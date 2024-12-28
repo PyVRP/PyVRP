@@ -164,7 +164,8 @@ def solve(
     VALUE = 1_000_000
     penalty_params = PenaltyParams(solutions_between_updates=VALUE)
     pm = PenaltyManager(
-        penalty_params, initial_penalties=(VALUE, VALUE, VALUE)
+        initial_penalties=([VALUE], VALUE, VALUE),
+        params=penalty_params,
     )
 
     accept = MovingAverageThreshold(1, 50, stop.criteria[0]._max_runtime)

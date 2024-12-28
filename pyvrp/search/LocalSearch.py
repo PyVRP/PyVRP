@@ -81,6 +81,7 @@ class LocalSearch:
         solution: Solution,
         cost_evaluator: CostEvaluator,
         candidate_clients: list[int],
+        overlap_tolerance: float = 0.05,
     ) -> Solution:
         """
         This method uses the :meth:`~search` and :meth:`~intensify` methods to
@@ -97,6 +98,8 @@ class LocalSearch:
             Cost evaluator to use.
         candidate_clients
             The list of candidate clients to consider for moves.
+        overlap_tolerance
+            See :meth:`~intensify` for details.
 
         Returns
         -------
@@ -105,7 +108,9 @@ class LocalSearch:
             solution that was passed in.
         """
         self._ls.shuffle(self._rng)
-        return self._ls(solution, cost_evaluator, candidate_clients)
+        return self._ls(
+            solution, cost_evaluator, candidate_clients, overlap_tolerance
+        )
 
     def intensify(
         self,

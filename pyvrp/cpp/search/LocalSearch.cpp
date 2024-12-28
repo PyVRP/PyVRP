@@ -12,7 +12,8 @@ using pyvrp::search::LocalSearch;
 
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator,
-                                 std::vector<size_t> const &candidateNodes)
+                                 std::vector<size_t> const &candidateNodes,
+                                 double overlapTolerance)
 {
     numEvaluations = 0;
     loadSolution(solution);
@@ -22,7 +23,7 @@ Solution LocalSearch::operator()(Solution const &solution,
         candidates[idx] = true;
 
     search(costEvaluator);
-    intensify(costEvaluator);
+    intensify(costEvaluator, overlapTolerance);
 
     return exportSolution();
 }

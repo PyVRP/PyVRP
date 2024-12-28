@@ -35,6 +35,8 @@ Contents
    setup/introduction_to_hgs
    setup/installation
    setup/getting_help
+   setup/faq
+   setup/concepts
    setup/benchmarks
    setup/citing
 
@@ -66,3 +68,4 @@ Contents
    dev/contributing
    dev/supported_vrplib_fields
    dev/new_vrp_variants
+   dev/glossary

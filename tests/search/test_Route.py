@@ -322,8 +322,8 @@ def test_str_contains_route(ok_small, locs: list[int]):
 
 def test_route_duration_access(ok_small):
     """
-    Tests access to a client's or depot's duration segment, as tracked by
-    the route.
+    Tests access to a client's or depot's duration segment, as tracked by the
+    route.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
     for client in range(ok_small.num_depots, ok_small.num_locations):
@@ -346,6 +346,59 @@ def test_route_duration_access(ok_small):
             assert_equal(ds.tw_early(), loc.tw_early)
             assert_equal(ds.tw_late(), loc.tw_late)
             assert_equal(ds.duration(), loc.service_duration)
+
+
+def test_route_duration_access_with_latest_start(ok_small):
+    """
+    Tests access to a depot's duration segment, as tracked by the route. The
+    start depot's segment differs from the end depot's segment due to different
+    latest start and latest finish on the vehicle type.
+    """
+    vehicle_type = ok_small.vehicle_type(0).replace(start_late=10_000)
+    ok_small = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route = Route(ok_small, idx=0, vehicle_type=0)
+    route.update()
+
+    # Start depot
+    start_ds = route.duration_at(0)
+    assert_equal(start_ds.tw_early(), vehicle_type.tw_early)
+    assert_equal(start_ds.tw_late(), vehicle_type.start_late)
+    assert_equal(start_ds.duration(), 0)
+
+    # End depot
+    end_ds = route.duration_at(1)
+    assert_equal(end_ds.tw_early(), vehicle_type.tw_early)
+    assert_equal(end_ds.tw_late(), vehicle_type.tw_late)
+    assert_equal(end_ds.duration(), 0)
+
+
+@pytest.mark.parametrize(
+    ("start_late", "expected"),
+    [
+        (100_000, 3_630),  # large enough, so duration without wait time
+        (14_056, 3_630),  # minimum latest start without wait time
+        (14_000, 3_686),  # now wait time is added to the duration
+        (10_000, 7_686),  # the wait time scales linearly
+        (0, 17_686),  # the wait time scales linearly
+    ],
+)
+def test_latest_start(ok_small: ProblemData, start_late: int, expected: int):
+    """
+    Tests that the start late attribute of vehicle types is reflected in the
+    route's duration calculations.
+    """
+    vehicle_type = VehicleType(1, capacity=[10], start_late=start_late)
+    ok_small = ok_small.replace(vehicle_types=[vehicle_type])
+
+    route = Route(ok_small, idx=0, vehicle_type=0)
+    route.append(Node(loc=1))
+    route.update()
+
+    assert_equal(route.duration(), expected)
+    # Starting the route before 14'056 results in wait time, so tw_early should
+    # be this start time if this does not exceed the latest start of the route.
+    assert_equal(route.duration_after(0).tw_early(), min(start_late, 14_056))
 
 
 @pytest.mark.parametrize("loc", [1, 2, 3, 4])
@@ -737,3 +790,37 @@ def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
 
     dur_mat = data.duration_matrix(0)
     assert_equal(route.duration(), dur_mat[0, 1])
+
+
+@pytest.mark.parametrize(
+    ("loc1", "loc2", "in_route1", "in_route2"),
+    [
+        (1, 2, False, False),
+        (1, 2, True, False),
+        (2, 3, False, True),
+        (3, 4, True, True),
+    ],
+)
+def test_route_swap(ok_small, loc1, loc2, in_route1, in_route2):
+    """
+    Tests that the swap method on routes correctly swaps nodes, even when one
+    or both of the nodes are not actually on a route.
+    """
+    route1 = Route(ok_small, 0, 0)
+    route2 = Route(ok_small, 1, 0)
+
+    node1 = Node(loc1)
+    if in_route1:
+        route1.append(node1)
+
+    node2 = Node(loc2)
+    if in_route2:
+        route2.append(node2)
+
+    old_route1 = node1.route
+    old_route2 = node2.route
+
+    Route.swap(node1, node2)
+
+    assert_(node1.route is old_route2)
+    assert_(node2.route is old_route1)

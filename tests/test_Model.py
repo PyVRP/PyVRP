@@ -158,12 +158,14 @@ def test_add_vehicle_type():
         tw_late=19,
         max_duration=93,
         max_distance=97,
+        start_late=18,
     )
 
     assert_equal(vehicle_type.num_available, 10)
     assert_equal(vehicle_type.capacity, [998])
     assert_equal(vehicle_type.fixed_cost, 1_001)
     assert_equal(vehicle_type.tw_early, 17)
+    assert_equal(vehicle_type.start_late, 18)
     assert_equal(vehicle_type.tw_late, 19)
     assert_equal(vehicle_type.max_duration, 93)
     assert_equal(vehicle_type.max_distance, 97)
@@ -495,10 +497,10 @@ def test_model_solves_small_instance_with_shift_durations():
     m.add_depot(x=0, y=0)
 
     for idx in range(5):
-        # Vehicles of the first type can visit two clients before having to
-        # return to the depot. The second vehicle type can be used to visit
-        # a single client before having to return to the depot. So we need
-        # at least three routes.
+        # Vehicles of the first type can visit a single client before having to
+        # return to the depot. The second vehicle type can be used to visit two
+        # clients before having to return to the depot. So we need at least
+        # three routes.
         m.add_client(
             x=idx,
             y=idx,
@@ -931,3 +933,26 @@ def test_model_solves_instance_with_zero_load_dimensions():
     # results in a distance of 1 + 1 + 1 + 1 = 4.
     route = res.best.routes()[0]
     assert_equal(route.distance(), 4)
+
+
+def test_bug_client_group_indices():
+    """
+    Tests the bug of #681. Because empty client groups compare equal, the
+    group to index implementation returned the first object that compared
+    equal, in this case resulting in both clients being inserted into the
+    first client group rather than the each into one.
+    """
+    m = Model()
+    m.add_depot(x=0, y=0)
+
+    group1 = m.add_client_group()
+    group2 = m.add_client_group()
+
+    client1 = m.add_client(x=0, y=0, required=False, group=group2)
+    assert_equal(client1.group, 1)
+
+    client2 = m.add_client(x=0, y=0, required=False, group=group1)
+    assert_equal(client2.group, 0)
+
+    assert_equal(len(group1), 1)
+    assert_equal(len(group2), 1)

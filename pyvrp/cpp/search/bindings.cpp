@@ -201,6 +201,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("solution"),
              py::arg("cost_evaluator"),
              py::arg("candidates"),
+             py::arg("overlap_tolerance") = 0.05,
              py::call_guard<py::gil_scoped_release>())
         .def("search",
              py::overload_cast<pyvrp::Solution const &,
@@ -358,6 +359,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("node"),
              py::keep_alive<1, 3>(),  // keep node alive
              py::keep_alive<3, 1>())  // keep route alive
+        .def_static("swap", &Route::swap, py::arg("first"), py::arg("second"))
         .def("update", &Route::update);
 
     py::class_<Route::Node>(m, "Node", DOC(pyvrp, search, Route, Node))

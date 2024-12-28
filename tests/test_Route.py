@@ -282,17 +282,22 @@ def test_route_can_be_pickled(rc208):
 
 
 @pytest.mark.parametrize(
-    ("tw_early", "tw_late", "expected"),
+    ("tw_early", "start_late", "tw_late", "expected"),
     [
-        (0, 0, 20_277),  # cannot be back at the depot before 20'277
-        (0, 20_000, 277),  # larger shift window decreases time warp
-        (0, 20_277, 0),  # and in this case there is no more time warp
-        (15_000, 20_000, 1_221),  # minimum route duration is 6'221
-        (10_000, 20_000, 277),  # before earliest possible return
+        (0, 0, 0, 20_277),  # cannot be back at the depot before 20'277
+        (0, 10_000, 20_000, 277),  # larger shift window decreases time warp
+        (0, 20_000, 20_000, 277),  # latest start does not affect time warp
+        (0, 20_277, 20_277, 0),  # and in this case there is no more time warp
+        (15_000, 15_000, 20_000, 1_221),  # minimum route duration is 6'221
+        (10_000, 20_000, 20_000, 277),  # before earliest possible return
     ],
 )
 def test_route_shift_duration(
-    ok_small, tw_early: int, tw_late: int, expected: int
+    ok_small,
+    tw_early: int,
+    start_late: int,
+    tw_late: int,
+    expected: int,
 ):
     """
     Tests that Route computes time warp due to shift durations correctly on a
@@ -300,7 +305,13 @@ def test_route_shift_duration(
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(2, capacity=[10], tw_early=tw_early, tw_late=tw_late)
+            VehicleType(
+                2,
+                capacity=[10],
+                tw_early=tw_early,
+                tw_late=tw_late,
+                start_late=start_late,
+            )
         ]
     )
 
@@ -368,3 +379,46 @@ def test_bug_start_time_before_release_time():
     assert_(route.is_feasible())
     assert_equal(route.start_time(), 5)
     assert_equal(route.end_time(), 25)
+
+
+@pytest.mark.parametrize("visits", [[1, 2, 3, 4], [2, 1, 3, 4]])
+def test_route_schedule(ok_small, visits: list[int]):
+    """
+    Tests that the route's schedule returns correct statistics for various
+    routes.
+    """
+    route = Route(ok_small, visits, 0)
+    schedule = route.schedule()
+
+    for client, visit in zip(route, schedule):
+        client_data: Client = ok_small.location(client)
+        assert_equal(visit.service_duration, client_data.service_duration)
+        assert_equal(
+            visit.service_duration,
+            visit.end_service - visit.start_service,
+        )
+
+    service_duration = sum(visit.service_duration for visit in schedule)
+    assert_equal(service_duration, route.service_duration())
+
+    wait_duration = sum(visit.wait_duration for visit in schedule)
+    assert_equal(wait_duration, route.wait_duration())
+
+    time_warp = sum(visit.time_warp for visit in schedule)
+    assert_equal(time_warp, route.time_warp())
+
+
+def test_route_schedule_wait_duration():
+    """
+    Tests that the route's schedule returns correct wait duration statistics.
+    """
+    data = read("data/OkSmallWaitTime.txt")
+    route = Route(data, [2, 4], 0)
+    schedule = route.schedule()
+
+    # All wait duration is incurred at the last stop.
+    assert_equal(schedule[-1].wait_duration, 1_550)
+    assert_equal(route.wait_duration(), 1_550)
+
+    wait_duration = sum(visit.wait_duration for visit in schedule)
+    assert_equal(wait_duration, route.wait_duration())

@@ -83,7 +83,8 @@ public:
      *    name: str = "",
      * )
      *
-     * Simple data object storing all client data as (read-only) properties.
+     * Simple data object storing all client data as properties. See also
+     * :doc:`../setup/concepts` for further information about these properties.
      *
      * Parameters
      * ----------
@@ -322,11 +323,13 @@ public:
      *     unit_distance_cost: int = 1,
      *     unit_duration_cost: int = 0,
      *     profile: int = 0,
+     *     start_late: int | None = None,
      *     *,
      *     name: str = "",
      * )
      *
-     * Simple data object storing all vehicle type data as properties.
+     * Simple data object storing all vehicle type data as properties. See also
+     * :doc:`../setup/concepts` for further information about these properties.
      *
      * Parameters
      * ----------
@@ -361,6 +364,9 @@ public:
      *     type. Default 0.
      * profile
      *     This vehicle type's routing profile. Default 0, the first profile.
+     * start_late
+     *     Latest start of the vehicle type's shift. Unconstrained if not
+     *     provided.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -393,6 +399,9 @@ public:
      *     Cost per unit of duration on routes using vehicles of this type.
      * profile
      *     This vehicle type's routing profile.
+     * start_late
+     *     Latest start of the vehicle type's shift. This is equal to
+     *     ``tw_late`` when the latest start is not constrained.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -410,6 +419,7 @@ public:
         Cost const unitDistanceCost;  // Variable cost per unit of distance
         Cost const unitDurationCost;  // Variable cost per unit of duration
         size_t const profile;         // Distance and duration profile
+        Duration const startLate;     // Latest start of shift
         char const *name;             // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
@@ -424,6 +434,7 @@ public:
                     Cost unitDistanceCost = 1,
                     Cost unitDurationCost = 0,
                     size_t profile = 0,
+                    std::optional<Duration> startLate = std::nullopt,
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -452,6 +463,7 @@ public:
                             std::optional<Cost> unitDistanceCost,
                             std::optional<Cost> unitDurationCost,
                             std::optional<size_t> profile,
+                            std::optional<Duration> startLate,
                             std::optional<std::string> name) const;
     };
 

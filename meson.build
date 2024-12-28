@@ -36,7 +36,6 @@ libpyvrp = static_library(
     'pyvrp',
     [
         SRC_DIR / 'CostEvaluator.cpp',
-        SRC_DIR / 'DistanceSegment.cpp',
         SRC_DIR / 'DynamicBitset.cpp',
         SRC_DIR / 'ProblemData.cpp',
         SRC_DIR / 'RandomNumberGenerator.cpp',
