@@ -378,7 +378,7 @@ void LocalSearch::update(Route *U, Route *V)
 
 void LocalSearch::loadSolution(Solution const &solution)
 {
-    std::vector<bool> routesToLoad(solution.numRoutes(), true);
+    std::vector<bool> isNew(solution.numRoutes(), true);
     auto const &solRoutes = solution.routes();
 
     // Clear LS routes that are no longer part of the solution.
@@ -400,29 +400,40 @@ void LocalSearch::loadSolution(Solution const &solution)
         auto solRoute = std::find_if(solRoutes.begin(), solRoutes.end(), pred);
 
         if (solRoute != solRoutes.end())  // route still in solution
-            routesToLoad[solRoute - solRoutes.begin()] = false;
+            isNew[solRoute - solRoutes.begin()] = false;
         else
             route.clear();
     }
 
-    // Load new solution routes only.
+    // Determine offsets for vehicle types.
+    std::vector<size_t> vehicleOffset(data.numVehicleTypes(), 0);
+    for (size_t vehType = 1; vehType < data.numVehicleTypes(); vehType++)
+    {
+        auto const prevAvail = data.vehicleType(vehType - 1).numAvailable;
+        vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
+    }
+
+    // Load only new solution routes.
     for (size_t idx = 0; idx != solution.numRoutes(); ++idx)
     {
-        if (!routesToLoad[idx])
+        if (!isNew[idx])
             continue;
 
-        auto const pred = [&](auto const &route)
-        {
-            return route.vehicleType() == solRoutes[idx].vehicleType()
-                   && route.empty();
-        };
-        auto route = std::find_if(routes.begin(), routes.end(), pred);
-        assert(route != routes.end());  // should always find a route
+        auto const vehicleType = solRoutes[idx].vehicleType();
+        auto const start = routes.begin() + vehicleOffset[vehicleType];
+        auto const end = vehicleType + 1 == data.numVehicleTypes()
+                             ? routes.end()
+                             : routes.begin() + vehicleOffset[vehicleType + 1];
+
+        auto route = std::find_if(start, end, std::empty<Route>);
+        assert(route != routes.end());
+        assert(route->vehicleType() == vehicleType);
 
         for (auto const client : solRoutes[idx])
             route->push_back(&nodes[client]);
 
         route->update();
+        vehicleOffset[vehicleType] = std::distance(routes.begin(), route) + 1;
     }
 
     for (auto *routeOp : routeOps)
