@@ -103,6 +103,9 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoclass:: ProblemData
       :members:
 
+   .. autoclass:: ScheduledVisit
+      :members:
+
    .. autoclass:: DynamicBitset
       :members:
       :special-members: __and__, __or__, __xor__, __getitem__, __setitem__,

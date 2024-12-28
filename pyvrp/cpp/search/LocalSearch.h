@@ -72,8 +72,7 @@ class LocalSearch
     void search(CostEvaluator const &costEvaluator);
 
     // Performs intensify on the currently loaded solution.
-    void intensify(CostEvaluator const &costEvaluator,
-                   double overlapTolerance = 0.05);
+    void intensify(CostEvaluator const &costEvaluator, double overlapTolerance);
 
     // Evaluate and apply inserting U after one of its neighbours if it's an
     // improving move or required for feasibility.
@@ -108,7 +107,8 @@ public:
      * improvements are made.
      */
     Solution operator()(Solution const &solution,
-                        CostEvaluator const &costEvaluator);
+                        CostEvaluator const &costEvaluator,
+                        double overlapTolerance = 0.05);
 
     /**
      * Performs regular (node-based) local search around the given solution,

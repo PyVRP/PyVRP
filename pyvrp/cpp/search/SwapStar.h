@@ -3,21 +3,19 @@
 
 #include "LocalSearchOperator.h"
 #include "Matrix.h"
-#include "Measure.h"
 
 #include <array>
-#include <limits>
-#include <vector>
+#include <utility>
 
 namespace pyvrp::search
 {
 /**
  * SwapStar(data: ProblemData)
  *
- * Explores the SWAP* neighbourhood of [1]_. The SWAP* neighbourhood explores
- * free form re-insertions of clients :math:`U` and :math:`V` in the given
- * routes (so the clients are exchanged between routes, but they are not
- * necessarily inserted in the place of the other exchanged client).
+ * Explores the SWAP* neighbourhood of [1]_. The SWAP* neighbourhood consists
+ * of free form re-insertions of clients :math:`U` and :math:`V` in the given
+ * routes (so the clients are swapped, but they are not necessarily inserted
+ * in the place of the other swapped client).
  *
  * References
  * ----------
@@ -27,16 +25,8 @@ namespace pyvrp::search
  */
 class SwapStar : public LocalSearchOperator<Route>
 {
-    struct ThreeBest  // stores three best SWAP* insertion points
-    {
-        bool shouldUpdate = true;
-        std::array<Route::Node *, 3> locs = {nullptr, nullptr, nullptr};
-        std::array<Cost, 3> costs = {std::numeric_limits<Cost>::max(),
-                                     std::numeric_limits<Cost>::max(),
-                                     std::numeric_limits<Cost>::max()};
-
-        void maybeAdd(Cost costInsert, Route::Node *placeInsert);
-    };
+    using InsertPoint = std::pair<Cost, Route::Node *>;
+    using ThreeBest = std::array<InsertPoint, 3>;
 
     struct BestMove  // tracks the best SWAP* move
     {
@@ -49,9 +39,17 @@ class SwapStar : public LocalSearchOperator<Route>
         Route::Node *VAfter = nullptr;  // insert V after this node in U's route
     };
 
-    Matrix<ThreeBest> cache;
+    // Tracks the three best insert locations, for each route and client.
+    Matrix<ThreeBest> insertCache;
+
+    // Tracks whether the insert locations and removal costs are still up to
+    // date. In particular, isCached(R, 0) tracks route-wise removal cost
+    // validity, while isCached(R, U) with U > 0 tracks (route, client) insert
+    // location validity.
+    Matrix<bool> isCached;
+
+    // Tracks the removal costs of removing a client from its route.
     Matrix<Cost> removalCosts;
-    std::vector<bool> updated;
 
     BestMove best;
 
@@ -60,18 +58,17 @@ class SwapStar : public LocalSearchOperator<Route>
 
     // Updates the cache storing the three best positions in the given route for
     // the passed-in node (client).
-    void updateInsertionCost(Route *R,
-                             Route::Node *U,
-                             CostEvaluator const &costEvaluator);
+    void updateInsertPoints(Route *R,
+                            Route::Node *U,
+                            CostEvaluator const &costEvaluator);
 
     Cost deltaLoadCost(Route::Node *U,
                        Route::Node *V,
                        CostEvaluator const &costEvaluator) const;
 
-    // Gets the delta cost and reinsert point for U in the route of V, assuming
-    // V is removed.
-    std::pair<Cost, Route::Node *> getBestInsertPoint(
-        Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator);
+    InsertPoint bestInsertPoint(Route::Node *U,
+                                Route::Node *V,
+                                CostEvaluator const &costEvaluator);
 
     // Evaluates the delta cost for ``V``'s route of inserting ``U`` after
     // ``V``, while removing ``remove`` from ``V``'s route.
@@ -90,13 +87,7 @@ public:
 
     void update(Route *U) override;
 
-    explicit SwapStar(ProblemData const &data)
-        : LocalSearchOperator<Route>(data),
-          cache(data.numVehicles(), data.numLocations()),
-          removalCosts(data.numVehicles(), data.numLocations()),
-          updated(data.numVehicles(), true)
-    {
-    }
+    explicit SwapStar(ProblemData const &data);
 };
 }  // namespace pyvrp::search
 
