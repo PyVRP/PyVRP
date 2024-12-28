@@ -404,10 +404,17 @@ public:
     void clear();
 
     /**
-     * Inserts the given node at index ``idx``. Assumes the given index is
+     * Inserts the given node before index ``idx``. Assumes the given index is
      * valid.
      */
     void insert(size_t idx, Node *node);
+
+    /**
+     * Inserts the given range of nodes before ``idx``. Assumes the given index
+     * is valid.
+     */
+    template <class InputIt>
+    void insert(size_t idx, InputIt first, InputIt last);
 
     /**
      * Inserts the given node at the back of the route.
@@ -829,6 +836,20 @@ LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
     };
 
     return std::apply(fn, segments);
+}
+
+template <class InputIt>
+void Route::insert(size_t idx, InputIt first, InputIt last)
+{
+    assert(0 < idx && idx < nodes.size());
+    nodes.insert(nodes.begin() + idx, first, last);
+
+    for (size_t after = idx; after != nodes.size(); ++after)
+        nodes[after]->assign(this, after);
+
+#ifndef NDEBUG
+    dirty = true;
+#endif
 }
 }  // namespace pyvrp::search
 
