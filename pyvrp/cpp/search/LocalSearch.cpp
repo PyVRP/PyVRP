@@ -435,7 +435,7 @@ void LocalSearch::loadSolution(Solution const &solution)
 
     // Clear the routes we do not want to keep.
     for (size_t idx = 0; idx != routes.size(); ++idx)
-        if (!keepExistingRoute[idx])
+        if (!keepExistingRoute[idx] && !routes[idx].empty())
             routes[idx].clear();
 
     // Load only new solution routes.
@@ -457,8 +457,7 @@ void LocalSearch::loadSolution(Solution const &solution)
 
         auto const isEmpty = [](auto const &route) { return route.empty(); };
         auto route = std::find_if(start, end, isEmpty);
-        assert(route != routes.end());
-        assert(route->vehicleType() == vehicleType);
+        assert(route != end);
 
         for (auto const client : solRoute)
             route->push_back(&nodes[client]);
