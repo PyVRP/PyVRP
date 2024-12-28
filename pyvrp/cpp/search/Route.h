@@ -842,8 +842,8 @@ template <class InputIt>
 void Route::insert(size_t idx, InputIt first, InputIt last)
 {
     assert(0 < idx && idx < nodes.size());
-
     nodes.insert(nodes.begin() + idx, first, last);
+
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->assign(this, after);
 
