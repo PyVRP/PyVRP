@@ -434,11 +434,14 @@ void LocalSearch::loadSolution(Solution const &solution)
         // vehicle type.
         auto const r = vehicleOffset[solRoute.vehicleType()]++;
         Route &route = routes[r];
-
         assert(route.empty());  // should have been emptied above.
-        for (auto const client : solRoute)
-            route.push_back(&nodes[client]);
 
+        std::vector<Route::Node *> visits;
+        visits.reserve(solRoute.size());
+        for (auto const client : solRoute)
+            visits.push_back(&nodes[client]);
+
+        route.insert(1, visits.begin(), visits.end());
         route.update();
     }
 
