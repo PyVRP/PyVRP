@@ -352,12 +352,14 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>(),  // keep node alive
              py::keep_alive<2, 1>())  // keep route alive
         .def("clear", &Route::clear)
-        .def("insert",
-             &Route::insert,
-             py::arg("idx"),
-             py::arg("node"),
-             py::keep_alive<1, 3>(),  // keep node alive
-             py::keep_alive<3, 1>())  // keep route alive
+        .def(
+            "insert",
+            [](Route &route, size_t idx, Route::Node *node)
+            { route.insert(idx, node); },
+            py::arg("idx"),
+            py::arg("node"),
+            py::keep_alive<1, 3>(),  // keep node alive
+            py::keep_alive<3, 1>())  // keep route alive
         .def_static("swap", &Route::swap, py::arg("first"), py::arg("second"))
         .def("update", &Route::update);
 
