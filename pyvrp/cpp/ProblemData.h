@@ -67,6 +67,35 @@ class ProblemData
 
 public:
     /**
+     * Characteristics(data: ProblemData)
+     *
+     * Simple data object that stores relevant instance characteristics of the
+     * passed-in data object. These characteristics can be used by various parts
+     * of PyVRP to speed up evaluations by skipping irrelevant aspects.
+     *
+     * Parameters
+     * ----------
+     * data
+     *     The data instance to analyse.
+     *
+     * Attributes
+     * ----------
+     * has_duration
+     *     Whether the data instance has meaningful duration-related constraints
+     *     or objective function terms. If this is not the case, any changes in
+     *     duration do not lead to changes in the objective, and can be skipped
+     *     when e.g. evaluating search moves.
+     */
+    struct Characteristics
+    {
+        bool const hasDuration;
+
+        explicit Characteristics(ProblemData const &data);
+
+        bool operator==(Characteristics const &other) const = default;
+    };
+
+    /**
      * Client(
      *    x: int,
      *    y: int,
@@ -487,12 +516,17 @@ private:
     std::vector<Depot> const depots_;              // Depot information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
     std::vector<ClientGroup> const groups_;        // Client groups
-
     size_t const numVehicles_;
     size_t const numLoadDimensions_;
+    Characteristics const characteristics_;  // Problem characteristics
 
 public:
     bool operator==(ProblemData const &other) const = default;
+
+    /**
+     * Returns data on relevant instance characteristics.
+     */
+    [[nodiscard]] inline Characteristics characteristics() const;
 
     /**
      * Returns location data for the location at the given index. This can
@@ -690,6 +724,11 @@ public:
 
     ProblemData() = delete;
 };
+
+ProblemData::Characteristics ProblemData::characteristics() const
+{
+    return characteristics_;
+}
 
 ProblemData::Location::operator Client const &() const { return *client; }
 

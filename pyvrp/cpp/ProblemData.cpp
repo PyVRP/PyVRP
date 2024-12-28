@@ -35,6 +35,15 @@ auto &pad(auto &vec1, auto const &vec2)
 bool isNegative(auto value) { return value < 0; }
 }  // namespace
 
+ProblemData::Characteristics::Characteristics(ProblemData const &data)
+    : hasDuration(std::any_of(data.durationMatrices().begin(),
+                              data.durationMatrices().end(),
+                              [](Matrix<Duration> const &mat)
+                              { return mat.size() > 0 && mat.max() > 0; }))
+{
+    // TODO
+}
+
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
                             std::vector<Load> delivery,
@@ -583,7 +592,8 @@ ProblemData::ProblemData(std::vector<Client> clients,
               // but the client constructor already ensures those are of equal
               // size (within a single client).
               ? (vehicleTypes_.empty() ? 0 : vehicleTypes_[0].capacity.size())
-              : clients_[0].delivery.size())
+              : clients_[0].delivery.size()),
+      characteristics_(*this)
 {
     for (auto const &client : clients_)
     {
