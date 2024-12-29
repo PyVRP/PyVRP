@@ -7,6 +7,3 @@ build:
   jobs:
     pre_build:
       - exit 0
-
-sphinx:
-  configuration: docs/source/conf.py
