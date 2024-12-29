@@ -5,5 +5,5 @@ build:
   tools:
     python: "3.12"
   jobs:
-    pre_build:
-      - exit 0
+    post_checkout:
+      - exit 183
