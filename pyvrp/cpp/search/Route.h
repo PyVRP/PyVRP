@@ -71,8 +71,8 @@ public:
     public:
         enum class NodeType
         {
-            DepotLoad,
-            DepotUnload,
+            StartDepot,
+            EndDepot,
             Client
         };
 
@@ -129,14 +129,14 @@ public:
         [[nodiscard]] inline bool isClient() const;
 
         /**
-         * Returns whether this node is a depot load node.
+         * Returns whether this node is a start depot node.
          */
-        [[nodiscard]] inline bool isDepotLoad() const;
+        [[nodiscard]] inline bool isStartDepot() const;
 
         /**
-         * Returns whether this node is a depot unload node.
+         * Returns whether this node is an end depot node.
          */
-        [[nodiscard]] inline bool isDepotUnload() const;
+        [[nodiscard]] inline bool isEndDepot() const;
 
         /**
          * Assigns the node to the given route, at the given position index and
@@ -163,10 +163,10 @@ private:
         size_t const start;
 
     public:
-        inline size_t first() const;                    // client at start
-        inline size_t last() const;                     // end depot
-        inline Route::Node::NodeType lastType() const;  // end node type
-        inline size_t numTrips() const;                 // number of trips
+        inline size_t first() const;     // client at start
+        inline size_t last() const;      // end depot
+        inline bool endsTrip() const;    // true, since last is end depot node
+        inline size_t numTrips() const;  // number of trips
 
         inline SegmentAfter(Route const &route, size_t start);
         inline DistanceSegment distance(size_t profile) const;
@@ -184,10 +184,10 @@ private:
         size_t const end;
 
     public:
-        inline size_t first() const;                    // start depot
-        inline size_t last() const;                     // client at end
-        inline Route::Node::NodeType lastType() const;  // end node type
-        inline size_t numTrips() const;                 // number of trips
+        inline size_t first() const;     // start depot
+        inline size_t last() const;      // depot/client at end
+        inline bool endsTrip() const;    // whether last is end depot node
+        inline size_t numTrips() const;  // number of trips
 
         inline SegmentBefore(Route const &route, size_t end);
         inline DistanceSegment distance(size_t profile) const;
@@ -206,10 +206,10 @@ private:
         size_t const end;
 
     public:
-        inline size_t first() const;                    // client at start
-        inline size_t last() const;                     // client at end
-        inline Route::Node::NodeType lastType() const;  // end node type
-        inline size_t numTrips() const;                 // number of trips
+        inline size_t first() const;     // depot/client at start
+        inline size_t last() const;      // depot/client at end
+        inline bool endsTrip() const;    // whether last is end depot node
+        inline size_t numTrips() const;  // number of trips
 
         inline SegmentBetween(Route const &route, size_t start, size_t end);
         inline DistanceSegment distance(size_t profile) const;
@@ -227,10 +227,10 @@ private:
         Route const &route;
 
     public:
-        inline size_t first() const;                    // client at start
-        inline size_t last() const;                     // client at end
-        inline Route::Node::NodeType lastType() const;  // end node type
-        inline size_t numTrips() const;                 // number of trips
+        inline size_t first() const;     // client at start
+        inline size_t last() const;      // client at end
+        inline bool endsTrip() const;    // false
+        inline size_t numTrips() const;  // number of trips
 
         inline SegmentStartDepot(Route const &route);
         inline DistanceSegment distance(size_t profile) const;
@@ -248,10 +248,10 @@ private:
         Route const &route;
 
     public:
-        inline size_t first() const;                    // client at start
-        inline size_t last() const;                     // client at end
-        inline Route::Node::NodeType lastType() const;  // end node type
-        inline size_t numTrips() const;                 // number of trips
+        inline size_t first() const;     // client at start
+        inline size_t last() const;      // client at end
+        inline bool endsTrip() const;    // true
+        inline size_t numTrips() const;  // number of trips
 
         inline SegmentEndDepot(Route const &route);
         inline DistanceSegment distance(size_t profile) const;
@@ -549,13 +549,13 @@ public:
     void push_back(Node *node);
 
     /**
-     * Insert an empty trip. A depot load/unload node pair is created and
+     * Insert an empty trip. A start/end depot node pair is created and
      * inserted at index ``tripIdx``. Assumes the given index is valid.
      */
     void insertTrip(size_t tripIdx);
 
     /**
-     * Inserts an empty trip at the end of the route. A depot load/unload node
+     * Inserts an empty trip at the end of the route. A start/end depot node
      * pair is created and inserted at the back of the route.
      */
     void addTrip();
@@ -566,8 +566,8 @@ public:
     void remove(size_t idx);
 
     /**
-     * Removes the trip at ``tripIdx`` from the route. The depot load/unload
-     * node pair for this trip are removed from the route. Assumes that the trip
+     * Removes the trip at ``tripIdx`` from the route. The start/end depot
+     * node pair for this trip is removed from the route. Assumes that the trip
      * to be removed is empty.
      */
     void removeTrip(size_t tripIdx);
@@ -615,16 +615,13 @@ Route *Route::Node::route() const { return route_; }
 
 Route::Node::NodeType Route::Node::type() const { return type_; }
 
-bool Route::Node::isDepot() const { return isDepotLoad() || isDepotUnload(); }
+bool Route::Node::isDepot() const { return isStartDepot() || isEndDepot(); }
 
 bool Route::Node::isClient() const { return type_ == NodeType::Client; }
 
-bool Route::Node::isDepotLoad() const { return type_ == NodeType::DepotLoad; }
+bool Route::Node::isStartDepot() const { return type_ == NodeType::StartDepot; }
 
-bool Route::Node::isDepotUnload() const
-{
-    return type_ == NodeType::DepotUnload;
-}
+bool Route::Node::isEndDepot() const { return type_ == NodeType::EndDepot; }
 
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
     : route(route), start(start)
@@ -713,9 +710,9 @@ LoadSegment const &Route::SegmentBefore::load(size_t dimension,
 
 size_t Route::SegmentBefore::first() const { return route.visits.front(); }
 size_t Route::SegmentBefore::last() const { return route.visits[end]; }
-Route::Node::NodeType Route::SegmentBefore::lastType() const
+bool Route::SegmentBefore::endsTrip() const
 {
-    return route.nodes[end]->type();
+    return route.nodes[end]->isEndDepot();
 }
 size_t Route::SegmentBefore::numTrips() const
 {
@@ -724,10 +721,7 @@ size_t Route::SegmentBefore::numTrips() const
 
 size_t Route::SegmentAfter::first() const { return route.visits[start]; }
 size_t Route::SegmentAfter::last() const { return route.visits.back(); }
-Route::Node::NodeType Route::SegmentAfter::lastType() const
-{
-    return Route::Node::NodeType::DepotUnload;
-}
+bool Route::SegmentAfter::endsTrip() const { return true; }
 size_t Route::SegmentAfter::numTrips() const
 {
     return route.numTrips() - route.nodes[start]->tripIdx();
@@ -735,9 +729,9 @@ size_t Route::SegmentAfter::numTrips() const
 
 size_t Route::SegmentBetween::first() const { return route.visits[start]; }
 size_t Route::SegmentBetween::last() const { return route.visits[end]; }
-Route::Node::NodeType Route::SegmentBetween::lastType() const
+bool Route::SegmentBetween::endsTrip() const
 {
-    return route.nodes[end]->type();
+    return route.nodes[end]->isEndDepot();
 }
 size_t Route::SegmentBetween::numTrips() const
 {
@@ -746,18 +740,12 @@ size_t Route::SegmentBetween::numTrips() const
 
 size_t Route::SegmentStartDepot::first() const { return route.startDepot(); }
 size_t Route::SegmentStartDepot::last() const { return route.startDepot(); }
-Route::Node::NodeType Route::SegmentStartDepot::lastType() const
-{
-    return Route::Node::NodeType::DepotLoad;
-}
+bool Route::SegmentStartDepot::endsTrip() const { return false; }
 size_t Route::SegmentStartDepot::numTrips() const { return 1; }
 
 size_t Route::SegmentEndDepot::first() const { return route.endDepot(); }
 size_t Route::SegmentEndDepot::last() const { return route.endDepot(); }
-Route::Node::NodeType Route::SegmentEndDepot::lastType() const
-{
-    return Route::Node::NodeType::DepotUnload;
-}
+bool Route::SegmentEndDepot::endsTrip() const { return true; }
 size_t Route::SegmentEndDepot::numTrips() const { return 1; }
 
 DistanceSegment Route::SegmentBetween::distance(size_t profile) const
@@ -1161,9 +1149,10 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
         }
 
         // Check if we have excess load for the last trip in the segment.
-        if (segment.lastType() == Route::Node::NodeType::DepotUnload)
+        if (segment.endsTrip())
         {
             excessLoad += calculateExcessLoad(currentLoadSegment);
+            // Next segment (if any) should start with new trip.
             currentLoadSegment = LoadSegment();
         }
     };

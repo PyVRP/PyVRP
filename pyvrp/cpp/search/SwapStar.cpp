@@ -71,7 +71,7 @@ void SwapStar::updateInsertionCost(Route *R,
     {
         // Skip points which would lead to new trip.
         auto *V = (*R)[idx];
-        if (V->isDepotUnload())
+        if (V->isEndDepot())
             continue;
 
         auto const proposal = R->proposal(
@@ -263,13 +263,13 @@ void SwapStar::apply(Route *U, Route *V) const
 
     // Check whether trip of Node U becomes empty after the move.
     std::optional<size_t> tripToRemoveU = std::nullopt;
-    if (p(best.U)->isDepotLoad() && n(best.U)->isDepotUnload()
+    if (p(best.U)->isStartDepot() && n(best.U)->isEndDepot()
         && best.VAfter != p(best.U))
         tripToRemoveU = best.U->tripIdx();
 
     // Check whether trip of Node V becomes empty after the move.
     std::optional<size_t> tripToRemoveV = std::nullopt;
-    if (p(best.V)->isDepotLoad() && n(best.V)->isDepotUnload()
+    if (p(best.V)->isStartDepot() && n(best.V)->isEndDepot()
         && best.UAfter != p(best.V))
         tripToRemoveV = best.V->tripIdx();
 

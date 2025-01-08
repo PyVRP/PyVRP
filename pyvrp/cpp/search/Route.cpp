@@ -110,8 +110,8 @@ void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
     assert(!node->isDepot());
-    // Not allowed to insert between depot unload and load node.
-    assert(!nodes[idx]->isDepotLoad());
+    // Not allowed to insert between end depot node and start depot node.
+    assert(!nodes[idx]->isStartDepot());
 
     // Insert the node before the node currently at position ``idx``.
     size_t tripIdx = nodes[idx]->tripIdx();
@@ -147,12 +147,12 @@ void Route::insertTrip(size_t tripIdx)
                            : depotNodes[tripIdx].first.idx();
 
     // Not allowed to insert new trip in the middle of an other trip.
-    assert(idx == 0 || nodes[idx - 1]->isDepotUnload());
+    assert(idx == 0 || nodes[idx - 1]->isEndDepot());
 
     auto depotPair = depotNodes.emplace(
         depotNodes.begin() + tripIdx,
-        Node(vehicleType_.startDepot, Node::NodeType::DepotLoad),
-        Node(vehicleType_.endDepot, Node::NodeType::DepotUnload));
+        Node(vehicleType_.startDepot, Node::NodeType::StartDepot),
+        Node(vehicleType_.endDepot, Node::NodeType::EndDepot));
 
     auto &[tripStartDepot, tripEndDepot] = *depotPair;
     tripStartDepot.assign(this, idx, tripIdx);
@@ -170,9 +170,9 @@ void Route::insertTrip(size_t tripIdx)
         // this outdated pointer can still be used to determine the type of the
         // node. If the node is a depot node, then the pointer is updated to the
         // correct depot node.
-        if (nodes[after]->isDepotLoad())
+        if (nodes[after]->isStartDepot())
             nodes[after] = &depotPair->first;
-        else if (nodes[after]->isDepotUnload())
+        else if (nodes[after]->isEndDepot())
         {
             nodes[after] = &depotPair->second;
             depotPair++;
@@ -216,20 +216,14 @@ void Route::remove(size_t idx)
 void Route::removeTrip(size_t tripIdx)
 {
     assert(tripIdx < numTrips());
-    assert(numTrips() > 1);
+    assert(numTrips() > 1);  // At least one remaining trip after removal.
 
     auto &[depotLoadNode, depotUnloadNode] = depotNodes[tripIdx];
-
-    assert(depotLoadNode.tripIdx() == tripIdx);
-    assert(depotUnloadNode.tripIdx() == tripIdx);
-    assert(depotLoadNode.route() == this);
-    assert(depotUnloadNode.route() == this);
-
     size_t const startIdx = depotLoadNode.idx();
     size_t const endIdx = depotUnloadNode.idx();
     assert(startIdx + 1 == endIdx);  // Trip must be empty.
 
-    // Removes depot load and unload node.
+    // Removes start depot node and end depot node.
     nodes.erase(nodes.begin() + startIdx, nodes.begin() + startIdx + 2);
 
     auto depotPair = depotNodes.erase(depotNodes.begin() + tripIdx);
@@ -237,9 +231,9 @@ void Route::removeTrip(size_t tripIdx)
     // Update depot node pointers.
     for (auto after = startIdx; after != nodes.size(); ++after)
     {
-        if (nodes[after]->isDepotLoad())
+        if (nodes[after]->isStartDepot())
             nodes[after] = &depotPair->first;
-        else if (nodes[after]->isDepotUnload())
+        else if (nodes[after]->isEndDepot())
         {
             nodes[after] = &depotPair->second;
             depotPair++;
@@ -296,7 +290,7 @@ void Route::update()
     size_t numClients = 0;
     visits.clear();
 
-    size_t depotBalance = 0;
+    bool inTrip = false;
     for (size_t idx = 0; idx != nodes.size(); ++idx)
     {
         auto const *node = nodes[idx];
@@ -304,26 +298,27 @@ void Route::update()
 
         if (node->isClient())
         {
-            assert(depotBalance == 1);
+            assert(inTrip);
             ++numClients;
         }
-        else if (node->isDepotLoad())
+        else if (node->isStartDepot())
         {
-            assert(depotBalance == 0);
-            depotBalance++;
+            assert(!inTrip);
+            inTrip = true;
             tripStart.push_back(idx);
         }
-        else  // Depot unload
+        else  // End depot
         {
-            assert(node->isDepotUnload());
-            assert(depotBalance == 1);
-            depotBalance--;
+            assert(node->isEndDepot());
+            assert(inTrip);
+            inTrip = false;
             tripEnd.push_back(idx);
             assert(tripStart.size() == tripEnd.size());
         }
     }
 
     assert(numClients == this->numClients());
+    assert(!inTrip);
 
     // Assert no empty trips, unless there is one single empty trip.
     if (numTrips > 1)
@@ -426,8 +421,10 @@ std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
     {
         if (node->isClient())
             out << ' ' << node->client();  // client index
-        else if (node->isDepotLoad() && node != *route.begin())
-            out << " |";  // trip delimiter
+        else if (node->isStartDepot())
+            out << " [";  // trip start
+        else if (node->isEndDepot())
+            out << " ]";  // trip end
     }
     out << '\n';
 

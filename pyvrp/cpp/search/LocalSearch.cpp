@@ -96,15 +96,15 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    // Moves involving a load depot: move clients to the
+                    // Moves involving a start depot: move clients to the
                     // beginning of a trip (after the depot node p(V)).
-                    if (p(V)->isDepotLoad()
+                    if (p(V)->isStartDepot()
                         && applyNodeOps(U, p(V), costEvaluator))
                         continue;
 
-                    // Moves involving an unload depot: move clients to a new
-                    // trip (after the depot node n(V)).
-                    if (n(V)->isDepotUnload()
+                    // Moves involving an end depot: move clients to a new trip
+                    // (after the depot node n(V)).
+                    if (n(V)->isEndDepot()
                         && applyNodeOps(U, n(V), costEvaluator))
                         continue;
                 }
@@ -446,13 +446,13 @@ Solution LocalSearch::exportSolution() const
         trip.reserve(route.numClients());  // upper bound
         for (auto *node : route)
         {
-            if (node->isDepotLoad())  // start trip
+            if (node->isStartDepot())  // start trip
                 trip.clear();
             else if (node->isClient())
                 trip.push_back(node->client());
-            else  // depot unload -> end of trip
+            else  // end depot -> end of trip
             {
-                assert(node->isDepotUnload());
+                assert(node->isEndDepot());
                 assert(trip.size() > 0);
                 trips.push_back(trip);
             }
@@ -514,7 +514,7 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     for (size_t loc = 0; loc != data.numLocations(); ++loc)
         nodes.emplace_back(loc,
                            loc < data.numDepots()
-                               ? Route::Node::NodeType::DepotLoad
+                               ? Route::Node::NodeType::StartDepot
                                : Route::Node::NodeType::Client);
 
     routes.reserve(data.numVehicles());

@@ -19,10 +19,7 @@ public:
 
     size_t first() const { return client; }
     size_t last() const { return client; }
-    pyvrp::search::Route::Node::NodeType lastType() const
-    {
-        return pyvrp::search::Route::Node::NodeType::Client;
-    }
+    bool endsTrip() const { return false; }
     size_t numTrips() const { return 1; }
 
     pyvrp::DistanceSegment distance([[maybe_unused]] size_t profile) const
@@ -58,7 +55,7 @@ pyvrp::Cost pyvrp::search::insertCost(Route::Node *U,
     Cost deltaCost
         = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
 
-    if (!V->isDepotUnload())
+    if (!V->isEndDepot())
     {
         costEvaluator.deltaCost<true>(
             deltaCost,

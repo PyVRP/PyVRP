@@ -106,7 +106,7 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         auto const uProposal = uRoute->proposal(uRoute->before(U->idx() - 1),
                                                 uRoute->after(U->idx() + N));
 
-        if (!V->isDepotUnload())
+        if (!V->isEndDepot())
         {
             auto const vProposal
                 = vRoute->proposal(vRoute->before(V->idx()),
@@ -141,7 +141,7 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
     {
         auto *route = U->route();
 
-        if (!V->isDepotUnload())
+        if (!V->isEndDepot())
         {
             if (U->idx() < V->idx())
                 costEvaluator.deltaCost(
@@ -262,15 +262,14 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
     if constexpr (M == 0)  // special case where nothing in V is moved
     {
         // No change if nodes are inserted in the position they already are.
-        // n(V) does not exist if V is the last (depot unload) node in the
-        // route. U cannot be a depot load node, so guaranteed that we are not
-        // inserting in the same position if V is a depot unload node.
-        if (!V->isDepotUnload() && U == n(V))
+        // n(V) does not exist if V is the last (end depot) node in the route.
+        // U cannot be a start depot node, so it is guaranteed that we are not
+        // inserting in the same position if V is an end depot node.
+        if (!V->isEndDepot() && U == n(V))
             return 0;
 
         // Cannot exceed max trips.
-        if (V->isDepotUnload()
-            && V->route()->numTrips() == V->route()->maxTrips())
+        if (V->isEndDepot() && V->route()->numTrips() == V->route()->maxTrips())
             return 0;
 
         return evalRelocateMove(U, V, costEvaluator);
@@ -296,8 +295,8 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
     auto *uToInsert = N == 1 ? U : uRoute[U->idx() + N - 1];
     auto *insertUAfter = M == 0 ? V : vRoute[V->idx() + M - 1];
 
-    // If inserting after a depot unload node, a new trip is created.
-    if (insertUAfter->isDepotUnload())
+    // If inserting after an end depot node, a new trip is created.
+    if (insertUAfter->isEndDepot())
     {
         vRoute.insertTrip(insertUAfter->tripIdx() + 1);
         insertUAfter = n(insertUAfter);
@@ -313,8 +312,8 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
     }
 
     // Remove depot nodes if empty trip is left in uRoute.
-    if (uRoute.numTrips() > 1 && uToInsert->isDepotLoad()
-        && n(uToInsert)->isDepotUnload())
+    if (uRoute.numTrips() > 1 && uToInsert->isStartDepot()
+        && n(uToInsert)->isEndDepot())
         uRoute.removeTrip(uToInsert->tripIdx());
 
     // ...and swap the overlapping nodes!

@@ -22,7 +22,7 @@ void pyvrp::repair::setupRoutes(std::vector<SearchRoute::Node> &locs,
     for (size_t loc = 0; loc != data.numLocations(); ++loc)
         locs.emplace_back(loc,
                           loc < data.numDepots()
-                              ? SearchRoute::Node::NodeType::DepotLoad
+                              ? SearchRoute::Node::NodeType::StartDepot
                               : SearchRoute::Node::NodeType::Client);
 
     size_t idx = 0;
@@ -63,13 +63,13 @@ pyvrp::repair::exportRoutes(ProblemData const &data,
         trip.reserve(route.numClients());  // upper bound
         for (auto *node : route)
         {
-            if (node->isDepotLoad())  // start trip
+            if (node->isStartDepot())  // start trip
                 trip.clear();
             else if (node->isClient())
                 trip.push_back(node->client());
-            else  // depot unload -> end of trip
+            else  // end depot -> end of trip
             {
-                assert(node->isDepotUnload());
+                assert(node->isEndDepot());
                 assert(trip.size() > 0);
                 trips.push_back(trip);
             }
