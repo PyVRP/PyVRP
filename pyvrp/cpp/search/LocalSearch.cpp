@@ -15,14 +15,11 @@ Solution LocalSearch::operator()(Solution const &solution,
 {
     loadSolution(solution);
 
-    while (true)
+    do
     {
         search(costEvaluator);
         intensify(costEvaluator, overlapTolerance);
-
-        if (numMoves == 0)  // then the current solution is locally optimal.
-            break;
-    }
+    } while (numMoves != 0);  // repeat until solution is locally optimal.
 
     return exportSolution();
 }
