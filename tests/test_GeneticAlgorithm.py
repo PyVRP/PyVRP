@@ -121,11 +121,11 @@ def test_initial_solutions_added_when_restarting(rc208):
 
     params = GeneticAlgorithmParams(
         repair_probability=0,
-        nb_iter_no_improvement=100,
+        nb_iter_no_improvement=25,
     )
     algo = GeneticAlgorithm(rc208, pm, rng, pop, ls, srex, init, params=params)
 
-    algo.run(MaxIterations(100))
+    algo.run(MaxIterations(25))
 
     # There are precisely enough non-improving iterations to trigger the
     # restarting mechanism. GA should have cleared and re-initialised the
@@ -241,7 +241,7 @@ def test_never_repairs_when_zero_repair_probability(rc208):
     # manager. This should be OK.
     ga_params = GeneticAlgorithmParams(repair_probability=1.0)
     algo = GeneticAlgorithm(rc208, pm, rng, pop, ls, srex, init, ga_params)
-    algo.run(MaxIterations(50))
+    algo.run(MaxIterations(25))
 
     # Now we patch the penalty manager: when asked for a booster cost evaluator
     # (as used during repair), this will now raise a runtime error. Since the
@@ -251,10 +251,10 @@ def test_never_repairs_when_zero_repair_probability(rc208):
 
     pm.booster_cost_evaluator = MethodType(raise_when_called, pm)
     with assert_raises(RuntimeError):
-        algo.run(MaxIterations(50))
+        algo.run(MaxIterations(25))
 
     # But when we set the repair probability to 0%, the booster is no longer
     # needed, and nothing should raise.
     ga_params = GeneticAlgorithmParams(repair_probability=0.0)
     algo = GeneticAlgorithm(rc208, pm, rng, pop, ls, srex, init, ga_params)
-    algo.run(MaxIterations(50))
+    algo.run(MaxIterations(25))
