@@ -16,27 +16,30 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
     if (uRoute == vRoute || uRoute->idx() > vRoute->idx())
         return 0;  // same route, or move will be tackled in a later iteration
 
-    // Don't tackle the case that U or V is an end depot node, which could
-    // result in inconsistent routes after swapping. Could end up with trips
-    // which do not begin and finish at a start and end depot node.
-    if (U->isEndDepot() || V->isEndDepot())
+    // Don't tackle the case that either U or V is an end depot node, which
+    // would result in inconsistent routes after swapping. It would lead to
+    // trips which do not begin and finish at a start and end depot node.
+    if ((U->isEndDepot() && !V->isEndDepot())
+        || (!U->isEndDepot() && V->isEndDepot()))
         return 0;
 
     Cost deltaCost = 0;
 
     // We're going to incur fixed cost if a route is currently empty but
     // becomes non-empty due to the proposed move.
-    if (uRoute->empty() && n(V)->idx() < vRoute->size() - 1)
+    bool const vTailEmpty = V->idx() >= vRoute->size() - 2;
+    bool const uTailEmpty = U->idx() >= uRoute->size() - 2;
+    if (uRoute->empty() && !vTailEmpty)
         deltaCost += uRoute->fixedVehicleCost();
 
-    if (vRoute->empty() && n(U)->idx() < uRoute->size() - 1)
+    if (vRoute->empty() && !uTailEmpty)
         deltaCost += vRoute->fixedVehicleCost();
 
     // We lose fixed cost if a route becomes empty due to the proposed move.
-    if (!uRoute->empty() && U->idx() == 0 && n(V)->idx() == vRoute->size() - 1)
+    if (!uRoute->empty() && U->idx() == 0 && vTailEmpty)
         deltaCost -= uRoute->fixedVehicleCost();
 
-    if (!vRoute->empty() && V->idx() == 0 && n(U)->idx() == uRoute->size() - 1)
+    if (!vRoute->empty() && V->idx() == 0 && uTailEmpty)
         deltaCost -= vRoute->fixedVehicleCost();
 
     // When multiple trips are involved, then the start and end depots of the
@@ -66,8 +69,6 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
     // Note that a proposal can contain an empty trip, but this should not
     // affect delta cost calculation. However, this is only true given that
     // there is no loading duration at the depot for the start of a trip.
-    bool const vTailEmpty = V->idx() >= vRoute->size() - 2;
-    bool const uTailEmpty = U->idx() >= uRoute->size() - 2;
     if (!uTailEmpty && !vTailEmpty)
     {
         // Both routes "send and receive" clients to/from each other.
@@ -86,15 +87,26 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
     else if (!uTailEmpty && vTailEmpty)
     {
         // Route U "sends" clients to route V, but not the other way around.
-        auto const uProposal = uRoute->proposal(uRoute->before(U->idx()),
-                                                uRoute->at(uRoute->size() - 1));
-
         auto const vProposal = vRoute->proposal(
             vRoute->before(V->idx()),
             uRoute->between(U->idx() + 1, uRoute->size() - 2),
             vRoute->at(vRoute->size() - 1));
 
-        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        if (U->isEndDepot())
+        {
+            // Proposal with one segment is currently not supported.
+            auto const uProposal = uRoute->proposal(
+                uRoute->before(U->idx() - 1), uRoute->at(uRoute->size() - 1));
+
+            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        }
+        else
+        {
+            auto const uProposal = uRoute->proposal(
+                uRoute->before(U->idx()), uRoute->at(uRoute->size() - 1));
+
+            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        }
     }
     else if (uTailEmpty && !vTailEmpty)
     {
@@ -104,119 +116,138 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
             vRoute->between(V->idx() + 1, vRoute->size() - 2),
             uRoute->at(uRoute->size() - 1));
 
-        auto const vProposal = vRoute->proposal(vRoute->before(V->idx()),
-                                                vRoute->at(vRoute->size() - 1));
+        if (V->isEndDepot())
+        {
+            // Proposal with one segment is currently not supported.
+            auto const vProposal = vRoute->proposal(
+                vRoute->before(V->idx() - 1), vRoute->at(vRoute->size() - 1));
 
-        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        }
+        else
+        {
+            auto const vProposal = vRoute->proposal(
+                vRoute->before(V->idx()), vRoute->at(vRoute->size() - 1));
+
+            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        }
     }
 
     return deltaCost;
 }
 
-void SwapTails::apply(Route::Node *U, Route::Node *V) const
+std::pair<size_t, size_t> SwapTails::applySwapTripTails(Route::Node *U,
+                                                        Route::Node *V) const
 {
-    // First swap the first trip of route U with the first trip of route V.
-    // Note that this can result in an empty trip in one of the routes, when
-    // one of the routes will swap all the clients of the trip and the other
-    // route will swap no clients of the trip. We will tackle this at the end.
-    auto *moveVAfter = n(V);
-    auto *moveUAfter = n(U);
+    // This method should not be used for swapping entire trips.
+    assert(!U->isEndDepot() && !V->isEndDepot());
 
-    auto *insertUAfter = U;
-    auto insertIdxU = insertUAfter->idx() + 1;
-    while (!moveVAfter->isDepot())
+    auto *nV = n(V);
+    auto *nU = n(U);
+
+    // Move trip tail from route V to route U.
+    size_t insertIdxU = U->idx() + 1;
+    while (!nV->isEndDepot())
     {
-        auto *node = moveVAfter;
-        moveVAfter = n(moveVAfter);
+        auto *node = nV;
+        nV = n(nV);
         V->route()->remove(node->idx());
         U->route()->insert(insertIdxU++, node);
     }
 
-    auto *insertVAfter = V;
-    auto insertIdxV = insertVAfter->idx() + 1;
-    while (!moveUAfter->isDepot())
+    // Move trip tail from route U to route V.
+    size_t insertIdxV = V->idx() + 1;
+    while (!nU->isEndDepot())
     {
-        auto *node = moveUAfter;
-        moveUAfter = n(moveUAfter);
+        auto *node = nU;
+        nU = n(nU);
         U->route()->remove(node->idx());
         V->route()->insert(insertIdxV++, node);
     }
 
-    insertUAfter = moveUAfter;
-    insertVAfter = moveVAfter;
+    return {nU->idx(), nV->idx()};
+}
+
+std::pair<size_t, size_t> SwapTails::applySwapTrips(Route::Node *U,
+                                                    Route::Node *V) const
+{
+    assert(U->isEndDepot() && V->isEndDepot());
+
+    // Skip start depot of next trip if next trip exists.
+    auto *nU = (U->tripIdx() + 1 < U->route()->numTrips()) ? n(n(U)) : U;
+    auto *nV = (V->tripIdx() + 1 < V->route()->numTrips()) ? n(n(V)) : V;
+
+    // Move trip (if any) from route V to route U.
+    size_t insertIdxU = U->idx();
+    if (nV != V)
+    {
+        U->route()->insertTrip(U->tripIdx() + 1);
+        insertIdxU += 2;  // Insert after the new start depot.
+        while (!nV->isEndDepot())
+        {
+            auto *node = nV;
+            nV = n(nV);
+            V->route()->remove(node->idx());
+            U->route()->insert(insertIdxU++, node);
+        }
+
+        // Remove empty trip from route V.
+        V->route()->removeTrip(nV->tripIdx());
+    }
+
+    // Move trip (if any) from route U to route V.
+    size_t insertIdxV = V->idx();
+    if (nU != U)
+    {
+        V->route()->insertTrip(V->tripIdx() + 1);
+        insertIdxV += 2;  // Insert after the new start depot.
+        while (!nU->isEndDepot())
+        {
+            auto *node = nU;
+            nU = n(nU);
+            U->route()->remove(node->idx());
+            V->route()->insert(insertIdxV++, node);
+        }
+
+        // Remove empty trip from route U.
+        U->route()->removeTrip(nU->tripIdx());
+    }
+
+    return {insertIdxU, insertIdxV};
+}
+
+void SwapTails::apply(Route::Node *U, Route::Node *V) const
+{
+    auto *curU = U;
+    auto *curV = V;
+    auto *uRoute = U->route();
+    auto *vRoute = V->route();
+
+    if (!U->isEndDepot() && !V->isEndDepot())
+    {
+        auto [idxU, idxV] = applySwapTripTails(curU, curV);
+        curU = (*uRoute)[idxU];
+        curV = (*vRoute)[idxV];
+    }
+
+    assert(curU->isEndDepot() && curV->isEndDepot());
 
     // Move rest of the trips 1 by 1. Note that the max trips in a route can
     // temporarily be exceeded by 1, but this will be corrected.
-    while (moveVAfter->idx() < V->route()->size() - 1
-           || moveUAfter->idx() < U->route()->size() - 1)
+    while (curU->idx() < uRoute->size() - 1 || curV->idx() < vRoute->size() - 1)
     {
-        // Move trip from route V to route U.
-        insertIdxU = insertUAfter->idx() + 1;
-        if (moveVAfter->idx() < V->route()->size() - 1)
-        {
-            auto *prevVAfter = moveVAfter;
-            moveVAfter = n(moveVAfter);
-            assert(moveVAfter->isStartDepot());
-            U->route()->insertTrip(insertUAfter->tripIdx() + 1);
-            insertIdxU++;
-            moveUAfter = n(n(moveUAfter));
-            while (!moveVAfter->isEndDepot())
-            {
-                moveVAfter = n(moveVAfter);
-                auto *node = moveVAfter;
-                assert(!node->isStartDepot());
-                if (node->isEndDepot())
-                {
-                    insertUAfter = moveUAfter;
-                    V->route()->removeTrip(moveVAfter->tripIdx());
-                    moveVAfter = prevVAfter;
-                }
-                else  // Client
-                {
-                    assert(node->isClient());
-                    moveVAfter = p(moveVAfter);
-                    V->route()->remove(node->idx());
-                    U->route()->insert(insertIdxU++, node);
-                }
-            }
-        }
-
-        // Move trip from route U to route V.
-        insertIdxV = insertVAfter->idx() + 1;
-        if (moveUAfter->idx() < U->route()->size() - 1)
-        {
-            auto *prevUAfter = moveUAfter;
-            moveUAfter = n(moveUAfter);
-            assert(moveUAfter->isStartDepot());
-            V->route()->insertTrip(insertVAfter->tripIdx() + 1);
-            insertIdxV++;
-            moveVAfter = n(n(moveVAfter));
-            while (!moveUAfter->isEndDepot())
-            {
-                moveUAfter = n(moveUAfter);
-                auto *node = moveUAfter;
-                assert(!node->isStartDepot());
-                if (node->isEndDepot())
-                {
-                    insertVAfter = moveVAfter;
-                    U->route()->removeTrip(moveUAfter->tripIdx());
-                    moveUAfter = prevUAfter;
-                }
-                else  // Client
-                {
-                    assert(node->isClient());
-                    moveUAfter = p(moveUAfter);
-                    U->route()->remove(node->idx());
-                    V->route()->insert(insertIdxV++, node);
-                }
-            }
-        }
+        auto [idxU, idxV] = applySwapTrips(curU, curV);
+        curU = (*uRoute)[idxU];
+        curV = (*vRoute)[idxV];
     }
 
-    // Remove empty trips as result of first trip swap.
-    if (U->route()->numTrips() > 1 && U->isStartDepot() && n(U)->isEndDepot())
-        U->route()->removeTrip(U->tripIdx());
+    // Remove possible empty trip as result of first trip tail swap.
+    if (!U->isEndDepot() && !V->isEndDepot())
+    {
+        if (uRoute->numTrips() > 1 && U->isStartDepot() && n(U)->isEndDepot())
+            uRoute->removeTrip(U->tripIdx());
 
-    if (V->route()->numTrips() > 1 && V->isStartDepot() && n(V)->isEndDepot())
-        V->route()->removeTrip(V->tripIdx());
+        if (vRoute->numTrips() > 1 && V->isStartDepot() && n(V)->isEndDepot())
+            vRoute->removeTrip(V->tripIdx());
+    }
 }
