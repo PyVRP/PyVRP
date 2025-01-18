@@ -50,10 +50,10 @@ def plot_objectives(
     y = [d.avg_cost for d in result.stats.feas_stats]
     _plot(x, y, label="Feas. avg.", c="tab:green", alpha=0.3, ls="--")
 
-    # Use best objectives to set reasonable y-limits, if available.
-    best = np.min([d.best_cost for d in result.stats.feas_stats])
-    if not np.isnan(best):
-        ax.set_ylim(best * ylim_adjust[0], best * ylim_adjust[1])
+    # Use best-found solution to set reasonable y-limits, if available.
+    if result.is_feasible():
+        best_cost = result.cost()
+        ax.set_ylim(best_cost * ylim_adjust[0], best_cost * ylim_adjust[1])
 
     ax.set_title("Objectives")
     ax.set_xlabel("Iteration (#)")
