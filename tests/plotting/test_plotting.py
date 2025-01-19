@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib.testing.decorators import image_comparison as img_comp
-from numpy.testing import assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
     CostEvaluator,
@@ -152,3 +152,29 @@ def test_plot_demands_raises_for_out_of_bounds_load_dimension():
 
     with assert_raises(ValueError):
         plotting.plot_demands(data)
+
+
+def test_plots_do_not_raise_when_there_are_no_feasible_sols(ok_small, recwarn):
+    """
+    Tests the small bug identified in #724 is fixed. The issue occured that we
+    used to set an axis limit that could be NaN when no feasible solution has
+    yet been found.
+    """
+    sol = Solution(ok_small, [[1, 2, 3, 4]])
+    assert_(not sol.is_feasible())
+
+    cost_eval = CostEvaluator([1], 1, 1)
+
+    pop = Population(broken_pairs_distance)
+    pop.add(sol, cost_eval)
+
+    stats = Statistics()
+    stats.collect_from(pop, cost_eval)
+
+    res = Result(sol, stats, 1, 0.0)
+    assert_(not res.is_feasible())
+
+    # This used to either warn about NaN values, or raise because of NaNs.
+    plotting.plot_objectives(res)
+    plotting.plot_result(res, ok_small)
+    assert_equal(len(recwarn), 0)
