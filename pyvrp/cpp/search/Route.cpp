@@ -220,8 +220,7 @@ void Route::removeTrip(size_t tripIdx)
 
     auto &[depotLoadNode, depotUnloadNode] = depotNodes[tripIdx];
     size_t const startIdx = depotLoadNode.idx();
-    size_t const endIdx = depotUnloadNode.idx();
-    assert(startIdx + 1 == endIdx);  // Trip must be empty.
+    assert(startIdx + 1 == depotUnloadNode.idx());  // Trip must be empty.
 
     // Removes start depot node and end depot node.
     nodes.erase(nodes.begin() + startIdx, nodes.begin() + startIdx + 2);
@@ -290,7 +289,7 @@ void Route::update()
     size_t numClients = 0;
     visits.clear();
 
-    bool inTrip = false;
+    [[maybe_unused]] bool inTrip = false;
     for (size_t idx = 0; idx != nodes.size(); ++idx)
     {
         auto const *node = nodes[idx];
