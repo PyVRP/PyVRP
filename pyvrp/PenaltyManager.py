@@ -165,16 +165,29 @@ class PenaltyManager:
         """
         distances = data.distance_matrices()
         durations = data.duration_matrices()
-        edge_costs = [  # edge costs per vehicle type
-            veh_type.unit_distance_cost * distances[veh_type.profile]
-            + veh_type.unit_duration_cost * durations[veh_type.profile]
+
+        # We first determine the elementwise minimum cost across all vehicle
+        # types. This is the cheapest way any edge can be traversed.
+        unique_edge_costs = {
+            (
+                veh_type.unit_distance_cost,
+                veh_type.unit_duration_cost,
+                veh_type.profile,
+            )
             for veh_type in data.vehicle_types()
-        ]
+        }
+
+        first, *rest = unique_edge_costs
+        unit_dist, unit_dur, prof = first
+        edge_costs = unit_dist * distances[prof] + unit_dur * durations[prof]
+        for unit_dist, unit_dur, prof in rest:
+            mat = unit_dist * distances[prof] + unit_dur * durations[prof]
+            np.minimum(edge_costs, mat, out=edge_costs)
 
         # Best edge cost/distance/duration over all vehicle types and profiles,
         # and then average that for the entire matrix to obtain an "average
         # best" edge cost/distance/duration.
-        avg_cost = np.minimum.reduce(edge_costs).mean()
+        avg_cost = edge_costs.mean()
         avg_distance = np.minimum.reduce(distances).mean()
         avg_duration = np.minimum.reduce(durations).mean()
 
