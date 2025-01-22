@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import reduce
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -164,14 +163,13 @@ def _compute_proximity(
         )
         for veh_type in data.vehicle_types()
     }
-    min_edge_cost = reduce(
-        lambda x, y: np.minimum.reduce([x, y]),
-        (
-            unit_distance_cost * distances[profile]
-            + unit_duration_cost * durations[profile]
-            for unit_distance_cost, unit_duration_cost, profile in unique_edge_costs
-        ),
-    )
+
+    first, *rest = unique_edge_costs
+    unit_dist, unit_dur, prof = first
+    edge_costs = unit_dist * distances[prof] + unit_dur * durations[prof]
+    for unit_dist, unit_dur, prof in rest:
+        mat = unit_dist * distances[prof] + unit_dur * durations[prof]
+        np.minimum(edge_costs, mat, out=edge_costs)
 
     # Minimum wait time and time warp of visiting j directly after i.
     min_duration = np.minimum.reduce(durations)
@@ -181,7 +179,7 @@ def _compute_proximity(
     # Proximity is based on edge costs (and rewards) and penalties for known
     # time-related violations.
     return (
-        min_edge_cost
+        edge_costs
         - prize[None, :]
         + weight_wait_time * np.maximum(min_wait, 0)
         + weight_time_warp * np.maximum(min_tw, 0)
