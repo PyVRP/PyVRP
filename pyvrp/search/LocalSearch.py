@@ -80,6 +80,7 @@ class LocalSearch:
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
+        overlap_tolerance: float = 0.05,
     ) -> Solution:
         """
         This method uses the :meth:`~search` and :meth:`~intensify` methods to
@@ -94,6 +95,8 @@ class LocalSearch:
             The solution to improve through local search.
         cost_evaluator
             Cost evaluator to use.
+        overlap_tolerance
+            See :meth:`~intensify` for details.
 
         Returns
         -------
@@ -102,7 +105,7 @@ class LocalSearch:
             solution that was passed in.
         """
         self._ls.shuffle(self._rng)
-        return self._ls(solution, cost_evaluator)
+        return self._ls(solution, cost_evaluator, overlap_tolerance)
 
     def intensify(
         self,

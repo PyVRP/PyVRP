@@ -83,7 +83,8 @@ public:
      *    name: str = "",
      * )
      *
-     * Simple data object storing all client data as (read-only) properties.
+     * Simple data object storing all client data as properties. See also
+     * :doc:`../setup/concepts` for further information about these properties.
      *
      * Parameters
      * ----------
@@ -328,7 +329,8 @@ public:
      *     name: str = "",
      * )
      *
-     * Simple data object storing all vehicle type data as properties.
+     * Simple data object storing all vehicle type data as properties. See also
+     * :doc:`../setup/concepts` for further information about these properties.
      *
      * Parameters
      * ----------
