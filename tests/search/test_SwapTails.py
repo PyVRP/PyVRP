@@ -37,7 +37,7 @@ def test_OkSmall_multiple_vehicle_types(
     """
     data = ok_small.replace(vehicle_types=vehicle_types)
 
-    cost_evaluator = CostEvaluator(10_000, 6, 0)  # large load penalty
+    cost_evaluator = CostEvaluator([10_000], 6, 0)  # large load penalty
     rng = RandomNumberGenerator(seed=42)
 
     neighbours: list[list[int]] = [[], [2], [], [], []]  # only 1 -> 2
@@ -89,7 +89,7 @@ def test_move_involving_empty_routes():
     route2.update()  # depot -> depot
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(0, 0, 0)
+    cost_eval = CostEvaluator([], 0, 0)
 
     # This move does not change the route structure, so the delta cost is 0.
     assert_equal(op.evaluate(route1[2], route2[0], cost_eval), 0)
@@ -164,7 +164,7 @@ def test_move_involving_multiple_depots():
     assert_equal(route2.distance(), 16)
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([], 1, 0)
 
     assert_equal(op.evaluate(route1[1], route2[1], cost_eval), 0)  # no-op
 
@@ -194,7 +194,7 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     route2.update()
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(0, 0, 0)  # all zero so no costs from penalties
+    cost_eval = CostEvaluator([0], 0, 0)  # all zero so no costs from penalties
 
     # First route has profile 0, and its distance is thus computed using the
     # first distance matrix.
@@ -262,7 +262,7 @@ def test_swapping_routes_with_multiple_trips():
     assert_equal(route2.excess_load(), [0])
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(1, 0, 0)
+    cost_eval = CostEvaluator([1], 0, 0)
 
     # Swap routes. This should fix the excess load on route 1 without resulting
     # in any excess load on route 2. Thus delta cost is -10.
@@ -327,7 +327,7 @@ def test_move_involving_multiple_trips():
     assert_equal(route2.excess_load(), [0])
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(1, 0, 0)
+    cost_eval = CostEvaluator([1], 0, 0)
 
     # The first route becomes: 0 -> 3 -> 1 -> 0 -> 0 -> 2 -> 0. The second
     # route becomes: 0 -> 4 -> 0 -> 0 -> 5 -> 6 -> 0. There is a reduction of 5
@@ -396,7 +396,7 @@ def test_move_different_number_of_trips_swapped():
     assert_equal(route2.excess_load(), [0])
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(1, 0, 0)
+    cost_eval = CostEvaluator([1], 0, 0)
 
     # The first route becomes: 0 -> 2 -> 0. The second route becomes:
     # 0 -> 1 -> 0 -> 0 -> 3 -> 0 -> 0 -> 4 -> 0 -> 0 -> 5 -> 6 -> 0.
@@ -464,7 +464,7 @@ def test_move_losing_trip():
     assert_equal(route2.excess_load(), [0])
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(1, 0, 0)
+    cost_eval = CostEvaluator([1], 0, 0)
 
     # The first route becomes: 0 -> 3 -> 4 -> 1 -> 0 -> 0 -> 2 -> 0. The second
     # route becomes: 0 -> 5 -> 6 -> 0. Note that a trip became empty during the
@@ -532,7 +532,7 @@ def test_move_not_exceeding_max_trips():
     assert_equal(route2.excess_load(), [0])
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(1, 0, 0)
+    cost_eval = CostEvaluator([1], 0, 0)
 
     # The first route becomes: 0 -> 3 -> 4 -> 1 -> 0. The second route becomes:
     # 0 -> 5 -> 2 -> 6 -> 0. Note that a trip is lost during the swap.
@@ -599,7 +599,7 @@ def test_move_exceeding_max_trips():
     assert_equal(route2.excess_load(), [0])
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(1, 0, 0)
+    cost_eval = CostEvaluator([1], 0, 0)
 
     # The first route becomes: 0 -> 3 -> 1 -> 0. The second route becomes:
     # 0 -> 4 -> 0 -> 0 -> 5 -> 2 -> 6 -> 0.
@@ -656,7 +656,7 @@ def test_move_multiple_trips_with_different_depots():
     assert_equal(route2.excess_load(), [0])
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(1, 0, 0)
+    cost_eval = CostEvaluator([1], 0, 0)
 
     # It is not allowed to swap the tails of routes with different depots when
     # at least one of the tails consists of multiple trips.

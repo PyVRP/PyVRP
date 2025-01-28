@@ -90,24 +90,24 @@ Cost SwapStar::deltaLoadCost(Route::Node *U,
     // calculation. So it's pretty rough but fast and seems to mostly work well
     // enough.
     // TODO investigate if this is still good enough for multi-trip cases.
-    Cost delta = 0;
+    Cost cost = 0;
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
-        auto const loadDiff
+        auto const delta
             = std::max(uClient.delivery[dim], uClient.pickup[dim])
               - std::max(vClient.delivery[dim], vClient.pickup[dim]);
 
         auto const uLoad = uRoute->tripLoad(dim, U->tripIdx());
         auto const vLoad = vRoute->tripLoad(dim, V->tripIdx());
 
-        delta += costEvaluator.loadPenalty(uLoad - loadDiff, uCap[dim]);
-        delta -= costEvaluator.loadPenalty(uLoad, uCap[dim]);
+        cost += costEvaluator.loadPenalty(uLoad - delta, uCap[dim], dim);
+        cost -= costEvaluator.loadPenalty(uLoad, uCap[dim], dim);
 
-        delta += costEvaluator.loadPenalty(vLoad + loadDiff, vCap[dim]);
-        delta -= costEvaluator.loadPenalty(vLoad, vCap[dim]);
+        cost += costEvaluator.loadPenalty(vLoad + delta, vCap[dim], dim);
+        cost -= costEvaluator.loadPenalty(vLoad, vCap[dim], dim);
     }
 
-    return delta;
+    return cost;
 }
 
 SwapStar::InsertPoint SwapStar::bestInsertPoint(

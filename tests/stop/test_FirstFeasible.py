@@ -15,6 +15,6 @@ def test_stops_on_first_feasible_solution(ok_small):
     assert_(feas.is_feasible())
 
     stop = FirstFeasible()
-    cost_eval = CostEvaluator(0, 0, 0)
+    cost_eval = CostEvaluator([0], 0, 0)
     assert_(not stop(cost_eval.cost(infeas)))
     assert_(stop(cost_eval.cost(feas)))

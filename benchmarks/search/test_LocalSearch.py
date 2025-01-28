@@ -26,7 +26,7 @@ def test_all_operators(instance, benchmark, request):
         ls.add_route_operator(route_op(data))
 
     sol = Solution.make_random(data, rng)
-    cost_evaluator = CostEvaluator(20, 6, 6)
+    cost_evaluator = CostEvaluator([20], 6, 6)
     benchmark(ls, sol, cost_evaluator)
 
 
@@ -42,7 +42,7 @@ def test_each_node_operator(node_op, instance, benchmark, request):
     ls.add_node_operator(node_op(data))
 
     sol = Solution.make_random(data, rng)
-    cost_evaluator = CostEvaluator(20, 6, 6)
+    cost_evaluator = CostEvaluator([20], 6, 6)
     benchmark(ls, sol, cost_evaluator)
 
 
@@ -58,5 +58,5 @@ def test_each_route_operator(route_op, instance, benchmark, request):
     ls.add_route_operator(route_op(data))
 
     sol = Solution.make_random(data, rng)
-    cost_evaluator = CostEvaluator(20, 6, 6)
+    cost_evaluator = CostEvaluator([20], 6, 6)
     benchmark(ls, sol, cost_evaluator)

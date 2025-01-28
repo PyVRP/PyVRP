@@ -75,7 +75,7 @@ def test_iteration(ok_small, capsys):
     """
     pop = Population(bpd)
     rng = RandomNumberGenerator(seed=42)
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     for _ in range(10):
         pop.add(Solution.make_random(ok_small, rng), cost_eval)
@@ -123,7 +123,7 @@ def test_should_print_false_no_output(ok_small, capsys):
     """
     pop = Population(bpd)
     rng = RandomNumberGenerator(seed=42)
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     for _ in range(10):
         pop.add(Solution.make_random(ok_small, rng), cost_eval)
@@ -163,7 +163,7 @@ def test_print_dash_when_subpopulation_is_empty(ok_small, routes, capsys):
     Tests that a "-" is printed as cost if one of the subpopulations is empty.
     """
     pop = Population(bpd)
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     solution = Solution(ok_small, routes)
     pop.add(solution, cost_eval)
