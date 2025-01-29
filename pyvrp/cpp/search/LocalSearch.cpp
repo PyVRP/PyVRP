@@ -15,14 +15,11 @@ Solution LocalSearch::operator()(Solution const &solution,
 {
     loadSolution(solution);
 
-    while (true)
+    do
     {
         search(costEvaluator);
         intensify(costEvaluator, overlapTolerance);
-
-        if (numMoves == 0)  // then the current solution is locally optimal.
-            break;
-    }
+    } while (numMoves != 0);  // repeat until solution is locally optimal.
 
     return exportSolution();
 }
@@ -417,10 +414,15 @@ void LocalSearch::loadSolution(Solution const &solution)
                 route.addTrip();
 
             auto const &trip = solRoute.trip(tripIdx);
+            // Set up a container of all node visits in the trip. This lets us
+            // insert all nodes in one go, requiring no intermediate updates.
+            std::vector<Route::Node *> visits;
+            visits.reserve(trip.size());
             for (auto const client : trip)
-                // Note that the ``push_back`` method will insert the client
-                // before the last depot node.
-                route.push_back(&nodes[client]);
+                visits.push_back(&nodes[client]);
+
+            // Insert before the last node in the route.
+            route.insert(route.size() - 1, visits.begin(), visits.end());
         }
 
         route.update();

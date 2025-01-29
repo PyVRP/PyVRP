@@ -14,7 +14,6 @@ Route::Node::Node(size_t loc, NodeType type)
 
 void Route::Node::assign(Route *route, size_t idx, size_t tripIdx)
 {
-    assert(!route_);  // must not currently be assigned
     idx_ = idx;
     tripIdx_ = tripIdx;
     route_ = route;
@@ -87,6 +86,9 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 
 void Route::clear()
 {
+    if (nodes.size() == 2)  // then the route is already empty and we have
+        return;             // nothing to do.
+
     for (auto *node : nodes)
         node->unassign();
 

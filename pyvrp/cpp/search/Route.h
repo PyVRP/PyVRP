@@ -538,10 +538,17 @@ public:
     void clear();
 
     /**
-     * Inserts the given client node at index ``idx``. Assumes the given index
-     * is valid.
+     * Inserts the given client node before index ``idx``. Assumes the given
+     * index is valid.
      */
     void insert(size_t idx, Node *node);
+
+    /**
+     * Inserts the given range of client nodes before ``idx``. Assumes the given
+     * index is valid.
+     */
+    template <class InputIt>
+    void insert(size_t idx, InputIt first, InputIt last);
 
     /**
      * Inserts the given client node at the back of the route.
@@ -1161,6 +1168,32 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
                segments);
 
     return excessLoad;
+}
+
+template <class InputIt>
+void Route::insert(size_t idx, InputIt first, InputIt last)
+{
+    assert(0 < idx && idx < nodes.size());
+    // Not allowed to insert between end depot node and start depot node.
+    assert(!nodes[idx]->isStartDepot());
+
+    // Insert the nodes before the node currently at position ``idx``.
+    size_t tripIdx = nodes[idx]->tripIdx();
+    nodes.insert(nodes.begin() + idx, first, last);
+    for (auto it = first; it != last; ++it)
+    {
+        auto node = *it;
+        assert(node->isClient());
+        node->assign(this, idx++, tripIdx);
+    }
+
+    // Note that trip indices do not change when only inserting clients.
+    for (size_t after = idx; after != nodes.size(); ++after)
+        nodes[after]->idx_ = after;
+
+#ifndef NDEBUG
+    dirty = true;
+#endif
 }
 }  // namespace pyvrp::search
 

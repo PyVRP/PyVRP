@@ -22,6 +22,42 @@ namespace pyvrp
  */
 class Route
 {
+public:
+    /**
+     * Simple object that stores some data about a client visit.
+     *
+     * Attributes
+     * ----------
+     * start_service : int
+     *     Time at which the client service begins.
+     * end_service : int
+     *     Time at which the client service completes.
+     * service_duration : int
+     *     Duration of the service.
+     * wait_duration : int
+     *     If the vehicle arrives early, this is the duration it has to wait
+     *     until it can begin service.
+     * time_warp : int
+     *     If the vehicle arrives late, this is the duration it has to 'travel
+     *     back in time' to begin service. Non-zero time warp indicates an
+     *     infeasible route.
+     */
+    struct ScheduledVisit
+    {
+        Duration const startService = 0;
+        Duration const endService = 0;
+        Duration const waitDuration = 0;
+        Duration const timeWarp = 0;
+
+        ScheduledVisit(Duration startService,
+                       Duration endService,
+                       Duration waitDuration,
+                       Duration timeWarp);
+
+        [[nodiscard]] Duration serviceDuration() const;
+    };
+
+private:
     using Client = size_t;
     using Depot = size_t;
     using VehicleType = size_t;
@@ -61,7 +97,8 @@ class Route
         Iterator &operator++();
     };
 
-    Trips trips_ = {};             // Trips that make up this route
+    Trips trips_ = {};  // Trips that make up this route
+    std::vector<ScheduledVisit> schedule_ = {};  // Client visit schedule data
     Distance distance_ = 0;        // Total travel distance on this route
     Cost distanceCost_ = 0;        // Total cost of travel distance
     Distance excessDistance_ = 0;  // Excess travel distance
@@ -116,6 +153,16 @@ public:
      * Number of trips in this route.
      */
     [[nodiscard]] size_t numTrips() const;
+
+    /**
+     * Statistics about each client visit and the overall route schedule.
+     *
+     * .. note::
+     *
+     *    The schedule assumes the route starts at :meth:`~start_time`. Starting
+     *    later may be feasible, but shifts the schedule.
+     */
+    [[nodiscard]] std::vector<ScheduledVisit> const &schedule() const;
 
     /**
      * Total distance travelled on this route.
@@ -294,7 +341,8 @@ public:
           std::pair<double, double> centroid,
           VehicleType vehicleType,
           Depot startDepot,
-          Depot endDepot);
+          Depot endDepot,
+          std::vector<ScheduledVisit> schedule);
 };
 }  // namespace pyvrp
 

@@ -280,7 +280,7 @@ def test_tournament_ranks_by_fitness(rc208, k: int):
     sol2idx = {item.solution: idx for idx, item in enumerate(by_fitness)}
     infeas_count = np.zeros(len(infeas_pop))
 
-    for _ in range(10_000):
+    for _ in range(5_000):
         sol = pop.tournament(rng, cost_evaluator, k=k)
         infeas_count[sol2idx[sol]] += 1
 

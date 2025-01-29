@@ -52,7 +52,7 @@ def plot_route_schedule(
     track_load = load_dimension < data.num_load_dimensions
 
     # Initialise tracking variables
-    t = route.release_time()
+    t = route.start_time()
     drive_time = 0
     serv_time = 0
     dist = 0

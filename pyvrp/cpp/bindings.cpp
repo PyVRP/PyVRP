@@ -460,6 +460,31 @@ PYBIND11_MODULE(_pyvrp, m)
                 return data;
             }));
 
+    py::class_<Route::ScheduledVisit>(
+        m, "ScheduledVisit", DOC(pyvrp, Route, ScheduledVisit))
+        .def_readonly("start_service", &Route::ScheduledVisit::startService)
+        .def_readonly("end_service", &Route::ScheduledVisit::endService)
+        .def_readonly("wait_duration", &Route::ScheduledVisit::waitDuration)
+        .def_readonly("time_warp", &Route::ScheduledVisit::timeWarp)
+        .def_property_readonly("service_duration",
+                               &Route::ScheduledVisit::serviceDuration)
+        .def(py::pickle(
+            [](Route::ScheduledVisit const &visit) {  // __getstate__
+                return py::make_tuple(visit.startService,
+                                      visit.endService,
+                                      visit.waitDuration,
+                                      visit.timeWarp);
+            },
+            [](py::tuple t) {  // __setstate__
+                Route::ScheduledVisit visit(
+                    t[0].cast<pyvrp::Duration>(),   // start service
+                    t[1].cast<pyvrp::Duration>(),   // end service
+                    t[2].cast<pyvrp::Duration>(),   // wait duration
+                    t[3].cast<pyvrp::Duration>());  // time warp
+
+                return visit;
+            }));
+
     py::class_<Route>(m, "Route", DOC(pyvrp, Route))
         // An empty list matches both constructors, and pybind11 picks the
         // first one that matches. We want that to be the constructor taking a
@@ -532,6 +557,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("has_time_warp",
              &Route::hasTimeWarp,
              DOC(pyvrp, Route, hasTimeWarp))
+        .def("schedule", &Route::schedule, DOC(pyvrp, Route, schedule))
         .def("__len__", &Route::size, DOC(pyvrp, Route, size))
         .def(
             "__iter__",
@@ -573,9 +599,12 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.centroid(),
                                       route.vehicleType(),
                                       route.startDepot(),
-                                      route.endDepot());
+                                      route.endDepot(),
+                                      route.schedule());
             },
             [](py::tuple t) {  // __setstate__
+                using Schedule = std::vector<Route::ScheduledVisit>;
+
                 Route route(
                     t[0].cast<std::vector<std::vector<size_t>>>(),  // trips
                     t[1].cast<pyvrp::Distance>(),                   // distance
@@ -597,7 +626,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[17].cast<std::pair<double, double>>(),  // centroid
                     t[18].cast<size_t>(),                     // vehicle type
                     t[19].cast<size_t>(),                     // start depot
-                    t[20].cast<size_t>());                    // end depot
+                    t[20].cast<size_t>(),                     // end depot
+                    t[21].cast<Schedule>());                  // visit schedule
 
                 return route;
             }))
