@@ -260,14 +260,14 @@ void SwapStar::apply(Route *U, Route *V) const
     U->remove(best.U->idx());
     V->remove(best.V->idx());
 
+    V->insert(best.UAfter->idx() + 1, best.U);
+    U->insert(best.VAfter->idx() + 1, best.V);
+
     if (tripToRemoveU.has_value())
         U->removeTrip(tripToRemoveU.value());
 
     if (tripToRemoveV.has_value())
         V->removeTrip(tripToRemoveV.value());
-
-    V->insert(best.UAfter->idx() + 1, best.U);
-    U->insert(best.VAfter->idx() + 1, best.V);
 }
 
 void SwapStar::update(Route *U) { isCached(U->idx(), 0) = false; }

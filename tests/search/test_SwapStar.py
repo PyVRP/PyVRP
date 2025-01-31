@@ -248,3 +248,70 @@ def test_max_distance(ok_small):
     route1, route2 = make_routes(data)
     assert_equal(swap_star.evaluate(route1, route2, cost_eval), -13_243)
     assert_equal(10 * (6_220 - 5_000) + 1_043, 13_243)
+
+
+def test_swap_star_can_remove_trip():
+    """
+    SWAP* should be able to remove a trip when the only client in the trip is
+    moved. This is explicitly tested here because it is rare.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=1, y=0),
+            Client(x=2, y=0),
+            Client(x=3, y=0),
+            Client(x=0, y=1),
+            Client(x=0, y=2),
+        ],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(num_available=2, max_trips=3)],
+        distance_matrices=[  # Manhattan distances
+            np.asarray(
+                [
+                    [0, 1, 2, 3, 1, 2],
+                    [1, 0, 1, 2, 2, 3],
+                    [2, 1, 0, 1, 3, 4],
+                    [3, 2, 1, 0, 4, 5],
+                    [1, 2, 3, 4, 0, 1],
+                    [2, 3, 4, 5, 1, 0],
+                ]
+            ),
+        ],
+        duration_matrices=[np.zeros((6, 6), dtype=int)],
+    )
+
+    nodes = [Node(loc=loc) for loc in range(data.num_locations)]
+
+    # First route is 0 -> 1 -> 0 -> 0 -> 5 -> 0 -> 0 -> 3 -> 0.
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route1.append(nodes[1])
+    route1.add_trip()
+    route1.append(nodes[5])
+    route1.add_trip()
+    route1.append(nodes[3])
+    route1.update()
+
+    # Second route is 0 -> 4 -> 2 -> 0.
+    route2 = Route(data, idx=1, vehicle_type=0)
+    route2.append(nodes[4])
+    route2.append(nodes[2])
+    route2.update()
+
+    cost_eval = CostEvaluator([], 1, 0)
+    swap_star = SwapStar(data)
+
+    # Optimal is 0 -> 1 -> 0 -> 0 -> 2 -> 3 -> 0 and 0 -> 4 -> 5 -> 0. This
+    # moves client 2 from route 2 to route 1 and client 5 from route 1 to route
+    # 2. The middle trip in route 1 is removed. The distance diff on route 1 is
+    # -4 and the diff on route 2 is -2, so the total diff is -6.
+    assert_equal(swap_star.evaluate(route1, route2, cost_eval), -6)
+
+    # Apply the move and test that it indeed swaps the nodes correctly.
+    swap_star.apply(route1, route2)
+    assert_(nodes[1].route is route1)
+    assert_(nodes[2].route is route1)
+    assert_(nodes[3].route is route1)
+    assert_(nodes[4].route is route2)
+    assert_(nodes[5].route is route2)
+    assert_equal(route1.num_trips(), 2)
+    assert_equal(route2.num_trips(), 1)
