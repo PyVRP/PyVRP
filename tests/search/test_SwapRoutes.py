@@ -36,15 +36,15 @@ def test_apply(ok_small, visits1: list[int], visits2: list[int]):
 
     # Before calling apply, route1 visits the clients in visits1, and route2
     # visits the clients in visits2.
-    assert_equal(visits1, [node.client for node in route1])
-    assert_equal(visits2, [node.client for node in route2])
+    assert_equal([0, *visits1, 0], [node.client for node in route1])
+    assert_equal([0, *visits2, 0], [node.client for node in route2])
 
     op = SwapRoutes(ok_small)
     op.apply(route1, route2)
 
     # But after apply, the visits are now swapped.
-    assert_equal(visits2, [node.client for node in route1])
-    assert_equal(visits1, [node.client for node in route2])
+    assert_equal([0, *visits2, 0], [node.client for node in route1])
+    assert_equal([0, *visits1, 0], [node.client for node in route2])
 
 
 def test_evaluate_same_vehicle_type(ok_small):
@@ -157,10 +157,12 @@ def test_evaluate_capacity_differences(ok_small):
     route1.update()
     route2.update()
 
-    assert_equal(len(route1), 1)
+    assert_equal(len(route1), 3)
+    assert_equal(route1.num_clients(), 1)
     assert_(route1.is_feasible())
 
-    assert_equal(len(route2), 3)
+    assert_equal(len(route2), 5)
+    assert_equal(route2.num_clients(), 3)
     assert_(route2.is_feasible())
 
 

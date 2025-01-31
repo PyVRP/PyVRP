@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
@@ -379,6 +379,162 @@ def test_bug_start_time_before_release_time():
     assert_(route.is_feasible())
     assert_equal(route.start_time(), 5)
     assert_equal(route.end_time(), 25)
+
+
+def test_route_raises_exceeding_max_trips(ok_small):
+    """
+    Tests that a route with more trips than allowed by the vehicle type raises
+    an exception.
+    """
+    data = ok_small.replace(vehicle_types=[VehicleType(3, [10], max_trips=1)])
+
+    with assert_raises(RuntimeError):
+        Route(data, [[1], [2]], 0)
+
+
+@pytest.mark.parametrize(
+    "trips",
+    [[[], [1]], [[], []], [[1], []], [[1], [], [1]], [[], [1, 2], [], [3, 4]]],
+)
+def test_route_raises_empty_trips(ok_small, trips: list[list[int]]):
+    """
+    Tests that Route with an empty trip raises an exception, when the empty
+    trip is not the only trip in the route.
+    """
+    data = ok_small.replace(vehicle_types=[VehicleType(3, [10], max_trips=4)])
+
+    with assert_raises(RuntimeError):
+        Route(data, trips, 0)
+
+
+@pytest.mark.parametrize("visits", [[1, 2, 3, 4], [[1, 2], [3, 4]]])
+def test_indexing(ok_small, visits):
+    """
+    Tests that routes are properly indexed with one or multiple trips, and
+    raise an index error when the given argument is out-of-bounds.
+    """
+    data = ok_small.replace(vehicle_types=[VehicleType(3, [10], max_trips=3)])
+    route = Route(data, visits, 0)
+
+    assert_equal(len(route), 4)
+    assert_equal(route[0], 1)
+    assert_equal(route[1], 2)
+    assert_equal(route[2], 3)
+
+    # Last visit on the route is 4, which can also be obtained by indexing
+    # with negative numbers.
+    assert_equal(route[3], 4)
+    assert_equal(route[-1], 4)
+
+    with assert_raises(IndexError):  # 5 is out-of-bounds.
+        route[5]
+
+
+def test_trip_access(ok_small):
+    """
+    Tests that accessing trips and client visits in a multi-trip route works
+    correctly.
+    """
+    data = ok_small.replace(vehicle_types=[VehicleType(3, [10], max_trips=2)])
+    route = Route(data, [[1, 2], [3, 4]], 0)
+
+    assert_equal(len(route), 4)
+    assert_equal(route.num_trips(), 2)
+
+    assert_equal(route.visits(), [1, 2, 3, 4])
+    assert_equal(route.trips(), [[1, 2], [3, 4]])
+
+    assert_equal(route.trip(0), [1, 2])
+    assert_equal(route.trip(1), [3, 4])
+
+
+@pytest.mark.parametrize("trips", [[], [[]]])
+def test_route_empty_visits(ok_small, trips: list[int] | list[list[int]]):
+    """
+    Tests that Route with a single empty trip is allowed.
+    """
+    route = Route(ok_small, trips, 0)
+    assert_equal(route.visits(), [])
+    assert_equal(route.num_trips(), 1)
+
+
+def test_load_multi_trip(ok_small):
+    """
+    Tests that Route properly evaluates load violations with multiple trips.
+    """
+    data = ok_small.replace(vehicle_types=[VehicleType(3, [10], max_trips=2)])
+
+    # Route wants to visit every client in a single trip. That does not fit in
+    # the vehicle's capacity, so this has excess load.
+    route1 = Route(data, [1, 2, 3, 4], 0)
+    assert_equal(route1.delivery(), [18])
+    assert_(route1.has_excess_load())
+    assert_equal(route1.excess_load(), [8])
+
+    # But splitting the visits up over two different trips is fine, now the
+    # vehicle's capacity is respected.
+    route2 = Route(data, [[1, 2], [3, 4]], 0)
+    # Trip 1 has a delivery of 10, trip 2 has a delivery of 8.
+    assert_equal(route2.delivery(), [18])
+    assert_(not route2.has_excess_load())
+    assert_equal(route2.excess_load(), [0])
+
+    # With a different split, the vehicle's capacity is no longer respected on
+    # trip 1 but is respected on trip 2.
+    route3 = Route(data, [[1, 2, 3], [4]], 0)
+    # Trip 1 has a delivery of 13, trip 2 has a delivery of 5.
+    assert_equal(route3.delivery(), [18])
+    assert_(route3.has_excess_load())
+    assert_equal(route3.excess_load(), [3])
+
+
+def test_distance_multi_trip(ok_small):
+    """
+    Tests that Route properly evaluates travel distance and maximum distance
+    violations with multiple trips.
+    """
+    vehicle_type = VehicleType(3, [10], max_distance=5_000, max_trips=2)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+    dist = data.distance_matrix(0)
+
+    route1 = Route(data, [[1, 2, 3, 4]], 0)
+    assert_equal(route1.distance(), 6_450)
+    assert_(route1.has_excess_distance())
+    assert_equal(route1.excess_distance(), 1_450)
+
+    route2 = Route(data, [[1, 2], [3, 4]], 0)
+    delta_dist = dist[2, 0] + dist[0, 3] - dist[2, 3]
+    assert_equal(route2.distance(), route1.distance() + delta_dist)
+    assert_equal(route2.distance(), 9_725)
+    assert_(route2.has_excess_distance())
+    assert_equal(route2.excess_distance(), 4_725)
+
+
+def test_duration_multi_trip(ok_small):
+    """
+    Tests that Route properly evaluates travel duration and time warp on routes
+    with multiple trips.
+    """
+    vehicle_type = VehicleType(3, [10], max_trips=2)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+    duration = data.duration_matrix(0)
+
+    route1 = Route(data, [[1, 2, 4]], 0)
+    assert_(not route1.has_time_warp())
+    assert_equal(route1.time_warp(), 0)
+    assert_equal(route1.duration(), 7_181)
+
+    # After servicing the first trip, returning to the depot, and arriving at
+    # client 4 the time is 21_753. That is 2_253 after its time window closes
+    # at 19_500. There is thus 2_253 time warp on this route.
+    route2 = Route(data, [[1, 2], [4]], 0)
+    assert_(route2.has_time_warp())
+    assert_equal(route2.time_warp(), 2_253)
+
+    # The duration solely increases due to the increased travel duration, since
+    # all other aspects remain unchanged.
+    delta_travel = duration[2, 0] + duration[0, 4] - duration[2, 4]
+    assert_equal(route2.duration(), route1.duration() + delta_travel)
 
 
 @pytest.mark.parametrize("visits", [[1, 2, 3, 4], [2, 1, 3, 4]])

@@ -159,6 +159,7 @@ def test_add_vehicle_type():
         max_duration=93,
         max_distance=97,
         start_late=18,
+        max_trips=2,
     )
 
     assert_equal(vehicle_type.num_available, 10)
@@ -169,6 +170,7 @@ def test_add_vehicle_type():
     assert_equal(vehicle_type.tw_late, 19)
     assert_equal(vehicle_type.max_duration, 93)
     assert_equal(vehicle_type.max_distance, 97)
+    assert_equal(vehicle_type.max_trips, 2)
 
 
 def test_add_vehicle_type_default_depots():
@@ -933,6 +935,78 @@ def test_model_solves_instance_with_zero_load_dimensions():
     # results in a distance of 1 + 1 + 1 + 1 = 4.
     route = res.best.routes()[0]
     assert_equal(route.distance(), 4)
+
+
+def test_model_solves_single_route_instance_with_multiple_trips():
+    """
+    Smoke test to check that the model can solve an instance with multiple
+    trips for a single route.
+    """
+    m = Model()
+    m.add_depot(x=1, y=1)
+    m.add_client(x=1, y=2, delivery=[5])
+    m.add_client(x=2, y=1, delivery=[5])
+    m.add_client(x=2, y=2, delivery=[5])
+
+    for frm in m.locations:
+        for to in m.locations:
+            manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, distance=manhattan)
+
+    m.add_vehicle_type(1, capacity=[5], max_trips=3)
+
+    res = m.solve(stop=MaxIterations(10))
+
+    assert_(res.is_feasible())
+    assert_equal(res.best.num_routes(), 1)
+
+    route = res.best.routes()[0]
+    assert_equal(route.excess_load(), [0])
+    assert_equal(route.num_trips(), 3)
+    assert_equal(route.delivery(), [15])
+
+
+def test_model_solves_instance_with_multiple_trips():
+    """
+    Smoke test to check that the model can solve an instance with multiple
+    trips.
+    """
+    m = Model()
+    depot0 = m.add_depot(x=1, y=1)
+    depot1 = m.add_depot(x=3, y=3)
+    m.add_client(x=1, y=2, delivery=[5])
+    m.add_client(x=2, y=1, delivery=[5])
+    m.add_client(x=2, y=2, delivery=[5])
+    m.add_client(x=3, y=2, delivery=[5])
+
+    for frm in m.locations:
+        for to in m.locations:
+            manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, distance=manhattan)
+
+    m.add_vehicle_type(
+        1, capacity=[5], max_trips=2, start_depot=depot0, end_depot=depot0
+    )
+    m.add_vehicle_type(
+        1, capacity=[10], max_trips=1, start_depot=depot1, end_depot=depot1
+    )
+
+    res = m.solve(stop=MaxIterations(10))
+
+    assert_(res.is_feasible())
+    assert_equal(res.best.num_routes(), 2)
+
+    route1, route2 = res.best.routes()
+    assert_equal(route1.num_trips(), 2)
+    assert_equal(route1.excess_load(), [0])
+    assert_equal(route1.visits(), [2, 3])
+    assert_equal(route1.trip(0), [2])
+    assert_equal(route1.trip(1), [3])
+
+    assert_equal(route2.num_trips(), 1)
+    assert_equal(route2.excess_load(), [0])
+    assert_equal(route2.visits(), [4, 5])
+    assert_equal(route2.trip(0), [4, 5])
 
 
 def test_bug_client_group_indices():

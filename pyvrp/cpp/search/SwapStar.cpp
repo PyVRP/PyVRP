@@ -10,15 +10,18 @@ using pyvrp::search::SwapStar;
 
 void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
-    for (size_t idx = 1; idx != R->size() + 1; ++idx)
+    for (size_t idx = 0; idx != R->size(); ++idx)
     {
+        auto const *U = (*R)[idx];
+        if (U->isDepot())
+            continue;
+
         auto const proposal
             = R->proposal(R->before(idx - 1), R->after(idx + 1));
 
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
 
-        auto const *U = (*R)[idx];
         removalCosts(R->idx(), U->client()) = deltaCost;
     }
 
@@ -34,15 +37,19 @@ void SwapStar::updateInsertPoints(Route *R,
     auto &insertPoints = insertCache(R->idx(), U->client());
     insertPoints.fill({std::numeric_limits<Cost>::max(), nullptr});
 
-    for (size_t idx = 0; idx != R->size() + 1; ++idx)
+    for (size_t idx = 0; idx != R->size(); ++idx)
     {
+        // Skip points which would lead to new trip.
+        auto *V = (*R)[idx];
+        if (V->isEndDepot())
+            continue;
+
         auto const proposal = R->proposal(
             R->before(idx), U->route()->at(U->idx()), R->after(idx + 1));
 
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
 
-        auto *V = (*R)[idx];
         if (deltaCost < insertPoints[0].first)
         {
             insertPoints[2] = insertPoints[1];
@@ -71,17 +78,18 @@ Cost SwapStar::deltaLoadCost(Route::Node *U,
     ProblemData::Client const &uClient = data.location(U->client());
     ProblemData::Client const &vClient = data.location(V->client());
 
-    auto const &uLoad = uRoute->load();
     auto const &uCap = uRoute->capacity();
-
-    auto const &vLoad = vRoute->load();
     auto const &vCap = vRoute->capacity();
 
     // Separating removal and insertion means that the effects on load are not
     // counted correctly: during insert, U is still in the route, and now V is
     // added as well. The following addresses this issue with an approximation,
-    // which is inexact when there are both pickups and deliveries in the data.
-    // So it's pretty rough but fast and seems to mostly work well enough.
+    // which is inexact when there are both pickups and deliveries in the data,
+    // and when there are multiple trips in the route. In this approximation it
+    // is assumed that V is added in the trip of U for the delta load cost
+    // calculation. So it's pretty rough but fast and seems to mostly work well
+    // enough.
+    // TODO investigate if this is still good enough for multi-trip cases.
     Cost cost = 0;
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
@@ -89,11 +97,14 @@ Cost SwapStar::deltaLoadCost(Route::Node *U,
             = std::max(uClient.delivery[dim], uClient.pickup[dim])
               - std::max(vClient.delivery[dim], vClient.pickup[dim]);
 
-        cost += costEvaluator.loadPenalty(uLoad[dim] - delta, uCap[dim], dim);
-        cost -= costEvaluator.loadPenalty(uLoad[dim], uCap[dim], dim);
+        auto const uLoad = uRoute->tripLoad(dim, U->tripIdx());
+        auto const vLoad = vRoute->tripLoad(dim, V->tripIdx());
 
-        cost += costEvaluator.loadPenalty(vLoad[dim] + delta, vCap[dim], dim);
-        cost -= costEvaluator.loadPenalty(vLoad[dim], vCap[dim], dim);
+        cost += costEvaluator.loadPenalty(uLoad - delta, uCap[dim], dim);
+        cost -= costEvaluator.loadPenalty(uLoad, uCap[dim], dim);
+
+        cost += costEvaluator.loadPenalty(vLoad + delta, vCap[dim], dim);
+        cost -= costEvaluator.loadPenalty(vLoad, vCap[dim], dim);
     }
 
     return cost;
@@ -180,6 +191,9 @@ Cost SwapStar::evaluate(Route *routeU,
     for (auto *U : *routeU)
         for (auto *V : *routeV)
         {
+            if (U->isDepot() || V->isDepot())
+                continue;
+
             // The following lines compute a delta cost of removing U and V from
             // their own routes and inserting them into the other's route in the
             // best place. This is approximate since removal and insertion are
@@ -231,11 +245,29 @@ void SwapStar::apply(Route *U, Route *V) const
     assert(best.V);
     assert(best.VAfter);
 
+    // Check whether trip of Node U becomes empty after the move.
+    std::optional<size_t> tripToRemoveU = std::nullopt;
+    if (p(best.U)->isStartDepot() && n(best.U)->isEndDepot()
+        && best.VAfter != p(best.U))
+        tripToRemoveU = best.U->tripIdx();
+
+    // Check whether trip of Node V becomes empty after the move.
+    std::optional<size_t> tripToRemoveV = std::nullopt;
+    if (p(best.V)->isStartDepot() && n(best.V)->isEndDepot()
+        && best.UAfter != p(best.V))
+        tripToRemoveV = best.V->tripIdx();
+
     U->remove(best.U->idx());
     V->remove(best.V->idx());
 
     V->insert(best.UAfter->idx() + 1, best.U);
     U->insert(best.VAfter->idx() + 1, best.V);
+
+    if (tripToRemoveU.has_value())
+        U->removeTrip(tripToRemoveU.value());
+
+    if (tripToRemoveV.has_value())
+        V->removeTrip(tripToRemoveV.value());
 }
 
 void SwapStar::update(Route *U) { isCached(U->idx(), 0) = false; }

@@ -21,6 +21,12 @@ class SwapTails : public LocalSearchOperator<Route::Node>
 {
     using LocalSearchOperator::LocalSearchOperator;
 
+    std::pair<size_t, size_t> applySwapTripTails(Route::Node *U,
+                                                 Route::Node *V) const;
+
+    std::pair<size_t, size_t> applySwapTrips(Route::Node *U,
+                                             Route::Node *V) const;
+
 public:
     Cost evaluate(Route::Node *U,
                   Route::Node *V,

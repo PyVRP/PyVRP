@@ -19,6 +19,8 @@ public:
 
     size_t first() const { return client; }
     size_t last() const { return client; }
+    bool endsTrip() const { return false; }
+    size_t numTrips() const { return 1; }
 
     pyvrp::DistanceSegment distance([[maybe_unused]] size_t profile) const
     {
@@ -30,8 +32,10 @@ public:
         return {data.location(client)};
     }
 
-    pyvrp::LoadSegment load(size_t dimension) const
+    pyvrp::LoadSegment load(size_t dimension,
+                            [[maybe_unused]] size_t trip) const
     {
+        assert(trip < numTrips());
         return {data.location(client), dimension};
     }
 };
@@ -51,11 +55,41 @@ pyvrp::Cost pyvrp::search::insertCost(Route::Node *U,
     Cost deltaCost
         = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
 
+    if (!V->isEndDepot())
+    {
+        costEvaluator.deltaCost<true>(
+            deltaCost,
+            route->proposal(route->before(V->idx()),
+                            ClientSegment(data, U->client()),
+                            route->after(V->idx() + 1)));
+
+        return deltaCost;
+    }
+
+    // Check if introducing new trip violates max trips.
+    if (route->numTrips() == route->maxTrips())
+        return 0;
+
+    if (V->idx() < route->size() - 1)  // New trip in middle of the route.
+    {
+        costEvaluator.deltaCost<true>(
+            deltaCost,
+            route->proposal(route->before(V->idx()),
+                            route->startDepotSegment(),
+                            ClientSegment(data, U->client()),
+                            route->endDepotSegment(),
+                            route->after(V->idx() + 1)));
+
+        return deltaCost;
+    }
+
+    // New trip at end of the route.
     costEvaluator.deltaCost<true>(
         deltaCost,
         route->proposal(route->before(V->idx()),
+                        route->startDepotSegment(),
                         ClientSegment(data, U->client()),
-                        route->after(V->idx() + 1)));
+                        route->endDepotSegment()));
 
     return deltaCost;
 }
@@ -71,8 +105,12 @@ pyvrp::Cost pyvrp::search::removeCost(Route::Node *U,
     ProblemData::Client const &client = data.location(U->client());
 
     Cost deltaCost
-        = client.prize - Cost(route->size() == 1) * route->fixedVehicleCost();
+        = client.prize
+          - Cost(route->numClients() == 1) * route->fixedVehicleCost();
 
+    // Note that the proposal might contain an empty trip, but this should not
+    // affect delta cost calculation. Note that this is no longer valid when,
+    // for example, introducing loading durations at depots.
     costEvaluator.deltaCost<true>(deltaCost,
                                   route->proposal(route->before(U->idx() - 1),
                                                   route->after(U->idx() + 1)));
@@ -85,7 +123,7 @@ pyvrp::Cost pyvrp::search::inplaceCost(Route::Node *U,
                                        ProblemData const &data,
                                        CostEvaluator const &costEvaluator)
 {
-    if (U->route() || !V->route())
+    if (U->route() || !V->route() || U->isDepot() || V->isDepot())
         return 0;
 
     auto const *route = V->route();
