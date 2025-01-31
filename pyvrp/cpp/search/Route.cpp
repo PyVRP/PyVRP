@@ -183,8 +183,6 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size(); ++idx)
         cumDist[idx] = cumDist[idx - 1] + distMat(visits[idx - 1], visits[idx]);
 
-#ifndef PYVRP_NO_TIME_WINDOWS
-    // Duration.
     durAt.resize(nodes.size());
     durAt[0] = {vehicleType_, vehicleType_.startLate};
     durAt[nodes.size() - 1] = {vehicleType_, vehicleType_.twLate};
@@ -195,21 +193,23 @@ void Route::update()
     auto const &durMat = data.durationMatrix(profile());
 
     durBefore.resize(nodes.size());
-    durBefore[0] = durAt[0];
-    for (size_t idx = 1; idx != nodes.size(); ++idx)
-        durBefore[idx]
-            = DurationSegment::merge(durMat(visits[idx - 1], visits[idx]),
-                                     durBefore[idx - 1],
-                                     durAt[idx]);
-
     durAfter.resize(nodes.size());
-    durAfter[nodes.size() - 1] = durAt[nodes.size() - 1];
-    for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-        durAfter[idx - 1]
-            = DurationSegment::merge(durMat(visits[idx - 1], visits[idx]),
-                                     durAt[idx - 1],
-                                     durAfter[idx]);
-#endif
+    if (data.characteristics().hasDuration)  // Duration.
+    {
+        durBefore[0] = durAt[0];
+        for (size_t idx = 1; idx != nodes.size(); ++idx)
+            durBefore[idx]
+                = DurationSegment::merge(durMat(visits[idx - 1], visits[idx]),
+                                         durBefore[idx - 1],
+                                         durAt[idx]);
+
+        durAfter[nodes.size() - 1] = durAt[nodes.size() - 1];
+        for (size_t idx = nodes.size() - 1; idx != 0; --idx)
+            durAfter[idx - 1]
+                = DurationSegment::merge(durMat(visits[idx - 1], visits[idx]),
+                                         durAt[idx - 1],
+                                         durAfter[idx]);
+    }
 
     // Load.
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
