@@ -422,3 +422,26 @@ def test_route_schedule_wait_duration():
 
     wait_duration = sum(visit.wait_duration for visit in schedule)
     assert_equal(wait_duration, route.wait_duration())
+
+
+def test_initial_load_calculation(ok_small):
+    """
+    Tests that loads are calculated correctly when there's an initial load
+    present on the vehicle.
+    """
+    # Route load and vehicle capacity are both 10, so there should not be any
+    # excess load.
+    orig_route = Route(ok_small, [1, 2], 0)
+    assert_equal(orig_route.excess_load(), [0])
+    assert_(not orig_route.has_excess_load())
+
+    # Modify data instance to have vehicle start with 5 initial load.
+    veh_type = ok_small.vehicle_type(0)
+    new_type = veh_type.replace(initial_load=[5])
+    new_data = ok_small.replace(vehicle_types=[new_type])
+
+    # Now there's 5 initial load, and 10 route load, with a vehicle capacity of
+    # 10. This means there is now 5 excess load.
+    new_route = Route(new_data, [1, 2], 0)
+    assert_equal(new_route.excess_load(), [5])
+    assert_(new_route.has_excess_load())
