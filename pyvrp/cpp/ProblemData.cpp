@@ -213,6 +213,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Cost unitDurationCost,
                                       size_t profile,
                                       std::optional<Duration> startLate,
+                                      size_t maxTrips,
                                       std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
@@ -227,6 +228,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       unitDurationCost(unitDurationCost),
       profile(profile),
       startLate(startLate.value_or(twLate)),
+      maxTrips(maxTrips),
       name(duplicate(name.data()))
 {
     if (numAvailable == 0)
@@ -258,6 +260,13 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
 
     if (unitDurationCost < 0)
         throw std::invalid_argument("unit_duration_cost must be >= 0.");
+
+    if (maxTrips < 1)
+        throw std::invalid_argument("max_trips must be >= 1.");
+
+    if (maxTrips > 1 && startDepot != endDepot)
+        throw std::invalid_argument(
+            "max_trips can only be > 1 when start_depot == end_depot.");
 }
 
 ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
@@ -274,6 +283,7 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       unitDurationCost(vehicleType.unitDurationCost),
       profile(vehicleType.profile),
       startLate(vehicleType.startLate),
+      maxTrips(vehicleType.maxTrips),
       name(duplicate(vehicleType.name))
 {
 }
@@ -292,6 +302,7 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       unitDurationCost(vehicleType.unitDurationCost),
       profile(vehicleType.profile),
       startLate(vehicleType.startLate),
+      maxTrips(vehicleType.maxTrips),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen
@@ -313,6 +324,7 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
                                   std::optional<Cost> unitDurationCost,
                                   std::optional<size_t> profile,
                                   std::optional<Duration> startLate,
+                                  std::optional<size_t> maxTrips,
                                   std::optional<std::string> name) const
 {
     return {numAvailable.value_or(this->numAvailable),
@@ -328,6 +340,7 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
             unitDurationCost.value_or(this->unitDurationCost),
             profile.value_or(this->profile),
             startLate.value_or(this->startLate),
+            maxTrips.value_or(this->maxTrips),
             name.value_or(this->name)};
 }
 
@@ -347,6 +360,7 @@ bool ProblemData::VehicleType::operator==(VehicleType const &other) const
         && unitDurationCost == other.unitDurationCost
         && profile == other.profile
         && startLate == other.startLate
+        && maxTrips == other.maxTrips
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }
@@ -422,6 +436,7 @@ size_t ProblemData::numLoadDimensions() const { return numLoadDimensions_; }
 void ProblemData::validate() const
 {
     // Client checks.
+    bool hasReleaseTimes = false;
     for (size_t idx = numDepots(); idx != numLocations(); ++idx)
     {
         ProblemData::Client const &client = location(idx);
@@ -456,6 +471,9 @@ void ProblemData::validate() const
             auto const *msg = "Required client in mutually exclusive group.";
             throw std::invalid_argument(msg);
         }
+
+        if (client.releaseTime > 0)
+            hasReleaseTimes = true;
     }
 
     // Depot checks.
@@ -504,6 +522,20 @@ void ProblemData::validate() const
 
         if (vehicleType.profile >= dists_.size())
             throw std::out_of_range("Vehicle type has invalid profile.");
+
+        if (vehicleType.maxTrips > 1 && hasReleaseTimes)
+            throw std::invalid_argument(
+                "Not supported to have non-zero "
+                "release times in combination with multi-trip.");
+
+        // Restrict max trips to avoid reserving too much memory for trip depot
+        // nodes in the search. A route cannot contain more trips than clients,
+        // so limit max trips to the number of clients + 1. The +1 is to support
+        // instances without clients.
+        if (vehicleType.maxTrips > numClients() + 1)
+            throw std::invalid_argument(
+                "Maximum number of trips on vehicle type exceeded the "
+                "number of clients by more than 1.");
     }
 
     // Matrix checks.

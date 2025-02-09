@@ -47,6 +47,7 @@ class Solution
 
     size_t numClients_ = 0;         // Number of clients in the solution
     size_t numMissingClients_ = 0;  // Number of required but missing clients
+    size_t numTrips_ = 0;           // Number of trips in the solution
     Distance distance_ = 0;         // Total travel distance over all routes
     Cost distanceCost_ = 0;         // Total cost of all routes' travel distance
     Duration duration_ = 0;         // Total duration over all routes
@@ -81,6 +82,11 @@ public:
      * Number of routes in this solution.
      */
     [[nodiscard]] size_t numRoutes() const;
+
+    /**
+     * Number of trips in this solution.
+     */
+    [[nodiscard]] size_t numTrips() const;
 
     /**
      * Number of clients in this solution.
@@ -249,6 +255,7 @@ public:
     // This constructor does *no* validation. Useful when unserialising objects.
     Solution(size_t numClients,
              size_t numMissingClients,
+             size_t numTrips,
              Distance distance,
              Cost distanceCost,
              Duration duration,

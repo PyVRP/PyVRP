@@ -28,6 +28,7 @@ void Solution::evaluate(ProblemData const &data)
     {
         // Whole solution statistics.
         numClients_ += route.size();
+        numTrips_ += route.numTrips();
         prizes_ += route.prizes();
         distance_ += route.distance();
         distanceCost_ += route.distanceCost();
@@ -52,6 +53,8 @@ size_t Solution::numRoutes() const { return routes_.size(); }
 size_t Solution::numClients() const { return numClients_; }
 
 size_t Solution::numMissingClients() const { return numMissingClients_; }
+
+size_t Solution::numTrips() const { return numTrips_; }
 
 Routes const &Solution::routes() const { return routes_; }
 
@@ -111,10 +114,17 @@ void Solution::makeNeighbours(ProblemData const &data)
         auto const startDepot = vehicleType.startDepot;
         auto const endDepot = vehicleType.endDepot;
 
-        for (size_t idx = 0; idx != route.size(); ++idx)
-            neighbours_[route[idx]] = {
-                idx == 0 ? startDepot : route[idx - 1],                // pred
-                idx == route.size() - 1 ? endDepot : route[idx + 1]};  // succ
+        // Every trip starts at start depot and ends at end depot.
+        assert(route.numTrips() == 1 || startDepot == endDepot);
+
+        for (size_t tripIdx = 0; tripIdx != route.numTrips(); ++tripIdx)
+        {
+            auto const &trip = route.trip(tripIdx);
+            for (size_t idx = 0; idx != trip.size(); ++idx)
+                neighbours_[trip[idx]] = {
+                    idx == 0 ? startDepot : trip[idx - 1],               // pred
+                    idx == trip.size() - 1 ? endDepot : trip[idx + 1]};  // succ
+        }
     }
 }
 
@@ -275,6 +285,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 
 Solution::Solution(size_t numClients,
                    size_t numMissingClients,
+                   size_t numTrips,
                    Distance distance,
                    Cost distanceCost,
                    Duration duration,
@@ -290,6 +301,7 @@ Solution::Solution(size_t numClients,
                    Neighbours neighbours)
     : numClients_(numClients),
       numMissingClients_(numMissingClients),
+      numTrips_(numTrips),
       distance_(distance),
       distanceCost_(distanceCost),
       duration_(duration),

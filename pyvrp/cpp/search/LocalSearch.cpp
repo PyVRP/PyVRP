@@ -89,10 +89,21 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 if (lastModified[U->route()->idx()] > lastTestedNode
                     || lastModified[V->route()->idx()] > lastTestedNode)
                 {
+                    // Moves involving clients: swapping or moving clients
+                    // after node V.
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    if (p(V)->isDepot() && applyNodeOps(U, p(V), costEvaluator))
+                    // Moves involving a start depot: move clients to the
+                    // beginning of a trip (after the depot node p(V)).
+                    if (p(V)->isStartDepot()
+                        && applyNodeOps(U, p(V), costEvaluator))
+                        continue;
+
+                    // Moves involving an end depot: move clients to a new trip
+                    // (after the depot node n(V)).
+                    if (n(V)->isEndDepot()
+                        && applyNodeOps(U, n(V), costEvaluator))
                         continue;
                 }
             }
@@ -390,19 +401,31 @@ void LocalSearch::loadSolution(Solution const &solution)
     // Load routes from solution.
     for (auto const &solRoute : solution.routes())
     {
-        // Set up a container of all node visits. This lets us insert all nodes
-        // in one go, requiring no intermediate updates.
-        std::vector<Route::Node *> visits;
-        visits.reserve(solRoute.size());
-        for (auto const client : solRoute)
-            visits.push_back(&nodes[client]);
-
         // Determine index of next route of this type to load, where we rely
         // on solution to be valid to not exceed the number of vehicles per
         // vehicle type.
-        auto const idx = vehicleOffset[solRoute.vehicleType()]++;
-        routes[idx].insert(1, visits.begin(), visits.end());
-        routes[idx].update();
+        auto const r = vehicleOffset[solRoute.vehicleType()]++;
+        Route &route = routes[r];
+
+        assert(route.empty());  // should have been emptied above.
+        for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
+        {
+            if (tripIdx > 0)  // Create and insert depot nodes for new trip.
+                route.addTrip();
+
+            auto const &trip = solRoute.trip(tripIdx);
+            // Set up a container of all node visits in the trip. This lets us
+            // insert all nodes in one go, requiring no intermediate updates.
+            std::vector<Route::Node *> visits;
+            visits.reserve(trip.size());
+            for (auto const client : trip)
+                visits.push_back(&nodes[client]);
+
+            // Insert before the last node in the route.
+            route.insert(route.size() - 1, visits.begin(), visits.end());
+        }
+
+        route.update();
     }
 
     for (auto *routeOp : routeOps)
@@ -419,13 +442,26 @@ Solution LocalSearch::exportSolution() const
         if (route.empty())
             continue;
 
-        std::vector<size_t> visits;
-        visits.reserve(route.size());
+        std::vector<std::vector<size_t>> trips;
+        trips.reserve(route.numTrips());
 
+        std::vector<size_t> trip;
+        trip.reserve(route.numClients());  // upper bound
         for (auto *node : route)
-            visits.push_back(node->client());
+        {
+            if (node->isStartDepot())  // start trip
+                trip.clear();
+            else if (node->isClient())
+                trip.push_back(node->client());
+            else  // end depot -> end of trip
+            {
+                assert(node->isEndDepot());
+                assert(trip.size() > 0);
+                trips.push_back(trip);
+            }
+        }
 
-        solRoutes.emplace_back(data, visits, route.vehicleType());
+        solRoutes.emplace_back(data, trips, route.vehicleType());
     }
 
     return {data, solRoutes};
@@ -479,7 +515,10 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
 
     nodes.reserve(data.numLocations());
     for (size_t loc = 0; loc != data.numLocations(); ++loc)
-        nodes.emplace_back(loc);
+        nodes.emplace_back(loc,
+                           loc < data.numDepots()
+                               ? Route::Node::NodeType::StartDepot
+                               : Route::Node::NodeType::Client);
 
     routes.reserve(data.numVehicles());
     size_t rIdx = 0;

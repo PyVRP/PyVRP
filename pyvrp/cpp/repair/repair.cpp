@@ -20,14 +20,25 @@ void pyvrp::repair::setupRoutes(std::vector<SearchRoute::Node> &locs,
     routes.reserve(solRoutes.size());
 
     for (size_t loc = 0; loc != data.numLocations(); ++loc)
-        locs.emplace_back(loc);
+        locs.emplace_back(loc,
+                          loc < data.numDepots()
+                              ? SearchRoute::Node::NodeType::StartDepot
+                              : SearchRoute::Node::NodeType::Client);
 
     size_t idx = 0;
     for (auto const &solRoute : solRoutes)
     {
         auto &route = routes.emplace_back(data, idx++, solRoute.vehicleType());
-        for (auto const client : solRoute)
-            route.push_back(&locs[client]);
+
+        for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
+        {
+            if (tripIdx > 0)  // Create and insert depot nodes for new trip.
+                route.addTrip();
+
+            auto const &trip = solRoute.trip(tripIdx);
+            for (auto const client : trip)
+                route.push_back(&locs[client]);
+        }
 
         route.update();
     }
@@ -42,13 +53,29 @@ pyvrp::repair::exportRoutes(ProblemData const &data,
 
     for (auto const &route : routes)
     {
-        std::vector<size_t> visits;
-        visits.reserve(route.size());
+        if (route.empty())
+            continue;
 
+        std::vector<std::vector<size_t>> trips;
+        trips.reserve(route.numTrips());
+
+        std::vector<size_t> trip;
+        trip.reserve(route.numClients());  // upper bound
         for (auto *node : route)
-            visits.push_back(node->client());
+        {
+            if (node->isStartDepot())  // start trip
+                trip.clear();
+            else if (node->isClient())
+                trip.push_back(node->client());
+            else  // end depot -> end of trip
+            {
+                assert(node->isEndDepot());
+                assert(trip.size() > 0);
+                trips.push_back(trip);
+            }
+        }
 
-        solRoutes.emplace_back(data, visits, route.vehicleType());
+        solRoutes.emplace_back(data, trips, route.vehicleType());
     }
 
     return solRoutes;

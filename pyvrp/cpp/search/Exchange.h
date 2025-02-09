@@ -57,11 +57,11 @@ public:
 template <size_t N, size_t M>
 bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
 {
-    // size() is the position of the last client in the route. So the segment
-    // must include the depot if idx + move length - 1 (-1 since we're also
-    // moving the node *at* idx) is larger than size().
-    return node->idx() == 0
-           || (node->idx() + segLength - 1 > node->route()->size());
+    // Segment exceeds route size, so it must contain a depot.
+    if (node->idx() + segLength >= node->route()->size())
+        return true;
+
+    return node->route()->containsDepot(node->idx(), segLength);
 }
 
 template <size_t N, size_t M>
@@ -100,37 +100,96 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
             deltaCost += vRoute->fixedVehicleCost();
 
         // We lose U's fixed cost if we're moving all U's clients.
-        if (uRoute->size() == N)
+        if (uRoute->numClients() == N)
             deltaCost -= uRoute->fixedVehicleCost();
 
         auto const uProposal = uRoute->proposal(uRoute->before(U->idx() - 1),
                                                 uRoute->after(U->idx() + N));
 
-        auto const vProposal
-            = vRoute->proposal(vRoute->before(V->idx()),
-                               uRoute->between(U->idx(), U->idx() + N - 1),
-                               vRoute->after(V->idx() + 1));
+        if (!V->isEndDepot())
+        {
+            auto const vProposal
+                = vRoute->proposal(vRoute->before(V->idx()),
+                                   uRoute->between(U->idx(), U->idx() + N - 1),
+                                   vRoute->after(V->idx() + 1));
 
-        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        }
+        else if (V->idx() < vRoute->size() - 1)  // new trip in middle of route
+        {
+            auto const vProposal
+                = vRoute->proposal(vRoute->before(V->idx()),
+                                   vRoute->startDepotSegment(),
+                                   uRoute->between(U->idx(), U->idx() + N - 1),
+                                   vRoute->endDepotSegment(),
+                                   vRoute->after(V->idx() + 1));
+
+            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        }
+        else  // new trip at end of route
+        {
+            auto const vProposal
+                = vRoute->proposal(vRoute->before(V->idx()),
+                                   vRoute->startDepotSegment(),
+                                   uRoute->between(U->idx(), U->idx() + N - 1),
+                                   vRoute->endDepotSegment());
+
+            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        }
     }
     else  // within same route
     {
         auto *route = U->route();
 
-        if (U->idx() < V->idx())
+        if (!V->isEndDepot())
+        {
+            if (U->idx() < V->idx())
+                costEvaluator.deltaCost(
+                    deltaCost,
+                    route->proposal(route->before(U->idx() - 1),
+                                    route->between(U->idx() + N, V->idx()),
+                                    route->between(U->idx(), U->idx() + N - 1),
+                                    route->after(V->idx() + 1)));
+            else
+                costEvaluator.deltaCost(
+                    deltaCost,
+                    route->proposal(route->before(V->idx()),
+                                    route->between(U->idx(), U->idx() + N - 1),
+                                    route->between(V->idx() + 1, U->idx() - 1),
+                                    route->after(U->idx() + N)));
+        }
+        else if (V->idx() < route->size() - 1)  // new trip in middle of route.
+        {
+            if (U->idx() < V->idx())
+                costEvaluator.deltaCost(
+                    deltaCost,
+                    route->proposal(route->before(U->idx() - 1),
+                                    route->between(U->idx() + N, V->idx()),
+                                    route->startDepotSegment(),
+                                    route->between(U->idx(), U->idx() + N - 1),
+                                    route->endDepotSegment(),
+                                    route->after(V->idx() + 1)));
+            else
+                costEvaluator.deltaCost(
+                    deltaCost,
+                    route->proposal(route->before(V->idx()),
+                                    route->startDepotSegment(),
+                                    route->between(U->idx(), U->idx() + N - 1),
+                                    route->endDepotSegment(),
+                                    route->between(V->idx() + 1, U->idx() - 1),
+                                    route->after(U->idx() + N)));
+        }
+        else  // new trip at end of route.
+        {
+            assert(U->idx() < V->idx());
             costEvaluator.deltaCost(
                 deltaCost,
                 route->proposal(route->before(U->idx() - 1),
                                 route->between(U->idx() + N, V->idx()),
+                                route->startDepotSegment(),
                                 route->between(U->idx(), U->idx() + N - 1),
-                                route->after(V->idx() + 1)));
-        else
-            costEvaluator.deltaCost(
-                deltaCost,
-                route->proposal(route->before(V->idx()),
-                                route->between(U->idx(), U->idx() + N - 1),
-                                route->between(V->idx() + 1, U->idx() - 1),
-                                route->after(U->idx() + N)));
+                                route->endDepotSegment()));
+        }
     }
 
     return deltaCost;
@@ -202,7 +261,15 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
 
     if constexpr (M == 0)  // special case where nothing in V is moved
     {
-        if (U == n(V))
+        // No change if nodes are inserted in the position they already are.
+        // n(V) does not exist if V is the last (end depot) node in the route.
+        // U cannot be a start depot node, so it is guaranteed that we are not
+        // inserting in the same position if V is an end depot node.
+        if (!V->isEndDepot() && U == n(V))
+            return 0;
+
+        // Cannot exceed max trips.
+        if (V->isEndDepot() && V->route()->numTrips() == V->route()->maxTrips())
             return 0;
 
         return evalRelocateMove(U, V, costEvaluator);
@@ -228,6 +295,13 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
     auto *uToInsert = N == 1 ? U : uRoute[U->idx() + N - 1];
     auto *insertUAfter = M == 0 ? V : vRoute[V->idx() + M - 1];
 
+    // If inserting after an end depot node, a new trip is created.
+    if (insertUAfter->isEndDepot())
+    {
+        vRoute.insertTrip(insertUAfter->tripIdx() + 1);
+        insertUAfter = n(insertUAfter);
+    }
+
     // Insert these 'extra' nodes of U after the end of V...
     for (size_t count = 0; count != N - M; ++count)
     {
@@ -236,6 +310,11 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
         vRoute.insert(insertUAfter->idx() + 1, uToInsert);
         uToInsert = prev;
     }
+
+    // Remove depot nodes if empty trip is left in uRoute.
+    if (uRoute.numTrips() > 1 && uToInsert->isStartDepot()
+        && n(uToInsert)->isEndDepot())
+        uRoute.removeTrip(uToInsert->tripIdx());
 
     // ...and swap the overlapping nodes!
     for (size_t count = 0; count != M; ++count)

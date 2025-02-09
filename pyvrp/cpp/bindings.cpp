@@ -217,6 +217,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Cost,
                       size_t,
                       std::optional<pyvrp::Duration>,
+                      size_t,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
@@ -233,6 +234,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("unit_duration_cost") = 0,
              py::arg("profile") = 0,
              py::arg("start_late") = py::none(),
+             py::arg("max_trips") = 1,
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -250,6 +252,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       &ProblemData::VehicleType::unitDurationCost)
         .def_readonly("profile", &ProblemData::VehicleType::profile)
         .def_readonly("start_late", &ProblemData::VehicleType::startLate)
+        .def_readonly("max_trips", &ProblemData::VehicleType::maxTrips)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
@@ -268,6 +271,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("unit_duration_cost") = py::none(),
              py::arg("profile") = py::none(),
              py::arg("start_late") = py::none(),
+             py::arg("max_trips") = py::none(),
              py::kw_only(),
              py::arg("name") = py::none(),
              DOC(pyvrp, ProblemData, VehicleType, replace))
@@ -287,6 +291,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.unitDurationCost,
                                       vehicleType.profile,
                                       vehicleType.startLate,
+                                      vehicleType.maxTrips,
                                       vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
@@ -304,7 +309,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[10].cast<pyvrp::Cost>(),      // unit duration cost
                     t[11].cast<size_t>(),           // profile
                     t[12].cast<pyvrp::Duration>(),  // start late
-                    t[13].cast<std::string>());     // name
+                    t[13].cast<size_t>(),           // max trips
+                    t[14].cast<std::string>());     // name
 
                 return vehicleType;
             }))
@@ -480,14 +486,32 @@ PYBIND11_MODULE(_pyvrp, m)
             }));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, Route))
+        // An empty list matches both constructors, and pybind11 picks the
+        // first one that matches. We want that to be the constructor taking a
+        // list of clients (rather than a list of trips), otherwise it is
+        // possible to create a route without any trips. So we define that one
+        // first.
         .def(py::init<ProblemData const &, std::vector<size_t>, size_t>(),
              py::arg("data"),
              py::arg("visits"),
              py::arg("vehicle_type"))
-        .def("visits",
-             &Route::visits,
+        .def(py::init<ProblemData const &,
+                      std::vector<std::vector<size_t>>,
+                      size_t>(),
+             py::arg("data"),
+             py::arg("visits"),
+             py::arg("vehicle_type"))
+        .def("visits", &Route::visits, DOC(pyvrp, Route, visits))
+        .def("trips",
+             &Route::trips,
              py::return_value_policy::reference_internal,
-             DOC(pyvrp, Route, visits))
+             DOC(pyvrp, Route, trips))
+        .def("trip",
+             &Route::trip,
+             py::arg("trip"),
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, trip))
+        .def("num_trips", &Route::numTrips, DOC(pyvrp, Route, numTrips))
         .def("distance", &Route::distance, DOC(pyvrp, Route, distance))
         .def("distance_cost",
              &Route::distanceCost,
@@ -555,7 +579,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::pickle(
             [](Route const &route) {  // __getstate__
                 // Returns a tuple that completely encodes the route's state.
-                return py::make_tuple(route.visits(),
+                return py::make_tuple(route.trips(),
                                       route.distance(),
                                       route.distanceCost(),
                                       route.excessDistance(),
@@ -582,8 +606,8 @@ PYBIND11_MODULE(_pyvrp, m)
                 using Schedule = std::vector<Route::ScheduledVisit>;
 
                 Route route(
-                    t[0].cast<std::vector<size_t>>(),         // visits
-                    t[1].cast<pyvrp::Distance>(),             // distance
+                    t[0].cast<std::vector<std::vector<size_t>>>(),  // trips
+                    t[1].cast<pyvrp::Distance>(),                   // distance
                     t[2].cast<pyvrp::Cost>(),                 // distance cost
                     t[3].cast<pyvrp::Distance>(),             // excess distance
                     t[4].cast<std::vector<pyvrp::Load>>(),    // delivery
@@ -650,6 +674,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("num_missing_clients",
              &Solution::numMissingClients,
              DOC(pyvrp, Solution, numMissingClients))
+        .def("num_trips", &Solution::numTrips, DOC(pyvrp, Solution, numTrips))
         .def("routes",
              &Solution::routes,
              py::return_value_policy::reference_internal,
@@ -711,6 +736,7 @@ PYBIND11_MODULE(_pyvrp, m)
                 // Returns a tuple that completely encodes the solution's state.
                 return py::make_tuple(sol.numClients(),
                                       sol.numMissingClients(),
+                                      sol.numTrips(),
                                       sol.distance(),
                                       sol.distanceCost(),
                                       sol.duration(),
@@ -733,19 +759,20 @@ PYBIND11_MODULE(_pyvrp, m)
                 Solution sol(
                     t[0].cast<size_t>(),                    // num clients
                     t[1].cast<size_t>(),                    // num missing
-                    t[2].cast<pyvrp::Distance>(),           // distance
-                    t[3].cast<pyvrp::Cost>(),               // distance cost
-                    t[4].cast<pyvrp::Duration>(),           // duration
-                    t[5].cast<pyvrp::Cost>(),               // duration cost
-                    t[6].cast<pyvrp::Distance>(),           // excess distance
-                    t[7].cast<std::vector<pyvrp::Load>>(),  // excess load
-                    t[8].cast<pyvrp::Cost>(),               // fixed veh cost
-                    t[9].cast<pyvrp::Cost>(),               // prizes
-                    t[10].cast<pyvrp::Cost>(),              // uncollected
-                    t[11].cast<pyvrp::Duration>(),          // time warp
-                    t[12].cast<bool>(),                     // is group feasible
-                    t[13].cast<Routes>(),                   // routes
-                    t[14].cast<Neighbours>());              // neighbours
+                    t[2].cast<size_t>(),                    // num trips
+                    t[3].cast<pyvrp::Distance>(),           // distance
+                    t[4].cast<pyvrp::Cost>(),               // distance cost
+                    t[5].cast<pyvrp::Duration>(),           // duration
+                    t[6].cast<pyvrp::Cost>(),               // duration cost
+                    t[7].cast<pyvrp::Distance>(),           // excess distance
+                    t[8].cast<std::vector<pyvrp::Load>>(),  // excess load
+                    t[9].cast<pyvrp::Cost>(),               // fixed veh cost
+                    t[10].cast<pyvrp::Cost>(),              // prizes
+                    t[11].cast<pyvrp::Cost>(),              // uncollected
+                    t[12].cast<pyvrp::Duration>(),          // time warp
+                    t[13].cast<bool>(),                     // is group feasible
+                    t[14].cast<Routes>(),                   // routes
+                    t[15].cast<Neighbours>());              // neighbours
 
                 return sol;
             }))

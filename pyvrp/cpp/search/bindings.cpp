@@ -266,6 +266,9 @@ PYBIND11_MODULE(_search, m)
         .def("max_distance", &Route::maxDistance)
         .def("time_warp", &Route::timeWarp)
         .def("profile", &Route::profile)
+        .def("num_clients", &Route::numClients)
+        .def("num_trips", &Route::numTrips)
+        .def("max_trips", &Route::maxTrips)
         .def(
             "dist_at",
             [](Route const &route, size_t idx, size_t profile)
@@ -293,29 +296,37 @@ PYBIND11_MODULE(_search, m)
             py::arg("profile") = 0)
         .def(
             "load_at",
-            [](Route const &route, size_t idx, size_t dimension)
-            { return route.at(idx).load(dimension); },
+            [](Route const &route, size_t idx, size_t dimension, size_t trip)
+            { return route.at(idx).load(dimension, trip); },
             py::arg("idx"),
-            py::arg("dimension") = 0)
+            py::arg("dimension") = 0,
+            py::arg("trip") = 0)
         .def(
             "load_between",
-            [](Route const &route, size_t start, size_t end, size_t dimension)
-            { return route.between(start, end).load(dimension); },
+            [](Route const &route,
+               size_t start,
+               size_t end,
+               size_t dimension,
+               size_t trip)
+            { return route.between(start, end).load(dimension, trip); },
             py::arg("start"),
             py::arg("end"),
-            py::arg("dimension") = 0)
+            py::arg("dimension") = 0,
+            py::arg("trip") = 0)
         .def(
             "load_after",
-            [](Route const &route, size_t start, size_t dimension)
-            { return route.after(start).load(dimension); },
+            [](Route const &route, size_t start, size_t dimension, size_t trip)
+            { return route.after(start).load(dimension, trip); },
             py::arg("start"),
-            py::arg("dimension") = 0)
+            py::arg("dimension") = 0,
+            py::arg("trip") = 0)
         .def(
             "load_before",
-            [](Route const &route, size_t end, size_t dimension)
-            { return route.before(end).load(dimension); },
+            [](Route const &route, size_t end, size_t dimension, size_t trip)
+            { return route.before(end).load(dimension, trip); },
             py::arg("end"),
-            py::arg("dimension") = 0)
+            py::arg("dimension") = 0,
+            py::arg("trip") = 0)
         .def(
             "duration_at",
             [](Route const &route, size_t idx, size_t profile)
@@ -351,6 +362,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("node"),
              py::keep_alive<1, 2>(),  // keep node alive
              py::keep_alive<2, 1>())  // keep route alive
+        .def("add_trip", &Route::addTrip)
         .def("clear", &Route::clear)
         .def(
             "insert",
@@ -367,6 +379,7 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<size_t>(), py::arg("loc"))
         .def_property_readonly("client", &Route::Node::client)
         .def_property_readonly("idx", &Route::Node::idx)
+        .def_property_readonly("trip_idx", &Route::Node::tripIdx)
         .def_property_readonly("route", &Route::Node::route)
         .def("is_depot", &Route::Node::isDepot);
 
