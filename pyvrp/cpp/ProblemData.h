@@ -369,9 +369,8 @@ public:
      *     Latest start of the vehicle type's shift. Unconstrained if not
      *     provided.
      * initial_load
-     *     Load quantities that are already present on the vehicle, without
-     *     taking into account any routing decisions. By default the vehicle
-     *     starts empty.
+     *     Load quantities that are already present on the vehicle, before
+     *     accouting for client visits. By default the vehicle starts empty.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -408,8 +407,8 @@ public:
      *     Latest start of the vehicle type's shift. This is equal to
      *     ``tw_late`` when the latest start is not constrained.
      * initial_load
-     *     Load quantities that are already present on the vehicle, without
-     *     taking into account any routing decisions.
+     *     Load quantities that are already present on the vehicle, before
+     *     accouting for client visits.
      * name
      *     Free-form name field for this vehicle type.
      */
