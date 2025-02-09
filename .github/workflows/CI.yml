@@ -101,7 +101,7 @@ jobs:
           files: build/meson-logs/coverage.xml
       - if: matrix.compiler == 'gcc'
         name: Install Valgrind
-        run: sudo apt install valgrind
+        run: sudo apt-get install -y valgrind
       - if: matrix.compiler == 'gcc'
         # Run this only when using GCC, because for some reason Valgrind has issues with
         # some of the outputs Clang produces.
