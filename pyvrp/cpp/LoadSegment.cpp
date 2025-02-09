@@ -17,6 +17,8 @@ LoadSegment::LoadSegment(ProblemData::Client const &client, size_t dimension)
 LoadSegment::LoadSegment(ProblemData::VehicleType const &vehicleType,
                          size_t dimension)
     : delivery_(0),
+      // Initial load is always a pickup quantity: it's already on the vehicle,
+      // and needs to be dropped off at a depot.
       pickup_(vehicleType.initialLoad[dimension]),
       load_(vehicleType.initialLoad[dimension])
 {
