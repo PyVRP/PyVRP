@@ -324,6 +324,7 @@ public:
      *     unit_duration_cost: int = 0,
      *     profile: int = 0,
      *     start_late: int | None = None,
+     *     initial_load: list[int] = [],
      *     *,
      *     name: str = "",
      * )
@@ -367,6 +368,8 @@ public:
      * start_late
      *     Latest start of the vehicle type's shift. Unconstrained if not
      *     provided.
+     * initial_load
+     *     TODO
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -402,6 +405,8 @@ public:
      * start_late
      *     Latest start of the vehicle type's shift. This is equal to
      *     ``tw_late`` when the latest start is not constrained.
+     * initial_load
+     *     TODO
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -420,7 +425,8 @@ public:
         Cost const unitDurationCost;  // Variable cost per unit of duration
         size_t const profile;         // Distance and duration profile
         Duration const startLate;     // Latest start of shift
-        char const *name;             // Type name (for reference)
+        std::vector<Load> const initialLoad;  // Initially used capacity
+        char const *name;                     // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
                     std::vector<Load> capacity = {},
@@ -435,6 +441,7 @@ public:
                     Cost unitDurationCost = 0,
                     size_t profile = 0,
                     std::optional<Duration> startLate = std::nullopt,
+                    std::vector<Load> initialLoad = {},
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -464,6 +471,7 @@ public:
                             std::optional<Cost> unitDurationCost,
                             std::optional<size_t> profile,
                             std::optional<Duration> startLate,
+                            std::optional<std::vector<Load>> initialLoad,
                             std::optional<std::string> name) const;
     };
 
