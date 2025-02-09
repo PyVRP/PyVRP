@@ -454,21 +454,24 @@ def test_matrices_are_not_copies():
         "unit_distance_cost",
         "unit_duration_cost",
         "start_late",
+        "initial_load",
     ),
     [
-        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
-        (-1, 1, 0, 0, 0, 0, 1, 0, 0, 0),  # capacity cannot be negative
-        (-100, 1, 0, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
-        (0, 1, 1, 1, 0, 0, 0, 0, 0, 0),  # early > start late
-        (0, 1, 1, 1, 0, 0, 0, 0, 0, 2),  # start late > late
-        (0, 1, -1, 0, 0, 0, 0, 0, 0, 0),  # negative early
-        (0, 1, 0, -1, 0, 0, 0, 0, 0, 0),  # negative late
-        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0),  # negative max_duration
-        (0, 1, 0, 0, 0, -1, 0, 0, 0, 0),  # negative max_distance
-        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0),  # negative fixed_cost
-        (0, 1, 0, 0, 0, 0, 0, -1, 0, 0),  # negative unit_distance_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, -1, 0),  # negative unit_duration_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, 0, -1),  # negative start late
+        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
+        (-1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0),  # capacity cannot be negative
+        (-100, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
+        (0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0),  # early > start late
+        (0, 1, 1, 1, 0, 0, 0, 0, 0, 2, 0),  # start late > late
+        (0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0),  # negative early
+        (0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0),  # negative late
+        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0),  # negative max_duration
+        (0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0),  # negative max_distance
+        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0),  # negative fixed_cost
+        (0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 0),  # negative unit_distance_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, -1, 0, 0),  # negative unit_duration_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, -1, 0),  # negative start late
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, -1),  # negative initial load
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2),  # initial load exceeds capacity
     ],
 )
 def test_vehicle_type_raises_invalid_data(
@@ -482,6 +485,7 @@ def test_vehicle_type_raises_invalid_data(
     unit_distance_cost: int,
     unit_duration_cost: int,
     start_late: int,
+    initial_load: int,
 ):
     """
     Tests that the vehicle type constructor raises when given invalid
@@ -499,6 +503,7 @@ def test_vehicle_type_raises_invalid_data(
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
             start_late=start_late,
+            initial_load=[initial_load],
         )
 
 
