@@ -988,6 +988,31 @@ def test_client_load_dimensions_are_padded_with_zeroes(
     assert_equal(client.pickup, exp_pickup)
 
 
+@pytest.mark.parametrize(
+    ("capacity", "initial_load", "exp_capacity", "exp_initial_load"),
+    [
+        ([0], [0], [0], [0]),
+        ([0], [0, 0, 0], [0, 0, 0], [0, 0, 0]),
+        ([0, 1, 2], [0], [0, 1, 2], [0, 0, 0]),
+        ([1, 2], [1], [1, 2], [1, 0]),
+        ([], [], [], []),
+    ],
+)
+def test_vehicle_load_dimensions_are_padded_with_zeroes(
+    capacity: list[int],
+    initial_load: list[int],
+    exp_capacity: list[int],
+    exp_initial_load: list[int],
+):
+    """
+    Tests that any missing load dimensions for the capacity and initial_load
+    VehicleType arguments are padded with zeroes.
+    """
+    vehicle_type = VehicleType(capacity=capacity, initial_load=initial_load)
+    assert_equal(vehicle_type.capacity, exp_capacity)
+    assert_equal(vehicle_type.initial_load, exp_initial_load)
+
+
 def test_problem_data_raises_when_pickup_and_delivery_dimensions_differ():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
