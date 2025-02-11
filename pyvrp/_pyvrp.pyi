@@ -149,7 +149,7 @@ class VehicleType:
         unit_duration_cost: int | None = None,
         profile: int | None = None,
         start_late: int | None = None,
-        initial_load: list[int] = [],
+        initial_load: list[int] | None = None,
         *,
         name: str | None = None,
     ) -> VehicleType: ...
