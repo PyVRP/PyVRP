@@ -454,21 +454,24 @@ def test_matrices_are_not_copies():
         "unit_distance_cost",
         "unit_duration_cost",
         "start_late",
+        "initial_load",
     ),
     [
-        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
-        (-1, 1, 0, 0, 0, 0, 1, 0, 0, 0),  # capacity cannot be negative
-        (-100, 1, 0, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
-        (0, 1, 1, 1, 0, 0, 0, 0, 0, 0),  # early > start late
-        (0, 1, 1, 1, 0, 0, 0, 0, 0, 2),  # start late > late
-        (0, 1, -1, 0, 0, 0, 0, 0, 0, 0),  # negative early
-        (0, 1, 0, -1, 0, 0, 0, 0, 0, 0),  # negative late
-        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0),  # negative max_duration
-        (0, 1, 0, 0, 0, -1, 0, 0, 0, 0),  # negative max_distance
-        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0),  # negative fixed_cost
-        (0, 1, 0, 0, 0, 0, 0, -1, 0, 0),  # negative unit_distance_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, -1, 0),  # negative unit_duration_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, 0, -1),  # negative start late
+        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
+        (-1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0),  # capacity cannot be negative
+        (-100, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
+        (0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0),  # early > start late
+        (0, 1, 1, 1, 0, 0, 0, 0, 0, 2, 0),  # start late > late
+        (0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0),  # negative early
+        (0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0),  # negative late
+        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0),  # negative max_duration
+        (0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0),  # negative max_distance
+        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0),  # negative fixed_cost
+        (0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 0),  # negative unit_distance_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, -1, 0, 0),  # negative unit_duration_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, -1, 0),  # negative start late
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, -1),  # negative initial load
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2),  # initial load exceeds capacity
     ],
 )
 def test_vehicle_type_raises_invalid_data(
@@ -482,6 +485,7 @@ def test_vehicle_type_raises_invalid_data(
     unit_distance_cost: int,
     unit_duration_cost: int,
     start_late: int,
+    initial_load: int,
 ):
     """
     Tests that the vehicle type constructor raises when given invalid
@@ -499,6 +503,7 @@ def test_vehicle_type_raises_invalid_data(
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
             start_late=start_late,
+            initial_load=[initial_load],
         )
 
 
@@ -981,6 +986,31 @@ def test_client_load_dimensions_are_padded_with_zeroes(
     client = Client(x=0, y=1, delivery=delivery, pickup=pickup)
     assert_equal(client.delivery, exp_delivery)
     assert_equal(client.pickup, exp_pickup)
+
+
+@pytest.mark.parametrize(
+    ("capacity", "initial_load", "exp_capacity", "exp_initial_load"),
+    [
+        ([0], [0], [0], [0]),
+        ([0], [0, 0, 0], [0, 0, 0], [0, 0, 0]),
+        ([0, 1, 2], [0], [0, 1, 2], [0, 0, 0]),
+        ([1, 2], [1], [1, 2], [1, 0]),
+        ([], [], [], []),
+    ],
+)
+def test_vehicle_load_dimensions_are_padded_with_zeroes(
+    capacity: list[int],
+    initial_load: list[int],
+    exp_capacity: list[int],
+    exp_initial_load: list[int],
+):
+    """
+    Tests that any missing load dimensions for the capacity and initial_load
+    VehicleType arguments are padded with zeroes.
+    """
+    vehicle_type = VehicleType(capacity=capacity, initial_load=initial_load)
+    assert_equal(vehicle_type.capacity, exp_capacity)
+    assert_equal(vehicle_type.initial_load, exp_initial_load)
 
 
 def test_problem_data_raises_when_pickup_and_delivery_dimensions_differ():

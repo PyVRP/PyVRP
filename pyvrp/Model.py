@@ -324,6 +324,7 @@ class Model:
         unit_duration_cost: int = 0,
         profile: Profile | None = None,
         start_late: int | None = None,
+        initial_load: int | list[int] = [],
         *,
         name: str = "",
     ) -> VehicleType:
@@ -363,6 +364,10 @@ class Model:
         else:
             raise ValueError("The given profile is not in this model.")
 
+        init_load = initial_load
+        if isinstance(init_load, int):
+            init_load = [init_load]
+
         vehicle_type = VehicleType(
             num_available=num_available,
             capacity=[capacity] if isinstance(capacity, int) else capacity,
@@ -377,6 +382,7 @@ class Model:
             unit_duration_cost=unit_duration_cost,
             profile=profile_idx,
             start_late=start_late,
+            initial_load=init_load,
             name=name,
         )
 

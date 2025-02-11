@@ -40,7 +40,10 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     endDepot_ = vehType.endDepot;
 
     DurationSegment ds = {vehType, vehType.startLate};
+
     std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
+    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+        loadSegments[dim] = {vehType, dim};
 
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);

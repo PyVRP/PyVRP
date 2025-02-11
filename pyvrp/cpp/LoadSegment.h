@@ -54,6 +54,10 @@ public:
     // Construct from load attributes of the given client and dimension.
     LoadSegment(ProblemData::Client const &client, size_t dimension);
 
+    // Construct from initial load attributes of the given vehicle type and
+    // dimension.
+    LoadSegment(ProblemData::VehicleType const &vehicleType, size_t dimension);
+
     // Construct from raw data.
     inline LoadSegment(Load delivery, Load pickup, Load load);
 

@@ -213,11 +213,12 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Cost unitDurationCost,
                                       size_t profile,
                                       std::optional<Duration> startLate,
+                                      std::vector<Load> initialLoad,
                                       std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
       endDepot(endDepot),
-      capacity(capacity),
+      capacity(pad(capacity, initialLoad)),
       twEarly(twEarly),
       twLate(twLate),
       maxDuration(maxDuration),
@@ -227,6 +228,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       unitDurationCost(unitDurationCost),
       profile(profile),
       startLate(startLate.value_or(twLate)),
+      initialLoad(pad(initialLoad, capacity)),
       name(duplicate(name.data()))
 {
     if (numAvailable == 0)
@@ -258,6 +260,13 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
 
     if (unitDurationCost < 0)
         throw std::invalid_argument("unit_duration_cost must be >= 0.");
+
+    if (std::any_of(initialLoad.begin(), initialLoad.end(), isNegative<Load>))
+        throw std::invalid_argument("initial load amounts must be >= 0.");
+
+    for (size_t dim = 0; dim != initialLoad.size(); ++dim)
+        if (initialLoad[dim] > capacity[dim])
+            throw std::invalid_argument("initial load exceeds capacity.");
 }
 
 ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
@@ -274,6 +283,7 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       unitDurationCost(vehicleType.unitDurationCost),
       profile(vehicleType.profile),
       startLate(vehicleType.startLate),
+      initialLoad(vehicleType.initialLoad),
       name(duplicate(vehicleType.name))
 {
 }
@@ -292,6 +302,7 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       unitDurationCost(vehicleType.unitDurationCost),
       profile(vehicleType.profile),
       startLate(vehicleType.startLate),
+      initialLoad(vehicleType.initialLoad),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen
@@ -313,6 +324,7 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
                                   std::optional<Cost> unitDurationCost,
                                   std::optional<size_t> profile,
                                   std::optional<Duration> startLate,
+                                  std::optional<std::vector<Load>> initialLoad,
                                   std::optional<std::string> name) const
 {
     return {numAvailable.value_or(this->numAvailable),
@@ -328,6 +340,7 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
             unitDurationCost.value_or(this->unitDurationCost),
             profile.value_or(this->profile),
             startLate.value_or(this->startLate),
+            initialLoad.value_or(this->initialLoad),
             name.value_or(this->name)};
 }
 
@@ -347,6 +360,7 @@ bool ProblemData::VehicleType::operator==(VehicleType const &other) const
         && unitDurationCost == other.unitDurationCost
         && profile == other.profile
         && startLate == other.startLate
+        && initialLoad == other.initialLoad
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }
