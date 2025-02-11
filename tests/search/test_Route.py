@@ -824,3 +824,19 @@ def test_route_swap(ok_small, loc1, loc2, in_route1, in_route2):
 
     assert_(node1.route is old_route2)
     assert_(node2.route is old_route1)
+
+
+def test_initial_load_calculation(ok_small):
+    """
+    Tests that loads are calculated correctly when there's an initial load
+    present on the vehicle.
+    """
+    orig_route = Route(ok_small, 0, 0)
+    assert_equal(orig_route.load(), [0])
+
+    veh_type = ok_small.vehicle_type(0)
+    new_type = veh_type.replace(initial_load=[5])
+    new_data = ok_small.replace(vehicle_types=[new_type])
+
+    new_route = Route(new_data, 0, 0)
+    assert_equal(new_route.load(), [5])

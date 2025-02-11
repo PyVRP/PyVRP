@@ -215,7 +215,7 @@ void Route::update()
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
         loadAt[dim].resize(nodes.size());
-        loadAt[dim][0] = {};
+        loadAt[dim][0] = {vehicleType_, dim};
         loadAt[dim][nodes.size() - 1] = {};
 
         for (size_t idx = 1; idx != nodes.size() - 1; ++idx)

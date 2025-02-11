@@ -113,6 +113,7 @@ class VehicleType:
     unit_duration_cost: int
     profile: int
     start_late: int
+    initial_load: list[int]
     name: str
     def __init__(
         self,
@@ -129,6 +130,7 @@ class VehicleType:
         unit_duration_cost: int = 0,
         profile: int = 0,
         start_late: int | None = None,
+        initial_load: list[int] = [],
         *,
         name: str = "",
     ) -> None: ...
@@ -147,6 +149,7 @@ class VehicleType:
         unit_duration_cost: int | None = None,
         profile: int | None = None,
         start_late: int | None = None,
+        initial_load: list[int] | None = None,
         *,
         name: str | None = None,
     ) -> VehicleType: ...

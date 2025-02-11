@@ -217,6 +217,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Cost,
                       size_t,
                       std::optional<pyvrp::Duration>,
+                      std::vector<pyvrp::Load>,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
@@ -233,6 +234,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("unit_duration_cost") = 0,
              py::arg("profile") = 0,
              py::arg("start_late") = py::none(),
+             py::arg("initial_load") = py::list(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -250,6 +252,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       &ProblemData::VehicleType::unitDurationCost)
         .def_readonly("profile", &ProblemData::VehicleType::profile)
         .def_readonly("start_late", &ProblemData::VehicleType::startLate)
+        .def_readonly("initial_load", &ProblemData::VehicleType::initialLoad)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
@@ -268,6 +271,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("unit_duration_cost") = py::none(),
              py::arg("profile") = py::none(),
              py::arg("start_late") = py::none(),
+             py::arg("initial_load") = py::none(),
              py::kw_only(),
              py::arg("name") = py::none(),
              DOC(pyvrp, ProblemData, VehicleType, replace))
@@ -287,6 +291,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.unitDurationCost,
                                       vehicleType.profile,
                                       vehicleType.startLate,
+                                      vehicleType.initialLoad,
                                       vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
@@ -304,7 +309,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[10].cast<pyvrp::Cost>(),      // unit duration cost
                     t[11].cast<size_t>(),           // profile
                     t[12].cast<pyvrp::Duration>(),  // start late
-                    t[13].cast<std::string>());     // name
+                    t[13].cast<std::vector<pyvrp::Load>>(),  // initial load
+                    t[14].cast<std::string>());              // name
 
                 return vehicleType;
             }))
