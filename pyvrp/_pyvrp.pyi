@@ -99,6 +99,19 @@ class Depot:
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
 
+class Reload:
+    depot: int
+    tw_early: int
+    tw_late: int
+    load_duration: int
+    def __init__(
+        self,
+        depot: int = 0,
+        tw_early: int = 0,
+        tw_late: int = ...,
+        load_duration: int = 0,
+    ) -> None: ...
+
 class VehicleType:
     num_available: int
     start_depot: int

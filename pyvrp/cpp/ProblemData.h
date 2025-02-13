@@ -416,6 +416,49 @@ public:
      */
     struct VehicleType
     {
+        /**
+         * Reload(
+         *     depot: int = 0,
+         *     tw_early: int = 0,
+         *     tw_late: int = np.iinfo(np.int64).max,
+         *     load_duration: int = 0
+         * )
+         *
+         * Simple data object storing attributes for a reload location, where
+         * vehicles may go to reload along their routes.
+         *
+         * Parameters
+         * ----------
+         * depot
+         *     The depot location where reloading takes place. Default 0 (first
+         *     depot).
+         * tw_early
+         *     The earliest time when reloading may start, if specified. Default
+         *     0.
+         * tw_late
+         *     The latest time reloading may start, if specified. Unconstrained
+         *     if not provided.
+         * load_duration
+         *     Amount of time it takes to complete reloading. Default 0.
+         */
+        struct Reload
+        {
+            size_t const depot;           // Depot where reload takes place
+            Duration const twEarly;       // Depot opening time
+            Duration const twLate;        // Depot closing time
+            Duration const loadDuration;  // Loading duration
+
+            Reload(size_t depot = 0,
+                   Duration twEarly = 0,
+                   Duration twLate = std::numeric_limits<Duration>::max(),
+                   Duration loadDuration = 0);
+
+            bool operator==(Reload const &other) const = default;
+
+            Reload &operator=(Reload const &reload) = delete;
+            Reload &operator=(Reload &&reload) = delete;
+        };
+
         size_t const numAvailable;         // Available vehicles of this type
         size_t const startDepot;           // Departure depot location
         size_t const endDepot;             // Return depot location

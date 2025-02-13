@@ -200,6 +200,22 @@ bool ProblemData::Depot::operator==(Depot const &other) const
     return x == other.x && y == other.y && std::strcmp(name, other.name) == 0;
 }
 
+ProblemData::VehicleType::Reload::Reload(size_t depot,
+                                         Duration twEarly,
+                                         Duration twLate,
+                                         Duration loadDuration)
+    : depot(depot), twEarly(twEarly), twLate(twLate), loadDuration(loadDuration)
+{
+    if (twEarly > twLate)
+        throw std::invalid_argument("start_late must be <= tw_late.");
+
+    if (twEarly < 0)
+        throw std::invalid_argument("tw_early must be >= 0.");
+
+    if (loadDuration < 0)
+        throw std::invalid_argument("load_duration must be >= 0.");
+}
+
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       std::vector<Load> capacity,
                                       size_t startDepot,

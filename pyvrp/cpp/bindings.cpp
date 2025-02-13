@@ -202,6 +202,22 @@ PYBIND11_MODULE(_pyvrp, m)
             { return py::make_iterator(group.begin(), group.end()); },
             py::return_value_policy::reference_internal);
 
+    py::class_<ProblemData::VehicleType::Reload>(
+        m, "Reload", DOC(pyvrp, ProblemData, VehicleType, Reload))
+        .def(py::init<size_t,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration>(),
+             py::arg("depot") = 0,
+             py::arg("tw_early") = 0,
+             py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
+             py::arg("load_duration") = 0)
+        .def_readonly("depot", &ProblemData::VehicleType::Reload::depot)
+        .def_readonly("tw_early", &ProblemData::VehicleType::Reload::twEarly)
+        .def_readonly("tw_late", &ProblemData::VehicleType::Reload::twLate)
+        .def_readonly("load_duration",
+                      &ProblemData::VehicleType::Reload::loadDuration);
+
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
         .def(py::init<size_t,
