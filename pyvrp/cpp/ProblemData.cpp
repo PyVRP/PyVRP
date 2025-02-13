@@ -106,8 +106,8 @@ ProblemData::Client::Client(Client const &client)
 ProblemData::Client::Client(Client &&client)
     : x(client.x),
       y(client.y),
-      delivery(client.delivery),
-      pickup(client.pickup),
+      delivery(std::move(client.delivery)),
+      pickup(std::move(client.pickup)),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
@@ -230,6 +230,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       size_t profile,
                                       std::optional<Duration> startLate,
                                       std::vector<Load> initialLoad,
+                                      std::vector<Reload> reloads,
                                       std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
@@ -245,6 +246,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       profile(profile),
       startLate(startLate.value_or(twLate)),
       initialLoad(pad(initialLoad, capacity)),
+      reloads(reloads),
       name(duplicate(name.data()))
 {
     if (numAvailable == 0)
@@ -308,7 +310,7 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
     : numAvailable(vehicleType.numAvailable),
       startDepot(vehicleType.startDepot),
       endDepot(vehicleType.endDepot),
-      capacity(vehicleType.capacity),
+      capacity(std::move(vehicleType.capacity)),
       twEarly(vehicleType.twEarly),
       twLate(vehicleType.twLate),
       maxDuration(vehicleType.maxDuration),
@@ -318,7 +320,8 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       unitDurationCost(vehicleType.unitDurationCost),
       profile(vehicleType.profile),
       startLate(vehicleType.startLate),
-      initialLoad(vehicleType.initialLoad),
+      initialLoad(std::move(vehicleType.initialLoad)),
+      reloads(std::move(vehicleType.reloads)),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen
@@ -341,6 +344,7 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
                                   std::optional<size_t> profile,
                                   std::optional<Duration> startLate,
                                   std::optional<std::vector<Load>> initialLoad,
+                                  std::optional<std::vector<Reload>> reloads,
                                   std::optional<std::string> name) const
 {
     return {numAvailable.value_or(this->numAvailable),
@@ -357,6 +361,7 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
             profile.value_or(this->profile),
             startLate.value_or(this->startLate),
             initialLoad.value_or(this->initialLoad),
+            reloads.value_or(this->reloads),
             name.value_or(this->name)};
 }
 
@@ -377,6 +382,7 @@ bool ProblemData::VehicleType::operator==(VehicleType const &other) const
         && profile == other.profile
         && startLate == other.startLate
         && initialLoad == other.initialLoad
+        && reloads == other.reloads
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }

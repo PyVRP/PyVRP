@@ -373,6 +373,8 @@ public:
      *     This load is present irrespective of any client visits. By default
      *     this value is zero, and the vehicle only considers loads from client
      *     visits.
+     * reloads
+     *     TODO
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -411,6 +413,8 @@ public:
      * initial_load
      *     Load already on the vehicle that need to be dropped off at a depot.
      *     This load is present irrespective of any client visits.
+     * reloads
+     *     TODO
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -453,6 +457,9 @@ public:
                    Duration twLate = std::numeric_limits<Duration>::max(),
                    Duration loadDuration = 0);
 
+            Reload(Reload const &other) = default;
+            Reload(Reload &&other) = default;
+
             bool operator==(Reload const &other) const = default;
 
             Reload &operator=(Reload const &reload) = delete;
@@ -473,6 +480,7 @@ public:
         size_t const profile;         // Distance and duration profile
         Duration const startLate;     // Latest start of shift
         std::vector<Load> const initialLoad;  // Initially used capacity
+        std::vector<Reload> const reloads;    // Reload locations
         char const *name;                     // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
@@ -489,6 +497,7 @@ public:
                     size_t profile = 0,
                     std::optional<Duration> startLate = std::nullopt,
                     std::vector<Load> initialLoad = {},
+                    std::vector<Reload> reloads = {},
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -519,6 +528,7 @@ public:
                             std::optional<size_t> profile,
                             std::optional<Duration> startLate,
                             std::optional<std::vector<Load>> initialLoad,
+                            std::optional<std::vector<Reload>> reloads,
                             std::optional<std::string> name) const;
     };
 

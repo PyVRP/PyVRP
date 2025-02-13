@@ -111,6 +111,9 @@ class Reload:
         tw_late: int = ...,
         load_duration: int = 0,
     ) -> None: ...
+    def __eq__(self, other: object) -> bool: ...
+    def __getstate__(self) -> tuple: ...
+    def __setstate__(self, state: tuple, /) -> None: ...
 
 class VehicleType:
     num_available: int
@@ -127,6 +130,7 @@ class VehicleType:
     profile: int
     start_late: int
     initial_load: list[int]
+    reloads: list[Reload]
     name: str
     def __init__(
         self,
@@ -144,6 +148,7 @@ class VehicleType:
         profile: int = 0,
         start_late: int | None = None,
         initial_load: list[int] = [],
+        reloads: list[Reload] = [],
         *,
         name: str = "",
     ) -> None: ...
@@ -163,6 +168,7 @@ class VehicleType:
         profile: int | None = None,
         start_late: int | None = None,
         initial_load: list[int] | None = None,
+        reloads: list[Reload] | None = None,
         *,
         name: str | None = None,
     ) -> VehicleType: ...
