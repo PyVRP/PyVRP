@@ -540,6 +540,10 @@ void ProblemData::validate() const
 
         if (vehicleType.profile >= dists_.size())
             throw std::out_of_range("Vehicle type has invalid profile.");
+
+        for (auto const &reload : vehicleType.reloads)
+            if (reload.depot >= numDepots())
+                throw std::out_of_range("Vehicle has invalid reload depot.");
     }
 
     // Matrix checks.
