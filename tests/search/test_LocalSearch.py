@@ -17,6 +17,7 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
+    SwapRoutes,
     SwapStar,
     compute_neighbours,
 )
@@ -391,6 +392,39 @@ def test_intensify_can_improve_solution_further(rc208):
     for _ in range(10):
         assert_equal(ls.search(search_opt, cost_eval), search_opt)
         assert_equal(ls.intensify(intensify_opt, cost_eval), intensify_opt)
+
+
+def test_intensify_can_swap_routes(ok_small):
+    """
+    Tests that the intensify method can improve a solution by swapping routes.
+    """
+    rng = RandomNumberGenerator(seed=42)
+
+    data = ok_small.replace(
+        vehicle_types=[
+            VehicleType(1, capacity=[5]),
+            VehicleType(1, capacity=[20]),
+        ]
+    )
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_route_operator(SwapRoutes(data))
+
+    # High load penalty, so the solution is penalised for having excess load.
+    cost_eval = CostEvaluator([100_000], 0, 0)
+    route1 = Route(data, [1, 2, 3], 0)  # Excess load: 13 - 5 = 8
+    route2 = Route(data, [4], 1)  # Excess load: 0
+    init_sol = Solution(data, [route1, route2])
+    init_cost = cost_eval.penalised_cost(init_sol)
+
+    assert_equal(init_sol.excess_load(), [8])
+
+    # This solution can be improved by using the intensifying route operators
+    # to swap the routes in the solution.
+    intensify_opt = ls.intensify(init_sol, cost_eval, overlap_tolerance=1)
+    intensify_cost = cost_eval.penalised_cost(intensify_opt)
+
+    assert_(intensify_cost < init_cost)
+    assert_equal(intensify_opt.excess_load(), [0])
 
 
 def test_local_search_completes_incomplete_solutions(ok_small_prizes):

@@ -134,7 +134,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
             auto const lastTested = lastTestedRoutes[U.idx()];
             lastTestedRoutes[U.idx()] = numMoves;
 
-            for (size_t rV = 0; rV != U.idx(); ++rV)
+            for (size_t rV = U.idx() + 1; rV != data.numVehicles(); ++rV)
             {
                 auto &V = routes[rV];
 
