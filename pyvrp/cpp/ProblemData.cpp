@@ -207,7 +207,7 @@ ProblemData::VehicleType::Reload::Reload(size_t depot,
     : depot(depot), twEarly(twEarly), twLate(twLate), loadDuration(loadDuration)
 {
     if (twEarly > twLate)
-        throw std::invalid_argument("start_late must be <= tw_late.");
+        throw std::invalid_argument("tw_early must be <= tw_late.");
 
     if (twEarly < 0)
         throw std::invalid_argument("tw_early must be >= 0.");
@@ -302,6 +302,7 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       profile(vehicleType.profile),
       startLate(vehicleType.startLate),
       initialLoad(vehicleType.initialLoad),
+      reloads(vehicleType.reloads),
       name(duplicate(vehicleType.name))
 {
 }
