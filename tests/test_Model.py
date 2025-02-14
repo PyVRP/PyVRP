@@ -1000,6 +1000,7 @@ def test_add_reload_raises_on_unknown_depot_argument():
     with assert_raises(ValueError):
         m.add_reload(depot)
 
-    # But if no depot is passed, it should default to the first.
+    # But if no depot is passed, it should default to the first, and that ought
+    # not to raise.
     reload = m.add_reload()
     assert_equal(reload.depot, 0)
