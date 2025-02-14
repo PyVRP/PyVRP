@@ -958,7 +958,7 @@ def test_bug_client_group_indices():
     assert_equal(len(group2), 1)
 
 
-def test_integer_or_list_vehicle_capacity_and_load_arguments():
+def test_integer_vehicle_capacity_and_load_arguments_are_promoted_to_lists():
     """
     Tests that passing an integer capacity or initial load functions the same
     way as passing a list of a single integer - the integer arguments are
@@ -974,3 +974,17 @@ def test_integer_or_list_vehicle_capacity_and_load_arguments():
     assert_(veh1 == veh2)
     assert_equal(veh2.capacity, [10])
     assert_equal(veh2.initial_load, [1])
+
+
+def test_add_reloads():
+    """
+    Smoke test that checks adding reloads and passing them when constructing a
+    vehicle type works correctly.
+    """
+    m = Model()
+    depot = m.add_depot(x=0, y=0)
+    reload = m.add_reload(depot)
+
+    veh_type = m.add_vehicle_type(reloads=[reload])
+    assert_equal(veh_type.reloads, [reload])
+    assert_equal(veh_type.reloads[0].depot, 0)

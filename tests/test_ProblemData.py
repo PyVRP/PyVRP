@@ -1121,6 +1121,7 @@ def test_validate_raises_for_invalid_reload_depot(ok_small):
 
     old_vehicle_type = ok_small.vehicle_type(0)
     new_vehicle_type = old_vehicle_type.replace(reloads=[reload])
+    assert_equal(new_vehicle_type.reloads, [reload])
 
     # First check if the constructor raises. There's just one depot, but the
     # reload object references depot=1, which does not exist.
