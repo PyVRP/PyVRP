@@ -988,3 +988,18 @@ def test_add_reloads():
     veh_type = m.add_vehicle_type(reloads=[reload])
     assert_equal(veh_type.reloads, [reload])
     assert_equal(veh_type.reloads[0].depot, 0)
+
+
+def test_add_reload_raises_on_unknown_depot_argument():
+    """
+    Tests that adding a reload with an unknown depot raises.
+    """
+    depot = Depot(x=0, y=0)  # created outside the model
+    m = Model()
+
+    with assert_raises(ValueError):
+        m.add_reload(depot)
+
+    # But if no depot is passed, it should default to the first.
+    reload = m.add_reload()
+    assert_equal(reload.depot, 0)
