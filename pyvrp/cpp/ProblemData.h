@@ -374,7 +374,9 @@ public:
      *     this value is zero, and the vehicle only considers loads from client
      *     visits.
      * reloads
-     *     TODO
+     *     List of reloads this vehicle may visit along it route, to empty and
+     *     reload for subsequent client visits. Defaults to an empty list, in
+     *     which case no reloads are allowed.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -414,7 +416,8 @@ public:
      *     Load already on the vehicle that need to be dropped off at a depot.
      *     This load is present irrespective of any client visits.
      * reloads
-     *     TODO
+     *     List of reload locations this vehicle may visit along it route, to
+     *     empty and reload.
      * name
      *     Free-form name field for this vehicle type.
      */
