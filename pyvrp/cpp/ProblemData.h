@@ -325,6 +325,7 @@ public:
      *     profile: int = 0,
      *     start_late: int | None = None,
      *     initial_load: list[int] = [],
+     *     reloads: list[Reload] = [],
      *     *,
      *     name: str = "",
      * )
@@ -373,6 +374,10 @@ public:
      *     This load is present irrespective of any client visits. By default
      *     this value is zero, and the vehicle only considers loads from client
      *     visits.
+     * reloads
+     *     List of reloads this vehicle may visit along it route, to empty and
+     *     reload for subsequent client visits. Defaults to an empty list, in
+     *     which case no reloads are allowed.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -411,11 +416,60 @@ public:
      * initial_load
      *     Load already on the vehicle that need to be dropped off at a depot.
      *     This load is present irrespective of any client visits.
+     * reloads
+     *     List of reload locations this vehicle may visit along it route, to
+     *     empty and reload.
      * name
      *     Free-form name field for this vehicle type.
      */
     struct VehicleType
     {
+        /**
+         * Reload(
+         *     depot: int = 0,
+         *     tw_early: int = 0,
+         *     tw_late: int = np.iinfo(np.int64).max,
+         *     load_duration: int = 0
+         * )
+         *
+         * Simple data object storing attributes for a reload location, where
+         * vehicles may go to reload along their routes.
+         *
+         * Parameters
+         * ----------
+         * depot
+         *     The depot location where reloading takes place. Default 0 (first
+         *     depot).
+         * tw_early
+         *     The earliest time when reloading may start, if specified. Default
+         *     0.
+         * tw_late
+         *     The latest time reloading may start, if specified. Unconstrained
+         *     if not provided.
+         * load_duration
+         *     Amount of time it takes to complete reloading. Default 0.
+         */
+        struct Reload
+        {
+            size_t const depot;           // Depot where reload takes place
+            Duration const twEarly;       // Depot opening time
+            Duration const twLate;        // Depot closing time
+            Duration const loadDuration;  // Loading duration
+
+            Reload(size_t depot = 0,
+                   Duration twEarly = 0,
+                   Duration twLate = std::numeric_limits<Duration>::max(),
+                   Duration loadDuration = 0);
+
+            Reload(Reload const &other) = default;
+            Reload(Reload &&other) = default;
+
+            bool operator==(Reload const &other) const = default;
+
+            Reload &operator=(Reload const &reload) = delete;
+            Reload &operator=(Reload &&reload) = delete;
+        };
+
         size_t const numAvailable;         // Available vehicles of this type
         size_t const startDepot;           // Departure depot location
         size_t const endDepot;             // Return depot location
@@ -430,6 +484,7 @@ public:
         size_t const profile;         // Distance and duration profile
         Duration const startLate;     // Latest start of shift
         std::vector<Load> const initialLoad;  // Initially used capacity
+        std::vector<Reload> const reloads;    // Reload locations
         char const *name;                     // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
@@ -446,6 +501,7 @@ public:
                     size_t profile = 0,
                     std::optional<Duration> startLate = std::nullopt,
                     std::vector<Load> initialLoad = {},
+                    std::vector<Reload> reloads = {},
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -476,6 +532,7 @@ public:
                             std::optional<size_t> profile,
                             std::optional<Duration> startLate,
                             std::optional<std::vector<Load>> initialLoad,
+                            std::optional<std::vector<Reload>> reloads,
                             std::optional<std::string> name) const;
     };
 
