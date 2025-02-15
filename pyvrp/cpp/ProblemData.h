@@ -325,6 +325,7 @@ public:
      *     profile: int = 0,
      *     start_late: int | None = None,
      *     initial_load: list[int] = [],
+     *     reloads: list[Reload] = [],
      *     *,
      *     name: str = "",
      * )
