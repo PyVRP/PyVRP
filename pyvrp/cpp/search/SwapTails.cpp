@@ -13,8 +13,11 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 
-    if (uRoute == vRoute || uRoute->idx() > vRoute->idx())
-        return 0;  // same route, or move will be tackled in a later iteration
+    if (uRoute == vRoute)
+        return 0;  // same route
+
+    if (uRoute->idx() > vRoute->idx() && !uRoute->empty() && !vRoute->empty())
+        return 0;  // move will be tackled in a later iteration
 
     Cost deltaCost = 0;
 
