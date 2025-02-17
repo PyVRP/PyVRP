@@ -39,6 +39,12 @@ class SwapStar : public LocalSearchOperator<Route>
         Route::Node *VAfter = nullptr;  // insert V after this node in U's route
     };
 
+    // To limit computational efforts, by default not all route pairs are
+    // considered: only those route pairs that share some overlap when
+    // considering their center's angle to the center of all clients. This value
+    // controls the amount of overlap needed before two routes are evaluated.
+    double const overlapTolerance;
+
     // Tracks the three best insert locations, for each route and client.
     Matrix<ThreeBest> insertCache;
 
@@ -87,7 +93,7 @@ public:
 
     void update(Route *U) override;
 
-    explicit SwapStar(ProblemData const &data);
+    explicit SwapStar(ProblemData const &data, double overlapTolerance = 0.05);
 };
 }  // namespace pyvrp::search
 

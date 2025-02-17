@@ -293,54 +293,6 @@ def test_bugfix_vehicle_type_offsets(ok_small):
     assert_(improved_cost <= current_cost)
 
 
-@pytest.mark.parametrize("method", ["__call__", "intensify"])
-def test_intensify_overlap_tolerance(method, rc208):
-    """
-    Tests that the local search's intensifying procedures respect the overlap
-    tolerance argument.
-    """
-    rng = RandomNumberGenerator(seed=42)
-
-    neighbours = compute_neighbours(rc208)
-    ls = LocalSearch(rc208, rng, neighbours)
-    ls.add_route_operator(SwapStar(rc208))
-
-    func = getattr(ls, method)
-
-    cost_eval = CostEvaluator([1], 1, 0)
-    sol = Solution.make_random(rc208, rng)
-
-    # Overlap tolerance is zero, so no routes should have overlap and thus
-    # no intensification should take place.
-    unchanged = func(sol, cost_eval, overlap_tolerance=0)
-    assert_equal(unchanged, sol)
-
-    # But with full overlap tolerance, all routes should be checked. That
-    # should lead to an improvement over the random solution.
-    better = func(sol, cost_eval, overlap_tolerance=1)
-    assert_(better != sol)
-    assert_(cost_eval.penalised_cost(better) < cost_eval.penalised_cost(sol))
-
-
-@pytest.mark.parametrize("tol", [-1.0, -0.01, 1.01, 10.9, 1000])
-def test_intensify_overlap_tolerance_raises_outside_unit_interval(rc208, tol):
-    """
-    Tests that calling ``intensify()`` raises when the overlap tolerance
-    argument is not in [0, 1].
-    """
-    rng = RandomNumberGenerator(seed=42)
-
-    neighbours = compute_neighbours(rc208)
-    ls = LocalSearch(rc208, rng, neighbours)
-    ls.add_route_operator(SwapStar(rc208))
-
-    cost_eval = CostEvaluator([1], 1, 0)
-    sol = Solution.make_random(rc208, rng)
-
-    with assert_raises(RuntimeError):  # each tolerance value is outside [0, 1]
-        ls.intensify(sol, cost_eval, overlap_tolerance=tol)
-
-
 def test_no_op_results_in_same_solution(ok_small):
     """
     Tests that calling local search without first adding node or route

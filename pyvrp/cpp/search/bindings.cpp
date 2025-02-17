@@ -155,8 +155,9 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &SwapRoutes::apply, py::arg("U"), py::arg("V"));
 
     py::class_<SwapStar, RouteOp>(m, "SwapStar", DOC(pyvrp, search, SwapStar))
-        .def(py::init<pyvrp::ProblemData const &>(),
+        .def(py::init<pyvrp::ProblemData const &, double>(),
              py::arg("data"),
+             py::arg("overlap_tolerance") = 0.05,
              py::keep_alive<1, 2>())  // keep data alive
         .def("evaluate",
              &SwapStar::evaluate,
@@ -200,7 +201,6 @@ PYBIND11_MODULE(_search, m)
              &LocalSearch::operator(),
              py::arg("solution"),
              py::arg("cost_evaluator"),
-             py::arg("overlap_tolerance") = 0.05,
              py::call_guard<py::gil_scoped_release>())
         .def("search",
              py::overload_cast<pyvrp::Solution const &,
@@ -211,11 +211,10 @@ PYBIND11_MODULE(_search, m)
              py::call_guard<py::gil_scoped_release>())
         .def("intensify",
              py::overload_cast<pyvrp::Solution const &,
-                               pyvrp::CostEvaluator const &,
-                               double const>(&LocalSearch::intensify),
+                               pyvrp::CostEvaluator const &>(
+                 &LocalSearch::intensify),
              py::arg("solution"),
              py::arg("cost_evaluator"),
-             py::arg("overlap_tolerance") = 0.05,
              py::call_guard<py::gil_scoped_release>())
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
 
