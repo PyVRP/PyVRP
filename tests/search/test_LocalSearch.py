@@ -373,7 +373,7 @@ def test_intensify_can_swap_routes(ok_small):
 
     # This solution can be improved by using the intensifying route operators
     # to swap the routes in the solution.
-    intensify_sol = ls.intensify(init_sol, cost_eval, overlap_tolerance=1)
+    intensify_sol = ls.intensify(init_sol, cost_eval)
     intensify_cost = cost_eval.penalised_cost(intensify_sol)
 
     assert_(intensify_cost < init_cost)
