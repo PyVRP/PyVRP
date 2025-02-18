@@ -115,15 +115,18 @@ def test_move_involving_empty_routes():
 
     # This move does not change the route structure, so the delta cost is 0.
     assert_equal(op.evaluate(route1[0], route2[2], cost_eval), 0)
+    assert_equal(op.evaluate(route2[2], route1[0], cost_eval), 0)
 
     # This move creates routes (depot -> 2 -> depot) and (depot -> 1 -> depot),
     # making route 1 non-empty and thus incurring its fixed cost of 10.
     assert_equal(op.evaluate(route1[0], route2[1], cost_eval), 10)
+    assert_equal(op.evaluate(route2[1], route1[0], cost_eval), 10)
 
     # This move creates routes (depot -> 1 -> 2 -> depot) and (depot -> depot),
     # making route 1 non-empty, while making route 2 empty. The total fixed
     # cost incurred is thus 10 - 100 = -90.
     assert_equal(op.evaluate(route1[0], route2[0], cost_eval), -90)
+    assert_equal(op.evaluate(route2[0], route1[0], cost_eval), -90)
 
 
 def test_move_involving_multiple_depots():
