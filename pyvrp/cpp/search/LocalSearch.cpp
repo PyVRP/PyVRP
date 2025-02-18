@@ -127,6 +127,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
         for (auto const rU : orderRoutes)
         {
             auto &U = routes[rU];
+            assert(U.idx() == rU);
 
             if (U.empty())
                 continue;
@@ -134,9 +135,10 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
             auto const lastTested = lastTestedRoutes[U.idx()];
             lastTestedRoutes[U.idx()] = numMoves;
 
-            for (size_t rV = U.idx() + 1; rV != data.numVehicles(); ++rV)
+            for (size_t rV = U.idx() + 1; rV != routes.size(); ++rV)
             {
                 auto &V = routes[rV];
+                assert(V.idx() == rV);
 
                 if (V.empty() || !U.overlapsWith(V, overlapTolerance))
                     continue;
