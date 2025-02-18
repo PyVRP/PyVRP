@@ -120,6 +120,13 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
     searchCompleted = false;
     numMoves = 0;
 
+    std::vector<size_t> vehicleOffset(data.numVehicleTypes(), 0);
+    for (size_t vehType = 1; vehType < data.numVehicleTypes(); vehType++)
+    {
+        auto const prevAvail = data.vehicleType(vehType - 1).numAvailable;
+        vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
+    }
+
     while (!searchCompleted)
     {
         searchCompleted = true;
@@ -135,20 +142,36 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
             auto const lastTested = lastTestedRoutes[U.idx()];
             lastTestedRoutes[U.idx()] = numMoves;
 
-            for (size_t rV = U.idx() + 1; rV != routes.size(); ++rV)
+            auto prev = data.numVehicles();
+            for (auto vehType = vehicleOffset.rbegin();
+                 vehType != vehicleOffset.rend();
+                 ++vehType)
             {
-                auto &V = routes[rV];
-                assert(V.idx() == rV);
+                auto const begin = std::max(*vehType, U.idx() + 1);
+                auto const end = prev;
+                prev = begin;
 
-                if (V.empty() || !U.overlapsWith(V, overlapTolerance))
-                    continue;
+                if (end <= U.idx())
+                    break;
 
-                auto const lastModifiedRoute
-                    = std::max(lastModified[U.idx()], lastModified[V.idx()]);
+                for (size_t rV = begin; rV != end; ++rV)
+                {
+                    auto &V = routes[rV];
+                    assert(V.idx() == rV);
 
-                if (lastModifiedRoute > lastTested
-                    && applyRouteOps(&U, &V, costEvaluator))
-                    continue;
+                    if (V.empty())
+                        break;
+
+                    if (!U.overlapsWith(V, overlapTolerance))
+                        continue;
+
+                    auto const lastModifiedRoute = std::max(
+                        lastModified[U.idx()], lastModified[V.idx()]);
+
+                    if (lastModifiedRoute > lastTested
+                        && applyRouteOps(&U, &V, costEvaluator))
+                        continue;
+                }
             }
         }
     }
