@@ -396,7 +396,8 @@ def test_intensify_can_improve_solution_further(rc208):
 
 def test_intensify_can_swap_routes(ok_small):
     """
-    Tests that the intensify method can improve a solution by swapping routes.
+    Tests that the bug identified in #742 is fixed. The intensify method should
+    be able to improve a solution by swapping routes.
     """
     rng = RandomNumberGenerator(seed=42)
 
@@ -420,11 +421,11 @@ def test_intensify_can_swap_routes(ok_small):
 
     # This solution can be improved by using the intensifying route operators
     # to swap the routes in the solution.
-    intensify_opt = ls.intensify(init_sol, cost_eval, overlap_tolerance=1)
-    intensify_cost = cost_eval.penalised_cost(intensify_opt)
+    intensify_sol = ls.intensify(init_sol, cost_eval, overlap_tolerance=1)
+    intensify_cost = cost_eval.penalised_cost(intensify_sol)
 
     assert_(intensify_cost < init_cost)
-    assert_equal(intensify_opt.excess_load(), [0])
+    assert_equal(intensify_sol.excess_load(), [0])
 
 
 def test_local_search_completes_incomplete_solutions(ok_small_prizes):
