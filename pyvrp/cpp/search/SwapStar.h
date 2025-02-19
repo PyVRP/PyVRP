@@ -10,7 +10,7 @@
 namespace pyvrp::search
 {
 /**
- * SwapStar(data: ProblemData)
+ * SwapStar(data: ProblemData, overlap_tolerance: float = 0.05)
  *
  * Explores the SWAP* neighbourhood of [1]_. The SWAP* neighbourhood consists
  * of free form re-insertions of clients :math:`U` and :math:`V` in the given

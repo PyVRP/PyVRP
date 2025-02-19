@@ -38,7 +38,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap(rc208):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
 
     ls.add_node_operator(Exchange11(rc208))
-    ls.add_route_operator(SwapStar(rc208, 1))
+    ls.add_route_operator(SwapStar(rc208, overlap_tolerance=1))
 
     for _ in range(10):  # repeat a few times to really make sure
         sol = Solution.make_random(rc208, rng)
@@ -65,7 +65,7 @@ def test_swap_star_on_RC208_instance(rc208, seed: int):
     rng = RandomNumberGenerator(seed=seed)
 
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    ls.add_route_operator(SwapStar(rc208, 1))
+    ls.add_route_operator(SwapStar(rc208, overlap_tolerance=1))
 
     # Make an initial solution that consists of two routes, by randomly
     # splitting the single-route solution.
@@ -123,7 +123,7 @@ def test_swap_star_can_swap_in_place():
     route2.update()
 
     cost_eval = CostEvaluator([], 1, 0)
-    swap_star = SwapStar(data, 1)
+    swap_star = SwapStar(data, overlap_tolerance=1)
 
     # Best is to exchange clients 1 and 3. The cost delta is all distance: it
     # saves one expensive arc of cost 10, by replacing it with one of cost 1.
@@ -180,7 +180,7 @@ def test_wrong_load_calculation_bug():
     route2.update()
 
     cost_eval = CostEvaluator([1_000], 1, 0)
-    swap_star = SwapStar(data, 1)
+    swap_star = SwapStar(data, overlap_tolerance=1)
 
     # Optimal is 0 -> 3 -> 1 -> 0 and 0 -> 4 -> 2 -> 0. This exchanges four
     # costly arcs of distance 10 for four arcs of distance 1, so the diff is
@@ -220,7 +220,7 @@ def test_max_distance(ok_small):
     assert_equal(route1.distance(), 6_220)
     assert_equal(route2.distance(), 2_951)
 
-    swap_star = SwapStar(ok_small, 1)
+    swap_star = SwapStar(ok_small, overlap_tolerance=1)
     assert_equal(swap_star.evaluate(route1, route2, cost_eval), -1_043)
     swap_star.apply(route1, route2)
 
@@ -243,7 +243,7 @@ def test_max_distance(ok_small):
     # due to route1 dropping below the maximum distance value of 5_000. The
     # delta cost is large due to this distance penalty reduction, and the same
     # distance difference as before.
-    swap_star = SwapStar(data, 1)
+    swap_star = SwapStar(data, overlap_tolerance=1)
     route1, route2 = make_routes(data)
     assert_equal(swap_star.evaluate(route1, route2, cost_eval), -13_243)
     assert_equal(10 * (6_220 - 5_000) + 1_043, 13_243)
@@ -251,8 +251,8 @@ def test_max_distance(ok_small):
 
 def test_swap_star_overlap_tolerance(ok_small):
     """
-    Tests that swap star respects the overlap tolerance argument when
-    evaluating moves.
+    Tests that SwapStar respects the overlap tolerance argument when evaluating
+    moves.
     """
     data = ok_small.replace(
         vehicle_types=[
@@ -274,14 +274,14 @@ def test_swap_star_overlap_tolerance(ok_small):
 
     cost_eval = CostEvaluator([1_000], 0, 0)
 
-    # Overlap tolerance is zero, so no routes should have overlap and thus
-    # should the move evaluate to 0.
-    swap_star = SwapStar(data, 0)
+    # Overlap tolerance is zero, so no routes should have overlap and thus the
+    # move should evaluate to 0.
+    swap_star = SwapStar(data, overlap_tolerance=0)
     assert_equal(swap_star.evaluate(route1, route2, cost_eval), 0)
 
     # But with full overlap tolerance, all routes should be checked. That
     # should lead to an improving move.
-    swap_star = SwapStar(data, 1)
+    swap_star = SwapStar(data, overlap_tolerance=1)
     assert_(swap_star.evaluate(route1, route2, cost_eval) < 0)
 
 
@@ -292,4 +292,4 @@ def test_swap_star_raises_overlap_tolerance_outside_unit_interval(rc208, tol):
     is not in [0, 1].
     """
     with assert_raises(ValueError):  # each tolerance value is outside [0, 1]
-        SwapStar(rc208, tol)
+        SwapStar(rc208, overlap_tolerance=tol)

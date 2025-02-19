@@ -251,5 +251,5 @@ SwapStar::SwapStar(ProblemData const &data, double overlapTolerance)
       removalCosts(data.numVehicles(), data.numLocations())
 {
     if (overlapTolerance < 0 || overlapTolerance > 1)
-        throw std::invalid_argument("Overlap tolerance must be in [0, 1].");
+        throw std::invalid_argument("overlap_tolerance must be in [0, 1].");
 }
