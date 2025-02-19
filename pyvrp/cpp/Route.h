@@ -20,18 +20,33 @@ namespace pyvrp
 class Route
 {
     /**
+     * Trip(
+     *     data: ProblemData,
+     *     visits: list[int],
+     *     start: Depot | Reload,
+     *     end: Depot | Reload,
+     *     after: Trip | None = None,
+     * )
+     *
      * TODO
      */
     class Trip
     {
+        using Depot = ProblemData::Depot;
         using Reload = ProblemData::VehicleType::Reload;
-        using TripDelimiter = std::variant<ProblemData::Depot, Reload>;
+        using TripDelimiter = std::variant<Depot const *, Reload const *>;
 
         TripDelimiter start_;
         TripDelimiter end_;
 
     public:
         // TODO
+
+        Trip(ProblemData const &data,
+             std::vector<size_t> const &visits,
+             TripDelimiter start,
+             TripDelimiter end,
+             Trip const *after = nullptr);
     };
 
 public:
