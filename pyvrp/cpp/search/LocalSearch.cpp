@@ -114,11 +114,14 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
     searchCompleted = false;
     numMoves = 0;
 
-    std::vector<size_t> vehicleOffset(data.numVehicleTypes(), 0);
+    // First vehicle index per vehicle type. Includes the one-past-the-end type
+    // for convenience.
+    std::vector<size_t> firstOfType(data.numVehicleTypes() + 1, 0);
+    firstOfType.back() = data.numVehicles();
     for (size_t vehType = 1; vehType < data.numVehicleTypes(); vehType++)
     {
         auto const prevAvail = data.vehicleType(vehType - 1).numAvailable;
-        vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
+        firstOfType[vehType] = firstOfType[vehType - 1] + prevAvail;
     }
 
     while (!searchCompleted)
@@ -140,9 +143,9 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
                  vehType != data.numVehicleTypes();
                  ++vehType)
             {
-                auto const first = vehicleOffset[vehType];
-                auto const begin = std::max(first, U.idx() + 1);
-                auto const end = first + data.vehicleType(vehType).numAvailable;
+                auto const begin = std::max(firstOfType[vehType], U.idx() + 1);
+                auto const end = firstOfType[vehType + 1];
+                assert(begin <= end);
 
                 for (size_t rV = begin; rV != end; ++rV)
                 {
