@@ -136,23 +136,30 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
             auto const lastTested = lastTestedRoutes[U.idx()];
             lastTestedRoutes[U.idx()] = numMoves;
 
-            auto prev = data.numVehicles();
-            for (auto vehType = vehicleOffset.rbegin();
-                 vehType != vehicleOffset.rend();
+            for (size_t vehType = U.vehicleType();
+                 vehType != data.numVehicleTypes();
                  ++vehType)
             {
-                auto const begin = std::max(*vehType, U.idx() + 1);
-                auto const end = prev;
-                prev = begin;
+                auto const first = vehicleOffset[vehType];
+                auto const begin = std::max(first, U.idx() + 1);
+                auto const end = first + data.vehicleType(vehType).numAvailable;
 
-                if (end <= U.idx())
-                    break;
+                if (end <= U.idx())  // then we have explored all routes beyond
+                    break;           // U and we can quit
 
                 for (size_t rV = begin; rV != end; ++rV)
                 {
                     auto &V = routes[rV];
                     assert(V.idx() == rV);
 
+                    // The way our routes are structured is that the non-empty
+                    // routes are all in the lower indices (per vehicle type).
+                    // It may happen that a non-empty route becomes empty and
+                    // creates a 'hole' in that pattern, but this is quite rare
+                    // (and not something we need to account for). So, most of
+                    // the time, the first empty route of a vehicle type signals
+                    // the start of the upper indices where all subsequent
+                    // routes of that type are also empty.
                     if (V.empty())
                         break;
 
