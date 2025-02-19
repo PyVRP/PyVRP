@@ -18,6 +18,14 @@ namespace pyvrp
  */
 class Route
 {
+    /**
+     * TODO
+     */
+    class Trip
+    {
+        // TODO
+    };
+
 public:
     /**
      * Simple object that stores some data about a client visit.
