@@ -7,6 +7,7 @@
 
 #include <iosfwd>
 #include <optional>
+#include <variant>
 #include <vector>
 
 namespace pyvrp
@@ -23,6 +24,13 @@ class Route
      */
     class Trip
     {
+        using Reload = ProblemData::VehicleType::Reload;
+        using TripDelimiter = std::variant<ProblemData::Depot, Reload>;
+
+        TripDelimiter start_;
+        TripDelimiter end_;
+
+    public:
         // TODO
     };
 
