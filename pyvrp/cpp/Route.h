@@ -19,6 +19,10 @@ namespace pyvrp
  */
 class Route
 {
+    using Client = size_t;
+    using Visits = std::vector<Client>;
+
+public:
     /**
      * Trip(
      *     data: ProblemData,
@@ -43,13 +47,12 @@ class Route
         // TODO
 
         Trip(ProblemData const &data,
-             std::vector<size_t> const &visits,
+             Visits const &visits,
              TripDelimiter start,
              TripDelimiter end,
              Trip const *after = nullptr);
     };
 
-public:
     /**
      * Simple object that stores some data about a client visit.
      *
@@ -85,10 +88,8 @@ public:
     };
 
 private:
-    using Client = size_t;
     using Depot = size_t;
     using VehicleType = size_t;
-    using Visits = std::vector<Client>;
 
     Visits visits_ = {};                         // Client visits on this route
     std::vector<ScheduledVisit> schedule_ = {};  // Client visit schedule data
