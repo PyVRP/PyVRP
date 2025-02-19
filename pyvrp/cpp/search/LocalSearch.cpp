@@ -10,15 +10,14 @@ using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 
 Solution LocalSearch::operator()(Solution const &solution,
-                                 CostEvaluator const &costEvaluator,
-                                 double overlapTolerance)
+                                 CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
 
     do
     {
         search(costEvaluator);
-        intensify(costEvaluator, overlapTolerance);
+        intensify(costEvaluator);
     } while (numMoves != 0);  // repeat until solution is locally optimal.
 
     return exportSolution();
@@ -33,11 +32,10 @@ Solution LocalSearch::search(Solution const &solution,
 }
 
 Solution LocalSearch::intensify(Solution const &solution,
-                                CostEvaluator const &costEvaluator,
-                                double overlapTolerance)
+                                CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    intensify(costEvaluator, overlapTolerance);
+    intensify(costEvaluator);
     return exportSolution();
 }
 
@@ -105,12 +103,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     }
 }
 
-void LocalSearch::intensify(CostEvaluator const &costEvaluator,
-                            double overlapTolerance)
+void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 {
-    if (overlapTolerance < 0 || overlapTolerance > 1)
-        throw std::runtime_error("overlapTolerance must be in [0, 1].");
-
     if (routeOps.empty())
         return;
 
@@ -161,9 +155,6 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
 
                     if (V.empty())
                         break;
-
-                    if (!U.overlapsWith(V, overlapTolerance))
-                        continue;
 
                     auto const lastModifiedRoute = std::max(
                         lastModified[U.idx()], lastModified[V.idx()]);
