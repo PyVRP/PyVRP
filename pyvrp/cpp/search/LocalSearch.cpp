@@ -144,9 +144,6 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
                 auto const begin = std::max(first, U.idx() + 1);
                 auto const end = first + data.vehicleType(vehType).numAvailable;
 
-                if (end <= U.idx())  // then we have explored all routes beyond
-                    break;           // U and we can quit
-
                 for (size_t rV = begin; rV != end; ++rV)
                 {
                     auto &V = routes[rV];
