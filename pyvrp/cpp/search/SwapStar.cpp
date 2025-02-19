@@ -169,6 +169,9 @@ Cost SwapStar::evaluate(Route *routeU,
                         Route *routeV,
                         CostEvaluator const &costEvaluator)
 {
+    if (!routeU->overlapsWith(*routeV, overlapTolerance))
+        return 0;
+
     best = {};
 
     if (!isCached(routeU->idx(), 0))
@@ -240,10 +243,13 @@ void SwapStar::apply(Route *U, Route *V) const
 
 void SwapStar::update(Route *U) { isCached(U->idx(), 0) = false; }
 
-SwapStar::SwapStar(ProblemData const &data)
+SwapStar::SwapStar(ProblemData const &data, double overlapTolerance)
     : LocalSearchOperator<Route>(data),
+      overlapTolerance(overlapTolerance),
       insertCache(data.numVehicles(), data.numLocations()),
       isCached(data.numVehicles(), data.numLocations()),
       removalCosts(data.numVehicles(), data.numLocations())
 {
+    if (overlapTolerance < 0 || overlapTolerance > 1)
+        throw std::invalid_argument("overlap_tolerance must be in [0, 1].");
 }

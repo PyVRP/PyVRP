@@ -67,7 +67,7 @@ optional = true
 
 
 [tool.poetry.group.docs.dependencies]
-sphinx = ">=7.3.0"
+sphinx = ">=7.3.0,<8.2.0"
 nbsphinx = ">=0.8.9"
 ipython = ">=8.6.0"
 numpydoc = ">=1.5.0"
