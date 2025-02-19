@@ -19,40 +19,7 @@ namespace pyvrp
  */
 class Route
 {
-    using Client = size_t;
-    using Visits = std::vector<Client>;
-
 public:
-    /**
-     * Trip(
-     *     data: ProblemData,
-     *     visits: list[int],
-     *     start: Depot | Reload,
-     *     end: Depot | Reload,
-     *     after: Trip | None = None,
-     * )
-     *
-     * TODO
-     */
-    class Trip
-    {
-        using Depot = ProblemData::Depot;
-        using Reload = ProblemData::VehicleType::Reload;
-        using TripDelimiter = std::variant<Depot const *, Reload const *>;
-
-        TripDelimiter start_;
-        TripDelimiter end_;
-
-    public:
-        // TODO
-
-        Trip(ProblemData const &data,
-             Visits const &visits,
-             TripDelimiter start,
-             TripDelimiter end,
-             Trip const *after = nullptr);
-    };
-
     /**
      * Simple object that stores some data about a client visit.
      *
@@ -88,8 +55,10 @@ public:
     };
 
 private:
+    using Client = size_t;
     using Depot = size_t;
     using VehicleType = size_t;
+    using Visits = std::vector<Client>;
 
     Visits visits_ = {};                         // Client visits on this route
     std::vector<ScheduledVisit> schedule_ = {};  // Client visit schedule data
