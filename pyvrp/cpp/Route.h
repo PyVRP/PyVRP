@@ -7,7 +7,6 @@
 
 #include <iosfwd>
 #include <optional>
-#include <variant>
 #include <vector>
 
 namespace pyvrp
