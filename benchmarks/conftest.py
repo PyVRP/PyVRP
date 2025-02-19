@@ -1,11 +1,16 @@
 import pytest
 
-from tests.helpers import read
+from tests.helpers import read, read_solution
 
 
 @pytest.fixture(scope="session")
 def vrptw():
     return read("data/RC208.vrp", round_func="dimacs")
+
+
+@pytest.fixture(scope="session")
+def vrptw_bks():
+    return read_solution("data/RC208.sol")
 
 
 @pytest.fixture(scope="session")
