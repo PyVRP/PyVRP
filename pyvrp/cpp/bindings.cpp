@@ -10,6 +10,7 @@
 #include "Route.h"
 #include "Solution.h"
 #include "SubPopulation.h"
+#include "Trip.h"
 #include "pyvrp_docs.h"
 
 #include <pybind11/functional.h>
@@ -36,6 +37,7 @@ using pyvrp::RandomNumberGenerator;
 using pyvrp::Route;
 using pyvrp::Solution;
 using pyvrp::SubPopulation;
+using pyvrp::Trip;
 
 PYBIND11_MODULE(_pyvrp, m)
 {
@@ -503,6 +505,18 @@ PYBIND11_MODULE(_pyvrp, m)
 
                 return data;
             }));
+
+    py::class_<Trip>(m, "Trip", DOC(pyvrp, Trip))
+        .def(py::init<ProblemData const &,
+                      std::vector<size_t>,
+                      Trip::TripDelimiter,
+                      Trip::TripDelimiter,
+                      Trip const *>(),
+             py::arg("data"),
+             py::arg("visits"),
+             py::arg("start"),
+             py::arg("end"),
+             py::arg("after") = static_cast<Trip const *>(nullptr));
 
     py::class_<Route::ScheduledVisit>(
         m, "ScheduledVisit", DOC(pyvrp, Route, ScheduledVisit))

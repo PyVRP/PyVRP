@@ -237,6 +237,16 @@ class ScheduledVisit:
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
 
+class Trip:
+    def __init__(
+        self,
+        data: ProblemData,
+        visits: list[int],
+        start: Depot | Reload,
+        end: Depot | Reload,
+        after: Trip | None = None,
+    ) -> None: ...
+
 class Route:
     def __init__(
         self, data: ProblemData, visits: list[int], vehicle_type: int
