@@ -242,6 +242,7 @@ class Trip:
         self,
         data: ProblemData,
         visits: list[int],
+        vehicle_type: int,
         start: Depot | Reload,
         end: Depot | Reload,
         after: Trip | None = None,

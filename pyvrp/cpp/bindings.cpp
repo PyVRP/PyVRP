@@ -509,11 +509,13 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<Trip>(m, "Trip", DOC(pyvrp, Trip))
         .def(py::init<ProblemData const &,
                       std::vector<size_t>,
+                      size_t,
                       Trip::TripDelimiter,
                       Trip::TripDelimiter,
                       Trip const *>(),
              py::arg("data"),
              py::arg("visits"),
+             py::arg("vehicle_type"),
              py::arg("start"),
              py::arg("end"),
              py::arg("after") = static_cast<Trip const *>(nullptr));
