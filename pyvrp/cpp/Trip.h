@@ -50,21 +50,18 @@ private:
     TripDelimiter end_;    // assigned end location (depot or reload)
 
 public:
+    [[nodiscard]] bool empty() const;
+
+    /**
+     * Returns the number of clients visited by this trip.
+     */
+    [[nodiscard]] size_t size() const;
+
     Trip(ProblemData const &data,
          Visits visits,
          size_t const vehicleType,
          TripDelimiter start,
          TripDelimiter end,
          Trip const *after = nullptr);
-
-    /**
-     * Starting (depot) location of this trip.
-     */
-    size_t startDepot() const;
-
-    /**
-     * Ending (depot) location of this trip.
-     */
-    size_t endDepot() const;
 };
 }  // namespace pyvrp

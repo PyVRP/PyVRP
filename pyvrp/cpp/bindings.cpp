@@ -518,7 +518,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("vehicle_type"),
              py::arg("start"),
              py::arg("end"),
-             py::arg("after") = static_cast<Trip const *>(nullptr));
+             py::arg("after") = static_cast<Trip const *>(nullptr))
+        .def("__len__", &Trip::size, DOC(pyvrp, Trip, size));
 
     py::class_<Route::ScheduledVisit>(
         m, "ScheduledVisit", DOC(pyvrp, Route, ScheduledVisit))
