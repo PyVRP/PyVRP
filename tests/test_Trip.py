@@ -1,5 +1,5 @@
 import pytest
-from numpy.testing import assert_allclose, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Depot, Reload, Route, Trip
 
@@ -110,4 +110,23 @@ def test_single_route_and_trip_same_statistics(ok_small, visits: list[int]):
     assert_equal(trip.has_time_warp(), route.has_time_warp())
 
 
-# TODO
+def test_eq(ok_small):
+    """
+    Tests the trip's equality operator.
+    """
+    depot = ok_small.location(0)
+    reload = Reload(depot=0)
+
+    trip1 = Trip(ok_small, [1, 2], 0, depot, reload)
+    trip2 = Trip(ok_small, [3, 4], 0, reload, depot, after=trip1)
+    trip3 = Trip(ok_small, [1, 2], 0, depot, reload)
+
+    assert_(trip1 == trip1)  # same object
+    assert_(trip1 != trip2)  # different visits, start/end locations
+    assert_(trip1 == trip3)  # same visits and start/end locations
+
+    # And a few tests against things that are not trips, just to be sure that
+    # there's also a type check in there somewhere.
+    assert_(trip1 != 1)
+    assert_(trip2 != "abc")
+    assert_(trip3 != 5)
