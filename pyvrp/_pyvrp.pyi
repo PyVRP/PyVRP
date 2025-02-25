@@ -247,6 +247,7 @@ class Trip:
         end: Depot | Reload,
         after: Trip | None = None,
     ) -> None: ...
+    def __len__(self) -> int: ...
 
 class Route:
     def __init__(

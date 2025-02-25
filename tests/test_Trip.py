@@ -1,7 +1,7 @@
 import pytest
 from numpy.testing import assert_equal, assert_raises
 
-from pyvrp import Depot, Reload, Trip
+from pyvrp import Depot, Reload, Route, Trip
 
 
 @pytest.mark.parametrize(
@@ -49,22 +49,40 @@ def test_raises_if_start_is_wrong_or_missing_after_argument(ok_small):
     # Now that we provide the appropriate argument the constructor should work.
     Trip(ok_small, [2], 0, reload1, ok_small.location(0), after=prev)
 
-    reload2 = Reload(depot=0)
+    reload2 = Reload(depot=1)
     with assert_raises(ValueError):
         # A trip should start at the exact same place the previous trip ended.
-        # If that's not the case (because the objects are not the same) then
+        # If that's not the case (because the depots are not the same) then
         # the constructor should raise.
         Trip(ok_small, [2], 0, reload2, ok_small.location(0), after=prev)
 
 
 @pytest.mark.parametrize("visits", [[], [1], [2, 3]])
-def test_trip_length(ok_small, visits):
+def test_trip_length(ok_small, visits: list[int]):
     """
     Tests that the trip length returns the number of client visits.
     """
     depot = ok_small.location(0)
     trip = Trip(ok_small, visits, 0, depot, depot)
     assert_equal(len(trip), len(visits))
+
+
+@pytest.mark.parametrize("visits", [[1, 2, 3], [2, 1], [4, 3], [4]])
+def test_single_route_and_trip_agree_on_statistics(
+    ok_small, visits: list[int]
+):
+    """
+    Tests that a single-trip route and just a trip agree on basic statistics
+    about the route/trip.
+    """
+    depot = ok_small.location(0)
+    trip = Trip(ok_small, visits, 0, depot, depot)
+    route = Route(ok_small, visits, 0)
+
+    assert_equal(len(trip), len(route))
+    # assert_equal(trip.distance(), route.distance())
+    # assert_equal(trip.duration(), route.duration())
+    # TODO
 
 
 # TODO
