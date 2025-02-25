@@ -65,9 +65,10 @@ def test_trip_length(ok_small, visits: list[int]):
     depot = ok_small.location(0)
     trip = Trip(ok_small, visits, 0, depot, depot)
     assert_equal(len(trip), len(visits))
+    assert_equal(trip.visits(), visits)
 
 
-@pytest.mark.parametrize("visits", [[1, 2, 3], [2, 1], [4, 3], [4]])
+@pytest.mark.parametrize("visits", [[1, 2, 3], [4, 3], [4], [1, 2, 3, 4]])
 def test_single_route_and_trip_agree_on_statistics(
     ok_small, visits: list[int]
 ):
@@ -79,10 +80,34 @@ def test_single_route_and_trip_agree_on_statistics(
     trip = Trip(ok_small, visits, 0, depot, depot)
     route = Route(ok_small, visits, 0)
 
+    # Structural attributes.
     assert_equal(len(trip), len(route))
-    # assert_equal(trip.distance(), route.distance())
-    # assert_equal(trip.duration(), route.duration())
-    # TODO
+    assert_equal(trip.vehicle_type(), route.vehicle_type())
+    assert_equal(trip.start_depot(), route.start_depot())
+    assert_equal(trip.end_depot(), route.end_depot())
+    assert_equal(trip.visits(), route.visits())
+
+    # Distance- and cost-related statistics.
+    assert_equal(trip.distance(), route.distance())
+    assert_equal(trip.prizes(), route.prizes())
+
+    # Duration-related statistics.
+    assert_equal(trip.duration(), route.duration())
+    assert_equal(trip.time_warp(), route.time_warp())
+    assert_equal(trip.service_duration(), route.service_duration())
+    assert_equal(trip.travel_duration(), route.travel_duration())
+    assert_equal(trip.wait_duration(), route.wait_duration())
+    assert_equal(trip.release_time(), route.release_time())
+
+    # Load-related statistics.
+    assert_equal(trip.delivery(), route.delivery())
+    assert_equal(trip.pickup(), route.pickup())
+    assert_equal(trip.excess_load(), route.excess_load())
+
+    # Feasibility-related statistics.
+    assert_equal(trip.is_feasible(), route.is_feasible())
+    assert_equal(trip.has_excess_load(), route.has_excess_load())
+    assert_equal(trip.has_time_warp(), route.has_time_warp())
 
 
 # TODO

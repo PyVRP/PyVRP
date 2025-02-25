@@ -107,6 +107,12 @@ public:
     [[nodiscard]] Duration waitDuration() const;
 
     /**
+     * Earliest time at which this trip can leave the depot. Follows from the
+     * release times of clients visited on this trip.
+     */
+    [[nodiscard]] Duration releaseTime() const;
+
+    /**
      * Total prize value collected on this trip.
      */
     [[nodiscard]] Cost prizes() const;

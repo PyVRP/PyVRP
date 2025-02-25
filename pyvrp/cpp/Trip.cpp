@@ -136,6 +136,8 @@ pyvrp::Duration Trip::travelDuration() const { return travel_; }
 
 pyvrp::Duration Trip::waitDuration() const { return wait_; }
 
+pyvrp::Duration Trip::releaseTime() const { return release_; }
+
 pyvrp::Cost Trip::prizes() const { return prizes_; }
 
 std::pair<double, double> const &Trip::centroid() const { return centroid_; }
