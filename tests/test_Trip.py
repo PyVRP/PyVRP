@@ -13,7 +13,7 @@ from pyvrp import Depot, Reload, Trip
         (Reload(depot=1), None),  # there is no depot 1
     ],
 )
-def test_trip_raises_for_invalid_depot_argument(ok_small, start, end):
+def test_trip_raises_for_invalid_start_end_arguments(ok_small, start, end):
     """
     The constructor should raise when given depot or reload arguments that
     point to non-existing depots.
