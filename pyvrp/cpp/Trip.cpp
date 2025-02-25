@@ -87,7 +87,7 @@ Trip::Trip(ProblemData const &data,
         prevClient = client;
     }
 
-    auto const last = visits_.empty() ? startDepot : visits_.back();
+    auto const last = empty() ? startDepot : visits_.back();
     distance_ += distances(last, endDepot);
     travel_ += durations(last, endDepot);
 

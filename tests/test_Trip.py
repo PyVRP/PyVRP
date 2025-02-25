@@ -1,5 +1,5 @@
 import pytest
-from numpy.testing import assert_raises
+from numpy.testing import assert_equal, assert_raises
 
 from pyvrp import Depot, Reload, Trip
 
@@ -55,6 +55,16 @@ def test_raises_if_start_is_wrong_or_missing_after_argument(ok_small):
         # If that's not the case (because the objects are not the same) then
         # the constructor should raise.
         Trip(ok_small, [2], 0, reload2, ok_small.location(0), after=prev)
+
+
+@pytest.mark.parametrize("visits", [[], [1], [2, 3]])
+def test_trip_length(ok_small, visits):
+    """
+    Tests that the trip length returns the number of client visits.
+    """
+    depot = ok_small.location(0)
+    trip = Trip(ok_small, visits, 0, depot, depot)
+    assert_equal(len(trip), len(visits))
 
 
 # TODO
