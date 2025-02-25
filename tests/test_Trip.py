@@ -27,5 +27,8 @@ def test_trip_raises_for_invalid_start_end_arguments(ok_small, start, end):
     with assert_raises(ValueError):
         Trip(ok_small, [1, 2], 0, start, end)
 
+    # This should be OK, starting and ending at the depot.
+    Trip(ok_small, [1, 2], 0, ok_small.location(0), ok_small.location(0))
+
 
 # TODO
