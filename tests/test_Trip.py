@@ -58,9 +58,10 @@ def test_raises_if_start_is_wrong_or_missing_after_argument(ok_small):
 
 
 @pytest.mark.parametrize("visits", [[], [1], [2, 3]])
-def test_trip_length(ok_small, visits: list[int]):
+def test_trip_length_and_visits(ok_small, visits: list[int]):
     """
-    Tests that the trip length returns the number of client visits.
+    Tests that the trip length returns the number of client visits, and
+    visits() the actual visits.
     """
     depot = ok_small.location(0)
     trip = Trip(ok_small, visits, 0, depot, depot)
@@ -69,9 +70,7 @@ def test_trip_length(ok_small, visits: list[int]):
 
 
 @pytest.mark.parametrize("visits", [[1, 2, 3], [4, 3], [4], [1, 2, 3, 4]])
-def test_single_route_and_trip_agree_on_statistics(
-    ok_small, visits: list[int]
-):
+def test_single_route_and_trip_same_statistics(ok_small, visits: list[int]):
     """
     Tests that a single-trip route and just a trip agree on basic statistics
     about the route/trip.
