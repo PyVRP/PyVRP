@@ -31,11 +31,10 @@ def test_trip_raises_for_invalid_start_end_arguments(ok_small, start, end):
     Trip(ok_small, [1, 2], 0, ok_small.location(0), ok_small.location(0))
 
 
-def test_raises_if_start_is_wrong_or_missing_after_argument(ok_small):
+def test_raises_if_reload_start_without_after_argument(ok_small):
     """
     Tests that the constructor raises when a trip starts at a reload location,
-    without information about a previous trip that brought us there, or when
-    the previous end and this start location are not the same.
+    without information about a previous trip that brought us there.
     """
     reload1 = Reload(depot=0)
     prev = Trip(ok_small, [1], 0, ok_small.location(0), reload1)
@@ -49,12 +48,24 @@ def test_raises_if_start_is_wrong_or_missing_after_argument(ok_small):
     # Now that we provide the appropriate argument the constructor should work.
     Trip(ok_small, [2], 0, reload1, ok_small.location(0), after=prev)
 
+
+def test_raises_if_start_different_from_after_end(ok_small_multi_depot):
+    """
+    Tests that the trip constructor raises when we start from a different
+    depot location than where the previous trip ended.
+    """
+    data = ok_small_multi_depot
+
+    reload1 = Reload(depot=0)
     reload2 = Reload(depot=1)
+    prev = Trip(data, [2], 0, data.location(0), reload1)  # end at depot 0
+
     with assert_raises(ValueError):
         # A trip should start at the exact same place the previous trip ended.
         # If that's not the case (because the depots are not the same) then
-        # the constructor should raise.
-        Trip(ok_small, [2], 0, reload2, ok_small.location(0), after=prev)
+        # the constructor should raise. Here, we start at depot 1, but prev
+        # ended at depot 0.
+        Trip(data, [3], 0, reload2, data.location(0), after=prev)
 
 
 @pytest.mark.parametrize("visits", [[], [1], [2, 3]])
@@ -130,3 +141,17 @@ def test_eq(ok_small):
     assert_(trip1 != 1)
     assert_(trip2 != "abc")
     assert_(trip3 != 5)
+
+
+def test_reload():
+    """
+    TODO
+    """
+    pass
+
+
+def test_after():
+    """
+    TODO
+    """
+    pass
