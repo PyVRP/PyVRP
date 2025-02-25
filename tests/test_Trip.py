@@ -31,4 +31,30 @@ def test_trip_raises_for_invalid_start_end_arguments(ok_small, start, end):
     Trip(ok_small, [1, 2], 0, ok_small.location(0), ok_small.location(0))
 
 
+def test_raises_if_start_is_wrong_or_missing_after_argument(ok_small):
+    """
+    Tests that the constructor raises when a trip starts at a reload location,
+    without information about a previous trip that brought us there, or when
+    the previous end and this start location are not the same.
+    """
+    reload1 = Reload(depot=0)
+    prev = Trip(ok_small, [1], 0, ok_small.location(0), reload1)
+
+    with assert_raises(ValueError):
+        # Trip starts at a reload location, so this cannot be the first trip
+        # in a route. But we didn't provide a previous trip, so something is
+        # wrong: this trip cannot stand on its own.
+        Trip(ok_small, [2], 0, reload1, ok_small.location(0))
+
+    # Now that we provide the appropriate argument the constructor should work.
+    Trip(ok_small, [2], 0, reload1, ok_small.location(0), after=prev)
+
+    reload2 = Reload(depot=0)
+    with assert_raises(ValueError):
+        # A trip should start at the exact same place the previous trip ended.
+        # If that's not the case (because the objects are not the same) then
+        # the constructor should raise.
+        Trip(ok_small, [2], 0, reload2, ok_small.location(0), after=prev)
+
+
 # TODO

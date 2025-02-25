@@ -40,6 +40,9 @@ Trip::Trip(ProblemData const &data,
         if (!after)
             throw std::invalid_argument("Reload start without previous trip.");
 
+        if (after->end_ != start_)
+            throw std::invalid_argument("Trip start unequal to previous end.");
+
         // Use attributes of previous trip to determine previous duration
         // segment, ignoring release times since those only apply per-trip.
         DurationSegment prev = {after->duration_,
