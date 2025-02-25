@@ -4,19 +4,17 @@
 
 using pyvrp::Trip;
 
-Trip::Trip([[maybe_unused]] ProblemData const &data,
+Trip::Trip(ProblemData const &data,
            Visits visits,
            size_t const vehicleType,
            TripDelimiter start,
            TripDelimiter end,
-           [[maybe_unused]] Trip const *after)
+           Trip const *after)
     : visits_(std::move(visits)),
       vehicleType_(vehicleType),
       start_(std::move(start)),
       end_(std::move(end))
 {
-    // TODO determine initial state using after argument.
-
     size_t const startDepot
         = std::holds_alternative<Depot const *>(start_)
               ? std::distance(data.depots().data(),
@@ -37,6 +35,23 @@ Trip::Trip([[maybe_unused]] ProblemData const &data,
     auto const &vehType = data.vehicleType(vehicleType_);
 
     DurationSegment ds = {vehType, vehType.startLate};
+    if (std::holds_alternative<Reload const *>(start_))
+    {
+        if (!after)
+            throw std::invalid_argument("Reload start without previous trip.");
+
+        // Use attributes of previous trip to determine previous duration
+        // segment, ignoring release times since those only apply per-trip.
+        DurationSegment prev = {after->duration_,
+                                after->timeWarp_,
+                                after->startTime_,
+                                after->startTime_ + after->slack_,
+                                0};
+
+        auto const *reload = std::get<Reload const *>(start_);
+        ds = {*reload, reload->loadDuration};
+        ds = DurationSegment::merge(0, prev, ds);
+    }
 
     std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
@@ -85,6 +100,12 @@ Trip::Trip([[maybe_unused]] ProblemData const &data,
     }
 
     DurationSegment endDS(vehType, vehType.twLate);
+    if (std::holds_alternative<Reload const *>(end_))
+    {
+        auto const *reload = std::get<Reload const *>(end_);
+        endDS = {*reload, 0};  // loading is part of the next trip
+    }
+
     ds = DurationSegment::merge(durations(last, endDepot), ds, endDS);
     duration_ = ds.duration();
     startTime_ = ds.twEarly();

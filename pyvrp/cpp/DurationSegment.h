@@ -102,6 +102,10 @@ public:
     DurationSegment(ProblemData::VehicleType const &vehicleType,
                     Duration const twLate);
 
+    // Construct from attributes of the given vehicle reload and load duration.
+    DurationSegment(ProblemData::VehicleType::Reload const &reload,
+                    Duration const loadDuration);
+
     // Construct from raw data.
     inline DurationSegment(Duration duration,
                            Duration timeWarp,

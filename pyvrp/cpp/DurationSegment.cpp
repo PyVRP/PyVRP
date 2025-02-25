@@ -39,3 +39,13 @@ DurationSegment::DurationSegment(ProblemData::VehicleType const &vehicleType,
       releaseTime_(0)
 {
 }
+
+DurationSegment::DurationSegment(ProblemData::VehicleType::Reload const &reload,
+                                 Duration const loadDuration)
+    : duration_(loadDuration),
+      timeWarp_(0),
+      twEarly_(reload.twEarly),
+      twLate_(reload.twLate),
+      releaseTime_(0)
+{
+}
