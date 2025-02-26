@@ -103,13 +103,13 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         if (uRoute->size() == N)
             deltaCost -= uRoute->fixedVehicleCost();
 
-        auto const uProposal = uRoute->proposal(uRoute->before(U->idx() - 1),
-                                                uRoute->after(U->idx() + N));
+        auto const uProposal = Route::Proposal(uRoute->before(U->idx() - 1),
+                                               uRoute->after(U->idx() + N));
 
         auto const vProposal
-            = vRoute->proposal(vRoute->before(V->idx()),
-                               uRoute->between(U->idx(), U->idx() + N - 1),
-                               vRoute->after(V->idx() + 1));
+            = Route::Proposal(vRoute->before(V->idx()),
+                              uRoute->between(U->idx(), U->idx() + N - 1),
+                              vRoute->after(V->idx() + 1));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
@@ -120,14 +120,14 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         if (U->idx() < V->idx())
             costEvaluator.deltaCost(
                 deltaCost,
-                route->proposal(route->before(U->idx() - 1),
+                Route::Proposal(route->before(U->idx() - 1),
                                 route->between(U->idx() + N, V->idx()),
                                 route->between(U->idx(), U->idx() + N - 1),
                                 route->after(V->idx() + 1)));
         else
             costEvaluator.deltaCost(
                 deltaCost,
-                route->proposal(route->before(V->idx()),
+                Route::Proposal(route->before(V->idx()),
                                 route->between(U->idx(), U->idx() + N - 1),
                                 route->between(V->idx() + 1, U->idx() - 1),
                                 route->after(U->idx() + N)));
@@ -152,14 +152,14 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
         auto const *vRoute = V->route();
 
         auto const uProposal
-            = uRoute->proposal(uRoute->before(U->idx() - 1),
-                               vRoute->between(V->idx(), V->idx() + M - 1),
-                               uRoute->after(U->idx() + N));
+            = Route::Proposal(uRoute->before(U->idx() - 1),
+                              vRoute->between(V->idx(), V->idx() + M - 1),
+                              uRoute->after(U->idx() + N));
 
         auto const vProposal
-            = vRoute->proposal(vRoute->before(V->idx() - 1),
-                               uRoute->between(U->idx(), U->idx() + N - 1),
-                               vRoute->after(V->idx() + M));
+            = Route::Proposal(vRoute->before(V->idx() - 1),
+                              uRoute->between(U->idx(), U->idx() + N - 1),
+                              vRoute->after(V->idx() + M));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
@@ -170,7 +170,7 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
         if (U->idx() < V->idx())
             costEvaluator.deltaCost(
                 deltaCost,
-                route->proposal(route->before(U->idx() - 1),
+                Route::Proposal(route->before(U->idx() - 1),
                                 route->between(V->idx(), V->idx() + M - 1),
                                 route->between(U->idx() + N, V->idx() - 1),
                                 route->between(U->idx(), U->idx() + N - 1),
@@ -178,7 +178,7 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
         else
             costEvaluator.deltaCost(
                 deltaCost,
-                route->proposal(route->before(V->idx() - 1),
+                Route::Proposal(route->before(V->idx() - 1),
                                 route->between(U->idx(), U->idx() + N - 1),
                                 route->between(V->idx() + M, U->idx() - 1),
                                 route->between(V->idx(), V->idx() + M - 1),

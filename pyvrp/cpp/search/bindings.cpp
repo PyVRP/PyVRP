@@ -280,16 +280,14 @@ PYBIND11_MODULE(_search, m)
             py::arg("profile") = 0)
         .def(
             "dist_after",
-            [](Route const &route, size_t start, size_t profile)
-            { return route.after(start).distance(profile); },
-            py::arg("start"),
-            py::arg("profile") = 0)
+            [](Route const &route, size_t start)
+            { return route.after(start).distance(route.profile()); },
+            py::arg("start"))
         .def(
             "dist_before",
-            [](Route const &route, size_t end, size_t profile)
-            { return route.before(end).distance(profile); },
-            py::arg("end"),
-            py::arg("profile") = 0)
+            [](Route const &route, size_t end)
+            { return route.before(end).distance(route.profile()); },
+            py::arg("end"))
         .def(
             "load_at",
             [](Route const &route, size_t idx, size_t dimension)
@@ -330,16 +328,14 @@ PYBIND11_MODULE(_search, m)
             py::arg("profile") = 0)
         .def(
             "duration_after",
-            [](Route const &route, size_t start, size_t profile)
-            { return route.after(start).duration(profile); },
-            py::arg("start"),
-            py::arg("profile") = 0)
+            [](Route const &route, size_t start)
+            { return route.after(start).duration(route.profile()); },
+            py::arg("start"))
         .def(
             "duration_before",
-            [](Route const &route, size_t end, size_t profile)
-            { return route.before(end).duration(profile); },
-            py::arg("end"),
-            py::arg("profile") = 0)
+            [](Route const &route, size_t end)
+            { return route.before(end).duration(route.profile()); },
+            py::arg("end"))
         .def("centroid", &Route::centroid)
         .def("overlaps_with",
              &Route::overlapsWith,
