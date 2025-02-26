@@ -734,9 +734,6 @@ def test_distance_different_profiles(ok_small_two_profiles):
     depot_to_depot = route.dist_between(0, len(route) + 1, profile=1)
     assert_equal(depot_to_depot.distance(), 2 * route.distance())
 
-    after_start = route.dist_after(0, profile=1)
-    assert_equal(after_start.distance(), depot_to_depot.distance())
-
 
 def test_duration_different_profiles(ok_small_two_profiles):
     """
@@ -760,9 +757,6 @@ def test_duration_different_profiles(ok_small_two_profiles):
     depot_to_depot = route.duration_between(0, len(route) + 1, profile=1)
     service = sum(c.service_duration for c in data.clients())
     assert_equal(depot_to_depot.duration(), 2 * route.duration() - service)
-
-    after_start = route.duration_after(0, profile=1)
-    assert_equal(after_start.duration(), depot_to_depot.duration())
 
 
 def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):

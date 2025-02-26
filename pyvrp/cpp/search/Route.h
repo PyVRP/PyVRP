@@ -39,15 +39,15 @@ public:
      */
     template <typename... Segments> class Proposal
     {
-        std::tuple<Segments...> segments;
+        std::tuple<Segments...> segments_;
 
     public:
         Proposal(Segments &&...segments);
 
         /**
          * The proposal's route. This is the route associated with the first
-         * segment, which determines a.o. the vehicle type and route profile
-         * used for the proposal.
+         * segment, and determines i.a. the vehicle type and route profile used
+         * in the proposal.
          */
         Route const *route() const;
 
@@ -228,13 +228,6 @@ public:
     // End depot. The iterator is valid!
     [[nodiscard]] std::vector<Node *>::const_iterator end() const;
     [[nodiscard]] std::vector<Node *>::iterator end();
-
-    /**
-     * Returns a route proposal object that stores the given route segment
-     * arguments.
-     */
-    template <typename... Segments>
-    [[nodiscard]] static Proposal<Segments...> proposal(Segments &&...segments);
 
     /**
      * Tests if this route is feasible.
@@ -497,22 +490,18 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
     assert(start <= end && end < route.nodes.size());
 }
 
-DistanceSegment Route::SegmentAfter::distance(size_t profile) const
+DistanceSegment
+Route::SegmentAfter::distance([[maybe_unused]] size_t profile) const
 {
-    if (profile == route_.profile())
-        return {route_.cumDist.back() - route_.cumDist[start]};
-
-    auto const between = SegmentBetween(route_, start, route_.size() + 1);
-    return between.distance(profile);
+    assert(profile == route_.profile());
+    return {route_.cumDist.back() - route_.cumDist[start]};
 }
 
-DurationSegment Route::SegmentAfter::duration(size_t profile) const
+DurationSegment
+Route::SegmentAfter::duration([[maybe_unused]] size_t profile) const
 {
-    if (profile == route_.profile())
-        return route_.durAfter[start];
-
-    auto const between = SegmentBetween(route_, start, route_.size() + 1);
-    return between.duration(profile);
+    assert(profile == route_.profile());
+    return route_.durAfter[start];
 }
 
 LoadSegment const &Route::SegmentAfter::load(size_t dimension) const
@@ -523,12 +512,14 @@ LoadSegment const &Route::SegmentAfter::load(size_t dimension) const
 DistanceSegment
 Route::SegmentBefore::distance([[maybe_unused]] size_t profile) const
 {
+    assert(profile == route_.profile());
     return {route_.cumDist[end]};
 }
 
 DurationSegment
 Route::SegmentBefore::duration([[maybe_unused]] size_t profile) const
 {
+    assert(profile == route_.profile());
     return route_.durBefore[end];
 }
 
@@ -639,12 +630,6 @@ Route::Node *Route::operator[](size_t idx)
     return nodes[idx];
 }
 
-template <typename... Segments>
-Route::Proposal<Segments...> Route::proposal(Segments &&...segments)
-{
-    return {std::forward<Segments>(segments)...};
-}
-
 std::vector<Load> const &Route::load() const
 {
     assert(!dirty);
@@ -748,15 +733,19 @@ Route::SegmentBetween Route::between(size_t start, size_t end) const
 
 template <typename... Segments>
 Route::Proposal<Segments...>::Proposal(Segments &&...segments)
-    : segments(std::forward<Segments>(segments)...)
+    : segments_(std::forward<Segments>(segments)...)
 {
-    static_assert(sizeof...(segments) > 0, "Proposal cannot be empty.");
+    static_assert(sizeof...(Segments) > 0, "Proposal cannot be empty.");
+
+    [[maybe_unused]] auto &&first = std::get<0>(segments_);
+    [[maybe_unused]] auto &&last = std::get<sizeof...(Segments) - 1>(segments_);
+    assert(first.route() == last.route());  // must start and end at same route
 }
 
 template <typename... Segments>
 Route const *Route::Proposal<Segments...>::route() const
 {
-    return std::get<0>(segments).route();
+    return std::get<0>(segments_).route();
 }
 
 template <typename... Segments>
@@ -786,7 +775,7 @@ DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
         return distSegment;
     };
 
-    return std::apply(fn, segments);
+    return std::apply(fn, segments_);
 }
 
 template <typename... Segments>
@@ -816,7 +805,7 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
         return durSegment;
     };
 
-    return std::apply(fn, segments);
+    return std::apply(fn, segments_);
 }
 
 template <typename... Segments>
@@ -837,7 +826,7 @@ LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
         return segment;
     };
 
-    return std::apply(fn, segments);
+    return std::apply(fn, segments_);
 }
 
 template <class InputIt>

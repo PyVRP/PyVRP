@@ -53,7 +53,7 @@ pyvrp::Cost pyvrp::search::insertCost(Route::Node *U,
 
     costEvaluator.deltaCost<true>(
         deltaCost,
-        Route::proposal(route->before(V->idx()),
+        Route::Proposal(route->before(V->idx()),
                         ClientSegment(data, U->client()),
                         route->after(V->idx() + 1)));
 
@@ -74,7 +74,7 @@ pyvrp::Cost pyvrp::search::removeCost(Route::Node *U,
         = client.prize - Cost(route->size() == 1) * route->fixedVehicleCost();
 
     costEvaluator.deltaCost<true>(deltaCost,
-                                  Route::proposal(route->before(U->idx() - 1),
+                                  Route::Proposal(route->before(U->idx() - 1),
                                                   route->after(U->idx() + 1)));
 
     return deltaCost;
@@ -96,7 +96,7 @@ pyvrp::Cost pyvrp::search::inplaceCost(Route::Node *U,
 
     costEvaluator.deltaCost<true>(
         deltaCost,
-        Route::proposal(route->before(V->idx() - 1),
+        Route::Proposal(route->before(V->idx() - 1),
                         ClientSegment(data, U->client()),
                         route->after(V->idx() + 1)));
 
