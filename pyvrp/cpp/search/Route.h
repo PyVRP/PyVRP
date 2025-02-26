@@ -44,6 +44,10 @@ public:
     public:
         Proposal(Segments &&...segments);
 
+        /**
+         * The proposal's original route. This is the route associated with the
+         * first segment.
+         */
         Route const *route() const;
 
         DistanceSegment distanceSegment() const;
