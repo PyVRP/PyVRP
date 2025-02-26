@@ -45,8 +45,9 @@ public:
         Proposal(Segments &&...segments);
 
         /**
-         * The proposal's original route. This is the route associated with the
-         * first segment.
+         * The proposal's route. This is the route associated with the first
+         * segment, which determines a.o. the vehicle type and route profile
+         * used for the proposal.
          */
         Route const *route() const;
 
