@@ -514,22 +514,16 @@ LoadSegment const &Route::SegmentAfter::load(size_t dimension) const
     return route.loadAfter[dimension][start];
 }
 
-DistanceSegment Route::SegmentBefore::distance(size_t profile) const
+DistanceSegment
+Route::SegmentBefore::distance([[maybe_unused]] size_t profile) const
 {
-    if (profile == route.profile())
-        return {route.cumDist[end]};
-
-    auto const between = SegmentBetween(route, 0, end);
-    return between.distance(profile);
+    return {route.cumDist[end]};
 }
 
-DurationSegment Route::SegmentBefore::duration(size_t profile) const
+DurationSegment
+Route::SegmentBefore::duration([[maybe_unused]] size_t profile) const
 {
-    if (profile == route.profile())
-        return route.durBefore[end];
-
-    auto const between = SegmentBetween(route, 0, end);
-    return between.duration(profile);
+    return route.durBefore[end];
 }
 
 LoadSegment const &Route::SegmentBefore::load(size_t dimension) const
@@ -751,6 +745,7 @@ Route::Proposal<Segments...>::Proposal(Route const *current,
       data(data),
       segments(std::forward<Segments>(segments)...)
 {
+    static_assert(sizeof...(segments) > 0, "Proposal cannot be empty.");
 }
 
 template <typename... Segments>
