@@ -10,7 +10,6 @@ from pyvrp._pyvrp import (
     ClientGroup,
     Depot,
     ProblemData,
-    Reload,
     VehicleType,
 )
 from pyvrp.constants import MAX_VALUE
@@ -310,31 +309,6 @@ class Model:
         self._profiles.append(profile)
         return profile
 
-    def add_reload(
-        self,
-        depot: Depot | None = None,
-        tw_early: int = 0,
-        tw_late: int = np.iinfo(np.int64).max,
-        load_duration: int = 0,
-    ) -> Reload:
-        """
-        Adds a new reload location the given attributes to the model. Returns
-        the created :class:`~pyvrp._pyvrp.Reload` instance.
-        """
-        if depot is None:
-            depot_idx = 0
-        elif (idx := _idx_by_id(depot, self._depots)) is not None:
-            depot_idx = idx
-        else:
-            raise ValueError("The given reload depot is not in this model.")
-
-        return Reload(
-            depot=depot_idx,
-            tw_early=tw_early,
-            tw_late=tw_late,
-            load_duration=load_duration,
-        )
-
     def add_vehicle_type(
         self,
         num_available: int = 1,
@@ -351,7 +325,7 @@ class Model:
         profile: Profile | None = None,
         start_late: int | None = None,
         initial_load: int | list[int] = [],
-        reloads: list[Reload] = [],
+        reload_depots: list[Depot] = [],
         *,
         name: str = "",
     ) -> VehicleType:
@@ -391,6 +365,15 @@ class Model:
         else:
             raise ValueError("The given profile is not in this model.")
 
+        reloads: list[int] = []
+        for depot in reload_depots:
+            depot_idx = _idx_by_id(depot, self._depots)
+            if depot_idx is not None:
+                reloads.append(depot_idx)
+            else:
+                msg = "The given reload depot is not in this model."
+                raise ValueError(msg)
+
         init_load = initial_load
         if isinstance(init_load, int):
             init_load = [init_load]
@@ -410,7 +393,7 @@ class Model:
             profile=profile_idx,
             start_late=start_late,
             initial_load=init_load,
-            reloads=reloads,
+            reload_depots=reloads,
             name=name,
         )
 

@@ -16,7 +16,6 @@ from ._pyvrp import Depot as Depot
 from ._pyvrp import DynamicBitset as DynamicBitset
 from ._pyvrp import ProblemData as ProblemData
 from ._pyvrp import RandomNumberGenerator as RandomNumberGenerator
-from ._pyvrp import Reload as Reload
 from ._pyvrp import Route as Route
 from ._pyvrp import Solution as Solution
 from ._pyvrp import VehicleType as VehicleType

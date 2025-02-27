@@ -5,7 +5,7 @@ import pytest
 from numpy.random import default_rng
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
-from pyvrp import Client, ClientGroup, Depot, ProblemData, Reload, VehicleType
+from pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
 
 
 @pytest.mark.parametrize(
@@ -1090,38 +1090,16 @@ def test_problem_data_constructor_valid_load_dimensions():
     assert_equal(data.num_load_dimensions, 2)
 
 
-@pytest.mark.parametrize(
-    ("tw_early", "tw_late", "load_duration"),
-    [
-        (1, 0, 0),  # tw_early > tw_late
-        (-1, 1, 0),  # tw_early < 0
-        (0, 1, -1),  # load_duration < 0
-    ],
-)
-def test_reload_raises_for_invalid_arguments(
-    tw_early: int,
-    tw_late: int,
-    load_duration: int,
-):
-    """
-    Tests that the Reload constructor raises for invalid arguments.
-    """
-    depot = 0  # depot is validated by the ProblemData constructor
-    with assert_raises(ValueError):
-        Reload(depot, tw_early, tw_late, load_duration)
-
-
 def test_validate_raises_for_invalid_reload_depot(ok_small):
     """
     Tests that the ProblemData's constructor validates the reload locations
     reference existing depots, and raises if something is wrong.
     """
-    reload = Reload(depot=1)
     assert_equal(ok_small.num_depots, 1)
 
     old_vehicle_type = ok_small.vehicle_type(0)
-    new_vehicle_type = old_vehicle_type.replace(reloads=[reload])
-    assert_equal(new_vehicle_type.reloads, [reload])
+    new_vehicle_type = old_vehicle_type.replace(reload_depots=[1])
+    assert_equal(new_vehicle_type.reload_depots, [1])
 
     # First check if the constructor raises. There's just one depot, but the
     # reload object references depot=1, which does not exist.
