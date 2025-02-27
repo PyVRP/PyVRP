@@ -30,6 +30,16 @@ DurationSegment::DurationSegment(ProblemData::Client const &client)
 {
 }
 
+DurationSegment::DurationSegment(ProblemData::Depot const &depot,
+                                 Duration const loadDuration)
+    : duration_(loadDuration),
+      timeWarp_(0),
+      twEarly_(depot.twEarly),
+      twLate_(depot.twLate),
+      releaseTime_(0)
+{
+}
+
 DurationSegment::DurationSegment(ProblemData::VehicleType const &vehicleType,
                                  Duration const twLate)
     : duration_(0),

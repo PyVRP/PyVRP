@@ -491,6 +491,42 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
     )
 
 
+@pytest.mark.parametrize(
+    ("shift_tw", "expected_tw"),
+    [
+        ((0, np.iinfo(np.int64).max), (0, 1000)),  # should default to depot
+        ((0, 1000), (0, 1000)),  # same as depot
+        ((0, 500), (0, 500)),  # earlier tw_late, should lower tw_late
+        ((250, 1000), (250, 1000)),  # later tw_early, should increase tw_early
+        ((300, 600), (300, 600)),  # both more restricitve
+    ],
+)
+def test_shift_duration_depot_time_window_interaction(
+    shift_tw: tuple[int, int], expected_tw: tuple[int, int]
+):
+    """
+    Tests that the route's depot time window is restricted to the most
+    restrictive of [depot early, depot late] and [shift early, shift late].
+    The depot time window defaults to [0, 1_000], and the shift time window
+    varies around that.
+    """
+    data = ProblemData(
+        clients=[],
+        depots=[Depot(x=0, y=0, tw_early=0, tw_late=1_000)],
+        vehicle_types=[VehicleType(tw_early=shift_tw[0], tw_late=shift_tw[1])],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
+    )
+
+    route = Route(data, idx=0, vehicle_type=0)
+    assert_equal(len(route), 0)
+
+    for idx in [0, 1]:
+        ds = route.duration_at(idx)
+        assert_equal(ds.tw_early(), expected_tw[0])
+        assert_equal(ds.tw_late(), expected_tw[1])
+
+
 @pytest.mark.parametrize("clients", [(1, 2, 3, 4), (1, 2), (3, 4)])
 def test_route_centroid(ok_small, clients):
     """
