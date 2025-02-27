@@ -1133,3 +1133,35 @@ def test_problem_data_constructor_valid_load_dimensions():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
     assert_equal(data.num_load_dimensions, 2)
+
+
+@pytest.mark.parametrize(
+    ("start_depot", "end_depot"),
+    [(0, 1), (1, 0), (1, 1)],
+)
+def test_raises_if_vehicle_and_depot_time_windows_do_not_overlap(
+    start_depot: int,
+    end_depot: int,
+):
+    """
+    Tests that the ProblemData constructor raises when a vehicle type's time
+    window (shift) does not at least overlap with that of the vehicle type's
+    start and end depots.
+    """
+    depot1 = Depot(x=0, y=0, tw_early=0, tw_late=10)
+    depot2 = Depot(x=0, y=0, tw_early=15, tw_late=25)
+    vehicle_type = VehicleType(  # overlap with first depot, but not second
+        tw_early=5,
+        tw_late=10,
+        start_depot=start_depot,
+        end_depot=end_depot,
+    )
+
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=[],
+            depots=[depot1, depot2],
+            vehicle_types=[vehicle_type],
+            distance_matrices=[np.zeros((2, 2), dtype=int)],
+            duration_matrices=[np.zeros((2, 2), dtype=int)],
+        )
