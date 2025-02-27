@@ -97,9 +97,6 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoclass:: Depot
       :members:
 
-   .. autoclass:: Reload
-      :members:
-
    .. autoclass:: VehicleType
       :members:
 
