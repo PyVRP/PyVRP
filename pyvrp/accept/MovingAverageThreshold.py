@@ -45,10 +45,15 @@ class MovingAverageThreshold:
     def history(self) -> list[float]:
         return list(self._history)
 
-    def __call__(self, best: float, current: float, candidate: float) -> bool:
-        self._history.append(candidate)
+    @property
+    def threshold(self) -> float:
+        if len(self._history) == 0:
+            return float("inf")
+
         recent_best = min(self._history)
         recent_avg = mean(self._history)
+        return recent_best + self._eta * (recent_avg - recent_best)
 
-        threshold = recent_best + self._eta * (recent_avg - recent_best)
-        return candidate <= threshold
+    def __call__(self, best: float, current: float, candidate: float) -> bool:
+        self._history.append(candidate)
+        return candidate <= self.threshold
