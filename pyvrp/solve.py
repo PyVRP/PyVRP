@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Type, Union
 
 import tomli
 
 import pyvrp.search
-from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
+from pyvrp.IteratedLocalSearch import (
+    IteratedLocalSearch,
+    IteratedLocalSearchParams,
+)
 from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
-from pyvrp.Population import Population, PopulationParams
 from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
-from pyvrp.crossover import ordered_crossover as ox
-from pyvrp.crossover import selective_route_exchange as srex
-from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.search import (
     NODE_OPERATORS,
     ROUTE_OPERATORS,
@@ -35,12 +34,10 @@ class SolveParams:
 
     Parameters
     ----------
-    genetic
-        Genetic algorithm parameters.
+    ils
+        Iterated local search parameters.
     penalty
         Penalty parameters.
-    population
-        Population parameters.
     neighbourhood
         Neighbourhood parameters.
     node_ops
@@ -51,16 +48,14 @@ class SolveParams:
 
     def __init__(
         self,
-        genetic: GeneticAlgorithmParams = GeneticAlgorithmParams(),
+        ils: IteratedLocalSearchParams = IteratedLocalSearchParams(),
         penalty: PenaltyParams = PenaltyParams(),
-        population: PopulationParams = PopulationParams(),
         neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
-        node_ops: list[type[NodeOperator]] = NODE_OPERATORS,
-        route_ops: list[type[RouteOperator]] = ROUTE_OPERATORS,
+        node_ops: list[Type[NodeOperator]] = NODE_OPERATORS,
+        route_ops: list[Type[RouteOperator]] = ROUTE_OPERATORS,
     ):
-        self._genetic = genetic
+        self._ils = ils
         self._penalty = penalty
-        self._population = population
         self._neighbourhood = neighbourhood
         self._node_ops = node_ops
         self._route_ops = route_ops
@@ -68,25 +63,20 @@ class SolveParams:
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, SolveParams)
-            and self.genetic == other.genetic
+            and self.ils == other.ils
             and self.penalty == other.penalty
-            and self.population == other.population
             and self.neighbourhood == other.neighbourhood
             and self.node_ops == other.node_ops
             and self.route_ops == other.route_ops
         )
 
     @property
-    def genetic(self):
-        return self._genetic
+    def ils(self):
+        return self._ils
 
     @property
     def penalty(self):
         return self._penalty
-
-    @property
-    def population(self):
-        return self._population
 
     @property
     def neighbourhood(self):
@@ -101,16 +91,15 @@ class SolveParams:
         return self._route_ops
 
     @classmethod
-    def from_file(cls, loc: str | pathlib.Path):
+    def from_file(cls, loc: Union[str, pathlib.Path]):
         """
         Loads the solver parameters from a TOML file.
         """
         with open(loc, "rb") as fh:
             data = tomli.load(fh)
 
-        gen_params = GeneticAlgorithmParams(**data.get("genetic", {}))
+        ils_params = IteratedLocalSearchParams(**data.get("ils", {}))
         pen_params = PenaltyParams(**data.get("penalty", {}))
-        pop_params = PopulationParams(**data.get("population", {}))
         nb_params = NeighbourhoodParams(**data.get("neighbourhood", {}))
 
         node_ops = NODE_OPERATORS
@@ -122,7 +111,11 @@ class SolveParams:
             route_ops = [getattr(pyvrp.search, op) for op in data["route_ops"]]
 
         return cls(
-            gen_params, pen_params, pop_params, nb_params, node_ops, route_ops
+            ils_params,
+            pen_params,
+            nb_params,
+            node_ops,
+            route_ops,
         )
 
 
@@ -162,8 +155,16 @@ def solve(
         found solution.
     """
     rng = RandomNumberGenerator(seed=seed)
-    neighbours = compute_neighbours(data, params.neighbourhood)
-    ls = LocalSearch(data, rng, neighbours)
+
+    VALUE = 1_000_000  # TODO Ignore the penalties for now
+    penalty_params = PenaltyParams(solutions_between_updates=VALUE)
+    pm = PenaltyManager(
+        initial_penalties=([VALUE], VALUE, VALUE),
+        params=penalty_params,
+    )
+    nbhd = compute_neighbours(data)
+    ls = LocalSearch(data, rng, nbhd)
+    perturb = ls  # TODO
 
     for node_op in params.node_ops:
         ls.add_node_operator(node_op(data))
@@ -171,16 +172,10 @@ def solve(
     for route_op in params.route_ops:
         ls.add_route_operator(route_op(data))
 
-    pm = PenaltyManager.init_from(data, params.penalty)
-    pop = Population(bpd, params.population)
-    init = [
-        Solution.make_random(data, rng)
-        for _ in range(params.population.min_pop_size)
-    ]
+    def accept(x, y, z):
+        return True  # TODO
 
-    # We use SREX when the instance is a proper VRP; else OX for TSP.
-    crossover = srex if data.num_vehicles > 1 else ox
-
-    gen_args = (data, pm, rng, pop, ls, crossover, init, params.genetic)
-    algo = GeneticAlgorithm(*gen_args)  # type: ignore
-    return algo.run(stop, collect_stats, display)
+    ils_args = (data, pm, rng, perturb, ls, accept, params.ils)
+    algo = IteratedLocalSearch(*ils_args)  # type: ignore
+    init = ls(Solution.make_random(data, rng), pm.cost_evaluator())
+    return algo.run(stop, init, collect_stats, display)

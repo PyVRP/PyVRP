@@ -1,16 +1,17 @@
+from __future__ import annotations
+
 from importlib.metadata import version
+from typing import TYPE_CHECKING
 
-from pyvrp._pyvrp import ProblemData
-
-from .Result import Result
-from .Statistics import Statistics
+if TYPE_CHECKING:
+    from pyvrp.Result import Result
+    from pyvrp.Statistics import Statistics
+    from pyvrp._pyvrp import (
+        ProblemData,
+    )
 
 # Templates for various different outputs.
-_ITERATION = (
-    "{special} {iters:>7} {elapsed:>6}s | "
-    "{feas_size:>3} {feas_avg:>8} {feas_best:>8} | "
-    "{infeas_size:>3} {infeas_avg:>8} {infeas_best:>8}"
-)
+_ITERATION = "{special} {iters:>7} {elapsed:>6}s | {curr:>8} {cand:>8} {best:>8}   | {threshold:>8}"  # noqa: E501
 
 _START = """PyVRP v{version}
 
@@ -19,8 +20,8 @@ Solving an instance with:
     {client_text}
     {vehicle_text} ({vehicle_type_text})
 
-                  |       Feasible        |      Infeasible
-    Iters    Time |   #      Avg     Best |   #      Avg     Best"""
+                  |   Cost (feasible)
+    Iters    Time |   Curr    Cand     Best         | Threshold"""
 
 _END = """
 Search terminated in {runtime:.2f}s after {iters} iterations.
@@ -29,7 +30,7 @@ Best-found solution has cost {best_cost}.
 {summary}
 """
 
-_RESTART = "R                 |        restart        |        restart"
+NUM_ITERS_PRINT = 500
 
 
 class ProgressPrinter:
@@ -57,30 +58,30 @@ class ProgressPrinter:
         should_print = (
             self._print
             and stats.is_collecting()
-            and stats.num_iterations % 500 == 0
+            and stats.num_iterations % NUM_ITERS_PRINT == 0
         )
 
         if not should_print:
             return
 
-        feas = stats.feas_stats[-1]
-        infeas = stats.infeas_stats[-1]
+        data = stats.data[-1]
+
+        def format_cost(cost, is_feas):
+            return f"{round(cost)} {'(F)' if is_feas else '(I)'}"
 
         msg = _ITERATION.format(
-            special="H" if feas.best_cost < self._best_cost else " ",
+            special="H" if data.best_cost < self._best_cost else " ",
             iters=stats.num_iterations,
             elapsed=round(sum(stats.runtimes)),
-            feas_size=feas.size,
-            feas_avg=round(feas.avg_cost) if feas.size else "-",
-            feas_best=round(feas.best_cost) if feas.size else "-",
-            infeas_size=infeas.size,
-            infeas_avg=round(infeas.avg_cost) if infeas.size else "-",
-            infeas_best=round(infeas.best_cost) if infeas.size else "-",
+            curr=format_cost(data.current_cost, data.current_feas),
+            cand=format_cost(data.candidate_cost, data.candidate_feas),
+            best=format_cost(data.best_cost, data.best_feas),
+            threshold=round(data.threshold, 2),
         )
         print(msg)
 
-        if feas.best_cost < self._best_cost:
-            self._best_cost = feas.best_cost
+        if data.best_cost < self._best_cost:
+            self._best_cost = data.best_cost
 
     def start(self, data: ProblemData):
         """
@@ -124,11 +125,3 @@ class ProgressPrinter:
                 summary=result.summary(),
             )
             print(msg)
-
-    def restart(self):
-        """
-        Indicates in the progress information that the algorithm has restarted
-        the search.
-        """
-        if self._print:
-            print(_RESTART)
