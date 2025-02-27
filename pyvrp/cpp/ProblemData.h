@@ -264,6 +264,9 @@ public:
      * Depot(
      *    x: int,
      *    y: int,
+     *    tw_early: int = 0,
+     *    tw_late: int = np.iinfo(np.int64).max,
+     *    load_duration: int = 0,
      *    *,
      *    name: str = "",
      * )
@@ -278,6 +281,12 @@ public:
      * y
      *     Vertical coordinate of this depot, that is, the 'y' part of the
      *     depot's (x, y) location tuple.
+     * tw_early
+     *     Opening time of this depot. Default 0.
+     * tw_late
+     *     Closing time of this depot. Default unconstrained.
+     * load_duration
+     *     Time it takes to load a vehicle at this depot. Default 0.
      * name
      *     Free-form name field for this depot. Default empty.
      *
@@ -287,6 +296,12 @@ public:
      *     Horizontal coordinate of this depot.
      * y
      *     Vertical coordinate of this depot.
+     * tw_early
+     *     Opening time of this depot.
+     * tw_late
+     *     Closing time of this depot.
+     * load_duration
+     *     Time it takes to load a vehicle at this depot.
      * name
      *     Free-form name field for this depot.
      */
@@ -294,9 +309,17 @@ public:
     {
         Coordinate const x;
         Coordinate const y;
-        char const *name;  // Depot name (for reference)
+        Duration const twEarly;       // Depot opening time
+        Duration const twLate;        // Depot closing time
+        Duration const loadDuration;  // Load duration at this depot
+        char const *name;             // Depot name (for reference)
 
-        Depot(Coordinate x, Coordinate y, std::string name = "");
+        Depot(Coordinate x,
+              Coordinate y,
+              Duration twEarly = 0,
+              Duration twLate = std::numeric_limits<Duration>::max(),
+              Duration loadDuration = 0,
+              std::string name = "");
 
         bool operator==(Depot const &other) const;
 

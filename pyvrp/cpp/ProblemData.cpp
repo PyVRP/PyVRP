@@ -177,18 +177,46 @@ void ProblemData::ClientGroup::addClient(size_t client)
 
 void ProblemData::ClientGroup::clear() { clients_.clear(); }
 
-ProblemData::Depot::Depot(Coordinate x, Coordinate y, std::string name)
-    : x(x), y(y), name(duplicate(name.data()))
+ProblemData::Depot::Depot(Coordinate x,
+                          Coordinate y,
+                          Duration twEarly,
+                          Duration twLate,
+                          Duration loadDuration,
+                          std::string name)
+    : x(x),
+      y(y),
+      twEarly(twEarly),
+      twLate(twLate),
+      loadDuration(loadDuration),
+      name(duplicate(name.data()))
 {
+    if (twEarly > twLate)
+        throw std::invalid_argument("tw_early must be <= tw_late.");
+
+    if (twEarly < 0)
+        throw std::invalid_argument("tw_early must be >= 0.");
+
+    if (loadDuration < 0)
+        throw std::invalid_argument("load_duration must be >= 0.");
 }
 
 ProblemData::Depot::Depot(Depot const &depot)
-    : x(depot.x), y(depot.y), name(duplicate(depot.name))
+    : x(depot.x),
+      y(depot.y),
+      twEarly(depot.twEarly),
+      twLate(depot.twLate),
+      loadDuration(depot.loadDuration),
+      name(duplicate(depot.name))
 {
 }
 
 ProblemData::Depot::Depot(Depot &&depot)
-    : x(depot.x), y(depot.y), name(depot.name)  // we can steal
+    : x(depot.x),
+      y(depot.y),
+      twEarly(depot.twEarly),
+      twLate(depot.twLate),
+      loadDuration(depot.loadDuration),
+      name(depot.name)  // we can steal
 {
     depot.name = nullptr;  // stolen
 }
@@ -197,7 +225,14 @@ ProblemData::Depot::~Depot() { delete[] name; }
 
 bool ProblemData::Depot::operator==(Depot const &other) const
 {
-    return x == other.x && y == other.y && std::strcmp(name, other.name) == 0;
+    // clang-format off
+    return x == other.x 
+        && y == other.y
+        && twEarly == other.twEarly
+        && twLate == other.twLate
+        && loadDuration == other.loadDuration
+        && std::strcmp(name, other.name) == 0;
+    // clang-format on
 }
 
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
