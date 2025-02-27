@@ -11,6 +11,7 @@ from pyvrp.IteratedLocalSearch import (
 )
 from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
 from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
+from pyvrp.accept import MovingAverageThreshold
 from pyvrp.search import (
     NODE_OPERATORS,
     ROUTE_OPERATORS,
@@ -172,9 +173,7 @@ def solve(
     for route_op in params.route_ops:
         ls.add_route_operator(route_op(data))
 
-    def accept(x, y, z):
-        return True  # TODO
-
+    accept = MovingAverageThreshold(eta=0.5, history_size=100)
     ils_args = (data, pm, rng, perturb, ls, accept, params.ils)
     algo = IteratedLocalSearch(*ils_args)  # type: ignore
     init = ls(Solution.make_random(data, rng), pm.cost_evaluator())
