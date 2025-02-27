@@ -33,6 +33,13 @@ auto &pad(auto &vec1, auto const &vec2)
 }
 
 bool isNegative(auto value) { return value < 0; }
+
+// Small helper that determines if the time windows of a and b overlap.
+bool hasTimeOverlap(auto const &a, auto const &b)
+{
+    // See https://stackoverflow.com/a/325964/4316405.
+    return a.twEarly <= b.twLate && a.twLate >= b.twEarly;
+}
 }  // namespace
 
 ProblemData::Client::Client(Coordinate x,
@@ -553,6 +560,14 @@ void ProblemData::validate() const
 
         if (vehicleType.profile >= dists_.size())
             throw std::out_of_range("Vehicle type has invalid profile.");
+
+        if (!hasTimeOverlap(depots_[vehicleType.startDepot], vehicleType))
+            throw std::invalid_argument("Vehicle and its start depot have no "
+                                        "overlapping time windows.");
+
+        if (!hasTimeOverlap(depots_[vehicleType.endDepot], vehicleType))
+            throw std::invalid_argument("Vehicle and its end depot have no "
+                                        "overlapping time windows.");
     }
 
     // Matrix checks.
