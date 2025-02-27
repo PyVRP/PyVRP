@@ -254,6 +254,9 @@ class Model:
         self,
         x: int,
         y: int,
+        tw_early: int = 0,
+        tw_late: int = np.iinfo(np.int64).max,
+        load_duration: int = 0,
         *,
         name: str = "",
     ) -> Depot:
@@ -261,7 +264,15 @@ class Model:
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Depot` instance.
         """
-        depot = Depot(x=x, y=y, name=name)
+        depot = Depot(
+            x=x,
+            y=y,
+            tw_early=tw_early,
+            tw_late=tw_late,
+            load_duration=load_duration,
+            name=name,
+        )
+
         self._depots.append(depot)
 
         for group in self._groups:  # new depot invalidates client indices
