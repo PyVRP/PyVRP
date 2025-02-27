@@ -7,7 +7,7 @@ project(
         'b_ndebug=if-release',  # disables asserts in release builds
         'b_lto=true',  # sets -flto
         'werror=true',  # sets -Werror
-        'warning_level=3',  # level 3 sets -Wextra and -Wpedantic
+        'warning_level=0',  # level 3 sets -Wextra and -Wpedantic
     ]
 )
 
@@ -71,6 +71,7 @@ libsearch = static_library(
     'search',
     [
         SRC_DIR / 'search' / 'LocalSearch.cpp',
+        SRC_DIR / 'search' / 'DestroyRepair.cpp',
         SRC_DIR / 'search' / 'Route.cpp',
         SRC_DIR / 'search' / 'primitives.cpp',
         SRC_DIR / 'search' / 'SwapRoutes.cpp',

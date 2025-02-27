@@ -1,6 +1,8 @@
 #include "bindings.h"
+#include "DestroyRepair.h"
 #include "Exchange.h"
 #include "LocalSearch.h"
+#include "RandomNumberGenerator.h"
 #include "Route.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
@@ -15,6 +17,8 @@
 
 namespace py = pybind11;
 
+using pyvrp::RandomNumberGenerator;
+using pyvrp::search::DestroyRepair;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
@@ -218,6 +222,26 @@ PYBIND11_MODULE(_search, m)
              py::arg("overlap_tolerance") = 0.05,
              py::call_guard<py::gil_scoped_release>())
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
+
+    py::class_<DestroyRepair>(m, "DestroyRepair")
+        .def(py::init<pyvrp::ProblemData const &,
+                      RandomNumberGenerator &,
+                      std::vector<std::vector<size_t>>>(),
+             py::arg("data"),
+             py::arg("rng"),
+             py::arg("neighbours"),
+             py::keep_alive<1, 2>())  // keep data alive until DR is freed
+        .def("set_neighbours",
+             &DestroyRepair::setNeighbours,
+             py::arg("neighbours"))
+        .def("neighbours",
+             &DestroyRepair::neighbours,
+             py::return_value_policy::reference_internal)
+        .def("__call__",
+             &DestroyRepair::operator(),
+             py::arg("solution"),
+             py::arg("cost_evaluator"),
+             py::call_guard<py::gil_scoped_release>());
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
         .def(py::init<pyvrp::ProblemData const &, size_t, size_t>(),

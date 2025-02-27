@@ -15,6 +15,7 @@ from pyvrp.accept import MovingAverageThreshold
 from pyvrp.search import (
     NODE_OPERATORS,
     ROUTE_OPERATORS,
+    DestroyRepair,
     LocalSearch,
     NeighbourhoodParams,
     NodeOperator,
@@ -164,8 +165,8 @@ def solve(
         params=penalty_params,
     )
     nbhd = compute_neighbours(data)
+    perturb = DestroyRepair(data, rng, nbhd)
     ls = LocalSearch(data, rng, nbhd)
-    perturb = ls  # TODO
 
     for node_op in params.node_ops:
         ls.add_node_operator(node_op(data))
