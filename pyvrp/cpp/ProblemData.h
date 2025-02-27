@@ -416,7 +416,7 @@ public:
      * initial_load
      *     Load already on the vehicle that need to be dropped off at a depot.
      *     This load is present irrespective of any client visits.
-     * reloads
+     * reload_depots
      *     List of reload locations this vehicle may visit along it route, to
      *     empty and reload.
      * name

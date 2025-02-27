@@ -976,10 +976,10 @@ def test_integer_vehicle_capacity_and_load_arguments_are_promoted_to_lists():
     assert_equal(veh2.initial_load, [1])
 
 
-def test_add_reload_depots():
+def test_adding_vehicle_reload_depots():
     """
-    Smoke test that checks adding reloads and passing them when constructing a
-    vehicle type works correctly.
+    Smoke test that checks adding reload depots to the vehicle type works
+    correctly.
     """
     m = Model()
     depot1 = m.add_depot(x=0, y=0)
@@ -990,3 +990,15 @@ def test_add_reload_depots():
 
     veh_type2 = m.add_vehicle_type(reload_depots=[depot1, depot2])
     assert_equal(veh_type2.reload_depots, [0, 1])
+
+
+def test_adding_unknown_reload_depots_raises():
+    """
+    Tests that passing an unknown reload depot when creating a new vehicle
+    type raises.
+    """
+    m = Model()
+    depot = Depot(x=0, y=0)  # not in model
+
+    with assert_raises(ValueError):
+        m.add_vehicle_type(reload_depots=[depot])
