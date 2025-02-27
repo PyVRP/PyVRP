@@ -7,19 +7,13 @@ using pyvrp::Trip;
 Trip::Trip(ProblemData const &data,
            Visits visits,
            size_t const vehicleType,
-           TripDelimiter start,
-           TripDelimiter end,
+           size_t const startDepot,
+           size_t const endDepot,
            Trip const *after)
     : visits_(std::move(visits)),
       vehicleType_(vehicleType),
-      startDepot_(std::holds_alternative<Depot const *>(start)
-                      ? std::distance(data.depots().data(),
-                                      std::get<Depot const *>(start))
-                      : std::get<Reload const *>(start)->depot),
-      endDepot_(std::holds_alternative<Depot const *>(end)
-                    ? std::distance(data.depots().data(),
-                                    std::get<Depot const *>(end))
-                    : std::get<Reload const *>(end)->depot)
+      startDepot_(startDepot),
+      endDepot_(endDepot)
 {
     if (startDepot_ >= data.numDepots())
         throw std::invalid_argument("Start depot not understood.");
@@ -30,25 +24,22 @@ Trip::Trip(ProblemData const &data,
     auto const &vehType = data.vehicleType(vehicleType_);
 
     DurationSegment ds = {vehType, vehType.startLate};
-    if (std::holds_alternative<Reload const *>(start))
+    if (after)
     {
-        if (!after)
-            throw std::invalid_argument("Reload start without previous trip.");
-
         if (after->endDepot_ != startDepot_)
             throw std::invalid_argument("Trip start unequal to previous end.");
 
         // Use attributes of previous trip to determine previous duration
         // segment, ignoring release times since those only apply per-trip.
-        DurationSegment prev = {after->duration_,
-                                after->timeWarp_,
-                                after->startTime_,
-                                after->startTime_ + after->slack_,
-                                0};
+        // DurationSegment prev = {after->duration_,
+        //                         after->timeWarp_,
+        //                         after->startTime_,
+        //                         after->startTime_ + after->slack_,
+        //                         0};
 
-        auto const *reload = std::get<Reload const *>(start);
-        ds = {*reload, reload->loadDuration};
-        ds = DurationSegment::merge(0, prev, ds);
+        // auto const *reload = std::get<Reload const *>(start);
+        // ds = {*reload, reload->loadDuration};
+        // ds = DurationSegment::merge(0, prev, ds);
     }
 
     std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
@@ -97,12 +88,8 @@ Trip::Trip(ProblemData const &data,
             loadSegments[dim].load() - vehType.capacity[dim], 0));
     }
 
+    // TODO
     DurationSegment endDS(vehType, vehType.twLate);
-    if (std::holds_alternative<Reload const *>(end))
-    {
-        auto const *reload = std::get<Reload const *>(end);
-        endDS = {*reload, 0};  // loading is part of the next trip
-    }
 
     ds = DurationSegment::merge(durations(last, endDepot_), ds, endDS);
     duration_ = ds.duration();

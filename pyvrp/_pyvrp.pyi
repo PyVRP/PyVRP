@@ -227,8 +227,8 @@ class Trip:
         data: ProblemData,
         visits: list[int],
         vehicle_type: int,
-        start: Depot | Reload,
-        end: Depot | Reload,
+        start_depot: int,
+        end_depot: int,
         after: Trip | None = None,
     ) -> None: ...
     def __len__(self) -> int: ...

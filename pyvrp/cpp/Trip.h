@@ -1,6 +1,5 @@
 #include "ProblemData.h"
 
-#include <variant>
 #include <vector>
 
 namespace pyvrp
@@ -10,8 +9,8 @@ namespace pyvrp
  *     data: ProblemData,
  *     visits: list[int],
  *     vehicle_type: int,
- *     start: Depot | Reload,
- *     end: Depot | Reload,
+ *     start_depot: int,
+ *     end_depot: int,
  *     after: Trip | None = None,
  * )
  *
@@ -21,9 +20,6 @@ class Trip
 {
 public:
     using Client = size_t;
-    using Depot = ProblemData::Depot;
-    using Reload = ProblemData::VehicleType::Reload;
-    using TripDelimiter = std::variant<Depot const *, Reload const *>;
     using Visits = std::vector<Client>;
 
 private:
@@ -159,8 +155,8 @@ public:
     Trip(ProblemData const &data,
          Visits visits,
          size_t const vehicleType,
-         TripDelimiter start,
-         TripDelimiter end,
+         size_t const startDepot,
+         size_t const endDepot,
          Trip const *after = nullptr);
 };
 }  // namespace pyvrp
