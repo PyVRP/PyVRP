@@ -526,7 +526,7 @@ void ProblemData::validate() const
         if (vehicleType.profile >= dists_.size())
             throw std::out_of_range("Vehicle type has invalid profile.");
 
-        for (auto const &depot : vehicleType.reloadDepots)
+        for (auto const depot : vehicleType.reloadDepots)
             if (depot >= numDepots())
                 throw std::out_of_range("Vehicle has invalid reload depot.");
     }
