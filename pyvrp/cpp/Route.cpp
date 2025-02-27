@@ -40,6 +40,8 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     endDepot_ = vehType.endDepot;
 
     ProblemData::Depot const &start = data.location(startDepot_);
+    loadDuration_ = start.loadDuration;
+
     DurationSegment const vehStart(vehType, vehType.startLate);
     DurationSegment const depotStart(start, start.loadDuration);
     DurationSegment ds = DurationSegment::merge(0, vehStart, depotStart);
@@ -135,6 +137,7 @@ Route::Route(Visits visits,
              std::vector<Load> excessLoad,
              Duration duration,
              Cost durationCost,
+             Duration loadDuration,
              Duration timeWarp,
              Duration travel,
              Duration service,
@@ -158,6 +161,7 @@ Route::Route(Visits visits,
       excessLoad_(std::move(excessLoad)),
       duration_(duration),
       durationCost_(durationCost),
+      loadDuration_(loadDuration),
       timeWarp_(timeWarp),
       travel_(travel),
       service_(service),
@@ -206,11 +210,16 @@ Duration Route::duration() const { return duration_; }
 
 Cost Route::durationCost() const { return durationCost_; }
 
+Duration Route::loadDuration() const { return loadDuration_; }
+
 Duration Route::serviceDuration() const { return service_; }
 
 Duration Route::timeWarp() const { return timeWarp_; }
 
-Duration Route::waitDuration() const { return duration_ - travel_ - service_; }
+Duration Route::waitDuration() const
+{
+    return duration_ - travel_ - service_ - loadDuration_;
+}
 
 Duration Route::travelDuration() const { return travel_; }
 
