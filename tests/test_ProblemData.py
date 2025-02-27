@@ -157,6 +157,28 @@ def test_raises_for_invalid_depot_data(
         Depot(x, y, tw_early, tw_late, load_duration)
 
 
+def test_depot_initialises_data_correctly():
+    """
+    Tests that the depot constructor correctly initialises its member data, and
+    ensures the data is accessible from Python.
+    """
+    depot = Depot(
+        x=1,
+        y=2,
+        tw_early=3,
+        tw_late=5,
+        load_duration=7,
+        name="test",
+    )
+
+    assert_equal(depot.x, 1)
+    assert_equal(depot.y, 2)
+    assert_equal(depot.tw_early, 3)
+    assert_equal(depot.tw_late, 5)
+    assert_equal(depot.load_duration, 7)
+    assert_equal(depot.name, "test")
+
+
 def test_problem_data_raises_when_no_depot_is_provided():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
