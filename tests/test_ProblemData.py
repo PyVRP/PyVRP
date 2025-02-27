@@ -134,6 +134,29 @@ def test_raises_for_invalid_client_data(
         )
 
 
+@pytest.mark.parametrize(
+    ("x", "y", "tw_early", "tw_late", "load_duration"),
+    [
+        (0, 0, 1, 0, 0),  # tw_early > tw_late
+        (0, 0, -1, 0, 0),  # tw_early < 0
+        (0, 0, 0, -1, 0),  # tw_late < 0
+        (0, 0, 0, 0, -1),  # load_duration < 0
+    ],
+)
+def test_raises_for_invalid_depot_data(
+    x: int,
+    y: int,
+    tw_early: int,
+    tw_late: int,
+    load_duration: int,
+):
+    """
+    Tests that an invalid depot configuration is not accepted.
+    """
+    with assert_raises(ValueError):
+        Depot(x, y, tw_early, tw_late, load_duration)
+
+
 def test_problem_data_raises_when_no_depot_is_provided():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
