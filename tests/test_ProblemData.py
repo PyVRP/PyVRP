@@ -1102,7 +1102,7 @@ def test_validate_raises_for_invalid_reload_depot(ok_small):
     assert_equal(new_vehicle_type.reload_depots, [1])
 
     # First check if the constructor raises. There's just one depot, but the
-    # reload object references depot=1, which does not exist.
+    # reload depot references a depot at index 1, which does not exist.
     mat = np.zeros((1, 1), dtype=int)
     with assert_raises(IndexError):
         ProblemData(
