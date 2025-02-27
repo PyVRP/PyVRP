@@ -99,22 +99,6 @@ class Depot:
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
 
-class Reload:
-    depot: int
-    tw_early: int
-    tw_late: int
-    load_duration: int
-    def __init__(
-        self,
-        depot: int = 0,
-        tw_early: int = 0,
-        tw_late: int = ...,
-        load_duration: int = 0,
-    ) -> None: ...
-    def __eq__(self, other: object) -> bool: ...
-    def __getstate__(self) -> tuple: ...
-    def __setstate__(self, state: tuple, /) -> None: ...
-
 class VehicleType:
     num_available: int
     start_depot: int
@@ -130,7 +114,7 @@ class VehicleType:
     profile: int
     start_late: int
     initial_load: list[int]
-    reloads: list[Reload]
+    reload_depots: list[int]
     name: str
     def __init__(
         self,
@@ -148,7 +132,7 @@ class VehicleType:
         profile: int = 0,
         start_late: int | None = None,
         initial_load: list[int] = [],
-        reloads: list[Reload] = [],
+        reload_depots: list[int] = [],
         *,
         name: str = "",
     ) -> None: ...
@@ -168,7 +152,7 @@ class VehicleType:
         profile: int | None = None,
         start_late: int | None = None,
         initial_load: list[int] | None = None,
-        reloads: list[Reload] | None = None,
+        reload_depots: list[int] | None = None,
         *,
         name: str | None = None,
     ) -> VehicleType: ...

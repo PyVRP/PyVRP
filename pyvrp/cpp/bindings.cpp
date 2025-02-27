@@ -204,42 +204,6 @@ PYBIND11_MODULE(_pyvrp, m)
             { return py::make_iterator(group.begin(), group.end()); },
             py::return_value_policy::reference_internal);
 
-    py::class_<ProblemData::VehicleType::Reload>(
-        m, "Reload", DOC(pyvrp, ProblemData, VehicleType, Reload))
-        .def(py::init<size_t,
-                      pyvrp::Duration,
-                      pyvrp::Duration,
-                      pyvrp::Duration>(),
-             py::arg("depot") = 0,
-             py::arg("tw_early") = 0,
-             py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
-             py::arg("load_duration") = 0)
-        .def(py::self == py::self)  // this is __eq__
-        .def_readonly("depot", &ProblemData::VehicleType::Reload::depot)
-        .def_readonly("tw_early", &ProblemData::VehicleType::Reload::twEarly)
-        .def_readonly("tw_late", &ProblemData::VehicleType::Reload::twLate)
-        .def_readonly("load_duration",
-                      &ProblemData::VehicleType::Reload::loadDuration)
-        .def(py::pickle(
-            [](ProblemData::VehicleType::Reload const
-                   &reload) {  // __getstate__
-                return py::make_tuple(reload.depot,
-                                      reload.twEarly,
-                                      reload.twLate,
-                                      reload.loadDuration);
-            },
-            [](py::tuple t) {  // __setstate__
-                using Reload = ProblemData::VehicleType::Reload;
-
-                Reload reload(t[0].cast<size_t>(),           // depot
-                              t[1].cast<pyvrp::Duration>(),  // tw early
-                              t[2].cast<pyvrp::Duration>(),  // tw late
-                              t[3].cast<pyvrp::Duration>()   // load duration
-                );
-
-                return reload;
-            }));
-
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
         .def(py::init<size_t,
@@ -256,7 +220,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       size_t,
                       std::optional<pyvrp::Duration>,
                       std::vector<pyvrp::Load>,
-                      std::vector<ProblemData::VehicleType::Reload>,
+                      std::vector<size_t>,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
@@ -274,7 +238,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("profile") = 0,
              py::arg("start_late") = py::none(),
              py::arg("initial_load") = py::list(),
-             py::arg("reloads") = py::list(),
+             py::arg("reload_depots") = py::list(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -293,7 +257,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("profile", &ProblemData::VehicleType::profile)
         .def_readonly("start_late", &ProblemData::VehicleType::startLate)
         .def_readonly("initial_load", &ProblemData::VehicleType::initialLoad)
-        .def_readonly("reloads", &ProblemData::VehicleType::reloads)
+        .def_readonly("reload_depots", &ProblemData::VehicleType::reloadDepots)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
@@ -313,7 +277,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("profile") = py::none(),
              py::arg("start_late") = py::none(),
              py::arg("initial_load") = py::none(),
-             py::arg("reloads") = py::none(),
+             py::arg("reload_depots") = py::none(),
              py::kw_only(),
              py::arg("name") = py::none(),
              DOC(pyvrp, ProblemData, VehicleType, replace))
@@ -334,12 +298,10 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.profile,
                                       vehicleType.startLate,
                                       vehicleType.initialLoad,
-                                      vehicleType.reloads,
+                                      vehicleType.reloadDepots,
                                       vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
-                using Reload = ProblemData::VehicleType::Reload;
-
                 ProblemData::VehicleType vehicleType(
                     t[0].cast<size_t>(),                    // num available
                     t[1].cast<std::vector<pyvrp::Load>>(),  // capacity
@@ -355,7 +317,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[11].cast<size_t>(),           // profile
                     t[12].cast<pyvrp::Duration>(),  // start late
                     t[13].cast<std::vector<pyvrp::Load>>(),  // initial load
-                    t[14].cast<std::vector<Reload>>(),       // reloads
+                    t[14].cast<std::vector<size_t>>(),       // reload depots
                     t[15].cast<std::string>());              // name
 
                 return vehicleType;
