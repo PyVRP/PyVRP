@@ -186,8 +186,15 @@ void Route::update()
 #ifndef PYVRP_NO_TIME_WINDOWS
     // Duration.
     durAt.resize(nodes.size());
-    durAt[0] = {vehicleType_, vehicleType_.startLate};
-    durAt[nodes.size() - 1] = {vehicleType_, vehicleType_.twLate};
+
+    ProblemData::Depot const &start = data.location(startDepot());
+    DurationSegment const vehStart(vehicleType_, vehicleType_.startLate);
+    DurationSegment const depotStart(start, start.serviceDuration);
+    durAt[0] = DurationSegment::merge(0, vehStart, depotStart);
+
+    DurationSegment const depotEnd(vehicleType_, vehicleType_.twLate);
+    DurationSegment const vehEnd(data.location(endDepot()), 0);
+    durAt[nodes.size() - 1] = DurationSegment::merge(0, depotEnd, vehEnd);
 
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
         durAt[idx] = {data.location(visits[idx])};
