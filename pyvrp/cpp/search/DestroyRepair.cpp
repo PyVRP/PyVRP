@@ -100,6 +100,26 @@ void DestroyRepair::repair(CostEvaluator const &costEvaluator)
             }
         }
 
+        auto begin = routes.begin();
+        for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
+        {
+            auto const end = begin + data.vehicleType(vehType).numAvailable;
+            auto const pred = [](auto const &route) { return route.empty(); };
+            auto empty = std::find_if(begin, end, pred);
+            begin = end;
+
+            if (empty != end)  // try inserting U into the empty route.
+            {
+                auto const cost
+                    = insertCost(U, (*empty)[0], data, costEvaluator);
+                if (cost < bestCost)
+                {
+                    bestCost = cost;
+                    UAfter = (*empty)[0];
+                }
+            }
+        }
+
         assert(UAfter && UAfter->route());
         UAfter->route()->insert(UAfter->idx() + 1, U);
         UAfter->route()->update();
