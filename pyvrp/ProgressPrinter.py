@@ -21,7 +21,7 @@ Solving an instance with:
     {vehicle_text} ({vehicle_type_text})
 
                   |   Cost (feasible)
-    Iters    Time |   Curr    Pert    Cand     Best       | Threshold"""
+    Iters    Time |   Curr    Pert    Cand     Best       | Threshold (diff)"""
 
 _END = """
 Search terminated in {runtime:.2f}s after {iters} iterations.
@@ -30,7 +30,7 @@ Best-found solution has cost {best_cost}.
 {summary}
 """
 
-NUM_ITERS_PRINT = 500
+NUM_ITERS_PRINT = 100
 
 
 class ProgressPrinter:
@@ -77,7 +77,7 @@ class ProgressPrinter:
             pert=format_cost(data.perturbed_cost, data.perturbed_feas),
             cand=format_cost(data.candidate_cost, data.candidate_feas),
             best=format_cost(data.best_cost, data.best_feas),
-            threshold=round(data.threshold, 2),
+            threshold=f"{data.threshold:.2f} ({data.threshold-data.current_cost:.2f})",
         )
         print(msg)
 
