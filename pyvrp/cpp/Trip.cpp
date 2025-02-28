@@ -2,6 +2,10 @@
 #include "DurationSegment.h"
 #include "LoadSegment.h"
 
+using pyvrp::Cost;
+using pyvrp::Distance;
+using pyvrp::Duration;
+using pyvrp::Load;
 using pyvrp::Trip;
 
 Trip::Trip(ProblemData const &data,
@@ -102,6 +106,13 @@ Trip::Trip(ProblemData const &data,
     slack_ = ds.twLate() - ds.twEarly();
     timeWarp_ = ds.timeWarp(vehType.maxDuration);
     release_ = ds.releaseTime();
+
+    if (after)
+    {
+        startTime_ += after->duration_;
+        duration_ -= after->duration_;
+        timeWarp_ -= after->timeWarp_;
+    }
 }
 
 bool Trip::empty() const { return visits_.empty(); }
@@ -110,27 +121,33 @@ size_t Trip::size() const { return visits_.size(); }
 
 Trip::Visits const &Trip::visits() const { return visits_; }
 
-pyvrp::Distance Trip::distance() const { return distance_; }
+Distance Trip::distance() const { return distance_; }
 
-std::vector<pyvrp::Load> const &Trip::delivery() const { return delivery_; }
+std::vector<Load> const &Trip::delivery() const { return delivery_; }
 
-std::vector<pyvrp::Load> const &Trip::pickup() const { return pickup_; }
+std::vector<Load> const &Trip::pickup() const { return pickup_; }
 
-std::vector<pyvrp::Load> const &Trip::excessLoad() const { return excessLoad_; }
+std::vector<Load> const &Trip::excessLoad() const { return excessLoad_; }
 
-pyvrp::Duration Trip::duration() const { return duration_; }
+Duration Trip::duration() const { return duration_; }
 
-pyvrp::Duration Trip::serviceDuration() const { return service_; }
+Duration Trip::serviceDuration() const { return service_; }
 
-pyvrp::Duration Trip::timeWarp() const { return timeWarp_; }
+Duration Trip::timeWarp() const { return timeWarp_; }
 
-pyvrp::Duration Trip::travelDuration() const { return travel_; }
+Duration Trip::travelDuration() const { return travel_; }
 
-pyvrp::Duration Trip::waitDuration() const { return wait_; }
+Duration Trip::waitDuration() const { return duration_ - travel_ - service_; }
 
-pyvrp::Duration Trip::releaseTime() const { return release_; }
+Duration Trip::startTime() const { return startTime_; }
 
-pyvrp::Cost Trip::prizes() const { return prizes_; }
+Duration Trip::endTime() const { return startTime_ + duration_ - timeWarp_; }
+
+Duration Trip::slack() const { return slack_; }
+
+Duration Trip::releaseTime() const { return release_; }
+
+Cost Trip::prizes() const { return prizes_; }
 
 std::pair<double, double> const &Trip::centroid() const { return centroid_; }
 

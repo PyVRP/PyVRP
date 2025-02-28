@@ -33,7 +33,6 @@ private:
     Duration timeWarp_ = 0;         // Total time warp on this trip
     Duration travel_ = 0;           // Total *travel* duration on this trip
     Duration service_ = 0;          // Total *service* duration on this trip
-    Duration wait_ = 0;             // Total *waiting* duration on this trip
     Duration release_ = 0;          // Release time of this trip
     Duration startTime_ = 0;        // (earliest) start time of this trip
     Duration slack_ = 0;            // Total time slack on this trip
@@ -101,6 +100,21 @@ public:
      * Total waiting duration on this trip.
      */
     [[nodiscard]] Duration waitDuration() const;
+
+    /**
+     * TODO
+     */
+    [[nodiscard]] Duration startTime() const;
+
+    /**
+     * TODO
+     */
+    [[nodiscard]] Duration endTime() const;
+
+    /**
+     * TODO
+     */
+    [[nodiscard]] Duration slack() const;
 
     /**
      * Earliest time at which this trip can leave the depot. Follows from the

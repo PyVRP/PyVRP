@@ -520,6 +520,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("wait_duration",
              &Trip::waitDuration,
              DOC(pyvrp, Trip, waitDuration))
+        .def("start_time", &Trip::startTime, DOC(pyvrp, Trip, startTime))
+        .def("end_time", &Trip::endTime, DOC(pyvrp, Trip, endTime))
+        .def("slack", &Trip::slack, DOC(pyvrp, Trip, slack))
         .def("release_time", &Trip::releaseTime, DOC(pyvrp, Trip, releaseTime))
         .def("prizes", &Trip::prizes, DOC(pyvrp, Trip, prizes))
         .def("centroid", &Trip::centroid, DOC(pyvrp, Trip, centroid))
