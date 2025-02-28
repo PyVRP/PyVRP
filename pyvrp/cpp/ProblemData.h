@@ -348,6 +348,7 @@ public:
      *     profile: int = 0,
      *     start_late: int | None = None,
      *     initial_load: list[int] = [],
+     *     reload_depots: list[int] = [],
      *     *,
      *     name: str = "",
      * )
@@ -396,6 +397,10 @@ public:
      *     This load is present irrespective of any client visits. By default
      *     this value is zero, and the vehicle only considers loads from client
      *     visits.
+     * reload_depots
+     *     List of reload depots (location indices) this vehicle may visit along
+     *     its route, to empty and reload for subsequent client visits. Defaults
+     *     to an empty list, in which case no reloads are allowed.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -434,6 +439,9 @@ public:
      * initial_load
      *     Load already on the vehicle that need to be dropped off at a depot.
      *     This load is present irrespective of any client visits.
+     * reload_depots
+     *     List of reload locations this vehicle may visit along it route, to
+     *     empty and reload.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -452,8 +460,9 @@ public:
         Cost const unitDurationCost;  // Variable cost per unit of duration
         size_t const profile;         // Distance and duration profile
         Duration const startLate;     // Latest start of shift
-        std::vector<Load> const initialLoad;  // Initially used capacity
-        char const *name;                     // Type name (for reference)
+        std::vector<Load> const initialLoad;     // Initially used capacity
+        std::vector<size_t> const reloadDepots;  // Reload locations
+        char const *name;                        // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
                     std::vector<Load> capacity = {},
@@ -469,6 +478,7 @@ public:
                     size_t profile = 0,
                     std::optional<Duration> startLate = std::nullopt,
                     std::vector<Load> initialLoad = {},
+                    std::vector<size_t> reloadDepots = {},
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -499,6 +509,7 @@ public:
                             std::optional<size_t> profile,
                             std::optional<Duration> startLate,
                             std::optional<std::vector<Load>> initialLoad,
+                            std::optional<std::vector<size_t>> reloadDepots,
                             std::optional<std::string> name) const;
     };
 

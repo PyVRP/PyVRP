@@ -120,6 +120,7 @@ class VehicleType:
     profile: int
     start_late: int
     initial_load: list[int]
+    reload_depots: list[int]
     name: str
     def __init__(
         self,
@@ -137,6 +138,7 @@ class VehicleType:
         profile: int = 0,
         start_late: int | None = None,
         initial_load: list[int] = [],
+        reload_depots: list[int] = [],
         *,
         name: str = "",
     ) -> None: ...
@@ -156,6 +158,7 @@ class VehicleType:
         profile: int | None = None,
         start_late: int | None = None,
         initial_load: list[int] | None = None,
+        reload_depots: list[int] | None = None,
         *,
         name: str | None = None,
     ) -> VehicleType: ...

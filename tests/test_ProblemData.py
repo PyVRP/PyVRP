@@ -1165,3 +1165,32 @@ def test_raises_if_vehicle_and_depot_time_windows_do_not_overlap(
             distance_matrices=[np.zeros((2, 2), dtype=int)],
             duration_matrices=[np.zeros((2, 2), dtype=int)],
         )
+
+
+def test_validate_raises_for_invalid_reload_depot(ok_small):
+    """
+    Tests that the ProblemData's constructor validates the reload locations
+    reference existing depots, and raises if something is wrong.
+    """
+    assert_equal(ok_small.num_depots, 1)
+
+    old_vehicle_type = ok_small.vehicle_type(0)
+    new_vehicle_type = old_vehicle_type.replace(reload_depots=[1])
+    assert_equal(new_vehicle_type.reload_depots, [1])
+
+    # First check if the constructor raises. There's just one depot, but the
+    # reload depot references a depot at index 1, which does not exist.
+    mat = np.zeros((1, 1), dtype=int)
+    with assert_raises(IndexError):
+        ProblemData(
+            clients=[],
+            depots=[Depot(x=0, y=0)],
+            vehicle_types=[new_vehicle_type],
+            distance_matrices=[mat],
+            duration_matrices=[mat],
+        )
+
+    # Replacing the vehicle type on the OkSmall instance should similarly raise
+    # during argument validation.
+    with assert_raises(IndexError):
+        ok_small.replace(vehicle_types=[new_vehicle_type])
