@@ -11,6 +11,8 @@ class _Datum:
 
     current_cost: float
     current_feas: bool
+    perturbed_cost: float
+    perturbed_feas: bool
     candidate_cost: float
     candidate_feas: bool
     best_cost: float
@@ -38,6 +40,8 @@ class Statistics:
         self,
         current_cost: float,
         current_feas: bool,
+        perturbed_cost: float,
+        perturbed_feas: bool,
         candidate_cost: float,
         candidate_feas: bool,
         best_cost: float,
@@ -59,6 +63,8 @@ class Statistics:
         datum = _Datum(
             current_cost,
             current_feas,
+            perturbed_cost,
+            perturbed_feas,
             candidate_cost,
             candidate_feas,
             best_cost,
@@ -81,6 +87,8 @@ class Statistics:
         headers = [
             "current_cost",
             "current_feas",
+            "perturbed_cost",
+            "perturbed_feas",
             "candidate_cost",
             "candidate_feas",
             "best_cost",
@@ -96,6 +104,8 @@ class Statistics:
                     [
                         datum.current_cost,
                         datum.current_feas,
+                        datum.perturbed_cost,
+                        datum.perturbed_feas,
                         datum.candidate_cost,
                         datum.candidate_feas,
                         datum.best_cost,
