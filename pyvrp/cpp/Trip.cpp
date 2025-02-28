@@ -13,7 +13,7 @@ Trip::Trip(ProblemData const &data,
            size_t const vehicleType,
            size_t const startDepot,
            size_t const endDepot,
-           Trip const *after)
+           Trip const *previous)
     : visits_(std::move(visits)),
       vehicleType_(vehicleType),
       startDepot_(startDepot),
@@ -34,17 +34,17 @@ Trip::Trip(ProblemData const &data,
     DurationSegment const depotStart(start, start.serviceDuration);
     DurationSegment ds = DurationSegment::merge(0, vehStart, depotStart);
 
-    if (after)
+    if (previous)
     {
-        if (after->endDepot_ != startDepot_)
+        if (previous->endDepot_ != startDepot_)
             throw std::invalid_argument("Trip start unequal to previous end.");
 
         // Use attributes of previous trip to determine previous duration
         // segment, ignoring release times since those only apply per-trip.
-        DurationSegment prev = {after->duration_,
-                                after->timeWarp_,
-                                after->startTime_,
-                                after->startTime_ + after->slack_,
+        DurationSegment prev = {previous->duration_,
+                                previous->timeWarp_,
+                                previous->startTime_,
+                                previous->startTime_ + previous->slack_,
                                 0};
 
         ds = DurationSegment::merge(0, prev, ds);
@@ -107,11 +107,11 @@ Trip::Trip(ProblemData const &data,
     timeWarp_ = ds.timeWarp(vehType.maxDuration);
     release_ = ds.releaseTime();
 
-    if (after)
+    if (previous)
     {
-        startTime_ += after->duration_;
-        duration_ -= after->duration_;
-        timeWarp_ -= after->timeWarp_;
+        startTime_ += previous->duration_;
+        duration_ -= previous->duration_;
+        timeWarp_ -= previous->timeWarp_;
     }
 }
 

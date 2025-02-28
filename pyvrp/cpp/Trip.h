@@ -11,7 +11,7 @@ namespace pyvrp
  *     vehicle_type: int,
  *     start_depot: int,
  *     end_depot: int,
- *     after: Trip | None = None,
+ *     previous: Trip | None = None,
  * )
  *
  * TODO
@@ -171,6 +171,6 @@ public:
          size_t const vehicleType,
          size_t const startDepot,
          size_t const endDepot,
-         Trip const *after = nullptr);
+         Trip const *previous = nullptr);
 };
 }  // namespace pyvrp

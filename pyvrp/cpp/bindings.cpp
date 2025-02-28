@@ -500,7 +500,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("vehicle_type"),
              py::arg("start_depot"),
              py::arg("end_depot"),
-             py::arg("after") = static_cast<Trip const *>(nullptr))
+             py::arg("previous") = static_cast<Trip const *>(nullptr))
         .def("visits",
              &Trip::visits,
              py::return_value_policy::reference_internal,

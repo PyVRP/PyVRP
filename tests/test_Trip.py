@@ -18,7 +18,7 @@ def test_trip_raises_for_invalid_depot_arguments(ok_small, start_idx, end_idx):
     Trip(ok_small, [1, 2], 0, 0, 0)
 
 
-def test_raises_if_start_different_from_after_end(ok_small_multi_depot):
+def test_raises_if_start_different_from_previous_end(ok_small_multi_depot):
     """
     Tests that the trip constructor raises when we start from a different
     depot location than where the previous trip ended.
@@ -30,7 +30,7 @@ def test_raises_if_start_different_from_after_end(ok_small_multi_depot):
         # If that's not the case (because the depots are not the same) then
         # the constructor should raise. Here, we start at depot 1, but prev
         # ended at depot 0.
-        Trip(ok_small_multi_depot, [3], 0, 1, 0, after=prev)
+        Trip(ok_small_multi_depot, [3], 0, 1, 0, previous=prev)
 
 
 @pytest.mark.parametrize("visits", [[], [1], [2, 3]])
@@ -92,7 +92,7 @@ def test_eq(ok_small_multi_depot):
     depot2 = 1
 
     trip1 = Trip(ok_small_multi_depot, [2, 3], 0, depot1, depot1)
-    trip2 = Trip(ok_small_multi_depot, [4], 0, depot1, depot2, after=trip1)
+    trip2 = Trip(ok_small_multi_depot, [4], 0, depot1, depot2, previous=trip1)
     trip3 = Trip(ok_small_multi_depot, [2, 3], 0, depot1, depot1)
 
     assert_(trip1 == trip1)  # same object
@@ -106,15 +106,26 @@ def test_eq(ok_small_multi_depot):
     assert_(trip3 != 5)
 
 
-def test_reload():
+def test_previous(ok_small):
     """
-    TODO
+    Tests that the trip correctly evaluates duration and time warp values that
+    result from a previous trip.
     """
-    pass
+    veh_type = ok_small.vehicle_type(0).replace(reload_depots=[0])
+    data = ok_small.replace(vehicle_types=[veh_type])
 
+    prev = Trip(data, [2], 0, 0, 0)
+    trip1 = Trip(data, [3], 0, 0, 0, previous=prev)
+    trip2 = Trip(data, [3], 0, 0, 0)
 
-def test_after():
-    """
-    TODO
-    """
-    pass
+    assert_equal(trip1.duration(), trip2.duration())
+    assert_equal(trip1.service_duration(), trip2.service_duration())
+    assert_equal(trip1.travel_duration(), trip2.travel_duration())
+
+    # TODO
+    assert_equal(trip1.start_time(), 14_325)
+    assert_equal(trip2.start_time(), 6_469)
+
+    # TODO
+    assert_equal(trip1.time_warp(), 956)
+    assert_equal(trip2.time_warp(), 0)
