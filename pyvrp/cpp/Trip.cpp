@@ -23,7 +23,13 @@ Trip::Trip(ProblemData const &data,
 
     auto const &vehType = data.vehicleType(vehicleType_);
 
-    DurationSegment ds = {vehType, vehType.startLate};
+    ProblemData::Depot const &start = data.location(startDepot_);
+    service_ += start.serviceDuration;
+
+    DurationSegment const vehStart(vehType, vehType.startLate);
+    DurationSegment const depotStart(start, start.serviceDuration);
+    DurationSegment ds = DurationSegment::merge(0, vehStart, depotStart);
+
     if (after)
     {
         if (after->endDepot_ != startDepot_)
@@ -31,15 +37,13 @@ Trip::Trip(ProblemData const &data,
 
         // Use attributes of previous trip to determine previous duration
         // segment, ignoring release times since those only apply per-trip.
-        // DurationSegment prev = {after->duration_,
-        //                         after->timeWarp_,
-        //                         after->startTime_,
-        //                         after->startTime_ + after->slack_,
-        //                         0};
+        DurationSegment prev = {after->duration_,
+                                after->timeWarp_,
+                                after->startTime_,
+                                after->startTime_ + after->slack_,
+                                0};
 
-        // auto const *reload = std::get<Reload const *>(start);
-        // ds = {*reload, reload->loadDuration};
-        // ds = DurationSegment::merge(0, prev, ds);
+        ds = DurationSegment::merge(0, prev, ds);
     }
 
     std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
@@ -88,10 +92,11 @@ Trip::Trip(ProblemData const &data,
             loadSegments[dim].load() - vehType.capacity[dim], 0));
     }
 
-    // TODO
-    DurationSegment endDS(vehType, vehType.twLate);
-
+    DurationSegment const depotEnd(vehType, vehType.twLate);
+    DurationSegment const vehEnd(data.location(endDepot_), 0);
+    DurationSegment const endDS = DurationSegment::merge(0, depotEnd, vehEnd);
     ds = DurationSegment::merge(durations(last, endDepot_), ds, endDS);
+
     duration_ = ds.duration();
     startTime_ = ds.twEarly();
     slack_ = ds.twLate() - ds.twEarly();
