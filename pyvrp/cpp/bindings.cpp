@@ -647,7 +647,6 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.timeWarp(),
                                       route.travelDuration(),
                                       route.serviceDuration(),
-                                      route.waitDuration(),
                                       route.releaseTime(),
                                       route.startTime(),
                                       route.slack(),
@@ -674,16 +673,15 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[9].cast<pyvrp::Duration>(),             // time warp
                     t[10].cast<pyvrp::Duration>(),            // travel
                     t[11].cast<pyvrp::Duration>(),            // service
-                    t[12].cast<pyvrp::Duration>(),            // wait
-                    t[13].cast<pyvrp::Duration>(),            // release
-                    t[14].cast<pyvrp::Duration>(),            // start time
-                    t[15].cast<pyvrp::Duration>(),            // slack
-                    t[16].cast<pyvrp::Cost>(),                // prizes
-                    t[17].cast<std::pair<double, double>>(),  // centroid
-                    t[18].cast<size_t>(),                     // vehicle type
-                    t[19].cast<size_t>(),                     // start depot
-                    t[20].cast<size_t>(),                     // end depot
-                    t[21].cast<Schedule>());                  // visit schedule
+                    t[12].cast<pyvrp::Duration>(),            // release
+                    t[13].cast<pyvrp::Duration>(),            // start time
+                    t[14].cast<pyvrp::Duration>(),            // slack
+                    t[15].cast<pyvrp::Cost>(),                // prizes
+                    t[16].cast<std::pair<double, double>>(),  // centroid
+                    t[17].cast<size_t>(),                     // vehicle type
+                    t[18].cast<size_t>(),                     // start depot
+                    t[19].cast<size_t>(),                     // end depot
+                    t[20].cast<Schedule>());                  // visit schedule
 
                 return route;
             }))
