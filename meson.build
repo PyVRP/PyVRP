@@ -62,6 +62,7 @@ libdiversity = static_library(
     'diversity',
     [
         SRC_DIR / 'diversity' / 'broken_pairs_distance.cpp',
+        SRC_DIR / 'diversity' / 'different_neighbours.cpp',
     ],
     include_directories: INCLUDES,
     link_with: libpyvrp,

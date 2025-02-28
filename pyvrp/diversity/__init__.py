@@ -1,1 +1,2 @@
 from ._diversity import broken_pairs_distance as broken_pairs_distance
+from ._diversity import different_neighbours as different_neighbours
