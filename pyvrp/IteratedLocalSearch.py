@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
+from pyvrp.diversity import different_neighbours
 
 if TYPE_CHECKING:
     from pyvrp.PenaltyManager import PenaltyManager
@@ -113,6 +114,11 @@ class IteratedLocalSearch:
             iters += 1
 
             perturbed = self._perturb(current, self._cost_evaluator)
+            diff = different_neighbours(current, perturbed)
+            if not diff:
+                continue
+
+            # candidate = self._search(perturbed, self._cost_evaluator, diff)
             candidate = self._search(perturbed, self._cost_evaluator)
 
             if not candidate.is_feasible():
