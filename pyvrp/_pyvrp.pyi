@@ -87,11 +87,17 @@ class ClientGroup:
 class Depot:
     x: int
     y: int
+    service_duration: int
+    tw_early: int
+    tw_late: int
     name: str
     def __init__(
         self,
         x: int,
         y: int,
+        service_duration: int = 0,
+        tw_early: int = 0,
+        tw_late: int = ...,
         *,
         name: str = "",
     ) -> None: ...

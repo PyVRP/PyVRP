@@ -124,9 +124,11 @@ def test_add_depot_attributes():
     in.
     """
     model = Model()
-    depot = model.add_depot(x=1, y=0)
+    depot = model.add_depot(x=1, y=0, tw_early=5, tw_late=7)
     assert_equal(depot.x, 1)
     assert_equal(depot.y, 0)
+    assert_equal(depot.tw_early, 5)
+    assert_equal(depot.tw_late, 7)
 
 
 def test_add_edge():

@@ -33,6 +33,13 @@ auto &pad(auto &vec1, auto const &vec2)
 }
 
 bool isNegative(auto value) { return value < 0; }
+
+// Small helper that determines if the time windows of a and b overlap.
+bool hasTimeOverlap(auto const &a, auto const &b)
+{
+    // See https://stackoverflow.com/a/325964/4316405.
+    return a.twEarly <= b.twLate && a.twLate >= b.twEarly;
+}
 }  // namespace
 
 ProblemData::Client::Client(Coordinate x,
@@ -49,11 +56,11 @@ ProblemData::Client::Client(Coordinate x,
                             std::string name)
     : x(x),
       y(y),
-      delivery(pad(delivery, pickup)),
-      pickup(pad(pickup, delivery)),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
+      delivery(pad(delivery, pickup)),
+      pickup(pad(pickup, delivery)),
       releaseTime(releaseTime),
       prize(prize),
       required(required),
@@ -90,11 +97,11 @@ ProblemData::Client::Client(Coordinate x,
 ProblemData::Client::Client(Client const &client)
     : x(client.x),
       y(client.y),
-      delivery(client.delivery),
-      pickup(client.pickup),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
+      delivery(client.delivery),
+      pickup(client.pickup),
       releaseTime(client.releaseTime),
       prize(client.prize),
       required(client.required),
@@ -106,11 +113,11 @@ ProblemData::Client::Client(Client const &client)
 ProblemData::Client::Client(Client &&client)
     : x(client.x),
       y(client.y),
-      delivery(std::move(client.delivery)),
-      pickup(std::move(client.pickup)),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
+      delivery(std::move(client.delivery)),
+      pickup(std::move(client.pickup)),
       releaseTime(client.releaseTime),
       prize(client.prize),
       required(client.required),
@@ -177,18 +184,46 @@ void ProblemData::ClientGroup::addClient(size_t client)
 
 void ProblemData::ClientGroup::clear() { clients_.clear(); }
 
-ProblemData::Depot::Depot(Coordinate x, Coordinate y, std::string name)
-    : x(x), y(y), name(duplicate(name.data()))
+ProblemData::Depot::Depot(Coordinate x,
+                          Coordinate y,
+                          Duration serviceDuration,
+                          Duration twEarly,
+                          Duration twLate,
+                          std::string name)
+    : x(x),
+      y(y),
+      serviceDuration(serviceDuration),
+      twEarly(twEarly),
+      twLate(twLate),
+      name(duplicate(name.data()))
 {
+    if (serviceDuration < 0)
+        throw std::invalid_argument("service_duration must be >= 0.");
+
+    if (twEarly > twLate)
+        throw std::invalid_argument("tw_early must be <= tw_late.");
+
+    if (twEarly < 0)
+        throw std::invalid_argument("tw_early must be >= 0.");
 }
 
 ProblemData::Depot::Depot(Depot const &depot)
-    : x(depot.x), y(depot.y), name(duplicate(depot.name))
+    : x(depot.x),
+      y(depot.y),
+      serviceDuration(depot.serviceDuration),
+      twEarly(depot.twEarly),
+      twLate(depot.twLate),
+      name(duplicate(depot.name))
 {
 }
 
 ProblemData::Depot::Depot(Depot &&depot)
-    : x(depot.x), y(depot.y), name(depot.name)  // we can steal
+    : x(depot.x),
+      y(depot.y),
+      serviceDuration(depot.serviceDuration),
+      twEarly(depot.twEarly),
+      twLate(depot.twLate),
+      name(depot.name)  // we can steal
 {
     depot.name = nullptr;  // stolen
 }
@@ -197,7 +232,14 @@ ProblemData::Depot::~Depot() { delete[] name; }
 
 bool ProblemData::Depot::operator==(Depot const &other) const
 {
-    return x == other.x && y == other.y && std::strcmp(name, other.name) == 0;
+    // clang-format off
+    return x == other.x 
+        && y == other.y
+        && serviceDuration == other.serviceDuration
+        && twEarly == other.twEarly
+        && twLate == other.twLate
+        && std::strcmp(name, other.name) == 0;
+    // clang-format on
 }
 
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
@@ -525,6 +567,14 @@ void ProblemData::validate() const
 
         if (vehicleType.profile >= dists_.size())
             throw std::out_of_range("Vehicle type has invalid profile.");
+
+        if (!hasTimeOverlap(depots_[vehicleType.startDepot], vehicleType))
+            throw std::invalid_argument("Vehicle and its start depot have no "
+                                        "overlapping time windows.");
+
+        if (!hasTimeOverlap(depots_[vehicleType.endDepot], vehicleType))
+            throw std::invalid_argument("Vehicle and its end depot have no "
+                                        "overlapping time windows.");
 
         for (auto const depot : vehicleType.reloadDepots)
             if (depot >= numDepots())
