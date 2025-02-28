@@ -39,7 +39,12 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
     startDepot_ = vehType.startDepot;
     endDepot_ = vehType.endDepot;
 
-    DurationSegment ds = {vehType, vehType.startLate};
+    ProblemData::Depot const &start = data.location(startDepot_);
+    service_ += start.serviceDuration;
+
+    DurationSegment const vehStart(vehType, vehType.startLate);
+    DurationSegment const depotStart(start, start.serviceDuration);
+    DurationSegment ds = DurationSegment::merge(0, vehStart, depotStart);
 
     std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
@@ -90,8 +95,11 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
             loadSegments[dim].load() - vehType.capacity[dim], 0));
     }
 
-    DurationSegment endDS(vehType, vehType.twLate);
+    DurationSegment const depotEnd(vehType, vehType.twLate);
+    DurationSegment const vehEnd(data.location(endDepot_), 0);
+    DurationSegment const endDS = DurationSegment::merge(0, depotEnd, vehEnd);
     ds = DurationSegment::merge(durations(last, endDepot_), ds, endDS);
+
     duration_ = ds.duration();
     durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
     startTime_ = ds.twEarly();
