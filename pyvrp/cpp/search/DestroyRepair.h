@@ -36,6 +36,10 @@ class DestroyRepair
     // Destroy the solution.
     void destroy();
 
+    void random(size_t numDestroy);
+    void concentric(size_t numDestroy);
+    void strings(size_t numDestroy);
+
     // Greedily repair the solution.
     void repair(CostEvaluator const &costEvaluator);
 

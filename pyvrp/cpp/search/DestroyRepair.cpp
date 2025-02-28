@@ -25,6 +25,17 @@ void DestroyRepair::destroy()
     size_t numDestroy = rng.randint(maxDestroy);
     numDestroy = std::max(10UL, numDestroy);
 
+    auto const dIdx = rng.randint(3);
+    if (dIdx == 0)
+        random(numDestroy);
+    else if (dIdx == 1)
+        concentric(numDestroy);
+    else
+        strings(numDestroy);
+}
+
+void DestroyRepair::random(size_t numDestroy)
+{
     for (size_t idx = 0; idx < numDestroy; ++idx)
     {
         auto const client = rng.randint(data.numClients()) + data.numDepots();
@@ -37,6 +48,29 @@ void DestroyRepair::destroy()
         route->remove(U->idx());
         route->update();
     }
+}
+
+void DestroyRepair::concentric(size_t numDestroy)
+{
+    auto const center = rng.randint(data.numClients()) + data.numDepots();
+    auto const &neighbours = neighbours_[center];
+    auto const maxDestroy = std::min(numDestroy, neighbours.size());
+
+    for (size_t idx = 0; idx < maxDestroy; ++idx)
+    {
+        auto *U = &nodes[idx];
+        if (!U->route())
+            continue;
+
+        auto *route = U->route();
+        route->remove(U->idx());
+        route->update();
+    }
+}
+
+void DestroyRepair::strings(size_t numDestroy)
+{
+    // TODO
 }
 
 void DestroyRepair::repair(CostEvaluator const &costEvaluator)
