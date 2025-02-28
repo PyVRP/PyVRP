@@ -254,9 +254,9 @@ class Model:
         self,
         x: int,
         y: int,
+        service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
-        load_duration: int = 0,
         *,
         name: str = "",
     ) -> Depot:
@@ -267,9 +267,9 @@ class Model:
         depot = Depot(
             x=x,
             y=y,
+            service_duration=service_duration,
             tw_early=tw_early,
             tw_late=tw_late,
-            load_duration=load_duration,
             name=name,
         )
 

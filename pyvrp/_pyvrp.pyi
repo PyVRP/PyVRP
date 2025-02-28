@@ -87,17 +87,17 @@ class ClientGroup:
 class Depot:
     x: int
     y: int
+    service_duration: int
     tw_early: int
     tw_late: int
-    load_duration: int
     name: str
     def __init__(
         self,
         x: int,
         y: int,
+        service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
-        load_duration: int = 0,
         *,
         name: str = "",
     ) -> None: ...
@@ -249,7 +249,6 @@ class Route:
     def start_time(self) -> int: ...
     def end_time(self) -> int: ...
     def slack(self) -> int: ...
-    def load_duration(self) -> int: ...
     def service_duration(self) -> int: ...
     def travel_duration(self) -> int: ...
     def wait_duration(self) -> int: ...

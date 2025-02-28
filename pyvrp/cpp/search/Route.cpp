@@ -189,7 +189,7 @@ void Route::update()
 
     ProblemData::Depot const &start = data.location(startDepot());
     DurationSegment const vehStart(vehicleType_, vehicleType_.startLate);
-    DurationSegment const depotStart(start, start.loadDuration);
+    DurationSegment const depotStart(start, start.serviceDuration);
     durAt[0] = DurationSegment::merge(0, vehStart, depotStart);
 
     DurationSegment const depotEnd(vehicleType_, vehicleType_.twLate);

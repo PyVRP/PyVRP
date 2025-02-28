@@ -56,11 +56,11 @@ ProblemData::Client::Client(Coordinate x,
                             std::string name)
     : x(x),
       y(y),
-      delivery(pad(delivery, pickup)),
-      pickup(pad(pickup, delivery)),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
+      delivery(pad(delivery, pickup)),
+      pickup(pad(pickup, delivery)),
       releaseTime(releaseTime),
       prize(prize),
       required(required),
@@ -97,11 +97,11 @@ ProblemData::Client::Client(Coordinate x,
 ProblemData::Client::Client(Client const &client)
     : x(client.x),
       y(client.y),
-      delivery(client.delivery),
-      pickup(client.pickup),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
+      delivery(client.delivery),
+      pickup(client.pickup),
       releaseTime(client.releaseTime),
       prize(client.prize),
       required(client.required),
@@ -113,11 +113,11 @@ ProblemData::Client::Client(Client const &client)
 ProblemData::Client::Client(Client &&client)
     : x(client.x),
       y(client.y),
-      delivery(client.delivery),
-      pickup(client.pickup),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
+      delivery(client.delivery),
+      pickup(client.pickup),
       releaseTime(client.releaseTime),
       prize(client.prize),
       required(client.required),
@@ -186,33 +186,33 @@ void ProblemData::ClientGroup::clear() { clients_.clear(); }
 
 ProblemData::Depot::Depot(Coordinate x,
                           Coordinate y,
+                          Duration serviceDuration,
                           Duration twEarly,
                           Duration twLate,
-                          Duration loadDuration,
                           std::string name)
     : x(x),
       y(y),
+      serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
-      loadDuration(loadDuration),
       name(duplicate(name.data()))
 {
+    if (serviceDuration < 0)
+        throw std::invalid_argument("service_duration must be >= 0.");
+
     if (twEarly > twLate)
         throw std::invalid_argument("tw_early must be <= tw_late.");
 
     if (twEarly < 0)
         throw std::invalid_argument("tw_early must be >= 0.");
-
-    if (loadDuration < 0)
-        throw std::invalid_argument("load_duration must be >= 0.");
 }
 
 ProblemData::Depot::Depot(Depot const &depot)
     : x(depot.x),
       y(depot.y),
+      serviceDuration(depot.serviceDuration),
       twEarly(depot.twEarly),
       twLate(depot.twLate),
-      loadDuration(depot.loadDuration),
       name(duplicate(depot.name))
 {
 }
@@ -220,9 +220,9 @@ ProblemData::Depot::Depot(Depot const &depot)
 ProblemData::Depot::Depot(Depot &&depot)
     : x(depot.x),
       y(depot.y),
+      serviceDuration(depot.serviceDuration),
       twEarly(depot.twEarly),
       twLate(depot.twLate),
-      loadDuration(depot.loadDuration),
       name(depot.name)  // we can steal
 {
     depot.name = nullptr;  // stolen
@@ -235,9 +235,9 @@ bool ProblemData::Depot::operator==(Depot const &other) const
     // clang-format off
     return x == other.x 
         && y == other.y
+        && serviceDuration == other.serviceDuration
         && twEarly == other.twEarly
         && twLate == other.twLate
-        && loadDuration == other.loadDuration
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }

@@ -160,11 +160,11 @@ public:
     {
         Coordinate const x;
         Coordinate const y;
+        Duration const serviceDuration;
+        Duration const twEarly;  // Earliest possible start of service
+        Duration const twLate;   // Latest possible start of service
         std::vector<Load> const delivery;
         std::vector<Load> const pickup;
-        Duration const serviceDuration;
-        Duration const twEarly;      // Earliest possible start of service
-        Duration const twLate;       // Latest possible start of service
         Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize;            // Prize for visiting this client
         bool const required;         // Must client be in solution?
@@ -264,9 +264,9 @@ public:
      * Depot(
      *    x: int,
      *    y: int,
+     *    service_duration: int = 0,
      *    tw_early: int = 0,
      *    tw_late: int = np.iinfo(np.int64).max,
-     *    load_duration: int = 0,
      *    *,
      *    name: str = "",
      * )
@@ -281,12 +281,12 @@ public:
      * y
      *     Vertical coordinate of this depot, that is, the 'y' part of the
      *     depot's (x, y) location tuple.
+     * service_duration
+     *     Time it takes to e.g. load a vehicle at this depot. Default 0.
      * tw_early
      *     Opening time of this depot. Default 0.
      * tw_late
      *     Closing time of this depot. Default unconstrained.
-     * load_duration
-     *     Time it takes to load a vehicle at this depot. Default 0.
      * name
      *     Free-form name field for this depot. Default empty.
      *
@@ -296,12 +296,12 @@ public:
      *     Horizontal coordinate of this depot.
      * y
      *     Vertical coordinate of this depot.
+     * service_duration
+     *     Time it takes to e.g. load a vehicle at this depot.
      * tw_early
      *     Opening time of this depot.
      * tw_late
      *     Closing time of this depot.
-     * load_duration
-     *     Time it takes to load a vehicle at this depot.
      * name
      *     Free-form name field for this depot.
      */
@@ -309,16 +309,16 @@ public:
     {
         Coordinate const x;
         Coordinate const y;
-        Duration const twEarly;       // Depot opening time
-        Duration const twLate;        // Depot closing time
-        Duration const loadDuration;  // Load duration at this depot
-        char const *name;             // Depot name (for reference)
+        Duration const serviceDuration;
+        Duration const twEarly;  // Depot opening time
+        Duration const twLate;   // Depot closing time
+        char const *name;        // Depot name (for reference)
 
         Depot(Coordinate x,
               Coordinate y,
+              Duration serviceDuration = 0,
               Duration twEarly = 0,
               Duration twLate = std::numeric_limits<Duration>::max(),
-              Duration loadDuration = 0,
               std::string name = "");
 
         bool operator==(Depot const &other) const;
