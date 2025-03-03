@@ -189,7 +189,7 @@ public:
 
     /**
      * End time of the route. This is equivalent to
-     *  ``start_time + duration - time_warp``.
+     * ``start_time + duration - time_warp``.
      */
     [[nodiscard]] Duration endTime() const;
 

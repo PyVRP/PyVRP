@@ -14,7 +14,7 @@ namespace pyvrp
  *     previous: Trip | None = None,
  * )
  *
- * TODO
+ * A simple class that stores the trip plan and some statistics.
  */
 class Trip
 {
@@ -107,17 +107,23 @@ public:
     [[nodiscard]] Duration waitDuration() const;
 
     /**
-     * TODO
+     * Start time of this trip. This is the earliest possible time at which
+     * the trip can leave the depot and have a minimal duration and time warp.
+     * If there is positive :meth:`~slack`, the start time can be delayed by at
+     * most :meth:`~slack` time units without increasing the total (minimal)
+     * trip duration, or time warp.
      */
     [[nodiscard]] Duration startTime() const;
 
     /**
-     * TODO
+     * End time of the trip. This is equivalent to
+     * ``start_time + duration - time_warp``.
      */
     [[nodiscard]] Duration endTime() const;
 
     /**
-     * TODO
+     * Time by which departure from the depot can be delayed without resulting
+     * in (additional) time warp or increased trip duration.
      */
     [[nodiscard]] Duration slack() const;
 
