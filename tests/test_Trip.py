@@ -127,7 +127,7 @@ def test_previous(ok_small):
     # 0 -> 3 -> 0. The data is as follows:
     # - Client 2: [12'000 early, 19'500 late], service 360
     # - Client 3: [8'400 early, 15'300 late], service 420
-    # - Distance 2 -> 0: 1'965, 0 -> 2: 1'944, 0 -> 3: 1931.
+    # - Distance 2 -> 0: 1'965, 0 -> 2: 1'944, 0 -> 3: 1'931.
     # At the earliest, we arrive at client 2 at 12'000, leaving from the depot
     # at 10'056 (starting time of prev). Then we do service, and leave at
     # 12'360. We arrive at the depot at 14325, and immediately leave there
@@ -142,7 +142,20 @@ def test_previous(ok_small):
     # 15'300. So there is time warp on trip1. Trip2, however, does not have
     # time warp.
     assert_equal(trip1.time_warp(), 956)
-    assert_equal(trip2.time_warp(), 0)
-
     assert_(not trip1.is_feasible())
+
+    assert_equal(trip2.time_warp(), 0)
     assert_(trip2.is_feasible())
+
+    # Because of the time warp there should be no slack on trip1, while there
+    # is the full time window of client 2's worth of slack on trip2.
+    assert_equal(trip1.slack(), 0)
+    assert_equal(trip2.slack(), 6_900)
+
+    # prev ends when trip1 starts, and trip1 and trip2 end after service, and
+    # return to the depot. That's at 16'256 + 420 + 2'063 - 956 = 17'783 for
+    # trip1, and 6'469 + 1'931 + 420 + 2'063 = 10'883 for trip2.
+    assert_equal(prev.end_time(), 14_325)
+    assert_equal(trip1.start_time(), prev.end_time())
+    assert_equal(trip1.end_time(), 17_783)
+    assert_equal(trip2.end_time(), 10_883)
