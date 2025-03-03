@@ -18,6 +18,23 @@ def test_trip_raises_for_invalid_depot_arguments(ok_small, start_idx, end_idx):
     Trip(ok_small, [1, 2], 0, 0, 0)
 
 
+def test_raises_if_start_different_from_previous_end(ok_small_multi_depot):
+    """
+    Tests that the trip constructor raises when we start from a different
+    depot location than where the previous trip ended.
+    """
+    veh_type = ok_small_multi_depot.vehicle_type(0).replace(reload_depots=[1])
+    data = ok_small_multi_depot.replace(vehicle_types=[veh_type])
+    prev = Trip(data, [2], 0, 1, 0)  # end at depot 0
+
+    with assert_raises(ValueError):
+        # A trip should start at the exact same place the previous trip ended.
+        # If that's not the case (because the depots are not the same) then
+        # the constructor should raise. Here, we start at depot 1, but prev
+        # ended at depot 0.
+        Trip(data, [3], 0, 1, 0, previous=prev)
+
+
 @pytest.mark.parametrize("visits", [[], [1], [2, 3]])
 def test_trip_length_and_visits(ok_small, visits: list[int]):
     """
