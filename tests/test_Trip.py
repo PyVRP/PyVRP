@@ -122,10 +122,27 @@ def test_previous(ok_small):
     assert_equal(trip1.service_duration(), trip2.service_duration())
     assert_equal(trip1.travel_duration(), trip2.travel_duration())
 
-    # TODO
+    # Trip1 starts after a trip visiting client 2. This implies we have a
+    # full route of 0 -> 2 -> 0 -> 3 -> 0. Trip2, on the other hand, is just
+    # 0 -> 3 -> 0. The data is as follows:
+    # - Client 2: [12'000 early, 19'500 late], service 360
+    # - Client 3: [8'400 early, 15'300 late], service 420
+    # - Distance 2 -> 0: 1'965, 0 -> 2: 1'944, 0 -> 3: 1931.
+    # At the earliest, we arrive at client 2 at 12'000, leaving from the depot
+    # at 10'056 (starting time of prev). Then we do service, and leave at
+    # 12'360. We arrive at the depot at 14325, and immediately leave there
+    # since depot service takes no time. This is the starting time for trip1.
+    # Trip2, not having to account for a previous trip, can start at 8'400
+    # minus the travel time to client 3, which amounts to 6'469.
+    assert_equal(prev.start_time(), 10_056)
     assert_equal(trip1.start_time(), 14_325)
     assert_equal(trip2.start_time(), 6_469)
 
-    # TODO
+    # We arrive at client 3 at 16'256, which is after its time window closes at
+    # 15'300. So there is time warp on trip1. Trip2, however, does not have
+    # time warp.
     assert_equal(trip1.time_warp(), 956)
     assert_equal(trip2.time_warp(), 0)
+
+    assert_(not trip1.is_feasible())
+    assert_(trip2.is_feasible())
