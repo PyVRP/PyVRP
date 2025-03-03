@@ -2,11 +2,33 @@
 #include "DurationSegment.h"
 #include "LoadSegment.h"
 
+#include <algorithm>
+
 using pyvrp::Cost;
 using pyvrp::Distance;
 using pyvrp::Duration;
 using pyvrp::Load;
+using pyvrp::ProblemData;
 using pyvrp::Trip;
+
+namespace
+{
+// Returns whether given vehicle type can start a trip from the given depot.
+bool canStartAt(ProblemData::VehicleType const &vehType, size_t depot)
+{
+    auto const &reloads = vehType.reloadDepots;
+    return depot == vehType.startDepot
+           || std::find(reloads.begin(), reloads.end(), depot) != reloads.end();
+}
+
+// Returns whether given vehicle type can end a trip at the given depot.
+bool canEndAt(ProblemData::VehicleType const &vehType, size_t depot)
+{
+    auto const &reloads = vehType.reloadDepots;
+    return depot == vehType.endDepot
+           || std::find(reloads.begin(), reloads.end(), depot) != reloads.end();
+}
+}  // namespace
 
 Trip::Trip(ProblemData const &data,
            Visits visits,
@@ -19,13 +41,19 @@ Trip::Trip(ProblemData const &data,
       startDepot_(startDepot),
       endDepot_(endDepot)
 {
+    auto const &vehType = data.vehicleType(vehicleType_);
+
     if (startDepot_ >= data.numDepots())
-        throw std::invalid_argument("Start depot not understood.");
+        throw std::invalid_argument("start_depot not understood.");
 
     if (endDepot_ >= data.numDepots())
-        throw std::invalid_argument("End depot not understood");
+        throw std::invalid_argument("end_depot not understood");
 
-    auto const &vehType = data.vehicleType(vehicleType_);
+    if (!canStartAt(vehType, startDepot))
+        throw std::invalid_argument("Vehicle cannot start from start_depot.");
+
+    if (!canEndAt(vehType, endDepot))
+        throw std::invalid_argument("Vehicle cannot end at end_depot.");
 
     ProblemData::Depot const &start = data.location(startDepot_);
     service_ += start.serviceDuration;

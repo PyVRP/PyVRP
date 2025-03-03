@@ -7,8 +7,8 @@ from pyvrp import Route, Trip
 @pytest.mark.parametrize(("start_idx", "end_idx"), [(1, 0), (0, 1)])
 def test_trip_raises_for_invalid_depot_arguments(ok_small, start_idx, end_idx):
     """
-    The constructor should raise when the depot arguments point to non-existing
-    depots.
+    The constructor should raise when the start or end depot arguments point to
+    non-existing depots.
     """
     assert_equal(ok_small.num_depots, 1)
     with assert_raises(ValueError):
@@ -16,21 +16,6 @@ def test_trip_raises_for_invalid_depot_arguments(ok_small, start_idx, end_idx):
 
     # This should be OK, starting and ending at the (only) depot.
     Trip(ok_small, [1, 2], 0, 0, 0)
-
-
-def test_raises_if_start_different_from_previous_end(ok_small_multi_depot):
-    """
-    Tests that the trip constructor raises when we start from a different
-    depot location than where the previous trip ended.
-    """
-    prev = Trip(ok_small_multi_depot, [2], 0, 1, 0)  # end at depot 0
-
-    with assert_raises(ValueError):
-        # A trip should start at the exact same place the previous trip ended.
-        # If that's not the case (because the depots are not the same) then
-        # the constructor should raise. Here, we start at depot 1, but prev
-        # ended at depot 0.
-        Trip(ok_small_multi_depot, [3], 0, 1, 0, previous=prev)
 
 
 @pytest.mark.parametrize("visits", [[], [1], [2, 3]])
@@ -88,16 +73,16 @@ def test_eq(ok_small_multi_depot):
     """
     Tests the trip's equality operator.
     """
-    depot1 = 0
-    depot2 = 1
-
-    trip1 = Trip(ok_small_multi_depot, [2, 3], 0, depot1, depot1)
-    trip2 = Trip(ok_small_multi_depot, [4], 0, depot1, depot2, previous=trip1)
-    trip3 = Trip(ok_small_multi_depot, [2, 3], 0, depot1, depot1)
+    trip1 = Trip(ok_small_multi_depot, [2, 3], 0, 0, 0)
+    trip2 = Trip(ok_small_multi_depot, [4], 0, 0, 0, previous=trip1)
+    trip3 = Trip(ok_small_multi_depot, [2, 3], 0, 0, 0)
 
     assert_(trip1 == trip1)  # same object
-    assert_(trip1 != trip2)  # different visits, start/end locations
-    assert_(trip1 == trip3)  # same visits and start/end locations
+    assert_(trip1 != trip2)  # different visits
+    assert_(trip1 == trip3)  # same visits and start/end depots
+
+    trip4 = Trip(ok_small_multi_depot, [2, 3], 1, 1, 1)
+    assert_(trip1 != trip4)  # different vehicle type, start/end depots
 
     # And a few tests against things that are not trips, just to be sure that
     # there's also a type check in there somewhere.
