@@ -43,12 +43,6 @@ Trip::Trip(ProblemData const &data,
 {
     auto const &vehType = data.vehicleType(vehicleType_);
 
-    if (startDepot_ >= data.numDepots())
-        throw std::invalid_argument("start_depot not understood.");
-
-    if (endDepot_ >= data.numDepots())
-        throw std::invalid_argument("end_depot not understood");
-
     if (!canStartAt(vehType, startDepot))
         throw std::invalid_argument("Vehicle cannot start from start_depot.");
 
@@ -146,6 +140,11 @@ Trip::Trip(ProblemData const &data,
 bool Trip::empty() const { return visits_.empty(); }
 
 size_t Trip::size() const { return visits_.size(); }
+
+Trip::Client Trip::operator[](size_t idx) const { return visits_[idx]; }
+
+Trip::Visits::const_iterator Trip::begin() const { return visits_.begin(); }
+Trip::Visits::const_iterator Trip::end() const { return visits_.end(); }
 
 Trip::Visits const &Trip::visits() const { return visits_; }
 

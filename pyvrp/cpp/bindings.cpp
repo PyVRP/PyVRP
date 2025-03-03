@@ -535,7 +535,23 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, Trip, hasExcessLoad))
         .def("has_time_warp", &Trip::hasTimeWarp, DOC(pyvrp, Trip, hasTimeWarp))
         .def(py::self == py::self)  // this is __eq__
-        .def("__len__", &Trip::size, DOC(pyvrp, Trip, size));
+        .def("__len__", &Trip::size, DOC(pyvrp, Trip, size))
+        .def(
+            "__iter__",
+            [](Trip const &trip)
+            { return py::make_iterator(trip.begin(), trip.end()); },
+            py::return_value_policy::reference_internal)
+        .def(
+            "__getitem__",
+            [](Trip const &trip, int idx)
+            {
+                // int so we also support negative offsets from the end.
+                idx = idx < 0 ? trip.size() + idx : idx;
+                if (idx < 0 || static_cast<size_t>(idx) >= trip.size())
+                    throw py::index_error();
+                return trip[idx];
+            },
+            py::arg("idx"));
 
     py::class_<Route::ScheduledVisit>(
         m, "ScheduledVisit", DOC(pyvrp, Route, ScheduledVisit))

@@ -144,3 +144,29 @@ def test_previous(ok_small):
     assert_equal(trip1.start_time(), prev.end_time())
     assert_equal(trip1.end_time(), 17_783)
     assert_equal(trip2.end_time(), 10_883)
+
+
+def test_trip_iter_and_getitem(ok_small):
+    """
+    Tests that the trip is iterable and may be indexed.
+    """
+    trip = Trip(ok_small, [1, 2], 0, 0, 0)
+
+    # Regular indexing gets the client visits.
+    assert_equal(trip[0], 1)
+    assert_equal(trip[1], 2)
+
+    # Indexing from the end is also supported.
+    assert_equal(trip[-1], 2)
+    assert_equal(trip[-2], 1)
+
+    # Negative indexing need to result in a proper index.
+    with assert_raises(IndexError):
+        trip[-3]
+
+    # As should regular indexing.
+    with assert_raises(IndexError):
+        trip[2]
+
+    # The trip is iterable, and iterating it returns the client visits.
+    assert_equal(trip.visits(), [client for client in trip])

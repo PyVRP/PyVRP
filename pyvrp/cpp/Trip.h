@@ -51,6 +51,11 @@ public:
      */
     [[nodiscard]] size_t size() const;
 
+    [[nodiscard]] Client operator[](size_t idx) const;
+
+    [[nodiscard]] Visits::const_iterator begin() const;
+    [[nodiscard]] Visits::const_iterator end() const;
+
     /**
      * Trip visits, as a list of clients.
      */

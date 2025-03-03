@@ -92,8 +92,8 @@ public:
 
     [[nodiscard]] Client operator[](size_t idx) const;
 
-    Visits::const_iterator begin() const;
-    Visits::const_iterator end() const;
+    [[nodiscard]] Visits::const_iterator begin() const;
+    [[nodiscard]] Visits::const_iterator end() const;
 
     /**
      * Route visits, as a list of clients.
