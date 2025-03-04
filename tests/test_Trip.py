@@ -1,7 +1,8 @@
+import numpy as np
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
-from pyvrp import Route, Trip
+from pyvrp import Client, Depot, ProblemData, Route, Trip, VehicleType
 
 
 @pytest.mark.parametrize(("start_idx", "end_idx"), [(1, 0), (0, 1)])
@@ -161,6 +162,48 @@ def test_previous(ok_small):
     assert_equal(trip1.start_time(), prev.end_time())
     assert_equal(trip1.end_time(), 17_783)
     assert_equal(trip2.end_time(), 10_883)
+
+
+def test_repeated_previous_argument_correctly_evaluates_duration_statistics():
+    """
+    Tests that repeated trips, using the previous argument, result in the
+    correct evaluation of the total route duration.
+    """
+    data = ProblemData(
+        clients=[
+            # First client is just like depot, all other clients are alike.
+            Client(x=0, y=0, service_duration=5, tw_early=5, tw_late=10),
+            Client(x=1, y=1, service_duration=2, tw_early=5, tw_late=20),
+            Client(x=1, y=1, service_duration=2, tw_early=5, tw_late=20),
+            Client(x=1, y=1, service_duration=2, tw_early=5, tw_late=20),
+        ],
+        depots=[Depot(x=0, y=0, service_duration=5, tw_early=5, tw_late=10)],
+        vehicle_types=[VehicleType(reload_depots=[0])],
+        distance_matrices=[np.zeros((5, 5), dtype=int)],
+        duration_matrices=[np.where(np.eye(5), 0, 1)],
+    )
+
+    # 5 arrive at 0
+    # 10 leave 0
+    # 11 arrive at 2
+    # 13 leave 2
+    # 14 arrive at 3
+    # 16 leave 3
+    # 17 arrive at 4
+    # 19 leave 4
+    # 20 arrive at 0
+
+    # All separate trips, one after another.
+    trip1 = Trip(data, [2], 0, 0, 0)
+    trip2 = Trip(data, [3], 0, 0, 0, previous=trip1)
+    trip3 = Trip(data, [4], 0, 0, 0, previous=trip2)
+    trips = [trip1, trip2, trip3]
+
+    # And an equivalent route, using the first client as a stand-in depot.
+    route = Route(data, [2, 1, 3, 1, 4], 0)
+    assert_equal(trip1.start_time(), route.start_time())
+    assert_equal(sum(trip.time_warp() for trip in trips), route.time_warp())
+    assert_equal(trip3.end_time(), route.end_time())
 
 
 def test_trip_iter_and_getitem(ok_small):
