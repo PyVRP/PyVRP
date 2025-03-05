@@ -95,8 +95,8 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
             loadSegments[dim].load() - vehType.capacity[dim], 0));
     }
 
-    DurationSegment const depotEnd(vehType, vehType.twLate);
-    DurationSegment const vehEnd(data.location(endDepot_), 0);
+    DurationSegment const depotEnd(data.location(endDepot_), 0);
+    DurationSegment const vehEnd(vehType, vehType.twLate);
     DurationSegment const endDS = DurationSegment::merge(0, depotEnd, vehEnd);
     ds = DurationSegment::merge(durations(last, endDepot_), ds, endDS);
 

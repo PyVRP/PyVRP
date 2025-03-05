@@ -11,10 +11,15 @@ namespace pyvrp
  *     vehicle_type: int,
  *     start_depot: int,
  *     end_depot: int,
- *     previous: Trip | None = None,
  * )
  *
- * A simple class that stores the trip plan and some statistics.
+ * A simple class that stores the trip plan and some related statistics.
+ *
+ * .. note::
+ *
+ *    A trip does not stand on its own - it is intended to be part of a
+ *    :class:`~pyvrp._pyvrp.Route`, which tracks overall route statistics
+ *    involving all trips, and determines route feasibility.
  */
 class Trip
 {
@@ -29,13 +34,9 @@ private:
     std::vector<Load> delivery_;    // Total delivery amount served on this trip
     std::vector<Load> pickup_;      // Total pickup amount gathered on this trip
     std::vector<Load> excessLoad_;  // Excess pickup or delivery demand
-    Duration duration_ = 0;         // Total duration of this trip
-    Duration timeWarp_ = 0;         // Total time warp on this trip
     Duration travel_ = 0;           // Total *travel* duration on this trip
     Duration service_ = 0;          // Total *service* duration on this trip
     Duration release_ = 0;          // Release time of this trip
-    Duration startTime_ = 0;        // (earliest) start time of this trip
-    Duration slack_ = 0;            // Total time slack on this trip
     Cost prizes_ = 0;               // Total value of prizes on this trip
 
     std::pair<double, double> centroid_ = {0, 0};  // Trip center
@@ -82,50 +83,14 @@ public:
     [[nodiscard]] std::vector<Load> const &excessLoad() const;
 
     /**
-     * Total trip duration, including travel, service and waiting time.
-     */
-    [[nodiscard]] Duration duration() const;
-
-    /**
      * Total duration of service on this trip.
      */
     [[nodiscard]] Duration serviceDuration() const;
 
     /**
-     * Amount of time warp incurred on this trip.
-     */
-    [[nodiscard]] Duration timeWarp() const;
-
-    /**
      * Total duration of travel on this trip.
      */
     [[nodiscard]] Duration travelDuration() const;
-
-    /**
-     * Total waiting duration on this trip.
-     */
-    [[nodiscard]] Duration waitDuration() const;
-
-    /**
-     * Start time of this trip. This is the earliest possible time at which
-     * the trip can leave the depot and have a minimal duration and time warp.
-     * If there is positive :meth:`~slack`, the start time can be delayed by at
-     * most :meth:`~slack` time units without increasing the total (minimal)
-     * trip duration, or time warp.
-     */
-    [[nodiscard]] Duration startTime() const;
-
-    /**
-     * End time of the trip. This is equivalent to
-     * ``start_time + duration - time_warp``.
-     */
-    [[nodiscard]] Duration endTime() const;
-
-    /**
-     * Time by which departure from the depot can be delayed without resulting
-     * in (additional) time warp or increased trip duration.
-     */
-    [[nodiscard]] Duration slack() const;
 
     /**
      * Earliest time at which this trip can leave the depot. Follows from the
@@ -159,19 +124,9 @@ public:
     [[nodiscard]] size_t endDepot() const;
 
     /**
-     * Returns whether this trip is feasible.
-     */
-    [[nodiscard]] bool isFeasible() const;
-
-    /**
      * Returns whether this trip violates capacity constraints.
      */
     [[nodiscard]] bool hasExcessLoad() const;
-
-    /**
-     * Returns whether this trip violates time window constraints.
-     */
-    [[nodiscard]] bool hasTimeWarp() const;
 
     bool operator==(Trip const &other) const;
 
@@ -181,7 +136,6 @@ public:
          Visits visits,
          size_t const vehicleType,
          size_t const startDepot,
-         size_t const endDepot,
-         Trip const *previous = nullptr);
+         size_t const endDepot);
 };
 }  // namespace pyvrp
