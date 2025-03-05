@@ -60,6 +60,7 @@ def test_single_route_and_trip_same_statistics(ok_small, visits: list[int]):
     assert_equal(trip.delivery(), route.delivery())
     assert_equal(trip.pickup(), route.pickup())
     assert_equal(trip.excess_load(), route.excess_load())
+    assert_equal(trip.has_excess_load(), route.has_excess_load())
 
 
 def test_eq(ok_small_multi_depot):
