@@ -111,8 +111,8 @@ public:
      *     Unconstrained if not provided.
      * release_time
      *     Earliest time at which this client is released, that is, the earliest
-     *     time at which a vehicle may leave the depot to visit this client.
-     *     Default 0.
+     *     time at which a vehicle may leave the depot on a trip to visit this
+     *     client. Default 0.
      * prize
      *     Prize collected by visiting this client. Default 0. If this client
      *     is not required, the prize needs to be sufficiently large to offset
@@ -145,8 +145,8 @@ public:
      * tw_late
      *     Latest time at which this client may be visited to start service.
      * release_time
-     *     Earliest time at which a vehicle may leave the depot to visit this
-     *     client.
+     *     Earliest time at which a vehicle may leave the depot on a trip to
+     *     visit this client.
      * prize
      *     Prize collected by visiting this client.
      * required
