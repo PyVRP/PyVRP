@@ -10,6 +10,7 @@
 #include "Route.h"
 #include "Solution.h"
 #include "SubPopulation.h"
+#include "Trip.h"
 #include "pyvrp_docs.h"
 
 #include <pybind11/functional.h>
@@ -36,6 +37,7 @@ using pyvrp::RandomNumberGenerator;
 using pyvrp::Route;
 using pyvrp::Solution;
 using pyvrp::SubPopulation;
+using pyvrp::Trip;
 
 PYBIND11_MODULE(_pyvrp, m)
 {
@@ -486,6 +488,59 @@ PYBIND11_MODULE(_pyvrp, m)
                 return data;
             }));
 
+    py::class_<Trip>(m, "Trip", DOC(pyvrp, Trip))
+        .def(py::init<ProblemData const &,
+                      std::vector<size_t>,
+                      size_t,
+                      size_t,
+                      size_t>(),
+             py::arg("data"),
+             py::arg("visits"),
+             py::arg("vehicle_type"),
+             py::arg("start_depot"),
+             py::arg("end_depot"))
+        .def("visits",
+             &Trip::visits,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Trip, visits))
+        .def("distance", &Trip::distance, DOC(pyvrp, Trip, distance))
+        .def("delivery", &Trip::delivery, DOC(pyvrp, Trip, delivery))
+        .def("pickup", &Trip::pickup, DOC(pyvrp, Trip, pickup))
+        .def("excess_load", &Trip::excessLoad, DOC(pyvrp, Trip, excessLoad))
+        .def("travel_duration",
+             &Trip::travelDuration,
+             DOC(pyvrp, Trip, travelDuration))
+        .def("service_duration",
+             &Trip::serviceDuration,
+             DOC(pyvrp, Trip, serviceDuration))
+        .def("release_time", &Trip::releaseTime, DOC(pyvrp, Trip, releaseTime))
+        .def("prizes", &Trip::prizes, DOC(pyvrp, Trip, prizes))
+        .def("centroid", &Trip::centroid, DOC(pyvrp, Trip, centroid))
+        .def("vehicle_type", &Trip::vehicleType, DOC(pyvrp, Trip, vehicleType))
+        .def("start_depot", &Trip::startDepot, DOC(pyvrp, Trip, startDepot))
+        .def("end_depot", &Trip::endDepot, DOC(pyvrp, Trip, endDepot))
+        .def("has_excess_load",
+             &Trip::hasExcessLoad,
+             DOC(pyvrp, Trip, hasExcessLoad))
+        .def(py::self == py::self)  // this is __eq__
+        .def("__len__", &Trip::size, DOC(pyvrp, Trip, size))
+        .def(
+            "__iter__",
+            [](Trip const &trip)
+            { return py::make_iterator(trip.begin(), trip.end()); },
+            py::return_value_policy::reference_internal)
+        .def(
+            "__getitem__",
+            [](Trip const &trip, int idx)
+            {
+                // int so we also support negative offsets from the end.
+                idx = idx < 0 ? trip.size() + idx : idx;
+                if (idx < 0 || static_cast<size_t>(idx) >= trip.size())
+                    throw py::index_error();
+                return trip[idx];
+            },
+            py::arg("idx"));
+
     py::class_<Route::ScheduledVisit>(
         m, "ScheduledVisit", DOC(pyvrp, Route, ScheduledVisit))
         .def_readonly("start_service", &Route::ScheduledVisit::startService)
@@ -599,7 +654,6 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.timeWarp(),
                                       route.travelDuration(),
                                       route.serviceDuration(),
-                                      route.waitDuration(),
                                       route.releaseTime(),
                                       route.startTime(),
                                       route.slack(),
@@ -626,16 +680,15 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[9].cast<pyvrp::Duration>(),             // time warp
                     t[10].cast<pyvrp::Duration>(),            // travel
                     t[11].cast<pyvrp::Duration>(),            // service
-                    t[12].cast<pyvrp::Duration>(),            // wait
-                    t[13].cast<pyvrp::Duration>(),            // release
-                    t[14].cast<pyvrp::Duration>(),            // start time
-                    t[15].cast<pyvrp::Duration>(),            // slack
-                    t[16].cast<pyvrp::Cost>(),                // prizes
-                    t[17].cast<std::pair<double, double>>(),  // centroid
-                    t[18].cast<size_t>(),                     // vehicle type
-                    t[19].cast<size_t>(),                     // start depot
-                    t[20].cast<size_t>(),                     // end depot
-                    t[21].cast<Schedule>());                  // visit schedule
+                    t[12].cast<pyvrp::Duration>(),            // release
+                    t[13].cast<pyvrp::Duration>(),            // start time
+                    t[14].cast<pyvrp::Duration>(),            // slack
+                    t[15].cast<pyvrp::Cost>(),                // prizes
+                    t[16].cast<std::pair<double, double>>(),  // centroid
+                    t[17].cast<size_t>(),                     // vehicle type
+                    t[18].cast<size_t>(),                     // start depot
+                    t[19].cast<size_t>(),                     // end depot
+                    t[20].cast<Schedule>());                  // visit schedule
 
                 return route;
             }))
