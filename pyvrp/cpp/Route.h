@@ -262,7 +262,7 @@ public:
 
     Route() = delete;
 
-    Route(ProblemData const &data, Trips trips, VehicleType const vehicleType);
+    Route(ProblemData const &data, Trips trips, VehicleType vehicleType);
 
     Route(ProblemData const &data, Visits visits, VehicleType vehicleType);
 
