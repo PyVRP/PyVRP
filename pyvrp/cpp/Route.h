@@ -72,7 +72,6 @@ private:
     Duration timeWarp_ = 0;         // Total time warp on this route
     Duration travel_ = 0;           // Total *travel* duration on this route
     Duration service_ = 0;          // Total *service* duration on this route
-    Duration wait_ = 0;             // Total *waiting* duration on this route
     Duration release_ = 0;          // Release time of this route
     Duration startTime_ = 0;        // (earliest) start time of this route
     Duration slack_ = 0;            // Total time slack on this route
@@ -93,8 +92,8 @@ public:
 
     [[nodiscard]] Client operator[](size_t idx) const;
 
-    Visits::const_iterator begin() const;
-    Visits::const_iterator end() const;
+    [[nodiscard]] Visits::const_iterator begin() const;
+    [[nodiscard]] Visits::const_iterator end() const;
 
     /**
      * Route visits, as a list of clients.
@@ -190,7 +189,7 @@ public:
 
     /**
      * End time of the route. This is equivalent to
-     *  ``start_time + duration - time_warp``.
+     * ``start_time + duration - time_warp``.
      */
     [[nodiscard]] Duration endTime() const;
 
@@ -278,7 +277,6 @@ public:
           Duration timeWarp,
           Duration travel,
           Duration service,
-          Duration wait,
           Duration release,
           Duration startTime,
           Duration slack,
