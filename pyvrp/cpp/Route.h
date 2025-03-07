@@ -13,7 +13,7 @@
 namespace pyvrp
 {
 /**
- * Route(data: ProblemData, visits: list[int], vehicle_type: int)
+ * Route(data: ProblemData, visits: list[int] | list[Trip], vehicle_type: int)
  *
  * A simple class that stores the route plan and some statistics.
  */
@@ -262,11 +262,9 @@ public:
 
     Route() = delete;
 
-    Route(ProblemData const &data, Trips trips);
+    Route(ProblemData const &data, Trips trips, VehicleType const vehicleType);
 
-    Route(ProblemData const &data,
-          Visits visits,
-          VehicleType const vehicleType);
+    Route(ProblemData const &data, Visits visits, VehicleType vehicleType);
 
     // This constructor does *no* validation. Useful when unserialising objects.
     Route(Visits visits,

@@ -257,7 +257,10 @@ class Trip:
 
 class Route:
     def __init__(
-        self, data: ProblemData, visits: list[int], vehicle_type: int
+        self,
+        data: ProblemData,
+        visits: list[int] | list[Trip],
+        vehicle_type: int,
     ) -> None: ...
     def __getitem__(self, idx: int) -> int: ...
     def __iter__(self) -> Iterator[int]: ...

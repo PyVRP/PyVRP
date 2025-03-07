@@ -567,6 +567,10 @@ PYBIND11_MODULE(_pyvrp, m)
             }));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, Route))
+        .def(py::init<ProblemData const &, std::vector<Trip>, size_t>(),
+             py::arg("data"),
+             py::arg("visits"),  // name is compatible with other constructor
+             py::arg("vehicle_type"))
         .def(py::init<ProblemData const &, std::vector<size_t>, size_t>(),
              py::arg("data"),
              py::arg("visits"),

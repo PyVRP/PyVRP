@@ -32,7 +32,7 @@ Duration Route::ScheduledVisit::serviceDuration() const
     return endService - startService;
 }
 
-Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
+Route::Route(ProblemData const &data, Visits visits, size_t vehicleType)
     : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
 {
     auto const &vehType = data.vehicleType(vehicleType);
@@ -126,6 +126,14 @@ Route::Route(ProblemData const &data, Visits visits, size_t const vehicleType)
         now += clientData.serviceDuration;
         prevClient = client;
     }
+}
+
+Route::Route([[maybe_unused]] ProblemData const &data,
+             [[maybe_unused]] Trips trips,
+             size_t vehicleType)
+    : visits_({}), centroid_({0, 0}), vehicleType_(vehicleType)
+{
+    // TODO
 }
 
 Route::Route(Visits visits,
