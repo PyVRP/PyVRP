@@ -4,6 +4,7 @@
 #include "Measure.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
+#include "Trip.h"
 
 #include <iosfwd>
 #include <optional>
@@ -57,6 +58,7 @@ private:
     using Client = size_t;
     using Depot = size_t;
     using VehicleType = size_t;
+    using Trips = std::vector<Trip>;
     using Visits = std::vector<Client>;
 
     Visits visits_ = {};                         // Client visits on this route
@@ -259,6 +261,8 @@ public:
     bool operator==(Route const &other) const;
 
     Route() = delete;
+
+    Route(ProblemData const &data, Trips trips);
 
     Route(ProblemData const &data,
           Visits visits,

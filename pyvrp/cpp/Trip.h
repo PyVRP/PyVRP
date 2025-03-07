@@ -1,3 +1,6 @@
+#ifndef PYVRP_TRIP_H
+#define PYVRP_TRIP_H
+
 #include "ProblemData.h"
 
 #include <vector>
@@ -139,3 +142,5 @@ public:
          size_t const endDepot);
 };
 }  // namespace pyvrp
+
+#endif  // PYVRP_TRIP_H
