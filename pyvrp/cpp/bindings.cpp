@@ -539,7 +539,50 @@ PYBIND11_MODULE(_pyvrp, m)
                     throw py::index_error();
                 return trip[idx];
             },
-            py::arg("idx"));
+            py::arg("idx"))
+        .def(py::pickle(
+            [](Trip const &trip) {  // __getstate__
+                // Returns a tuple that completely encodes the trip's state.
+                return py::make_tuple(trip.visits(),
+                                      trip.distance(),
+                                      trip.delivery(),
+                                      trip.pickup(),
+                                      trip.excessLoad(),
+                                      trip.travelDuration(),
+                                      trip.serviceDuration(),
+                                      trip.releaseTime(),
+                                      trip.prizes(),
+                                      trip.centroid(),
+                                      trip.vehicleType(),
+                                      trip.startDepot(),
+                                      trip.endDepot());
+            },
+            [](py::tuple t) {  // __setstate__
+                using Loads = std::vector<pyvrp::Load>;
+
+                Trip trip(t[0].cast<Trip::Visits>(),     // visits
+                          t[1].cast<pyvrp::Distance>(),  // distance
+                          t[2].cast<Loads>(),            // delivery
+                          t[3].cast<Loads>(),            // pickup
+                          t[4].cast<Loads>(),            // excess load
+                          t[5].cast<pyvrp::Duration>(),  // travel
+                          t[6].cast<pyvrp::Duration>(),  // service
+                          t[7].cast<pyvrp::Duration>(),  // release
+                          t[8].cast<pyvrp::Cost>(),      // prizes
+                          t[9].cast<std::pair<double, double>>(),  // centroid
+                          t[10].cast<size_t>(),   // vehicle type
+                          t[11].cast<size_t>(),   // start depot
+                          t[12].cast<size_t>());  // end depot
+
+                return trip;
+            }))
+        .def("__str__",
+             [](Trip const &trip)
+             {
+                 std::stringstream stream;
+                 stream << trip;
+                 return stream.str();
+             });
 
     py::class_<Route::ScheduledVisit>(
         m, "ScheduledVisit", DOC(pyvrp, Route, ScheduledVisit))
@@ -646,7 +689,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::pickle(
             [](Route const &route) {  // __getstate__
                 // Returns a tuple that completely encodes the route's state.
-                return py::make_tuple(route.visits(),
+                return py::make_tuple(route.trips(),
                                       route.distance(),
                                       route.distanceCost(),
                                       route.excessDistance(),
@@ -669,10 +712,11 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.schedule());
             },
             [](py::tuple t) {  // __setstate__
+                using Trips = std::vector<Trip>;
                 using Schedule = std::vector<Route::ScheduledVisit>;
 
                 Route route(
-                    t[0].cast<std::vector<size_t>>(),         // visits
+                    t[0].cast<Trips>(),                       // trips
                     t[1].cast<pyvrp::Distance>(),             // distance
                     t[2].cast<pyvrp::Cost>(),                 // distance cost
                     t[3].cast<pyvrp::Distance>(),             // excess distance

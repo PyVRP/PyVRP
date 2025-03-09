@@ -140,7 +140,24 @@ public:
          size_t const vehicleType,
          size_t const startDepot,
          size_t const endDepot);
+
+    // This constructor does *no* validation. Useful when unserialising objects.
+    Trip(Visits visits,
+         Distance distance,
+         std::vector<Load> delivery,
+         std::vector<Load> pickup,
+         std::vector<Load> excessLoad,
+         Duration travel,
+         Duration service,
+         Duration release,
+         Cost prizes,
+         std::pair<double, double> centroid,
+         size_t vehicleType,
+         size_t startDepot,
+         size_t endDepot);
 };
 }  // namespace pyvrp
+
+std::ostream &operator<<(std::ostream &out, pyvrp::Trip const &trip);
 
 #endif  // PYVRP_TRIP_H

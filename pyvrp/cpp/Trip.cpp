@@ -95,6 +95,35 @@ Trip::Trip(ProblemData const &data,
     }
 }
 
+Trip::Trip(Visits visits,
+           Distance distance,
+           std::vector<Load> delivery,
+           std::vector<Load> pickup,
+           std::vector<Load> excessLoad,
+           Duration travel,
+           Duration service,
+           Duration release,
+           Cost prizes,
+           std::pair<double, double> centroid,
+           size_t vehicleType,
+           size_t startDepot,
+           size_t endDepot)
+    : visits_(std::move(visits)),
+      distance_(distance),
+      delivery_(std::move(delivery)),
+      pickup_(std::move(pickup)),
+      excessLoad_(std::move(excessLoad)),
+      travel_(travel),
+      service_(service),
+      release_(release),
+      prizes_(prizes),
+      centroid_(centroid),
+      vehicleType_(vehicleType),
+      startDepot_(startDepot),
+      endDepot_(endDepot)
+{
+}
+
 bool Trip::empty() const { return visits_.empty(); }
 
 size_t Trip::size() const { return visits_.size(); }
@@ -150,4 +179,16 @@ bool Trip::operator==(Trip const &other) const
         && vehicleType_ == other.vehicleType_
         && visits_ == other.visits_;
     // clang-format on
+}
+
+std::ostream &operator<<(std::ostream &out, Trip const &trip)
+{
+    for (size_t idx = 0; idx != trip.size(); ++idx)
+    {
+        out << trip[idx];
+        if (idx + 1 != trip.size())
+            out << ' ';
+    }
+
+    return out;
 }

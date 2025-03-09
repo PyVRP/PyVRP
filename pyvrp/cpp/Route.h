@@ -15,11 +15,51 @@ namespace pyvrp
 /**
  * Route(data: ProblemData, visits: list[int] | list[Trip], vehicle_type: int)
  *
- * A simple class that stores the route plan and some statistics.
+ * A simple class that stores the route plan and some statistics. Internally,
+ * a route consists of :class:`~pyvrp._pyvrp.Trip`s.
  */
 class Route
 {
+    using Client = size_t;
+    using Depot = size_t;
+    using VehicleType = size_t;
+    using Trips = std::vector<Trip>;
+    using Visits = std::vector<Client>;
+
 public:
+    /**
+     * Forward iterator through the clients visited by this route.
+     */
+    class Iterator
+    {
+        Trips const *trips = nullptr;
+        size_t trip = 0;   // trip index in trips
+        size_t visit = 0;  // visit index into trips[trip]
+
+        Iterator(Trips const &trips, size_t trip, size_t visit);
+
+    public:
+        using difference_type = std::ptrdiff_t;
+        using value_type = Client;
+
+        Iterator() = default;
+        Iterator(Iterator const &other) = default;
+        Iterator(Iterator &&other) = default;
+
+        Iterator &operator=(Iterator const &other) = default;
+        Iterator &operator=(Iterator &&other) = default;
+
+        static Iterator begin(Trips const &trips);
+        static Iterator end(Trips const &trips);
+
+        bool operator==(Iterator const &other) const;
+
+        Client operator*() const;
+
+        Iterator operator++(int);
+        Iterator &operator++();
+    };
+
     /**
      * Simple object that stores some data about a client visit.
      *
@@ -55,13 +95,7 @@ public:
     };
 
 private:
-    using Client = size_t;
-    using Depot = size_t;
-    using VehicleType = size_t;
-    using Trips = std::vector<Trip>;
-    using Visits = std::vector<Client>;
-
-    Visits visits_ = {};                         // Client visits on this route
+    Trips trips_ = {};
     std::vector<ScheduledVisit> schedule_ = {};  // Client visit schedule data
     Distance distance_ = 0;        // Total travel distance on this route
     Cost distanceCost_ = 0;        // Total cost of travel distance
@@ -94,13 +128,18 @@ public:
 
     [[nodiscard]] Client operator[](size_t idx) const;
 
-    [[nodiscard]] Visits::const_iterator begin() const;
-    [[nodiscard]] Visits::const_iterator end() const;
+    [[nodiscard]] Iterator begin() const;
+    [[nodiscard]] Iterator end() const;
+
+    /**
+     * Returns the trips that make up this route.
+     */
+    [[nodiscard]] Trips const &trips() const;
 
     /**
      * Route visits, as a list of clients.
      */
-    [[nodiscard]] Visits const &visits() const;
+    [[nodiscard]] Visits visits() const;
 
     /**
      * Statistics about each client visit and the overall route schedule.
@@ -267,7 +306,7 @@ public:
     Route(ProblemData const &data, Visits visits, VehicleType vehicleType);
 
     // This constructor does *no* validation. Useful when unserialising objects.
-    Route(Visits visits,
+    Route(Trips trips,
           Distance distance,
           Cost distanceCost,
           Distance excessDistance,

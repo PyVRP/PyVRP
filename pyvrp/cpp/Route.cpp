@@ -15,6 +15,54 @@ using pyvrp::Route;
 
 using Client = size_t;
 
+Route::Iterator::Iterator(Trips const &trips, size_t trip, size_t visit)
+    : trips(&trips), trip(trip), visit(visit)
+{
+}
+
+Route::Iterator Route::Iterator::begin(Trips const &trips)
+{
+    return Iterator(trips, 0, 0);
+}
+
+Route::Iterator Route::Iterator::end(Trips const &trips)
+{
+    return Iterator(trips, trips.size(), 0);
+}
+
+bool Route::Iterator::operator==(Iterator const &other) const
+{
+    return trips == other.trips && trip == other.trip && visit == other.visit;
+}
+
+Client Route::Iterator::operator*() const
+{
+    assert(trip < trips->size());
+    return (*trips)[trip][visit];
+}
+
+Route::Iterator Route::Iterator::operator++(int)
+{
+    auto tmp = *this;
+    ++*this;
+    return tmp;
+}
+
+Route::Iterator &Route::Iterator::operator++()
+{
+    auto const tripSize = (*trips)[trip].size();
+
+    if (visit + 1 < tripSize)
+        ++visit;
+    else
+    {
+        ++trip;
+        visit = 0;
+    }
+
+    return *this;
+}
+
 Route::ScheduledVisit::ScheduledVisit(Duration startService,
                                       Duration endService,
                                       Duration waitDuration,
@@ -33,8 +81,21 @@ Duration Route::ScheduledVisit::serviceDuration() const
 }
 
 Route::Route(ProblemData const &data, Visits visits, size_t vehicleType)
-    : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
+    : Route(data,
+            {{data,
+              std::move(visits),
+              vehicleType,
+              data.vehicleType(vehicleType).startDepot,
+              data.vehicleType(vehicleType).endDepot}},
+            vehicleType)
 {
+}
+
+Route::Route(ProblemData const &data, Trips trips, size_t vehicleType)
+    : trips_(std::move(trips)), centroid_({0, 0}), vehicleType_(vehicleType)
+{
+    // TODO validation
+
     auto const &vehType = data.vehicleType(vehicleType);
     startDepot_ = vehType.startDepot;
     endDepot_ = vehType.endDepot;
@@ -53,36 +114,39 @@ Route::Route(ProblemData const &data, Visits visits, size_t vehicleType)
     auto const &distances = data.distanceMatrix(vehType.profile);
     auto const &durations = data.durationMatrix(vehType.profile);
 
-    for (size_t prevClient = startDepot_; auto const client : visits_)
+    size_t prevClient = startDepot_;
+    for (auto const &trip : trips_)
     {
-        ProblemData::Client const &clientData = data.location(client);
+        distance_ += trip.distance();
+        service_ += trip.serviceDuration();
+        prizes_ += trip.prizes();
 
-        distance_ += distances(prevClient, client);
-        service_ += clientData.serviceDuration;
-        prizes_ += clientData.prize;
-
-        auto const edgeDuration = durations(prevClient, client);
-        travel_ += edgeDuration;
-        ds = DurationSegment::merge(edgeDuration, ds, {clientData});
-
-        centroid_.first += static_cast<double>(clientData.x) / size();
-        centroid_.second += static_cast<double>(clientData.y) / size();
-
-        for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+        for (auto const client : trip)
         {
-            auto const clientLs = LoadSegment(clientData, dim);
-            loadSegments[dim] = LoadSegment::merge(loadSegments[dim], clientLs);
-        }
+            ProblemData::Client const &clientData = data.location(client);
 
-        prevClient = client;
+            auto const edgeDuration = durations(prevClient, client);
+            travel_ += edgeDuration;
+            ds = DurationSegment::merge(edgeDuration, ds, {clientData});
+
+            centroid_.first += static_cast<double>(clientData.x) / size();
+            centroid_.second += static_cast<double>(clientData.y) / size();
+
+            for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+            {
+                auto const clientLs = LoadSegment(clientData, dim);
+                loadSegments[dim]
+                    = LoadSegment::merge(loadSegments[dim], clientLs);
+            }
+
+            prevClient = client;
+        }
     }
 
-    auto const last = visits_.empty() ? startDepot_ : visits_.back();
-    distance_ += distances(last, endDepot_);
+    distance_ += distances(prevClient, endDepot_);
     distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
-
-    travel_ += durations(last, endDepot_);
+    travel_ += durations(prevClient, endDepot_);
 
     delivery_.reserve(data.numLoadDimensions());
     pickup_.reserve(data.numLoadDimensions());
@@ -98,45 +162,46 @@ Route::Route(ProblemData const &data, Visits visits, size_t vehicleType)
     DurationSegment const depotEnd(data.location(endDepot_), 0);
     DurationSegment const vehEnd(vehType, vehType.twLate);
     DurationSegment const endDS = DurationSegment::merge(0, depotEnd, vehEnd);
-    ds = DurationSegment::merge(durations(last, endDepot_), ds, endDS);
+    ds = DurationSegment::merge(durations(prevClient, endDepot_), ds, endDS);
 
     duration_ = ds.duration();
     durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
     startTime_ = ds.twEarly();
     slack_ = ds.twLate() - ds.twEarly();
     timeWarp_ = ds.timeWarp(vehType.maxDuration);
-    release_ = ds.releaseTime();
+    release_ = trips_.empty() ? 0 : trips_[0].releaseTime();
 
     schedule_.reserve(size());
     auto now = startTime_;
-    for (size_t prevClient = startDepot_; auto const client : visits_)
+    for (size_t prevClient = startDepot_; auto const &trip : trips_)
     {
-        now += durations(prevClient, client);
+        ProblemData::Depot const &depot = data.location(trip.startDepot());
+        now += depot.serviceDuration;
 
-        ProblemData::Client const &clientData = data.location(client);
-        auto const wait = std::max<Duration>(clientData.twEarly - now, 0);
-        auto const timeWarp = std::max<Duration>(now - clientData.twLate, 0);
+        for (auto const client : trip)
+        {
+            now += durations(prevClient, client);
 
-        now += wait;
-        now -= timeWarp;
+            ProblemData::Client const &clientData = data.location(client);
+            auto const wait = std::max<Duration>(clientData.twEarly - now, 0);
+            auto const timeWarp
+                = std::max<Duration>(now - clientData.twLate, 0);
 
-        schedule_.emplace_back(
-            now, now + clientData.serviceDuration, wait, timeWarp);
+            now += wait;
+            now -= timeWarp;
 
-        now += clientData.serviceDuration;
-        prevClient = client;
+            schedule_.emplace_back(
+                now, now + clientData.serviceDuration, wait, timeWarp);
+
+            now += clientData.serviceDuration;
+            prevClient = client;
+        }
+
+        prevClient = trip.endDepot();
     }
 }
 
-Route::Route([[maybe_unused]] ProblemData const &data,
-             [[maybe_unused]] Trips trips,
-             size_t vehicleType)
-    : visits_({}), centroid_({0, 0}), vehicleType_(vehicleType)
-{
-    // TODO
-}
-
-Route::Route(Visits visits,
+Route::Route(Trips trips,
              Distance distance,
              Cost distanceCost,
              Distance excessDistance,
@@ -157,7 +222,7 @@ Route::Route(Visits visits,
              size_t startDepot,
              size_t endDepot,
              std::vector<ScheduledVisit> schedule)
-    : visits_(std::move(visits)),
+    : trips_(std::move(trips)),
       schedule_(std::move(schedule)),
       distance_(distance),
       distanceCost_(distanceCost),
@@ -181,17 +246,37 @@ Route::Route(Visits visits,
 {
 }
 
-bool Route::empty() const { return visits_.empty(); }
+bool Route::empty() const { return size() == 0; }
 
-size_t Route::size() const { return visits_.size(); }
+size_t Route::size() const
+{
+    return std::accumulate(trips_.begin(),
+                           trips_.end(),
+                           0,
+                           [](size_t count, auto const &trip)
+                           { return count + trip.size(); });
+}
 
-Client Route::operator[](size_t idx) const { return visits_[idx]; }
+Client Route::operator[](size_t idx) const
+{
+    for (auto const &trip : trips_)
+        if (idx < trip.size())
+            return trip[idx];
+        else
+            idx -= trip.size();
 
-Route::Visits::const_iterator Route::begin() const { return visits_.cbegin(); }
+    // TODO this should probably become std::unreachable() once more compilers
+    // support it.
+    throw std::out_of_range("Index out of range.");
+}
 
-Route::Visits::const_iterator Route::end() const { return visits_.cend(); }
+Route::Iterator Route::begin() const { return Iterator::begin(trips_); }
 
-Route::Visits const &Route::visits() const { return visits_; }
+Route::Iterator Route::end() const { return Iterator::end(trips_); }
+
+Route::Trips const &Route::trips() const { return trips_; }
+
+Route::Visits Route::visits() const { return {begin(), end()}; }
 
 std::vector<Route::ScheduledVisit> const &Route::schedule() const
 {
@@ -265,13 +350,19 @@ bool Route::operator==(Route const &other) const
         && duration_ == other.duration_
         && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
-        && visits_ == other.visits_;
+        && trips_ == other.trips_;
     // clang-format on
 }
 
 std::ostream &operator<<(std::ostream &out, Route const &route)
 {
-    for (auto const client : route)
-        out << client << ' ';
+    auto const &trips = route.trips();
+    for (size_t idx = 0; idx != trips.size(); ++idx)
+    {
+        out << trips[idx];
+        if (idx + 1 != trips.size())
+            out << " | ";
+    }
+
     return out;
 }
