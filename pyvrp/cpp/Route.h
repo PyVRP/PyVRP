@@ -32,15 +32,14 @@ public:
      */
     class Iterator
     {
-        Trips const *trips = nullptr;
-        size_t trip = 0;   // trip index in trips
-        size_t visit = 0;  // visit index into trips[trip]
-
-        Iterator(Trips const &trips, size_t trip, size_t visit);
+        Route const *route = nullptr;
+        size_t idx = 0;
 
     public:
         using difference_type = std::ptrdiff_t;
         using value_type = Client;
+
+        Iterator(Route const &route, size_t idx);
 
         Iterator() = default;
         Iterator(Iterator const &other) = default;
@@ -48,9 +47,6 @@ public:
 
         Iterator &operator=(Iterator const &other) = default;
         Iterator &operator=(Iterator &&other) = default;
-
-        static Iterator begin(Trips const &trips);
-        static Iterator end(Trips const &trips);
 
         bool operator==(Iterator const &other) const;
 

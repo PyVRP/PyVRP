@@ -15,31 +15,18 @@ using pyvrp::Route;
 
 using Client = size_t;
 
-Route::Iterator::Iterator(Trips const &trips, size_t trip, size_t visit)
-    : trips(&trips), trip(trip), visit(visit)
+Route::Iterator::Iterator(Route const &route, size_t idx)
+    : route(&route), idx(idx)
 {
-}
-
-Route::Iterator Route::Iterator::begin(Trips const &trips)
-{
-    return Iterator(trips, 0, 0);
-}
-
-Route::Iterator Route::Iterator::end(Trips const &trips)
-{
-    return Iterator(trips, trips.size(), 0);
+    assert(idx <= route.size());
 }
 
 bool Route::Iterator::operator==(Iterator const &other) const
 {
-    return trips == other.trips && trip == other.trip && visit == other.visit;
+    return route == other.route && idx == other.idx;
 }
 
-Client Route::Iterator::operator*() const
-{
-    assert(trip < trips->size());
-    return (*trips)[trip][visit];
-}
+Client Route::Iterator::operator*() const { return (*route)[idx]; }
 
 Route::Iterator Route::Iterator::operator++(int)
 {
@@ -50,16 +37,7 @@ Route::Iterator Route::Iterator::operator++(int)
 
 Route::Iterator &Route::Iterator::operator++()
 {
-    auto const tripSize = (*trips)[trip].size();
-
-    if (visit + 1 < tripSize)
-        ++visit;
-    else
-    {
-        ++trip;
-        visit = 0;
-    }
-
+    ++idx;
     return *this;
 }
 
@@ -270,9 +248,9 @@ Client Route::operator[](size_t idx) const
     throw std::out_of_range("Index out of range.");
 }
 
-Route::Iterator Route::begin() const { return Iterator::begin(trips_); }
+Route::Iterator Route::begin() const { return Iterator(*this, 0); }
 
-Route::Iterator Route::end() const { return Iterator::end(trips_); }
+Route::Iterator Route::end() const { return Iterator(*this, size()); }
 
 Route::Trips const &Route::trips() const { return trips_; }
 
