@@ -23,9 +23,9 @@ void DestroyRepair::destroy()
 {
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
 
-    auto const maxDestroy = std::min(30UL, data.numClients());
+    auto const maxDestroy = std::min(25UL, data.numClients());
     size_t numDestroy = rng.randint(maxDestroy);
-    numDestroy = std::max(5UL, numDestroy);
+    numDestroy = std::max(15UL, numDestroy);
 
     auto const dIdx = rng.randint(2);
 
@@ -62,7 +62,7 @@ void DestroyRepair::strings(size_t numDestroy)
     auto const center = rng.randint(data.numClients()) + data.numDepots();
     auto const &neighbours = neighbours_[center];
     auto const maxDestroy = std::min(numDestroy, neighbours.size());
-    auto const maxPerRoute = 10;
+    auto const maxPerRoute = 5;
 
     size_t numDestroyed = 0;
     for (auto const neighbour : neighbours)
