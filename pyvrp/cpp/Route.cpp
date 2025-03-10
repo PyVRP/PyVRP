@@ -1,6 +1,5 @@
 #include "Route.h"
 #include "DurationSegment.h"
-#include "LoadSegment.h"
 
 #include <algorithm>
 #include <cassert>
@@ -69,114 +68,64 @@ Route::Route(ProblemData const &data, Visits visits, size_t vehicleType)
 {
 }
 
-Route::Route(ProblemData const &data, Trips trips, size_t vehicleType)
-    : trips_(std::move(trips)), centroid_({0, 0}), vehicleType_(vehicleType)
+Route::Route(ProblemData const &data, Trips trips, size_t vehType)
+    : trips_(std::move(trips)),
+      delivery_(data.numLoadDimensions(), 0),
+      pickup_(data.numLoadDimensions(), 0),
+      excessLoad_(data.numLoadDimensions(), 0),
+      centroid_({0, 0}),
+      vehicleType_(vehType)
 {
-    // TODO validation
+    auto const &vehData = data.vehicleType(vehType);
+    startDepot_ = vehData.startDepot;
+    endDepot_ = vehData.endDepot;
 
-    auto const &vehType = data.vehicleType(vehicleType);
-    startDepot_ = vehType.startDepot;
-    endDepot_ = vehType.endDepot;
+    if (trips_.empty())  // then we insert a dummy trip for ease of validation.
+        trips_.emplace_back(data, Visits{}, vehType, startDepot_, endDepot_);
 
-    ProblemData::Depot const &start = data.location(startDepot_);
-    service_ += start.serviceDuration;
+    if (trips_[0].startDepot() != startDepot_)
+    {
+        auto const *msg = "Route must start at vehicle's start_depot.";
+        throw std::invalid_argument(msg);
+    }
 
-    DurationSegment const vehStart(vehType, vehType.startLate);
-    DurationSegment const depotStart(start, start.serviceDuration);
-    DurationSegment ds = DurationSegment::merge(0, vehStart, depotStart);
+    if (trips_.back().endDepot() != endDepot_)
+        throw std::invalid_argument("Route must end at vehicle's end_depot.");
 
-    std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
-    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-        loadSegments[dim] = {vehType, dim};
+    for (size_t idx = 0; idx + 1 != trips_.size(); ++idx)
+        if (trips_[idx].endDepot() != trips_[idx + 1].startDepot())
+        {
+            auto *msg = "Consecutive trips must end and start at same depot.";
+            throw std::invalid_argument(msg);
+        }
 
-    auto const &distances = data.distanceMatrix(vehType.profile);
-    auto const &durations = data.durationMatrix(vehType.profile);
-
-    size_t prevClient = startDepot_;
     for (auto const &trip : trips_)
     {
         distance_ += trip.distance();
         service_ += trip.serviceDuration();
+        travel_ += trip.travelDuration();
         prizes_ += trip.prizes();
 
-        for (auto const client : trip)
+        auto const &tripDelivery = trip.delivery();
+        auto const &tripPickup = trip.pickup();
+        auto const &tripExcessLoad = trip.excessLoad();
+        for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
         {
-            ProblemData::Client const &clientData = data.location(client);
-
-            auto const edgeDuration = durations(prevClient, client);
-            travel_ += edgeDuration;
-            ds = DurationSegment::merge(edgeDuration, ds, {clientData});
-
-            centroid_.first += static_cast<double>(clientData.x) / size();
-            centroid_.second += static_cast<double>(clientData.y) / size();
-
-            for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-            {
-                auto const clientLs = LoadSegment(clientData, dim);
-                loadSegments[dim]
-                    = LoadSegment::merge(loadSegments[dim], clientLs);
-            }
-
-            prevClient = client;
+            delivery_[dim] += tripDelivery[dim];
+            pickup_[dim] += tripPickup[dim];
+            excessLoad_[dim] += tripExcessLoad[dim];
         }
-    }
-
-    distance_ += distances(prevClient, endDepot_);
-    distanceCost_ = vehType.unitDistanceCost * static_cast<Cost>(distance_);
-    excessDistance_ = std::max<Distance>(distance_ - vehType.maxDistance, 0);
-    travel_ += durations(prevClient, endDepot_);
-
-    delivery_.reserve(data.numLoadDimensions());
-    pickup_.reserve(data.numLoadDimensions());
-    excessLoad_.reserve(data.numLoadDimensions());
-    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-    {
-        delivery_.push_back(loadSegments[dim].delivery());
-        pickup_.push_back(loadSegments[dim].pickup());
-        excessLoad_.push_back(std::max<Load>(
-            loadSegments[dim].load() - vehType.capacity[dim], 0));
-    }
-
-    DurationSegment const depotEnd(data.location(endDepot_), 0);
-    DurationSegment const vehEnd(vehType, vehType.twLate);
-    DurationSegment const endDS = DurationSegment::merge(0, depotEnd, vehEnd);
-    ds = DurationSegment::merge(durations(prevClient, endDepot_), ds, endDS);
-
-    duration_ = ds.duration();
-    durationCost_ = vehType.unitDurationCost * static_cast<Cost>(duration_);
-    startTime_ = ds.twEarly();
-    slack_ = ds.twLate() - ds.twEarly();
-    timeWarp_ = ds.timeWarp(vehType.maxDuration);
-    release_ = trips_.empty() ? 0 : trips_[0].releaseTime();
-
-    schedule_.reserve(size());
-    auto now = startTime_;
-    for (size_t prevClient = startDepot_; auto const &trip : trips_)
-    {
-        ProblemData::Depot const &depot = data.location(trip.startDepot());
-        now += depot.serviceDuration;
 
         for (auto const client : trip)
         {
-            now += durations(prevClient, client);
-
-            ProblemData::Client const &clientData = data.location(client);
-            auto const wait = std::max<Duration>(clientData.twEarly - now, 0);
-            auto const timeWarp
-                = std::max<Duration>(now - clientData.twLate, 0);
-
-            now += wait;
-            now -= timeWarp;
-
-            schedule_.emplace_back(
-                now, now + clientData.serviceDuration, wait, timeWarp);
-
-            now += clientData.serviceDuration;
-            prevClient = client;
+            [[maybe_unused]] ProblemData::Client const &clientData
+                = data.location(client);
+            // TODO
         }
-
-        prevClient = trip.endDepot();
     }
+
+    release_ = trips_[0].releaseTime();
+    // TODO
 }
 
 Route::Route(Trips trips,
