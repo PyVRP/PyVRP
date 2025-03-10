@@ -88,7 +88,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!candidates[uClient])
                 continue;
 
-            // candidates[uClient] = false;
+            candidates[uClient] = false;
 
             for (auto const vClient : neighbours_[uClient])
             {
@@ -214,14 +214,6 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
                 if (!n(V)->isDepot())
                     candidates[n(V)->client()] = true;
             }
-
-            // for (auto *U : *rU)
-            //     if (!U->isDepot())
-            //         candidates[U->client()] = true;
-
-            // for (auto *V : *rV)
-            //     if (!V->isDepot())
-            //         candidates[V->client()] = true;
 
             [[maybe_unused]] auto const costAfter
                 = costEvaluator.penalisedCost(*rU)
