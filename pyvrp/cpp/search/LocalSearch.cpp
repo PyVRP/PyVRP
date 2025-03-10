@@ -56,14 +56,11 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     std::vector<int> lastTestedNodes(data.numLocations(), -1);
     lastModified = std::vector<int>(data.numVehicles(), 0);
 
-    searchCompleted = false;
     numMoves = 0;
 
     bool firstStep = true;
-    while (candidates.any() && !searchCompleted)
+    while (candidates.any())
     {
-        searchCompleted = true;
-
         // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
         {
