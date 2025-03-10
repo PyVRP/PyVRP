@@ -34,12 +34,12 @@ class DestroyRepair
 
     // Destroy the solution.
     void destroy(size_t numDestroy);
-
     void concentric(size_t numDestroy);
     void strings(size_t numDestroy);
 
-    // Greedily repair the solution.
+    // Repair the solution.
     void repair(CostEvaluator const &costEvaluator);
+    void greedyInsert(CostEvaluator const &costEvaluator);
 
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);

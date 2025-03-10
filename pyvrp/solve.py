@@ -182,8 +182,12 @@ def solve(
         max_runtime=max_runtime,
     )
 
+    # import numpy as np
+    # from .accept import RecordToRecordThreshold
+
     # distmat = data.distance_matrices()[0]
     # avg = np.mean([distmat[i, j] for i, nbs in enumerate(nbhd) for j in nbs])
+    # print(avg)
     # accept = RecordToRecordThreshold(avg * 1, avg * 0.5, max_runtime)
 
     ils_args = (data, pm, rng, perturb, ls, accept, params.ils)

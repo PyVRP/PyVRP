@@ -77,7 +77,9 @@ class IteratedLocalSearch:
         return self._pm.cost_evaluator()
 
     def _stats(self, solution: Solution) -> tuple[float, bool]:
-        return self._cost_evaluator.cost(solution), solution.is_feasible()
+        cost = self._cost_evaluator.penalised_cost(solution)
+        is_feas = solution.is_feasible()
+        return cost, is_feas
 
     def run(
         self,

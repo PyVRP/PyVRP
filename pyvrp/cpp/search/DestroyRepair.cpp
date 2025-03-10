@@ -88,6 +88,20 @@ void DestroyRepair::repair(CostEvaluator const &costEvaluator)
 {
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
 
+    auto const dIdx = rng.randint(2);
+
+    if (dIdx == 0)
+        greedyInsert(costEvaluator);
+    else
+    {
+        // HACK this allows for infeasible insertions
+        auto const costEval = CostEvaluator({20}, 6, 6);
+        greedyInsert(costEval);
+    }
+}
+
+void DestroyRepair::greedyInsert(CostEvaluator const &costEvaluator)
+{
     for (auto const client : orderNodes)
     {
         auto *U = &nodes[client];
