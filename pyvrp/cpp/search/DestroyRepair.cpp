@@ -11,22 +11,18 @@ using pyvrp::Solution;
 using pyvrp::search::DestroyRepair;
 
 Solution DestroyRepair::operator()(Solution const &solution,
-                                   CostEvaluator const &costEvaluator)
+                                   CostEvaluator const &costEvaluator,
+                                   size_t numDestroy)
 {
     loadSolution(solution);
-    destroy();
+    destroy(numDestroy);
     repair(costEvaluator);
     return exportSolution();
 }
 
-void DestroyRepair::destroy()
+void DestroyRepair::destroy(size_t numDestroy)
 {
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
-
-    auto const maxDestroy = std::min(25UL, data.numClients());
-    size_t numDestroy = rng.randint(maxDestroy);
-    numDestroy = std::max(15UL, numDestroy);
-
     auto const dIdx = rng.randint(2);
 
     if (dIdx == 0)

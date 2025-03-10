@@ -33,7 +33,7 @@ class DestroyRepair
     Solution exportSolution() const;
 
     // Destroy the solution.
-    void destroy();
+    void destroy(size_t numDestroy);
 
     void concentric(size_t numDestroy);
     void strings(size_t numDestroy);
@@ -62,7 +62,8 @@ public:
      * improvements are made.
      */
     Solution operator()(Solution const &solution,
-                        CostEvaluator const &costEvaluator);
+                        CostEvaluator const &costEvaluator,
+                        size_t numDestroy);
 
     DestroyRepair(ProblemData const &data,
                   RandomNumberGenerator &rng,
