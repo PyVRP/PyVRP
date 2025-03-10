@@ -99,12 +99,22 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
             throw std::invalid_argument(msg);
         }
 
+    auto const &durations = data.durationMatrix(vehData.profile);
+    DurationSegment ds = {vehData, vehData.startLate};
+
     for (auto const &trip : trips_)
     {
+        ProblemData::Depot const &start = data.location(trip.startDepot());
+        ds = DurationSegment::merge(0, ds, {start, start.serviceDuration});
+
         distance_ += trip.distance();
         service_ += trip.serviceDuration();
         travel_ += trip.travelDuration();
         prizes_ += trip.prizes();
+
+        auto const [x, y] = trip.centroid();
+        centroid_.first += (x * trip.size()) / size();
+        centroid_.second += (y * trip.size()) / size();
 
         auto const &tripDelivery = trip.delivery();
         auto const &tripPickup = trip.pickup();
@@ -116,16 +126,34 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
             excessLoad_[dim] += tripExcessLoad[dim];
         }
 
+        size_t prevClient = trip.startDepot();
         for (auto const client : trip)
         {
-            [[maybe_unused]] ProblemData::Client const &clientData
-                = data.location(client);
-            // TODO
+            auto const edgeDuration = durations(prevClient, client);
+            DurationSegment const clientDS = {data.location(client)};
+            ds = DurationSegment::merge(edgeDuration, ds, clientDS);
+
+            prevClient = client;
         }
+
+        ProblemData::Depot const &end = data.location(trip.endDepot());
+        ds = DurationSegment::merge(
+            durations(prevClient, trip.endDepot()), ds, {end, 0});
     }
 
+    distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
+    excessDistance_ = std::max<Distance>(distance_ - vehData.maxDistance, 0);
+
+    ds = DurationSegment::merge(0, ds, {vehData, vehData.twLate});
+    duration_ = ds.duration();
+    durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_);
+    startTime_ = ds.twEarly();
+    slack_ = ds.twLate() - ds.twEarly();
+    timeWarp_ = ds.timeWarp(vehData.maxDuration);
     release_ = trips_[0].releaseTime();
-    // TODO
+
+    schedule_.reserve(size());
+    // TODO schedule
 }
 
 Route::Route(Trips trips,
