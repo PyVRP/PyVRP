@@ -21,33 +21,18 @@ Solution DestroyRepair::operator()(Solution const &solution,
 
 void DestroyRepair::destroy()
 {
-    auto const maxDestroy = std::min(40UL, data.numClients());
-    size_t numDestroy = rng.randint(maxDestroy);
-    numDestroy = std::max(10UL, numDestroy);
+    std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
 
-    auto const dIdx = rng.randint(3);
+    auto const maxDestroy = std::min(30UL, data.numClients());
+    size_t numDestroy = rng.randint(maxDestroy);
+    numDestroy = std::max(5UL, numDestroy);
+
+    auto const dIdx = rng.randint(2);
+
     if (dIdx == 0)
-        random(numDestroy);
-    else if (dIdx == 1)
         concentric(numDestroy);
     else
         strings(numDestroy);
-}
-
-void DestroyRepair::random(size_t numDestroy)
-{
-    for (size_t idx = 0; idx < numDestroy; ++idx)
-    {
-        auto const client = rng.randint(data.numClients()) + data.numDepots();
-        auto *U = &nodes[client];
-
-        if (!U->route())
-            continue;
-
-        auto *route = U->route();
-        route->remove(U->idx());
-        route->update();
-    }
 }
 
 void DestroyRepair::concentric(size_t numDestroy)
@@ -56,27 +41,58 @@ void DestroyRepair::concentric(size_t numDestroy)
     auto const &neighbours = neighbours_[center];
     auto const maxDestroy = std::min(numDestroy, neighbours.size());
 
-    for (size_t idx = 0; idx < maxDestroy; ++idx)
+    size_t numDestroyed = 0;
+    for (auto neighbour : neighbours)  // assumes there are enough neighbours
     {
-        auto *U = &nodes[idx];
+        auto *U = &nodes[neighbour];
         if (!U->route())
             continue;
 
         auto *route = U->route();
         route->remove(U->idx());
         route->update();
+
+        if (++numDestroyed == maxDestroy)
+            return;
     }
 }
 
 void DestroyRepair::strings(size_t numDestroy)
 {
-    // TODO
+    auto const center = rng.randint(data.numClients()) + data.numDepots();
+    auto const &neighbours = neighbours_[center];
+    auto const maxDestroy = std::min(numDestroy, neighbours.size());
+    auto const maxPerRoute = 10;
+
+    size_t numDestroyed = 0;
+    for (auto const neighbour : neighbours)
+    {
+        auto *U = &nodes[neighbour];
+        if (!U->route())
+            continue;
+
+        auto *route = U->route();
+        size_t routeDestroyed = 0;  // Count per route
+
+        while (!n(U)->isDepot() && routeDestroyed < maxPerRoute)
+        {
+            auto next = n(U);
+            route->remove(U->idx());
+            route->update();
+            U = next;
+
+            routeDestroyed++;
+            if (++numDestroyed == numDestroy)
+                return;
+        }
+    }
 }
 
 void DestroyRepair::repair(CostEvaluator const &costEvaluator)
 {
-    for (size_t client = data.numDepots(); client != data.numLocations();
-         ++client)
+    std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
+
+    for (auto const client : orderNodes)
     {
         auto *U = &nodes[client];
         if (U->route())
@@ -222,8 +238,14 @@ DestroyRepair::Neighbours const &DestroyRepair::neighbours() const
 DestroyRepair::DestroyRepair(ProblemData const &data,
                              RandomNumberGenerator &rng,
                              Neighbours neighbours)
-    : data(data), rng(rng), neighbours_(data.numLocations())
+    : data(data),
+      rng(rng),
+      neighbours_(data.numLocations()),
+      orderNodes(data.numClients())
+
 {
+    std::iota(orderNodes.begin(), orderNodes.end(), data.numDepots());
+
     setNeighbours(neighbours);
     nodes.reserve(data.numLocations());
     for (size_t loc = 0; loc != data.numLocations(); ++loc)

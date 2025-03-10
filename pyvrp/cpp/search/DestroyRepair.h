@@ -7,8 +7,6 @@
 #include "Route.h"
 #include "Solution.h"
 
-#include <functional>
-#include <stdexcept>
 #include <vector>
 
 namespace pyvrp::search
@@ -24,6 +22,7 @@ class DestroyRepair
     // numLocations, but nothing is stored for the depots!)
     Neighbours neighbours_;
 
+    std::vector<size_t> orderNodes;  // node order used by destroy/repair
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
 
@@ -36,7 +35,6 @@ class DestroyRepair
     // Destroy the solution.
     void destroy();
 
-    void random(size_t numDestroy);
     void concentric(size_t numDestroy);
     void strings(size_t numDestroy);
 
