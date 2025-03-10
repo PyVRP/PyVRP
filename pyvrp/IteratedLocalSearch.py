@@ -76,9 +76,7 @@ class IteratedLocalSearch:
     def _cost_evaluator(self) -> CostEvaluator:
         return self._pm.cost_evaluator()
 
-    def _stats(
-        self, solution: Solution, cost_evaluator: CostEvaluator
-    ) -> tuple[float, bool]:
+    def _stats(self, solution: Solution) -> tuple[float, bool]:
         return self._cost_evaluator.cost(solution), solution.is_feasible()
 
     def run(
@@ -124,10 +122,10 @@ class IteratedLocalSearch:
             if not candidate.is_feasible():
                 continue  # skip infeasible solutions for now
 
-            curr_cost, curr_feas = self._stats(current, self._cost_evaluator)
-            pert_cost, pert_feas = self._stats(perturbed, self._cost_evaluator)
-            cand_cost, cand_feas = self._stats(candidate, self._cost_evaluator)
-            best_cost, best_feas = self._stats(best, self._cost_evaluator)
+            curr_cost, curr_feas = self._stats(current)
+            pert_cost, pert_feas = self._stats(perturbed)
+            cand_cost, cand_feas = self._stats(candidate)
+            best_cost, best_feas = self._stats(best)
 
             if cand_cost < best_cost:
                 best, current = candidate, candidate

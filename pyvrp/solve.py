@@ -164,8 +164,10 @@ def solve(
         initial_penalties=([VALUE], VALUE, VALUE),
         params=penalty_params,
     )
+
     nbhd = compute_neighbours(data)
-    perturb = DestroyRepair(data, rng, nbhd)
+    max_runtime = stop.criteria[0]._max_runtime  # hack
+    perturb = DestroyRepair(data, rng, nbhd, max_runtime)
     ls = LocalSearch(data, rng, nbhd)
 
     for node_op in params.node_ops:
@@ -174,8 +176,17 @@ def solve(
     for route_op in params.route_ops:
         ls.add_route_operator(route_op(data))
 
-    accept = MovingAverageThreshold(eta=0.5, history_size=100)
+    accept = MovingAverageThreshold(
+        eta=0.2,
+        history_size=100,
+        max_runtime=max_runtime,
+    )
+
+    # distmat = data.distance_matrices()[0]
+    # avg = np.mean([distmat[i, j] for i, nbs in enumerate(nbhd) for j in nbs])
+    # accept = RecordToRecordThreshold(avg * 1, avg * 0.5, max_runtime)
+
     ils_args = (data, pm, rng, perturb, ls, accept, params.ils)
     algo = IteratedLocalSearch(*ils_args)  # type: ignore
-    init = ls(Solution.make_random(data, rng), pm.cost_evaluator())
+    init = Solution.make_random(data, rng)
     return algo.run(stop, init, collect_stats, display)

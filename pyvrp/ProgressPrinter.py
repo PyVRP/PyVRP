@@ -30,7 +30,7 @@ Best-found solution has cost {best_cost}.
 {summary}
 """
 
-NUM_ITERS_PRINT = 100
+NUM_ITERS_PRINT = 500
 
 
 class ProgressPrinter:
@@ -77,7 +77,7 @@ class ProgressPrinter:
             pert=format_cost(data.perturbed_cost, data.perturbed_feas),
             cand=format_cost(data.candidate_cost, data.candidate_feas),
             best=format_cost(data.best_cost, data.best_feas),
-            threshold=f"{data.threshold:.2f} ({data.threshold-data.current_cost:.2f})",
+            threshold=f"{data.threshold:.2f} ({data.threshold-data.current_cost:.2f})",  # noqa: E501
         )
         print(msg)
 
