@@ -204,6 +204,7 @@ PYBIND11_MODULE(_search, m)
              &LocalSearch::operator(),
              py::arg("solution"),
              py::arg("cost_evaluator"),
+             py::arg("candidates"),
              py::arg("overlap_tolerance") = 0.05,
              py::call_guard<py::gil_scoped_release>())
         .def("search",
@@ -241,6 +242,7 @@ PYBIND11_MODULE(_search, m)
              &DestroyRepair::operator(),
              py::arg("solution"),
              py::arg("cost_evaluator"),
+             py::arg("num_destroy"),
              py::call_guard<py::gil_scoped_release>());
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))

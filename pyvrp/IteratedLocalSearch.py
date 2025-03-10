@@ -116,8 +116,7 @@ class IteratedLocalSearch:
             if not diff:
                 continue
 
-            # candidate = self._search(perturbed, self._cost_evaluator, diff)
-            candidate = self._search(perturbed, self._cost_evaluator)
+            candidate = self._search(perturbed, self._cost_evaluator, diff)
 
             if not candidate.is_feasible():
                 continue  # skip infeasible solutions for now
