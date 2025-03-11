@@ -80,7 +80,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     startDepot_ = vehData.startDepot;
     endDepot_ = vehData.endDepot;
 
-    if (trips_.empty())  // then we insert a dummy trip for ease of validation.
+    if (trips_.empty())  // then we insert a dummy trip for ease.
         trips_.emplace_back(data, Visits{}, vehType, startDepot_, endDepot_);
 
     if (trips_[0].startDepot() != startDepot_)
@@ -95,7 +95,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     for (size_t idx = 0; idx + 1 != trips_.size(); ++idx)
         if (trips_[idx].endDepot() != trips_[idx + 1].startDepot())
         {
-            auto *msg = "Consecutive trips must end and start at same depot.";
+            auto *msg = "Consecutive trips must start at previous' end_depot.";
             throw std::invalid_argument(msg);
         }
 
@@ -153,6 +153,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     timeWarp_ = ds.timeWarp(vehData.maxDuration);
     release_ = trips_[0].releaseTime();
 
+    // TODO simplify the following
     schedule_.reserve(size());
     auto now = startTime_;
     for (auto const &trip : trips_)
