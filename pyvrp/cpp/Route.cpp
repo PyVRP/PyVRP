@@ -86,6 +86,13 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     if (trips_.back().endDepot() != endDepot_)
         throw std::invalid_argument("Route must end at vehicle's end_depot.");
 
+    for (auto const &trip : trips_)
+        if (trip.vehicleType() != vehicleType_)
+        {
+            auto const *msg = "Each trip must use the route's vehicle type.";
+            throw std::invalid_argument(msg);
+        }
+
     for (size_t idx = 0; idx + 1 != trips_.size(); ++idx)
         if (trips_[idx].endDepot() != trips_[idx + 1].startDepot())
         {

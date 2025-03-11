@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
@@ -11,6 +11,7 @@ from pyvrp import (
     RandomNumberGenerator,
     Route,
     Solution,
+    Trip,
     VehicleType,
 )
 from tests.helpers import read
@@ -468,3 +469,53 @@ def test_initial_load_calculation(ok_small):
     new_route = Route(new_data, [1, 2], 0)
     assert_equal(new_route.excess_load(), [5])
     assert_(new_route.has_excess_load())
+
+
+@pytest.mark.parametrize(("start_depot", "end_depot"), [(0, 1), (1, 0)])
+def test_raises_if_route_does_not_start_and_end_at_vehicle_start_end_depots(
+    ok_small_multi_depot, start_depot: int, end_depot: int
+):
+    """
+    Tests that the route constructor raises when the route implied by the
+    sequence of trips does not start at the vehicle type's start_depot, or end
+    at the end_depot.
+    """
+    old_veh_type = ok_small_multi_depot.vehicle_type(0)
+    veh_type = old_veh_type.replace(reload_depots=[0, 1])
+    data = ok_small_multi_depot.replace(vehicle_types=[veh_type])
+
+    trip1 = Trip(data, [2], 0, start_depot, 1)
+    trip2 = Trip(data, [3], 0, 0, end_depot)
+
+    with assert_raises(ValueError):
+        Route(data, [trip1, trip2], 0)
+
+
+def test_raises_inconsistent_vehicle_type(ok_small_two_profiles):
+    """
+    Tests that the route constructor raises when trips do not share the route's
+    vehicle type.
+    """
+    trip = Trip(ok_small_two_profiles, [], 1)
+    assert_equal(trip.vehicle_type(), 1)
+
+    with assert_raises(ValueError):
+        Route(ok_small_two_profiles, [trip], 0)
+
+
+def test_raises_consecutive_trips_different_depots(ok_small_multi_depot):
+    """
+    Tests that the route constructor raises when consecutive trips disagree on
+    their start and end depots.
+    """
+    old_veh_type = ok_small_multi_depot.vehicle_type(0)
+    veh_type = old_veh_type.replace(reload_depots=[0, 1])
+    data = ok_small_multi_depot.replace(vehicle_types=[veh_type])
+
+    trip1 = Trip(data, [2], 0, 0, 1)
+    trip2 = Trip(data, [3], 0, 0, 1)
+    assert_equal(trip1.end_depot(), 1)
+    assert_equal(trip2.start_depot(), 0)
+
+    with assert_raises(ValueError):
+        Route(data, [trip1, trip2], 0)
