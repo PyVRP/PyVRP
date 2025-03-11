@@ -18,6 +18,20 @@ def test_trip_raises_for_invalid_depot_arguments(ok_small, start_idx, end_idx):
     Trip(ok_small, [1, 2], 0, 0, 0)
 
 
+def test_trip_defaults_to_vehicle_start_end_depots(ok_small_multi_depot):
+    """
+    Tests that the constructor defaults to using the vehicle's start and end
+    depots if no explicit trip start and end depots are passed.
+    """
+    trip1 = Trip(ok_small_multi_depot, [], 0)
+    assert_equal(trip1.start_depot(), 0)
+    assert_equal(trip1.end_depot(), 0)
+
+    trip2 = Trip(ok_small_multi_depot, [], 1)
+    assert_equal(trip2.start_depot(), 1)
+    assert_equal(trip2.end_depot(), 1)
+
+
 @pytest.mark.parametrize("visits", [[], [1], [2, 3]])
 def test_trip_length_and_visits(ok_small, visits: list[int]):
     """
