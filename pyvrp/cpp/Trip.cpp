@@ -31,20 +31,19 @@ bool canEndAt(ProblemData::VehicleType const &vehType, size_t depot)
 
 Trip::Trip(ProblemData const &data,
            Visits visits,
-           size_t const vehicleType,
-           size_t const startDepot,
-           size_t const endDepot)
-    : visits_(std::move(visits)),
-      vehicleType_(vehicleType),
-      startDepot_(startDepot),
-      endDepot_(endDepot)
+           size_t vehicleType,
+           std::optional<size_t> startDepot,
+           std::optional<size_t> endDepot)
+    : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
 {
     auto const &vehType = data.vehicleType(vehicleType_);
+    startDepot_ = startDepot.value_or(vehType.startDepot);
+    endDepot_ = endDepot.value_or(vehType.endDepot);
 
-    if (!canStartAt(vehType, startDepot))
+    if (!canStartAt(vehType, startDepot_))
         throw std::invalid_argument("Vehicle cannot start from start_depot.");
 
-    if (!canEndAt(vehType, endDepot))
+    if (!canEndAt(vehType, endDepot_))
         throw std::invalid_argument("Vehicle cannot end at end_depot.");
 
     ProblemData::Depot const &start = data.location(startDepot_);

@@ -233,8 +233,8 @@ class Trip:
         data: ProblemData,
         visits: list[int],
         vehicle_type: int,
-        start_depot: int,
-        end_depot: int,
+        start_depot: int | None = None,
+        end_depot: int | None = None,
     ) -> None: ...
     def __getitem__(self, idx: int) -> int: ...
     def __iter__(self) -> Iterator[int]: ...

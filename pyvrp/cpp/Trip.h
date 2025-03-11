@@ -3,6 +3,7 @@
 
 #include "ProblemData.h"
 
+#include <optional>
 #include <vector>
 
 namespace pyvrp
@@ -12,11 +13,13 @@ namespace pyvrp
  *     data: ProblemData,
  *     visits: list[int],
  *     vehicle_type: int,
- *     start_depot: int,
- *     end_depot: int,
+ *     start_depot: int | None = None,
+ *     end_depot: int | None = None,
  * )
  *
- * A simple class that stores the trip plan and some related statistics.
+ * A simple class that stores the trip plan and some related statistics. The
+ * start and end depots default to the vehicle type's start and end depots if
+ * not explicitly given.
  *
  * .. note::
  *
@@ -137,9 +140,9 @@ public:
 
     Trip(ProblemData const &data,
          Visits visits,
-         size_t const vehicleType,
-         size_t const startDepot,
-         size_t const endDepot);
+         size_t vehicleType,
+         std::optional<size_t> startDepot = std::nullopt,
+         std::optional<size_t> endDepot = std::nullopt);
 
     // This constructor does *no* validation. Useful when unserialising objects.
     Trip(Visits visits,

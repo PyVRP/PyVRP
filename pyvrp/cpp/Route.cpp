@@ -58,13 +58,7 @@ Duration Route::ScheduledVisit::serviceDuration() const
 }
 
 Route::Route(ProblemData const &data, Visits visits, size_t vehicleType)
-    : Route(data,
-            {{data,
-              std::move(visits),
-              vehicleType,
-              data.vehicleType(vehicleType).startDepot,
-              data.vehicleType(vehicleType).endDepot}},
-            vehicleType)
+    : Route(data, {{data, std::move(visits), vehicleType}}, vehicleType)
 {
 }
 
@@ -81,7 +75,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     endDepot_ = vehData.endDepot;
 
     if (trips_.empty())  // then we insert a dummy trip for ease.
-        trips_.emplace_back(data, Visits{}, vehType, startDepot_, endDepot_);
+        trips_.emplace_back(data, Visits{}, vehType);
 
     if (trips_[0].startDepot() != startDepot_)
     {

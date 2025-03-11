@@ -94,8 +94,12 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("name") = "")
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
-        .def_readonly("delivery", &ProblemData::Client::delivery)
-        .def_readonly("pickup", &ProblemData::Client::pickup)
+        .def_readonly("delivery",
+                      &ProblemData::Client::delivery,
+                      py::return_value_policy::reference_internal)
+        .def_readonly("pickup",
+                      &ProblemData::Client::pickup,
+                      py::return_value_policy::reference_internal)
         .def_readonly("service_duration", &ProblemData::Client::serviceDuration)
         .def_readonly("tw_early", &ProblemData::Client::twEarly)
         .def_readonly("tw_late", &ProblemData::Client::twLate)
@@ -201,7 +205,9 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::ClientGroup::addClient,
              py::arg("client"))
         .def("clear", &ProblemData::ClientGroup::clear)
-        .def_property_readonly("clients", &ProblemData::ClientGroup::clients)
+        .def_property_readonly("clients",
+                               &ProblemData::ClientGroup::clients,
+                               py::return_value_policy::reference_internal)
         .def_readonly("required", &ProblemData::ClientGroup::required)
         .def_readonly("mutually_exclusive",
                       &ProblemData::ClientGroup::mutuallyExclusive)
@@ -262,7 +268,9 @@ PYBIND11_MODULE(_pyvrp, m)
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
-        .def_readonly("capacity", &ProblemData::VehicleType::capacity)
+        .def_readonly("capacity",
+                      &ProblemData::VehicleType::capacity,
+                      py::return_value_policy::reference_internal)
         .def_readonly("start_depot", &ProblemData::VehicleType::startDepot)
         .def_readonly("end_depot", &ProblemData::VehicleType::endDepot)
         .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
@@ -276,8 +284,12 @@ PYBIND11_MODULE(_pyvrp, m)
                       &ProblemData::VehicleType::unitDurationCost)
         .def_readonly("profile", &ProblemData::VehicleType::profile)
         .def_readonly("start_late", &ProblemData::VehicleType::startLate)
-        .def_readonly("initial_load", &ProblemData::VehicleType::initialLoad)
-        .def_readonly("reload_depots", &ProblemData::VehicleType::reloadDepots)
+        .def_readonly("initial_load",
+                      &ProblemData::VehicleType::initialLoad,
+                      py::return_value_policy::reference_internal)
+        .def_readonly("reload_depots",
+                      &ProblemData::VehicleType::reloadDepots,
+                      py::return_value_policy::reference_internal)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
@@ -492,21 +504,30 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::init<ProblemData const &,
                       std::vector<size_t>,
                       size_t,
-                      size_t,
-                      size_t>(),
+                      std::optional<size_t>,
+                      std::optional<size_t>>(),
              py::arg("data"),
              py::arg("visits"),
              py::arg("vehicle_type"),
-             py::arg("start_depot"),
-             py::arg("end_depot"))
+             py::arg("start_depot") = py::none(),
+             py::arg("end_depot") = py::none())
         .def("visits",
              &Trip::visits,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, Trip, visits))
         .def("distance", &Trip::distance, DOC(pyvrp, Trip, distance))
-        .def("delivery", &Trip::delivery, DOC(pyvrp, Trip, delivery))
-        .def("pickup", &Trip::pickup, DOC(pyvrp, Trip, pickup))
-        .def("excess_load", &Trip::excessLoad, DOC(pyvrp, Trip, excessLoad))
+        .def("delivery",
+             &Trip::delivery,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Trip, delivery))
+        .def("pickup",
+             &Trip::pickup,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Trip, pickup))
+        .def("excess_load",
+             &Trip::excessLoad,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Trip, excessLoad))
         .def("travel_duration",
              &Trip::travelDuration,
              DOC(pyvrp, Trip, travelDuration))
@@ -629,9 +650,18 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("excess_distance",
              &Route::excessDistance,
              DOC(pyvrp, Route, excessDistance))
-        .def("delivery", &Route::delivery, DOC(pyvrp, Route, delivery))
-        .def("pickup", &Route::pickup, DOC(pyvrp, Route, pickup))
-        .def("excess_load", &Route::excessLoad, DOC(pyvrp, Route, excessLoad))
+        .def("delivery",
+             &Route::delivery,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, delivery))
+        .def("pickup",
+             &Route::pickup,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, pickup))
+        .def("excess_load",
+             &Route::excessLoad,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, excessLoad))
         .def("duration", &Route::duration, DOC(pyvrp, Route, duration))
         .def("duration_cost",
              &Route::durationCost,
