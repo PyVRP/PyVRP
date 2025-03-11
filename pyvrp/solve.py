@@ -177,7 +177,7 @@ def solve(
         ls.add_route_operator(route_op(data))
 
     accept = MovingAverageThreshold(
-        eta=0.2,
+        eta=0.5,
         history_size=100,
         max_runtime=max_runtime,
     )

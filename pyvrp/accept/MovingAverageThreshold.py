@@ -66,7 +66,7 @@ class MovingAverageThreshold:
         recent_best = min(self._history)
         recent_avg = mean(self._history)
         pct_time = (perf_counter() - self._start_time) / self.max_runtime
-        factor = max(self._eta * (1 - pct_time), 0.05)
+        factor = max(self._eta * (1 - pct_time), 0.01)
 
         return recent_best + factor * (recent_avg - recent_best)
 
