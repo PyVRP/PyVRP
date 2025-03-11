@@ -27,17 +27,6 @@ class DestroyRepair:
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
+        num_destroy: int,
     ) -> Solution:
-
-        delta = time.perf_counter() - self._start_time
-        elapsed = 1 - delta / self._max_runtime
-
-        min_destroy = 10
-        max_destroy = 25
-        delta = max_destroy - min_destroy
-
-        num_destroy = min_destroy + self._rng.randint(
-            int(elapsed * delta) * 2 + 1
-        )
-
         return self._dr(solution, cost_evaluator, num_destroy)

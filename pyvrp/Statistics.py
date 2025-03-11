@@ -18,6 +18,7 @@ class _Datum:
     best_cost: float
     best_feas: bool
     threshold: float
+    diversity: float
 
 
 class Statistics:
@@ -47,6 +48,7 @@ class Statistics:
         best_cost: float,
         best_feas: bool,
         threshold: float,
+        diversity: float,
     ):
         """
         Collects statistics from the ILS iteration.
@@ -70,6 +72,7 @@ class Statistics:
             best_cost,
             best_feas,
             threshold,
+            diversity,
         )
         self.data.append(datum)
 
@@ -94,6 +97,7 @@ class Statistics:
             "best_cost",
             "best_feas",
             "threshold",
+            "diversity",
         ]
 
         with open(file_path, mode="w", newline="") as csvfile:
@@ -111,5 +115,6 @@ class Statistics:
                         datum.best_cost,
                         datum.best_feas,
                         datum.threshold,
+                        datum.diversity,
                     ]
                 )

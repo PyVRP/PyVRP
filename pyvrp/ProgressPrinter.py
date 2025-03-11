@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     )
 
 # Templates for various different outputs.
-_ITERATION = "{special} {iters:>7} {elapsed:>6}s | {curr:>8} {pert:>8} {cand:>8} {best:>8}   | {threshold:>8}"  # noqa: E501
+_ITERATION = "{special} {iters:>7} {elapsed:>6}s | {curr:>8} {pert:>8} {cand:>8} {best:>8}   | {threshold:>8} {diversity:>5}"  # noqa: E501
 
 _START = """PyVRP v{version}
 
@@ -21,7 +21,7 @@ Solving an instance with:
     {vehicle_text} ({vehicle_type_text})
 
                   |   Cost (feasible)
-    Iters    Time |   Curr    Pert    Cand     Best       | Threshold (diff)"""
+    Iters    Time |   Curr    Pert    Cand     Best       | Threshold (diff)  Diversity"""
 
 _END = """
 Search terminated in {runtime:.2f}s after {iters} iterations.
@@ -78,6 +78,7 @@ class ProgressPrinter:
             cand=format_cost(data.candidate_cost, data.candidate_feas),
             best=format_cost(data.best_cost, data.best_feas),
             threshold=f"{data.threshold:.2f} ({data.threshold-data.current_cost:.2f})",  # noqa: E501
+            diversity=round(data.diversity, 3),
         )
         print(msg)
 

@@ -4,6 +4,7 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from pyvrp.ConvergenceManager import ConvergenceManager
 from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
@@ -104,6 +105,7 @@ class IteratedLocalSearch:
         """
         print_progress = ProgressPrinter(should_print=display)
         print_progress.start(self._data)
+        conv_manager = ConvergenceManager(initial_num_destroy=30)
 
         start = time.perf_counter()
         stats = Statistics(collect_stats=collect_stats)
@@ -113,11 +115,10 @@ class IteratedLocalSearch:
         while not stop(self._cost_evaluator.cost(best)):
             iters += 1
 
-            perturbed = self._perturb(current, self._cost_evaluator)
+            perturbed = self._perturb(
+                current, self._cost_evaluator, conv_manager.num_destroy
+            )
             diff = different_neighbours(current, perturbed)
-            if not diff:
-                continue
-
             candidate = self._search(perturbed, self._cost_evaluator, diff)
 
             if not candidate.is_feasible():
@@ -127,6 +128,9 @@ class IteratedLocalSearch:
             pert_cost, pert_feas = self._stats(perturbed)
             cand_cost, cand_feas = self._stats(candidate)
             best_cost, best_feas = self._stats(best)
+
+            diff = len(different_neighbours(current, candidate))
+            conv_manager.register(diff)
 
             if cand_cost < best_cost:
                 best, current = candidate, candidate
@@ -143,6 +147,8 @@ class IteratedLocalSearch:
                 best_cost,
                 best_feas,
                 self._accept.threshold,  # type: ignore
+                # conv_manager.num_destroy,
+                diff,
             )
             print_progress.iteration(stats)
 
