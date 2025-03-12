@@ -93,7 +93,7 @@ def read(
 def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
     """
     Reads a solution in ``VRPLIB`` format from the give file location, and
-    returns the routes contained in it.
+    returns the correspoding Solution object.
 
     Parameters
     ----------
@@ -101,17 +101,17 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         File location to read. Assumes the solution in the file on the given
         location is in ``VRPLIB`` solution format.
     data
-        The problem data instance that the solution is based on.
+        Problem data instance that the solution is based on.
 
     Returns
     -------
     Solution
-        The resulting solution.
+        Solution object constructed from the read data.
     """
     sol = vrplib.read_solution(str(where))
 
-    # We assume that the VRPLIB instances have a consistent
-    # ordering of vehicle types.
+    # We assume that the routes are listed in order of vehicle types as
+    # determined by ``read()``.
     veh2type = []
     for idx, veh_type in enumerate(data.vehicle_types()):
         veh2type.extend([idx] * veh_type.num_available)
@@ -119,6 +119,7 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
     routes = [
         Route(data, visits, veh2type[idx])
         for idx, visits in enumerate(sol["routes"])
+        if visits
     ]
     return Solution(data, routes)
 
