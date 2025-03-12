@@ -58,8 +58,6 @@ numpy = [
 ]
 matplotlib = ">=2.2.0"
 vrplib = "^1.4.0"
-tqdm = "^4.64.1"
-tomli = "^2.0.1"
 
 
 [tool.poetry.group.docs]
@@ -98,10 +96,6 @@ gcovr = "^7.2"
 docblock = "^0.1.5"
 
 
-[tool.poetry.scripts]
-pyvrp = "pyvrp.cli:main"
-
-
 [tool.black]
 line-length = 79
 
@@ -133,7 +127,6 @@ omit = [
     "build_extensions.py",  # build entrypoint
     "extract_docstrings.py",  # build script
     "pyvrp/show_versions.py",  # only prints debug information
-    "pyvrp/cli.py",  # tested in other ways than unit tests
     ".venv/*",
     "benchmarks/*",
     "docs/*",
