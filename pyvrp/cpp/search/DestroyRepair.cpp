@@ -58,7 +58,7 @@ void DestroyRepair::strings(size_t numDestroy)
     auto const center = rng.randint(data.numClients()) + data.numDepots();
     auto const &neighbours = neighbours_[center];
     auto const maxDestroy = std::min(numDestroy, neighbours.size());
-    auto const maxPerRoute = 5;
+    auto const maxPerRoute = 8;
 
     size_t numDestroyed = 0;
     for (auto const neighbour : neighbours)
@@ -95,7 +95,7 @@ void DestroyRepair::repair(CostEvaluator const &costEvaluator)
     else
     {
         // HACK this allows for infeasible insertions
-        auto const costEval = CostEvaluator({20}, 6, 6);
+        auto const costEval = CostEvaluator({1}, 1, 1);
         greedyInsert(costEval);
     }
 }
