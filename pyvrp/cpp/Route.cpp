@@ -57,25 +57,12 @@ Duration Route::ScheduledVisit::serviceDuration() const
     return endService - startService;
 }
 
-Route::Route(ProblemData const &data, Visits visits, size_t vehicleType)
-    : Route(data, {{data, std::move(visits), vehicleType}}, vehicleType)
+void Route::validate(ProblemData const &data) const
 {
-}
+    auto const &vehData = data.vehicleType(vehicleType_);
 
-Route::Route(ProblemData const &data, Trips trips, size_t vehType)
-    : trips_(std::move(trips)),
-      delivery_(data.numLoadDimensions(), 0),
-      pickup_(data.numLoadDimensions(), 0),
-      excessLoad_(data.numLoadDimensions(), 0),
-      centroid_({0, 0}),
-      vehicleType_(vehType)
-{
-    auto const &vehData = data.vehicleType(vehType);
-    startDepot_ = vehData.startDepot;
-    endDepot_ = vehData.endDepot;
-
-    if (trips_.empty())  // then we insert a dummy trip for ease.
-        trips_.emplace_back(data, Visits{}, vehType);
+    if (vehData.reloadDepots.empty() && trips_.size() > 1)
+        throw std::invalid_argument("Vehicle cannot perform multiple trips.");
 
     if (trips_[0].startDepot() != startDepot_)
     {
@@ -99,6 +86,29 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
             auto *msg = "Consecutive trips must start at previous' end_depot.";
             throw std::invalid_argument(msg);
         }
+}
+
+Route::Route(ProblemData const &data, Visits visits, size_t vehicleType)
+    : Route(data, {{data, std::move(visits), vehicleType}}, vehicleType)
+{
+}
+
+Route::Route(ProblemData const &data, Trips trips, size_t vehType)
+    : trips_(std::move(trips)),
+      delivery_(data.numLoadDimensions(), 0),
+      pickup_(data.numLoadDimensions(), 0),
+      excessLoad_(data.numLoadDimensions(), 0),
+      centroid_({0, 0}),
+      vehicleType_(vehType)
+{
+    if (trips_.empty())  // then we insert a dummy trip for ease.
+        trips_.emplace_back(data, Visits{}, vehType);
+
+    auto const &vehData = data.vehicleType(vehType);
+    startDepot_ = vehData.startDepot;
+    endDepot_ = vehData.endDepot;
+
+    validate(data);
 
     auto const &durations = data.durationMatrix(vehData.profile);
     DurationSegment ds = {vehData, vehData.startLate};

@@ -26,6 +26,9 @@ class Route
     using Trips = std::vector<Trip>;
     using Visits = std::vector<Client>;
 
+    // Validates the consistency of the constructed instance.
+    void validate(ProblemData const &data) const;
+
 public:
     /**
      * Forward iterator through the clients visited by this route.

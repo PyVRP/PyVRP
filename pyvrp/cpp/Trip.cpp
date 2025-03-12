@@ -2,6 +2,7 @@
 #include "LoadSegment.h"
 
 #include <algorithm>
+#include <fstream>
 
 using pyvrp::Cost;
 using pyvrp::Distance;
@@ -45,6 +46,14 @@ Trip::Trip(ProblemData const &data,
 
     if (!canEndAt(vehType, endDepot_))
         throw std::invalid_argument("Vehicle cannot end at end_depot.");
+
+    for (auto const client : visits_)
+        if (client < data.numDepots() || client >= data.numLocations())
+        {
+            std::ostringstream msg;
+            msg << "Client " << client << " is not understood.";
+            throw std::invalid_argument(msg.str());
+        }
 
     ProblemData::Depot const &start = data.location(startDepot_);
     service_ += start.serviceDuration;

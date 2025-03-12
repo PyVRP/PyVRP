@@ -18,6 +18,21 @@ def test_trip_raises_for_invalid_depot_arguments(ok_small, start_idx, end_idx):
     Trip(ok_small, [1, 2], 0, 0, 0)
 
 
+def test_raises_invalid_clients(ok_small):
+    """
+    Tests that the constructor raises when given a visits list that contains
+    invalid clients.
+    """
+    assert_equal(ok_small.num_depots, 1)
+    assert_equal(ok_small.num_clients, 4)
+
+    with assert_raises(ValueError):
+        Trip(ok_small, [0], 0)
+
+    with assert_raises(ValueError):
+        Trip(ok_small, [5], 0)
+
+
 def test_trip_defaults_to_vehicle_start_end_depots(ok_small_multi_depot):
     """
     Tests that the constructor defaults to using the vehicle's start and end

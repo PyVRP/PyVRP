@@ -519,3 +519,39 @@ def test_raises_consecutive_trips_different_depots(ok_small_multi_depot):
 
     with assert_raises(ValueError):
         Route(data, [trip1, trip2], 0)
+
+
+def test_raises_multiple_trips_without_reload_depots(ok_small):
+    """
+    Tests that the route constructor raises when there is more than one trip,
+    yet the vehicle type does not support reloading.
+    """
+    assert_equal(len(ok_small.vehicle_type(0).reload_depots), 0)
+
+    trips = [Trip(ok_small, [1, 2], 0), Trip(ok_small, [3], 0)]
+    with assert_raises(ValueError):
+        Route(ok_small, trips, 0)
+
+
+def test_str(ok_small):
+    """
+    Tests that a route's string representation correctly uses a | to separate
+    multiple trips.
+    """
+    old_veh_type = ok_small.vehicle_type(0)
+    veh_type = old_veh_type.replace(reload_depots=[0])
+    data = ok_small.replace(vehicle_types=[veh_type])
+
+    trips = [Trip(data, [1, 2], 0), Trip(data, [3], 0)]
+
+    route1 = Route(data, trips, 0)
+    assert_equal(str(route1), "1 2 | 3")
+
+    route2 = Route(data, [trips[0]], 0)
+    assert_equal(str(route2), "1 2")
+
+    route3 = Route(data, [trips[1]], 0)
+    assert_equal(str(route3), "3")
+
+    route4 = Route(data, [], 0)
+    assert_equal(str(route4), "")
