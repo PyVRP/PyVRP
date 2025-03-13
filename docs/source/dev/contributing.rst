@@ -152,7 +152,7 @@ Next, we need to use a profiling tool, which varies based on your operating syst
 
         .. code-block:: shell
 
-            poetry run perf record pyvrp instances/VRPTW/RC2_10_5.vrp --seed 6 --round_func dimacs --max_runtime 5
+            poetry run perf record bench instances/VRPTW/RC2_10_5.vrp --seed 6 --round_func dimacs --max_runtime 5
 
         The resulting ``perf.data`` file will contain all relevant profiling results.
         Such a file can be inspected using ``perf`` on the command line, or with a GUI using, for example, KDAB's `hotspot <https://github.com/KDAB/hotspot>`_ program.
@@ -165,7 +165,7 @@ Next, we need to use a profiling tool, which varies based on your operating syst
 
         .. code-block:: shell
 
-            poetry run pyvrp instances/VRPTW/RC2_10_5.vrp --seed 6 --round_func dimacs --max_runtime 60
+            poetry run bench instances/VRPTW/RC2_10_5.vrp --seed 6 --round_func dimacs --max_runtime 60
 
         Next, open the Instruments application.
         Select the "CPU Profiler" template, click on the search bar at the top of the window, and select the corresponding Python process as your target, which is usually the most recent one.
