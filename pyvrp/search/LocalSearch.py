@@ -104,9 +104,7 @@ class LocalSearch:
             The improved solution. This is not the same object as the
             solution that was passed in.
         """
-        return self._ls(
-            solution, cost_evaluator, candidate_clients, overlap_tolerance
-        )
+        return self._ls(solution, cost_evaluator, candidate_clients)
 
     def intensify(
         self,
