@@ -574,5 +574,5 @@ def test_str(ok_small_multiple_trips):
 
 
 # TODO multi-trip tests:
-#  - schedule with/without depot service time
+#  - schedule(), with/without depot service time
 #  - statistics evaluation on small example(s)
