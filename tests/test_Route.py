@@ -533,15 +533,12 @@ def test_raises_multiple_trips_without_reload_depots(ok_small):
         Route(ok_small, trips, 0)
 
 
-def test_str(ok_small):
+def test_str(ok_small_multiple_trips):
     """
     Tests that a route's string representation correctly uses a | to separate
     multiple trips.
     """
-    old_veh_type = ok_small.vehicle_type(0)
-    veh_type = old_veh_type.replace(reload_depots=[0])
-    data = ok_small.replace(vehicle_types=[veh_type])
-
+    data = ok_small_multiple_trips
     trips = [Trip(data, [1, 2], 0), Trip(data, [3], 0)]
 
     route1 = Route(data, trips, 0)
