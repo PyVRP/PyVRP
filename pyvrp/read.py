@@ -93,7 +93,7 @@ def read(
 def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
     """
     Reads a solution in ``VRPLIB`` format from the give file location, and
-    returns the correspoding Solution object.
+    returns the corresponding Solution object.
 
     Parameters
     ----------
