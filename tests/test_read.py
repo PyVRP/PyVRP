@@ -502,3 +502,22 @@ def test_sdvrptw_instance():
         assert_equal(distance_matrix[client, idcs], MAX_VALUE)
         assert_equal(duration_matrix[idcs, client], MAX_VALUE)
         assert_equal(duration_matrix[client, idcs], MAX_VALUE)
+
+
+def test_multi_trip_instance():
+    """
+    Tests that a small multi-trip instance with vehicle reload options is
+    parsed correctly.
+    """
+    data = read("data/OkSmallMultipleTrips.txt")
+    assert_equal(data.num_depots, 1)
+    assert_equal(data.num_vehicles, 3)
+    assert_equal(data.num_vehicle_types, 2)
+
+    veh_type1 = data.vehicle_type(0)
+    assert_equal(veh_type1.num_available, 2)
+    assert_equal(veh_type1.reload_depots, [0])
+
+    veh_type2 = data.vehicle_type(1)
+    assert_equal(veh_type2.num_available, 1)
+    assert_equal(veh_type2.reload_depots, [])
