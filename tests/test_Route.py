@@ -513,7 +513,7 @@ def test_raises_consecutive_trips_different_depots(ok_small_multi_depot):
     data = ok_small_multi_depot.replace(vehicle_types=[veh_type])
 
     trip1 = Trip(data, [2], 0, 0, 1)
-    trip2 = Trip(data, [3], 0, 0, 1)
+    trip2 = Trip(data, [3], 0, 0, 0)
     assert_equal(trip1.end_depot(), 1)
     assert_equal(trip2.start_depot(), 0)
 

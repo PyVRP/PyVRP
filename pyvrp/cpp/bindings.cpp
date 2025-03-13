@@ -611,6 +611,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("end_service", &Route::ScheduledVisit::endService)
         .def_readonly("wait_duration", &Route::ScheduledVisit::waitDuration)
         .def_readonly("time_warp", &Route::ScheduledVisit::timeWarp)
+        .def_readonly("trip", &Route::ScheduledVisit::trip)
         .def_property_readonly("service_duration",
                                &Route::ScheduledVisit::serviceDuration)
         .def(py::pickle(
@@ -618,14 +619,16 @@ PYBIND11_MODULE(_pyvrp, m)
                 return py::make_tuple(visit.startService,
                                       visit.endService,
                                       visit.waitDuration,
-                                      visit.timeWarp);
+                                      visit.timeWarp,
+                                      visit.trip);
             },
             [](py::tuple t) {  // __setstate__
                 Route::ScheduledVisit visit(
-                    t[0].cast<pyvrp::Duration>(),   // start service
-                    t[1].cast<pyvrp::Duration>(),   // end service
-                    t[2].cast<pyvrp::Duration>(),   // wait duration
-                    t[3].cast<pyvrp::Duration>());  // time warp
+                    t[0].cast<pyvrp::Duration>(),  // start service
+                    t[1].cast<pyvrp::Duration>(),  // end service
+                    t[2].cast<pyvrp::Duration>(),  // wait duration
+                    t[3].cast<pyvrp::Duration>(),  // time warp
+                    t[4].cast<size_t>());          // trip
 
                 return visit;
             }));

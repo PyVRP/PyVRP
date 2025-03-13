@@ -77,6 +77,8 @@ public:
      *     If the vehicle arrives late, this is the duration it has to 'travel
      *     back in time' to begin service. Non-zero time warp indicates an
      *     infeasible route.
+     * trip: int
+     *     Index of the trip visiting this client.
      */
     struct ScheduledVisit
     {
@@ -84,11 +86,13 @@ public:
         Duration const endService = 0;
         Duration const waitDuration = 0;
         Duration const timeWarp = 0;
+        size_t const trip = 0;
 
         ScheduledVisit(Duration startService,
                        Duration endService,
                        Duration waitDuration,
-                       Duration timeWarp);
+                       Duration timeWarp,
+                       size_t trip);
 
         [[nodiscard]] Duration serviceDuration() const;
     };

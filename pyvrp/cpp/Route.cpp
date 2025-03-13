@@ -43,11 +43,13 @@ Route::Iterator &Route::Iterator::operator++()
 Route::ScheduledVisit::ScheduledVisit(Duration startService,
                                       Duration endService,
                                       Duration waitDuration,
-                                      Duration timeWarp)
+                                      Duration timeWarp,
+                                      size_t trip)
     : startService(startService),
       endService(endService),
       waitDuration(waitDuration),
-      timeWarp(timeWarp)
+      timeWarp(timeWarp),
+      trip(trip)
 {
     assert(startService <= endService);
 }
@@ -115,7 +117,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
 
     for (auto const &trip : trips_)
     {
-        // TODO release time is per trip; not whole route
+        // TODO release time is per trip; not whole route. Fix this.
         ProblemData::Depot const &start = data.location(trip.startDepot());
         ds = DurationSegment::merge(0, ds, {start, start.serviceDuration});
 
@@ -164,23 +166,15 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     timeWarp_ = ds.timeWarp(vehData.maxDuration);
     release_ = trips_[0].releaseTime();
 
-    // TODO simplify the following
     schedule_.reserve(size());
     auto now = startTime_;
-    for (auto const &trip : trips_)
+    for (size_t tripIdx = 0; tripIdx != trips_.size(); ++tripIdx)
     {
-        auto func = [&now](auto const &where)
-        {
-            auto const wait = std::max<Duration>(where.twEarly - now, 0);
-            auto const tw = std::max<Duration>(now - where.twLate, 0);
-            return std::make_pair(wait, tw);
-        };
+        auto const &trip = trips_[tripIdx];
 
         ProblemData::Depot const &start = data.location(trip.startDepot());
-        auto [wait, timeWarp] = func(start);
-
-        now += wait;
-        now -= timeWarp;
+        now += std::max<Duration>(start.twEarly - now, 0);  // wait
+        now -= std::max<Duration>(now - start.twLate, 0);   // time warp
 
         now += start.serviceDuration;
         size_t prevClient = trip.startDepot();
@@ -190,13 +184,14 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
             now += durations(prevClient, client);
 
             ProblemData::Client const &clientData = data.location(client);
-            auto [wait, timeWarp] = func(clientData);
+            auto const wait = std::max<Duration>(clientData.twEarly - now, 0);
+            auto const tw = std::max<Duration>(now - clientData.twLate, 0);
 
             now += wait;
-            now -= timeWarp;
+            now -= tw;
 
             schedule_.emplace_back(
-                now, now + clientData.serviceDuration, wait, timeWarp);
+                now, now + clientData.serviceDuration, wait, tw, tripIdx);
 
             now += clientData.serviceDuration;
             prevClient = client;
