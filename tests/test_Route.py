@@ -95,6 +95,25 @@ def test_route_access_methods(ok_small):
     assert_equal(routes[1].service_duration(), services[2] + services[4])
 
 
+def test_access_multiple_trips(ok_small_multiple_trips):
+    """
+    Tests that accessing the route's clients via visits(), iteration, or the
+    underlying trips works correctly for a multi-trip instance.
+    """
+    data = ok_small_multiple_trips
+    trips = [Trip(data, [1, 2], 0), Trip(data, [3], 0)]
+    route = Route(data, trips, 0)
+
+    assert_equal(route.visits(), [1, 2, 3])
+    assert_equal([client for client in route], [1, 2, 3])
+
+    assert_equal(trips[0].visits(), [1, 2])
+    assert_equal([client for client in trips[0]], [1, 2])
+
+    assert_equal(trips[1].visits(), [3])
+    assert_equal([client for client in trips[1]], [3])
+
+
 def test_route_time_warp_calculations(ok_small):
     """
     Tests route time warp calculations.
@@ -557,4 +576,3 @@ def test_str(ok_small_multiple_trips):
 # TODO multi-trip tests:
 #  - schedule with/without depot service time
 #  - statistics evaluation on small example(s)
-#  - visits() with multiple trips
