@@ -13,7 +13,7 @@ void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
     for (size_t idx = 1; idx != R->size() + 1; ++idx)
     {
         auto const proposal
-            = R->proposal(R->before(idx - 1), R->after(idx + 1));
+            = Route::Proposal(R->before(idx - 1), R->after(idx + 1));
 
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
@@ -36,7 +36,7 @@ void SwapStar::updateInsertPoints(Route *R,
 
     for (size_t idx = 0; idx != R->size() + 1; ++idx)
     {
-        auto const proposal = R->proposal(
+        auto const proposal = Route::Proposal(
             R->before(idx), U->route()->at(U->idx()), R->after(idx + 1));
 
         Cost deltaCost = 0;
@@ -115,7 +115,7 @@ SwapStar::InsertPoint SwapStar::bestInsertPoint(
     Cost deltaCost = 0;
     costEvaluator.deltaCost<true, true>(
         deltaCost,
-        route->proposal(route->before(V->idx() - 1),
+        Route::Proposal(route->before(V->idx() - 1),
                         U->route()->at(U->idx()),
                         route->after(V->idx() + 1)));
 
@@ -137,20 +137,20 @@ Cost SwapStar::evaluateMove(Route::Node const *U,
     if (V->idx() + 1 == remove->idx())  // then we insert U in place of remove
         costEvaluator.deltaCost<true>(
             deltaCost,
-            route->proposal(route->before(V->idx()),
+            Route::Proposal(route->before(V->idx()),
                             U->route()->at(U->idx()),
                             route->after(V->idx() + 2)));
     else if (V->idx() < remove->idx())
         costEvaluator.deltaCost<true>(
             deltaCost,
-            route->proposal(route->before(V->idx()),
+            Route::Proposal(route->before(V->idx()),
                             U->route()->at(U->idx()),
                             route->between(V->idx() + 1, remove->idx() - 1),
                             route->after(remove->idx() + 1)));
     else if (V->idx() > remove->idx())
         costEvaluator.deltaCost<true>(
             deltaCost,
-            route->proposal(route->before(remove->idx() - 1),
+            Route::Proposal(route->before(remove->idx() - 1),
                             route->between(remove->idx() + 1, V->idx()),
                             U->route()->at(U->idx()),
                             route->after(V->idx() + 1)));
@@ -169,6 +169,9 @@ Cost SwapStar::evaluate(Route *routeU,
                         Route *routeV,
                         CostEvaluator const &costEvaluator)
 {
+    if (!routeU->overlapsWith(*routeV, overlapTolerance))
+        return 0;
+
     best = {};
 
     if (!isCached(routeU->idx(), 0))
@@ -240,10 +243,13 @@ void SwapStar::apply(Route *U, Route *V) const
 
 void SwapStar::update(Route *U) { isCached(U->idx(), 0) = false; }
 
-SwapStar::SwapStar(ProblemData const &data)
+SwapStar::SwapStar(ProblemData const &data, double overlapTolerance)
     : LocalSearchOperator<Route>(data),
+      overlapTolerance(overlapTolerance),
       insertCache(data.numVehicles(), data.numLocations()),
       isCached(data.numVehicles(), data.numLocations()),
       removalCosts(data.numVehicles(), data.numLocations())
 {
+    if (overlapTolerance < 0 || overlapTolerance > 1)
+        throw std::invalid_argument("overlap_tolerance must be in [0, 1].");
 }

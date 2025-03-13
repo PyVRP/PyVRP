@@ -143,25 +143,45 @@ PYBIND11_MODULE(_pyvrp, m)
             py::return_value_policy::reference_internal);
 
     py::class_<ProblemData::Depot>(m, "Depot", DOC(pyvrp, ProblemData, Depot))
-        .def(py::init<pyvrp::Coordinate, pyvrp::Coordinate, char const *>(),
+        .def(py::init<pyvrp::Coordinate,
+                      pyvrp::Coordinate,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      char const *>(),
              py::arg("x"),
              py::arg("y"),
+             py::arg("service_duration") = 0,
+             py::arg("tw_early") = 0,
+             py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("x", &ProblemData::Depot::x)
         .def_readonly("y", &ProblemData::Depot::y)
+        .def_readonly("service_duration", &ProblemData::Depot::serviceDuration)
+        .def_readonly("tw_early", &ProblemData::Depot::twEarly)
+        .def_readonly("tw_late", &ProblemData::Depot::twLate)
         .def_readonly("name",
                       &ProblemData::Depot::name,
                       py::return_value_policy::reference_internal)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::Depot const &depot) {  // __getstate__
-                return py::make_tuple(depot.x, depot.y, depot.name);
+                return py::make_tuple(depot.x,
+                                      depot.y,
+                                      depot.serviceDuration,
+                                      depot.twEarly,
+                                      depot.twLate,
+                                      depot.name);
             },
             [](py::tuple t) {  // __setstate__
-                ProblemData::Depot depot(t[0].cast<pyvrp::Coordinate>(),  // x
-                                         t[1].cast<pyvrp::Coordinate>(),  // y
-                                         t[2].cast<std::string>());  // name
+                ProblemData::Depot depot(
+                    t[0].cast<pyvrp::Coordinate>(),  // x
+                    t[1].cast<pyvrp::Coordinate>(),  // y
+                    t[2].cast<pyvrp::Duration>(),    // service duration
+                    t[3].cast<pyvrp::Duration>(),    // tw early
+                    t[4].cast<pyvrp::Duration>(),    // tw late
+                    t[5].cast<std::string>());       // name
 
                 return depot;
             }))
@@ -217,6 +237,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Cost,
                       size_t,
                       std::optional<pyvrp::Duration>,
+                      std::vector<pyvrp::Load>,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
@@ -233,6 +254,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("unit_duration_cost") = 0,
              py::arg("profile") = 0,
              py::arg("start_late") = py::none(),
+             py::arg("initial_load") = py::list(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -250,6 +272,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       &ProblemData::VehicleType::unitDurationCost)
         .def_readonly("profile", &ProblemData::VehicleType::profile)
         .def_readonly("start_late", &ProblemData::VehicleType::startLate)
+        .def_readonly("initial_load", &ProblemData::VehicleType::initialLoad)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
@@ -268,6 +291,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("unit_duration_cost") = py::none(),
              py::arg("profile") = py::none(),
              py::arg("start_late") = py::none(),
+             py::arg("initial_load") = py::none(),
              py::kw_only(),
              py::arg("name") = py::none(),
              DOC(pyvrp, ProblemData, VehicleType, replace))
@@ -287,6 +311,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.unitDurationCost,
                                       vehicleType.profile,
                                       vehicleType.startLate,
+                                      vehicleType.initialLoad,
                                       vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
@@ -304,7 +329,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[10].cast<pyvrp::Cost>(),      // unit duration cost
                     t[11].cast<size_t>(),           // profile
                     t[12].cast<pyvrp::Duration>(),  // start late
-                    t[13].cast<std::string>());     // name
+                    t[13].cast<std::vector<pyvrp::Load>>(),  // initial load
+                    t[14].cast<std::string>());              // name
 
                 return vehicleType;
             }))

@@ -244,7 +244,30 @@ def test_release_time_and_max_duration():
     assert_equal(route.start_time(), 10_056)
     assert_equal(route.end_time(), 15_056)
     assert_equal(route.duration(), 5_998)
+    assert_equal(route.service_duration(), 1_140)
     assert_equal(route.time_warp(), 998)
+
+
+def test_release_time_and_service_duration_duration():
+    """
+    Tests the interaction between release times and depot service duration, and
+    checks that service at the depot happens after the tasks are released. See
+    also the ``test_release_time_and_max_duration`` test.
+    """
+    ok_small = read("data/OkSmallReleaseTimes.txt")
+    depot = Depot(x=2334, y=726, service_duration=6_000)
+    data = ok_small.replace(depots=[depot])
+
+    # This route has a release time of 5000, but we want to start much later
+    # anyway because of the time windows. That's not possible, however, because
+    # of the depot service duration of 6000. The overall route duration is 5998
+    # plus the 6000, and there is no time warp.
+    route = Route(data, [2, 3, 4], 0)
+    assert_equal(route.release_time(), 5_000)
+    assert_equal(route.start_time(), 5_000)
+    assert_equal(route.duration(), 6_000 + 5_998)
+    assert_equal(route.service_duration(), 6_000 + 1_140)
+    assert_equal(route.time_warp(), 0)
 
 
 def test_route_centroid(ok_small):
@@ -422,3 +445,26 @@ def test_route_schedule_wait_duration():
 
     wait_duration = sum(visit.wait_duration for visit in schedule)
     assert_equal(wait_duration, route.wait_duration())
+
+
+def test_initial_load_calculation(ok_small):
+    """
+    Tests that loads are calculated correctly when there's an initial load
+    present on the vehicle.
+    """
+    # Route load and vehicle capacity are both 10, so there should not be any
+    # excess load.
+    orig_route = Route(ok_small, [1, 2], 0)
+    assert_equal(orig_route.excess_load(), [0])
+    assert_(not orig_route.has_excess_load())
+
+    # Modify data instance to have vehicle start with 5 initial load.
+    veh_type = ok_small.vehicle_type(0)
+    new_type = veh_type.replace(initial_load=[5])
+    new_data = ok_small.replace(vehicle_types=[new_type])
+
+    # Now there's 5 initial load, and 10 route load, with a vehicle capacity of
+    # 10. This means there is now 5 excess load.
+    new_route = Route(new_data, [1, 2], 0)
+    assert_equal(new_route.excess_load(), [5])
+    assert_(new_route.has_excess_load())

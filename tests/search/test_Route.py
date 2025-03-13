@@ -491,6 +491,42 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
     )
 
 
+@pytest.mark.parametrize(
+    ("shift_tw", "expected_tw"),
+    [
+        ((0, np.iinfo(np.int64).max), (0, 1000)),  # should default to depot
+        ((0, 1000), (0, 1000)),  # same as depot
+        ((0, 500), (0, 500)),  # earlier tw_late, should lower tw_late
+        ((250, 1000), (250, 1000)),  # later tw_early, should increase tw_early
+        ((300, 600), (300, 600)),  # both more restricitve
+    ],
+)
+def test_shift_duration_depot_time_window_interaction(
+    shift_tw: tuple[int, int], expected_tw: tuple[int, int]
+):
+    """
+    Tests that the route's depot time window is restricted to the most
+    restrictive of [depot early, depot late] and [shift early, shift late].
+    The depot time window defaults to [0, 1_000], and the shift time window
+    varies around that.
+    """
+    data = ProblemData(
+        clients=[],
+        depots=[Depot(x=0, y=0, tw_early=0, tw_late=1_000)],
+        vehicle_types=[VehicleType(tw_early=shift_tw[0], tw_late=shift_tw[1])],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
+    )
+
+    route = Route(data, idx=0, vehicle_type=0)
+    assert_equal(len(route), 0)
+
+    for idx in [0, 1]:
+        ds = route.duration_at(idx)
+        assert_equal(ds.tw_early(), expected_tw[0])
+        assert_equal(ds.tw_late(), expected_tw[1])
+
+
 @pytest.mark.parametrize("clients", [(1, 2, 3, 4), (1, 2), (3, 4)])
 def test_route_centroid(ok_small, clients):
     """
@@ -734,12 +770,6 @@ def test_distance_different_profiles(ok_small_two_profiles):
     depot_to_depot = route.dist_between(0, len(route) + 1, profile=1)
     assert_equal(depot_to_depot.distance(), 2 * route.distance())
 
-    after_start = route.dist_after(0, profile=1)
-    assert_equal(after_start.distance(), depot_to_depot.distance())
-
-    before_end = route.dist_before(len(route) + 1, profile=1)
-    assert_equal(before_end.distance(), depot_to_depot.distance())
-
 
 def test_duration_different_profiles(ok_small_two_profiles):
     """
@@ -763,12 +793,6 @@ def test_duration_different_profiles(ok_small_two_profiles):
     depot_to_depot = route.duration_between(0, len(route) + 1, profile=1)
     service = sum(c.service_duration for c in data.clients())
     assert_equal(depot_to_depot.duration(), 2 * route.duration() - service)
-
-    after_start = route.duration_after(0, profile=1)
-    assert_equal(after_start.duration(), depot_to_depot.duration())
-
-    before_end = route.duration_before(len(route) + 1, profile=1)
-    assert_equal(before_end.duration(), depot_to_depot.duration())
 
 
 def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
@@ -824,3 +848,19 @@ def test_route_swap(ok_small, loc1, loc2, in_route1, in_route2):
 
     assert_(node1.route is old_route2)
     assert_(node2.route is old_route1)
+
+
+def test_initial_load_calculation(ok_small):
+    """
+    Tests that loads are calculated correctly when there's an initial load
+    present on the vehicle.
+    """
+    orig_route = Route(ok_small, 0, 0)
+    assert_equal(orig_route.load(), [0])
+
+    veh_type = ok_small.vehicle_type(0)
+    new_type = veh_type.replace(initial_load=[5])
+    new_data = ok_small.replace(vehicle_types=[new_type])
+
+    new_route = Route(new_data, 0, 0)
+    assert_equal(new_route.load(), [5])

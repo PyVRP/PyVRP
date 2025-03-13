@@ -12,8 +12,7 @@ using pyvrp::search::LocalSearch;
 
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator,
-                                 std::vector<size_t> const &candidateNodes,
-                                 double overlapTolerance)
+                                 std::vector<size_t> const &candidateNodes)
 {
     numEvaluations = 0;
     loadSolution(solution);
@@ -23,7 +22,7 @@ Solution LocalSearch::operator()(Solution const &solution,
         candidates[idx] = true;
 
     search(costEvaluator);
-    intensify(costEvaluator, overlapTolerance);
+    intensify(costEvaluator);
 
     return exportSolution();
 }
@@ -37,11 +36,10 @@ Solution LocalSearch::search(Solution const &solution,
 }
 
 Solution LocalSearch::intensify(Solution const &solution,
-                                CostEvaluator const &costEvaluator,
-                                double overlapTolerance)
+                                CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    intensify(costEvaluator, overlapTolerance);
+    intensify(costEvaluator);
     return exportSolution();
 }
 
@@ -115,12 +113,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     }
 }
 
-void LocalSearch::intensify(CostEvaluator const &costEvaluator,
-                            double overlapTolerance)
+void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 {
-    if (overlapTolerance < 0 || overlapTolerance > 1)
-        throw std::runtime_error("overlapTolerance must be in [0, 1].");
-
     if (routeOps.empty())
         return;
 
@@ -137,6 +131,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
         for (auto const rU : orderRoutes)
         {
             auto &U = routes[rU];
+            assert(U.idx() == rU);
 
             if (U.empty())
                 continue;
@@ -144,11 +139,12 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator,
             auto const lastTested = lastTestedRoutes[U.idx()];
             lastTestedRoutes[U.idx()] = numMoves;
 
-            for (size_t rV = 0; rV != U.idx(); ++rV)
+            for (size_t rV = U.idx() + 1; rV != routes.size(); ++rV)
             {
                 auto &V = routes[rV];
+                assert(V.idx() == rV);
 
-                if (V.empty() || !U.overlapsWith(V, overlapTolerance))
+                if (V.empty())
                     continue;
 
                 auto const lastModifiedRoute

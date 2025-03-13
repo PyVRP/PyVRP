@@ -134,6 +134,51 @@ def test_raises_for_invalid_client_data(
         )
 
 
+@pytest.mark.parametrize(
+    ("x", "y", "tw_early", "tw_late", "service_duration"),
+    [
+        (0, 0, 1, 0, 0),  # tw_early > tw_late
+        (0, 0, -1, 0, 0),  # tw_early < 0
+        (0, 0, 0, -1, 0),  # tw_late < 0
+        (0, 0, 0, 0, -1),  # service_duration < 0
+    ],
+)
+def test_raises_for_invalid_depot_data(
+    x: int,
+    y: int,
+    tw_early: int,
+    tw_late: int,
+    service_duration: int,
+):
+    """
+    Tests that an invalid depot configuration is not accepted.
+    """
+    with assert_raises(ValueError):
+        Depot(x, y, service_duration, tw_early, tw_late)
+
+
+def test_depot_initialises_data_correctly():
+    """
+    Tests that the depot constructor correctly initialises its member data, and
+    ensures the data is accessible from Python.
+    """
+    depot = Depot(
+        x=1,
+        y=2,
+        service_duration=3,
+        tw_early=5,
+        tw_late=7,
+        name="test",
+    )
+
+    assert_equal(depot.x, 1)
+    assert_equal(depot.y, 2)
+    assert_equal(depot.service_duration, 3)
+    assert_equal(depot.tw_early, 5)
+    assert_equal(depot.tw_late, 7)
+    assert_equal(depot.name, "test")
+
+
 def test_problem_data_raises_when_no_depot_is_provided():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
@@ -454,21 +499,24 @@ def test_matrices_are_not_copies():
         "unit_distance_cost",
         "unit_duration_cost",
         "start_late",
+        "initial_load",
     ),
     [
-        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
-        (-1, 1, 0, 0, 0, 0, 1, 0, 0, 0),  # capacity cannot be negative
-        (-100, 1, 0, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
-        (0, 1, 1, 1, 0, 0, 0, 0, 0, 0),  # early > start late
-        (0, 1, 1, 1, 0, 0, 0, 0, 0, 2),  # start late > late
-        (0, 1, -1, 0, 0, 0, 0, 0, 0, 0),  # negative early
-        (0, 1, 0, -1, 0, 0, 0, 0, 0, 0),  # negative late
-        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0),  # negative max_duration
-        (0, 1, 0, 0, 0, -1, 0, 0, 0, 0),  # negative max_distance
-        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0),  # negative fixed_cost
-        (0, 1, 0, 0, 0, 0, 0, -1, 0, 0),  # negative unit_distance_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, -1, 0),  # negative unit_duration_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, 0, -1),  # negative start late
+        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
+        (-1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0),  # capacity cannot be negative
+        (-100, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
+        (0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0),  # early > start late
+        (0, 1, 1, 1, 0, 0, 0, 0, 0, 2, 0),  # start late > late
+        (0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0),  # negative early
+        (0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0),  # negative late
+        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0),  # negative max_duration
+        (0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0),  # negative max_distance
+        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0),  # negative fixed_cost
+        (0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 0),  # negative unit_distance_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, -1, 0, 0),  # negative unit_duration_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, -1, 0),  # negative start late
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, -1),  # negative initial load
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2),  # initial load exceeds capacity
     ],
 )
 def test_vehicle_type_raises_invalid_data(
@@ -482,6 +530,7 @@ def test_vehicle_type_raises_invalid_data(
     unit_distance_cost: int,
     unit_duration_cost: int,
     start_late: int,
+    initial_load: int,
 ):
     """
     Tests that the vehicle type constructor raises when given invalid
@@ -499,6 +548,7 @@ def test_vehicle_type_raises_invalid_data(
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
             start_late=start_late,
+            initial_load=[initial_load],
         )
 
 
@@ -983,6 +1033,31 @@ def test_client_load_dimensions_are_padded_with_zeroes(
     assert_equal(client.pickup, exp_pickup)
 
 
+@pytest.mark.parametrize(
+    ("capacity", "initial_load", "exp_capacity", "exp_initial_load"),
+    [
+        ([0], [0], [0], [0]),
+        ([0], [0, 0, 0], [0, 0, 0], [0, 0, 0]),
+        ([0, 1, 2], [0], [0, 1, 2], [0, 0, 0]),
+        ([1, 2], [1], [1, 2], [1, 0]),
+        ([], [], [], []),
+    ],
+)
+def test_vehicle_load_dimensions_are_padded_with_zeroes(
+    capacity: list[int],
+    initial_load: list[int],
+    exp_capacity: list[int],
+    exp_initial_load: list[int],
+):
+    """
+    Tests that any missing load dimensions for the capacity and initial_load
+    VehicleType arguments are padded with zeroes.
+    """
+    vehicle_type = VehicleType(capacity=capacity, initial_load=initial_load)
+    assert_equal(vehicle_type.capacity, exp_capacity)
+    assert_equal(vehicle_type.initial_load, exp_initial_load)
+
+
 def test_problem_data_raises_when_pickup_and_delivery_dimensions_differ():
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
@@ -1058,3 +1133,35 @@ def test_problem_data_constructor_valid_load_dimensions():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
     assert_equal(data.num_load_dimensions, 2)
+
+
+@pytest.mark.parametrize(
+    ("start_depot", "end_depot"),
+    [(0, 1), (1, 0), (1, 1)],
+)
+def test_raises_if_vehicle_and_depot_time_windows_do_not_overlap(
+    start_depot: int,
+    end_depot: int,
+):
+    """
+    Tests that the ProblemData constructor raises when a vehicle type's time
+    window (shift) does not at least overlap with that of the vehicle type's
+    start and end depots.
+    """
+    depot1 = Depot(x=0, y=0, tw_early=0, tw_late=10)
+    depot2 = Depot(x=0, y=0, tw_early=15, tw_late=25)
+    vehicle_type = VehicleType(  # overlap with first depot, but not second
+        tw_early=5,
+        tw_late=10,
+        start_depot=start_depot,
+        end_depot=end_depot,
+    )
+
+    with assert_raises(ValueError):
+        ProblemData(
+            clients=[],
+            depots=[depot1, depot2],
+            vehicle_types=[vehicle_type],
+            distance_matrices=[np.zeros((2, 2), dtype=int)],
+            duration_matrices=[np.zeros((2, 2), dtype=int)],
+        )

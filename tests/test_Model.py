@@ -124,9 +124,11 @@ def test_add_depot_attributes():
     in.
     """
     model = Model()
-    depot = model.add_depot(x=1, y=0)
+    depot = model.add_depot(x=1, y=0, tw_early=5, tw_late=7)
     assert_equal(depot.x, 1)
     assert_equal(depot.y, 0)
+    assert_equal(depot.tw_early, 5)
+    assert_equal(depot.tw_late, 7)
 
 
 def test_add_edge():
@@ -956,3 +958,21 @@ def test_bug_client_group_indices():
 
     assert_equal(len(group1), 1)
     assert_equal(len(group2), 1)
+
+
+def test_integer_or_list_vehicle_capacity_and_load_arguments():
+    """
+    Tests that passing an integer capacity or initial load functions the same
+    way as passing a list of a single integer - the integer arguments are
+    automatically promoted to lists of integers.
+    """
+    m = Model()
+
+    veh1 = m.add_vehicle_type(capacity=10, initial_load=1)
+    assert_equal(veh1.capacity, [10])
+    assert_equal(veh1.initial_load, [1])
+
+    veh2 = m.add_vehicle_type(capacity=[10], initial_load=[1])
+    assert_(veh1 == veh2)
+    assert_equal(veh2.capacity, [10])
+    assert_equal(veh2.initial_load, [1])

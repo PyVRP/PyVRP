@@ -160,11 +160,11 @@ public:
     {
         Coordinate const x;
         Coordinate const y;
+        Duration const serviceDuration;
+        Duration const twEarly;  // Earliest possible start of service
+        Duration const twLate;   // Latest possible start of service
         std::vector<Load> const delivery;
         std::vector<Load> const pickup;
-        Duration const serviceDuration;
-        Duration const twEarly;      // Earliest possible start of service
-        Duration const twLate;       // Latest possible start of service
         Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize;            // Prize for visiting this client
         bool const required;         // Must client be in solution?
@@ -264,6 +264,9 @@ public:
      * Depot(
      *    x: int,
      *    y: int,
+     *    service_duration: int = 0,
+     *    tw_early: int = 0,
+     *    tw_late: int = np.iinfo(np.int64).max,
      *    *,
      *    name: str = "",
      * )
@@ -278,6 +281,12 @@ public:
      * y
      *     Vertical coordinate of this depot, that is, the 'y' part of the
      *     depot's (x, y) location tuple.
+     * service_duration
+     *     Time it takes to e.g. load a vehicle at this depot. Default 0.
+     * tw_early
+     *     Opening time of this depot. Default 0.
+     * tw_late
+     *     Closing time of this depot. Default unconstrained.
      * name
      *     Free-form name field for this depot. Default empty.
      *
@@ -287,6 +296,12 @@ public:
      *     Horizontal coordinate of this depot.
      * y
      *     Vertical coordinate of this depot.
+     * service_duration
+     *     Time it takes to e.g. load a vehicle at this depot.
+     * tw_early
+     *     Opening time of this depot.
+     * tw_late
+     *     Closing time of this depot.
      * name
      *     Free-form name field for this depot.
      */
@@ -294,9 +309,17 @@ public:
     {
         Coordinate const x;
         Coordinate const y;
-        char const *name;  // Depot name (for reference)
+        Duration const serviceDuration;
+        Duration const twEarly;  // Depot opening time
+        Duration const twLate;   // Depot closing time
+        char const *name;        // Depot name (for reference)
 
-        Depot(Coordinate x, Coordinate y, std::string name = "");
+        Depot(Coordinate x,
+              Coordinate y,
+              Duration serviceDuration = 0,
+              Duration twEarly = 0,
+              Duration twLate = std::numeric_limits<Duration>::max(),
+              std::string name = "");
 
         bool operator==(Depot const &other) const;
 
@@ -324,6 +347,7 @@ public:
      *     unit_duration_cost: int = 0,
      *     profile: int = 0,
      *     start_late: int | None = None,
+     *     initial_load: list[int] = [],
      *     *,
      *     name: str = "",
      * )
@@ -367,6 +391,11 @@ public:
      * start_late
      *     Latest start of the vehicle type's shift. Unconstrained if not
      *     provided.
+     * initial_load
+     *     Load already on the vehicle that need to be dropped off at a depot.
+     *     This load is present irrespective of any client visits. By default
+     *     this value is zero, and the vehicle only considers loads from client
+     *     visits.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -402,6 +431,9 @@ public:
      * start_late
      *     Latest start of the vehicle type's shift. This is equal to
      *     ``tw_late`` when the latest start is not constrained.
+     * initial_load
+     *     Load already on the vehicle that need to be dropped off at a depot.
+     *     This load is present irrespective of any client visits.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -420,7 +452,8 @@ public:
         Cost const unitDurationCost;  // Variable cost per unit of duration
         size_t const profile;         // Distance and duration profile
         Duration const startLate;     // Latest start of shift
-        char const *name;             // Type name (for reference)
+        std::vector<Load> const initialLoad;  // Initially used capacity
+        char const *name;                     // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
                     std::vector<Load> capacity = {},
@@ -435,6 +468,7 @@ public:
                     Cost unitDurationCost = 0,
                     size_t profile = 0,
                     std::optional<Duration> startLate = std::nullopt,
+                    std::vector<Load> initialLoad = {},
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -464,6 +498,7 @@ public:
                             std::optional<Cost> unitDurationCost,
                             std::optional<size_t> profile,
                             std::optional<Duration> startLate,
+                            std::optional<std::vector<Load>> initialLoad,
                             std::optional<std::string> name) const;
     };
 

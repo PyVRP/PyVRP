@@ -12,7 +12,7 @@ from numpy.testing import (
 
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
-from tests.helpers import read
+from tests.helpers import read, read_solution
 
 
 @pytest.mark.parametrize(
@@ -502,3 +502,38 @@ def test_sdvrptw_instance():
         assert_equal(distance_matrix[client, idcs], MAX_VALUE)
         assert_equal(duration_matrix[idcs, client], MAX_VALUE)
         assert_equal(duration_matrix[client, idcs], MAX_VALUE)
+
+
+def test_read_solution_single_vehicle_type(ok_small):
+    """
+    Tests that reading a solution with a single vehicle type works correctly.
+    """
+    solution = read_solution("data/OkSmall.sol", ok_small)
+    routes = solution.routes()
+
+    assert_equal(routes[0].visits(), [1, 2])
+    assert_equal(routes[1].visits(), [3, 4])
+
+    assert_equal(routes[0].vehicle_type(), 0)
+    assert_equal(routes[1].vehicle_type(), 0)
+
+
+def test_read_solution_multiple_vehicle_types(ok_small_multi_depot):
+    """
+    Tests that reading a solution with multiple vehicle types works correctly.
+    """
+    solution = read_solution(
+        "data/OkSmallMultipleDepots.sol", ok_small_multi_depot
+    )
+    routes = solution.routes()
+
+    # The solution file shows three routes, but empty routes are ignored.
+    assert_equal(solution.num_routes(), 2)
+    assert_equal(routes[0].visits(), [2])
+    assert_equal(routes[1].visits(), [3, 4])
+
+    # The instance has two vehicle types: two of the first type and one of the
+    # second type. Because the second route was empty, the second vehicle of
+    # the first type is not used.
+    assert_equal(routes[0].vehicle_type(), 0)
+    assert_equal(routes[1].vehicle_type(), 1)

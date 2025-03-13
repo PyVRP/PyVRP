@@ -17,6 +17,7 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
+    SwapRoutes,
     SwapStar,
     compute_neighbours,
 )
@@ -292,54 +293,6 @@ def test_bugfix_vehicle_type_offsets(ok_small):
     assert_(improved_cost <= current_cost)
 
 
-@pytest.mark.parametrize("method", ["__call__", "intensify"])
-def test_intensify_overlap_tolerance(method, rc208):
-    """
-    Tests that the local search's intensifying procedures respect the overlap
-    tolerance argument.
-    """
-    rng = RandomNumberGenerator(seed=42)
-
-    neighbours = compute_neighbours(rc208)
-    ls = LocalSearch(rc208, rng, neighbours)
-    ls.add_route_operator(SwapStar(rc208))
-
-    func = getattr(ls, method)
-
-    cost_eval = CostEvaluator([1], 1, 0)
-    sol = Solution.make_random(rc208, rng)
-
-    # Overlap tolerance is zero, so no routes should have overlap and thus
-    # no intensification should take place.
-    unchanged = func(sol, cost_eval, overlap_tolerance=0)
-    assert_equal(unchanged, sol)
-
-    # But with full overlap tolerance, all routes should be checked. That
-    # should lead to an improvement over the random solution.
-    better = func(sol, cost_eval, overlap_tolerance=1)
-    assert_(better != sol)
-    assert_(cost_eval.penalised_cost(better) < cost_eval.penalised_cost(sol))
-
-
-@pytest.mark.parametrize("tol", [-1.0, -0.01, 1.01, 10.9, 1000])
-def test_intensify_overlap_tolerance_raises_outside_unit_interval(rc208, tol):
-    """
-    Tests that calling ``intensify()`` raises when the overlap tolerance
-    argument is not in [0, 1].
-    """
-    rng = RandomNumberGenerator(seed=42)
-
-    neighbours = compute_neighbours(rc208)
-    ls = LocalSearch(rc208, rng, neighbours)
-    ls.add_route_operator(SwapStar(rc208))
-
-    cost_eval = CostEvaluator([1], 1, 0)
-    sol = Solution.make_random(rc208, rng)
-
-    with assert_raises(RuntimeError):  # each tolerance value is outside [0, 1]
-        ls.intensify(sol, cost_eval, overlap_tolerance=tol)
-
-
 def test_no_op_results_in_same_solution(ok_small):
     """
     Tests that calling local search without first adding node or route
@@ -391,6 +344,40 @@ def test_intensify_can_improve_solution_further(rc208):
     for _ in range(10):
         assert_equal(ls.search(search_opt, cost_eval), search_opt)
         assert_equal(ls.intensify(intensify_opt, cost_eval), intensify_opt)
+
+
+def test_intensify_can_swap_routes(ok_small):
+    """
+    Tests that the bug identified in #742 is fixed. The intensify method should
+    be able to improve a solution by swapping routes.
+    """
+    rng = RandomNumberGenerator(seed=42)
+
+    data = ok_small.replace(
+        vehicle_types=[
+            VehicleType(1, capacity=[5]),
+            VehicleType(1, capacity=[20]),
+        ]
+    )
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_route_operator(SwapRoutes(data))
+
+    # High load penalty, so the solution is penalised for having excess load.
+    cost_eval = CostEvaluator([100_000], 0, 0)
+    route1 = Route(data, [1, 2, 3], 0)  # Excess load: 13 - 5 = 8
+    route2 = Route(data, [4], 1)  # Excess load: 0
+    init_sol = Solution(data, [route1, route2])
+    init_cost = cost_eval.penalised_cost(init_sol)
+
+    assert_equal(init_sol.excess_load(), [8])
+
+    # This solution can be improved by using the intensifying route operators
+    # to swap the routes in the solution.
+    intensify_sol = ls.intensify(init_sol, cost_eval)
+    intensify_cost = cost_eval.penalised_cost(intensify_sol)
+
+    assert_(intensify_cost < init_cost)
+    assert_equal(intensify_sol.excess_load(), [0])
 
 
 def test_local_search_completes_incomplete_solutions(ok_small_prizes):

@@ -81,7 +81,6 @@ class LocalSearch:
         solution: Solution,
         cost_evaluator: CostEvaluator,
         candidate_clients: list[int],
-        overlap_tolerance: float = 0.05,
     ) -> Solution:
         """
         This method uses the :meth:`~search` and :meth:`~intensify` methods to
@@ -98,8 +97,6 @@ class LocalSearch:
             Cost evaluator to use.
         candidate_clients
             The list of candidate clients to consider for moves.
-        overlap_tolerance
-            See :meth:`~intensify` for details.
 
         Returns
         -------
@@ -107,7 +104,6 @@ class LocalSearch:
             The improved solution. This is not the same object as the
             solution that was passed in.
         """
-        self._ls.shuffle(self._rng)
         return self._ls(
             solution, cost_evaluator, candidate_clients, overlap_tolerance
         )
@@ -116,13 +112,10 @@ class LocalSearch:
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
-        overlap_tolerance: float = 0.05,
     ) -> Solution:
         """
         This method uses the intensifying route operators on this local search
-        object to improve the given solution. To limit the computational
-        demands of intensification, the  ``overlap_tolerance`` argument
-        can be used to limit the number of route pairs that are evaluated.
+        object to improve the given solution.
 
         Parameters
         ----------
@@ -130,13 +123,6 @@ class LocalSearch:
             The solution to improve.
         cost_evaluator
             Cost evaluator to use.
-        overlap_tolerance
-            This method evaluates improving moves between route pairs. To limit
-            computational efforts, by default not all route pairs are
-            considered: only those route pairs that share some overlap when
-            considering their center's angle to the center of all clients.
-            This parameter controls the amount of overlap needed before two
-            routes are evaluated.
 
         Returns
         -------
@@ -145,7 +131,7 @@ class LocalSearch:
             solution that was passed in.
         """
         self._ls.shuffle(self._rng)
-        return self._ls.intensify(solution, cost_evaluator, overlap_tolerance)
+        return self._ls.intensify(solution, cost_evaluator)
 
     def search(
         self, solution: Solution, cost_evaluator: CostEvaluator
