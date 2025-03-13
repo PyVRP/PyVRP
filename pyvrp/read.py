@@ -187,6 +187,15 @@ class _InstanceParser:
 
         return self.round_func(self.instance["release_time"])
 
+    def reload_depots(self) -> list[tuple[int, ...]]:
+        if "vehicles_reload_depot" not in self.instance:
+            return [tuple() for _ in range(self.num_vehicles)]
+
+        return [
+            tuple(idx - 1 for idx in group)
+            for group in self.instance["vehicles_reload_depot"]
+        ]
+
     def prizes(self) -> np.ndarray:
         if "prize" not in self.instance:
             return np.zeros(self.num_locations, dtype=np.int64)
@@ -349,6 +358,7 @@ class _ProblemDataBuilder:
         vehicles_data = (
             self.parser.capacities(),
             self.parser.allowed_clients(),
+            self.parser.reload_depots(),
             self.parser.vehicles_depots(),
             self.parser.max_distances(),
             self.parser.max_durations(),
@@ -373,20 +383,21 @@ class _ProblemDataBuilder:
 
         vehicle_types = []
         for attributes, vehicles in type2idcs.items():
-            (capacity, clients, depot_idx, max_dist, max_duration) = attributes
+            (cap, clients, reloads, depot, max_dist, max_duration) = attributes
 
             vehicle_type = VehicleType(
                 num_available=len(vehicles),
-                capacity=capacity,
-                start_depot=depot_idx,
-                end_depot=depot_idx,
+                capacity=cap,
+                start_depot=depot,
+                end_depot=depot,
                 # The literature specifies depot time windows. We do not have
                 # depot time windows but instead set those on the vehicles.
-                tw_early=time_windows[depot_idx][0],
-                tw_late=time_windows[depot_idx][1],
+                tw_early=time_windows[depot][0],
+                tw_late=time_windows[depot][1],
                 max_duration=max_duration,
                 max_distance=max_dist,
                 profile=client2profile[clients],
+                reload_depots=reloads,
                 # A bit hacky, but this csv-like name is really useful to track
                 # the actual vehicles that make up this vehicle type.
                 name=",".join(map(str, vehicles)),
