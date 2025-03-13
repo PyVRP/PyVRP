@@ -8,7 +8,7 @@ import numpy as np
 
 @dataclass
 class ConvergenceParams:
-    solutions_between_updates: int = 50
+    solutions_between_updates: int = 100
     penalty_increase: int = 2
     penalty_decrease: int = 1
     target_pairs: float = 15
