@@ -15,17 +15,37 @@ using pyvrp::Route;
 using Client = size_t;
 
 Route::Iterator::Iterator(Route const &route, size_t idx)
-    : route(&route), idx(idx)
+    : route_(&route), trip_(route.numTrips()), idx_(0)
 {
     assert(idx <= route.size());
+
+    auto const &trips = route.trips();
+    for (size_t trip = 0; trip != trips.size(); ++trip)
+    {
+        if (idx < trips[trip].size())
+        {
+            trip_ = trip;
+            idx_ = idx;
+            break;
+        }
+
+        idx -= trips[trip].size();
+    }
 }
 
 bool Route::Iterator::operator==(Iterator const &other) const
 {
-    return route == other.route && idx == other.idx;
+    return route_ == other.route_ && trip_ == other.trip_ && idx_ == other.idx_;
 }
 
-Client Route::Iterator::operator*() const { return (*route)[idx]; }
+Client Route::Iterator::operator*() const
+{
+    auto const &trips = route_->trips();
+    assert(trip_ < trips.size());
+    assert(idx_ < trips[trip_].size());
+
+    return trips[trip_][idx_];
+}
 
 Route::Iterator Route::Iterator::operator++(int)
 {
@@ -36,7 +56,15 @@ Route::Iterator Route::Iterator::operator++(int)
 
 Route::Iterator &Route::Iterator::operator++()
 {
-    ++idx;
+    auto const &trips = route_->trips();
+    if (idx_ + 1 < trips[trip_].size())
+    {
+        ++idx_;
+        return *this;
+    }
+
+    ++trip_;
+    idx_ = 0;
     return *this;
 }
 
@@ -256,6 +284,8 @@ size_t Route::size() const
                            [](size_t count, auto const &trip)
                            { return count + trip.size(); });
 }
+
+size_t Route::numTrips() const { return trips_.size(); }
 
 Client Route::operator[](size_t idx) const
 {

@@ -33,15 +33,13 @@ public:
     /**
      * Forward iterator through the clients visited by this route.
      */
-    class Iterator
+    class Iterator : public std::iterator<std::forward_iterator_tag, Client>
     {
-        Route const *route = nullptr;
-        size_t idx = 0;
+        Route const *route_ = nullptr;
+        size_t trip_ = 0;
+        size_t idx_ = 0;
 
     public:
-        using difference_type = std::ptrdiff_t;
-        using value_type = Client;
-
         Iterator(Route const &route, size_t idx);
 
         Iterator() = default;
@@ -128,6 +126,11 @@ public:
      * Returns the number of clients visited by this route.
      */
     [[nodiscard]] size_t size() const;
+
+    /**
+     * Returns the number of trips in this route.
+     */
+    [[nodiscard]] size_t numTrips() const;
 
     [[nodiscard]] Client operator[](size_t idx) const;
 
