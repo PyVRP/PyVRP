@@ -555,3 +555,9 @@ def test_str(ok_small):
 
     route4 = Route(data, [], 0)
     assert_equal(str(route4), "")
+
+
+# TODO multi-trip tests:
+#  - schedule with/without depot service time
+#  - statistics evaluation on small example(s)
+#  - visits() with multiple trips
