@@ -116,7 +116,7 @@ def test_initial_solutions_added_when_restarting(rc208):
 
     # We use the best known solution as one of the initial solutions so that
     # there are no improving iterations.
-    init = {Solution(rc208, read_solution("data/RC208.sol"))}
+    init = {read_solution("data/RC208.sol", rc208)}
     init.update(Solution.make_random(rc208, rng) for _ in range(24))
 
     params = GeneticAlgorithmParams(
@@ -177,7 +177,7 @@ def test_best_initial_solution(rc208):
     pop = Population(bpd)
 
     init = [Solution.make_random(rc208, rng) for _ in range(24)]
-    bks = Solution(rc208, read_solution("data/RC208.sol"))
+    bks = read_solution("data/RC208.sol", rc208)
     init.append(bks)
 
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
@@ -195,7 +195,7 @@ def test_infeasible_offspring_is_repaired(rc208):
     Tests that infeasible offspring will be repaired if the repair probability
     is 1.
     """
-    bks = Solution(rc208, read_solution("data/RC208.sol"))
+    bks = read_solution("data/RC208.sol", rc208)
 
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     rng = RandomNumberGenerator(seed=42)
