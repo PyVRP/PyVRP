@@ -112,6 +112,10 @@ PyVRP supports the following data sections:
       Depot assignments for each vehicle, typically used in multi-depot instances.
       Vehicles are assigned to the first depot if this section is not provided.
 
+   ``VEHICLES_RELOAD_DEPOT_SECTION``
+      Reload depot assignments for each vehicle, typically used in multi-trip instances.
+      Vehicles are not allowed to reload if this section is not provided.
+
    ``VEHICLES_MAX_DISTANCE_SECTION``
       Maximum route distance for each vehicle.
       Route distances are assumed to be unconstrained if this section is not present.
