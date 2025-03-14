@@ -80,6 +80,7 @@ class LocalSearch:
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
+        candidate_clients: list[int],
     ) -> Solution:
         """
         This method uses the :meth:`~search` and :meth:`~intensify` methods to
@@ -94,6 +95,8 @@ class LocalSearch:
             The solution to improve through local search.
         cost_evaluator
             Cost evaluator to use.
+        candidate_clients
+            The list of candidate clients to consider for moves.
 
         Returns
         -------
@@ -101,8 +104,7 @@ class LocalSearch:
             The improved solution. This is not the same object as the
             solution that was passed in.
         """
-        self._ls.shuffle(self._rng)
-        return self._ls(solution, cost_evaluator)
+        return self._ls(solution, cost_evaluator, candidate_clients)
 
     def intensify(
         self,
