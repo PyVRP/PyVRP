@@ -248,12 +248,16 @@ PYBIND11_MODULE(_search, m)
         .def("has_excess_load", &Route::hasExcessLoad)
         .def("has_excess_distance", &Route::hasExcessDistance)
         .def("has_time_warp", &Route::hasTimeWarp)
-        .def("capacity", &Route::capacity)
+        .def("capacity",
+             &Route::capacity,
+             py::return_value_policy::reference_internal)
         .def("start_depot", &Route::startDepot)
         .def("end_depot", &Route::endDepot)
         .def("fixed_vehicle_cost", &Route::fixedVehicleCost)
-        .def("load", &Route::load)
-        .def("excess_load", &Route::excessLoad)
+        .def("load", &Route::load, py::return_value_policy::reference_internal)
+        .def("excess_load",
+             &Route::excessLoad,
+             py::return_value_policy::reference_internal)
         .def("excess_distance", &Route::excessDistance)
         .def("distance", &Route::distance)
         .def("distance_cost", &Route::distanceCost)
