@@ -504,7 +504,7 @@ def test_raises_if_route_does_not_start_and_end_at_vehicle_start_end_depots(
     data = ok_small_multi_depot.replace(vehicle_types=[veh_type])
 
     trip1 = Trip(data, [2], 0, start_depot, 1)
-    trip2 = Trip(data, [3], 0, 0, end_depot)
+    trip2 = Trip(data, [3], 0, 1, end_depot)
 
     with assert_raises(ValueError):
         Route(data, [trip1, trip2], 0)

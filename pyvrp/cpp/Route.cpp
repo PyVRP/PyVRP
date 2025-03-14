@@ -128,7 +128,6 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
       delivery_(data.numLoadDimensions(), 0),
       pickup_(data.numLoadDimensions(), 0),
       excessLoad_(data.numLoadDimensions(), 0),
-      centroid_({0, 0}),
       vehicleType_(vehType)
 {
     if (trips_.empty())  // then we insert a dummy trip for ease.

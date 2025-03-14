@@ -35,7 +35,7 @@ Trip::Trip(ProblemData const &data,
            size_t vehicleType,
            std::optional<size_t> startDepot,
            std::optional<size_t> endDepot)
-    : visits_(std::move(visits)), centroid_({0, 0}), vehicleType_(vehicleType)
+    : visits_(std::move(visits)), vehicleType_(vehicleType)
 {
     auto const &vehType = data.vehicleType(vehicleType_);
     startDepot_ = startDepot.value_or(vehType.startDepot);
