@@ -158,7 +158,7 @@ def solve(
     """
     rng = RandomNumberGenerator(seed=seed)
 
-    VALUE = 1_000_000  # TODO Ignore the penalties for now
+    VALUE = 1000
     penalty_params = PenaltyParams(solutions_between_updates=VALUE)
     pm = PenaltyManager(
         initial_penalties=([VALUE], VALUE, VALUE),

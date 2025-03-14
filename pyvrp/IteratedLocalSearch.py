@@ -8,12 +8,12 @@ from pyvrp.ConvergenceManager import ConvergenceManager
 from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
-from pyvrp._pyvrp import CostEvaluator
 from pyvrp.diversity import different_neighbours
 
 if TYPE_CHECKING:
     from pyvrp.PenaltyManager import PenaltyManager
     from pyvrp._pyvrp import (
+        CostEvaluator,
         ProblemData,
         RandomNumberGenerator,
         Solution,
@@ -116,12 +116,21 @@ class IteratedLocalSearch:
             iters += 1
 
             perturbed = self._perturb(
-                current, self._cost_evaluator, conv_manager.num_destroy
+                current,
+                self._pm.booster_cost_evaluator(),
+                conv_manager.num_destroy,
             )
             diff = different_neighbours(current, perturbed)
-            cost_evaluator = CostEvaluator([20], 6, 6)
-            candidate = self._search(perturbed, cost_evaluator, diff)
-            candidate = self._search(candidate, self._cost_evaluator, diff)
+            candidate = self._search(
+                perturbed, self._pm.cost_evaluator(), diff
+            )
+
+            if not candidate.is_feasible():
+                candidate = self._search(
+                    candidate, self._pm.booster_cost_evaluator(), diff
+                )
+
+            self._pm.register(candidate)
 
             if not candidate.is_feasible():
                 continue  # skip infeasible solutions for now

@@ -87,17 +87,7 @@ void DestroyRepair::strings(size_t numDestroy)
 void DestroyRepair::repair(CostEvaluator const &costEvaluator)
 {
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
-
-    auto const dIdx = rng.randint(2);
-
-    if (dIdx == 0)
-        greedyInsert(costEvaluator);
-    else
-    {
-        // HACK this allows for infeasible insertions
-        auto const costEval = CostEvaluator({1}, 1, 1);
-        greedyInsert(costEval);
-    }
+    greedyInsert(costEvaluator);
 }
 
 void DestroyRepair::greedyInsert(CostEvaluator const &costEvaluator)
