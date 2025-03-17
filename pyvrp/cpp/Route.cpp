@@ -314,8 +314,6 @@ Client Route::operator[](size_t idx) const
         else
             idx -= trip.size();
 
-    // TODO this should probably become std::unreachable() once more compilers
-    // support it.
     throw std::out_of_range("Index out of range.");
 }
 

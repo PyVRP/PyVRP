@@ -718,11 +718,8 @@ PYBIND11_MODULE(_pyvrp, m)
             "__getitem__",
             [](Route const &route, int idx)
             {
-                // int so we also support negative offsets from the end.
-                idx = idx < 0 ? route.size() + idx : idx;
-                if (idx < 0 || static_cast<size_t>(idx) >= route.size())
-                    throw py::index_error();
-                return route[idx];
+                // conditional so we support negative offsets from the end.
+                return route[idx < 0 ? route.size() + idx : idx];
             },
             py::arg("idx"))
         .def(py::self == py::self)  // this is __eq__

@@ -627,4 +627,23 @@ def test_schedule_multi_trip_example(ok_small_multiple_trips):
     assert_equal(locations, [0, 1, 2, 0, 0, 3, 4, 0])
 
 
+def test_index_multiple_trips(ok_small_multiple_trips):
+    """
+    Tests that direct indexing a route object with multiple trips finds the
+    correct client associated with each index.
+    """
+    trip1 = Trip(ok_small_multiple_trips, [1], 0)
+    trip2 = Trip(ok_small_multiple_trips, [3], 0)
+
+    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+    assert_equal(route[0], 1)
+    assert_equal(route[-2], 1)
+
+    assert_equal(route[1], 3)
+    assert_equal(route[-1], 3)
+
+    with assert_raises(IndexError):
+        route[2]
+
+
 # TODO multi-trip and release time interaction
