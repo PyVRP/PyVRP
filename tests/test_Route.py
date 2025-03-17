@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
@@ -11,6 +11,7 @@ from pyvrp import (
     RandomNumberGenerator,
     Route,
     Solution,
+    Trip,
     VehicleType,
 )
 from tests.helpers import read
@@ -92,6 +93,25 @@ def test_route_access_methods(ok_small):
     services = [0] + [client.service_duration for client in ok_small.clients()]
     assert_equal(routes[0].service_duration(), services[1] + services[3])
     assert_equal(routes[1].service_duration(), services[2] + services[4])
+
+
+def test_access_multiple_trips(ok_small_multiple_trips):
+    """
+    Tests that accessing the route's clients via visits(), iteration, or the
+    underlying trips works correctly for a multi-trip instance.
+    """
+    data = ok_small_multiple_trips
+    trips = [Trip(data, [1, 2], 0), Trip(data, [3], 0)]
+    route = Route(data, trips, 0)
+
+    assert_equal(route.visits(), [1, 2, 3])
+    assert_equal([client for client in route], [1, 2, 3])
+
+    assert_equal(trips[0].visits(), [1, 2])
+    assert_equal([client for client in trips[0]], [1, 2])
+
+    assert_equal(trips[1].visits(), [3])
+    assert_equal([client for client in trips[1]], [3])
 
 
 def test_route_time_warp_calculations(ok_small):
@@ -412,10 +432,11 @@ def test_route_schedule(ok_small, visits: list[int]):
     """
     route = Route(ok_small, visits, 0)
     schedule = route.schedule()
+    assert_equal(len(schedule), len(route) + 2)  # schedule includes depots
 
-    for client, visit in zip(route, schedule):
-        client_data: Client = ok_small.location(client)
-        assert_equal(visit.service_duration, client_data.service_duration)
+    for visit in schedule:
+        data = ok_small.location(visit.location)
+        assert_equal(visit.service_duration, data.service_duration)
         assert_equal(
             visit.service_duration,
             visit.end_service - visit.start_service,
@@ -439,8 +460,8 @@ def test_route_schedule_wait_duration():
     route = Route(data, [2, 4], 0)
     schedule = route.schedule()
 
-    # All wait duration is incurred at the last stop.
-    assert_equal(schedule[-1].wait_duration, 1_550)
+    # All wait duration is incurred at the last client stop.
+    assert_equal(schedule[-2].wait_duration, 1_550)
     assert_equal(route.wait_duration(), 1_550)
 
     wait_duration = sum(visit.wait_duration for visit in schedule)
@@ -468,3 +489,161 @@ def test_initial_load_calculation(ok_small):
     new_route = Route(new_data, [1, 2], 0)
     assert_equal(new_route.excess_load(), [5])
     assert_(new_route.has_excess_load())
+
+
+@pytest.mark.parametrize(("start_depot", "end_depot"), [(0, 1), (1, 0)])
+def test_raises_if_route_does_not_start_and_end_at_vehicle_start_end_depots(
+    ok_small_multi_depot, start_depot: int, end_depot: int
+):
+    """
+    Tests that the route constructor raises when the route implied by the
+    sequence of trips does not start at the vehicle type's start_depot, or end
+    at the end_depot.
+    """
+    old_veh_type = ok_small_multi_depot.vehicle_type(0)
+    veh_type = old_veh_type.replace(reload_depots=[0, 1])
+    data = ok_small_multi_depot.replace(vehicle_types=[veh_type])
+
+    trip1 = Trip(data, [2], 0, start_depot, 1)
+    trip2 = Trip(data, [3], 0, 1, end_depot)
+
+    with assert_raises(ValueError):
+        Route(data, [trip1, trip2], 0)
+
+
+def test_raises_inconsistent_vehicle_type(ok_small_two_profiles):
+    """
+    Tests that the route constructor raises when trips do not share the route's
+    vehicle type.
+    """
+    trip = Trip(ok_small_two_profiles, [], 1)
+    assert_equal(trip.vehicle_type(), 1)
+
+    with assert_raises(ValueError):
+        Route(ok_small_two_profiles, [trip], 0)
+
+
+def test_raises_consecutive_trips_different_depots(ok_small_multi_depot):
+    """
+    Tests that the route constructor raises when consecutive trips disagree on
+    their start and end depots.
+    """
+    old_veh_type = ok_small_multi_depot.vehicle_type(0)
+    veh_type = old_veh_type.replace(reload_depots=[0, 1])
+    data = ok_small_multi_depot.replace(vehicle_types=[veh_type])
+
+    trip1 = Trip(data, [2], 0, 0, 1)
+    trip2 = Trip(data, [3], 0, 0, 0)
+    assert_equal(trip1.end_depot(), 1)
+    assert_equal(trip2.start_depot(), 0)
+
+    with assert_raises(ValueError):
+        Route(data, [trip1, trip2], 0)
+
+
+def test_raises_multiple_trips_without_reload_depots(ok_small):
+    """
+    Tests that the route constructor raises when there is more than one trip,
+    yet the vehicle type does not support reloading.
+    """
+    assert_equal(len(ok_small.vehicle_type(0).reload_depots), 0)
+
+    trips = [Trip(ok_small, [1, 2], 0), Trip(ok_small, [3], 0)]
+    with assert_raises(ValueError):
+        Route(ok_small, trips, 0)
+
+
+def test_str(ok_small_multiple_trips):
+    """
+    Tests that a route's string representation correctly uses a | to separate
+    multiple trips.
+    """
+    data = ok_small_multiple_trips
+    trips = [Trip(data, [1, 2], 0), Trip(data, [3], 0)]
+
+    route1 = Route(data, trips, 0)
+    assert_equal(str(route1), "1 2 | 3")
+
+    route2 = Route(data, [trips[0]], 0)
+    assert_equal(str(route2), "1 2")
+
+    route3 = Route(data, [trips[1]], 0)
+    assert_equal(str(route3), "3")
+
+    route4 = Route(data, [], 0)
+    assert_equal(str(route4), "")
+
+
+def test_statistics_with_small_multi_trip_example(ok_small_multiple_trips):
+    """
+    Tests some statistics calculations on a small multi-trip example.
+    """
+    # Regular route, executed in a single trip.
+    route1 = Route(ok_small_multiple_trips, [1, 2, 3, 4], 0)
+
+    # Same visits but executed over two trips.
+    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
+    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
+    route2 = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+
+    assert_equal(route2.visits(), route1.visits())
+    assert_equal(len(route2), len(route1))
+    assert_equal(len(route1.trips()), 1)
+    assert_equal(len(route2.trips()), 2)
+
+    # Route structure and general statistics.
+    assert_equal(route2.prizes(), route1.prizes())
+    assert_allclose(route2.centroid(), route1.centroid())
+    assert_equal(route2.start_depot(), route1.start_depot())
+    assert_equal(route2.end_depot(), route1.end_depot())
+
+    # First route has excess load, second does not.
+    assert_equal(route1.excess_load(), [8])
+    assert_equal(route2.excess_load(), [0])
+
+    # First route takes 7'950, but the second route takes longer, because it
+    # has to reload at the depot. The difference is exactly the difference in
+    # arc travel time.
+    durs = ok_small_multiple_trips.duration_matrix(0)
+    diff = durs[2, 0] + durs[0, 3] - durs[2, 3]
+
+    assert_equal(route1.duration(), 7_950)
+    assert_equal(route2.duration(), route1.duration() + diff)
+    assert_equal(route2.wait_duration(), route1.wait_duration())
+    assert_equal(route2.service_duration(), route1.service_duration())
+
+
+def test_schedule_multi_trip_example(ok_small_multiple_trips):
+    """
+    Tests that schedule() includes the depot visits, which is particularly
+    important when a route consists of multiple trips.
+    """
+    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
+    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
+    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+
+    schedule = route.schedule()
+    locations = [visit.location for visit in schedule]
+    assert_equal(locations, [0, 1, 2, 0, 0, 3, 4, 0])
+
+
+def test_index_multiple_trips(ok_small_multiple_trips):
+    """
+    Tests that direct indexing a route object with multiple trips finds the
+    correct client associated with each index.
+    """
+    trip1 = Trip(ok_small_multiple_trips, [1], 0)
+    trip2 = Trip(ok_small_multiple_trips, [3], 0)
+
+    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+    assert_equal(route[0], 1)
+    assert_equal(route[-2], 1)
+
+    assert_equal(route[1], 3)
+    assert_equal(route[-1], 3)
+
+    with assert_raises(IndexError):
+        route[2]
+
+
+# TODO multi-trip and release time interaction

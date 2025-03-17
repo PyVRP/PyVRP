@@ -2,6 +2,7 @@
 #include "LoadSegment.h"
 
 #include <algorithm>
+#include <fstream>
 
 using pyvrp::Cost;
 using pyvrp::Distance;
@@ -31,21 +32,28 @@ bool canEndAt(ProblemData::VehicleType const &vehType, size_t depot)
 
 Trip::Trip(ProblemData const &data,
            Visits visits,
-           size_t const vehicleType,
-           size_t const startDepot,
-           size_t const endDepot)
-    : visits_(std::move(visits)),
-      vehicleType_(vehicleType),
-      startDepot_(startDepot),
-      endDepot_(endDepot)
+           size_t vehicleType,
+           std::optional<size_t> startDepot,
+           std::optional<size_t> endDepot)
+    : visits_(std::move(visits)), vehicleType_(vehicleType)
 {
     auto const &vehType = data.vehicleType(vehicleType_);
+    startDepot_ = startDepot.value_or(vehType.startDepot);
+    endDepot_ = endDepot.value_or(vehType.endDepot);
 
-    if (!canStartAt(vehType, startDepot))
+    if (!canStartAt(vehType, startDepot_))
         throw std::invalid_argument("Vehicle cannot start from start_depot.");
 
-    if (!canEndAt(vehType, endDepot))
+    if (!canEndAt(vehType, endDepot_))
         throw std::invalid_argument("Vehicle cannot end at end_depot.");
+
+    for (auto const client : visits_)
+        if (client < data.numDepots() || client >= data.numLocations())
+        {
+            std::ostringstream msg;
+            msg << "Client " << client << " is not understood.";
+            throw std::invalid_argument(msg.str());
+        }
 
     ProblemData::Depot const &start = data.location(startDepot_);
     service_ += start.serviceDuration;
@@ -93,6 +101,35 @@ Trip::Trip(ProblemData const &data,
         excessLoad_.push_back(std::max<Load>(
             loadSegments[dim].load() - vehType.capacity[dim], 0));
     }
+}
+
+Trip::Trip(Visits visits,
+           Distance distance,
+           std::vector<Load> delivery,
+           std::vector<Load> pickup,
+           std::vector<Load> excessLoad,
+           Duration travel,
+           Duration service,
+           Duration release,
+           Cost prizes,
+           std::pair<double, double> centroid,
+           size_t vehicleType,
+           size_t startDepot,
+           size_t endDepot)
+    : visits_(std::move(visits)),
+      distance_(distance),
+      delivery_(std::move(delivery)),
+      pickup_(std::move(pickup)),
+      excessLoad_(std::move(excessLoad)),
+      travel_(travel),
+      service_(service),
+      release_(release),
+      prizes_(prizes),
+      centroid_(centroid),
+      vehicleType_(vehicleType),
+      startDepot_(startDepot),
+      endDepot_(endDepot)
+{
 }
 
 bool Trip::empty() const { return visits_.empty(); }
@@ -150,4 +187,16 @@ bool Trip::operator==(Trip const &other) const
         && vehicleType_ == other.vehicleType_
         && visits_ == other.visits_;
     // clang-format on
+}
+
+std::ostream &operator<<(std::ostream &out, Trip const &trip)
+{
+    for (size_t idx = 0; idx != trip.size(); ++idx)
+    {
+        out << trip[idx];
+        if (idx + 1 != trip.size())
+            out << ' ';
+    }
+
+    return out;
 }
