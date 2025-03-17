@@ -432,10 +432,11 @@ def test_route_schedule(ok_small, visits: list[int]):
     """
     route = Route(ok_small, visits, 0)
     schedule = route.schedule()
+    assert_equal(len(schedule), len(route) + 2)  # schedule includes depots
 
-    for client, visit in zip(route, schedule):
-        client_data: Client = ok_small.location(client)
-        assert_equal(visit.service_duration, client_data.service_duration)
+    for visit in schedule:
+        data = ok_small.location(visit.location)
+        assert_equal(visit.service_duration, data.service_duration)
         assert_equal(
             visit.service_duration,
             visit.end_service - visit.start_service,
@@ -459,8 +460,8 @@ def test_route_schedule_wait_duration():
     route = Route(data, [2, 4], 0)
     schedule = route.schedule()
 
-    # All wait duration is incurred at the last stop.
-    assert_equal(schedule[-1].wait_duration, 1_550)
+    # All wait duration is incurred at the last client stop.
+    assert_equal(schedule[-2].wait_duration, 1_550)
     assert_equal(route.wait_duration(), 1_550)
 
     wait_duration = sum(visit.wait_duration for visit in schedule)
@@ -617,7 +618,13 @@ def test_schedule_multi_trip_example(ok_small_multiple_trips):
     Tests that schedule() includes the depot visits, which is particularly
     important when a route consists of multiple trips.
     """
-    pass
+    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
+    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
+    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+
+    schedule = route.schedule()
+    locations = [visit.location for visit in schedule]
+    assert_equal(locations, [0, 1, 2, 0, 0, 3, 4, 0])
 
 
 # TODO multi-trip and release time interaction

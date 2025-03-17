@@ -218,11 +218,12 @@ class ProblemData:
     def __setstate__(self, state: tuple, /) -> None: ...
 
 class ScheduledVisit:
+    location: int
+    trip: int
     start_service: int
     end_service: int
     wait_duration: int
     time_warp: int
-    trip: int
     @property
     def service_duration(self) -> int: ...
     def __getstate__(self) -> tuple: ...

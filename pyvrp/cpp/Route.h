@@ -29,6 +29,9 @@ class Route
     // Validates the consistency of the constructed instance.
     void validate(ProblemData const &data) const;
 
+    // Creates the data returned by ``schedule()``.
+    void makeSchedule(ProblemData const &data);
+
 public:
     /**
      * Forward iterator through the clients visited by this route.
@@ -62,14 +65,18 @@ public:
     };
 
     /**
-     * Simple object that stores some data about a client visit.
+     * Simple object that stores some data about a client or depot visit.
      *
      * Attributes
      * ----------
+     * location : int
+     *     Index of the visited location (client or depot).
+     * trip : int
+     *     Index of the trip visiting this location.
      * start_service : int
-     *     Time at which the client service begins.
+     *     Time at which service begins.
      * end_service : int
-     *     Time at which the client service completes.
+     *     Time at which service completes.
      * service_duration : int
      *     Duration of the service.
      * wait_duration : int
@@ -79,22 +86,22 @@ public:
      *     If the vehicle arrives late, this is the duration it has to 'travel
      *     back in time' to begin service. Non-zero time warp indicates an
      *     infeasible route.
-     * trip: int
-     *     Index of the trip visiting this client.
      */
     struct ScheduledVisit
     {
+        size_t const location = 0;
+        size_t const trip = 0;
         Duration const startService = 0;
         Duration const endService = 0;
         Duration const waitDuration = 0;
         Duration const timeWarp = 0;
-        size_t const trip = 0;
 
-        ScheduledVisit(Duration startService,
+        ScheduledVisit(size_t location,
+                       size_t trip,
+                       Duration startService,
                        Duration endService,
                        Duration waitDuration,
-                       Duration timeWarp,
-                       size_t trip);
+                       Duration timeWarp);
 
         [[nodiscard]] Duration serviceDuration() const;
     };
@@ -152,7 +159,8 @@ public:
     [[nodiscard]] Visits visits() const;
 
     /**
-     * Statistics about each client visit and the overall route schedule.
+     * Statistics about each visit and the overall route schedule. This includes
+     * all client visits, but also starting and leaving depots.
      *
      * .. note::
      *
