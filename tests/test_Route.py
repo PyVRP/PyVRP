@@ -573,6 +573,51 @@ def test_str(ok_small_multiple_trips):
     assert_equal(str(route4), "")
 
 
-# TODO multi-trip tests:
-#  - schedule(), with/without depot service time
-#  - statistics evaluation on small example(s)
+def test_statistics_with_small_multi_trip_example(ok_small_multiple_trips):
+    """
+    Tests some statistics calculations on a small multi-trip example.
+    """
+    # Regular route, executed in a single trip.
+    route1 = Route(ok_small_multiple_trips, [1, 2, 3, 4], 0)
+
+    # Same visits but executed over two trips.
+    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
+    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
+    route2 = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+
+    assert_equal(route2.visits(), route1.visits())
+    assert_equal(len(route2), len(route1))
+    assert_equal(len(route1.trips()), 1)
+    assert_equal(len(route2.trips()), 2)
+
+    # Route structure and general statistics.
+    assert_equal(route2.prizes(), route1.prizes())
+    assert_allclose(route2.centroid(), route1.centroid())
+    assert_equal(route2.start_depot(), route1.start_depot())
+    assert_equal(route2.end_depot(), route1.end_depot())
+
+    # First route has excess load, second does not.
+    assert_equal(route1.excess_load(), [8])
+    assert_equal(route2.excess_load(), [0])
+
+    # First route takes 7'950, but the second route takes longer, because it
+    # has to reload at the depot. The difference is exactly the difference in
+    # arc travel time.
+    durs = ok_small_multiple_trips.duration_matrix(0)
+    diff = durs[2, 0] + durs[0, 3] - durs[2, 3]
+
+    assert_equal(route1.duration(), 7_950)
+    assert_equal(route2.duration(), route1.duration() + diff)
+    assert_equal(route2.wait_duration(), route1.wait_duration())
+    assert_equal(route2.service_duration(), route1.service_duration())
+
+
+def test_schedule_multi_trip_example(ok_small_multiple_trips):
+    """
+    Tests that schedule() includes the depot visits, which is particularly
+    important when a route consists of multiple trips.
+    """
+    pass
+
+
+# TODO multi-trip and release time interaction

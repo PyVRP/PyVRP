@@ -642,6 +642,10 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("data"),
              py::arg("visits"),  // name is compatible with other constructor
              py::arg("vehicle_type"))
+        .def("trips",
+             &Route::trips,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, trips))
         .def("visits",
              &Route::visits,
              py::return_value_policy::reference_internal,
