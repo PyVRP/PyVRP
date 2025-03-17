@@ -44,9 +44,8 @@ def test_all_operators_on_vrptw_from_bks(benchmark, vrptw, vrptw_bks):
     for route_op in ROUTE_OPERATORS:
         ls.add_route_operator(route_op(vrptw))
 
-    sol = Solution(vrptw, vrptw_bks)
     cost_evaluator = CostEvaluator([20], 6, 6)
-    benchmark(ls, sol, cost_evaluator)
+    benchmark(ls, vrptw_bks, cost_evaluator)
 
 
 @pytest.mark.parametrize("node_op", NODE_OPERATORS)

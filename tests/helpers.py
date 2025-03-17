@@ -19,7 +19,6 @@ def read(where: str, *args, **kwargs):
     return _read(this_dir / where, *args, **kwargs)
 
 
-@lru_cache
 def read_solution(where: str, *args, **kwargs):
     """
     Lightweight wrapper around ``pyvrp.read.read_solution()``, reading solution

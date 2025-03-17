@@ -8,11 +8,18 @@ from warnings import warn
 import numpy as np
 import vrplib
 
-from pyvrp._pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
+from pyvrp._pyvrp import (
+    Client,
+    ClientGroup,
+    Depot,
+    ProblemData,
+    Route,
+    Solution,
+    VehicleType,
+)
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 
-_Routes = list[list[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
 _INT_MAX = np.iinfo(np.int64).max
@@ -83,24 +90,38 @@ def read(
     return builder.data()
 
 
-def read_solution(where: str | pathlib.Path) -> _Routes:
+def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
     """
     Reads a solution in ``VRPLIB`` format from the give file location, and
-    returns the routes contained in it.
+    returns the corresponding Solution object.
 
     Parameters
     ----------
     where
         File location to read. Assumes the solution in the file on the given
         location is in ``VRPLIB`` solution format.
+    data
+        Problem data instance that the solution is based on.
 
     Returns
     -------
-    list
-        List of routes, where each route is a list of client numbers.
+    Solution
+        Solution object constructed from the read data.
     """
     sol = vrplib.read_solution(str(where))
-    return sol["routes"]  # type: ignore
+
+    # We assume that the routes are listed in order of vehicle types as
+    # determined by ``read()``.
+    veh2type = []
+    for idx, veh_type in enumerate(data.vehicle_types()):
+        veh2type.extend([idx] * veh_type.num_available)
+
+    routes = [
+        Route(data, visits, veh2type[idx])
+        for idx, visits in enumerate(sol["routes"])
+        if visits
+    ]
+    return Solution(data, routes)
 
 
 class _InstanceParser:

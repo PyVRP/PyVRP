@@ -9,8 +9,8 @@ def vrptw():
 
 
 @pytest.fixture(scope="session")
-def vrptw_bks():
-    return read_solution("data/RC208.sol")
+def vrptw_bks(vrptw):
+    return read_solution("data/RC208.sol", vrptw)
 
 
 @pytest.fixture(scope="session")
