@@ -367,7 +367,10 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("client", &Route::Node::client)
         .def_property_readonly("idx", &Route::Node::idx)
         .def_property_readonly("route", &Route::Node::route)
-        .def("is_depot", &Route::Node::isDepot);
+        .def("is_depot", &Route::Node::isDepot)
+        .def("is_start_depot", &Route::Node::isStartDepot)
+        .def("is_end_depot", &Route::Node::isEndDepot)
+        .def("is_reload_depot", &Route::Node::isReloadDepot);
 
     m.def("insert_cost",
           &insertCost,

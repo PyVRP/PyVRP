@@ -90,10 +90,24 @@ public:
         [[nodiscard]] inline Route *route() const;
 
         /**
-         * Returns whether this node is a depot. A node can only be a depot if
-         * it is in a route.
+         * Returns whether this node is a depot.
          */
         [[nodiscard]] inline bool isDepot() const;
+
+        /**
+         * Returns whether this node is a start depot.
+         */
+        [[nodiscard]] inline bool isStartDepot() const;
+
+        /**
+         * Returns whether this node is an end depot.
+         */
+        [[nodiscard]] inline bool isEndDepot() const;
+
+        /**
+         * Returns whether this node is a reload depot.
+         */
+        [[nodiscard]] inline bool isReloadDepot() const;
 
         /**
          * Assigns the node to the given route, at the given index.
@@ -466,8 +480,27 @@ Route *Route::Node::route() const { return route_; }
 
 bool Route::Node::isDepot() const
 {
+    return isStartDepot() || isEndDepot() || isReloadDepot();
+}
+
+bool Route::Node::isStartDepot() const
+{
+    return route_ && this == &route_->startDepot_;
+}
+
+bool Route::Node::isEndDepot() const
+{
+    return route_ && this == &route_->endDepot_;
+}
+
+bool Route::Node::isReloadDepot() const
+{
+    // clang-format off
     return route_
-           && (this == &route_->startDepot_ || this == &route_->endDepot_);
+        && loc_ < route_->data.numDepots()
+        && !isStartDepot()
+        && !isEndDepot();
+    // clang-format on
 }
 
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)

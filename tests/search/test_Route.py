@@ -83,8 +83,14 @@ def test_route_depots_are_depots(ok_small):
         # The depots flank the clients at indices {1, ..., len(route)}. Thus,
         # depots are at indices 0 and len(route) + 1.
         route.append(Node(loc=loc))
+
         assert_(route[0].is_depot())
+        assert_(route[0].is_start_depot())
+        assert_(not route[0].is_end_depot())
+
         assert_(route[len(route) + 1].is_depot())
+        assert_(route[len(route) + 1].is_end_depot())
+        assert_(not route[len(route) + 1].is_start_depot())
 
 
 def test_route_append_increases_route_len(ok_small):
@@ -864,3 +870,17 @@ def test_initial_load_calculation(ok_small):
 
     new_route = Route(new_data, 0, 0)
     assert_equal(new_route.load(), [5])
+
+
+def test_multi_trip_depots(ok_small_multiple_trips):
+    """
+    Tests that a reload depot node correctly identifies as a reload depot node.
+    """
+    route = Route(ok_small_multiple_trips, 0, 0)
+    for loc in [1, 0, 4]:
+        node = Node(loc=loc)
+        route.append(node)
+
+    assert_equal(route[2].client, 0)
+    assert_(route[2].is_depot())
+    assert_(route[2].is_reload_depot())
