@@ -349,6 +349,7 @@ public:
      *     start_late: int | None = None,
      *     initial_load: list[int] = [],
      *     reload_depots: list[int] = [],
+     *     max_trips: int = 1,
      *     *,
      *     name: str = "",
      * )
@@ -401,6 +402,10 @@ public:
      *     List of reload depots (location indices) this vehicle may visit along
      *     its route, to empty and reload for subsequent client visits. Defaults
      *     to an empty list, in which case no reloads are allowed.
+     * max_trips
+     *     Maximum number of trips the vehicle may perform on a route. A trip
+     *     ends at the ``end_depot``, or one of the ``reload_depots``. Defaults
+     *     to 1, in which case no reloads are allowed.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -442,6 +447,8 @@ public:
      * reload_depots
      *     List of reload locations this vehicle may visit along it route, to
      *     empty and reload.
+     * max_trips
+     *     Maximum number of trips the vehicle may perform on a route.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -462,6 +469,7 @@ public:
         Duration const startLate;     // Latest start of shift
         std::vector<Load> const initialLoad;     // Initially used capacity
         std::vector<size_t> const reloadDepots;  // Reload locations
+        size_t const maxTrips;                   // Maximum number of trips
         char const *name;                        // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
@@ -479,6 +487,7 @@ public:
                     std::optional<Duration> startLate = std::nullopt,
                     std::vector<Load> initialLoad = {},
                     std::vector<size_t> reloadDepots = {},
+                    size_t maxTrips = 1,
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -510,6 +519,7 @@ public:
                             std::optional<Duration> startLate,
                             std::optional<std::vector<Load>> initialLoad,
                             std::optional<std::vector<size_t>> reloadDepots,
+                            std::optional<size_t> maxTrips,
                             std::optional<std::string> name) const;
     };
 

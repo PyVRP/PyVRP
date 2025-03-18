@@ -279,6 +279,19 @@ class _InstanceParser:
 
         return self.round_func(max_durations)
 
+    def max_trips(self) -> np.ndarray:
+        if "vehicles_max_trips" not in self.instance:
+            return np.full(self.num_vehicles, 1)
+
+        max_trips = self.instance["vehicles_max_trips"]
+
+        if isinstance(max_trips, Number):
+            # Some instances describe a uniform max trips constraint as a
+            # single value that applies to all vehicles.
+            return np.full(self.num_vehicles, max_trips)
+
+        return max_trips
+
     def mutually_exclusive_groups(self) -> list[list[int]]:
         if "mutually_exclusive_group" not in self.instance:
             return []
@@ -383,6 +396,7 @@ class _ProblemDataBuilder:
             self.parser.vehicles_depots(),
             self.parser.max_distances(),
             self.parser.max_durations(),
+            self.parser.max_trips(),
         )
 
         if any(len(attr) != num_vehicles for attr in vehicles_data):
@@ -404,11 +418,21 @@ class _ProblemDataBuilder:
 
         vehicle_types = []
         for attributes, vehicles in type2idcs.items():
-            (cap, clients, reloads, depot, max_dist, max_duration) = attributes
+            (
+                capacity,
+                clients,
+                reloads,
+                depot,
+                max_distance,
+                max_duration,
+                max_trips,
+            ) = attributes
+
+            print(attributes)
 
             vehicle_type = VehicleType(
                 num_available=len(vehicles),
-                capacity=cap,
+                capacity=capacity,
                 start_depot=depot,
                 end_depot=depot,
                 # The literature specifies depot time windows. We do not have
@@ -416,9 +440,10 @@ class _ProblemDataBuilder:
                 tw_early=time_windows[depot][0],
                 tw_late=time_windows[depot][1],
                 max_duration=max_duration,
-                max_distance=max_dist,
+                max_distance=max_distance,
                 profile=client2profile[clients],
                 reload_depots=reloads,
+                max_trips=max_trips,
                 # A bit hacky, but this csv-like name is really useful to track
                 # the actual vehicles that make up this vehicle type.
                 name=",".join(map(str, vehicles)),
