@@ -94,6 +94,9 @@ void Route::validate(ProblemData const &data) const
 {
     auto const &vehData = data.vehicleType(vehicleType_);
 
+    if (trips_.size() > vehData.maxTrips)
+        throw std::invalid_argument("Vehicle cannot perform this many trips.");
+
     if (vehData.reloadDepots.empty() && trips_.size() > 1)
         throw std::invalid_argument("Vehicle cannot perform multiple trips.");
 

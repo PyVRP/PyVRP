@@ -553,6 +553,22 @@ def test_raises_multiple_trips_without_reload_depots(ok_small):
         Route(ok_small, trips, 0)
 
 
+def test_raises_vehicle_max_trips(ok_small_multiple_trips):
+    """
+    Tests that the route constructor raises when there are more trips than the
+    vehicle supports.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0)
+    assert_equal(veh_type.max_trips, 2)
+
+    trip1 = Trip(ok_small_multiple_trips, [1], 0)
+    trip2 = Trip(ok_small_multiple_trips, [2], 0)
+    trip3 = Trip(ok_small_multiple_trips, [3], 0)
+
+    with assert_raises(ValueError):
+        Route(ok_small_multiple_trips, [trip1, trip2, trip3], 0)
+
+
 def test_str(ok_small_multiple_trips):
     """
     Tests that a route's string representation correctly uses a | to separate
