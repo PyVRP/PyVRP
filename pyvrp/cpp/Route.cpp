@@ -324,7 +324,11 @@ Route::Iterator Route::end() const { return Iterator(*this, size()); }
 
 Route::Trips const &Route::trips() const { return trips_; }
 
-Trip const &Route::trip(size_t idx) const { return trips_[idx]; }
+Trip const &Route::trip(size_t idx) const
+{
+    assert(idx < trips_.size());
+    return trips_[idx];
+}
 
 Route::Visits Route::visits() const { return {begin(), end()}; }
 
