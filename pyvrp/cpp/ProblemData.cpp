@@ -257,7 +257,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       std::optional<Duration> startLate,
                                       std::vector<Load> initialLoad,
                                       std::vector<size_t> reloadDepots,
-                                      size_t maxTrips,
+                                      size_t maxReloads,
                                       std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
@@ -274,7 +274,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       startLate(startLate.value_or(twLate)),
       initialLoad(pad(initialLoad, capacity)),
       reloadDepots(reloadDepots),
-      maxTrips(maxTrips),
+      maxReloads(maxReloads),
       name(duplicate(name.data()))
 {
     if (numAvailable == 0)
@@ -313,9 +313,6 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
     for (size_t dim = 0; dim != initialLoad.size(); ++dim)
         if (initialLoad[dim] > capacity[dim])
             throw std::invalid_argument("initial load exceeds capacity.");
-
-    if (maxTrips == 0)
-        throw std::invalid_argument("max_trips must be > 0.");
 }
 
 ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
@@ -334,7 +331,7 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       startLate(vehicleType.startLate),
       initialLoad(vehicleType.initialLoad),
       reloadDepots(vehicleType.reloadDepots),
-      maxTrips(vehicleType.maxTrips),
+      maxReloads(vehicleType.maxReloads),
       name(duplicate(vehicleType.name))
 {
 }
@@ -355,7 +352,7 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       startLate(vehicleType.startLate),
       initialLoad(std::move(vehicleType.initialLoad)),
       reloadDepots(std::move(vehicleType.reloadDepots)),
-      maxTrips(vehicleType.maxTrips),
+      maxReloads(vehicleType.maxReloads),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen
@@ -379,7 +376,7 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
     std::optional<Duration> startLate,
     std::optional<std::vector<Load>> initialLoad,
     std::optional<std::vector<size_t>> reloadDepots,
-    std::optional<size_t> maxTrips,
+    std::optional<size_t> maxReloads,
     std::optional<std::string> name) const
 {
     return {numAvailable.value_or(this->numAvailable),
@@ -397,7 +394,7 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
             startLate.value_or(this->startLate),
             initialLoad.value_or(this->initialLoad),
             reloadDepots.value_or(this->reloadDepots),
-            maxTrips.value_or(this->maxTrips),
+            maxReloads.value_or(this->maxReloads),
             name.value_or(this->name)};
 }
 
@@ -419,7 +416,7 @@ bool ProblemData::VehicleType::operator==(VehicleType const &other) const
         && startLate == other.startLate
         && initialLoad == other.initialLoad
         && reloadDepots == other.reloadDepots
-        && maxTrips == other.maxTrips
+        && maxReloads == other.maxReloads
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }

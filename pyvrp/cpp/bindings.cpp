@@ -266,7 +266,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("start_late") = py::none(),
              py::arg("initial_load") = py::list(),
              py::arg("reload_depots") = py::list(),
-             py::arg("max_trips") = 1,
+             py::arg("max_reloads") = 0,
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -292,7 +292,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("reload_depots",
                       &ProblemData::VehicleType::reloadDepots,
                       py::return_value_policy::reference_internal)
-        .def_readonly("max_trips", &ProblemData::VehicleType::maxTrips)
+        .def_readonly("max_reloads", &ProblemData::VehicleType::maxReloads)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
@@ -313,7 +313,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("start_late") = py::none(),
              py::arg("initial_load") = py::none(),
              py::arg("reload_depots") = py::none(),
-             py::arg("max_trips") = py::none(),
+             py::arg("max_reloads") = py::none(),
              py::kw_only(),
              py::arg("name") = py::none(),
              DOC(pyvrp, ProblemData, VehicleType, replace))
@@ -335,7 +335,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.startLate,
                                       vehicleType.initialLoad,
                                       vehicleType.reloadDepots,
-                                      vehicleType.maxTrips,
+                                      vehicleType.maxReloads,
                                       vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
@@ -355,7 +355,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[12].cast<pyvrp::Duration>(),  // start late
                     t[13].cast<std::vector<pyvrp::Load>>(),  // initial load
                     t[14].cast<std::vector<size_t>>(),       // reload depots
-                    t[15].cast<size_t>(),                    // max trips
+                    t[15].cast<size_t>(),                    // max reloads
                     t[16].cast<std::string>());              // name
 
                 return vehicleType;

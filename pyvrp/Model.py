@@ -337,7 +337,7 @@ class Model:
         start_late: int | None = None,
         initial_load: int | list[int] = [],
         reload_depots: list[Depot] = [],
-        max_trips: int = 1,
+        max_reloads: int = 0,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -406,7 +406,7 @@ class Model:
             start_late=start_late,
             initial_load=init_load,
             reload_depots=reloads,
-            max_trips=max_trips,
+            max_reloads=max_reloads,
             name=name,
         )
 

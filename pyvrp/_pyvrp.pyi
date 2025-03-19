@@ -121,7 +121,7 @@ class VehicleType:
     start_late: int
     initial_load: list[int]
     reload_depots: list[int]
-    max_trips: int
+    max_reloads: int
     name: str
     def __init__(
         self,
@@ -140,7 +140,7 @@ class VehicleType:
         start_late: int | None = None,
         initial_load: list[int] = [],
         reload_depots: list[int] = [],
-        max_trips: int = 1,
+        max_reloads: int = 0,
         *,
         name: str = "",
     ) -> None: ...
@@ -161,7 +161,7 @@ class VehicleType:
         start_late: int | None = None,
         initial_load: list[int] | None = None,
         reload_depots: list[int] | None = None,
-        max_trips: int | None = None,
+        max_reloads: int | None = None,
         *,
         name: str | None = None,
     ) -> VehicleType: ...

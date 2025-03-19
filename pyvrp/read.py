@@ -279,18 +279,18 @@ class _InstanceParser:
 
         return self.round_func(max_durations)
 
-    def max_trips(self) -> np.ndarray:
-        if "vehicles_max_trips" not in self.instance:
-            return np.full(self.num_vehicles, 1)
+    def max_reloads(self) -> np.ndarray:
+        if "vehicles_max_reloads" not in self.instance:
+            return np.full(self.num_vehicles, 0)
 
-        max_trips = self.instance["vehicles_max_trips"]
+        max_reloads = self.instance["vehicles_max_reloads"]
 
-        if isinstance(max_trips, Number):
-            # Some instances describe a uniform max trips constraint as a
+        if isinstance(max_reloads, Number):
+            # Some instances describe a uniform max reloads constraint as a
             # single value that applies to all vehicles.
-            return np.full(self.num_vehicles, max_trips)
+            return np.full(self.num_vehicles, max_reloads)
 
-        return max_trips
+        return max_reloads
 
     def mutually_exclusive_groups(self) -> list[list[int]]:
         if "mutually_exclusive_group" not in self.instance:
@@ -396,7 +396,7 @@ class _ProblemDataBuilder:
             self.parser.vehicles_depots(),
             self.parser.max_distances(),
             self.parser.max_durations(),
-            self.parser.max_trips(),
+            self.parser.max_reloads(),
         )
 
         if any(len(attr) != num_vehicles for attr in vehicles_data):
@@ -425,10 +425,8 @@ class _ProblemDataBuilder:
                 depot,
                 max_distance,
                 max_duration,
-                max_trips,
+                max_reloads,
             ) = attributes
-
-            print(attributes)
 
             vehicle_type = VehicleType(
                 num_available=len(vehicles),
@@ -443,7 +441,7 @@ class _ProblemDataBuilder:
                 max_distance=max_distance,
                 profile=client2profile[clients],
                 reload_depots=reloads,
-                max_trips=max_trips,
+                max_reloads=max_reloads,
                 # A bit hacky, but this csv-like name is really useful to track
                 # the actual vehicles that make up this vehicle type.
                 name=",".join(map(str, vehicles)),

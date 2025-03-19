@@ -552,9 +552,9 @@ def test_multi_trip_instance():
     veh_type1 = data.vehicle_type(0)
     assert_equal(veh_type1.num_available, 2)
     assert_equal(veh_type1.reload_depots, [0])
-    assert_equal(veh_type1.max_trips, 2)
+    assert_equal(veh_type1.max_reloads, 1)
 
     veh_type2 = data.vehicle_type(1)
     assert_equal(veh_type2.num_available, 1)
     assert_equal(veh_type2.reload_depots, [])
-    assert_equal(veh_type1.max_trips, 2)
+    assert_equal(veh_type1.max_reloads, 1)
