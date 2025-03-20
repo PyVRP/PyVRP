@@ -426,11 +426,6 @@ public:
     void insert(size_t idx, Node *node);
 
     /**
-     * Appends the given range of nodes to the end of the route.
-     */
-    template <class InputIt> void push_back(InputIt first, InputIt last);
-
-    /**
      * Appends the given node at the end of the route.
      */
     void push_back(Node *node);
@@ -866,19 +861,6 @@ LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
     };
 
     return std::apply(fn, segments_);
-}
-
-template <class InputIt> void Route::push_back(InputIt first, InputIt last)
-{
-    auto const idx = nodes.size() - 1;  // insert just before end depot
-    nodes.insert(idx, first, last);
-
-    for (size_t after = idx; after != nodes.size(); ++after)
-        nodes[after]->assign(this, after);
-
-#ifndef NDEBUG
-    dirty = true;
-#endif
 }
 }  // namespace pyvrp::search
 
