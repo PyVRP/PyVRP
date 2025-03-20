@@ -129,7 +129,7 @@ void Route::push_back(Node *node) { insert(nodes.size() - 1, node); }
 
 void Route::push_back(size_t depot)
 {
-    auto node = depots_.emplace_back(depot);
+    auto &node = depots_.emplace_back(depot);
     push_back(&node);
 }
 
