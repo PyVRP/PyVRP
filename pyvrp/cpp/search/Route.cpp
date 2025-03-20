@@ -25,14 +25,17 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
       idx_(idx),
-      startDepot_(vehicleType_.startDepot),
-      endDepot_(vehicleType_.endDepot),
       loadAt(data.numLoadDimensions()),
       loadAfter(data.numLoadDimensions()),
       loadBefore(data.numLoadDimensions()),
       load_(data.numLoadDimensions()),
       excessLoad_(data.numLoadDimensions())
 {
+    // Reserve sufficient space for, in the worst case, all reload depots and
+    // the route's start and end depots. This ensures the depots_ vector never
+    // reallocates, so we can work with pointers into its memory.
+    depots_.reserve(vehicleType_.maxReloads + 2);
+
     clear();
 }
 
@@ -92,15 +95,22 @@ void Route::clear()
     for (auto *node : nodes)
         node->unassign();
 
-    nodes.clear();  // clear nodes and reinsert the depots.
-    nodes.push_back(&startDepot_);
-    nodes.push_back(&endDepot_);
+    nodes.clear();
+    depots_.clear();
 
-    startDepot_.assign(this, 0);
-    endDepot_.assign(this, 1);
+    depots_.emplace_back(vehicleType_.startDepot);
+    depots_.emplace_back(vehicleType_.endDepot);
+
+    for (size_t idx : {0, 1})
+    {
+        nodes.push_back(&depots_[idx]);
+        depots_[idx].assign(this, idx);
+    }
 
     update();
 }
+
+void Route::reserve(size_t size) { nodes.reserve(size); }
 
 void Route::insert(size_t idx, Node *node)
 {
@@ -115,13 +125,12 @@ void Route::insert(size_t idx, Node *node)
 #endif
 }
 
-void Route::push_back(Node *node)
-{
-    insert(size() + 1, node);
+void Route::push_back(Node *node) { insert(nodes.size() - 1, node); }
 
-#ifndef NDEBUG
-    dirty = true;
-#endif
+void Route::push_back(size_t depot)
+{
+    auto node = depots_.emplace_back(depot);
+    push_back(&node);
 }
 
 void Route::remove(size_t idx)

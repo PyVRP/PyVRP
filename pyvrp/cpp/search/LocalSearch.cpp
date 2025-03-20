@@ -386,19 +386,29 @@ void LocalSearch::loadSolution(Solution const &solution)
     // Load routes from solution.
     for (auto const &solRoute : solution.routes())
     {
-        // Set up a container of all node visits. This lets us insert all nodes
-        // in one go, requiring no intermediate updates.
-        std::vector<Route::Node *> visits;
-        visits.reserve(solRoute.size());
-        for (auto const client : solRoute)
-            visits.push_back(&nodes[client]);
-
         // Determine index of next route of this type to load, where we rely
         // on solution to be valid to not exceed the number of vehicles per
         // vehicle type.
         auto const idx = vehicleOffset[solRoute.vehicleType()]++;
-        routes[idx].insert(1, visits.begin(), visits.end());
-        routes[idx].update();
+        auto &route = routes[idx];
+
+        // Routes use a representation with nodes for each client, reload depot
+        // (one per trip), and start/end depots. The start depot doubles as the
+        // reload depot for the first trip.
+        route.reserve(solRoute.size() + solRoute.numTrips() + 1);
+
+        for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
+        {
+            auto const &trip = solRoute.trip(tripIdx);
+
+            if (tripIdx != 0)  // then we first insert a trip delimiter.
+                route.push_back(trip.startDepot());
+
+            for (auto const client : trip)
+                route.push_back(&nodes[client]);
+        }
+
+        route.update();
     }
 
     for (auto *routeOp : routeOps)

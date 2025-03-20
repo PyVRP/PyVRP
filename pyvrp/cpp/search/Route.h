@@ -190,8 +190,7 @@ private:
     ProblemData::VehicleType const &vehicleType_;
     size_t const idx_;
 
-    Node startDepot_;  // Departure depot for this route
-    Node endDepot_;    // Return depot for this route
+    std::vector<Node> depots_;  // start, end, and reload depots (in that order)
 
     std::vector<Node *> nodes;   // Nodes in this route, including depots
     std::vector<size_t> visits;  // Locations in this route, incl. depots
@@ -415,22 +414,31 @@ public:
     void clear();
 
     /**
+     * Reserves capacity for at least given ``size`` number of nodes (depots
+     * and clients).
+     */
+    void reserve(size_t size);
+
+    /**
      * Inserts the given node before index ``idx``. Assumes the given index is
      * valid.
      */
     void insert(size_t idx, Node *node);
 
     /**
-     * Inserts the given range of nodes before ``idx``. Assumes the given index
-     * is valid.
+     * Appends the given range of nodes to the end of the route.
      */
-    template <class InputIt>
-    void insert(size_t idx, InputIt first, InputIt last);
+    template <class InputIt> void push_back(InputIt first, InputIt last);
 
     /**
-     * Inserts the given node at the back of the route.
+     * Appends the given node at the end of the route.
      */
     void push_back(Node *node);
+
+    /**
+     * Appends a depot at the end of the route.
+     */
+    void push_back(size_t depot);
 
     /**
      * Removes the node at ``idx`` from the route.
@@ -483,12 +491,12 @@ bool Route::Node::isDepot() const
 
 bool Route::Node::isStartDepot() const
 {
-    return route_ && this == &route_->startDepot_;
+    return route_ && this == &route_->depots_[0];
 }
 
 bool Route::Node::isEndDepot() const
 {
-    return route_ && this == &route_->endDepot_;
+    return route_ && this == &route_->depots_.back();
 }
 
 bool Route::Node::isReloadDepot() const
@@ -734,8 +742,8 @@ bool Route::empty() const { return size() == 0; }
 
 size_t Route::size() const
 {
-    assert(nodes.size() >= 2);  // excl. depots
-    return nodes.size() - 2;
+    assert(nodes.size() >= depots_.size());  // excl. depots
+    return nodes.size() - depots_.size();
 }
 
 Route::SegmentBetween Route::at(size_t idx) const
@@ -860,11 +868,10 @@ LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
     return std::apply(fn, segments_);
 }
 
-template <class InputIt>
-void Route::insert(size_t idx, InputIt first, InputIt last)
+template <class InputIt> void Route::push_back(InputIt first, InputIt last)
 {
-    assert(0 < idx && idx < nodes.size());
-    nodes.insert(nodes.begin() + idx, first, last);
+    auto const idx = nodes.size() - 1;  // insert just before end depot
+    nodes.insert(idx, first, last);
 
     for (size_t after = idx; after != nodes.size(); ++after)
         nodes[after]->assign(this, after);
