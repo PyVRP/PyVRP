@@ -21,6 +21,35 @@ void Route::Node::unassign()
     route_ = nullptr;
 }
 
+Route::Iterator::Iterator(std::vector<Node *> const &nodes, size_t idx)
+    : nodes_(&nodes), idx_(idx)
+{
+    assert(0 < idx && idx < nodes.size());
+}
+
+bool Route::Iterator::operator==(Iterator const &other) const
+{
+    return nodes_ == other.nodes_ && idx_ == other.idx_;
+}
+
+Route::Node *Route::Iterator::operator*() const { return (*nodes_)[idx_]; }
+
+Route::Iterator Route::Iterator::operator++(int)
+{
+    auto tmp = *this;
+    ++*this;
+    return tmp;
+}
+
+Route::Iterator &Route::Iterator::operator++()
+{
+    idx_++;
+    while (operator*()->isReloadDepot())  // skip intermediate reload depots
+        idx_++;
+
+    return *this;
+}
+
 Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
@@ -41,20 +70,9 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
 
 Route::~Route() { clear(); }
 
-std::vector<Route::Node *>::const_iterator Route::begin() const
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::const_iterator Route::end() const
-{
-    return nodes.end() - 1;
-}
+Route::Iterator Route::begin() const { return Iterator(nodes, 1); }
 
-std::vector<Route::Node *>::iterator Route::begin()
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
+Route::Iterator Route::end() const { return Iterator(nodes, nodes.size() - 1); }
 
 std::pair<double, double> const &Route::centroid() const
 {

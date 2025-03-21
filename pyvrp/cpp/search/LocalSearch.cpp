@@ -1,5 +1,6 @@
 #include "LocalSearch.h"
 #include "Measure.h"
+#include "Trip.h"
 #include "primitives.h"
 
 #include <algorithm>
@@ -425,13 +426,35 @@ Solution LocalSearch::exportSolution() const
         if (route.empty())
             continue;
 
+        std::vector<Trip> trips;
+        trips.reserve(route.numDepots() - 1);
+
         std::vector<size_t> visits;
         visits.reserve(route.size());
 
-        for (auto *node : route)
-            visits.push_back(node->client());
+        auto const numNodes = route.numClients() + route.numDepots();
+        auto const *prevDepot = route[0];
+        for (size_t idx = 1; idx != numNodes; ++idx)
+        {
+            auto const *node = route[idx];
 
-        solRoutes.emplace_back(data, visits, route.vehicleType());
+            if (!node->isDepot())
+            {
+                visits.push_back(node->client());
+                continue;
+            }
+
+            trips.emplace_back(data,
+                               visits,
+                               route.vehicleType(),
+                               prevDepot->client(),
+                               node->client());
+
+            visits.clear();
+            prevDepot = node;
+        }
+
+        solRoutes.emplace_back(data, trips, route.vehicleType());
     }
 
     return {data, solRoutes};

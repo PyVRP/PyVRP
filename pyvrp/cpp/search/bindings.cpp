@@ -228,7 +228,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("vehicle_type", &Route::vehicleType)
         .def("__delitem__", &Route::remove, py::arg("idx"))
         .def("__getitem__",
-             &Route::operator[],
+             py::overload_cast<size_t>(&Route::operator[]),
              py::arg("idx"),
              py::return_value_policy::reference_internal)
         .def(

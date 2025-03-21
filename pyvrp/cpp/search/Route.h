@@ -118,6 +118,36 @@ public:
         void unassign();
     };
 
+    /**
+     * Forward iterator through the client nodes visited by this route.
+     */
+    class Iterator
+    {
+        std::vector<Node *> const *nodes_;
+        size_t idx_ = 0;
+
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = Node *;
+
+        Iterator(std::vector<Node *> const &nodes, size_t idx);
+
+        Iterator() = default;
+        Iterator(Iterator const &other) = default;
+        Iterator(Iterator &&other) = default;
+
+        Iterator &operator=(Iterator const &other) = default;
+        Iterator &operator=(Iterator &&other) = default;
+
+        bool operator==(Iterator const &other) const;
+
+        Node *operator*() const;
+
+        Iterator operator++(int);
+        Iterator &operator++();
+    };
+
 private:
     using LoadSegments = std::vector<LoadSegment>;
 
@@ -230,15 +260,10 @@ public:
      * @return The client or depot node at the given ``idx``.
      */
     [[nodiscard]] inline Node *operator[](size_t idx);
+    [[nodiscard]] inline Node const *operator[](size_t idx) const;
 
-    // First client in the route if the route is non-empty. Else it is the
-    // end depot. In either case the iterator is valid!
-    [[nodiscard]] std::vector<Node *>::const_iterator begin() const;
-    [[nodiscard]] std::vector<Node *>::iterator begin();
-
-    // End depot. The iterator is valid!
-    [[nodiscard]] std::vector<Node *>::const_iterator end() const;
-    [[nodiscard]] std::vector<Node *>::iterator end();
+    [[nodiscard]] Iterator begin() const;
+    [[nodiscard]] Iterator end() const;
 
     /**
      * Tests if this route is feasible.
@@ -363,9 +388,19 @@ public:
     [[nodiscard]] inline bool empty() const;
 
     /**
-     * @return Number of clients in this route.
+     * Number of clients in this route.
      */
     [[nodiscard]] inline size_t size() const;
+
+    /**
+     * Number of clients in this route.
+     */
+    [[nodiscard]] inline size_t numClients() const;
+
+    /**
+     * Returns the number of start, end, and reload depots in this route.
+     */
+    [[nodiscard]] inline size_t numDepots() const;
 
     /**
      * Returns an object that can be queried for data associated with the node
@@ -664,6 +699,12 @@ Route::Node *Route::operator[](size_t idx)
     return nodes[idx];
 }
 
+Route::Node const *Route::operator[](size_t idx) const
+{
+    assert(idx < nodes.size());
+    return nodes[idx];
+}
+
 std::vector<Load> const &Route::load() const
 {
     assert(!dirty);
@@ -740,6 +781,10 @@ size_t Route::size() const
     assert(nodes.size() >= depots_.size());  // excl. depots
     return nodes.size() - depots_.size();
 }
+
+size_t Route::numClients() const { return size(); }
+
+size_t Route::numDepots() const { return depots_.size(); }
 
 Route::SegmentBetween Route::at(size_t idx) const
 {
