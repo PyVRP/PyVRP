@@ -558,3 +558,29 @@ def test_multi_trip_instance(ok_small_multiple_trips):
     assert_equal(veh_type2.num_available, 1)
     assert_equal(veh_type2.reload_depots, [])
     assert_equal(veh_type1.max_reloads, 1)
+
+
+def test_2d_data_sections_are_correctly_casted_from_1d():
+    """
+    Tests that data sections that should be 2D arrays (reload depots, allowed
+    clients, mutually exclusive groups) are correctly cast from 1D arrays. This
+    happens when the data section only one has one element per row.
+    """
+    data = read("data/CastDataSection2D.txt")
+
+    for idx, veh_type in enumerate(data.vehicle_types()):
+        assert_equal(veh_type.reload_depots, [idx])
+
+        dist = data.distance_matrix(veh_type.profile)
+        dur = data.duration_matrix(veh_type.profile)
+
+        # Client at location 3 is allowed.
+        assert_(np.all(dist[: data.num_depots, 3] != MAX_VALUE))
+        assert_(np.all(dur[: data.num_depots, 3] != MAX_VALUE))
+
+        # Client at location 4 is not allowed.
+        assert_equal(dist[: data.num_depots, 4], MAX_VALUE)
+        assert_equal(dur[: data.num_depots, 4], MAX_VALUE)
+
+    # No groups because groups with 1 client are ignored.
+    assert_equal(data.num_groups, 0)
