@@ -539,12 +539,12 @@ def test_read_solution_multiple_vehicle_types(ok_small_multi_depot):
     assert_equal(routes[1].vehicle_type(), 1)
 
 
-def test_multi_trip_instance(ok_small_multiple_trips):
+def test_multi_trip_instance():
     """
     Tests that a small multi-trip instance with vehicle reload options is
     parsed correctly.
     """
-    data = ok_small_multiple_trips
+    data = read("data/OkSmallMultipleTrips.txt")
     assert_equal(data.num_depots, 1)
     assert_equal(data.num_vehicles, 3)
     assert_equal(data.num_vehicle_types, 2)
