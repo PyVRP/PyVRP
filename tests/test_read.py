@@ -564,7 +564,7 @@ def test_2d_data_sections_are_correctly_casted_from_1d():
     """
     Tests that data sections that should be 2D arrays (reload depots, allowed
     clients, mutually exclusive groups) are correctly cast from 1D arrays. This
-    happens when the data section only one has one element per row.
+    happens when the data section only has one element per row.
     """
     data = read("data/CastDataSection2D.txt")
 
