@@ -217,7 +217,7 @@ class _InstanceParser:
         if isinstance(reload_depots[0], Number):
             # Some instances describe only one reload depot per vehicle, so
             # we first cast it to a 2D array.
-            reload_depots = [[item] for item in reload_depots]
+            reload_depots = np.atleast_2d(reload_depots).T
 
         return [tuple(idx - 1 for idx in group) for group in reload_depots]
 
@@ -250,7 +250,7 @@ class _InstanceParser:
         if isinstance(allowed_clients[0], Number):
             # Some instances describe only one allowed client per vehicle, so
             # we first cast it to a 2D array.
-            allowed_clients = [[item] for item in allowed_clients]
+            allowed_clients = np.atleast_2d(allowed_clients).T
 
         return [
             tuple(idx - 1 for idx in clients) for clients in allowed_clients
@@ -311,7 +311,7 @@ class _InstanceParser:
         if isinstance(groups[0], Number):
             # Some instances describe only one client per group, so we first
             # cast it to a 2D array.
-            groups = [[item] for item in groups]
+            groups = np.atleast_2d(groups).T
 
         raw_groups = [[idx - 1 for idx in group] for group in groups]
 
