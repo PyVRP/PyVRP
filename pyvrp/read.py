@@ -189,7 +189,7 @@ class _InstanceParser:
             # Some instances describe a uniform service time as a single value
             # that applies to all clients.
             service_times = np.full(self.num_locations, service_times)
-            service_times[0] = 0
+            service_times[: self.num_depots] = 0
 
         return self.round_func(service_times)
 
