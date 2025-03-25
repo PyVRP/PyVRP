@@ -265,21 +265,27 @@ void Route::update()
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
         loadAt[dim].resize(nodes.size());
-        loadAt[dim][0] = {vehicleType_, dim};
+        loadAt[dim][0] = {vehicleType_, dim};  // initial load
         loadAt[dim][nodes.size() - 1] = {};
 
         for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-            loadAt[dim][idx] = {data.location(visits[idx]), dim};
+            if (nodes[idx]->isReloadDepot())
+                loadAt[dim][idx] = {};
+            else
+                loadAt[dim][idx] = LoadSegment{data.location(visits[idx]), dim};
 
+        // TODO reset at reload depot
         loadBefore[dim].resize(nodes.size());
         loadBefore[dim][0] = loadAt[dim][0];
         for (size_t idx = 1; idx != nodes.size(); ++idx)
             loadBefore[dim][idx] = LoadSegment::merge(loadBefore[dim][idx - 1],
                                                       loadAt[dim][idx]);
 
+        // TODO
         load_[dim] = loadBefore[dim].back().load();
         excessLoad_[dim] = std::max<Load>(load_[dim] - capacity()[dim], 0);
 
+        // TODO reset at reload depot
         loadAfter[dim].resize(nodes.size());
         loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
         for (size_t idx = nodes.size() - 1; idx != 0; --idx)
