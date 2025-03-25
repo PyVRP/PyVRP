@@ -15,18 +15,21 @@ Solution DestroyRepair::operator()(Solution const &solution,
                                    size_t numDestroy)
 {
     loadSolution(solution);
-    destroy(numDestroy);
+    destroy(numDestroy, costEvaluator);
     repair(costEvaluator);
     return exportSolution();
 }
 
-void DestroyRepair::destroy(size_t numDestroy)
+void DestroyRepair::destroy(size_t numDestroy,
+                            CostEvaluator const &costEvaluator)
 {
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
-    auto const dIdx = rng.randint(2);
+    auto const dIdx = rng.randint(3);
 
     if (dIdx == 0)
         concentric(numDestroy);
+    else if (dIdx == 1)
+        worst(numDestroy, costEvaluator);
     else
         strings(numDestroy);
 }
@@ -81,6 +84,30 @@ void DestroyRepair::strings(size_t numDestroy)
             if (++numDestroyed == numDestroy)
                 return;
         }
+    }
+}
+
+void DestroyRepair::worst(size_t numDestroy, CostEvaluator const &costEvaluator)
+{
+    std::vector<std::pair<size_t, Cost>> removeCosts;
+
+    for (auto const client : orderNodes)
+        removeCosts.emplace_back(
+            client, removeCost(&nodes[client], data, costEvaluator));
+
+    std::sort(removeCosts.begin(),
+              removeCosts.end(),
+              [](const auto &a, const auto &b) { return a.second > b.second; });
+
+    for (size_t idx = 0; idx < std::min(numDestroy, removeCosts.size()); ++idx)
+    {
+        auto *U = &nodes[removeCosts[idx].first];
+        if (!U->route())
+            continue;
+
+        auto *route = U->route();
+        route->remove(U->idx());
+        route->update();
     }
 }
 
