@@ -195,9 +195,12 @@ void Route::update()
         visits.emplace_back(node->client());
 
     centroid_ = {0, 0};
-    for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
+    for (auto const *node : nodes)
     {
-        ProblemData::Client const &clientData = data.location(visits[idx]);
+        if (node->isDepot())
+            continue;
+
+        ProblemData::Client const &clientData = data.location(node->client());
         centroid_.first += static_cast<double>(clientData.x) / size();
         centroid_.second += static_cast<double>(clientData.y) / size();
     }
@@ -224,7 +227,20 @@ void Route::update()
     durAt[nodes.size() - 1] = DurationSegment::merge(0, depotEnd, vehEnd);
 
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-        durAt[idx] = {data.location(visits[idx])};
+    {
+        auto const *node = nodes[idx];
+
+        if (!node->isReloadDepot())
+        {
+            ProblemData::Client const &client = data.location(node->client());
+            durAt[idx] = {client};
+        }
+        else
+        {
+            ProblemData::Depot const &depot = data.location(node->client());
+            durAt[idx] = {depot, depot.serviceDuration};
+        }
+    }
 
     auto const &durMat = data.durationMatrix(profile());
 
