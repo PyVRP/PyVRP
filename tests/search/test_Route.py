@@ -874,13 +874,25 @@ def test_initial_load_calculation(ok_small):
 
 def test_multi_trip_depots(ok_small_multiple_trips):
     """
-    Tests that a reload depot node correctly identifies as a reload depot node.
+    Tests that a depot nodes correctly identify as start, end, or reload depot
+    nodes.
     """
     route = Route(ok_small_multiple_trips, 0, 0)
     for loc in [1, 0, 4]:
         node = Node(loc=loc)
         route.append(node)
 
-    assert_equal(route[2].client, 0)
-    assert_(route[2].is_depot())
+    assert_(route[0].is_depot())  # 0 is the start depot
+    assert_(route[0].is_start_depot())
+    assert_(not route[0].is_end_depot())
+    assert_(not route[0].is_reload_depot())
+
+    assert_(route[2].is_depot())  # 2 is a reload depot
+    assert_(not route[2].is_start_depot())
+    assert_(not route[2].is_end_depot())
     assert_(route[2].is_reload_depot())
+
+    assert_(route[4].is_depot())  # 4 is the end depot
+    assert_(not route[4].is_start_depot())
+    assert_(route[4].is_end_depot())
+    assert_(not route[4].is_reload_depot())
