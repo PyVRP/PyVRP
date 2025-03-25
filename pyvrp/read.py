@@ -189,7 +189,7 @@ class _InstanceParser:
             # Some instances describe a uniform service time as a single value
             # that applies to all clients.
             service_times = np.full(self.num_locations, service_times)
-            service_times[0] = 0
+            service_times[: self.num_depots] = 0
 
         return self.round_func(service_times)
 
@@ -212,10 +212,14 @@ class _InstanceParser:
         if "vehicles_reload_depot" not in self.instance:
             return [tuple() for _ in range(self.num_vehicles)]
 
-        return [
-            tuple(idx - 1 for idx in group)
-            for group in self.instance["vehicles_reload_depot"]
-        ]
+        reload_depots = self.instance["vehicles_reload_depot"]
+
+        if isinstance(reload_depots[0], Number):
+            # Some instances describe only one reload depot per vehicle, so
+            # we first cast it to a 2D array.
+            reload_depots = np.atleast_2d(reload_depots).T
+
+        return [tuple(idx - 1 for idx in depots) for depots in reload_depots]
 
     def prizes(self) -> np.ndarray:
         if "prize" not in self.instance:
@@ -241,9 +245,15 @@ class _InstanceParser:
             client_idcs = tuple(range(self.num_depots, self.num_locations))
             return [client_idcs for _ in range(self.num_vehicles)]
 
+        allowed_clients = self.instance["vehicles_allowed_clients"]
+
+        if isinstance(allowed_clients[0], Number):
+            # Some instances describe only one allowed client per vehicle, so
+            # we first cast it to a 2D array.
+            allowed_clients = np.atleast_2d(allowed_clients).T
+
         return [
-            tuple(idx - 1 for idx in clients)
-            for clients in self.instance["vehicles_allowed_clients"]
+            tuple(idx - 1 for idx in clients) for clients in allowed_clients
         ]
 
     def vehicles_depots(self) -> np.ndarray:
@@ -296,10 +306,14 @@ class _InstanceParser:
         if "mutually_exclusive_group" not in self.instance:
             return []
 
-        raw_groups = [
-            [idx - 1 for idx in group]
-            for group in self.instance["mutually_exclusive_group"]
-        ]
+        groups = self.instance["mutually_exclusive_group"]
+
+        if isinstance(groups[0], Number):
+            # Some instances describe only one client per group, so we first
+            # cast it to a 2D array.
+            groups = np.atleast_2d(groups).T
+
+        raw_groups = [[idx - 1 for idx in group] for group in groups]
 
         # Only keep groups if they have more than one member. Empty groups or
         # groups with one member are trivial to decide, so there is no point
