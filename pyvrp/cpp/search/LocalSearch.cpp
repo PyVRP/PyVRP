@@ -429,11 +429,11 @@ Solution LocalSearch::exportSolution() const
         if (route.empty())
             continue;
 
-        trips.reserve(route.numDepots() - 1);
         trips.clear();
+        trips.reserve(route.numDepots() - 1);
 
-        visits.reserve(route.size());
         visits.clear();
+        visits.reserve(route.size());
 
         auto const *prevDepot = route[0];
         for (size_t idx = 1; idx != route.numClients() + route.numDepots();
