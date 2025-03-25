@@ -219,7 +219,7 @@ class _InstanceParser:
             # we first cast it to a 2D array.
             reload_depots = np.atleast_2d(reload_depots).T
 
-        return [tuple(idx - 1 for idx in group) for group in reload_depots]
+        return [tuple(idx - 1 for idx in depots) for depots in reload_depots]
 
     def prizes(self) -> np.ndarray:
         if "prize" not in self.instance:
