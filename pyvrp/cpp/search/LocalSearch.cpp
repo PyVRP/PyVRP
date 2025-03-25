@@ -421,20 +421,23 @@ Solution LocalSearch::exportSolution() const
     std::vector<pyvrp::Route> solRoutes;
     solRoutes.reserve(data.numVehicles());
 
+    std::vector<Trip> trips;
+    std::vector<size_t> visits;
+
     for (auto const &route : routes)
     {
         if (route.empty())
             continue;
 
-        std::vector<Trip> trips;
         trips.reserve(route.numDepots() - 1);
+        trips.clear();
 
-        std::vector<size_t> visits;
         visits.reserve(route.size());
+        visits.clear();
 
-        auto const numNodes = route.numClients() + route.numDepots();
         auto const *prevDepot = route[0];
-        for (size_t idx = 1; idx != numNodes; ++idx)
+        for (size_t idx = 1; idx != route.numClients() + route.numDepots();
+             ++idx)
         {
             auto const *node = route[idx];
 
@@ -454,6 +457,7 @@ Solution LocalSearch::exportSolution() const
             prevDepot = node;
         }
 
+        assert(trips.size() == route.numTrips());
         solRoutes.emplace_back(data, trips, route.vehicleType());
     }
 

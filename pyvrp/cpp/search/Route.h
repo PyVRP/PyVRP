@@ -403,6 +403,11 @@ public:
     [[nodiscard]] inline size_t numDepots() const;
 
     /**
+     * Returns the number of trips in this route.
+     */
+    [[nodiscard]] inline size_t numTrips() const;
+
+    /**
      * Returns an object that can be queried for data associated with the node
      * at idx.
      */
@@ -526,7 +531,7 @@ bool Route::Node::isStartDepot() const
 
 bool Route::Node::isEndDepot() const
 {
-    return route_ && this == &route_->depots_.back();
+    return route_ && this == &route_->depots_[1];
 }
 
 bool Route::Node::isReloadDepot() const
@@ -785,6 +790,8 @@ size_t Route::size() const
 size_t Route::numClients() const { return size(); }
 
 size_t Route::numDepots() const { return depots_.size(); }
+
+size_t Route::numTrips() const { return depots_.size() - 1; }
 
 Route::SegmentBetween Route::at(size_t idx) const
 {
