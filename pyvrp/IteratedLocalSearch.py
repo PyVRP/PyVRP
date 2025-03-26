@@ -134,13 +134,14 @@ class IteratedLocalSearch:
             candidate = self._search(
                 perturbed, self._pm.cost_evaluator(), diff
             )
+            self._pm.register(candidate)
 
             if not candidate.is_feasible():
                 candidate = self._search(
                     candidate, self._pm.booster_cost_evaluator(), diff
                 )
 
-            self._pm.register(candidate)
+                self._pm.register(candidate)
 
             curr_cost, curr_feas = self._stats(current)
             pert_cost, pert_feas = self._stats(perturbed)
