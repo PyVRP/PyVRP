@@ -4,13 +4,13 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from pyvrp.ConvergenceManager import ConvergenceManager
 from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
 from pyvrp.diversity import different_neighbours
 
 if TYPE_CHECKING:
+    from pyvrp.ConvergenceManager import ConvergenceManager
     from pyvrp.PenaltyManager import PenaltyManager
     from pyvrp._pyvrp import (
         CostEvaluator,
@@ -67,6 +67,7 @@ class IteratedLocalSearch:
         perturb_method: SearchMethod,
         search_method: SearchMethod,
         acceptance_criterion: AcceptanceCriterion,
+        conv_manager: ConvergenceManager,
         params: IteratedLocalSearchParams,
     ):
         self._data = data
@@ -75,6 +76,7 @@ class IteratedLocalSearch:
         self._perturb = perturb_method
         self._search = search_method
         self._accept = acceptance_criterion
+        self._conv_manager = conv_manager
         self._params = params
 
     @property
@@ -109,7 +111,6 @@ class IteratedLocalSearch:
         """
         print_progress = ProgressPrinter(should_print=display)
         print_progress.start(self._data)
-        conv_manager = ConvergenceManager(initial_num_destroy=30)
 
         start = time.perf_counter()
         stats = Statistics(collect_stats=collect_stats)
@@ -128,7 +129,7 @@ class IteratedLocalSearch:
             perturbed = self._perturb(
                 current,
                 self._pm.booster_cost_evaluator(),
-                conv_manager.num_destroy,
+                self._conv_manager.num_destroy,
             )
             diff = different_neighbours(current, perturbed)
             candidate = self._search(
@@ -149,7 +150,7 @@ class IteratedLocalSearch:
             best_cost, best_feas = self._stats(best)
 
             diff = len(different_neighbours(current, candidate))
-            conv_manager.register(diff)
+            self._conv_manager.register(diff)
 
             if cand_feas and cand_cost < best_cost:  # new best
                 best = candidate
@@ -170,7 +171,7 @@ class IteratedLocalSearch:
                 best_cost,
                 best_feas,
                 self._accept.threshold,  # type: ignore
-                conv_manager.num_destroy,
+                self._conv_manager.num_destroy,
                 # diff,
             )
             print_progress.iteration(stats)

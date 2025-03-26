@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Type, Union
 import tomli
 
 import pyvrp.search
+from pyvrp.ConvergenceManager import ConvergenceManager
 from pyvrp.IteratedLocalSearch import (
     IteratedLocalSearch,
     IteratedLocalSearchParams,
@@ -182,6 +183,8 @@ def solve(
         max_runtime=max_runtime,
     )
 
+    cm = ConvergenceManager(initial_num_destroy=30, max_runtime=max_runtime)
+
     # import numpy as np
     # from .accept import RecordToRecordThreshold
 
@@ -190,7 +193,7 @@ def solve(
     # print(avg)
     # accept = RecordToRecordThreshold(avg * 1, avg * 0.5, max_runtime)
 
-    ils_args = (data, pm, rng, perturb, ls, accept, params.ils)
+    ils_args = (data, pm, rng, perturb, ls, accept, cm, params.ils)
     algo = IteratedLocalSearch(*ils_args)  # type: ignore
     init = Solution.make_random(data, rng)
     return algo.run(stop, init, collect_stats, display)
