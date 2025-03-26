@@ -277,8 +277,8 @@ void Route::update()
         loadBefore[dim].resize(nodes.size());
         loadBefore[dim][0] = loadAt[dim][0];
         for (size_t idx = 1; idx != nodes.size(); ++idx)
-            if (nodes[idx]->isReloadDepot())
-                loadBefore[dim][idx] = {};
+            if (nodes[idx - 1]->isReloadDepot())  // then we restart from here
+                loadBefore[dim][idx] = loadAt[dim][idx];
             else
                 loadBefore[dim][idx] = LoadSegment::merge(
                     loadBefore[dim][idx - 1], loadAt[dim][idx]);
@@ -287,8 +287,7 @@ void Route::update()
         excessLoad_[dim] = 0;
         for (auto it = depots_.begin() + 1; it != depots_.end(); ++it)
         {
-            auto const tripLoad = loadBefore[dim][it->idx() - 1].load();
-
+            auto const tripLoad = loadBefore[dim][it->idx()].load();
             load_[dim] += tripLoad;
             excessLoad_[dim] += std::max<Load>(tripLoad - capacity()[dim], 0);
         }
@@ -296,8 +295,8 @@ void Route::update()
         loadAfter[dim].resize(nodes.size());
         loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
         for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-            if (nodes[idx - 1]->isReloadDepot())
-                loadAfter[dim][idx - 1] = {};
+            if (nodes[idx]->isReloadDepot())  // then we restart from here
+                loadAfter[dim][idx - 1] = loadAt[dim][idx - 1];
             else
                 loadAfter[dim][idx - 1] = LoadSegment::merge(
                     loadAt[dim][idx - 1], loadAfter[dim][idx]);

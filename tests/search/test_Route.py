@@ -908,5 +908,23 @@ def test_multi_trip_load_evaluation(ok_small_multiple_trips):
         route.append(node)
 
     route.update()
+
+    # Overall route load statistics: there's 18 load being transported, 10 on
+    # the first trip and 8 on the second. Because that's below the capacity of
+    # 10 on each trip, there is no excess load.
     assert_equal(route.load(), [18])
     assert_equal(route.excess_load(), [0])
+
+    start1, end1 = (0, 3)  # start/end of first trip
+    before1 = route.load_before(end1)
+    after1 = route.load_after(start1)
+
+    assert_equal(before1.load(), 10)
+    assert_equal(after1.load(), 10)
+
+    start2, end2 = (3, 6)  # start/end of second trip
+    before2 = route.load_before(end2)
+    after2 = route.load_after(start2)
+
+    assert_equal(before2.load(), 8)
+    assert_equal(after2.load(), 8)
