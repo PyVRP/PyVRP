@@ -132,9 +132,6 @@ class IteratedLocalSearch:
 
             self._pm.register(candidate)
 
-            if not candidate.is_feasible():
-                continue  # skip infeasible solutions for now
-
             curr_cost, curr_feas = self._stats(current)
             pert_cost, pert_feas = self._stats(perturbed)
             cand_cost, cand_feas = self._stats(candidate)
@@ -143,8 +140,10 @@ class IteratedLocalSearch:
             diff = len(different_neighbours(current, candidate))
             conv_manager.register(diff)
 
-            if cand_cost < best_cost:
+            if cand_cost < best_cost and cand_feas:
                 best, current = candidate, candidate
+            elif not cand_feas:
+                continue  # skip infeasible for now
             elif self._accept(best_cost, curr_cost, cand_cost):
                 current = candidate
 
@@ -158,8 +157,8 @@ class IteratedLocalSearch:
                 best_cost,
                 best_feas,
                 self._accept.threshold,  # type: ignore
-                # conv_manager.num_destroy,
-                diff,
+                conv_manager.num_destroy,
+                # diff,
             )
             print_progress.iteration(stats)
 
