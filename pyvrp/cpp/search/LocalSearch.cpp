@@ -436,7 +436,7 @@ Solution LocalSearch::exportSolution() const
         trips.reserve(route.numDepots() - 1);
 
         visits.clear();
-        visits.reserve(route.size());
+        visits.reserve(route.numClients());
 
         auto const *prevDepot = route[0];
         for (size_t idx = 1; idx != route.numClients() + route.numDepots();

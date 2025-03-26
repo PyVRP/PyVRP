@@ -136,6 +136,7 @@ void Route::clear()
     }
 
     update();
+    assert(empty());
 }
 
 void Route::reserve(size_t size) { nodes.reserve(size); }
@@ -219,8 +220,8 @@ void Route::update()
             continue;
 
         ProblemData::Client const &clientData = data.location(node->client());
-        centroid_.first += static_cast<double>(clientData.x) / size();
-        centroid_.second += static_cast<double>(clientData.y) / size();
+        centroid_.first += static_cast<double>(clientData.x) / numClients();
+        centroid_.second += static_cast<double>(clientData.y) / numClients();
     }
 
     // Distance.

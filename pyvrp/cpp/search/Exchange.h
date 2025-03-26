@@ -60,10 +60,9 @@ bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
     auto const first = node->idx();
     auto const last = first + segLength - 1;
     auto const &route = *node->route();
-    auto const size = route.numClients() + route.numDepots();
 
     return first == 0                               // contains start depot
-           || last >= size                          // contains end depot
+           || last >= route.size()                  // contains end depot
            || node->trip() != route[last]->trip();  // contains reload depot
 }
 
@@ -99,11 +98,11 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         auto const *vRoute = V->route();
 
         // We're going to incur V's fixed cost if V is currently empty.
-        if (V->idx() == 0 && vRoute->empty())
+        if (V->isStartDepot() && vRoute->empty())
             deltaCost += vRoute->fixedVehicleCost();
 
         // We lose U's fixed cost if we're moving all U's clients.
-        if (uRoute->size() == N)
+        if (uRoute->numClients() == N)
             deltaCost -= uRoute->fixedVehicleCost();
 
         auto const uProposal = Route::Proposal(uRoute->before(U->idx() - 1),

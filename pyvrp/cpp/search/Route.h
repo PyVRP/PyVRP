@@ -18,8 +18,7 @@ namespace pyvrp::search
  *
  * A ``Route`` object tracks a full route, including the depots. The clients
  * and depots on the route can be accessed using ``Route::operator[]`` on a
- * ``route`` object. Note that ``Route::size()`` returns the number of
- * *clients* in the route; this excludes the depots.
+ * ``route`` object.
  *
  * .. note::
  *
@@ -394,12 +393,12 @@ public:
     [[nodiscard]] inline size_t profile() const;
 
     /**
-     * @return true if this route is empty, false otherwise.
+     * True if this route has no client visits, false otherwise.
      */
     [[nodiscard]] inline bool empty() const;
 
     /**
-     * Number of clients in this route.
+     * Number of clients and depots on this route.
      */
     [[nodiscard]] inline size_t size() const;
 
@@ -460,7 +459,7 @@ public:
 
     /**
      * Clears all clients on this route. After calling this method, ``empty()``
-     * returns true and ``size()`` is zero.
+     * returns true.
      */
     void clear();
 
@@ -561,13 +560,13 @@ bool Route::Node::isReloadDepot() const
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
     : route_(route), start(start)
 {
-    assert(start < route.nodes.size());
+    assert(start < route.size());
 }
 
 Route::SegmentBefore::SegmentBefore(Route const &route, size_t end)
     : route_(route), end(end)
 {
-    assert(end < route.nodes.size());
+    assert(end < route.size());
 }
 
 Route::SegmentBetween::SegmentBetween(Route const &route,
@@ -575,7 +574,7 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
                                       size_t end)
     : route_(route), start(start), end(end)
 {
-    assert(start <= end && end < route.nodes.size());
+    assert(start <= end && end < route.size());
 }
 
 DistanceSegment
@@ -793,15 +792,11 @@ Duration Route::timeWarp() const
 
 size_t Route::profile() const { return vehicleType_.profile; }
 
-bool Route::empty() const { return size() == 0; }
+bool Route::empty() const { return numClients() == 0; }
 
-size_t Route::size() const
-{
-    assert(nodes.size() >= depots_.size());  // excl. depots
-    return nodes.size() - depots_.size();
-}
+size_t Route::size() const { return nodes.size(); }
 
-size_t Route::numClients() const { return size(); }
+size_t Route::numClients() const { return size() - numDepots(); }
 
 size_t Route::numDepots() const { return depots_.size(); }
 

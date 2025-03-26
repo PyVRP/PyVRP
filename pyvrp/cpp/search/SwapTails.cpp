@@ -23,17 +23,17 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
     // We're going to incur fixed cost if a route is currently empty but
     // becomes non-empty due to the proposed move.
-    if (uRoute->empty() && !n(V)->isDepot())
+    if (uRoute->empty() && !n(V)->isEndDepot())
         deltaCost += uRoute->fixedVehicleCost();
 
-    if (vRoute->empty() && !n(U)->isDepot())
+    if (vRoute->empty() && !n(U)->isEndDepot())
         deltaCost += vRoute->fixedVehicleCost();
 
     // We lose fixed cost if a route becomes empty due to the proposed move.
-    if (!uRoute->empty() && U->isDepot() && n(V)->isDepot())
+    if (!uRoute->empty() && U->isStartDepot() && n(V)->isEndDepot())
         deltaCost -= uRoute->fixedVehicleCost();
 
-    if (!vRoute->empty() && V->isDepot() && n(U)->isDepot())
+    if (!vRoute->empty() && V->isStartDepot() && n(U)->isEndDepot())
         deltaCost -= vRoute->fixedVehicleCost();
 
     if (U->idx() < uRoute->size() && V->idx() < vRoute->size())

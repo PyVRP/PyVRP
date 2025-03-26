@@ -1,5 +1,7 @@
 #include "primitives.h"
 
+#include <cassert>
+
 namespace
 {
 /**
@@ -15,6 +17,7 @@ public:
     ClientSegment(pyvrp::ProblemData const &data, size_t client)
         : data(data), client(client)
     {
+        assert(client >= data.numDepots());  // must be an actual client
     }
 
     size_t first() const { return client; }
@@ -71,7 +74,8 @@ pyvrp::Cost pyvrp::search::removeCost(Route::Node *U,
     ProblemData::Client const &client = data.location(U->client());
 
     Cost deltaCost
-        = client.prize - Cost(route->size() == 1) * route->fixedVehicleCost();
+        = client.prize
+          - Cost(route->numClients() == 1) * route->fixedVehicleCost();
 
     costEvaluator.deltaCost<true>(deltaCost,
                                   Route::Proposal(route->before(U->idx() - 1),

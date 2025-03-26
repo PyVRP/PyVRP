@@ -237,6 +237,9 @@ PYBIND11_MODULE(_search, m)
             { return py::make_iterator(route.begin(), route.end()); },
             py::return_value_policy::reference_internal)
         .def("__len__", &Route::size)
+        .def("num_clients", &Route::numClients)
+        .def("num_depots", &Route::numDepots)
+        .def("num_trips", &Route::numTrips)
         .def("__str__",
              [](Route const &route)
              {

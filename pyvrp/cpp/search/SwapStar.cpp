@@ -10,15 +10,17 @@ using pyvrp::search::SwapStar;
 
 void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
-    for (size_t idx = 1; idx != R->size() + 1; ++idx)
+    for (size_t idx = 1; idx != R->size() - 1; ++idx)
     {
+        auto const *U = (*R)[idx];
+        if (U->isReloadDepot())
+            continue;
+
         auto const proposal
             = Route::Proposal(R->before(idx - 1), R->after(idx + 1));
 
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
-
-        auto const *U = (*R)[idx];
         removalCosts(R->idx(), U->client()) = deltaCost;
     }
 
@@ -34,7 +36,7 @@ void SwapStar::updateInsertPoints(Route *R,
     auto &insertPoints = insertCache(R->idx(), U->client());
     insertPoints.fill({std::numeric_limits<Cost>::max(), nullptr});
 
-    for (size_t idx = 0; idx != R->size() + 1; ++idx)
+    for (size_t idx = 0; idx != R->size() - 1; ++idx)
     {
         auto const proposal = Route::Proposal(
             R->before(idx), U->route()->at(U->idx()), R->after(idx + 1));
@@ -129,6 +131,7 @@ Cost SwapStar::evaluateMove(Route::Node const *U,
 {
     assert(V->route() == remove->route());
     assert(V != remove);
+    assert(!remove->isDepot());
 
     auto const *route = V->route();
 
