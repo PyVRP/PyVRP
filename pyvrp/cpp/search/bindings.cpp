@@ -226,6 +226,9 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("idx", &Route::idx)
         .def_property_readonly("vehicle_type", &Route::vehicleType)
+        .def_property_readonly("num_clients", &Route::numClients)
+        .def_property_readonly("num_depots", &Route::numDepots)
+        .def_property_readonly("num_trips", &Route::numTrips)
         .def("__delitem__", &Route::remove, py::arg("idx"))
         .def("__getitem__",
              py::overload_cast<size_t>(&Route::operator[]),
@@ -237,9 +240,6 @@ PYBIND11_MODULE(_search, m)
             { return py::make_iterator(route.begin(), route.end()); },
             py::return_value_policy::reference_internal)
         .def("__len__", &Route::size)
-        .def("num_clients", &Route::numClients)
-        .def("num_depots", &Route::numDepots)
-        .def("num_trips", &Route::numTrips)
         .def("__str__",
              [](Route const &route)
              {
