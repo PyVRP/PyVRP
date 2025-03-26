@@ -9,11 +9,11 @@ import numpy as np
 
 @dataclass
 class ConvergenceParams:
-    solutions_between_updates: int = 100
+    solutions_between_updates: int = 500
     penalty_increase: int = 1
     penalty_decrease: int = 5
     target_pairs_max: float = 30
-    target_pairs_min: float = 15
+    target_pairs_min: float = 10
 
 
 class ConvergenceManager:
