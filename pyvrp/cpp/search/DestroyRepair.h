@@ -33,10 +33,9 @@ class DestroyRepair
     Solution exportSolution() const;
 
     // Destroy the solution.
-    void destroy(size_t numDestroy, CostEvaluator const &costEvaluator);
+    void destroy(size_t numDestroy);
     void concentric(size_t numDestroy);
     void strings(size_t numDestroy);
-    void worst(size_t numDestroy, CostEvaluator const &costEvaluator);
 
     // Repair the solution.
     void repair(CostEvaluator const &costEvaluator);
