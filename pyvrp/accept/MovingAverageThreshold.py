@@ -1,6 +1,6 @@
-from collections import deque
-from statistics import mean
 from time import perf_counter
+
+import numpy as np
 
 
 class MovingAverageThreshold:
@@ -35,9 +35,11 @@ class MovingAverageThreshold:
         self._eta = eta
         self._history_size = history_size
         self._max_runtime = max_runtime
-        self._history: deque[float] = deque(maxlen=history_size)
+
+        self._history = np.zeros(history_size)
         self._start_time = None
         self._num_improving = 0
+        self._idx = 0
 
     @property
     def eta(self) -> float:
@@ -60,16 +62,22 @@ class MovingAverageThreshold:
         if self._start_time is None:
             self._start_time = perf_counter()
 
-        if not self._history:
+        if self._idx == 0:
             return float("inf")
 
-        recent_best = min(self._history)
-        recent_avg = mean(self._history)
+        recent_best = self._history.min()
+        recent_avg = self._history.mean()
         pct_time = (perf_counter() - self._start_time) / self.max_runtime
         factor = max(self._eta * (1 - pct_time), 0.01)
 
         return recent_best + factor * (recent_avg - recent_best)
 
     def __call__(self, best: float, current: float, candidate: float) -> bool:
-        self._history.append(candidate)
+        if self._idx == 0:
+            self._history[:] = candidate
+        else:
+            self._history[self._idx % self._history_size] = candidate
+
+        self._idx += 1
+
         return candidate <= self.threshold

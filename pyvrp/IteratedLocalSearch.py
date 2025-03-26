@@ -143,7 +143,7 @@ class IteratedLocalSearch:
             if cand_cost < best_cost and cand_feas:
                 best, current = candidate, candidate
             elif not cand_feas:
-                continue  # skip infeasible for now
+                pass  # skip infeasible solutions
             elif self._accept(best_cost, curr_cost, cand_cost):
                 current = candidate
 
