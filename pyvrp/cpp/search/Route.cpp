@@ -274,23 +274,28 @@ void Route::update()
             else
                 loadAt[dim][idx] = LoadSegment{data.location(visits[idx]), dim};
 
-        // TODO reset at reload depot
         loadBefore[dim].resize(nodes.size());
         loadBefore[dim][0] = loadAt[dim][0];
         for (size_t idx = 1; idx != nodes.size(); ++idx)
-            loadBefore[dim][idx] = LoadSegment::merge(loadBefore[dim][idx - 1],
-                                                      loadAt[dim][idx]);
+            if (nodes[idx]->isReloadDepot())
+                loadBefore[dim][idx] = {};
+            else
+                loadBefore[dim][idx] = LoadSegment::merge(
+                    loadBefore[dim][idx - 1], loadAt[dim][idx]);
 
-        // TODO
-        load_[dim] = loadBefore[dim].back().load();
+        load_[dim] = 0;
+        for (auto it = depots_.begin() + 1; it != depots_.end(); ++it)
+            load_[dim] += loadBefore[dim][it->idx()].load();
         excessLoad_[dim] = std::max<Load>(load_[dim] - capacity()[dim], 0);
 
-        // TODO reset at reload depot
         loadAfter[dim].resize(nodes.size());
         loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
         for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-            loadAfter[dim][idx - 1]
-                = LoadSegment::merge(loadAt[dim][idx - 1], loadAfter[dim][idx]);
+            if (nodes[idx - 1]->isReloadDepot())
+                loadAfter[dim][idx - 1] = {};
+            else
+                loadAfter[dim][idx - 1] = LoadSegment::merge(
+                    loadAt[dim][idx - 1], loadAfter[dim][idx]);
     }
 
 #ifndef NDEBUG
