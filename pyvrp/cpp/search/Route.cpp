@@ -24,7 +24,17 @@ void Route::Node::unassign()
 Route::Iterator::Iterator(std::vector<Node *> const &nodes, size_t idx)
     : nodes_(&nodes), idx_(idx)
 {
-    assert(0 < idx && idx < nodes.size());
+    ensureValidIndex();
+}
+
+void Route::Iterator::ensureValidIndex()
+{
+    // size() - 1 is the index of the end depot, and what's returned by
+    // Route::end() - we must not exceed it.
+    while (idx_ < nodes_->size() - 1 && operator*() -> isReloadDepot())
+        idx_++;  // skip any intermediate reload depots
+
+    assert(0 < idx_ && idx_ < nodes_->size());
 }
 
 bool Route::Iterator::operator==(Iterator const &other) const
@@ -44,9 +54,7 @@ Route::Iterator Route::Iterator::operator++(int)
 Route::Iterator &Route::Iterator::operator++()
 {
     idx_++;
-    while (operator*()->isReloadDepot())  // skip intermediate reload depots
-        idx_++;
-
+    ensureValidIndex();
     return *this;
 }
 

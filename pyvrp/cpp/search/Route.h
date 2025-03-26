@@ -126,6 +126,9 @@ public:
         std::vector<Node *> const *nodes_;
         size_t idx_ = 0;
 
+        // Ensures we skip reload depots.
+        void ensureValidIndex();
+
     public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = std::ptrdiff_t;

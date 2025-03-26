@@ -154,6 +154,18 @@ def test_route_iter_returns_all_clients(ok_small):
     assert_equal(nodes[2], route[3])
 
 
+def test_iter_skips_reload_depots(ok_small_multiple_trips):
+    """
+    Tests that iterating a route skips (repeated) reload depots.
+    """
+    route = Route(ok_small_multiple_trips, 0, 0)
+    for loc in [0, 0, 0]:
+        route.append(Node(loc=loc))
+
+    assert_equal(len(route), 0)  # there are no clients
+    assert_equal(list(route), [])  # and thus iteration yields an empty list
+
+
 def test_route_add_and_delete_client_leaves_route_empty(ok_small):
     """
     Tests that adding and removing a client leaves a route empty.
