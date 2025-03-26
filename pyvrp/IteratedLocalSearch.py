@@ -29,7 +29,11 @@ class IteratedLocalSearchParams:
     Parameters for the iterated local search algorithm.
     """
 
-    pass
+    num_iter_no_improvement: int = 20_000
+
+    def __post_init__(self):
+        if self.num_iter_no_improvement < 0:
+            raise ValueError("num_iter_no_improvement < 0 not understood.")
 
 
 class IteratedLocalSearch:
@@ -110,10 +114,16 @@ class IteratedLocalSearch:
         start = time.perf_counter()
         stats = Statistics(collect_stats=collect_stats)
         iters = 0
+        iters_no_improvement = 0
         best = current = initial_solution
 
         while not stop(self._cost_evaluator.cost(best)):
             iters += 1
+
+            if iters_no_improvement == self._params.num_iter_no_improvement:
+                print_progress.restart()
+                iters_no_improvement = 1
+                current = best
 
             perturbed = self._perturb(
                 current,
@@ -140,12 +150,14 @@ class IteratedLocalSearch:
             diff = len(different_neighbours(current, candidate))
             conv_manager.register(diff)
 
-            if not cand_feas:
-                pass  # skip infeasible solutions
-            elif self._accept(best_cost, curr_cost, cand_cost):
+            if cand_feas and cand_cost < best_cost:  # new best
+                best = candidate
+                iters_no_improvement = 1
+            else:
+                iters_no_improvement += 1
+
+            if cand_feas and self._accept(best_cost, curr_cost, cand_cost):
                 current = candidate
-                if cand_cost < best_cost:  # new best
-                    best = candidate
 
             stats.collect(
                 curr_cost,

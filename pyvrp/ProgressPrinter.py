@@ -23,6 +23,8 @@ Solving an instance with:
                   |   Cost (feasible)
     Iters    Time |   Curr    Pert    Cand     Best       | Threshold (diff)  Diversity"""
 
+_RESTART = "R                 |                restart                |        restart"
+
 _END = """
 Search terminated in {runtime:.2f}s after {iters} iterations.
 Best-found solution has cost {best_cost}.
@@ -127,3 +129,11 @@ class ProgressPrinter:
                 summary=result.summary(),
             )
             print(msg)
+
+    def restart(self):
+        """
+        Indicates in the progress information that the algorithm has restarted
+        the search.
+        """
+        if self._print:
+            print(_RESTART)
