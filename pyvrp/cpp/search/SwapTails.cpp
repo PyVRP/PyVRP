@@ -10,6 +10,9 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
                                 Route::Node *V,
                                 CostEvaluator const &costEvaluator)
 {
+    assert(!U->isEndDepot() && !U->isReloadDepot());
+    assert(!V->isEndDepot() && !V->isReloadDepot());
+
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 
@@ -36,41 +39,41 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
     if (!vRoute->empty() && V->isStartDepot() && n(U)->isEndDepot())
         deltaCost -= vRoute->fixedVehicleCost();
 
-    if (U->idx() < uRoute->size() && V->idx() < vRoute->size())
+    if (!n(U)->isEndDepot() && !n(V)->isEndDepot())
     {
         auto const uProposal
             = Route::Proposal(uRoute->before(U->idx()),
-                              vRoute->between(V->idx() + 1, vRoute->size()),
-                              uRoute->at(uRoute->size() + 1));
+                              vRoute->between(V->idx() + 1, vRoute->size() - 1),
+                              uRoute->at(uRoute->size() - 1));
 
         auto const vProposal
             = Route::Proposal(vRoute->before(V->idx()),
-                              uRoute->between(U->idx() + 1, uRoute->size()),
-                              vRoute->at(vRoute->size() + 1));
+                              uRoute->between(U->idx() + 1, uRoute->size() - 1),
+                              vRoute->at(vRoute->size() - 1));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
-    else if (U->idx() < uRoute->size() && V->idx() >= vRoute->size())
+    else if (!n(U)->isEndDepot() && n(V)->isEndDepot())
     {
         auto const uProposal = Route::Proposal(uRoute->before(U->idx()),
-                                               uRoute->at(uRoute->size() + 1));
+                                               uRoute->at(uRoute->size() - 1));
 
         auto const vProposal
             = Route::Proposal(vRoute->before(V->idx()),
-                              uRoute->between(U->idx() + 1, uRoute->size()),
-                              vRoute->at(vRoute->size() + 1));
+                              uRoute->between(U->idx() + 1, uRoute->size() - 1),
+                              vRoute->at(vRoute->size() - 1));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
-    else if (U->idx() >= uRoute->size() && V->idx() < vRoute->size())
+    else if (n(U)->isEndDepot() && !n(V)->isEndDepot())
     {
         auto const uProposal
             = Route::Proposal(uRoute->before(U->idx()),
-                              vRoute->between(V->idx() + 1, vRoute->size()),
-                              uRoute->at(uRoute->size() + 1));
+                              vRoute->between(V->idx() + 1, vRoute->size() - 1),
+                              uRoute->at(uRoute->size() - 1));
 
         auto const vProposal = Route::Proposal(vRoute->before(V->idx()),
-                                               vRoute->at(vRoute->size() + 1));
+                                               vRoute->at(vRoute->size() - 1));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
