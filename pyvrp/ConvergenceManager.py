@@ -12,8 +12,8 @@ class ConvergenceParams:
     solutions_between_updates: int = 100
     penalty_increase: int = 1
     penalty_decrease: int = 5
-    target_pairs_max: float = 20
-    target_pairs_min: float = 10
+    target_pairs_max: float = 30
+    target_pairs_min: float = 15
 
 
 class ConvergenceManager:
