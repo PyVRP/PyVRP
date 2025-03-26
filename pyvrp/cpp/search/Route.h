@@ -466,14 +466,15 @@ public:
     void insert(size_t idx, Node *node);
 
     /**
-     * Appends the given node at the end of the route.
+     * Appends the given node pointer at the end of the route. Depending on the
+     * type of node, one of the following happens:
+     *
+     * * A client node is simply appended, and we assume the pointer remains
+     *   valid throughout this route's lifetime. No ownership is taken.
+     * * A depot node is copied into an internal structure. No ownership is
+     *   taken, but changes are not propagated to the original node.
      */
     void push_back(Node *node);
-
-    /**
-     * Appends a depot at the end of the route.
-     */
-    void push_back(size_t depot);
 
     /**
      * Removes the node at ``idx`` from the route.

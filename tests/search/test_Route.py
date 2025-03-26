@@ -896,3 +896,17 @@ def test_multi_trip_depots(ok_small_multiple_trips):
     assert_(not route[4].is_start_depot())
     assert_(route[4].is_end_depot())
     assert_(not route[4].is_reload_depot())
+
+
+def test_multi_trip_load_evaluation(ok_small_multiple_trips):
+    """
+    Tests load evaluation of a route with multiple trips.
+    """
+    route = Route(ok_small_multiple_trips, 0, 0)
+    for loc in [1, 2, 0, 3, 4]:
+        node = Node(loc=loc)
+        route.append(node)
+
+    route.update()
+    assert_equal(route.load(), [18])
+    assert_equal(route.excess_load(), [0])

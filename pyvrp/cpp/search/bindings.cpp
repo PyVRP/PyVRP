@@ -346,7 +346,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("other"),
              py::arg("tolerance"))
         .def("append",
-             static_cast<void (Route::*)(Route::Node *)>(&Route::push_back),
+             &Route::push_back,
              py::arg("node"),
              py::keep_alive<1, 2>(),  // keep node alive
              py::keep_alive<2, 1>())  // keep route alive

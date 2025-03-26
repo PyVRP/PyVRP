@@ -403,7 +403,10 @@ void LocalSearch::loadSolution(Solution const &solution)
             auto const &trip = solRoute.trip(tripIdx);
 
             if (tripIdx != 0)  // then we first insert a trip delimiter.
-                route.push_back(trip.startDepot());
+            {
+                Route::Node depot = {trip.startDepot()};
+                route.push_back(&depot);
+            }
 
             for (auto const client : trip)
                 route.push_back(&nodes[client]);

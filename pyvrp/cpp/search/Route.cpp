@@ -143,12 +143,12 @@ void Route::insert(size_t idx, Node *node)
 #endif
 }
 
-void Route::push_back(Node *node) { insert(nodes.size() - 1, node); }
-
-void Route::push_back(size_t depot)
+void Route::push_back(Node *node)
 {
-    auto &node = depots_.emplace_back(depot);
-    push_back(&node);
+    if (node->client() < data.numDepots())  // is depot, so we copy first
+        node = &depots_.emplace_back(node->client());
+
+    insert(nodes.size() - 1, node);
 }
 
 void Route::remove(size_t idx)
@@ -284,9 +284,14 @@ void Route::update()
                     loadBefore[dim][idx - 1], loadAt[dim][idx]);
 
         load_[dim] = 0;
+        excessLoad_[dim] = 0;
         for (auto it = depots_.begin() + 1; it != depots_.end(); ++it)
-            load_[dim] += loadBefore[dim][it->idx()].load();
-        excessLoad_[dim] = std::max<Load>(load_[dim] - capacity()[dim], 0);
+        {
+            auto const tripLoad = loadBefore[dim][it->idx() - 1].load();
+
+            load_[dim] += tripLoad;
+            excessLoad_[dim] += std::max<Load>(tripLoad - capacity()[dim], 0);
+        }
 
         loadAfter[dim].resize(nodes.size());
         loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
