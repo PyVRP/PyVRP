@@ -7,17 +7,19 @@
 
 using pyvrp::search::Route;
 
-Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
+Route::Node::Node(size_t loc) : loc_(loc), idx_(0), trip_(0), route_(nullptr) {}
 
-void Route::Node::assign(Route *route, size_t idx)
+void Route::Node::assign(Route *route, size_t idx, size_t trip)
 {
     idx_ = idx;
+    trip_ = trip;
     route_ = route;
 }
 
 void Route::Node::unassign()
 {
     idx_ = 0;
+    trip_ = 0;
     route_ = nullptr;
 }
 
@@ -130,7 +132,7 @@ void Route::clear()
     for (size_t idx : {0, 1})
     {
         nodes.push_back(&depots_[idx]);
-        depots_[idx].assign(this, idx);
+        depots_[idx].assign(this, idx, idx);
     }
 
     update();
@@ -141,10 +143,18 @@ void Route::reserve(size_t size) { nodes.reserve(size); }
 void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
+
+    auto trip = nodes[idx - 1]->trip();
     nodes.insert(nodes.begin() + idx, node);
+    node->assign(this, idx, trip);
 
     for (size_t after = idx; after != nodes.size(); ++after)
-        nodes[after]->assign(this, after);
+    {
+        if (nodes[after]->isDepot())
+            trip++;
+
+        nodes[after]->assign(this, after, trip);
+    }
 
 #ifndef NDEBUG
     dirty = true;

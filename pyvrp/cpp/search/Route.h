@@ -65,6 +65,7 @@ public:
 
         size_t loc_;    // Location represented by this node
         size_t idx_;    // Position in the route
+        size_t trip_;   // Trip index.
         Route *route_;  // Indicates membership of a route, if any
 
     public:
@@ -80,6 +81,12 @@ public:
          * the node is *not* in a route.
          */
         [[nodiscard]] inline size_t idx() const;
+
+        /**
+         * Returns this node's assigned trip number.  This value is ``0`` when
+         * the node is *not* in a route.
+         */
+        [[nodiscard]] inline size_t trip() const;
 
         /**
          * Returns the route this node is currently in. If the node is not in
@@ -108,9 +115,10 @@ public:
         [[nodiscard]] inline bool isReloadDepot() const;
 
         /**
-         * Assigns the node to the given route, at the given index.
+         * Assigns the node to the given route, at the given index, in the
+         * given trip.
          */
-        void assign(Route *route, size_t idx);
+        void assign(Route *route, size_t idx, size_t trip);
 
         /**
          * Removes the node from its assigned route, if any.
@@ -520,6 +528,8 @@ inline Route::Node *n(Route::Node *node)
 size_t Route::Node::client() const { return loc_; }
 
 size_t Route::Node::idx() const { return idx_; }
+
+size_t Route::Node::trip() const { return trip_; }
 
 Route *Route::Node::route() const { return route_; }
 

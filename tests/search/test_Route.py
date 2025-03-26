@@ -909,6 +909,11 @@ def test_multi_trip_depots(ok_small_multiple_trips):
     assert_(route[4].is_end_depot())
     assert_(not route[4].is_reload_depot())
 
+    # Each depot starts a new trip, and implicitly ends the last.
+    assert_equal(route[0].trip, 0)
+    assert_equal(route[2].trip, 1)
+    assert_equal(route[4].trip, 2)
+
 
 def test_multi_trip_load_evaluation(ok_small_multiple_trips):
     """

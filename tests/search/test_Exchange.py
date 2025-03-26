@@ -572,3 +572,24 @@ def test_swap_with_different_profiles(ok_small_two_profiles):
     delta = dist1[0, 4] + dist1[4, 0] + dist2[0, 3] + dist2[3, 0]
     delta -= route1.distance() + route2.distance()
     assert_equal(op.evaluate(route1[1], route2[1], cost_eval), delta)
+
+
+def test_swap_does_not_swap_depots(ok_small_multiple_trips):
+    """
+    Tests that the exchange operator does not attempt moves that include moving
+    a reload depot.
+    """
+    data = ok_small_multiple_trips
+
+    route = Route(data, 0, 0)  # route is 1 2 | 3 4
+    for loc in [1, 2, 0, 3, 4]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    op = Exchange21(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+
+    # First move overlaps with the reload depot at index 3, so cannot be
+    # evaluated. Second move does not: this aims to swap 1 -> 2 with 3.
+    assert_equal(op.evaluate(route[2], route[4], cost_eval), 0)
+    assert_equal(op.evaluate(route[1], route[4], cost_eval), 370)
