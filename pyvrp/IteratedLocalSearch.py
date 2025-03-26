@@ -140,12 +140,12 @@ class IteratedLocalSearch:
             diff = len(different_neighbours(current, candidate))
             conv_manager.register(diff)
 
-            if cand_cost < best_cost and cand_feas:
-                best, current = candidate, candidate
-            elif not cand_feas:
+            if not cand_feas:
                 pass  # skip infeasible solutions
             elif self._accept(best_cost, curr_cost, cand_cost):
                 current = candidate
+                if cand_cost < best_cost:  # new best
+                    best = candidate
 
             stats.collect(
                 curr_cost,

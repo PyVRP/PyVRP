@@ -40,6 +40,7 @@ class MovingAverageThreshold:
         self._start_time = None
         self._num_improving = 0
         self._idx = 0
+        self._best = float("inf")
 
     @property
     def eta(self) -> float:
@@ -75,9 +76,9 @@ class MovingAverageThreshold:
     def __call__(self, best: float, current: float, candidate: float) -> bool:
         if self._idx == 0:
             self._history[:] = candidate
-        else:
-            self._history[self._idx % self._history_size] = candidate
 
+        idx = self._idx % self._history_size
+        self._history[idx] = candidate
         self._idx += 1
 
         return candidate <= self.threshold
