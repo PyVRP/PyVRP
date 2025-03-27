@@ -70,7 +70,7 @@ void DestroyRepair::strings(size_t numDestroy)
         auto *route = U->route();
         size_t routeDestroyed = 0;  // Count per route
 
-        while (!n(U)->isDepot() && routeDestroyed < maxPerRoute)
+        while (!U->isDepot() && routeDestroyed < maxPerRoute)
         {
             auto next = n(U);
             route->remove(U->idx());
