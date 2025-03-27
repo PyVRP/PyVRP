@@ -77,6 +77,13 @@ class MovingAverageThreshold:
         if self._idx == 0:
             self._history[:] = candidate
 
+        # In VRPB/SDVRP infeasible edges have very high cost, but are feasible.
+        # We hack here to consider these solutions infeasible, because it
+        # messes up the MAT threshold. Here, if the candidate has 2x the best
+        # solution cost, we return False and don't update the threshold.
+        if 2 * best < candidate:
+            return False
+
         idx = self._idx % self._history_size
         self._history[idx] = candidate
         self._idx += 1
