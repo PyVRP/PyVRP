@@ -433,14 +433,13 @@ Solution LocalSearch::exportSolution() const
             continue;
 
         trips.clear();
-        trips.reserve(route.numDepots() - 1);
+        trips.reserve(route.numTrips());
 
         visits.clear();
         visits.reserve(route.numClients());
 
         auto const *prevDepot = route[0];
-        for (size_t idx = 1; idx != route.numClients() + route.numDepots();
-             ++idx)
+        for (size_t idx = 1; idx != route.size(); ++idx)
         {
             auto const *node = route[idx];
 
