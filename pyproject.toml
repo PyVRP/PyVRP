@@ -60,7 +60,7 @@ matplotlib = ">=2.2.0"
 vrplib = "^1.4.0"
 tqdm = "^4.64.1"
 tomli = "^2.0.1"
-bench = {git = "ssh://git@github.com/PyVRP/Bench.git"}
+bench = {git = "https://github.com/PyVRP/Bench.git", branch = "main"}
 
 
 [tool.poetry.group.docs]
