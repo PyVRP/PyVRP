@@ -74,8 +74,13 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // Evaluate moves involving the client's group, if it is in any.
             applyGroupMoves(U, costEvaluator);
 
-            if (!U->route())  // we already evaluated inserting U, so there is
-                continue;     // nothing left to be done for this client.
+            // We already evaluated inserting U, so there is nothing left to
+            // be done for this client. We also remove it as candidate.
+            if (!U->route())
+            {
+                candidates[uClient] = false;
+                continue;
+            }
 
             // We next evaluate node operators that work on pairs of nodes
             // of nodes (U, V), where both U and V are in the solution. We

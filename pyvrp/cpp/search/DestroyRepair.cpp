@@ -98,6 +98,10 @@ void DestroyRepair::greedyInsert(CostEvaluator const &costEvaluator)
         if (U->route())
             continue;
 
+        ProblemData::Client const &uData = data.location(client);
+        if (!uData.required)  // skip optional clients
+            continue;
+
         Route::Node *UAfter = routes[0][0];
         Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
 
