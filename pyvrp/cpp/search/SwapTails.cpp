@@ -26,50 +26,50 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
     // We're going to incur fixed cost if a route is currently empty but
     // becomes non-empty due to the proposed move.
-    if (uRoute->empty() && !n(V)->isEndDepot())
+    if (uRoute->empty() && !n(V)->isDepot())
         deltaCost += uRoute->fixedVehicleCost();
 
-    if (vRoute->empty() && !n(U)->isEndDepot())
+    if (vRoute->empty() && !n(U)->isDepot())
         deltaCost += vRoute->fixedVehicleCost();
 
     // We lose fixed cost if a route becomes empty due to the proposed move.
-    if (!uRoute->empty() && U->isStartDepot() && n(V)->isEndDepot())
+    if (!uRoute->empty() && U->isDepot() && n(V)->isDepot())
         deltaCost -= uRoute->fixedVehicleCost();
 
-    if (!vRoute->empty() && V->isStartDepot() && n(U)->isEndDepot())
+    if (!vRoute->empty() && V->isDepot() && n(U)->isDepot())
         deltaCost -= vRoute->fixedVehicleCost();
 
-    if (!n(U)->isEndDepot() && !n(V)->isEndDepot())
+    if (U->idx() < uRoute->size() - 2 && V->idx() < vRoute->size() - 2)
     {
         auto const uProposal
             = Route::Proposal(uRoute->before(U->idx()),
-                              vRoute->between(V->idx() + 1, vRoute->size() - 1),
+                              vRoute->between(V->idx() + 1, vRoute->size() - 2),
                               uRoute->at(uRoute->size() - 1));
 
         auto const vProposal
             = Route::Proposal(vRoute->before(V->idx()),
-                              uRoute->between(U->idx() + 1, uRoute->size() - 1),
+                              uRoute->between(U->idx() + 1, uRoute->size() - 2),
                               vRoute->at(vRoute->size() - 1));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
-    else if (!n(U)->isEndDepot() && n(V)->isEndDepot())
+    else if (U->idx() < uRoute->size() - 2 && V->idx() >= vRoute->size() - 2)
     {
         auto const uProposal = Route::Proposal(uRoute->before(U->idx()),
                                                uRoute->at(uRoute->size() - 1));
 
         auto const vProposal
             = Route::Proposal(vRoute->before(V->idx()),
-                              uRoute->between(U->idx() + 1, uRoute->size() - 1),
+                              uRoute->between(U->idx() + 1, uRoute->size() - 2),
                               vRoute->at(vRoute->size() - 1));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
-    else if (n(U)->isEndDepot() && !n(V)->isEndDepot())
+    else if (U->idx() >= uRoute->size() - 2 && V->idx() < vRoute->size() - 2)
     {
         auto const uProposal
             = Route::Proposal(uRoute->before(U->idx()),
-                              vRoute->between(V->idx() + 1, vRoute->size() - 1),
+                              vRoute->between(V->idx() + 1, vRoute->size() - 2),
                               uRoute->at(uRoute->size() - 1));
 
         auto const vProposal = Route::Proposal(vRoute->before(V->idx()),
