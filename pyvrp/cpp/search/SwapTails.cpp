@@ -26,20 +26,25 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
     // We're going to incur fixed cost if a route is currently empty but
     // becomes non-empty due to the proposed move.
-    if (uRoute->empty() && !n(V)->isDepot())
+    if (uRoute->empty() && !n(V)->isEndDepot())
         deltaCost += uRoute->fixedVehicleCost();
 
-    if (vRoute->empty() && !n(U)->isDepot())
+    if (vRoute->empty() && !n(U)->isEndDepot())
         deltaCost += vRoute->fixedVehicleCost();
 
     // We lose fixed cost if a route becomes empty due to the proposed move.
-    if (!uRoute->empty() && U->isDepot() && n(V)->isDepot())
+    if (!uRoute->empty() && U->isStartDepot() && n(V)->isEndDepot())
         deltaCost -= uRoute->fixedVehicleCost();
 
-    if (!vRoute->empty() && V->isDepot() && n(U)->isDepot())
+    if (!vRoute->empty() && V->isStartDepot() && n(U)->isEndDepot())
         deltaCost -= vRoute->fixedVehicleCost();
 
-    if (U->idx() < uRoute->size() - 2 && V->idx() < vRoute->size() - 2)
+    // We cannot move the end depots, so if U or V are the end depots (or the
+    // clients visited just before) then there's nothing to be moved from their
+    // routes. The following cases handle each possibility.
+    bool const uIsEndDepotOrAdjacent = U->isEndDepot() || n(U)->isEndDepot();
+    bool const vIsEndDepotOrAdjacent = V->isEndDepot() || n(V)->isEndDepot();
+    if (!uIsEndDepotOrAdjacent && !vIsEndDepotOrAdjacent)
     {
         auto const uProposal
             = Route::Proposal(uRoute->before(U->idx()),
@@ -53,7 +58,7 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
-    else if (U->idx() < uRoute->size() - 2 && V->idx() >= vRoute->size() - 2)
+    else if (!uIsEndDepotOrAdjacent && vIsEndDepotOrAdjacent)
     {
         auto const uProposal = Route::Proposal(uRoute->before(U->idx()),
                                                uRoute->at(uRoute->size() - 1));
@@ -65,7 +70,7 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
-    else if (U->idx() >= uRoute->size() - 2 && V->idx() < vRoute->size() - 2)
+    else if (uIsEndDepotOrAdjacent && !vIsEndDepotOrAdjacent)
     {
         auto const uProposal
             = Route::Proposal(uRoute->before(U->idx()),
