@@ -10,6 +10,7 @@ from pyvrp import (
     RandomNumberGenerator,
     Route,
     Solution,
+    Trip,
     VehicleType,
 )
 from pyvrp.search import (
@@ -505,3 +506,21 @@ def test_swap_if_improving_mutually_exclusive_group(
     routes = improved.routes()
     assert_equal(improved.num_routes(), 1)
     assert_equal(routes[0].visits(), [3, 4])
+
+
+def test_no_op_multi_trip_instance(ok_small_multiple_trips):
+    """
+    Tests that loading and exporting a multi-trip instance correctly returns an
+    equivalent solution when no operators are available.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbours = [[] for _ in range(ok_small_multiple_trips.num_locations)]
+    ls = LocalSearch(ok_small_multiple_trips, rng, neighbours)
+
+    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
+    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
+    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+
+    sol = Solution(ok_small_multiple_trips, [route])
+    cost_eval = CostEvaluator([20], 6, 0)
+    assert_equal(ls(sol, cost_eval), sol)

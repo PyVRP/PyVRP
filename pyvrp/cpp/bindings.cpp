@@ -655,6 +655,11 @@ PYBIND11_MODULE(_pyvrp, m)
              &Route::trips,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, Route, trips))
+        .def("trip",
+             &Route::trip,
+             py::arg("idx"),
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, trip))
         .def("visits",
              &Route::visits,
              py::return_value_policy::reference_internal,

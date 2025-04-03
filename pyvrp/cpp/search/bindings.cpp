@@ -226,9 +226,12 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("idx", &Route::idx)
         .def_property_readonly("vehicle_type", &Route::vehicleType)
+        .def_property_readonly("num_clients", &Route::numClients)
+        .def_property_readonly("num_depots", &Route::numDepots)
+        .def_property_readonly("num_trips", &Route::numTrips)
         .def("__delitem__", &Route::remove, py::arg("idx"))
         .def("__getitem__",
-             &Route::operator[],
+             py::overload_cast<size_t>(&Route::operator[]),
              py::arg("idx"),
              py::return_value_policy::reference_internal)
         .def(
@@ -366,8 +369,12 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<size_t>(), py::arg("loc"))
         .def_property_readonly("client", &Route::Node::client)
         .def_property_readonly("idx", &Route::Node::idx)
+        .def_property_readonly("trip", &Route::Node::trip)
         .def_property_readonly("route", &Route::Node::route)
-        .def("is_depot", &Route::Node::isDepot);
+        .def("is_depot", &Route::Node::isDepot)
+        .def("is_start_depot", &Route::Node::isStartDepot)
+        .def("is_end_depot", &Route::Node::isEndDepot)
+        .def("is_reload_depot", &Route::Node::isReloadDepot);
 
     m.def("insert_cost",
           &insertCost,

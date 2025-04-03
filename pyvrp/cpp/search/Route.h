@@ -18,10 +18,7 @@ namespace pyvrp::search
  *
  * A ``Route`` object tracks a full route, including the depots. The clients
  * and depots on the route can be accessed using ``Route::operator[]`` on a
- * ``route`` object: ``route[0]`` and ``route[route.size() + 1]`` are the start
- * and end depots, respectively, and any clients in between are on the indices
- * ``{1, ..., size()}`` (empty if ``size() == 0``). Note that ``Route::size()``
- * returns the number of *clients* in the route; this excludes the depots.
+ * ``route`` object.
  *
  * .. note::
  *
@@ -67,6 +64,7 @@ public:
 
         size_t loc_;    // Location represented by this node
         size_t idx_;    // Position in the route
+        size_t trip_;   // Trip index.
         Route *route_;  // Indicates membership of a route, if any
 
     public:
@@ -84,26 +82,80 @@ public:
         [[nodiscard]] inline size_t idx() const;
 
         /**
+         * Returns this node's assigned trip number.  This value is ``0`` when
+         * the node is *not* in a route.
+         */
+        [[nodiscard]] inline size_t trip() const;
+
+        /**
          * Returns the route this node is currently in. If the node is not in
          * a route, this returns ``None`` (C++: ``nullptr``).
          */
         [[nodiscard]] inline Route *route() const;
 
         /**
-         * Returns whether this node is a depot. A node can only be a depot if
-         * it is in a route.
+         * Returns whether this node is a depot.
          */
         [[nodiscard]] inline bool isDepot() const;
 
         /**
-         * Assigns the node to the given route, at the given index.
+         * Returns whether this node is a start depot.
          */
-        void assign(Route *route, size_t idx);
+        [[nodiscard]] inline bool isStartDepot() const;
+
+        /**
+         * Returns whether this node is an end depot.
+         */
+        [[nodiscard]] inline bool isEndDepot() const;
+
+        /**
+         * Returns whether this node is a reload depot.
+         */
+        [[nodiscard]] inline bool isReloadDepot() const;
+
+        /**
+         * Assigns the node to the given route, at the given index, in the
+         * given trip.
+         */
+        void assign(Route *route, size_t idx, size_t trip);
 
         /**
          * Removes the node from its assigned route, if any.
          */
         void unassign();
+    };
+
+    /**
+     * Forward iterator through the client nodes visited by this route.
+     */
+    class Iterator
+    {
+        std::vector<Node *> const *nodes_;
+        size_t idx_ = 0;
+
+        // Ensures we skip reload depots.
+        void ensureValidIndex();
+
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = Node *;
+
+        Iterator(std::vector<Node *> const &nodes, size_t idx);
+
+        Iterator() = default;
+        Iterator(Iterator const &other) = default;
+        Iterator(Iterator &&other) = default;
+
+        Iterator &operator=(Iterator const &other) = default;
+        Iterator &operator=(Iterator &&other) = default;
+
+        bool operator==(Iterator const &other) const;
+
+        Node *operator*() const;
+
+        Iterator operator++(int);
+        Iterator &operator++();
     };
 
 private:
@@ -178,8 +230,7 @@ private:
     ProblemData::VehicleType const &vehicleType_;
     size_t const idx_;
 
-    Node startDepot_;  // Departure depot for this route
-    Node endDepot_;    // Return depot for this route
+    std::vector<Node> depots_;  // start, end, and reload depots (in that order)
 
     std::vector<Node *> nodes;   // Nodes in this route, including depots
     std::vector<size_t> visits;  // Locations in this route, incl. depots
@@ -219,15 +270,10 @@ public:
      * @return The client or depot node at the given ``idx``.
      */
     [[nodiscard]] inline Node *operator[](size_t idx);
+    [[nodiscard]] inline Node const *operator[](size_t idx) const;
 
-    // First client in the route if the route is non-empty. Else it is the
-    // end depot. In either case the iterator is valid!
-    [[nodiscard]] std::vector<Node *>::const_iterator begin() const;
-    [[nodiscard]] std::vector<Node *>::iterator begin();
-
-    // End depot. The iterator is valid!
-    [[nodiscard]] std::vector<Node *>::const_iterator end() const;
-    [[nodiscard]] std::vector<Node *>::iterator end();
+    [[nodiscard]] Iterator begin() const;
+    [[nodiscard]] Iterator end() const;
 
     /**
      * Tests if this route is feasible.
@@ -347,14 +393,29 @@ public:
     [[nodiscard]] inline size_t profile() const;
 
     /**
-     * @return true if this route is empty, false otherwise.
+     * True if this route has no client visits, false otherwise.
      */
     [[nodiscard]] inline bool empty() const;
 
     /**
-     * @return Number of clients in this route.
+     * Number of clients and depots on this route.
      */
     [[nodiscard]] inline size_t size() const;
+
+    /**
+     * Number of clients in this route.
+     */
+    [[nodiscard]] inline size_t numClients() const;
+
+    /**
+     * Returns the number of start, end, and reload depots in this route.
+     */
+    [[nodiscard]] inline size_t numDepots() const;
+
+    /**
+     * Returns the number of trips in this route.
+     */
+    [[nodiscard]] inline size_t numTrips() const;
 
     /**
      * Returns an object that can be queried for data associated with the node
@@ -398,9 +459,15 @@ public:
 
     /**
      * Clears all clients on this route. After calling this method, ``empty()``
-     * returns true and ``size()`` is zero.
+     * returns true.
      */
     void clear();
+
+    /**
+     * Reserves capacity for at least given ``size`` number of nodes (depots
+     * and clients).
+     */
+    void reserve(size_t size);
 
     /**
      * Inserts the given node before index ``idx``. Assumes the given index is
@@ -409,14 +476,13 @@ public:
     void insert(size_t idx, Node *node);
 
     /**
-     * Inserts the given range of nodes before ``idx``. Assumes the given index
-     * is valid.
-     */
-    template <class InputIt>
-    void insert(size_t idx, InputIt first, InputIt last);
-
-    /**
-     * Inserts the given node at the back of the route.
+     * Appends the given node pointer at the end of the route. Depending on the
+     * type of node, one of the following happens:
+     *
+     * * A client node is simply appended, and we assume the pointer remains
+     *   valid throughout this route's lifetime. No ownership is taken.
+     * * A depot node is copied into an internal structure. No ownership is
+     *   taken, but changes are not propagated to the original node.
      */
     void push_back(Node *node);
 
@@ -462,24 +528,45 @@ size_t Route::Node::client() const { return loc_; }
 
 size_t Route::Node::idx() const { return idx_; }
 
+size_t Route::Node::trip() const { return trip_; }
+
 Route *Route::Node::route() const { return route_; }
 
 bool Route::Node::isDepot() const
 {
+    return isStartDepot() || isEndDepot() || isReloadDepot();
+}
+
+bool Route::Node::isStartDepot() const
+{
+    return route_ && this == &route_->depots_[0];
+}
+
+bool Route::Node::isEndDepot() const
+{
+    return route_ && this == &route_->depots_[1];
+}
+
+bool Route::Node::isReloadDepot() const
+{
+    // clang-format off
     return route_
-           && (this == &route_->startDepot_ || this == &route_->endDepot_);
+        && loc_ < route_->data.numDepots()
+        && !isStartDepot()
+        && !isEndDepot();
+    // clang-format on
 }
 
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
     : route_(route), start(start)
 {
-    assert(start < route.nodes.size());
+    assert(start < route.size());
 }
 
 Route::SegmentBefore::SegmentBefore(Route const &route, size_t end)
     : route_(route), end(end)
 {
-    assert(end < route.nodes.size());
+    assert(end < route.size());
 }
 
 Route::SegmentBetween::SegmentBetween(Route const &route,
@@ -487,7 +574,7 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
                                       size_t end)
     : route_(route), start(start), end(end)
 {
-    assert(start <= end && end < route.nodes.size());
+    assert(start <= end && end < route.size());
 }
 
 DistanceSegment
@@ -630,6 +717,12 @@ Route::Node *Route::operator[](size_t idx)
     return nodes[idx];
 }
 
+Route::Node const *Route::operator[](size_t idx) const
+{
+    assert(idx < nodes.size());
+    return nodes[idx];
+}
+
 std::vector<Load> const &Route::load() const
 {
     assert(!dirty);
@@ -699,13 +792,15 @@ Duration Route::timeWarp() const
 
 size_t Route::profile() const { return vehicleType_.profile; }
 
-bool Route::empty() const { return size() == 0; }
+bool Route::empty() const { return numClients() == 0; }
 
-size_t Route::size() const
-{
-    assert(nodes.size() >= 2);  // excl. depots
-    return nodes.size() - 2;
-}
+size_t Route::size() const { return nodes.size(); }
+
+size_t Route::numClients() const { return size() - numDepots(); }
+
+size_t Route::numDepots() const { return depots_.size(); }
+
+size_t Route::numTrips() const { return depots_.size() - 1; }
 
 Route::SegmentBetween Route::at(size_t idx) const
 {
@@ -827,20 +922,6 @@ LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
     };
 
     return std::apply(fn, segments_);
-}
-
-template <class InputIt>
-void Route::insert(size_t idx, InputIt first, InputIt last)
-{
-    assert(0 < idx && idx < nodes.size());
-    nodes.insert(nodes.begin() + idx, first, last);
-
-    for (size_t after = idx; after != nodes.size(); ++after)
-        nodes[after]->assign(this, after);
-
-#ifndef NDEBUG
-    dirty = true;
-#endif
 }
 }  // namespace pyvrp::search
 

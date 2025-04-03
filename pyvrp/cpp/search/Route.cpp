@@ -7,51 +7,82 @@
 
 using pyvrp::search::Route;
 
-Route::Node::Node(size_t loc) : loc_(loc), idx_(0), route_(nullptr) {}
+Route::Node::Node(size_t loc) : loc_(loc), idx_(0), trip_(0), route_(nullptr) {}
 
-void Route::Node::assign(Route *route, size_t idx)
+void Route::Node::assign(Route *route, size_t idx, size_t trip)
 {
     idx_ = idx;
+    trip_ = trip;
     route_ = route;
 }
 
 void Route::Node::unassign()
 {
     idx_ = 0;
+    trip_ = 0;
     route_ = nullptr;
+}
+
+Route::Iterator::Iterator(std::vector<Node *> const &nodes, size_t idx)
+    : nodes_(&nodes), idx_(idx)
+{
+    ensureValidIndex();
+}
+
+void Route::Iterator::ensureValidIndex()
+{
+    // size() - 1 is the index of the end depot, and what's returned by
+    // Route::end() - we must not exceed it.
+    while (idx_ < nodes_->size() - 1 && operator*() -> isReloadDepot())
+        idx_++;  // skip any intermediate reload depots
+
+    assert(0 < idx_ && idx_ < nodes_->size());
+}
+
+bool Route::Iterator::operator==(Iterator const &other) const
+{
+    return nodes_ == other.nodes_ && idx_ == other.idx_;
+}
+
+Route::Node *Route::Iterator::operator*() const { return (*nodes_)[idx_]; }
+
+Route::Iterator Route::Iterator::operator++(int)
+{
+    auto tmp = *this;
+    ++*this;
+    return tmp;
+}
+
+Route::Iterator &Route::Iterator::operator++()
+{
+    idx_++;
+    ensureValidIndex();
+    return *this;
 }
 
 Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
       idx_(idx),
-      startDepot_(vehicleType_.startDepot),
-      endDepot_(vehicleType_.endDepot),
       loadAt(data.numLoadDimensions()),
       loadAfter(data.numLoadDimensions()),
       loadBefore(data.numLoadDimensions()),
       load_(data.numLoadDimensions()),
       excessLoad_(data.numLoadDimensions())
 {
+    // Reserve sufficient space for, in the worst case, all reload depots and
+    // the route's start and end depots. This ensures the depots_ vector never
+    // reallocates, so we can work with pointers into its memory.
+    depots_.reserve(vehicleType_.maxReloads + 2);
+
     clear();
 }
 
 Route::~Route() { clear(); }
 
-std::vector<Route::Node *>::const_iterator Route::begin() const
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::const_iterator Route::end() const
-{
-    return nodes.end() - 1;
-}
+Route::Iterator Route::begin() const { return Iterator(nodes, 1); }
 
-std::vector<Route::Node *>::iterator Route::begin()
-{
-    return nodes.begin() + 1;
-}
-std::vector<Route::Node *>::iterator Route::end() { return nodes.end() - 1; }
+Route::Iterator Route::end() const { return Iterator(nodes, nodes.size() - 1); }
 
 std::pair<double, double> const &Route::centroid() const
 {
@@ -92,23 +123,39 @@ void Route::clear()
     for (auto *node : nodes)
         node->unassign();
 
-    nodes.clear();  // clear nodes and reinsert the depots.
-    nodes.push_back(&startDepot_);
-    nodes.push_back(&endDepot_);
+    nodes.clear();
+    depots_.clear();
 
-    startDepot_.assign(this, 0);
-    endDepot_.assign(this, 1);
+    depots_.emplace_back(vehicleType_.startDepot);
+    depots_.emplace_back(vehicleType_.endDepot);
+
+    for (size_t idx : {0, 1})
+    {
+        nodes.push_back(&depots_[idx]);
+        depots_[idx].assign(this, idx, idx);
+    }
 
     update();
+    assert(empty());
 }
+
+void Route::reserve(size_t size) { nodes.reserve(size); }
 
 void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
+
+    auto trip = nodes[idx - 1]->trip();
     nodes.insert(nodes.begin() + idx, node);
+    node->assign(this, idx, trip);
 
     for (size_t after = idx; after != nodes.size(); ++after)
-        nodes[after]->assign(this, after);
+    {
+        if (nodes[after]->isDepot())
+            trip++;
+
+        nodes[after]->assign(this, after, trip);
+    }
 
 #ifndef NDEBUG
     dirty = true;
@@ -117,15 +164,15 @@ void Route::insert(size_t idx, Node *node)
 
 void Route::push_back(Node *node)
 {
-    insert(size() + 1, node);
+    if (node->client() < data.numDepots())  // is depot, so we copy first
+        node = &depots_.emplace_back(node->client());
 
-#ifndef NDEBUG
-    dirty = true;
-#endif
+    insert(nodes.size() - 1, node);
 }
 
 void Route::remove(size_t idx)
 {
+    // TODO remove reload depot
     assert(0 < idx && idx < nodes.size() - 1);
     assert(nodes[idx]->route() == this);  // must currently be in this route
 
@@ -142,6 +189,7 @@ void Route::remove(size_t idx)
 
 void Route::swap(Node *first, Node *second)
 {
+    // TODO swap reload depot
     // TODO specialise std::swap for Node
     if (first->route_)
         first->route_->nodes[first->idx_] = second;
@@ -168,11 +216,14 @@ void Route::update()
         visits.emplace_back(node->client());
 
     centroid_ = {0, 0};
-    for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
+    for (auto const *node : nodes)
     {
-        ProblemData::Client const &clientData = data.location(visits[idx]);
-        centroid_.first += static_cast<double>(clientData.x) / size();
-        centroid_.second += static_cast<double>(clientData.y) / size();
+        if (node->isDepot())
+            continue;
+
+        ProblemData::Client const &clientData = data.location(node->client());
+        centroid_.first += static_cast<double>(clientData.x) / numClients();
+        centroid_.second += static_cast<double>(clientData.y) / numClients();
     }
 
     // Distance.
@@ -197,7 +248,20 @@ void Route::update()
     durAt[nodes.size() - 1] = DurationSegment::merge(0, depotEnd, vehEnd);
 
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-        durAt[idx] = {data.location(visits[idx])};
+    {
+        auto const *node = nodes[idx];
+
+        if (!node->isReloadDepot())
+        {
+            ProblemData::Client const &client = data.location(node->client());
+            durAt[idx] = {client};
+        }
+        else
+        {
+            ProblemData::Depot const &depot = data.location(node->client());
+            durAt[idx] = {depot, depot.serviceDuration};
+        }
+    }
 
     auto const &durMat = data.durationMatrix(profile());
 
@@ -222,26 +286,41 @@ void Route::update()
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
         loadAt[dim].resize(nodes.size());
-        loadAt[dim][0] = {vehicleType_, dim};
+        loadAt[dim][0] = {vehicleType_, dim};  // initial load
         loadAt[dim][nodes.size() - 1] = {};
 
         for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-            loadAt[dim][idx] = {data.location(visits[idx]), dim};
+            if (nodes[idx]->isReloadDepot())
+                loadAt[dim][idx] = {};
+            else
+                loadAt[dim][idx] = LoadSegment{data.location(visits[idx]), dim};
 
         loadBefore[dim].resize(nodes.size());
         loadBefore[dim][0] = loadAt[dim][0];
         for (size_t idx = 1; idx != nodes.size(); ++idx)
-            loadBefore[dim][idx] = LoadSegment::merge(loadBefore[dim][idx - 1],
-                                                      loadAt[dim][idx]);
+            if (nodes[idx - 1]->isReloadDepot())  // then we restart from here
+                loadBefore[dim][idx] = loadAt[dim][idx];
+            else
+                loadBefore[dim][idx] = LoadSegment::merge(
+                    loadBefore[dim][idx - 1], loadAt[dim][idx]);
 
-        load_[dim] = loadBefore[dim].back().load();
-        excessLoad_[dim] = std::max<Load>(load_[dim] - capacity()[dim], 0);
+        load_[dim] = 0;
+        excessLoad_[dim] = 0;
+        for (auto it = depots_.begin() + 1; it != depots_.end(); ++it)
+        {
+            auto const tripLoad = loadBefore[dim][it->idx()].load();
+            load_[dim] += tripLoad;
+            excessLoad_[dim] += std::max<Load>(tripLoad - capacity()[dim], 0);
+        }
 
         loadAfter[dim].resize(nodes.size());
         loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
         for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-            loadAfter[dim][idx - 1]
-                = LoadSegment::merge(loadAt[dim][idx - 1], loadAfter[dim][idx]);
+            if (nodes[idx]->isReloadDepot())  // then we restart from here
+                loadAfter[dim][idx - 1] = loadAt[dim][idx - 1];
+            else
+                loadAfter[dim][idx - 1] = LoadSegment::merge(
+                    loadAt[dim][idx - 1], loadAfter[dim][idx]);
     }
 
 #ifndef NDEBUG

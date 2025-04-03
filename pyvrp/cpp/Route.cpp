@@ -11,6 +11,7 @@ using pyvrp::Distance;
 using pyvrp::Duration;
 using pyvrp::Load;
 using pyvrp::Route;
+using pyvrp::Trip;
 
 using Client = size_t;
 
@@ -325,6 +326,12 @@ Route::Iterator Route::begin() const { return Iterator(*this, 0); }
 Route::Iterator Route::end() const { return Iterator(*this, size()); }
 
 Route::Trips const &Route::trips() const { return trips_; }
+
+Trip const &Route::trip(size_t idx) const
+{
+    assert(idx < trips_.size());
+    return trips_[idx];
+}
 
 Route::Visits Route::visits() const { return {begin(), end()}; }
 

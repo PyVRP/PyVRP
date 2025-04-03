@@ -154,6 +154,11 @@ public:
     [[nodiscard]] Trips const &trips() const;
 
     /**
+     * Returns the trip at the given index.
+     */
+    [[nodiscard]] Trip const &trip(size_t idx) const;
+
+    /**
      * Route visits, as a list of clients.
      */
     [[nodiscard]] Visits visits() const;
