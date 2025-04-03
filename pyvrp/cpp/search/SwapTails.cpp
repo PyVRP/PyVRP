@@ -87,7 +87,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
     auto *nV = n(V);
 
     auto insertIdx = U->idx() + 1;
-    while (!nV->isDepot())
+    while (!nV->isEndDepot())
     {
         auto *node = nV;
         nV = n(nV);
@@ -96,7 +96,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
     }
 
     insertIdx = V->idx() + 1;
-    while (!nU->isDepot())
+    while (!nU->isEndDepot())
     {
         auto *node = nU;
         nU = n(nU);

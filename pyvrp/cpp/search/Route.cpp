@@ -172,6 +172,7 @@ void Route::push_back(Node *node)
 
 void Route::remove(size_t idx)
 {
+    // TODO remove reload depot
     assert(0 < idx && idx < nodes.size() - 1);
     assert(nodes[idx]->route() == this);  // must currently be in this route
 
@@ -188,6 +189,7 @@ void Route::remove(size_t idx)
 
 void Route::swap(Node *first, Node *second)
 {
+    // TODO swap reload depot
     // TODO specialise std::swap for Node
     if (first->route_)
         first->route_->nodes[first->idx_] = second;

@@ -91,7 +91,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    if (p(V)->isDepot() && applyNodeOps(U, p(V), costEvaluator))
+                    if (p(V)->isStartDepot()
+                        && applyNodeOps(U, p(V), costEvaluator))
                         continue;
                 }
             }
