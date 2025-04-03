@@ -39,12 +39,7 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
     if (!vRoute->empty() && V->isStartDepot() && n(U)->isEndDepot())
         deltaCost -= vRoute->fixedVehicleCost();
 
-    // We cannot move the end depots, so if U or V are the end depots (or the
-    // clients visited just before) then there's nothing to be moved from their
-    // routes. The following cases handle each possibility.
-    bool const uIsEndDepotOrAdjacent = U->isEndDepot() || n(U)->isEndDepot();
-    bool const vIsEndDepotOrAdjacent = V->isEndDepot() || n(V)->isEndDepot();
-    if (!uIsEndDepotOrAdjacent && !vIsEndDepotOrAdjacent)
+    if (!n(U)->isEndDepot() && !n(V)->isEndDepot())
     {
         auto const uProposal
             = Route::Proposal(uRoute->before(U->idx()),
@@ -58,7 +53,7 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
-    else if (!uIsEndDepotOrAdjacent && vIsEndDepotOrAdjacent)
+    else if (!n(U)->isEndDepot() && n(V)->isEndDepot())
     {
         auto const uProposal = Route::Proposal(uRoute->before(U->idx()),
                                                uRoute->at(uRoute->size() - 1));
@@ -70,7 +65,7 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
-    else if (uIsEndDepotOrAdjacent && !vIsEndDepotOrAdjacent)
+    else if (n(U)->isEndDepot() && !n(V)->isEndDepot())
     {
         auto const uProposal
             = Route::Proposal(uRoute->before(U->idx()),
