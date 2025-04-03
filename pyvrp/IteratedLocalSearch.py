@@ -129,7 +129,7 @@ class IteratedLocalSearch:
             perturbed = self._perturb(
                 current,
                 self._pm.booster_cost_evaluator(),
-                self._conv_manager.num_destroy,
+                15,  # hardcoded value
             )
             diff = different_neighbours(current, perturbed)
             candidate = self._search(
