@@ -285,6 +285,8 @@ void Route::update()
     // Load.
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
+        auto const capacity = vehicleType_.capacity[dim];
+
         loadAt[dim].resize(nodes.size());
         loadAt[dim][0] = {vehicleType_, dim};  // initial load
         loadAt[dim][nodes.size() - 1] = {};
@@ -298,26 +300,35 @@ void Route::update()
         loadBefore[dim].resize(nodes.size());
         loadBefore[dim][0] = loadAt[dim][0];
         for (size_t idx = 1; idx != nodes.size(); ++idx)
-            if (nodes[idx - 1]->isReloadDepot())  // then we restart from here
-                loadBefore[dim][idx] = loadAt[dim][idx];
+            if (nodes[idx - 1]->isReloadDepot())
+                // Then we restart from here, but keep track of any excess load
+                // observed so far.
+                loadBefore[dim][idx]
+                    = {loadAt[dim][idx].pickup(),
+                       loadAt[dim][idx].delivery(),
+                       loadAt[dim][idx].load(),
+                       loadBefore[dim][idx - 1].excessLoad(capacity)};
             else
                 loadBefore[dim][idx] = LoadSegment::merge(
                     loadBefore[dim][idx - 1], loadAt[dim][idx]);
 
         load_[dim] = 0;
-        excessLoad_[dim] = 0;
+        excessLoad_[dim]
+            = loadBefore[dim][nodes.size() - 1].excessLoad(capacity);
         for (auto it = depots_.begin() + 1; it != depots_.end(); ++it)
-        {
-            auto const tripLoad = loadBefore[dim][it->idx()].load();
-            load_[dim] += tripLoad;
-            excessLoad_[dim] += std::max<Load>(tripLoad - capacity()[dim], 0);
-        }
+            load_[dim] += loadBefore[dim][it->idx()].load();
 
         loadAfter[dim].resize(nodes.size());
         loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
         for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-            if (nodes[idx]->isReloadDepot())  // then we restart from here
-                loadAfter[dim][idx - 1] = loadAt[dim][idx - 1];
+            if (nodes[idx]->isReloadDepot())
+                // Then we restart from here, but keep track of any excess load
+                // observed so far.
+                loadAfter[dim][idx - 1]
+                    = {loadAt[dim][idx - 1].delivery(),
+                       loadAt[dim][idx - 1].pickup(),
+                       loadAt[dim][idx - 1].load(),
+                       loadAfter[dim][idx].excessLoad(capacity)};
             else
                 loadAfter[dim][idx - 1] = LoadSegment::merge(
                     loadAt[dim][idx - 1], loadAfter[dim][idx]);
