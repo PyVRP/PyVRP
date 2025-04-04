@@ -49,7 +49,7 @@ public:
 
         Distance distance() const;
         DurationSegment durationSegment() const;
-        LoadSegment loadSegment(size_t dimension) const;
+        Load excessLoad(size_t dimension) const;
     };
 
     /**
@@ -898,9 +898,10 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
 }
 
 template <typename... Segments>
-LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
+Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 {
-    auto const fn = [dimension](auto &&...args)
+    auto const &capacity = route()->capacity();
+    auto const fn = [capacity, dimension](auto &&...args)
     {
         LoadSegment segment;
 
@@ -912,7 +913,7 @@ LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
         };
 
         merge(merge, args.load(dimension)...);
-        return segment;
+        return std::max<Load>(segment.load() - capacity[dimension], 0);
     };
 
     return std::apply(fn, segments_);
