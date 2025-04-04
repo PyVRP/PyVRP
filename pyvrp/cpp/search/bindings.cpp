@@ -5,6 +5,7 @@
 #include "SwapRoutes.h"
 #include "SwapStar.h"
 #include "SwapTails.h"
+#include "TripRelocate.h"
 #include "primitives.h"
 #include "search_docs.h"
 
@@ -25,6 +26,7 @@ using pyvrp::search::Route;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
 using pyvrp::search::SwapTails;
+using pyvrp::search::TripRelocate;
 
 PYBIND11_MODULE(_search, m)
 {
@@ -177,6 +179,18 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &SwapTails::apply, py::arg("U"), py::arg("V"));
 
+    py::class_<TripRelocate, NodeOp>(
+        m, "TripRelocate", DOC(pyvrp, search, TripRelocate))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &TripRelocate::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &TripRelocate::apply, py::arg("U"), py::arg("V"));
+
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
                       std::vector<std::vector<size_t>>>(),
@@ -229,6 +243,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("num_clients", &Route::numClients)
         .def_property_readonly("num_depots", &Route::numDepots)
         .def_property_readonly("num_trips", &Route::numTrips)
+        .def_property_readonly("max_trips", &Route::maxTrips)
         .def("__delitem__", &Route::remove, py::arg("idx"))
         .def("__getitem__",
              py::overload_cast<size_t>(&Route::operator[]),

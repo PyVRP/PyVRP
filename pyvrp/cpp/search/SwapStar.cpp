@@ -186,6 +186,8 @@ Cost SwapStar::evaluate(Route *routeU,
     for (auto *U : *routeU)
         for (auto *V : *routeV)
         {
+            assert(!U->isDepot() && !V->isDepot());
+
             // The following lines compute a delta cost of removing U and V from
             // their own routes and inserting them into the other's route in the
             // best place. This is approximate since removal and insertion are

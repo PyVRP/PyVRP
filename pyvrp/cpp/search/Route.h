@@ -418,6 +418,11 @@ public:
     [[nodiscard]] inline size_t numTrips() const;
 
     /**
+     * Returns the maximum number of allowed trips for this route.
+     */
+    [[nodiscard]] inline size_t maxTrips() const;
+
+    /**
      * Returns an object that can be queried for data associated with the node
      * at idx.
      */
@@ -803,6 +808,8 @@ size_t Route::numClients() const { return size() - numDepots(); }
 size_t Route::numDepots() const { return depots_.size(); }
 
 size_t Route::numTrips() const { return depots_.size() - 1; }
+
+size_t Route::maxTrips() const { return vehicleType_.maxReloads + 1; }
 
 Route::SegmentBetween Route::at(size_t idx) const
 {

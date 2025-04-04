@@ -211,6 +211,8 @@ void Route::swap(Node *first, Node *second)
 
 void Route::update()
 {
+    assert(numTrips() <= maxTrips());
+
     visits.clear();
     for (auto const *node : nodes)
         visits.emplace_back(node->client());
