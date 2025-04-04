@@ -268,18 +268,15 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     )
 
     # Distances on various segments of the route.
-    distances = ok_small.distance_matrix(profile=0)
-    assert_equal(route.dist_between(0, 1).distance(), distances[0, client])
-    assert_equal(route.dist_between(1, 2).distance(), distances[client, 0])
-    assert_equal(
-        route.dist_between(0, 2).distance(),
-        distances[0, client] + distances[client, 0],
-    )
+    dists = ok_small.distance_matrix(profile=0)
+    assert_equal(route.dist_between(0, 1), dists[0, client])
+    assert_equal(route.dist_between(1, 2), dists[client, 0])
+    assert_equal(route.dist_between(0, 2), dists[0, client] + dists[client, 0])
 
     # This should always be zero because distance is a property of the edges,
     # not the nodes.
-    assert_equal(route.dist_at(0).distance(), 0)
-    assert_equal(route.dist_at(1).distance(), 0)
+    assert_equal(route.dist_at(0), 0)
+    assert_equal(route.dist_at(1), 0)
 
 
 def test_route_overlaps_with_self_no_matter_the_tolerance_value(ok_small):
@@ -502,9 +499,7 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
         route.append(Node(loc=client))
     route.update()
 
-    assert_equal(
-        route.distance(), route.dist_between(0, len(route) - 1).distance()
-    )
+    assert_equal(route.distance(), route.dist_between(0, len(route) - 1))
 
 
 @pytest.mark.parametrize(
@@ -658,13 +653,11 @@ def test_dist_between_equal_to_before_after_when_one_is_depot(ok_small):
     route.update()
 
     for idx in [1, 2, 3, 4]:
-        before = route.dist_before(idx)
-        between_before = route.dist_between(0, idx)
-        assert_equal(before.distance(), between_before.distance())
-
-        after = route.dist_after(idx)
-        between_after = route.dist_between(idx, len(route) - 1)
-        assert_equal(after.distance(), between_after.distance())
+        assert_equal(route.dist_before(idx), route.dist_between(0, idx))
+        assert_equal(
+            route.dist_after(idx),
+            route.dist_between(idx, len(route) - 1),
+        )
 
 
 def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
@@ -784,7 +777,7 @@ def test_distance_different_profiles(ok_small_two_profiles):
     # Let's test with a different profile. The distance on the route should be
     # double using the second profile.
     depot_to_depot = route.dist_between(0, len(route) - 1, profile=1)
-    assert_equal(depot_to_depot.distance(), 2 * route.distance())
+    assert_equal(depot_to_depot, 2 * route.distance())
 
 
 def test_duration_different_profiles(ok_small_two_profiles):

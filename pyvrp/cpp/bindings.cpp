@@ -1,6 +1,5 @@
 #include "bindings.h"
 #include "CostEvaluator.h"
-#include "DistanceSegment.h"
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
 #include "LoadSegment.h"
@@ -26,7 +25,6 @@
 namespace py = pybind11;
 
 using pyvrp::CostEvaluator;
-using pyvrp::DistanceSegment;
 using pyvrp::DurationSegment;
 using pyvrp::DynamicBitset;
 using pyvrp::LoadSegment;
@@ -1067,18 +1065,6 @@ PYBIND11_MODULE(_pyvrp, m)
              &SubPopulation::updateFitness,
              py::arg("cost_evaluator"),
              DOC(pyvrp, SubPopulation, updateFitness));
-
-    py::class_<DistanceSegment>(
-        m, "DistanceSegment", DOC(pyvrp, DistanceSegment))
-        .def(py::init<pyvrp::Distance>(), py::arg("distance"))
-        .def("distance",
-             &DistanceSegment::distance,
-             DOC(pyvrp, DistanceSegment, distance))
-        .def_static("merge",
-                    &DistanceSegment::merge,
-                    py::arg("edge_distance"),
-                    py::arg("first"),
-                    py::arg("second"));
 
     py::class_<LoadSegment>(m, "LoadSegment", DOC(pyvrp, LoadSegment))
         .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
