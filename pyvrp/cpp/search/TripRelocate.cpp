@@ -15,8 +15,8 @@ class ReloadDepotSegment
 }  // namespace
 
 pyvrp::Cost
-TripRelocate::evaluate([[maybe_unused]] Route::Node *U,
-                       [[maybe_unused]] Route::Node *V,
+TripRelocate::evaluate(Route::Node *U,
+                       Route::Node *V,
                        [[maybe_unused]] CostEvaluator const &costEvaluator)
 {
     assert(!U->isDepot() && !V->isEndDepot());
