@@ -162,7 +162,7 @@ private:
 
     /**
      * Class storing data related to the route segment starting at ``start``,
-     * and ending at the depot (inclusive).
+     * and ending at the end depot (inclusive).
      */
     class SegmentAfter
     {
@@ -182,8 +182,8 @@ private:
     };
 
     /**
-     * Class storing data related to the route segment starting at the depot,
-     * and ending at ``end`` (inclusive).
+     * Class storing data related to the route segment starting at the start
+     * depot, and ending at ``end`` (inclusive).
      */
     class SegmentBefore
     {
@@ -204,7 +204,8 @@ private:
 
     /**
      * Class storing data related to the route segment starting at ``start``,
-     * and ending at ``end`` (inclusive).
+     * and ending at ``end`` (inclusive). The segment must consist of a single
+     * trip, possibly including its ending depot.
      */
     class SegmentBetween
     {
@@ -574,6 +575,11 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
     : route_(route), start(start), end(end)
 {
     assert(start <= end && end < route.size());
+
+    // The segment must consist of a single trip only, possibly including the
+    // depot that begins the next trip (and ends this one). So the difference
+    // in trips is at most one.
+    assert(route[end]->trip() - route[start]->trip() <= route[end]->isDepot());
 }
 
 Distance Route::SegmentAfter::distance([[maybe_unused]] size_t profile) const
@@ -913,7 +919,7 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
         };
 
         merge(merge, args.load(dimension)...);
-        return std::max<Load>(segment.load() - capacity[dimension], 0);
+        return segment.excessLoad(capacity[dimension]);
     };
 
     return std::apply(fn, segments_);

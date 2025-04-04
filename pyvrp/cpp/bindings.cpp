@@ -1067,15 +1067,20 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, SubPopulation, updateFitness));
 
     py::class_<LoadSegment>(m, "LoadSegment", DOC(pyvrp, LoadSegment))
-        .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
+        .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
              py::arg("delivery"),
              py::arg("pickup"),
-             py::arg("load"))
+             py::arg("load"),
+             py::arg("excess_load"))
         .def("delivery",
              &LoadSegment::delivery,
              DOC(pyvrp, LoadSegment, delivery))
         .def("pickup", &LoadSegment::pickup, DOC(pyvrp, LoadSegment, pickup))
         .def("load", &LoadSegment::load, DOC(pyvrp, LoadSegment, load))
+        .def("excess_load",
+             &LoadSegment::excessLoad,
+             py::arg("capacity"),
+             DOC(pyvrp, LoadSegment, excessLoad))
         .def_static(
             "merge", &LoadSegment::merge, py::arg("first"), py::arg("second"));
 

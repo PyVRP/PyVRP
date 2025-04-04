@@ -7,7 +7,7 @@
 namespace pyvrp
 {
 /**
- * LoadSegment(delivery: int = 0, pickup: int = 0, load: int = 0)
+ * LoadSegment(delivery: int, pickup: int, load: int, excess_load: int)
  *
  * Creates a new load segment for delivery and pickup loads in a single
  * dimension. These load segments can be efficiently concatenated, and track
@@ -22,12 +22,15 @@ namespace pyvrp
  *     Total pickup amount on this segment.
  * load
  *     Maximum load on this segment.
+ * excess_load
+ *     Cumulative excess load on this segment, possibly from earlier trips.
  */
 class LoadSegment
 {
-    Load delivery_ = 0;
-    Load pickup_ = 0;
-    Load load_ = 0;
+    Load delivery_ = 0;    // of client demand since last depot visit
+    Load pickup_ = 0;      // of client demand until next depot visit
+    Load load_ = 0;        // of current trip
+    Load excessLoad_ = 0;  // cumulative excess load over all trips
 
 public:
     [[nodiscard]] static inline LoadSegment merge(LoadSegment const &first,
@@ -47,7 +50,17 @@ public:
     /**
      * Returns the maximum load encountered on this segment.
      */
-    [[nodiscard]] inline Load load() const;
+    [[nodiscard]] Load load() const;
+
+    /**
+     * Returns the load violation on this segment.
+     *
+     * Parameters
+     * ----------
+     * capacity
+     *     Segment capacity, if any.
+     */
+    [[nodiscard]] inline Load excessLoad(Load capacity) const;
 
     LoadSegment() = default;  // default is all zero
 
@@ -59,7 +72,7 @@ public:
     LoadSegment(ProblemData::VehicleType const &vehicleType, size_t dimension);
 
     // Construct from raw data.
-    inline LoadSegment(Load delivery, Load pickup, Load load);
+    inline LoadSegment(Load delivery, Load pickup, Load load, Load excessLoad);
 
     // Move or copy construct from the other load segment.
     inline LoadSegment(LoadSegment const &) = default;
@@ -78,13 +91,17 @@ LoadSegment LoadSegment::merge(LoadSegment const &first,
     return {
         first.delivery_ + second.delivery_,
         first.pickup_ + second.pickup_,
-        std::max(first.load_ + second.delivery_, second.load_ + first.pickup_)};
+        std::max(first.load_ + second.delivery_, second.load_ + first.pickup_),
+        first.excessLoad_ + second.excessLoad_};
 }
 
-Load LoadSegment::load() const { return load_; }
+Load LoadSegment::excessLoad(Load capacity) const
+{
+    return excessLoad_ + std::max<Load>(load_ - capacity, 0);
+}
 
-LoadSegment::LoadSegment(Load delivery, Load pickup, Load load)
-    : delivery_(delivery), pickup_(pickup), load_(load)
+LoadSegment::LoadSegment(Load delivery, Load pickup, Load load, Load excessLoad)
+    : delivery_(delivery), pickup_(pickup), load_(load), excessLoad_(excessLoad)
 {
 }
 }  // namespace pyvrp
