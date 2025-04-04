@@ -21,7 +21,7 @@ TripRelocate::evaluate([[maybe_unused]] Route::Node *U,
 {
     assert(!U->isDepot() && !V->isEndDepot());
 
-    auto const *uRoute = U->route();
+    [[maybe_unused]] auto const *uRoute = U->route();
     auto const *vRoute = V->route();
     assert(uRoute && vRoute);
 
