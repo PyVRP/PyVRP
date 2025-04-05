@@ -31,6 +31,7 @@ TripRelocate::evaluate(Route::Node *U,
     if (p(U)->isReloadDepot() || n(U)->isReloadDepot())
     {
         // TODO U borders reload depot, test moving it along with U.
+        // TODO test if reload depot is allowed in V
         return 0;
     }
 
