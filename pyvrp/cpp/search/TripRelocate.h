@@ -10,8 +10,8 @@ namespace pyvrp::search
  *
  * Tests a few moves while relocating :math:`U` after :math:`V`:
  *
- * * If :math`U` borders a reload depot, tests if removing the reload depot is
- *   better;
+ * * If :math:`U` borders a reload depot, tests if moving the reload depot
+ *   along with :math:`U` is better;
  * * If :math:`V` or :math:`n(V)` is not a depot, tests if inserting a reload
  *   depot after or before :math:`U` is better.
  */

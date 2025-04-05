@@ -6,14 +6,6 @@
 
 using pyvrp::search::TripRelocate;
 
-namespace
-{
-class ReloadDepotSegment
-{
-    // TODO
-};
-}  // namespace
-
 pyvrp::Cost
 TripRelocate::evaluate(Route::Node *U,
                        Route::Node *V,
@@ -21,22 +13,29 @@ TripRelocate::evaluate(Route::Node *U,
 {
     assert(!U->isDepot() && !V->isEndDepot());
 
-    [[maybe_unused]] auto const *uRoute = U->route();
+    auto const *uRoute = U->route();
     auto const *vRoute = V->route();
-    assert(uRoute && vRoute);
+
+    if (vRoute->numTrips() == vRoute->maxTrips())
+        // Then we cannot insert another depot in V so we have nothing to do.
+        return 0;
+
+    Cost deltaCost = 0;
+
+    if (uRoute->numClients() == 1)
+        deltaCost -= uRoute->fixedVehicleCost();
+
+    if (vRoute->empty())
+        deltaCost += vRoute->fixedVehicleCost();
 
     if (p(U)->isReloadDepot() || n(U)->isReloadDepot())
     {
-        // TODO U borders reload depot, test removing it.
+        // TODO U borders reload depot, test moving it along with U.
+        return 0;
     }
 
     if (!V->isReloadDepot() && !n(V)->isReloadDepot())
     {
-        if (vRoute->numTrips() == vRoute->maxTrips())
-            // Then we cannot do anything more than evaluate removing the
-            // reload depot from U, since we cannot insert another depot in V.
-            return 0;
-
         // Test inserting U with a reload depot
         return 0;
     }
