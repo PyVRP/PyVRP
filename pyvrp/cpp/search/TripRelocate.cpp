@@ -49,10 +49,9 @@ public:
 };
 }  // namespace
 
-pyvrp::Cost
-TripRelocate::evaluate(Route::Node *U,
-                       Route::Node *V,
-                       [[maybe_unused]] CostEvaluator const &costEvaluator)
+pyvrp::Cost TripRelocate::evaluate(Route::Node *U,
+                                   Route::Node *V,
+                                   CostEvaluator const &costEvaluator)
 {
     assert(!U->isDepot() && !V->isEndDepot());
 
@@ -110,8 +109,7 @@ TripRelocate::evaluate(Route::Node *U,
     return 0;
 }
 
-void TripRelocate::apply([[maybe_unused]] Route::Node *U,
-                         [[maybe_unused]] Route::Node *V) const
+void TripRelocate::apply(Route::Node *U, Route::Node *V) const
 {
     auto *uRoute = U->route();
     uRoute->remove(U->idx());
