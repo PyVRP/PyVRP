@@ -11,6 +11,25 @@
 
 namespace pyvrp::search
 {
+// This defines the minimal interface required for a segment of visits.
+template <typename T>
+concept Segment = requires(T arg, size_t profile, size_t dimension) {
+    { arg.route() };
+    { arg.first() } -> std::same_as<size_t>;
+    { arg.last() } -> std::same_as<size_t>;
+    { arg.distance(profile) } -> std::convertible_to<Distance>;
+    { arg.duration(profile) } -> std::convertible_to<DurationSegment>;
+    { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
+};
+
+// Additionally, if the segment specifies just a reload depot, that may be
+// available in the interface. This is helpful when evaluating excess load
+// with intermediate reload depots.
+template <typename T>
+concept ReloadSegment = Segment<T> && requires(T arg) {
+    { arg.isReloadDepot() } -> std::same_as<bool>;
+};
+
 /**
  * This ``Route`` class supports fast delta cost computations and in-place
  * modification. It can be used to implement move evaluations.
@@ -33,7 +52,9 @@ public:
      * can be efficiently evaluated by calling appropriate member functions,
      * detailing the newly proposed route's statistics.
      */
-    template <typename... Segments> class Proposal
+    template <typename... Segments>
+        requires(... && Segment<Segments>)
+    class Proposal
     {
         std::tuple<Segments...> segments_;
 
@@ -920,12 +941,12 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            segment = LoadSegment::merge(segment, other);
+            segment = LoadSegment::merge(segment, other.load(dimension));
             if constexpr (sizeof...(args) != 0)
                 self(self, std::forward<decltype(args)>(args)...);
         };
 
-        merge(merge, args.load(dimension)...);
+        merge(merge, std::forward<decltype(args)>(args)...);
         return segment.excessLoad(capacity[dimension]);
     };
 

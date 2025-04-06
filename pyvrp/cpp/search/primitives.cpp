@@ -20,6 +20,8 @@ public:
         assert(client >= data.numDepots());  // must be an actual client
     }
 
+    pyvrp::search::Route const *route() const { return nullptr; }
+
     size_t first() const { return client; }
     size_t last() const { return client; }
 

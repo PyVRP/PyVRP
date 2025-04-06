@@ -8,16 +8,26 @@ namespace pyvrp::search
 /**
  * TripRelocate(data: ProblemData)
  *
- * Tests a few moves while relocating :math:`U` after :math:`V`:
- *
- * * If :math:`U` borders a reload depot, tests if moving the reload depot
- *   along with :math:`U` is better;
- * * If :math:`V` or :math:`n(V)` is not a depot, tests if inserting a reload
- *   depot after or before :math:`U` is better.
+ * Tests if inserting a reload depot while relocating :math:`U` after :math:`V`
+ * is an improving move.
  */
 class TripRelocate : public LocalSearchOperator<Route::Node>
 {
     using LocalSearchOperator::LocalSearchOperator;
+
+    enum class MoveType
+    {
+        DEPOT_U,  // V -> depot -> U
+        U_DEPOT,  // V -> U -> depot
+    };
+
+    struct Move
+    {
+        MoveType type;
+        size_t depot;
+    };
+
+    Move move;
 
 public:
     Cost evaluate(Route::Node *U,
