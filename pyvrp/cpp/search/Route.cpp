@@ -145,6 +145,9 @@ void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
 
+    if (node->client() < data.numDepots())  // is depot, so we copy first
+        node = &depots_.emplace_back(node->client());
+
     auto trip = nodes[idx - 1]->trip();
     nodes.insert(nodes.begin() + idx, node);
     node->assign(this, idx, trip);
@@ -162,13 +165,7 @@ void Route::insert(size_t idx, Node *node)
 #endif
 }
 
-void Route::push_back(Node *node)
-{
-    if (node->client() < data.numDepots())  // is depot, so we copy first
-        node = &depots_.emplace_back(node->client());
-
-    insert(nodes.size() - 1, node);
-}
+void Route::push_back(Node *node) { insert(nodes.size() - 1, node); }
 
 void Route::remove(size_t idx)
 {

@@ -7,7 +7,9 @@
 
 #include <algorithm>
 #include <cassert>
+#include <concepts>
 #include <iosfwd>
+#include <type_traits>
 
 namespace pyvrp::search
 {
@@ -27,7 +29,7 @@ concept Segment = requires(T arg, size_t profile, size_t dimension) {
 // with intermediate reload depots.
 template <typename T>
 concept ReloadSegment = Segment<T> && requires(T arg) {
-    { arg.isReloadDepot() } -> std::same_as<bool>;
+    { arg.IS_RELOAD_DEPOT } -> std::same_as<std::true_type>;
 };
 
 /**
@@ -497,18 +499,14 @@ public:
 
     /**
      * Inserts the given node before index ``idx``. Assumes the given index is
-     * valid.
+     * valid. Depot nodes are copied into internal memory, but of client nodes
+     * no ownership is taken.
      */
     void insert(size_t idx, Node *node);
 
     /**
-     * Appends the given node pointer at the end of the route. Depending on the
-     * type of node, one of the following happens:
-     *
-     * * A client node is simply appended, and we assume the pointer remains
-     *   valid throughout this route's lifetime. No ownership is taken.
-     * * A depot node is copied into an internal structure. No ownership is
-     *   taken, but changes are not propagated to the original node.
+     * Appends the given node pointer at the end of the route. Depot nodes are
+     * copied into internal memory, but of client nodes no ownership is taken.
      */
     void push_back(Node *node);
 
@@ -943,6 +941,9 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
             segment = LoadSegment::merge(segment, other.load(dimension));
+            if constexpr (ReloadSegment<decltype(other)>)
+                segment = {0, 0, 0, segment.excessLoad(capacity[dimension])};
+
             if constexpr (sizeof...(args) != 0)
                 self(self, std::forward<decltype(args)>(args)...);
         };

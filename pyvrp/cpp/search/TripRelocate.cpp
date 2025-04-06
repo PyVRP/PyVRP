@@ -18,6 +18,8 @@ class ReloadDepotSegment
     size_t depot_;
 
 public:
+    bool const IS_RELOAD_DEPOT = true;  // used by ReloadSegment concept
+
     ReloadDepotSegment(pyvrp::ProblemData const &data, size_t depot)
         : data_(data), depot_(depot)
     {
@@ -28,7 +30,6 @@ public:
 
     size_t first() const { return depot_; }
     size_t last() const { return depot_; }
-    bool isReloadDepot() const { return true; }
 
     pyvrp::Distance distance([[maybe_unused]] size_t profile) const
     {
@@ -112,13 +113,21 @@ TripRelocate::evaluate(Route::Node *U,
 void TripRelocate::apply([[maybe_unused]] Route::Node *U,
                          [[maybe_unused]] Route::Node *V) const
 {
+    auto *uRoute = U->route();
+    uRoute->remove(U->idx());
+
+    auto *vRoute = V->route();
+    Route::Node depot = {move.depot};
+
     if (move.type == MoveType::DEPOT_U)
     {
-        // TODO
+        vRoute->insert(V->idx() + 1, U);
+        vRoute->insert(V->idx() + 1, &depot);
     }
 
     if (move.type == MoveType::U_DEPOT)
     {
-        // TODO
+        vRoute->insert(V->idx() + 1, &depot);
+        vRoute->insert(V->idx() + 1, U);
     }
 }
