@@ -245,10 +245,18 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("num_trips", &Route::numTrips)
         .def_property_readonly("max_trips", &Route::maxTrips)
         .def("__delitem__", &Route::remove, py::arg("idx"))
-        .def("__getitem__",
-             py::overload_cast<size_t>(&Route::operator[]),
-             py::arg("idx"),
-             py::return_value_policy::reference_internal)
+        .def(
+            "__getitem__",
+            [](Route const &route, int idx)
+            {
+                // int so we also support negative offsets from the end.
+                idx = idx < 0 ? route.size() + idx : idx;
+                if (idx < 0 || static_cast<size_t>(idx) >= route.size())
+                    throw py::index_error();
+                return route[idx];
+            },
+            py::arg("idx"),
+            py::return_value_policy::reference_internal)
         .def(
             "__iter__",
             [](Route const &route)

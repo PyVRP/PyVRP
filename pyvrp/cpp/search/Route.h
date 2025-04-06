@@ -513,7 +513,8 @@ public:
     void push_back(Node *node);
 
     /**
-     * Removes the node at ``idx`` from the route.
+     * Removes the node at ``idx`` from the route. Start and end depots cannot
+     * be removed.
      */
     void remove(size_t idx);
 

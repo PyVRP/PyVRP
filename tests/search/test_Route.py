@@ -86,9 +86,9 @@ def test_route_depots_are_depots(ok_small):
         assert_(route[0].is_start_depot())
         assert_(not route[0].is_end_depot())
 
-        assert_(route[len(route) - 1].is_depot())
-        assert_(route[len(route) - 1].is_end_depot())
-        assert_(not route[len(route) - 1].is_start_depot())
+        assert_(route[-1].is_depot())
+        assert_(route[-1].is_end_depot())
+        assert_(not route[-1].is_start_depot())
 
 
 def test_route_append_increases_route_len(ok_small):
@@ -936,3 +936,29 @@ def test_multi_trip_load_evaluation(ok_small_multiple_trips):
 
     assert_equal(before2.load(), 8)
     assert_equal(after2.load(), 8)
+
+
+def test_route_remove_reload_depot(ok_small_multiple_trips):
+    """
+    Tests that removing reload depots from the route correctly reduces the
+    number of depots, and does not affect the start and end depots.
+    """
+    route = Route(ok_small_multiple_trips, 0, 0)
+    for loc in [1, 0, 4]:
+        node = Node(loc=loc)
+        route.append(node)
+
+    start_depot = route[0]
+    end_depot = route[-1]
+
+    assert_equal(route.num_clients, 2)
+    assert_equal(route.num_depots, 3)  # start, end, and one reload depot
+    assert_(route[2].is_reload_depot())
+
+    del route[2]
+    assert_equal(route.num_clients, 2)
+    assert_equal(route.num_depots, 2)
+    assert_(not route[2].is_reload_depot())
+
+    assert_(route[0] is start_depot)
+    assert_(route[-1] is end_depot)

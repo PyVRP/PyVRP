@@ -172,13 +172,17 @@ void Route::push_back(Node *node)
 
 void Route::remove(size_t idx)
 {
-    // TODO remove reload depot
-    assert(0 < idx && idx < nodes.size() - 1);
-    assert(nodes[idx]->route() == this);  // must currently be in this route
+    assert(0 < idx && idx < nodes.size() - 1);  // is not start or end depot
+    assert(nodes[idx]->route() == this);        // must be in this route
 
-    nodes[idx]->unassign();
-    nodes.erase(nodes.begin() + idx);
+    if (nodes[idx]->isReloadDepot())
+        // Then we own this node - it's in our depots vector.
+        depots_.erase(depots_.begin() + nodes[idx]->trip() + 1);
+    else
+        // We do not own this node, so we only unassign it.
+        nodes[idx]->unassign();
 
+    nodes.erase(nodes.begin() + idx);  // remove dangling pointer
     for (auto after = idx; after != nodes.size(); ++after)
         nodes[after]->idx_ = after;
 
@@ -189,7 +193,8 @@ void Route::remove(size_t idx)
 
 void Route::swap(Node *first, Node *second)
 {
-    // TODO swap reload depot
+    assert(!first->isDepot() && !second->isDepot());
+
     // TODO specialise std::swap for Node
     if (first->route_)
         first->route_->nodes[first->idx_] = second;
