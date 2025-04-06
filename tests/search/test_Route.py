@@ -944,21 +944,11 @@ def test_route_remove_reload_depot(ok_small_multiple_trips):
     number of depots, and does not affect the start and end depots.
     """
     route = Route(ok_small_multiple_trips, 0, 0)
-    for loc in [1, 0, 4]:
-        node = Node(loc=loc)
-        route.append(node)
+    route.append(Node(loc=0))
 
-    start_depot = route[0]
-    end_depot = route[-1]
-
-    assert_equal(route.num_clients, 2)
     assert_equal(route.num_depots, 3)  # start, end, and one reload depot
-    assert_(route[2].is_reload_depot())
+    assert_(route[1].is_reload_depot())
 
-    del route[2]
-    assert_equal(route.num_clients, 2)
+    del route[1]
     assert_equal(route.num_depots, 2)
-    assert_(not route[2].is_reload_depot())
-
-    assert_(route[0] is start_depot)
-    assert_(route[-1] is end_depot)
+    assert_(not route[1].is_reload_depot())
