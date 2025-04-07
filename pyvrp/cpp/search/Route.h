@@ -956,7 +956,7 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 }
 }  // namespace pyvrp::search
 
-// Outputs a route into a given ostream in CVRPLib format
+// Outputs a route into a given ostream in human-readable format
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route);
 
 #endif  // PYVRP_SEARCH_ROUTE_H

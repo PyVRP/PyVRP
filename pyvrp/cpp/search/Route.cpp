@@ -345,10 +345,16 @@ void Route::update()
 
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
 {
-    out << "Route #" << route.idx() + 1 << ":";  // route number
-    for (auto *node : route)
-        out << ' ' << node->client();  // client index
-    out << '\n';
+    for (size_t idx = 1; idx != route.size() - 1; ++idx)
+    {
+        if (idx != 1)
+            out << ' ';
+
+        if (route[idx]->isReloadDepot())
+            out << '|';
+        else
+            out << route[idx]->client();
+    }
 
     return out;
 }

@@ -416,9 +416,9 @@ std::ostream &operator<<(std::ostream &out, Route const &route)
     auto const &trips = route.trips();
     for (size_t idx = 0; idx != trips.size(); ++idx)
     {
-        out << trips[idx];
-        if (idx + 1 != trips.size())
+        if (idx != 0)
             out << " | ";
+        out << trips[idx];
     }
 
     return out;
