@@ -5,10 +5,10 @@ from pyvrp.search import TripRelocate
 from pyvrp.search._search import Node, Route
 
 
-def test_inserts_depot(ok_small_multiple_trips):
+def test_inserts_depot_single_route(ok_small_multiple_trips):
     """
     Tests that TripRelocate inserts a reload depot along with the node
-    relocation.
+    relocation in the same route.
     """
     route = Route(ok_small_multiple_trips, 0, 0)
     for loc in [1, 2, 3, 4]:
@@ -39,6 +39,14 @@ def test_inserts_depot(ok_small_multiple_trips):
 
     # Check that the route now indeed includes the "3 | 2" bit.
     assert_equal(str(route), "1 3 | 2 4")
+
+
+def test_inserts_depot_across_routes(ok_small_multiple_trips):
+    """
+    Tests that TripRelocate inserts a reload depot along with the node
+    relocation across routes.
+    """
+    pass  # TODO
 
 
 def test_evaluate_fixed_vehicle_costs():
