@@ -24,9 +24,9 @@ concept Segment = requires(T arg, size_t profile, size_t dimension) {
     { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
 };
 
-// Additionally, if the segment specifies just a reload depot, that may be
-// available in the interface. This is helpful when evaluating excess load
-// with intermediate reload depots.
+// Additionally, the following interface may be used by a segment to signal it
+// represents a reload depot. This is helpful when evaluating excess load with
+// intermediate reload depots.
 template <typename T>
 concept ReloadSegment = Segment<T> && requires(T arg) {
     { arg.isReloadDepot() } -> std::same_as<std::true_type>;
@@ -54,9 +54,7 @@ public:
      * can be efficiently evaluated by calling appropriate member functions,
      * detailing the newly proposed route's statistics.
      */
-    template <typename... Segments>
-        requires(... && Segment<Segments>)
-    class Proposal
+    template <Segment... Segments> class Proposal
     {
         std::tuple<Segments...> segments_;
 
@@ -855,7 +853,7 @@ Route::SegmentBetween Route::between(size_t start, size_t end) const
     return {*this, start, end};
 }
 
-template <typename... Segments>
+template <Segment... Segments>
 Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     : segments_(std::forward<Segments>(segments)...)
 {
@@ -866,13 +864,13 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     assert(first.route() == last.route());  // must start and end at same route
 }
 
-template <typename... Segments>
+template <Segment... Segments>
 Route const *Route::Proposal<Segments...>::route() const
 {
     return std::get<0>(segments_).route();
 }
 
-template <typename... Segments>
+template <Segment... Segments>
 Distance Route::Proposal<Segments...>::distance() const
 {
     auto const &data = route()->data;
@@ -900,7 +898,7 @@ Distance Route::Proposal<Segments...>::distance() const
     return std::apply(fn, segments_);
 }
 
-template <typename... Segments>
+template <Segment... Segments>
 DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
     auto const &data = route()->data;
@@ -930,7 +928,7 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
     return std::apply(fn, segments_);
 }
 
-template <typename... Segments>
+template <Segment... Segments>
 Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 {
     auto const &capacity = route()->capacity();
