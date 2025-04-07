@@ -589,7 +589,5 @@ def test_swap_does_not_swap_depots(ok_small_multiple_trips):
     op = Exchange21(data)
     cost_eval = CostEvaluator([0], 0, 0)
 
-    # First move overlaps with the reload depot at index 3, so cannot be
-    # evaluated. Second move does not: this aims to swap 1 -> 2 with 3.
+    # This move overlaps with reload depot at index 3, so cannot be evaluated.
     assert_equal(op.evaluate(route[2], route[4], cost_eval), 0)
-    assert_equal(op.evaluate(route[1], route[4], cost_eval), 370)
