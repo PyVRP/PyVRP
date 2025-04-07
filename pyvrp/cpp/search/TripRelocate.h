@@ -9,7 +9,7 @@ namespace pyvrp::search
  * TripRelocate(data: ProblemData)
  *
  * Tests if inserting a reload depot while relocating :math:`U` after :math:`V`
- * is an improving move.
+ * results in an improving move.
  */
 class TripRelocate : public LocalSearchOperator<Route::Node>
 {
@@ -23,8 +23,9 @@ class TripRelocate : public LocalSearchOperator<Route::Node>
 
     struct Move
     {
-        MoveType type;
-        size_t depot;
+        Cost cost = std::numeric_limits<Cost>::max();
+        MoveType type = MoveType::DEPOT_U;
+        size_t depot = 0;
     };
 
     Move move;

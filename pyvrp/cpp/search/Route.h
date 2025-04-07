@@ -29,7 +29,7 @@ concept Segment = requires(T arg, size_t profile, size_t dimension) {
 // with intermediate reload depots.
 template <typename T>
 concept ReloadSegment = Segment<T> && requires(T arg) {
-    { arg.IS_RELOAD_DEPOT } -> std::same_as<std::true_type>;
+    { arg.isReloadDepot() } -> std::same_as<std::true_type>;
 };
 
 /**
@@ -940,9 +940,10 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            segment = LoadSegment::merge(segment, other.load(dimension));
             if constexpr (ReloadSegment<decltype(other)>)
                 segment = {0, 0, 0, segment.excessLoad(capacity[dimension])};
+            else
+                segment = LoadSegment::merge(segment, other.load(dimension));
 
             if constexpr (sizeof...(args) != 0)
                 self(self, std::forward<decltype(args)>(args)...);
