@@ -240,3 +240,26 @@ def test_inplace_cost_delta_distance_computation(ok_small):
     #                     delta = -958
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(inplace_cost(node3, node1, ok_small, cost_eval), -958)
+
+
+def test_remove_reload_depot(ok_small_multiple_trips):
+    """
+    Tests that remove_cost() correctly evaluates removing a reload depot.
+    """
+    data = ok_small_multiple_trips
+    route = Route(data, 0, 0)
+    for loc in [1, 2, 0, 3, 4]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    assert_(not route.has_excess_load())
+    assert_(route[3].is_reload_depot())
+
+    # If we remove the reload depot, we gain 8 excess load. That costs 8_000
+    # with this cost evaluator. Additionally, we have some changes in distance
+    # cost, as follows:
+    #              dist(2, 3) = 621
+    # dist(2, 0) + dist(0, 3) = 1965 + 1931
+    #              dist delta = -3275
+    cost_eval = CostEvaluator([1000], 0, 0)
+    assert_equal(remove_cost(route[3], data, cost_eval), 8_000 - 3_275)

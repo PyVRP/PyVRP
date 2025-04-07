@@ -69,15 +69,19 @@ pyvrp::Cost pyvrp::search::removeCost(Route::Node *U,
                                       ProblemData const &data,
                                       CostEvaluator const &costEvaluator)
 {
-    if (!U->route() || U->isDepot())
+    if (!U->route() || U->isStartDepot() || U->isEndDepot())
         return 0;
 
     auto *route = U->route();
-    ProblemData::Client const &client = data.location(U->client());
+    Cost deltaCost = 0;
 
-    Cost deltaCost
-        = client.prize
-          - Cost(route->numClients() == 1) * route->fixedVehicleCost();
+    if (!U->isDepot())
+    {
+        ProblemData::Client const &client = data.location(U->client());
+        deltaCost
+            = client.prize
+              - Cost(route->numClients() == 1) * route->fixedVehicleCost();
+    }
 
     costEvaluator.deltaCost<true>(deltaCost,
                                   Route::Proposal(route->before(U->idx() - 1),

@@ -28,7 +28,21 @@ class TripRelocate : public LocalSearchOperator<Route::Node>
         size_t depot = 0;
     };
 
-    Move move;
+    Move move_;
+
+    // Evaluates moves where a reload depot is inserted before U, as
+    // V -> depot -> U.
+    void evalDepotBefore(Cost &deltaCost,
+                         Route::Node *U,
+                         Route::Node *V,
+                         CostEvaluator const &costEvaluator);
+
+    // Evaluates moves where a reload depot is inserted after U, as
+    // V -> U -> depot.
+    void evalDepotAfter(Cost &deltaCost,
+                        Route::Node *U,
+                        Route::Node *V,
+                        CostEvaluator const &costEvaluator);
 
 public:
     Cost evaluate(Route::Node *U,

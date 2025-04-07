@@ -94,6 +94,14 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                     if (p(V)->isStartDepot()
                         && applyNodeOps(U, p(V), costEvaluator))
                         continue;
+
+                    if (p(V)->isReloadDepot()
+                        && applyDepotRemovalMove(p(V), costEvaluator))
+                        continue;
+
+                    if (n(V)->isReloadDepot()
+                        && applyDepotRemovalMove(n(V), costEvaluator))
+                        continue;
                 }
             }
 
@@ -221,6 +229,22 @@ bool LocalSearch::applyRouteOps(Route *U,
 
             return true;
         }
+    }
+
+    return false;
+}
+
+bool LocalSearch::applyDepotRemovalMove(Route::Node *U,
+                                        CostEvaluator const &CostEvaluator)
+{
+    if (!U->isReloadDepot())
+        return false;
+
+    if (removeCost(U, data, CostEvaluator) < 0)
+    {
+        auto *uRoute = U->route();
+        uRoute->remove(U->idx());
+        return true;
     }
 
     return false;
