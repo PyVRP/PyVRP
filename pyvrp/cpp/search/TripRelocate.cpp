@@ -172,6 +172,9 @@ pyvrp::Cost TripRelocate::evaluate(Route::Node *U,
 {
     assert(!U->isDepot() && !V->isEndDepot());
 
+    if (U == n(V))
+        return 0;
+
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 

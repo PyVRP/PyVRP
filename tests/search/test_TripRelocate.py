@@ -46,7 +46,7 @@ def test_evaluate_fixed_vehicle_costs():
     Tests that TripRelocate correctly evaluates delta costs resulting from
     vehicles' fixed costs.
     """
-    pass
+    pass  # TODO
 
 
 def test_reload_depot_before_or_after_relocate():
@@ -54,7 +54,7 @@ def test_reload_depot_before_or_after_relocate():
     TripRelocate evaluates placing a reload depot either before or after the
     relocated node. This test checks if it picks the best option.
     """
-    pass
+    pass  # TODO
 
 
 def test_inserts_best_reload_depot():
@@ -62,4 +62,4 @@ def test_inserts_best_reload_depot():
     Tests that TripRelocate inserts the best possible reload depot, not just
     the first improving one.
     """
-    pass
+    pass  # TODO

@@ -64,7 +64,13 @@ Route::Iterator &Route::Iterator::operator++()
         return *this;
     }
 
+    // Then we move to the next trip. This trip could be empty - in that case
+    // we continue to the next until we either exhaust all trips, or we find a
+    // non-empty trip.
     ++trip_;
+    while (trip_ + 1 < trips.size() && trips[trip_].empty())
+        ++trip_;
+
     idx_ = 0;
     return *this;
 }

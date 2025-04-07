@@ -202,6 +202,10 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
         if (containsDepot(V, M))
             return 0;
 
+    // We cannot easily evaluate across trips, so we cannot determine this move.
+    if (U->route() == V->route() && U->trip() != V->trip())
+        return 0;
+
     if constexpr (M == 0)  // special case where nothing in V is moved
     {
         if (U == n(V))
