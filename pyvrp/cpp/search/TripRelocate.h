@@ -32,14 +32,14 @@ class TripRelocate : public LocalSearchOperator<Route::Node>
 
     // Evaluates moves where a reload depot is inserted before U, as
     // V -> depot -> U.
-    void evalDepotBefore(Cost &deltaCost,
+    void evalDepotBefore(Cost fixedCost,
                          Route::Node *U,
                          Route::Node *V,
                          CostEvaluator const &costEvaluator);
 
     // Evaluates moves where a reload depot is inserted after U, as
     // V -> U -> depot.
-    void evalDepotAfter(Cost &deltaCost,
+    void evalDepotAfter(Cost fixedCost,
                         Route::Node *U,
                         Route::Node *V,
                         CostEvaluator const &costEvaluator);

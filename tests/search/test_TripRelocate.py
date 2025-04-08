@@ -74,14 +74,6 @@ def test_inserts_depot_across_routes(ok_small_multiple_trips):
     assert_equal(str(route2), "1 3 | 2 4")
 
 
-def test_evaluate_fixed_vehicle_costs():
-    """
-    Tests that TripRelocate correctly evaluates delta costs resulting from
-    vehicles' fixed costs.
-    """
-    pass  # TODO
-
-
 def test_reload_depot_before_or_after_relocate():
     """
     TripRelocate evaluates placing a reload depot either before or after the

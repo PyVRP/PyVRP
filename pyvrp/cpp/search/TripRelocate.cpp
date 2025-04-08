@@ -50,7 +50,7 @@ public:
 };
 }  // namespace
 
-void TripRelocate::evalDepotBefore(Cost &deltaCost,
+void TripRelocate::evalDepotBefore(Cost fixedCost,
                                    Route::Node *U,
                                    Route::Node *V,
                                    CostEvaluator const &costEvaluator)
@@ -66,17 +66,17 @@ void TripRelocate::evalDepotBefore(Cost &deltaCost,
 
         for (auto const depot : vehType.reloadDepots)
         {
-            auto tmpCost = deltaCost;
+            auto deltaCost = fixedCost;
             costEvaluator.deltaCost(
-                tmpCost,
+                deltaCost,
                 uProposal,
                 Route::Proposal(vRoute->before(V->idx()),
                                 ReloadDepotSegment(data, depot),
                                 uRoute->at(U->idx()),
                                 vRoute->after(V->idx() + 1)));
 
-            if (tmpCost < move_.cost)
-                move_ = {tmpCost, MoveType::DEPOT_U, depot};
+            if (deltaCost < move_.cost)
+                move_ = {deltaCost, MoveType::DEPOT_U, depot};
         }
     }
     else  // within same route
@@ -84,10 +84,10 @@ void TripRelocate::evalDepotBefore(Cost &deltaCost,
         auto const *route = vRoute;
         for (auto const depot : vehType.reloadDepots)
         {
-            auto tmpCost = deltaCost;
+            auto deltaCost = fixedCost;
             if (U->idx() < V->idx())
                 costEvaluator.deltaCost(
-                    tmpCost,
+                    deltaCost,
                     Route::Proposal(route->before(U->idx() - 1),
                                     route->between(U->idx() + 1, V->idx()),
                                     ReloadDepotSegment(data, depot),
@@ -95,20 +95,20 @@ void TripRelocate::evalDepotBefore(Cost &deltaCost,
                                     route->after(V->idx() + 1)));
             else
                 costEvaluator.deltaCost(
-                    tmpCost,
+                    deltaCost,
                     Route::Proposal(route->before(V->idx()),
                                     ReloadDepotSegment(data, depot),
                                     route->at(U->idx()),
                                     route->between(V->idx() + 1, U->idx() - 1),
                                     route->after(U->idx() + 1)));
 
-            if (tmpCost < move_.cost)
-                move_ = {tmpCost, MoveType::DEPOT_U, depot};
+            if (deltaCost < move_.cost)
+                move_ = {deltaCost, MoveType::DEPOT_U, depot};
         }
     }
 }
 
-void TripRelocate::evalDepotAfter(Cost &deltaCost,
+void TripRelocate::evalDepotAfter(Cost fixedCost,
                                   Route::Node *U,
                                   Route::Node *V,
                                   CostEvaluator const &costEvaluator)
@@ -124,17 +124,17 @@ void TripRelocate::evalDepotAfter(Cost &deltaCost,
 
         for (auto const depot : vehType.reloadDepots)
         {
-            Cost tmpCost = deltaCost;
+            Cost deltaCost = fixedCost;
             costEvaluator.deltaCost(
-                tmpCost,
+                deltaCost,
                 uProposal,
                 Route::Proposal(vRoute->before(V->idx()),
                                 uRoute->at(U->idx()),
                                 ReloadDepotSegment(data, depot),
                                 vRoute->after(V->idx() + 1)));
 
-            if (tmpCost < move_.cost)
-                move_ = {tmpCost, MoveType::U_DEPOT, depot};
+            if (deltaCost < move_.cost)
+                move_ = {deltaCost, MoveType::U_DEPOT, depot};
         }
     }
     else  // within same route
@@ -142,10 +142,10 @@ void TripRelocate::evalDepotAfter(Cost &deltaCost,
         auto const *route = vRoute;
         for (auto const depot : vehType.reloadDepots)
         {
-            Cost tmpCost = deltaCost;
+            Cost deltaCost = fixedCost;
             if (U->idx() < V->idx())
                 costEvaluator.deltaCost(
-                    tmpCost,
+                    deltaCost,
                     Route::Proposal(route->before(U->idx() - 1),
                                     route->between(U->idx() + 1, V->idx()),
                                     route->at(U->idx()),
@@ -153,15 +153,15 @@ void TripRelocate::evalDepotAfter(Cost &deltaCost,
                                     route->after(V->idx() + 1)));
             else
                 costEvaluator.deltaCost(
-                    tmpCost,
+                    deltaCost,
                     Route::Proposal(route->before(V->idx()),
                                     route->at(U->idx()),
                                     ReloadDepotSegment(data, depot),
                                     route->between(V->idx() + 1, U->idx() - 1),
                                     route->after(U->idx() + 1)));
 
-            if (tmpCost < move_.cost)
-                move_ = {tmpCost, MoveType::U_DEPOT, depot};
+            if (deltaCost < move_.cost)
+                move_ = {deltaCost, MoveType::U_DEPOT, depot};
         }
     }
 }
@@ -185,18 +185,18 @@ pyvrp::Cost TripRelocate::evaluate(Route::Node *U,
 
     move_ = {};
 
-    Cost deltaCost = 0;
+    Cost fixedCost = 0;
     if (uRoute != vRoute)
     {
         if (uRoute->numClients() == 1)  // will become empty after move
-            deltaCost -= uRoute->fixedVehicleCost();
+            fixedCost -= uRoute->fixedVehicleCost();
 
         if (vRoute->empty())  // no longer empty after move
-            deltaCost += vRoute->fixedVehicleCost();
+            fixedCost += vRoute->fixedVehicleCost();
     }
 
-    evalDepotBefore(deltaCost, U, V, costEvaluator);
-    evalDepotAfter(deltaCost, U, V, costEvaluator);
+    evalDepotBefore(fixedCost, U, V, costEvaluator);
+    evalDepotAfter(fixedCost, U, V, costEvaluator);
 
     return move_.cost;
 }
