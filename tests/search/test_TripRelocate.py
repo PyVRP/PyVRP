@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
@@ -75,12 +76,41 @@ def test_inserts_depot_across_routes(ok_small_multiple_trips):
     assert_equal(str(route2), "1 3 | 2 4")
 
 
-def test_reload_depot_before_or_after_relocate():
+@pytest.mark.parametrize(
+    ("load_penalty", "exp_delta_cost", "exp_route_str"),
+    [
+        # With such a large load penalty, we insert the depot after 1 because
+        # that ensures the route has no excess load, which dominates the cost
+        # structure.
+        (1_000, -3_897, "2 1 | 3 4"),
+        # With this load penalty the time aspect is still important, and we
+        # insert the depot before 1 because that is better w.r.t. time warp.
+        (300, -54, "2 | 1 3 4"),  # depot before 1
+    ],
+)
+def test_reload_depot_before_or_after_relocate(
+    ok_small_multiple_trips,
+    load_penalty: int,
+    exp_delta_cost: int,
+    exp_route_str: str,
+):
     """
     TripRelocate evaluates placing a reload depot either before or after the
     relocated node. This test checks if it picks the best option.
     """
-    pass  # TODO
+    route = Route(ok_small_multiple_trips, 0, 0)
+    for loc in [1, 2, 3, 4]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    op = TripRelocate(ok_small_multiple_trips)
+    cost_eval = CostEvaluator([load_penalty], 1, 0)
+    assert_equal(op.evaluate(route[1], route[2], cost_eval), exp_delta_cost)
+
+    op.apply(route[1], route[2])
+    route.update()
+
+    assert_equal(str(route), exp_route_str)
 
 
 def test_inserts_best_reload_depot():
