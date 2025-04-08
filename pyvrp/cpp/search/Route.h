@@ -931,12 +931,13 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            if (other.first() < data.numDepots())
-                // Then other begins with a (reload) depot. We finalise this
-                // load segment and restart before merging with other.
-                segment = {0, 0, 0, segment.excessLoad(capacity[dimension])};
+            if (other.first() < data.numDepots())  // other starts at a depot
+                segment = segment.finalise(capacity[dimension]);
 
             segment = LoadSegment::merge(segment, other.load(dimension));
+
+            if (other.last() < data.numDepots())  // other ends at a depot
+                segment = segment.finalise(capacity[dimension]);
 
             if constexpr (sizeof...(args) != 0)
                 self(self, std::forward<decltype(args)>(args)...);

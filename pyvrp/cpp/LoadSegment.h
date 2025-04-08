@@ -37,6 +37,14 @@ public:
                                                   LoadSegment const &second);
 
     /**
+     * Finalises the load on this segment, and returns a new segment where any
+     * excess load has been moved to the cumulative excess load field. This is
+     * useful with reloading, because the finalised segment can be concatened
+     * with load segments of subsequent trips.
+     */
+    LoadSegment finalise(Load capacity) const;
+
+    /**
      * Returns the delivery amount, that is, the total amount of load delivered
      * to clients on this segment.
      */

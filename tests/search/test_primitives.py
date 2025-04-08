@@ -284,3 +284,6 @@ def test_remove_consecutive_reload_depots(ok_small_multiple_trips):
     # Load should be a no-op, since there's a reload depot immediately after
     # the one we're trying to remove. So delta cost must be 0.
     assert_equal(remove_cost(route[3], data, CostEvaluator([1000], 0, 0)), 0)
+
+    # And similarly removing the second depot should also be a no-op.
+    assert_equal(remove_cost(route[4], data, CostEvaluator([1000], 0, 0)), 0)
