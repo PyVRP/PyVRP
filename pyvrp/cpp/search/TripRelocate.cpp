@@ -199,8 +199,11 @@ pyvrp::Cost TripRelocate::evaluate(Route::Node *U,
             fixedCost += vRoute->fixedVehicleCost();
     }
 
-    evalDepotBefore(fixedCost, U, V, costEvaluator);
-    evalDepotAfter(fixedCost, U, V, costEvaluator);
+    if (!V->isDepot())
+        evalDepotBefore(fixedCost, U, V, costEvaluator);
+
+    if (!n(V)->isDepot())
+        evalDepotAfter(fixedCost, U, V, costEvaluator);
 
     return move_.cost;
 }
