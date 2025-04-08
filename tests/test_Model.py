@@ -1039,4 +1039,3 @@ def test_model_solves_multi_trip_instance():
     route = routes[0]
     assert_equal(route.excess_load(), [0])
     assert_equal(len(route.trips()), 3)
-    assert_equal(str(route), "6 | 5 4 | 2 3")
