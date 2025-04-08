@@ -575,6 +575,3 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     routes = improved.routes()
     assert_(str(routes[0]), "1 3")
     assert_(str(routes[1]), "2 4")
-
-
-# TODO what about two reload depots in a row? Does that evaluate correctly?

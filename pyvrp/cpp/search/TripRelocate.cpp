@@ -3,7 +3,6 @@
 #include "Route.h"
 
 #include <cassert>
-#include <type_traits>
 
 using pyvrp::search::TripRelocate;
 
@@ -19,8 +18,6 @@ class ReloadDepotSegment
     size_t depot_;
 
 public:
-    constexpr std::true_type isReloadDepot() const { return std::true_type(); }
-
     ReloadDepotSegment(pyvrp::ProblemData const &data, size_t depot)
         : data_(data), depot_(depot)
     {

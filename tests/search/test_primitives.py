@@ -263,3 +263,24 @@ def test_remove_reload_depot(ok_small_multiple_trips):
     #              dist delta = -3275
     cost_eval = CostEvaluator([1000], 0, 0)
     assert_equal(remove_cost(route[3], data, cost_eval), 8_000 - 3_275)
+
+
+def test_remove_consecutive_reload_depots(ok_small_multiple_trips):
+    """
+    Tests that removing one of multiple, consecutive reload depots is evaluated
+    correctly.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=2)
+    data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
+    route = Route(data, 0, 0)
+    for loc in [1, 2, 0, 0, 3, 4]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    assert_(route[3].is_reload_depot())
+    assert_(route[4].is_reload_depot())
+
+    # There are no distance or duration aspects, so this is purely about load.
+    # Load should be a no-op, since there's a reload depot immediately after
+    # the one we're trying to remove. So delta cost must be 0.
+    assert_equal(remove_cost(route[3], data, CostEvaluator([1000], 0, 0)), 0)

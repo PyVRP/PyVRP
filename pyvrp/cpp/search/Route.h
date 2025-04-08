@@ -9,7 +9,6 @@
 #include <cassert>
 #include <concepts>
 #include <iosfwd>
-#include <type_traits>
 
 namespace pyvrp::search
 {
@@ -22,14 +21,6 @@ concept Segment = requires(T arg, size_t profile, size_t dimension) {
     { arg.distance(profile) } -> std::convertible_to<Distance>;
     { arg.duration(profile) } -> std::convertible_to<DurationSegment>;
     { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
-};
-
-// Additionally, the following interface may be used by a segment to signal it
-// represents a reload depot. This is helpful when evaluating excess load with
-// intermediate reload depots.
-template <typename T>
-concept ReloadSegment = Segment<T> && requires(T arg) {
-    { arg.isReloadDepot() } -> std::same_as<std::true_type>;
 };
 
 /**
@@ -931,17 +922,21 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
 template <Segment... Segments>
 Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 {
+    auto const &data = route()->data;
     auto const &capacity = route()->capacity();
-    auto const fn = [capacity, dimension](auto &&...args)
+
+    auto const fn = [&](auto &&...args)
     {
         LoadSegment segment;
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            if constexpr (ReloadSegment<decltype(other)>)
+            if (other.first() < data.numDepots())
+                // Then other begins with a (reload) depot. We finalise this
+                // load segment and restart before merging with other.
                 segment = {0, 0, 0, segment.excessLoad(capacity[dimension])};
-            else
-                segment = LoadSegment::merge(segment, other.load(dimension));
+
+            segment = LoadSegment::merge(segment, other.load(dimension));
 
             if constexpr (sizeof...(args) != 0)
                 self(self, std::forward<decltype(args)>(args)...);
