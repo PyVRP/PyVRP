@@ -1034,6 +1034,9 @@ def test_model_solves_multi_trip_instance():
     routes = res.best.routes()
     assert_equal(len(routes), 1)
 
+    # This route transports the full 25 client delivery demand using a vehicle
+    # with capacity of just 10 because it reloads twice along the route.
     route = routes[0]
+    assert_equal(route.excess_load(), [0])
     assert_equal(len(route.trips()), 3)
     assert_equal(str(route), "6 | 5 4 | 2 3")
