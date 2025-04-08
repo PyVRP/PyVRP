@@ -1,6 +1,7 @@
-from numpy.testing import assert_equal
+import numpy as np
+from numpy.testing import assert_, assert_equal
 
-from pyvrp import CostEvaluator
+from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
 from pyvrp.search import TripRelocate
 from pyvrp.search._search import Node, Route
 
@@ -87,4 +88,41 @@ def test_inserts_best_reload_depot():
     Tests that TripRelocate inserts the best possible reload depot, not just
     the first improving one.
     """
-    pass  # TODO
+    # Only non-zero in and out of the first depot, so we do not want to use
+    # that one - we instead prefer the second one, which is free.
+    mat = np.zeros((4, 4), dtype=int)
+    mat[0, 2:] = 100
+    mat[2:, 0] = 100
+
+    veh_type = VehicleType(capacity=[5], reload_depots=[0, 1], max_reloads=1)
+    data = ProblemData(
+        clients=[Client(0, 0, delivery=[5]), Client(0, 0, delivery=[5])],
+        depots=[Depot(0, 0), Depot(0, 0)],
+        vehicle_types=[veh_type],
+        distance_matrices=[mat],
+        duration_matrices=[mat],
+    )
+
+    route = Route(data, 0, 0)
+    route.append(Node(loc=2))
+    route.append(Node(loc=3))
+    route.update()
+
+    assert_(route.has_excess_load())
+    assert_equal(route.excess_load(), [5])
+
+    op = TripRelocate(data)
+    cost_eval = CostEvaluator([500], 0, 0)
+
+    # We evaluate two moves, 3 | 2 and 3 2 |, for each depot (0 and 1). Only
+    # 3 | 2 removes excess load. Then the depot choice: depot 0 incurs a small
+    # routing costs, whereas 1 is fee. Thus, we should evaluate and apply the
+    # move using depot 1, at delta cost -2_500.
+    assert_equal(op.evaluate(route[1], route[2], cost_eval), -2_500)
+
+    op.apply(route[1], route[2])
+    route.update()
+
+    assert_(not route.has_excess_load())
+    assert_equal(str(route), "3 | 2")
+    assert_equal(route[2].client, 1)
