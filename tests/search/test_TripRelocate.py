@@ -46,7 +46,32 @@ def test_inserts_depot_across_routes(ok_small_multiple_trips):
     Tests that TripRelocate inserts a reload depot along with the node
     relocation across routes.
     """
-    pass  # TODO
+    route1 = Route(ok_small_multiple_trips, 0, 0)
+    route1.append(Node(loc=3))
+    route1.update()
+
+    route2 = Route(ok_small_multiple_trips, 1, 0)
+    for loc in [1, 2, 4]:
+        route2.append(Node(loc=loc))
+    route2.update()
+
+    assert_equal(str(route1), "3")
+    assert_equal(str(route2), "1 2 4")
+
+    op = TripRelocate(ok_small_multiple_trips)
+    cost_eval = CostEvaluator([500], 0, 0)
+
+    # The proposal evaluates 1 | 3 2 4 and 1 3 | 2 4. Of these, the second is
+    # better, with total cost 9_543 (compared to 3_994 + 8_601 now). The cost
+    # delta is thus -3_052.
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), -3_052)
+
+    op.apply(route1[1], route2[1])
+    route1.update()
+    route2.update()
+
+    assert_equal(str(route1), "")
+    assert_equal(str(route2), "1 3 | 2 4")
 
 
 def test_evaluate_fixed_vehicle_costs():
