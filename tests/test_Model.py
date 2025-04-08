@@ -1004,3 +1004,36 @@ def test_adding_unknown_reload_depots_raises():
 
     with assert_raises(ValueError):
         m.add_vehicle_type(reload_depots=[depot])
+
+
+def test_model_solves_multi_trip_instance():
+    """
+    Smoke test to check that the model can solve an instance with multiple
+    trips / reloading.
+    """
+    m = Model()
+    depot1 = m.add_depot(0, 0)
+    depot2 = m.add_depot(0, 0)
+
+    m.add_vehicle_type(
+        capacity=[10],
+        reload_depots=[depot1, depot2],
+        max_reloads=2,
+    )
+
+    for _ in range(5):
+        m.add_client(0, 0, delivery=[5])
+
+    for frm in m.locations:
+        for to in m.locations:
+            m.add_edge(frm, to, distance=0)
+
+    res = m.solve(stop=MaxIterations(25))
+    assert_(res.is_feasible())
+
+    routes = res.best.routes()
+    assert_equal(len(routes), 1)
+
+    route = routes[0]
+    assert_equal(len(route.trips()), 3)
+    assert_equal(str(route), "6 | 5 4 | 2 3")

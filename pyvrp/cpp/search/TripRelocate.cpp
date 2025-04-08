@@ -183,6 +183,10 @@ pyvrp::Cost TripRelocate::evaluate(Route::Node *U,
         // feasible. We have nothing to do in either case.
         return 0;
 
+    if (uRoute == vRoute && U->trip() != V->trip())
+        // We cannot currently evaluate such a move.
+        return 0;
+
     move_ = {};
 
     Cost fixedCost = 0;
