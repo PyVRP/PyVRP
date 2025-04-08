@@ -156,3 +156,40 @@ def test_inserts_best_reload_depot():
     assert_(not route.has_excess_load())
     assert_equal(str(route), "3 | 2")
     assert_equal(route[2].client, 1)
+
+
+def test_fixed_vehicle_cost():
+    """
+    Tests that TripRelocate correctly accounts for fixed vehicle costs due to
+    non-empty routes becoming empty.
+    """
+    data = ProblemData(
+        clients=[Client(0, 0, delivery=[5]), Client(0, 0, delivery=[4])],
+        depots=[Depot(0, 0)],
+        vehicle_types=[
+            VehicleType(
+                num_available=2,
+                capacity=[4],
+                fixed_cost=2_000,
+                reload_depots=[0],
+                max_reloads=1,
+            )
+        ],
+        distance_matrices=[np.zeros((3, 3), dtype=int)],
+        duration_matrices=[np.zeros((3, 3), dtype=int)],
+    )
+
+    route1 = Route(data, 0, 0)
+    route1.append(Node(loc=1))
+    route1.update()
+
+    route2 = Route(data, 1, 0)
+    route2.append(Node(loc=2))
+    route2.update()
+
+    op = TripRelocate(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+
+    # After this move, route1 is empty, which results in a cost delta of -2000
+    # because all other costs are zero.
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), -2_000)

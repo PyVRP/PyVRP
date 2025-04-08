@@ -45,6 +45,23 @@ public:
         return {};
     }
 };
+
+bool shouldSkipMove(pyvrp::search::Route::Node *U,
+                    pyvrp::search::Route::Node *V)
+{
+    auto const *uRoute = U->route();
+    auto const *vRoute = V->route();
+
+    // Cannot insert another depot in V, because it's already at capacity.
+    return vRoute->numTrips() == vRoute->maxTrips()
+           // Neither route has load violations, so no point trying reloading.
+           || (!uRoute->hasExcessLoad() && !vRoute->hasExcessLoad())
+           // Cannot evaluate this move because it requires load segments to
+           // contain a reload depot.
+           || (uRoute == vRoute && U->trip() != V->trip())
+           // If this route's empty, just Exchange<1, 0> already suffices.
+           || vRoute->empty();
+}
 }  // namespace
 
 void TripRelocate::evalDepotBefore(Cost fixedCost,
@@ -169,32 +186,17 @@ pyvrp::Cost TripRelocate::evaluate(Route::Node *U,
 {
     assert(!U->isDepot() && !V->isEndDepot());
 
-    if (U == n(V))
-        return 0;
-
-    auto const *uRoute = U->route();
-    auto const *vRoute = V->route();
-
-    if (vRoute->numTrips() == vRoute->maxTrips() || !vRoute->hasExcessLoad())
-        // Then we cannot insert another depot in V, or V is already load
-        // feasible. We have nothing to do in either case.
-        return 0;
-
-    if (uRoute == vRoute && U->trip() != V->trip())
-        // We cannot currently evaluate such a move.
+    if (U == n(V) || shouldSkipMove(U, V))
         return 0;
 
     move_ = {};
 
-    Cost fixedCost = 0;
-    if (uRoute != vRoute)
-    {
-        if (uRoute->numClients() == 1)  // will become empty after move
-            fixedCost -= uRoute->fixedVehicleCost();
+    auto const *uRoute = U->route();
+    auto const *vRoute = V->route();
 
-        if (vRoute->empty())  // no longer empty after move
-            fixedCost += vRoute->fixedVehicleCost();
-    }
+    Cost fixedCost = 0;
+    if (uRoute != vRoute && uRoute->numClients() == 1)  // empty after move
+        fixedCost -= uRoute->fixedVehicleCost();
 
     if (!V->isDepot())
         evalDepotBefore(fixedCost, U, V, costEvaluator);
