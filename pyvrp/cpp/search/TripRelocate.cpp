@@ -45,21 +45,6 @@ public:
         return {};
     }
 };
-
-bool shouldSkipMove(pyvrp::search::Route::Node *U,
-                    pyvrp::search::Route::Node *V)
-{
-    auto const *uRoute = U->route();
-    auto const *vRoute = V->route();
-
-    // Cannot insert another depot in V, because it's already at capacity.
-    return vRoute->numTrips() == vRoute->maxTrips()
-           // Cannot evaluate this move because it requires load segments to
-           // contain a reload depot.
-           || (uRoute == vRoute && U->trip() != V->trip())
-           // If this route's empty, just Exchange<1, 0> already suffices.
-           || vRoute->empty();
-}
 }  // namespace
 
 void TripRelocate::evalDepotBefore(Cost fixedCost,
@@ -184,13 +169,21 @@ pyvrp::Cost TripRelocate::evaluate(Route::Node *U,
 {
     assert(!U->isDepot() && !V->isEndDepot());
 
-    if (U == n(V) || shouldSkipMove(U, V))
+    auto const *uRoute = U->route();
+    auto const *vRoute = V->route();
+
+    if (U == n(V) || vRoute->empty())  // if V's empty, Exchange<1, 0> suffices
+        return 0;
+
+    if (vRoute->numTrips() == vRoute->maxTrips())
+        return 0;
+
+    // Cannot evaluate this move because it requires a load segment to contain
+    // a reload depot in the middle, which makes concatenation far more complex.
+    if (uRoute == vRoute && U->trip() != V->trip())
         return 0;
 
     move_ = {};
-
-    auto const *uRoute = U->route();
-    auto const *vRoute = V->route();
 
     Cost fixedCost = 0;
     if (uRoute != vRoute && uRoute->numClients() == 1)  // empty after move
