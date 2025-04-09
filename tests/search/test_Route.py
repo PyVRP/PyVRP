@@ -953,9 +953,41 @@ def test_route_remove_reload_depot(ok_small_multiple_trips):
     assert_equal(route.num_depots(), 3)  # start, end, and one reload depot
     assert_(route[1].is_reload_depot())
 
+    assert_equal(route[0].trip, 0)
+    assert_equal(route[1].trip, 1)
+    assert_equal(route[2].trip, 2)
+
     del route[1]
     assert_equal(route.num_depots(), 2)
     assert_(not route[1].is_reload_depot())
+
+    assert_equal(route[0].trip, 0)
+    assert_equal(route[1].trip, 1)
+
+
+def test_remove_multiple_reload_depots(ok_small_multiple_trips):
+    """
+    Tests that removing a reload depot from a route with multiple reload depots
+    correctly updates the following depots.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=2)
+    data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
+
+    route = Route(data, 0, 0)
+    for loc in [0, 0]:
+        route.append(Node(loc=loc))
+
+    assert_(route[1].is_reload_depot())
+    assert_(route[2].is_reload_depot())
+    assert_equal(route[1].trip, 1)
+    assert_equal(route[2].trip, 2)
+    assert_equal(route[3].trip, 3)
+
+    del route[1]
+    assert_(route[1].is_reload_depot())
+    assert_(route[2].is_end_depot())
+    assert_equal(route[1].trip, 1)
+    assert_equal(route[2].trip, 2)
 
 
 def test_route_raises_too_many_trips(ok_small_multiple_trips):

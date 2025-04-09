@@ -175,16 +175,28 @@ void Route::remove(size_t idx)
     assert(0 < idx && idx < nodes.size() - 1);  // is not start or end depot
     assert(nodes[idx]->route() == this);        // must be in this route
 
+    auto trip = nodes[idx - 1]->trip();
     if (nodes[idx]->isReloadDepot())
-        // Then we own this node - it's in our depots vector.
-        depots_.erase(depots_.begin() + nodes[idx]->trip() + 1);
+    {
+        // Then we own this node - it's in our depots vector. We erase it, and
+        // then update any references to subsequent reload depots that may have
+        // been invalidated by the erasure.
+        auto it = depots_.erase(depots_.begin() + nodes[idx]->trip() + 1);
+        for (; it != depots_.end(); ++it)
+            nodes[it->idx()] = &*it;
+    }
     else
         // We do not own this node, so we only unassign it.
         nodes[idx]->unassign();
 
     nodes.erase(nodes.begin() + idx);  // remove dangling pointer
     for (auto after = idx; after != nodes.size(); ++after)
-        nodes[after]->idx_ = after;
+    {
+        if (nodes[after]->isDepot())
+            trip++;
+
+        nodes[after]->assign(this, after, trip);
+    }
 
 #ifndef NDEBUG
     dirty = true;
