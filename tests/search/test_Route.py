@@ -96,16 +96,16 @@ def test_route_append_increases_route_len(ok_small):
     Tests that appending nodes to a route increases the route's length.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
-    assert_equal(route.num_clients, 0)
+    assert_equal(route.num_clients(), 0)
 
     node = Node(loc=1)
     route.append(node)
-    assert_equal(route.num_clients, 1)
+    assert_equal(route.num_clients(), 1)
     assert_(route[1] is node)  # pointers, so must be same object
 
     node = Node(loc=2)
     route.append(node)
-    assert_equal(route.num_clients, 2)
+    assert_equal(route.num_clients(), 2)
     assert_(route[2] is node)  # pointers, so must be same object
 
 
@@ -115,19 +115,19 @@ def test_route_insert(ok_small):
     to the end, inserting places at the given index.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
-    assert_equal(route.num_clients, 0)
-    assert_equal(route.num_depots, 2)
+    assert_equal(route.num_clients(), 0)
+    assert_equal(route.num_depots(), 2)
 
     # Insert a few nodes so we have an actual route.
     route.append(Node(loc=1))
     route.append(Node(loc=2))
-    assert_equal(route.num_clients, 2)
+    assert_equal(route.num_clients(), 2)
     assert_equal(route[1].client, 1)
     assert_equal(route[2].client, 2)
 
     # # Now insert a new nodes at index 1.
     route.insert(1, Node(loc=3))
-    assert_equal(route.num_clients, 3)
+    assert_equal(route.num_clients(), 3)
     assert_equal(route[1].client, 3)
     assert_equal(route[2].client, 1)
     assert_equal(route[3].client, 2)
@@ -144,7 +144,7 @@ def test_route_iter_returns_all_clients(ok_small):
         route.append(Node(loc=loc))
 
     nodes = [node for node in route]
-    assert_equal(len(nodes), route.num_clients)
+    assert_equal(len(nodes), route.num_clients())
 
     # Iterating the Route object returns only clients, not the depots.
     assert_equal(nodes[0], route[1])
@@ -164,7 +164,7 @@ def test_iter_skips_reload_depots(ok_small_multiple_trips):
         route.append(Node(loc=loc))
     route.update()
 
-    assert_equal(route.num_clients, 0)  # there are no clients
+    assert_equal(route.num_clients(), 0)  # there are no clients
     assert_equal(list(route), [])  # and thus iteration yields an empty list
 
 
@@ -175,10 +175,10 @@ def test_route_add_and_delete_client_leaves_route_empty(ok_small):
     route = Route(ok_small, idx=0, vehicle_type=0)
 
     route.append(Node(loc=1))
-    assert_equal(route.num_clients, 1)
+    assert_equal(route.num_clients(), 1)
 
     del route[1]
-    assert_equal(route.num_clients, 0)
+    assert_equal(route.num_clients(), 0)
 
 
 def test_route_delete_reduces_size_by_one(ok_small):
@@ -189,10 +189,10 @@ def test_route_delete_reduces_size_by_one(ok_small):
 
     route.append(Node(loc=1))
     route.append(Node(loc=2))
-    assert_equal(route.num_clients, 2)
+    assert_equal(route.num_clients(), 2)
 
     del route[1]
-    assert_equal(route.num_clients, 1)
+    assert_equal(route.num_clients(), 1)
     assert_equal(route[1].client, 2)
 
 
@@ -207,10 +207,10 @@ def test_route_clear_empties_entire_route(ok_small, num_nodes: int):
     for loc in range(1, num_nodes + 1):
         route.append(Node(loc=loc))
 
-    assert_equal(route.num_clients, num_nodes)
+    assert_equal(route.num_clients(), num_nodes)
 
     route.clear()
-    assert_equal(route.num_clients, 0)
+    assert_equal(route.num_clients(), 0)
 
 
 def test_excess_load(ok_small):
@@ -349,7 +349,7 @@ def test_route_duration_access(ok_small):
 
     for idx in range(len(route)):
         is_depot = idx % (len(route) - 1) == 0
-        loc = ok_small.location(idx % (route.num_clients + 1))
+        loc = ok_small.location(idx % (route.num_clients() + 1))
         ds = route.duration_at(idx)
 
         assert_equal(ds.time_warp(), 0)
@@ -474,7 +474,7 @@ def test_duration_between_single_route_has_correct_time_warp(ok_small):
     for client in range(ok_small.num_depots, ok_small.num_locations):
         route.append(Node(loc=client))
 
-    assert_equal(route.num_clients, ok_small.num_clients)
+    assert_equal(route.num_clients(), ok_small.num_clients)
 
     route.update()
     assert_(route.has_time_warp())
@@ -534,7 +534,7 @@ def test_shift_duration_depot_time_window_interaction(
     )
 
     route = Route(data, idx=0, vehicle_type=0)
-    assert_equal(route.num_clients, 0)
+    assert_equal(route.num_clients(), 0)
 
     for idx in [0, 1]:
         ds = route.duration_at(idx)
@@ -950,11 +950,11 @@ def test_route_remove_reload_depot(ok_small_multiple_trips):
     route = Route(ok_small_multiple_trips, 0, 0)
     route.append(Node(loc=0))
 
-    assert_equal(route.num_depots, 3)  # start, end, and one reload depot
+    assert_equal(route.num_depots(), 3)  # start, end, and one reload depot
     assert_(route[1].is_reload_depot())
 
     del route[1]
-    assert_equal(route.num_depots, 2)
+    assert_equal(route.num_depots(), 2)
     assert_(not route[1].is_reload_depot())
 
 

@@ -240,10 +240,10 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("idx", &Route::idx)
         .def_property_readonly("vehicle_type", &Route::vehicleType)
-        .def_property_readonly("num_clients", &Route::numClients)
-        .def_property_readonly("num_depots", &Route::numDepots)
-        .def_property_readonly("num_trips", &Route::numTrips)
-        .def_property_readonly("max_trips", &Route::maxTrips)
+        .def("num_clients", &Route::numClients)
+        .def("num_depots", &Route::numDepots)
+        .def("num_trips", &Route::numTrips)
+        .def("max_trips", &Route::maxTrips)
         .def("__delitem__", &Route::remove, py::arg("idx"))
         .def(
             "__getitem__",

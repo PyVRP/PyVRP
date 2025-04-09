@@ -206,15 +206,15 @@ def test_relocate_after_depot_should_work(ok_small):
     assert_(op.evaluate(nodes[-1], route2[0], cost_evaluator) < 0)
 
     assert_(nodes[-1].route is route1)
-    assert_equal(route1.num_clients, 3)
-    assert_equal(route2.num_clients, 0)
+    assert_equal(route1.num_clients(), 3)
+    assert_equal(route2.num_clients(), 0)
 
     # Apply the move and check that the routes and nodes are appropriately
     # updated.
     op.apply(nodes[-1], route2[0])
     assert_(nodes[-1].route is route2)
-    assert_equal(route1.num_clients, 2)
-    assert_equal(route2.num_clients, 1)
+    assert_equal(route1.num_clients(), 2)
+    assert_equal(route2.num_clients(), 1)
 
 
 def test_relocate_only_happens_when_distance_and_duration_allow_it():

@@ -18,8 +18,8 @@ def test_inserts_depot_single_route(ok_small_multiple_trips):
     route.update()
 
     assert_equal(str(route), "1 2 3 4")
-    assert_equal(route.num_depots, 2)
-    assert_equal(route.num_trips, 1)
+    assert_equal(route.num_depots(), 2)
+    assert_equal(route.num_trips(), 1)
     assert_equal(route.excess_load(), [8])
 
     op = TripRelocate(ok_small_multiple_trips)
@@ -35,8 +35,8 @@ def test_inserts_depot_single_route(ok_small_multiple_trips):
 
     # There should now be an additional reload depot and trip, and all excess
     # load should have been resolved by the reloading.
-    assert_equal(route.num_depots, 3)
-    assert_equal(route.num_trips, 2)
+    assert_equal(route.num_depots(), 3)
+    assert_equal(route.num_trips(), 2)
     assert_equal(route.excess_load(), [0])
 
     # Check that the route now indeed includes the "3 | 2" bit.
@@ -193,3 +193,26 @@ def test_fixed_vehicle_cost():
     # After this move, route1 is empty, which results in a cost delta of -2000
     # because all other costs are zero.
     assert_equal(op.evaluate(route1[1], route2[1], cost_eval), -2_000)
+
+
+def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
+    """
+    Tests that TripRelocate does not evaluate moves that would result in more
+    trips than the vehicle on the route can execute.
+    """
+    route = Route(ok_small_multiple_trips, 0, 0)
+    for loc in [3, 0, 1, 2, 4]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    assert_equal(str(route), "3 | 1 2 4")
+    assert_equal(route.excess_load(), [5])
+
+    op = TripRelocate(ok_small_multiple_trips)
+    cost_eval = CostEvaluator([10_000], 0, 0)
+
+    # This move would result in either 3 | 2 | 1 4, or 3 | 2 1 | 4, both of
+    # which would resolve any excess load. But that's more trips than the
+    # vehicle can perform, so this move cannot be done.
+    assert_equal(op.evaluate(route[3], route[4], cost_eval), 0)
+    assert_equal(route.num_trips(), route.max_trips())
