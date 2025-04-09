@@ -818,7 +818,7 @@ size_t Route::numDepots() const { return depots_.size(); }
 
 size_t Route::numTrips() const { return depots_.size() - 1; }
 
-size_t Route::maxTrips() const { return vehicleType_.maxReloads + 1; }
+size_t Route::maxTrips() const { return vehicleType_.maxTrips(); }
 
 Route::SegmentBetween Route::at(size_t idx) const
 {

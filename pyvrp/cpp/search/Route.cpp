@@ -148,6 +148,9 @@ void Route::insert(size_t idx, Node *node)
     if (node->client() < data.numDepots())  // is depot, so we copy first
         node = &depots_.emplace_back(node->client());
 
+    if (numTrips() > maxTrips())
+        throw std::invalid_argument("Vehicle cannot perform this many trips.");
+
     auto trip = nodes[idx - 1]->trip();
     nodes.insert(nodes.begin() + idx, node);
     node->assign(this, idx, trip);
@@ -213,8 +216,6 @@ void Route::swap(Node *first, Node *second)
 
 void Route::update()
 {
-    assert(numTrips() <= maxTrips());
-
     visits.clear();
     for (auto const *node : nodes)
         visits.emplace_back(node->client());

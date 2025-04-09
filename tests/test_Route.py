@@ -604,8 +604,8 @@ def test_statistics_with_small_multi_trip_example(ok_small_multiple_trips):
 
     assert_equal(route2.visits(), route1.visits())
     assert_equal(len(route2), len(route1))
-    assert_equal(len(route1.trips()), 1)
-    assert_equal(len(route2.trips()), 2)
+    assert_equal(route1.num_trips(), 1)
+    assert_equal(route2.num_trips(), 2)
 
     # Route structure and general statistics.
     assert_equal(route2.prizes(), route1.prizes())

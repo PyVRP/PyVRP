@@ -1038,4 +1038,4 @@ def test_model_solves_multi_trip_instance():
     # with capacity of just 10 because it reloads twice along the route.
     route = routes[0]
     assert_equal(route.excess_load(), [0])
-    assert_equal(len(route.trips()), 3)
+    assert_equal(route.num_trips(), 3)

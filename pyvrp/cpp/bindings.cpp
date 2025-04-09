@@ -291,6 +291,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       &ProblemData::VehicleType::reloadDepots,
                       py::return_value_policy::reference_internal)
         .def_readonly("max_reloads", &ProblemData::VehicleType::maxReloads)
+        .def_property_readonly("max_trips", &ProblemData::VehicleType::maxTrips)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
@@ -649,6 +650,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("data"),
              py::arg("visits"),  // name is compatible with other constructor
              py::arg("vehicle_type"))
+        .def("num_trips", &Route::numTrips, DOC(pyvrp, Route, numTrips))
         .def("trips",
              &Route::trips,
              py::return_value_policy::reference_internal,

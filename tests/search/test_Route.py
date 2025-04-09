@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Client, Depot, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
@@ -156,9 +156,13 @@ def test_iter_skips_reload_depots(ok_small_multiple_trips):
     """
     Tests that iterating a route skips (repeated) reload depots.
     """
-    route = Route(ok_small_multiple_trips, 0, 0)
+    veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=100)
+    data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
+
+    route = Route(data, 0, 0)
     for loc in [0, 0, 0]:
         route.append(Node(loc=loc))
+    route.update()
 
     assert_equal(route.num_clients, 0)  # there are no clients
     assert_equal(list(route), [])  # and thus iteration yields an empty list
@@ -952,3 +956,18 @@ def test_route_remove_reload_depot(ok_small_multiple_trips):
     del route[1]
     assert_equal(route.num_depots, 2)
     assert_(not route[1].is_reload_depot())
+
+
+def test_route_raises_too_many_trips(ok_small_multiple_trips):
+    """
+    Tests that the route raises when a modification inserts too many reload
+    depots and we exceed the maximum number of allowed trips.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0)
+    assert_equal(veh_type.max_reloads, 1)
+
+    route = Route(ok_small_multiple_trips, 0, 0)
+    route.append(Node(loc=0))  # first reload, is OK
+
+    with assert_raises(ValueError):  # second reload, should raise
+        route.append(Node(loc=0))
