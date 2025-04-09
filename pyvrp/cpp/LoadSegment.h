@@ -27,10 +27,10 @@ namespace pyvrp
  */
 class LoadSegment
 {
-    Load delivery_ = 0;    // of client demand since last depot visit
-    Load pickup_ = 0;      // of client demand until next depot visit
-    Load load_ = 0;        // of current trip
-    Load excessLoad_ = 0;  // cumulative excess load over all trips
+    Load delivery_ = 0;    // of client demand on current trip
+    Load pickup_ = 0;      // of client demand on current trip
+    Load load_ = 0;        // on current trip
+    Load excessLoad_ = 0;  // cumulative excess load over other trips in segment
 
 public:
     [[nodiscard]] static inline LoadSegment merge(LoadSegment const &first,
