@@ -177,10 +177,9 @@ void Route::remove(size_t idx)
         // then update any references to reload depots that may have been
         // invalidated by the erasure.
         auto const depotIdx = std::distance(depots_.data(), nodes[idx]);
-        depots_.erase(depots_.begin() + depotIdx);
-
-        for (auto &depot : depots_)
-            nodes[depot.idx()] = &depot;
+        auto it = depots_.erase(depots_.begin() + depotIdx);
+        for (; it != depots_.end(); ++it)
+            nodes[it->idx()] = &*it;
     }
     else
         // We do not own this node, so we only unassign it.
