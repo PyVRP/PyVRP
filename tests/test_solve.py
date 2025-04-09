@@ -113,3 +113,16 @@ def test_solve_custom_params(ok_small):
 
     assert_(max_feas_size <= max_pop_size)
     assert_(max_infeas_size <= max_pop_size)
+
+
+def test_solve_multi_trip_instance(mtvrptw):
+    """
+    TODO
+    """
+    res = solve(mtvrptw, stop=MaxIterations(100), seed=42)
+    print(res)
+
+
+# from tests.helpers import read
+# mtvrptw = read("data/MTVRPTW.vrp", round_func="exact")
+# test_solve_multi_trip_instance(mtvrptw)

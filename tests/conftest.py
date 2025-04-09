@@ -57,6 +57,15 @@ def pr107():
 
 
 @pytest.fixture(scope="session")
+def mtvrptw():
+    """
+    Fixture that returns a multi-trip instance with 100 clients. The instance
+    is the same as the RC_1_S_35 instance of Francois et al. 2019.
+    """
+    return read("data/MTVRPTW.vrp", round_func="exact")
+
+
+@pytest.fixture(scope="session")
 def ok_small_multi_depot():
     """
     Fixture that returns the OkSmall instance, but where the first client has
