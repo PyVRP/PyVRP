@@ -216,6 +216,7 @@ void Route::swap(Node *first, Node *second)
 
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
+    std::swap(first->trip_, second->trip_);
 
 #ifndef NDEBUG
     if (first->route_)

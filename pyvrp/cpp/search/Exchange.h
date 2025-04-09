@@ -62,7 +62,7 @@ bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
     auto const &route = *node->route();
 
     return first == 0                               // contains start depot
-           || last >= route.size()                  // contains end depot
+           || last >= route.size() - 1              // contains end depot
            || node->trip() != route[last]->trip();  // contains reload depot
 }
 

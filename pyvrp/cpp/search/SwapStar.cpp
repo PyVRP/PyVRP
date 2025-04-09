@@ -107,7 +107,10 @@ SwapStar::InsertPoint SwapStar::bestInsertPoint(
         updateInsertPoints(route, U, costEvaluator);
 
     for (auto [cost, where] : insertCache(route->idx(), U->client()))
-        if (where && where != V && n(where) != V)  // only if V is not adjacent
+        if (where && where != V && n(where) != V && V->trip() == where->trip())
+            // Only if V is not adjacent. We also require that V is in the same
+            // trip as the node we plan to remove, because we cannot currently
+            // evaluate segments with intermediate reloads in them.
             return std::make_pair(cost, where);
 
     // As a fallback option, we consider inserting in the place of V.
