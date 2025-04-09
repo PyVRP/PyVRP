@@ -10,12 +10,9 @@ using pyvrp::search::SwapStar;
 
 void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
-    for (size_t idx = 1; idx != R->size() - 1; ++idx)
+    for (auto const *U : *R)
     {
-        auto const *U = (*R)[idx];
-        if (U->isReloadDepot())
-            continue;
-
+        auto const idx = U->idx();
         auto const proposal
             = Route::Proposal(R->before(idx - 1), R->after(idx + 1));
 
