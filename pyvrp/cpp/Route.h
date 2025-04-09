@@ -16,7 +16,7 @@ namespace pyvrp
  * Route(data: ProblemData, visits: list[int] | list[Trip], vehicle_type: int)
  *
  * A simple class that stores the route plan and some statistics. Internally,
- * a route consists of :class:`~pyvrp._pyvrp.Trip`s.
+ * a route consists of one or more :class:`~pyvrp._pyvrp.Trip` objects.
  */
 class Route
 {
