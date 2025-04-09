@@ -39,7 +39,7 @@ public:
     /**
      * Finalises the load on this segment, and returns a new segment where any
      * excess load has been moved to the cumulative excess load field. This is
-     * useful with reloading, because the finalised segment can be concatened
+     * useful with reloading, because the finalised segment can be concatenated
      * with load segments of subsequent trips.
      */
     LoadSegment finalise(Load capacity) const;
