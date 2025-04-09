@@ -144,28 +144,23 @@ void Route::reserve(size_t size) { nodes.reserve(size); }
 void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
+    auto const isDepot = node->client() < data.numDepots();
 
-    if (node->client() < data.numDepots())  // is depot, so we copy first
+    if (isDepot)  // is depot, so we copy first
         node = &depots_.emplace_back(node->client());
 
     if (numTrips() > maxTrips())
         throw std::invalid_argument("Vehicle cannot perform this many trips.");
 
-    auto trip = nodes[idx - 1]->trip();
     nodes.insert(nodes.begin() + idx, node);
-    node->assign(this, idx, trip);
+    node->assign(this, idx, nodes[idx - 1]->trip());
 
     for (size_t after = idx; after != nodes.size(); ++after)
     {
-        if (nodes[after]->isDepot())
-            trip++;
-
-        nodes[after]->assign(this, after, trip);
+        nodes[after]->idx_ = after;
+        if (isDepot)
+            nodes[after]->trip_++;
     }
-
-#ifndef NDEBUG
-    dirty = true;
-#endif
 }
 
 void Route::push_back(Node *node) { insert(nodes.size() - 1, node); }
@@ -175,15 +170,17 @@ void Route::remove(size_t idx)
     assert(0 < idx && idx < nodes.size() - 1);  // is not start or end depot
     assert(nodes[idx]->route() == this);        // must be in this route
 
-    auto trip = nodes[idx - 1]->trip();
-    if (nodes[idx]->isReloadDepot())
+    auto const isDepot = nodes[idx]->isReloadDepot();
+    if (isDepot)
     {
         // Then we own this node - it's in our depots vector. We erase it, and
-        // then update any references to subsequent reload depots that may have
-        // been invalidated by the erasure.
-        auto it = depots_.erase(depots_.begin() + nodes[idx]->trip() + 1);
-        for (; it != depots_.end(); ++it)
-            nodes[it->idx()] = &*it;
+        // then update any references to reload depots that may have been
+        // invalidated by the erasure.
+        auto const depotIdx = std::distance(depots_.data(), nodes[idx]);
+        depots_.erase(depots_.begin() + depotIdx);
+
+        for (auto &depot : depots_)
+            nodes[depot.idx()] = &depot;
     }
     else
         // We do not own this node, so we only unassign it.
@@ -192,10 +189,9 @@ void Route::remove(size_t idx)
     nodes.erase(nodes.begin() + idx);  // remove dangling pointer
     for (auto after = idx; after != nodes.size(); ++after)
     {
-        if (nodes[after]->isDepot())
-            trip++;
-
-        nodes[after]->assign(this, after, trip);
+        nodes[after]->idx_ = after;
+        if (isDepot)
+            nodes[after]->trip_--;
     }
 
 #ifndef NDEBUG
