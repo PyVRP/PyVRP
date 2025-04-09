@@ -54,8 +54,6 @@ bool shouldSkipMove(pyvrp::search::Route::Node *U,
 
     // Cannot insert another depot in V, because it's already at capacity.
     return vRoute->numTrips() == vRoute->maxTrips()
-           // Neither route has load violations, so no point trying reloading.
-           || (!uRoute->hasExcessLoad() && !vRoute->hasExcessLoad())
            // Cannot evaluate this move because it requires load segments to
            // contain a reload depot.
            || (uRoute == vRoute && U->trip() != V->trip())
