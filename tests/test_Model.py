@@ -1021,15 +1021,17 @@ def test_model_solves_multi_trip_instance():
         max_reloads=2,
     )
 
-    for _ in range(5):
-        m.add_client(0, 0, delivery=[5])
+    for idx in range(5):
+        m.add_client(idx, 0, delivery=[5])
 
     for frm in m.locations:
         for to in m.locations:
-            m.add_edge(frm, to, distance=0)
+            manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, distance=manhattan)
 
     res = m.solve(stop=MaxIterations(25))
     assert_(res.is_feasible())
+    assert_equal(res.cost(), 12)
 
     routes = res.best.routes()
     assert_equal(len(routes), 1)
@@ -1039,3 +1041,12 @@ def test_model_solves_multi_trip_instance():
     route = routes[0]
     assert_equal(route.excess_load(), [0])
     assert_equal(route.num_trips(), 3)
+
+    # The visits are grouped as {2}, {3, 4}, and {5, 6}, because the instance
+    # is on a line (0 is depot, clients are at 0, 1, ..., 4) and there can be
+    # at most two visits per trip. In that setting it's cheapest to visit 2
+    # using a singleton route, and combine 6 with 5, and then finally 4 with 3.
+    visit_sets = [set(trip.visits()) for trip in route.trips()]
+    assert_({2} in visit_sets)
+    assert_({3, 4} in visit_sets)
+    assert_({5, 6} in visit_sets)
