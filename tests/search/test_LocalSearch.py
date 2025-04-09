@@ -20,6 +20,7 @@ from pyvrp.search import (
     NeighbourhoodParams,
     SwapRoutes,
     SwapStar,
+    TripRelocate,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -524,3 +525,53 @@ def test_no_op_multi_trip_instance(ok_small_multiple_trips):
     sol = Solution(ok_small_multiple_trips, [route])
     cost_eval = CostEvaluator([20], 6, 0)
     assert_equal(ls(sol, cost_eval), sol)
+
+
+def test_local_search_inserts_reload_depots(ok_small_multiple_trips):
+    """
+    Tests that the local search routine inserts a reload depot when that is
+    beneficial.
+    """
+    rng = RandomNumberGenerator(seed=2)
+    neighbours = compute_neighbours(ok_small_multiple_trips)
+
+    ls = LocalSearch(ok_small_multiple_trips, rng, neighbours)
+    ls.add_node_operator(TripRelocate(ok_small_multiple_trips))
+
+    sol = Solution(ok_small_multiple_trips, [[1, 2, 3, 4]])
+    assert_(sol.has_excess_load())
+
+    cost_eval = CostEvaluator([1_000], 0, 0)
+    improved = ls(sol, cost_eval)
+
+    assert_(not improved.has_excess_load())
+    assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
+
+    routes = improved.routes()
+    assert_equal(len(routes), 1)
+    assert_equal(str(routes[0]), "1 3 | 2 4")
+
+
+def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
+    """
+    Tests that the local search removes usless reload depots from the given
+    solution.
+    """
+    data = ok_small_multiple_trips
+    rng = RandomNumberGenerator(seed=2)
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data))
+
+    route1 = Route(data, [Trip(data, [1], 0), Trip(data, [3], 0)], 0)
+    route2 = Route(data, [2, 4], 0)
+    sol = Solution(data, [route1, route2])
+
+    cost_eval = CostEvaluator([1_000], 0, 0)
+    improved = ls(sol, cost_eval)
+    assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
+
+    # The local search should have removed the reload depot from the first
+    # route, because that was not providing any value.
+    routes = improved.routes()
+    assert_(str(routes[0]), "1 3")
+    assert_(str(routes[1]), "2 4")

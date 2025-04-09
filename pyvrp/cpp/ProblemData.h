@@ -520,6 +520,11 @@ public:
                             std::optional<std::vector<size_t>> reloadDepots,
                             std::optional<size_t> maxReloads,
                             std::optional<std::string> name) const;
+
+        /**
+         * Returns the maximum number of trips these vehicle can execute.
+         */
+        size_t maxTrips() const;
     };
 
 private:

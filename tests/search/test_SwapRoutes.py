@@ -157,10 +157,10 @@ def test_evaluate_capacity_differences(ok_small):
     route1.update()
     route2.update()
 
-    assert_equal(route1.num_clients, 1)
+    assert_equal(route1.num_clients(), 1)
     assert_(route1.is_feasible())
 
-    assert_equal(route2.num_clients, 3)
+    assert_equal(route2.num_clients(), 3)
     assert_(route2.is_feasible())
 
 

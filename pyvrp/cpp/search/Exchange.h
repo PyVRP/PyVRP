@@ -62,7 +62,7 @@ bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
     auto const &route = *node->route();
 
     return first == 0                               // contains start depot
-           || last >= route.size()                  // contains end depot
+           || last >= route.size() - 1              // contains end depot
            || node->trip() != route[last]->trip();  // contains reload depot
 }
 
@@ -201,6 +201,10 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
     if constexpr (M > 0)
         if (containsDepot(V, M))
             return 0;
+
+    // We cannot easily evaluate across trips, so we cannot determine this move.
+    if (U->route() == V->route() && U->trip() != V->trip())
+        return 0;
 
     if constexpr (M == 0)  // special case where nothing in V is moved
     {

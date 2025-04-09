@@ -1,6 +1,5 @@
 #include "bindings.h"
 #include "CostEvaluator.h"
-#include "DistanceSegment.h"
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
 #include "LoadSegment.h"
@@ -26,7 +25,6 @@
 namespace py = pybind11;
 
 using pyvrp::CostEvaluator;
-using pyvrp::DistanceSegment;
 using pyvrp::DurationSegment;
 using pyvrp::DynamicBitset;
 using pyvrp::LoadSegment;
@@ -293,6 +291,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       &ProblemData::VehicleType::reloadDepots,
                       py::return_value_policy::reference_internal)
         .def_readonly("max_reloads", &ProblemData::VehicleType::maxReloads)
+        .def_property_readonly("max_trips", &ProblemData::VehicleType::maxTrips)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
@@ -651,6 +650,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("data"),
              py::arg("visits"),  // name is compatible with other constructor
              py::arg("vehicle_type"))
+        .def("num_trips", &Route::numTrips, DOC(pyvrp, Route, numTrips))
         .def("trips",
              &Route::trips,
              py::return_value_policy::reference_internal,
@@ -1068,28 +1068,21 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("cost_evaluator"),
              DOC(pyvrp, SubPopulation, updateFitness));
 
-    py::class_<DistanceSegment>(
-        m, "DistanceSegment", DOC(pyvrp, DistanceSegment))
-        .def(py::init<pyvrp::Distance>(), py::arg("distance"))
-        .def("distance",
-             &DistanceSegment::distance,
-             DOC(pyvrp, DistanceSegment, distance))
-        .def_static("merge",
-                    &DistanceSegment::merge,
-                    py::arg("edge_distance"),
-                    py::arg("first"),
-                    py::arg("second"));
-
     py::class_<LoadSegment>(m, "LoadSegment", DOC(pyvrp, LoadSegment))
-        .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
+        .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
              py::arg("delivery"),
              py::arg("pickup"),
-             py::arg("load"))
+             py::arg("load"),
+             py::arg("excess_load"))
         .def("delivery",
              &LoadSegment::delivery,
              DOC(pyvrp, LoadSegment, delivery))
         .def("pickup", &LoadSegment::pickup, DOC(pyvrp, LoadSegment, pickup))
         .def("load", &LoadSegment::load, DOC(pyvrp, LoadSegment, load))
+        .def("excess_load",
+             &LoadSegment::excessLoad,
+             py::arg("capacity"),
+             DOC(pyvrp, LoadSegment, excessLoad))
         .def_static(
             "merge", &LoadSegment::merge, py::arg("first"), py::arg("second"));
 

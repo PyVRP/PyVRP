@@ -38,9 +38,9 @@ concept PrizeCostEvaluatable = CostEvaluatable<T> && requires(T arg) {
 template <typename T>
 concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
     { arg.route() };
-    { arg.distanceSegment() };
+    { arg.distance() };
     { arg.durationSegment() };
-    { arg.loadSegment(dimension) };
+    { arg.excessLoad(dimension) };
 };
 
 /**
@@ -263,9 +263,9 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     out -= route->durationCost();
     out -= twPenalty(route->timeWarp());
 
-    auto const dist = proposal.distanceSegment();
-    out += route->unitDistanceCost() * static_cast<Cost>(dist.distance());
-    out += distPenalty(dist.distance(), route->maxDistance());
+    auto const distance = proposal.distance();
+    out += route->unitDistanceCost() * static_cast<Cost>(distance);
+    out += distPenalty(distance, route->maxDistance());
 
     if constexpr (!exact)
         if (out >= 0)
@@ -275,8 +275,7 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     {
         auto const &capacity = route->capacity();
         for (size_t dim = 0; dim != capacity.size(); ++dim)
-            out += loadPenalty(
-                proposal.loadSegment(dim).load(), capacity[dim], dim);
+            out += loadPenalty(proposal.excessLoad(dim), 0, dim);
     }
 
     auto const duration = proposal.durationSegment();
@@ -319,13 +318,13 @@ bool CostEvaluator::deltaCost(Cost &out,
     out -= vRoute->durationCost();
     out -= twPenalty(vRoute->timeWarp());
 
-    auto const uDist = uProposal.distanceSegment();
-    out += uRoute->unitDistanceCost() * static_cast<Cost>(uDist.distance());
-    out += distPenalty(uDist.distance(), uRoute->maxDistance());
+    auto const uDist = uProposal.distance();
+    out += uRoute->unitDistanceCost() * static_cast<Cost>(uDist);
+    out += distPenalty(uDist, uRoute->maxDistance());
 
-    auto const vDist = vProposal.distanceSegment();
-    out += vRoute->unitDistanceCost() * static_cast<Cost>(vDist.distance());
-    out += distPenalty(vDist.distance(), vRoute->maxDistance());
+    auto const vDist = vProposal.distance();
+    out += vRoute->unitDistanceCost() * static_cast<Cost>(vDist);
+    out += distPenalty(vDist, vRoute->maxDistance());
 
     if constexpr (!exact)
         if (out >= 0)
@@ -335,13 +334,11 @@ bool CostEvaluator::deltaCost(Cost &out,
     {
         auto const &uCapacity = uRoute->capacity();
         for (size_t dim = 0; dim != uCapacity.size(); ++dim)
-            out += loadPenalty(
-                uProposal.loadSegment(dim).load(), uCapacity[dim], dim);
+            out += loadPenalty(uProposal.excessLoad(dim), 0, dim);
 
         auto const &vCapacity = vRoute->capacity();
         for (size_t dim = 0; dim != vCapacity.size(); ++dim)
-            out += loadPenalty(
-                vProposal.loadSegment(dim).load(), vCapacity[dim], dim);
+            out += loadPenalty(vProposal.excessLoad(dim), 0, dim);
     }
 
     if constexpr (!exact)

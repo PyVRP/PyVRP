@@ -145,6 +145,12 @@ void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
 
+    if (node->client() < data.numDepots())  // is depot, so we copy first
+        node = &depots_.emplace_back(node->client());
+
+    if (numTrips() > maxTrips())
+        throw std::invalid_argument("Vehicle cannot perform this many trips.");
+
     auto trip = nodes[idx - 1]->trip();
     nodes.insert(nodes.begin() + idx, node);
     node->assign(this, idx, trip);
@@ -162,25 +168,35 @@ void Route::insert(size_t idx, Node *node)
 #endif
 }
 
-void Route::push_back(Node *node)
-{
-    if (node->client() < data.numDepots())  // is depot, so we copy first
-        node = &depots_.emplace_back(node->client());
-
-    insert(nodes.size() - 1, node);
-}
+void Route::push_back(Node *node) { insert(nodes.size() - 1, node); }
 
 void Route::remove(size_t idx)
 {
-    // TODO remove reload depot
-    assert(0 < idx && idx < nodes.size() - 1);
-    assert(nodes[idx]->route() == this);  // must currently be in this route
+    assert(0 < idx && idx < nodes.size() - 1);  // is not start or end depot
+    assert(nodes[idx]->route() == this);        // must be in this route
 
-    nodes[idx]->unassign();
-    nodes.erase(nodes.begin() + idx);
+    auto trip = nodes[idx - 1]->trip();
+    if (nodes[idx]->isReloadDepot())
+    {
+        // Then we own this node - it's in our depots vector. We erase it, and
+        // then update any references to subsequent reload depots that may have
+        // been invalidated by the erasure.
+        auto it = depots_.erase(depots_.begin() + nodes[idx]->trip() + 1);
+        for (; it != depots_.end(); ++it)
+            nodes[it->idx()] = &*it;
+    }
+    else
+        // We do not own this node, so we only unassign it.
+        nodes[idx]->unassign();
 
+    nodes.erase(nodes.begin() + idx);  // remove dangling pointer
     for (auto after = idx; after != nodes.size(); ++after)
-        nodes[after]->idx_ = after;
+    {
+        if (nodes[after]->isDepot())
+            trip++;
+
+        nodes[after]->assign(this, after, trip);
+    }
 
 #ifndef NDEBUG
     dirty = true;
@@ -189,7 +205,8 @@ void Route::remove(size_t idx)
 
 void Route::swap(Node *first, Node *second)
 {
-    // TODO swap reload depot
+    assert(!first->isDepot() && !second->isDepot());
+
     // TODO specialise std::swap for Node
     if (first->route_)
         first->route_->nodes[first->idx_] = second;
@@ -199,6 +216,7 @@ void Route::swap(Node *first, Node *second)
 
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
+    std::swap(first->trip_, second->trip_);
 
 #ifndef NDEBUG
     if (first->route_)
@@ -285,6 +303,8 @@ void Route::update()
     // Load.
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
+        auto const capacity = vehicleType_.capacity[dim];
+
         loadAt[dim].resize(nodes.size());
         loadAt[dim][0] = {vehicleType_, dim};  // initial load
         loadAt[dim][nodes.size() - 1] = {};
@@ -298,26 +318,35 @@ void Route::update()
         loadBefore[dim].resize(nodes.size());
         loadBefore[dim][0] = loadAt[dim][0];
         for (size_t idx = 1; idx != nodes.size(); ++idx)
-            if (nodes[idx - 1]->isReloadDepot())  // then we restart from here
-                loadBefore[dim][idx] = loadAt[dim][idx];
+            if (nodes[idx - 1]->isReloadDepot())
+                // Then we restart from here, but keep track of any excess load
+                // observed so far.
+                loadBefore[dim][idx]
+                    = {loadAt[dim][idx].pickup(),
+                       loadAt[dim][idx].delivery(),
+                       loadAt[dim][idx].load(),
+                       loadBefore[dim][idx - 1].excessLoad(capacity)};
             else
                 loadBefore[dim][idx] = LoadSegment::merge(
                     loadBefore[dim][idx - 1], loadAt[dim][idx]);
 
         load_[dim] = 0;
-        excessLoad_[dim] = 0;
+        excessLoad_[dim]
+            = loadBefore[dim][nodes.size() - 1].excessLoad(capacity);
         for (auto it = depots_.begin() + 1; it != depots_.end(); ++it)
-        {
-            auto const tripLoad = loadBefore[dim][it->idx()].load();
-            load_[dim] += tripLoad;
-            excessLoad_[dim] += std::max<Load>(tripLoad - capacity()[dim], 0);
-        }
+            load_[dim] += loadBefore[dim][it->idx()].load();
 
         loadAfter[dim].resize(nodes.size());
         loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
         for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-            if (nodes[idx]->isReloadDepot())  // then we restart from here
-                loadAfter[dim][idx - 1] = loadAt[dim][idx - 1];
+            if (nodes[idx]->isReloadDepot())
+                // Then we restart from here, but keep track of any excess load
+                // observed so far.
+                loadAfter[dim][idx - 1]
+                    = {loadAt[dim][idx - 1].delivery(),
+                       loadAt[dim][idx - 1].pickup(),
+                       loadAt[dim][idx - 1].load(),
+                       loadAfter[dim][idx].excessLoad(capacity)};
             else
                 loadAfter[dim][idx - 1] = LoadSegment::merge(
                     loadAt[dim][idx - 1], loadAfter[dim][idx]);
@@ -330,10 +359,16 @@ void Route::update()
 
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
 {
-    out << "Route #" << route.idx() + 1 << ":";  // route number
-    for (auto *node : route)
-        out << ' ' << node->client();  // client index
-    out << '\n';
+    for (size_t idx = 1; idx != route.size() - 1; ++idx)
+    {
+        if (idx != 1)
+            out << ' ';
+
+        if (route[idx]->isReloadDepot())
+            out << '|';
+        else
+            out << route[idx]->client();
+    }
 
     return out;
 }

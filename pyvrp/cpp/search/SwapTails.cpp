@@ -6,6 +6,15 @@
 
 using pyvrp::search::SwapTails;
 
+namespace
+{
+bool onLastTrip(pyvrp::search::Route::Node *node)
+{
+    auto const *route = node->route();
+    return node->trip() + 1 == route->numTrips();
+}
+}  // namespace
+
 pyvrp::Cost SwapTails::evaluate(Route::Node *U,
                                 Route::Node *V,
                                 CostEvaluator const &costEvaluator)
@@ -21,6 +30,11 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
     if (uRoute->idx() > vRoute->idx() && !uRoute->empty() && !vRoute->empty())
         return 0;  // move will be tackled in a later iteration
+
+    if (!onLastTrip(U) || !onLastTrip(V))
+        // We cannot move reload depots, so we only evaluate a move if it does
+        // not include a reload depot.
+        return 0;
 
     Cost deltaCost = 0;
 

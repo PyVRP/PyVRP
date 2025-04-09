@@ -193,9 +193,9 @@ std::ostream &operator<<(std::ostream &out, Trip const &trip)
 {
     for (size_t idx = 0; idx != trip.size(); ++idx)
     {
-        out << trip[idx];
-        if (idx + 1 != trip.size())
+        if (idx != 0)
             out << ' ';
+        out << trip[idx];
     }
 
     return out;

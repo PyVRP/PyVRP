@@ -604,8 +604,8 @@ def test_statistics_with_small_multi_trip_example(ok_small_multiple_trips):
 
     assert_equal(route2.visits(), route1.visits())
     assert_equal(len(route2), len(route1))
-    assert_equal(len(route1.trips()), 1)
-    assert_equal(len(route2.trips()), 2)
+    assert_equal(route1.num_trips(), 1)
+    assert_equal(route2.num_trips(), 2)
 
     # Route structure and general statistics.
     assert_equal(route2.prizes(), route1.prizes())
@@ -660,6 +660,23 @@ def test_index_multiple_trips(ok_small_multiple_trips):
 
     with assert_raises(IndexError):
         route[2]
+
+
+def test_iter_empty_trips(ok_small_multiple_trips):
+    """
+    Tests that iterating a route also gracefully handles empty trips.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=2)
+    data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
+
+    trip1 = Trip(data, [1, 2], 0)
+    trip2 = Trip(data, [], 0)
+    trip3 = Trip(data, [3, 4], 0)
+
+    route = Route(data, [trip1, trip2, trip3], 0)
+    assert_equal(str(route), "1 2 |  | 3 4")
+    assert_equal(route.num_trips(), 3)
+    assert_equal(list(route), [1, 2, 3, 4])
 
 
 # TODO multi-trip and release time interaction

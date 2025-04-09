@@ -398,6 +398,8 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
             name.value_or(this->name)};
 }
 
+size_t ProblemData::VehicleType::maxTrips() const { return maxReloads + 1; }
+
 bool ProblemData::VehicleType::operator==(VehicleType const &other) const
 {
     // clang-format off

@@ -3,14 +3,22 @@
 using pyvrp::Load;
 using pyvrp::LoadSegment;
 
+LoadSegment LoadSegment::finalise(Load capacity) const
+{
+    return {0, 0, 0, excessLoad(capacity)};
+}
+
 Load LoadSegment::delivery() const { return delivery_; }
 
 Load LoadSegment::pickup() const { return pickup_; }
 
+Load LoadSegment::load() const { return load_; }
+
 LoadSegment::LoadSegment(ProblemData::Client const &client, size_t dimension)
     : delivery_(client.delivery[dimension]),
       pickup_(client.pickup[dimension]),
-      load_(std::max<Load>(delivery_, pickup_))
+      load_(std::max<Load>(delivery_, pickup_)),
+      excessLoad_(0)
 {
 }
 
@@ -20,6 +28,7 @@ LoadSegment::LoadSegment(ProblemData::VehicleType const &vehicleType,
       // Initial load is always a pickup quantity: it's already on the vehicle,
       // and needs to be dropped off at a depot.
       pickup_(vehicleType.initialLoad[dimension]),
-      load_(vehicleType.initialLoad[dimension])
+      load_(vehicleType.initialLoad[dimension]),
+      excessLoad_(0)
 {
 }

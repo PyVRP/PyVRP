@@ -5,6 +5,7 @@
 #include "SwapRoutes.h"
 #include "SwapStar.h"
 #include "SwapTails.h"
+#include "TripRelocate.h"
 #include "primitives.h"
 #include "search_docs.h"
 
@@ -25,6 +26,7 @@ using pyvrp::search::Route;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
 using pyvrp::search::SwapTails;
+using pyvrp::search::TripRelocate;
 
 PYBIND11_MODULE(_search, m)
 {
@@ -177,6 +179,18 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &SwapTails::apply, py::arg("U"), py::arg("V"));
 
+    py::class_<TripRelocate, NodeOp>(
+        m, "TripRelocate", DOC(pyvrp, search, TripRelocate))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &TripRelocate::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &TripRelocate::apply, py::arg("U"), py::arg("V"));
+
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
                       std::vector<std::vector<size_t>>>(),
@@ -226,14 +240,23 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("idx", &Route::idx)
         .def_property_readonly("vehicle_type", &Route::vehicleType)
-        .def_property_readonly("num_clients", &Route::numClients)
-        .def_property_readonly("num_depots", &Route::numDepots)
-        .def_property_readonly("num_trips", &Route::numTrips)
+        .def("num_clients", &Route::numClients)
+        .def("num_depots", &Route::numDepots)
+        .def("num_trips", &Route::numTrips)
+        .def("max_trips", &Route::maxTrips)
         .def("__delitem__", &Route::remove, py::arg("idx"))
-        .def("__getitem__",
-             py::overload_cast<size_t>(&Route::operator[]),
-             py::arg("idx"),
-             py::return_value_policy::reference_internal)
+        .def(
+            "__getitem__",
+            [](Route const &route, int idx)
+            {
+                // int so we also support negative offsets from the end.
+                idx = idx < 0 ? route.size() + idx : idx;
+                if (idx < 0 || static_cast<size_t>(idx) >= route.size())
+                    throw py::index_error();
+                return route[idx];
+            },
+            py::arg("idx"),
+            py::return_value_policy::reference_internal)
         .def(
             "__iter__",
             [](Route const &route)

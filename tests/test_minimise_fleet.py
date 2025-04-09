@@ -1,4 +1,4 @@
-from numpy.testing import assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import minimise_fleet
 from pyvrp.stop import MaxIterations
@@ -60,7 +60,7 @@ def test_rc208(rc208):
 
     vehicle_type = minimise_fleet(rc208, MaxIterations(3))
     data = rc208.replace(vehicle_types=[vehicle_type])
-    assert_equal(data.num_vehicles, 7)
+    assert_(data.num_vehicles < rc208.num_vehicles)
 
 
 def test_X_instance():

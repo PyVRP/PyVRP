@@ -76,6 +76,10 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!U->route())  // we already evaluated inserting U, so there is
                 continue;     // nothing left to be done for this client.
 
+            // If U borders a reload depot, try removing it.
+            applyDepotRemovalMove(p(U), costEvaluator);
+            applyDepotRemovalMove(n(U), costEvaluator);
+
             // We next apply the regular node operators. These work on pairs
             // of nodes (U, V), where both U and V are in the solution.
             for (auto const vClient : neighbours_[uClient])
@@ -224,6 +228,23 @@ bool LocalSearch::applyRouteOps(Route *U,
     }
 
     return false;
+}
+
+void LocalSearch::applyDepotRemovalMove(Route::Node *U,
+                                        CostEvaluator const &CostEvaluator)
+{
+    if (!U->isReloadDepot())
+        return;
+
+    // We remove the depot when that's either better, or neutral. It can be
+    // neutral if for example it's the same depot visited consecutively, but
+    // that's then unnecessary.
+    if (removeCost(U, data, CostEvaluator) <= 0)
+    {
+        auto *route = U->route();
+        route->remove(U->idx());
+        update(route, route);
+    }
 }
 
 void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
