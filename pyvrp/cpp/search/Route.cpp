@@ -158,7 +158,7 @@ void Route::insert(size_t idx, Node *node)
     for (size_t after = idx; after != nodes.size(); ++after)
     {
         nodes[after]->idx_ = after;
-        if (isDepot)
+        if (isDepot)  // then we need to bump each following trip index
             nodes[after]->trip_++;
     }
 }
@@ -169,13 +169,12 @@ void Route::remove(size_t idx)
 {
     assert(0 < idx && idx < nodes.size() - 1);  // is not start or end depot
     assert(nodes[idx]->route() == this);        // must be in this route
-
     auto const isDepot = nodes[idx]->isReloadDepot();
+
     if (isDepot)
     {
-        // Then we own this node - it's in our depots vector. We erase it, and
-        // then update any references to reload depots that may have been
-        // invalidated by the erasure.
+        // We own this node - it's in our depots vector. We erase it, and then
+        // update reload depot references that were invalidated by the erasure.
         auto const depotIdx = std::distance(depots_.data(), nodes[idx]);
         auto it = depots_.erase(depots_.begin() + depotIdx);
         for (; it != depots_.end(); ++it)
@@ -189,7 +188,7 @@ void Route::remove(size_t idx)
     for (auto after = idx; after != nodes.size(); ++after)
     {
         nodes[after]->idx_ = after;
-        if (isDepot)
+        if (isDepot)  // then we need to decrease each following trip index
             nodes[after]->trip_--;
     }
 
