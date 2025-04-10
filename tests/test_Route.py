@@ -491,6 +491,28 @@ def test_initial_load_calculation(ok_small):
     assert_(new_route.has_excess_load())
 
 
+def test_bug_initial_load_multiple_trips(ok_small_multiple_trips):
+    """
+    Tests that a bug where initial load was evaluated at each trip has been
+    corrected: initial load is a route-level property, not trip-level.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0)
+    new_type = veh_type.replace(initial_load=[5])
+    data = ok_small_multiple_trips.replace(vehicle_types=[new_type])
+
+    trip1 = Trip(data, [1, 2], 0)
+    trip2 = Trip(data, [3, 4], 0)
+
+    # Both trips are load feasible.
+    assert_(not trip1.has_excess_load())
+    assert_(not trip2.has_excess_load())
+
+    # But the route is not because the first trip has a load of 10, in addition
+    # to the initial load of 5: 15 > 10.
+    route = Route(data, [trip1, trip2], 0)
+    assert_equal(route.excess_load(), [5])
+
+
 @pytest.mark.parametrize(("start_depot", "end_depot"), [(0, 1), (1, 0)])
 def test_raises_if_route_does_not_start_and_end_at_vehicle_start_end_depots(
     ok_small_multi_depot, start_depot: int, end_depot: int
@@ -501,7 +523,7 @@ def test_raises_if_route_does_not_start_and_end_at_vehicle_start_end_depots(
     at the end_depot.
     """
     old_veh_type = ok_small_multi_depot.vehicle_type(0)
-    veh_type = old_veh_type.replace(reload_depots=[0, 1])
+    veh_type = old_veh_type.replace(reload_depots=[0, 1], max_reloads=2)
     data = ok_small_multi_depot.replace(vehicle_types=[veh_type])
 
     trip1 = Trip(data, [2], 0, start_depot, 1)
@@ -529,7 +551,7 @@ def test_raises_consecutive_trips_different_depots(ok_small_multi_depot):
     their start and end depots.
     """
     old_veh_type = ok_small_multi_depot.vehicle_type(0)
-    veh_type = old_veh_type.replace(reload_depots=[0, 1])
+    veh_type = old_veh_type.replace(reload_depots=[0, 1], max_reloads=2)
     data = ok_small_multi_depot.replace(vehicle_types=[veh_type])
 
     trip1 = Trip(data, [2], 0, 0, 1)
@@ -546,16 +568,18 @@ def test_raises_multiple_trips_without_reload_depots(ok_small):
     Tests that the route constructor raises when there is more than one trip,
     yet the vehicle type does not support reloading.
     """
-    assert_equal(len(ok_small.vehicle_type(0).reload_depots), 0)
+    veh_type = ok_small.vehicle_type(0).replace(max_reloads=2)
+    data = ok_small.replace(vehicle_types=[veh_type])
+    assert_equal(len(data.vehicle_type(0).reload_depots), 0)
 
-    trips = [Trip(ok_small, [1, 2], 0), Trip(ok_small, [3], 0)]
+    trips = [Trip(data, [1, 2], 0), Trip(data, [3], 0)]
     with assert_raises(ValueError):
-        Route(ok_small, trips, 0)
+        Route(data, trips, 0)
 
 
 def test_raises_vehicle_max_reloads(ok_small_multiple_trips):
     """
-    Tests that the route constructor raises when there are more rekoads than
+    Tests that the route constructor raises when there are more reloads than
     the vehicle supports.
     """
     veh_type = ok_small_multiple_trips.vehicle_type(0)

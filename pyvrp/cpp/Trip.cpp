@@ -35,16 +35,20 @@ Trip::Trip(ProblemData const &data,
            size_t vehicleType,
            std::optional<size_t> startDepot,
            std::optional<size_t> endDepot)
-    : visits_(std::move(visits)), vehicleType_(vehicleType)
+    : visits_(std::move(visits)),
+      delivery_(data.numLoadDimensions()),
+      pickup_(data.numLoadDimensions()),
+      excessLoad_(data.numLoadDimensions()),
+      vehicleType_(vehicleType)
 {
-    auto const &vehType = data.vehicleType(vehicleType_);
-    startDepot_ = startDepot.value_or(vehType.startDepot);
-    endDepot_ = endDepot.value_or(vehType.endDepot);
+    auto const &vehData = data.vehicleType(vehicleType_);
+    startDepot_ = startDepot.value_or(vehData.startDepot);
+    endDepot_ = endDepot.value_or(vehData.endDepot);
 
-    if (!canStartAt(vehType, startDepot_))
+    if (!canStartAt(vehData, startDepot_))
         throw std::invalid_argument("Vehicle cannot start from start_depot.");
 
-    if (!canEndAt(vehType, endDepot_))
+    if (!canEndAt(vehData, endDepot_))
         throw std::invalid_argument("Vehicle cannot end at end_depot.");
 
     for (auto const client : visits_)
@@ -58,19 +62,17 @@ Trip::Trip(ProblemData const &data,
     ProblemData::Depot const &start = data.location(startDepot_);
     service_ += start.serviceDuration;
 
+    auto const &distances = data.distanceMatrix(vehData.profile);
+    auto const &durations = data.durationMatrix(vehData.profile);
+
     std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
-    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-        loadSegments[dim] = {vehType, dim};
-
-    auto const &distances = data.distanceMatrix(vehType.profile);
-    auto const &durations = data.durationMatrix(vehType.profile);
-
     for (size_t prevClient = startDepot_; auto const client : visits_)
     {
-        ProblemData::Client const &clientData = data.location(client);
-
         distance_ += distances(prevClient, client);
         travel_ += durations(prevClient, client);
+
+        ProblemData::Client const &clientData = data.location(client);
+
         service_ += clientData.serviceDuration;
         release_ = std::max(release_, clientData.releaseTime);
         prizes_ += clientData.prize;
@@ -79,10 +81,8 @@ Trip::Trip(ProblemData const &data,
         centroid_.second += static_cast<double>(clientData.y) / size();
 
         for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-        {
-            auto const clientLs = LoadSegment(clientData, dim);
-            loadSegments[dim] = LoadSegment::merge(loadSegments[dim], clientLs);
-        }
+            loadSegments[dim]
+                = LoadSegment::merge(loadSegments[dim], {clientData, dim});
 
         prevClient = client;
     }
@@ -91,15 +91,11 @@ Trip::Trip(ProblemData const &data,
     distance_ += distances(last, endDepot_);
     travel_ += durations(last, endDepot_);
 
-    delivery_.reserve(data.numLoadDimensions());
-    pickup_.reserve(data.numLoadDimensions());
-    excessLoad_.reserve(data.numLoadDimensions());
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
-        delivery_.push_back(loadSegments[dim].delivery());
-        pickup_.push_back(loadSegments[dim].pickup());
-        excessLoad_.push_back(std::max<Load>(
-            loadSegments[dim].load() - vehType.capacity[dim], 0));
+        delivery_[dim] = loadSegments[dim].delivery();
+        pickup_[dim] = loadSegments[dim].pickup();
+        excessLoad_[dim] = loadSegments[dim].excessLoad(vehData.capacity[dim]);
     }
 }
 
