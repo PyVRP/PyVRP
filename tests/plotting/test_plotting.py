@@ -54,7 +54,8 @@ def test_plot_solution_multiple_depots():
 @img_comp(["plot_solution_multiple_trips"], **IMG_KWARGS)
 def test_plot_solution_multiple_trips(ok_small_multiple_trips):
     """
-    TODO
+    Tests that plot_solution() correctly displays the reload depot visit that
+    separates multiple trips.
     """
     trip1 = Trip(ok_small_multiple_trips, [1, 3], 0)
     trip2 = Trip(ok_small_multiple_trips, [2, 4], 0)
