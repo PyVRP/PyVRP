@@ -13,6 +13,7 @@ from pyvrp import (
     Route,
     Solution,
     Statistics,
+    Trip,
     VehicleType,
     plotting,
 )
@@ -48,6 +49,19 @@ def test_plot_solution_multiple_depots():
     ]
 
     plotting.plot_solution(Solution(data, routes), data)
+
+
+@img_comp(["plot_solution_multiple_trips"], **IMG_KWARGS)
+def test_plot_solution_multiple_trips(ok_small_multiple_trips):
+    """
+    TODO
+    """
+    trip1 = Trip(ok_small_multiple_trips, [1, 3], 0)
+    trip2 = Trip(ok_small_multiple_trips, [2, 4], 0)
+    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+    sol = Solution(ok_small_multiple_trips, [route])
+
+    plotting.plot_solution(sol, ok_small_multiple_trips)
 
 
 @img_comp(["plot_solution_optional_clients"], **IMG_KWARGS)
