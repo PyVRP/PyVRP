@@ -63,7 +63,7 @@ class Solution
     Neighbours neighbours_;  // client [pred, succ] pairs, null if unassigned
 
     // Determines the [pred, succ] pairs for assigned clients.
-    void makeNeighbours(ProblemData const &data);
+    void makeNeighbours();
 
     // Evaluates this solution's characteristics.
     void evaluate(ProblemData const &data);

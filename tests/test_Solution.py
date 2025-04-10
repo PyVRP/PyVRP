@@ -13,6 +13,7 @@ from pyvrp import (
     RandomNumberGenerator,
     Route,
     Solution,
+    Trip,
     VehicleType,
 )
 from tests.helpers import read
@@ -244,6 +245,23 @@ def test_neighbours(ok_small):
 
     for loc in range(ok_small.num_locations):
         assert_equal(neighbours[loc], expected[loc])
+
+
+def test_neighbours_includes_reload_depots(ok_small_multiple_trips):
+    """
+    Tests that the neighbours calculation accounts for reload depots.
+    """
+    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
+    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
+    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+    sol = Solution(ok_small_multiple_trips, [route])
+
+    neighbours = sol.neighbours()
+    assert_(neighbours[0] is None)  # is depot
+    assert_equal(neighbours[1], (0, 2))  # (start, 2)
+    assert_equal(neighbours[2], (1, 0))  # (1, reload)
+    assert_equal(neighbours[3], (0, 4))  # (reload, 4)
+    assert_equal(neighbours[4], (3, 0))  # (3, end)
 
 
 def test_neighbours_multi_depot(ok_small):

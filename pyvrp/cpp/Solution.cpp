@@ -103,19 +103,19 @@ Cost Solution::uncollectedPrizes() const { return uncollectedPrizes_; }
 
 Duration Solution::timeWarp() const { return timeWarp_; }
 
-void Solution::makeNeighbours(ProblemData const &data)
+void Solution::makeNeighbours()
 {
     for (auto const &route : routes_)
-    {
-        auto const &vehicleType = data.vehicleType(route.vehicleType());
-        auto const startDepot = vehicleType.startDepot;
-        auto const endDepot = vehicleType.endDepot;
+        for (auto const &trip : route.trips())
+        {
+            auto const startDepot = trip.startDepot();
+            auto const endDepot = trip.endDepot();
 
-        for (size_t idx = 0; idx != route.size(); ++idx)
-            neighbours_[route[idx]] = {
-                idx == 0 ? startDepot : route[idx - 1],                // pred
-                idx == route.size() - 1 ? endDepot : route[idx + 1]};  // succ
-    }
+            for (size_t idx = 0; idx != trip.size(); ++idx)
+                neighbours_[trip[idx]] = {
+                    idx == 0 ? startDepot : trip[idx - 1],               // pred
+                    idx == trip.size() - 1 ? endDepot : trip[idx + 1]};  // succ
+        }
 }
 
 bool Solution::operator==(Solution const &other) const
@@ -134,10 +134,11 @@ bool Solution::operator==(Solution const &other) const
     if (!attributeChecks)
         return false;
 
-    // The visits are the same for both solutions, but the vehicle assignments
-    // need not be. We check this via a mapping from the first client in each
-    // route to the vehicle type of that route. We need to base this on the
-    // visits since the route order can differ between solutions.
+    // The visits are the same for both solutions, but the vehicle
+    // assignments need not be. We check this via a mapping from the first
+    // client in each route to the vehicle type of that route. We need to
+    // base this on the visits since the route order can differ between
+    // solutions.
     std::unordered_map<Client, VehicleType> client2vehType;
     for (auto const &route : routes_)
         client2vehType[route[0]] = route.vehicleType();
@@ -165,9 +166,9 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     // Shuffle clients to create random routes.
     std::shuffle(clients.begin(), clients.end(), rng);
 
-    // Distribute clients evenly over the routes: the total number of clients
-    // per vehicle, with an adjustment in case the division is not perfect and
-    // there are not enough vehicles for single-client routes.
+    // Distribute clients evenly over the routes: the total number of
+    // clients per vehicle, with an adjustment in case the division is not
+    // perfect and there are not enough vehicles for single-client routes.
     auto const numVehicles = data.numVehicles();
     auto const numClients = clients.size();
     auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
@@ -189,9 +190,10 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     }
 
     if (data.numVehicleTypes() > 1)
-        // Shuffle vehicle types when there is more than one. This ensures some
-        // additional diversity in the initial solutions, which sometimes (e.g.
-        // with heterogeneous fleet VRP) matters for consistent convergence.
+        // Shuffle vehicle types when there is more than one. This ensures
+        // some additional diversity in the initial solutions, which
+        // sometimes (e.g. with heterogeneous fleet VRP) matters for
+        // consistent convergence.
         std::shuffle(vehTypes.begin(), vehTypes.end(), rng);
 
     routes_.reserve(numRoutes);
@@ -250,9 +252,9 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 
     for (auto const &group : data.groups())
     {
-        // The solution is feasible w.r.t. this client group if exactly one of
-        // the clients in the group is in the solution. When the group is not
-        // required, we relax this to at most one client.
+        // The solution is feasible w.r.t. this client group if exactly one
+        // of the clients in the group is in the solution. When the group is
+        // not required, we relax this to at most one client.
         assert(group.mutuallyExclusive);
         auto const inSol = [&](auto client) { return visits[client] == 1; };
         auto const numInSol = std::count_if(group.begin(), group.end(), inSol);
@@ -269,7 +271,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
             throw std::runtime_error(msg.str());
         }
 
-    makeNeighbours(data);
+    makeNeighbours();
     evaluate(data);
 }
 
