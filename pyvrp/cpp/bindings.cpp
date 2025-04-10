@@ -825,6 +825,7 @@ PYBIND11_MODULE(_pyvrp, m)
             })
         .def(
             "num_routes", &Solution::numRoutes, DOC(pyvrp, Solution, numRoutes))
+        .def("num_trips", &Solution::numTrips, DOC(pyvrp, Solution, numTrips))
         .def("num_clients",
              &Solution::numClients,
              DOC(pyvrp, Solution, numClients))
