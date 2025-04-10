@@ -1,5 +1,6 @@
 #include "Route.h"
 #include "DurationSegment.h"
+#include "LoadSegment.h"
 
 #include <algorithm>
 #include <cassert>
@@ -203,8 +204,10 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     auto const &durations = data.durationMatrix(vehData.profile);
     DurationSegment ds = {vehData, vehData.startLate};
 
-    for (auto const &trip : trips_)
+    for (size_t tripIdx = 0; tripIdx != trips_.size(); ++tripIdx)
     {
+        auto const &trip = trips_[tripIdx];
+
         // TODO release time is per trip; not whole route. Fix this - here and
         // in makeSchedule().
         ProblemData::Depot const &start = data.location(trip.startDepot());
@@ -219,14 +222,32 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         centroid_.first += (x * trip.size()) / size();
         centroid_.second += (y * trip.size()) / size();
 
-        auto const &tripDelivery = trip.delivery();
+        auto const &tripDeliv = trip.delivery();
         auto const &tripPickup = trip.pickup();
-        auto const &tripExcessLoad = trip.excessLoad();
+        auto const &tripExcess = trip.excessLoad();
         for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
         {
-            delivery_[dim] += tripDelivery[dim];
-            pickup_[dim] += tripPickup[dim];
-            excessLoad_[dim] += tripExcessLoad[dim];
+            if (tripIdx == 0 && vehData.initialLoad[dim] > 0)
+            {
+                // There is initial load that the first trip does not know
+                // about, so we need to account for it here at the route level.
+                LoadSegment vehicle = {vehData, dim};
+                LoadSegment trip = {tripDeliv[dim],
+                                    tripPickup[dim],
+                                    std::max(tripDeliv[dim], tripPickup[dim]),
+                                    0};
+
+                LoadSegment merged = LoadSegment::merge(vehicle, trip);
+                delivery_[dim] += merged.delivery();
+                pickup_[dim] += merged.pickup();
+                excessLoad_[dim] += merged.excessLoad(vehData.capacity[dim]);
+            }
+            else
+            {
+                delivery_[dim] += tripDeliv[dim];
+                pickup_[dim] += tripPickup[dim];
+                excessLoad_[dim] += tripExcess[dim];
+            }
         }
 
         size_t prevClient = trip.startDepot();
