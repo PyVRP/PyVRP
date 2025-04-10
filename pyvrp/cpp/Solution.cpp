@@ -49,6 +49,15 @@ bool Solution::empty() const { return numClients() == 0 && numRoutes() == 0; }
 
 size_t Solution::numRoutes() const { return routes_.size(); }
 
+size_t Solution::numTrips() const
+{
+    return std::accumulate(routes_.begin(),
+                           routes_.end(),
+                           0,
+                           [](size_t count, auto const &route)
+                           { return count + route.numTrips(); });
+}
+
 size_t Solution::numClients() const { return numClients_; }
 
 size_t Solution::numMissingClients() const { return numMissingClients_; }

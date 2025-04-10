@@ -83,6 +83,11 @@ public:
     [[nodiscard]] size_t numRoutes() const;
 
     /**
+     * Number of trips in this solution.
+     */
+    [[nodiscard]] size_t numTrips() const;
+
+    /**
      * Number of clients in this solution.
      *
      * .. warning::

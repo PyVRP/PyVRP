@@ -254,7 +254,10 @@ def test_neighbours_includes_reload_depots(ok_small_multiple_trips):
     trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
     trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
     route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+
     sol = Solution(ok_small_multiple_trips, [route])
+    assert_equal(sol.num_routes(), 1)
+    assert_equal(sol.num_trips(), 2)
 
     neighbours = sol.neighbours()
     assert_(neighbours[0] is None)  # is depot
