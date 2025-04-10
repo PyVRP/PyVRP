@@ -679,4 +679,4 @@ def test_iter_empty_trips(ok_small_multiple_trips):
     assert_equal(list(route), [1, 2, 3, 4])
 
 
-# TODO multi-trip and release time interaction
+# TODO test release time / multi trip
