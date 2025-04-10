@@ -223,31 +223,20 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         centroid_.second += (y * trip.size()) / size();
 
         auto const &tripDeliv = trip.delivery();
-        auto const &tripPickup = trip.pickup();
-        auto const &tripExcess = trip.excessLoad();
+        auto const &tripPick = trip.pickup();
+        auto const &tripLoad = trip.load();
         for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
         {
-            if (tripIdx == 0 && vehData.initialLoad[dim] > 0)
-            {
-                // There is initial load that the first trip does not know
-                // about, so we need to account for it here at the route level.
-                LoadSegment vehicle = {vehData, dim};
-                LoadSegment trip = {tripDeliv[dim],
-                                    tripPickup[dim],
-                                    std::max(tripDeliv[dim], tripPickup[dim]),
-                                    0};
+            LoadSegment ls = {tripDeliv[dim], tripPick[dim], tripLoad[dim], 0};
 
-                LoadSegment merged = LoadSegment::merge(vehicle, trip);
-                delivery_[dim] += merged.delivery();
-                pickup_[dim] += merged.pickup();
-                excessLoad_[dim] += merged.excessLoad(vehData.capacity[dim]);
-            }
-            else
-            {
-                delivery_[dim] += tripDeliv[dim];
-                pickup_[dim] += tripPickup[dim];
-                excessLoad_[dim] += tripExcess[dim];
-            }
+            if (tripIdx == 0 && vehData.initialLoad[dim] > 0)
+                // There is initial load that the first trip does not know
+                // about, but we need to account for that first.
+                ls = LoadSegment::merge({vehData, dim}, ls);
+
+            delivery_[dim] += ls.delivery();
+            pickup_[dim] += ls.pickup();
+            excessLoad_[dim] += ls.excessLoad(vehData.capacity[dim]);
         }
 
         size_t prevClient = trip.startDepot();

@@ -39,6 +39,7 @@ private:
     Distance distance_ = 0;         // Total travel distance on this trip
     std::vector<Load> delivery_;    // Total delivery amount served on this trip
     std::vector<Load> pickup_;      // Total pickup amount gathered on this trip
+    std::vector<Load> load_;        // Load on this trip
     std::vector<Load> excessLoad_;  // Excess pickup or delivery demand
     Duration travel_ = 0;           // Total *travel* duration on this trip
     Duration service_ = 0;          // Total *service* duration on this trip
@@ -82,6 +83,11 @@ public:
      * Total client pickup load on this trip.
      */
     [[nodiscard]] std::vector<Load> const &pickup() const;
+
+    /**
+     * Maximum load at any point of this trip.
+     */
+    [[nodiscard]] std::vector<Load> const &load() const;
 
     /**
      * Pickup or delivery loads in excess of the vehicle's capacity.
@@ -149,6 +155,7 @@ public:
          Distance distance,
          std::vector<Load> delivery,
          std::vector<Load> pickup,
+         std::vector<Load> load,
          std::vector<Load> excessLoad,
          Duration travel,
          Duration service,
