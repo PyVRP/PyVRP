@@ -40,24 +40,29 @@ def plot_solution(
         **kwargs,
     )
 
-    colours = plt.get_cmap("tab10")
+    colors = plt.get_cmap("tab10")
     in_solution = np.zeros(data.num_locations, dtype=bool)
     for idx, route in enumerate(solution.routes()):
+        color = colors(idx)
         in_solution[route] = True
 
         if len(route) == 1 or plot_clients:  # explicit client coordinate plot
             kwargs = dict(label=f"Route {idx + 1}", zorder=3, s=75)
-            ax.scatter(x_coords[route], y_coords[route], **kwargs)
+            ax.scatter(x_coords[route], y_coords[route], **kwargs, color=color)
 
         for trip in route.trips():
             if len(trip) == 0:
                 continue
 
-            # Clients visited by this trip, as a line segment. All trips of the
-            # same route use the same colour.
             x = x_coords[trip]
             y = y_coords[trip]
-            ax.plot(x, y, color=colours(idx))
+
+            # Clients visited by this trip, as a line segment or single dot (in
+            # case of a singleton trip). Trips of the same route share colour.
+            if len(trip) == 1:
+                ax.scatter(x, y, zorder=3, s=75, color=color)
+            else:
+                ax.plot(x, y, color=color)
 
             # Thin edges from and to the depot. The edge from the depot to the
             # first client is given an arrow head to indicate route direction.
