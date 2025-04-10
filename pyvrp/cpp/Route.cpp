@@ -255,7 +255,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     timeWarp_ = ds.timeWarp(vehData.maxDuration);
     release_ = trips_[0].releaseTime();
 
-    // makeSchedule(data);
+    makeSchedule(data);
 }
 
 Route::Route(Trips trips,

@@ -55,52 +55,53 @@ Trip::Trip(ProblemData const &data,
             throw std::invalid_argument(msg.str());
         }
 
-    ProblemData::Depot const &start = data.location(startDepot_);
-    service_ += start.serviceDuration;
+    // ProblemData::Depot const &start = data.location(startDepot_);
+    // service_ += start.serviceDuration;
 
-    std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
-    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-        loadSegments[dim] = {vehType, dim};
+    // std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
+    // for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+    //     loadSegments[dim] = {vehType, dim};
 
-    auto const &distances = data.distanceMatrix(vehType.profile);
-    auto const &durations = data.durationMatrix(vehType.profile);
+    // auto const &distances = data.distanceMatrix(vehType.profile);
+    // auto const &durations = data.durationMatrix(vehType.profile);
 
-    for (size_t prevClient = startDepot_; auto const client : visits_)
-    {
-        ProblemData::Client const &clientData = data.location(client);
+    // for (size_t prevClient = startDepot_; auto const client : visits_)
+    // {
+    //     ProblemData::Client const &clientData = data.location(client);
 
-        distance_ += distances(prevClient, client);
-        travel_ += durations(prevClient, client);
-        service_ += clientData.serviceDuration;
-        release_ = std::max(release_, clientData.releaseTime);
-        prizes_ += clientData.prize;
+    //     distance_ += distances(prevClient, client);
+    //     travel_ += durations(prevClient, client);
+    //     service_ += clientData.serviceDuration;
+    //     release_ = std::max(release_, clientData.releaseTime);
+    //     prizes_ += clientData.prize;
 
-        centroid_.first += static_cast<double>(clientData.x) / size();
-        centroid_.second += static_cast<double>(clientData.y) / size();
+    //     centroid_.first += static_cast<double>(clientData.x) / size();
+    //     centroid_.second += static_cast<double>(clientData.y) / size();
 
-        for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-        {
-            auto const clientLs = LoadSegment(clientData, dim);
-            loadSegments[dim] = LoadSegment::merge(loadSegments[dim], clientLs);
-        }
+    //     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+    //     {
+    //         auto const clientLs = LoadSegment(clientData, dim);
+    //         loadSegments[dim] = LoadSegment::merge(loadSegments[dim],
+    //         clientLs);
+    //     }
 
-        prevClient = client;
-    }
+    //     prevClient = client;
+    // }
 
-    auto const last = empty() ? startDepot_ : visits_.back();
-    distance_ += distances(last, endDepot_);
-    travel_ += durations(last, endDepot_);
+    // auto const last = empty() ? startDepot_ : visits_.back();
+    // distance_ += distances(last, endDepot_);
+    // travel_ += durations(last, endDepot_);
 
     delivery_.reserve(data.numLoadDimensions());
     pickup_.reserve(data.numLoadDimensions());
     excessLoad_.reserve(data.numLoadDimensions());
-    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-    {
-        delivery_.push_back(loadSegments[dim].delivery());
-        pickup_.push_back(loadSegments[dim].pickup());
-        excessLoad_.push_back(std::max<Load>(
-            loadSegments[dim].load() - vehType.capacity[dim], 0));
-    }
+    // for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+    // {
+    //     delivery_.push_back(loadSegments[dim].delivery());
+    //     pickup_.push_back(loadSegments[dim].pickup());
+    //     excessLoad_.push_back(std::max<Load>(
+    //         loadSegments[dim].load() - vehType.capacity[dim], 0));
+    // }
 }
 
 Trip::Trip(Visits visits,
