@@ -119,5 +119,11 @@ def test_solve_multi_trip_instance(mtvrptw):
     """
     TODO
     """
-    res = solve(mtvrptw, stop=MaxIterations(100), seed=42)
-    print(res)
+    # res = solve(mtvrptw, stop=MaxIterations(1_000), seed=42)
+    # print(res)
+    assert False
+
+
+# from tests.helpers import read
+# mtvrptw = read("data/MTVRPTW.vrp", round_func="exact")
+# test_solve_multi_trip_instance(mtvrptw)
