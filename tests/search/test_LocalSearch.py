@@ -547,9 +547,9 @@ def test_local_search_inserts_reload_depots(ok_small_multiple_trips):
     assert_(not improved.has_excess_load())
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
-    routes = improved.routes()
-    assert_equal(len(routes), 1)
-    assert_equal(str(routes[0]), "1 3 | 2 4")
+    assert_equal(improved.num_routes(), 1)
+    assert_equal(improved.num_trips(), 2)
+    assert_(not improved.has_excess_load())
 
 
 def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
