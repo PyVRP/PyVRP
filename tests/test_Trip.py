@@ -138,3 +138,14 @@ def test_trip_iter_and_getitem(ok_small):
 
     # The trip is iterable, and iterating it returns the client visits.
     assert_equal(trip.visits(), [client for client in trip])
+
+
+def test_load(ok_small):
+    """
+    Tests load calculations for a small instance.
+    """
+    trip = Trip(ok_small, [1, 2, 3, 4], 0)
+    assert_equal(trip.delivery(), [18])
+    assert_equal(trip.pickup(), [0])
+    assert_equal(trip.load(), [18])
+    assert_equal(trip.excess_load(), [8])

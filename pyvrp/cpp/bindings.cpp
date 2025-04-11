@@ -529,6 +529,10 @@ PYBIND11_MODULE(_pyvrp, m)
              &Trip::pickup,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, Trip, pickup))
+        .def("load",
+             &Trip::load,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Trip, load))
         .def("excess_load",
              &Trip::excessLoad,
              py::return_value_policy::reference_internal,
@@ -573,6 +577,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       trip.distance(),
                                       trip.delivery(),
                                       trip.pickup(),
+                                      trip.load(),
                                       trip.excessLoad(),
                                       trip.travelDuration(),
                                       trip.serviceDuration(),
@@ -590,15 +595,16 @@ PYBIND11_MODULE(_pyvrp, m)
                           t[1].cast<pyvrp::Distance>(),  // distance
                           t[2].cast<Loads>(),            // delivery
                           t[3].cast<Loads>(),            // pickup
-                          t[4].cast<Loads>(),            // excess load
-                          t[5].cast<pyvrp::Duration>(),  // travel
-                          t[6].cast<pyvrp::Duration>(),  // service
-                          t[7].cast<pyvrp::Duration>(),  // release
-                          t[8].cast<pyvrp::Cost>(),      // prizes
-                          t[9].cast<std::pair<double, double>>(),  // centroid
-                          t[10].cast<size_t>(),   // vehicle type
-                          t[11].cast<size_t>(),   // start depot
-                          t[12].cast<size_t>());  // end depot
+                          t[4].cast<Loads>(),            // load
+                          t[5].cast<Loads>(),            // excess load
+                          t[6].cast<pyvrp::Duration>(),  // travel
+                          t[7].cast<pyvrp::Duration>(),  // service
+                          t[8].cast<pyvrp::Duration>(),  // release
+                          t[9].cast<pyvrp::Cost>(),      // prizes
+                          t[10].cast<std::pair<double, double>>(),  // centroid
+                          t[11].cast<size_t>(),   // vehicle type
+                          t[12].cast<size_t>(),   // start depot
+                          t[13].cast<size_t>());  // end depot
 
                 return trip;
             }))

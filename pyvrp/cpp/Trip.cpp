@@ -36,9 +36,10 @@ Trip::Trip(ProblemData const &data,
            std::optional<size_t> startDepot,
            std::optional<size_t> endDepot)
     : visits_(std::move(visits)),
-      delivery_(data.numLoadDimensions()),
-      pickup_(data.numLoadDimensions()),
-      excessLoad_(data.numLoadDimensions()),
+      delivery_(data.numLoadDimensions(), 0),
+      pickup_(data.numLoadDimensions(), 0),
+      load_(data.numLoadDimensions(), 0),
+      excessLoad_(data.numLoadDimensions(), 0),
       vehicleType_(vehicleType)
 {
     auto const &vehData = data.vehicleType(vehicleType_);
@@ -95,6 +96,7 @@ Trip::Trip(ProblemData const &data,
     {
         delivery_[dim] = loadSegments[dim].delivery();
         pickup_[dim] = loadSegments[dim].pickup();
+        load_[dim] = loadSegments[dim].load();
         excessLoad_[dim] = loadSegments[dim].excessLoad(vehData.capacity[dim]);
     }
 }
@@ -103,6 +105,7 @@ Trip::Trip(Visits visits,
            Distance distance,
            std::vector<Load> delivery,
            std::vector<Load> pickup,
+           std::vector<Load> load,
            std::vector<Load> excessLoad,
            Duration travel,
            Duration service,
@@ -116,6 +119,7 @@ Trip::Trip(Visits visits,
       distance_(distance),
       delivery_(std::move(delivery)),
       pickup_(std::move(pickup)),
+      load_(std::move(load)),
       excessLoad_(std::move(excessLoad)),
       travel_(travel),
       service_(service),
@@ -144,6 +148,8 @@ Distance Trip::distance() const { return distance_; }
 std::vector<Load> const &Trip::delivery() const { return delivery_; }
 
 std::vector<Load> const &Trip::pickup() const { return pickup_; }
+
+std::vector<Load> const &Trip::load() const { return load_; }
 
 std::vector<Load> const &Trip::excessLoad() const { return excessLoad_; }
 
