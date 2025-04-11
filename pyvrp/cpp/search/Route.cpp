@@ -70,11 +70,6 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
       load_(data.numLoadDimensions()),
       excessLoad_(data.numLoadDimensions())
 {
-    // Reserve sufficient space for, in the worst case, all reload depots and
-    // the route's start and end depots. This ensures the depots_ vector never
-    // reallocates, so we can work with pointers into its memory.
-    depots_.reserve(vehicleType_.maxReloads + 2);
-
     clear();
 }
 
@@ -146,8 +141,17 @@ void Route::insert(size_t idx, Node *node)
     assert(0 < idx && idx < nodes.size());
     auto const isDepot = node->client() < data.numDepots();
 
-    if (isDepot)  // is depot, so we copy first
+    if (isDepot)  // is depot, so we need to insert a copy into our own memory
+    {
+        if (depots_.size() == depots_.capacity())  // then we reallocate and
+        {                                          // must update references
+            depots_.reserve(depots_.size() + 1);
+            for (auto &depot : depots_)
+                nodes[depot.idx()] = &depot;
+        }
+
         node = &depots_.emplace_back(node->client());
+    }
 
     if (numTrips() > maxTrips())
         throw std::invalid_argument("Vehicle cannot perform this many trips.");
