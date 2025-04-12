@@ -214,7 +214,7 @@ void TripRelocate::apply(Route::Node *U, Route::Node *V) const
 
     // We need to be careful to insert the depot last, because doing so could
     // invalidate V (it might trigger an update to the route's internal data
-    // layout, which could invalidate V if V's a depot).
+    // layout, which could invalidate V if V is a depot).
     if (move_.type == MoveType::U_DEPOT)
     {
         vRoute->insert(V->idx() + 1, U);
