@@ -401,7 +401,7 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
 size_t ProblemData::VehicleType::maxTrips() const
 {
     // When maxReloads is at its maximum size, maxReloads + 1 wraps around to 0,
-    // and then the std::max ensures we still return a reasonable value.
+    // and then std::max() ensures we still return a reasonable value.
     return std::max(maxReloads, maxReloads + 1);
 }
 
