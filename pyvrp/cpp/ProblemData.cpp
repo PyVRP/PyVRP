@@ -398,7 +398,12 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
             name.value_or(this->name)};
 }
 
-size_t ProblemData::VehicleType::maxTrips() const { return maxReloads + 1; }
+size_t ProblemData::VehicleType::maxTrips() const
+{
+    // When maxReloads is at its maximum size, maxReloads + 1 wraps around to 0,
+    // and then the std::max ensures we still return a reasonable value.
+    return std::max(maxReloads, maxReloads + 1);
+}
 
 bool ProblemData::VehicleType::operator==(VehicleType const &other) const
 {
