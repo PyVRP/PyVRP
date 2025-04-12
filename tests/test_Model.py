@@ -1050,3 +1050,60 @@ def test_model_solves_multi_trip_instance():
     assert_({2} in visit_sets)
     assert_({3, 4} in visit_sets)
     assert_({5, 6} in visit_sets)
+
+
+def test_model_simultaneous_pickup_delivery_with_reloading():
+    """
+    Tests an instance with multiple depots, simultaneous pickup and delivery,
+    and reloading. This instance is a reduced test case from the tutorial.
+    """
+    # fmt: off
+    coords = [
+        (456, 320),  # location 0 - a depot
+        (228, 0),    # location 1 - a depot
+        (798, 160),  # location 2
+        (342, 240),  # location 3
+        (570, 400),  # location 4
+    ]
+
+    loads = [
+        (0, 0),   # location 0 - a depot
+        (0, 0),   # location 1 - a depot
+        (4, 7),   # location 2 - simultaneous pickup and delivery
+        (11, 0),  # location 3 - pure delivery
+        (0, 5),   # location 4 - pure pickup
+    ]
+    # fmt: on
+
+    m = Model()
+
+    depot1 = m.add_depot(x=coords[0][0], y=coords[0][1])
+    depot2 = m.add_depot(x=coords[1][0], y=coords[1][1])
+
+    m.add_vehicle_type(
+        3,
+        capacity=15,
+        start_depot=depot1,
+        end_depot=depot1,
+        reload_depots=[depot1, depot2],
+        max_reloads=2,
+    )
+
+    for idx in range(2, len(coords)):
+        m.add_client(
+            x=coords[idx][0],
+            y=coords[idx][1],
+            delivery=loads[idx][0],
+            pickup=loads[idx][1],
+        )
+
+    for frm in m.locations:
+        for to in m.locations:
+            distance = abs(frm.x - to.x) + abs(frm.y - to.y)  # Manhattan
+            m.add_edge(frm, to, distance=distance)
+
+    res = m.solve(stop=MaxIterations(50), display=False)
+    print(res)
+
+
+# test_tutorial()
