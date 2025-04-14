@@ -133,6 +133,7 @@ void Route::validate(ProblemData const &data) const
 
 void Route::makeSchedule(ProblemData const &data)
 {
+    // TODO fix release time / multi trip
     schedule_.clear();
     schedule_.reserve(size() + 2 * numTrips());  // clients and start/end depots
 
@@ -208,8 +209,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     {
         auto const &trip = trips_[tripIdx];
 
-        // TODO release time is per trip; not whole route. Fix this - here and
-        // in makeSchedule().
+        // TODO fix release time / multi trip
         ProblemData::Depot const &start = data.location(trip.startDepot());
         ds = DurationSegment::merge(0, ds, {start, start.serviceDuration});
 

@@ -7,6 +7,8 @@ from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
 
+_MAX_SIZE = np.iinfo(np.uint64).max
+
 
 @pytest.mark.parametrize(
     (
@@ -1194,3 +1196,20 @@ def test_validate_raises_for_invalid_reload_depot(ok_small):
     # during argument validation.
     with assert_raises(IndexError):
         ok_small.replace(vehicle_types=[new_vehicle_type])
+
+
+def test_vehicle_type_max_trips(ok_small_multiple_trips):
+    """
+    Tests that the vehicle type correctly handles the case where max_reloads
+    is set to its largest allowed size - then max_trips should not overflow.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0)
+    assert_equal(veh_type.max_reloads, 1)
+    assert_equal(veh_type.max_trips, 2)
+
+    # Normally, max_trips == max_reloads + 1, but when max_reloads is at the
+    # maximum size, we do not want max_trips to overflow and wrap around to
+    # zero. These asserts check that does not happen.
+    veh_type = veh_type.replace(max_reloads=_MAX_SIZE)
+    assert_equal(veh_type.max_reloads, _MAX_SIZE)
+    assert_equal(veh_type.max_trips, _MAX_SIZE)
