@@ -320,8 +320,8 @@ void Route::update()
                 // Then we restart from here, but keep track of any excess load
                 // observed so far.
                 loadBefore[dim][idx]
-                    = {loadAt[dim][idx].pickup(),
-                       loadAt[dim][idx].delivery(),
+                    = {loadAt[dim][idx].delivery(),
+                       loadAt[dim][idx].pickup(),
                        loadAt[dim][idx].load(),
                        loadBefore[dim][idx - 1].excessLoad(capacity)};
             else
