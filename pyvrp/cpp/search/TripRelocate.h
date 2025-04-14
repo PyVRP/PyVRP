@@ -14,7 +14,7 @@ namespace pyvrp::search
  *
  * References
  * ----------
- * .. [1] Francois, V., Y, Arda, and Y. Crama (2019). Adaptive Large
+ * .. [1] Francois, V., Y. Arda, and Y. Crama (2019). Adaptive Large
  *        Neighborhood Search for Multitrip Vehicle Routing with Time Windows.
  *        *Transportation Science*, 53(6): 1706 - 1730.
  *        https://doi.org/10.1287/trsc.2019.0909.

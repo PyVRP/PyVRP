@@ -703,13 +703,20 @@ def test_iter_empty_trips(ok_small_multiple_trips):
     assert_equal(list(route), [1, 2, 3, 4])
 
 
-def test_small_example_from_paper():
+def test_small_example_from_cattaruzza_paper():
     """
     Tests a small multi-trip VRP example. The data are from the paper by
     Cattaruzza et al. (2016), corresponding to their Figure 1.
+
+    Cattaruzza, D., N. Absi, and D. Feillet (2016). The Multi-Trip Vehicle
+    Routing Problem with Time Windows and Release Dates.
+    *Transportation Science* 50(2): 676 - 693.
+    https://doi.org/10.1287/trsc.2015.0608.
     """
     depot = Depot(0, 0, tw_early=0, tw_late=200, service_duration=20)
     clients = [
+        # Figure 1 details release times for some clients. But release times
+        # are actually binding in the example, so they are not needed.
         Client(0, 0, tw_early=100, tw_late=120, service_duration=5),
         Client(0, 0, tw_early=50, tw_late=75, service_duration=5),
         Client(0, 0, tw_early=50, tw_late=75, service_duration=5),
@@ -740,14 +747,14 @@ def test_small_example_from_paper():
     trip4 = Trip(data, [2], 0)
     route = Route(data, [trip1, trip2, trip3, trip4], 0)
 
-    # These values were verified from the paper / calculated manually. The
-    # paper setting requires the first trip to start immediately, which results
-    # in 15 wait duration. We do not require this, and thus start a little
-    # later, avoiding the wait duration. The other quantities match the paper.
+    # These values were verified from the paper, and where needed calculated
+    # manually. Note that the paper setting requires the first trip to start
+    # immediately, which results in 15 wait duration. We do not require this,
+    # instead starting a little later to avoid the wait duration. The other
+    # quantities reported below match the paper.
     assert_equal(route.start_time(), 15)
     assert_equal(route.end_time(), 95)
     assert_equal(route.time_warp(), 75 + 55)  # two time warp violations
     assert_equal(route.service_duration(), 80 + 25)  # depot and clients
 
-
-# TODO test release time / multi trip
+    # TODO test schedule?
