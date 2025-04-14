@@ -1003,3 +1003,32 @@ def test_route_raises_too_many_trips(ok_small_multiple_trips):
 
     with assert_raises(ValueError):  # second reload, should raise
         route.append(Node(loc=0))
+
+
+def test_bug_reload_swaps_pickup_delivery_swap(small_spd):
+    """
+    Tests a bug that materialised when reloading, where the reload depot
+    segment accidentally swapped delivery and pickup arguments, causing a
+    wrong load evaluation.
+    """
+    veh_type = small_spd.vehicle_type(0)
+    new_type = veh_type.replace(reload_depots=[0], max_reloads=2)
+    data = small_spd.replace(vehicle_types=[new_type])
+
+    route = Route(data, 0, 0)
+    for loc in [1, 0, 3, 4]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    client3 = data.location(3)
+    client4 = data.location(4)
+    assert_equal(client3.delivery[0] + client4.delivery[0], 34)
+    assert_equal(client3.pickup[0] + client4.pickup[0], 50)
+
+    assert_equal(route.load_before(5).delivery(), 34)
+    assert_equal(route.load_before(5).pickup(), 50)
+    assert_equal(route.load_before(5).load(), 50)
+
+    assert_equal(route.load_after(2).delivery(), 34)
+    assert_equal(route.load_after(2).pickup(), 50)
+    assert_equal(route.load_after(2).load(), 50)
