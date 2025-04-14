@@ -703,4 +703,51 @@ def test_iter_empty_trips(ok_small_multiple_trips):
     assert_equal(list(route), [1, 2, 3, 4])
 
 
+def test_small_example_from_paper():
+    """
+    Tests a small multi-trip VRP example. The data are from the paper by
+    Cattaruzza et al. (2016), corresponding to their Figure 1.
+    """
+    depot = Depot(0, 0, tw_early=0, tw_late=200, service_duration=20)
+    clients = [
+        Client(0, 0, tw_early=100, tw_late=120, service_duration=5),
+        Client(0, 0, tw_early=50, tw_late=75, service_duration=5),
+        Client(0, 0, tw_early=50, tw_late=75, service_duration=5),
+        Client(0, 0, tw_early=50, tw_late=100, service_duration=5),
+        Client(0, 0, tw_early=50, tw_late=100, service_duration=5),
+    ]
+
+    matrix = [
+        [0, 5, 15, 20, 10, 15],
+        [5, 0, 20, 20, 15, 15],
+        [15, 20, 0, 40, 20, 30],
+        [20, 20, 40, 0, 30, 10],
+        [10, 15, 20, 30, 0, 20],
+        [15, 15, 30, 10, 20, 0],
+    ]
+
+    data = ProblemData(
+        clients=clients,
+        depots=[depot],
+        vehicle_types=[VehicleType(reload_depots=[0], max_reloads=3)],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+    )
+
+    trip1 = Trip(data, [5, 3], 0)
+    trip2 = Trip(data, [1], 0)
+    trip3 = Trip(data, [4], 0)
+    trip4 = Trip(data, [2], 0)
+    route = Route(data, [trip1, trip2, trip3, trip4], 0)
+
+    # These values were verified from the paper / calculated manually. The
+    # paper setting requires the first trip to start immediately, which results
+    # in 15 wait duration. We do not require this, and thus start a little
+    # later, avoiding the wait duration. The other quantities match the paper.
+    assert_equal(route.start_time(), 15)
+    assert_equal(route.end_time(), 95)
+    assert_equal(route.time_warp(), 75 + 55)  # two time warp violations
+    assert_equal(route.service_duration(), 80 + 25)  # depot and clients
+
+
 # TODO test release time / multi trip
