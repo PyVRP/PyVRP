@@ -758,3 +758,51 @@ def test_small_example_from_cattaruzza_paper():
     assert_equal(route.service_duration(), 80 + 25)  # depot and clients
 
     # TODO test schedule?
+
+
+def test_multi_trip_with_release_times():
+    """
+    Test a small example with multiple trips and (binding) release times.
+    """
+    matrix = [
+        [0, 10, 0, 20],
+        [0, 0, 10, 0],
+        [5, 0, 0, 0],
+        [10, 0, 0, 0],
+    ]
+
+    data = ProblemData(
+        clients=[
+            Client(0, 0, tw_early=60, tw_late=100, release_time=40),
+            Client(0, 0, tw_early=70, tw_late=90, release_time=50),
+            Client(0, 0, tw_early=80, tw_late=150, release_time=100),
+        ],
+        depots=[Depot(0, 0, service_duration=20)],
+        vehicle_types=[VehicleType(reload_depots=[0], max_reloads=10)],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+    )
+
+    trip1 = Trip(data, [1, 2], 0)
+    trip2 = Trip(data, [3], 0)
+
+    assert_equal(trip1.release_time(), 50)
+    assert_equal(trip2.release_time(), 100)
+
+    # Route should have a release time corresponding to its first trip.
+    route = Route(data, [trip1, trip2], 0)
+    assert_equal(route.release_time(), trip1.release_time())
+
+    # Some route-level statistics. We start at 50, the release time for the
+    # first trip. Then we load at the depot until 70. Then we drive to client
+    # 1 and arrive at 80. We do service, and drive to 2, where we arrive at 90.
+    # Again, service and drive to 0, where we arrive at 95. We then wait until
+    # 100, the release time for the second trip. We load at the depot until
+    # 120, and then drive to 3, where we arrive at 140. We service, and drive
+    # back to the depot, where we arrive at 150. We finish at 150.
+    assert_equal(route.start_time(), 50)
+    assert_equal(route.end_time(), 150)
+    assert_equal(route.wait_duration(), 5)  # waiting for release time
+    assert_equal(route.time_warp(), 0)
+
+    # TODO test schedule?
