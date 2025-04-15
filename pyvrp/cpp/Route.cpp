@@ -202,17 +202,8 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
 
     validate(data);
 
-    auto const &durations = data.durationMatrix(vehData.profile);
-    DurationSegment ds = {vehData, vehData.startLate};
-
-    for (size_t tripIdx = 0; tripIdx != trips_.size(); ++tripIdx)
+    for (auto const &trip : trips_)  // general statistics
     {
-        auto const &trip = trips_[tripIdx];
-
-        // TODO release time / multi trip
-        ProblemData::Depot const &start = data.location(trip.startDepot());
-        ds = DurationSegment::merge(0, ds, {start, start.serviceDuration});
-
         distance_ += trip.distance();
         service_ += trip.serviceDuration();
         travel_ += trip.travelDuration();
@@ -221,23 +212,42 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         auto const [x, y] = trip.centroid();
         centroid_.first += (x * trip.size()) / size();
         centroid_.second += (y * trip.size()) / size();
+    }
 
+    distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
+    excessDistance_ = std::max<Distance>(distance_ - vehData.maxDistance, 0);
+
+    for (size_t idx = 0; idx != trips_.size(); ++idx)  // load statistics
+    {
+        auto const &trip = trips_[idx];
         auto const &tripDeliv = trip.delivery();
         auto const &tripPick = trip.pickup();
         auto const &tripLoad = trip.load();
+
         for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
         {
             LoadSegment ls = {tripDeliv[dim], tripPick[dim], tripLoad[dim], 0};
 
-            if (tripIdx == 0 && vehData.initialLoad[dim] > 0)
-                // There is initial load that the first trip does not know
-                // about, but we need to account for that first.
+            if (idx == 0 && vehData.initialLoad[dim] > 0)
+                // This is initial load that the first trip does not know about
+                // that we need to account for first.
                 ls = LoadSegment::merge({vehData, dim}, ls);
 
             delivery_[dim] += ls.delivery();
             pickup_[dim] += ls.pickup();
             excessLoad_[dim] += ls.excessLoad(vehData.capacity[dim]);
         }
+    }
+
+    // Duration statistics
+    auto const &durations = data.durationMatrix(vehData.profile);
+    DurationSegment ds = {vehData, vehData.startLate};
+
+    for (auto const &trip : trips_)
+    {
+        // TODO release time / multi trip
+        ProblemData::Depot const &start = data.location(trip.startDepot());
+        ds = DurationSegment::merge(0, ds, {start, start.serviceDuration});
 
         size_t prevClient = trip.startDepot();
         for (auto const client : trip)
@@ -253,9 +263,6 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         ds = DurationSegment::merge(
             durations(prevClient, trip.endDepot()), ds, {end, 0});
     }
-
-    distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
-    excessDistance_ = std::max<Distance>(distance_ - vehData.maxDistance, 0);
 
     ds = DurationSegment::merge(0, ds, {vehData, vehData.twLate});
     duration_ = ds.duration();

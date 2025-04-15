@@ -757,8 +757,6 @@ def test_small_example_from_cattaruzza_paper():
     assert_equal(route.time_warp(), 75 + 55)  # two time warp violations
     assert_equal(route.service_duration(), 80 + 25)  # depot and clients
 
-    # TODO test schedule?
-
 
 def test_multi_trip_with_release_times():
     """
@@ -793,6 +791,16 @@ def test_multi_trip_with_release_times():
     route = Route(data, [trip1, trip2], 0)
     assert_equal(route.release_time(), trip1.release_time())
 
+    # Travel is explained better below.
+    assert_equal(trip1.travel_duration(), 25)
+    assert_equal(trip2.travel_duration(), 30)
+    assert_equal(route.travel_duration(), 55)
+
+    # Service only at the depots.
+    assert_equal(trip1.service_duration(), 20)
+    assert_equal(trip2.service_duration(), 20)
+    assert_equal(route.service_duration(), 40)
+
     # Some route-level statistics. We start at 50, the release time for the
     # first trip. Then we load at the depot until 70. Then we drive to client
     # 1 and arrive at 80. We do service, and drive to 2, where we arrive at 90.
@@ -801,8 +809,9 @@ def test_multi_trip_with_release_times():
     # 120, and then drive to 3, where we arrive at 140. We service, and drive
     # back to the depot, where we arrive at 150. We finish at 150.
     assert_equal(route.start_time(), 50)
+    assert_equal(route.duration(), 100)
     assert_equal(route.end_time(), 150)
     assert_equal(route.wait_duration(), 5)  # waiting for release time
     assert_equal(route.time_warp(), 0)
 
-    # TODO test schedule?
+    # TODO test schedule
