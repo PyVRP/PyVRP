@@ -239,15 +239,19 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         }
     }
 
-    // Duration statistics
+    // Duration statistics.
     auto const &durations = data.durationMatrix(vehData.profile);
     DurationSegment ds = {vehData, vehData.startLate};
-
-    for (auto const &trip : trips_)
+    Duration startTime = 0;
+    for (size_t idx = 0; idx != numTrips(); ++idx)
     {
-        // TODO release time / multi trip
+        auto const &trip = trips_[idx];
+
         ProblemData::Depot const &start = data.location(trip.startDepot());
-        ds = DurationSegment::merge(0, ds, {start, start.serviceDuration});
+        if (idx == 0)
+            ds = DurationSegment::merge(0, ds, {start, start.serviceDuration});
+        else
+            ds = {start, start.serviceDuration};
 
         size_t prevClient = trip.startDepot();
         for (auto const client : trip)
@@ -262,15 +266,42 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         ProblemData::Depot const &end = data.location(trip.endDepot());
         ds = DurationSegment::merge(
             durations(prevClient, trip.endDepot()), ds, {end, 0});
+
+        if (idx == numTrips() - 1)
+            ds = DurationSegment::merge(0, ds, {vehData, vehData.twLate});
+
+        duration_ += ds.duration();
+        timeWarp_ += ds.timeWarp();
+
+        if (idx == 0)
+        {
+            startTime_ = ds.twEarly();
+            slack_ = ds.twLate() - ds.twEarly();
+            release_ = ds.releaseTime();
+        }
+
+        if (ds.twLate() < startTime)
+        {
+            timeWarp_ += startTime - ds.twLate();
+            startTime = ds.twLate() + ds.duration() - ds.timeWarp();
+        }
+        else
+        {
+            if (idx > 0)  // wait time
+                duration_ += std::max<Duration>(ds.twEarly() - startTime, 0);
+
+            auto const start = std::max(startTime, ds.twEarly());
+            startTime = start + ds.duration() - ds.timeWarp();
+        }
     }
 
-    ds = DurationSegment::merge(0, ds, {vehData, vehData.twLate});
-    duration_ = ds.duration();
     durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_);
-    startTime_ = ds.twEarly();
-    slack_ = ds.twLate() - ds.twEarly();
-    timeWarp_ = ds.timeWarp(vehData.maxDuration);
-    release_ = trips_[0].releaseTime();
+    timeWarp_ += duration_ > vehData.maxDuration
+                     ? duration_ - vehData.maxDuration
+                     : 0;
+
+    if (timeWarp_ > 0)
+        slack_ = 0;
 
     makeSchedule(data);
 }
