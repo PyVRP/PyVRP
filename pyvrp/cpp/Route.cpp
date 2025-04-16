@@ -241,17 +241,15 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
 
     // Duration statistics.
     auto const &durations = data.durationMatrix(vehData.profile);
-    DurationSegment ds = {vehData, vehData.startLate};
     Duration startTime = 0;
     for (size_t idx = 0; idx != numTrips(); ++idx)
     {
         auto const &trip = trips_[idx];
 
         ProblemData::Depot const &start = data.location(trip.startDepot());
-        if (idx == 0)
-            ds = DurationSegment::merge(0, ds, {start, start.serviceDuration});
-        else
-            ds = {start, start.serviceDuration};
+        DurationSegment ds = {start, start.serviceDuration};
+        if (idx == 0)  // vehicle to first depot
+            ds = DurationSegment::merge(0, {vehData, vehData.startLate}, ds);
 
         size_t prevClient = trip.startDepot();
         for (auto const client : trip)
@@ -267,7 +265,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         ds = DurationSegment::merge(
             durations(prevClient, trip.endDepot()), ds, {end, 0});
 
-        if (idx == numTrips() - 1)
+        if (idx == numTrips() - 1)  // last depot to vehicle
             ds = DurationSegment::merge(0, ds, {vehData, vehData.twLate});
 
         duration_ += ds.duration();
@@ -279,6 +277,14 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
             slack_ = ds.twLate() - ds.twEarly();
             release_ = ds.releaseTime();
         }
+        else
+        {
+            // Wait duration applies only to later trips. Slack is always the
+            // minimum across trips; in particular, if there's a trip with
+            // time warp, then there is no slack.
+            duration_ += std::max<Duration>(ds.twEarly() - startTime, 0);
+            slack_ = std::min(slack_, ds.twLate() - ds.twEarly());
+        }
 
         if (ds.twLate() < startTime)
         {
@@ -287,17 +293,14 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         }
         else
         {
-            if (idx > 0)  // wait time
-                duration_ += std::max<Duration>(ds.twEarly() - startTime, 0);
-
             auto const start = std::max(startTime, ds.twEarly());
             startTime = start + ds.duration() - ds.timeWarp();
         }
     }
 
     durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_);
-    timeWarp_ += duration_ > vehData.maxDuration
-                     ? duration_ - vehData.maxDuration
+    timeWarp_ += duration_ - timeWarp_ > vehData.maxDuration
+                     ? duration_ - timeWarp_ - vehData.maxDuration
                      : 0;
 
     if (timeWarp_ > 0)

@@ -755,6 +755,7 @@ def test_small_example_from_cattaruzza_paper():
     assert_equal(route.start_time(), 15)
     assert_equal(route.end_time(), 95)
     assert_equal(route.time_warp(), 75 + 55)  # two time warp violations
+    assert_equal(route.slack(), 0)  # there is time warp, so no slack
     assert_equal(route.service_duration(), 80 + 25)  # depot and clients
 
 
@@ -813,5 +814,6 @@ def test_multi_trip_with_release_times():
     assert_equal(route.end_time(), 150)
     assert_equal(route.wait_duration(), 5)  # waiting for release time
     assert_equal(route.time_warp(), 0)
+    assert_equal(route.slack(), 0)  # the schedule is tight
 
     # TODO test schedule
