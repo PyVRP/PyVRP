@@ -275,24 +275,22 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         {
             startTime = ds.twEarly();
             startTime_ = ds.twEarly();
-
-            slack_ = ds.twLate() - ds.twEarly();
         }
-        else
-            // Slack is always the minimum across trips; in particular, if
-            // there's a trip with time warp, then there is no slack.
-            slack_ = std::min(slack_, ds.twLate() - ds.twEarly());
 
-        if (ds.twLate() < startTime)
-        {
-            timeWarp_ += startTime - ds.twLate();
+        // Slack is always the minimum across trips; in particular, if there is
+        // a trip with time warp, then there is no slack.
+        slack_ = std::min(slack_, ds.twLate() - ds.twEarly());
+
+        if (ds.twLate() < startTime)  // time warp: we need to start before
+        {                             // we feasibly can.
             slack_ = 0;
+            timeWarp_ += startTime - ds.twLate();
             startTime = ds.twLate() + ds.duration() - ds.timeWarp();
         }
-        else
-        {
+        else  // then we can start at a feasible time, but there might be a
+        {     // bit of extra waiting time.
             auto const start = std::max(startTime, ds.twEarly());
-            duration_ += std::max<Duration>(ds.twEarly() - startTime, 0);
+            duration_ += start - startTime;
             startTime = start + ds.duration() - ds.timeWarp();
         }
     }

@@ -121,8 +121,8 @@ private:
     Duration travel_ = 0;           // Total *travel* duration on this route
     Duration service_ = 0;          // Total *service* duration on this route
     Duration startTime_ = 0;        // (earliest) start time of this route
-    Duration slack_ = 0;            // Total time slack on this route
-    Cost prizes_ = 0;               // Total value of prizes on this route
+    Duration slack_ = std::numeric_limits<Duration>::max();  // schedule slack
+    Cost prizes_ = 0;  // Total value of prizes on this route
 
     std::pair<double, double> centroid_;  // Route center
     VehicleType vehicleType_;             // Type of vehicle
