@@ -273,27 +273,26 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
 
         if (idx == 0)
         {
+            startTime = ds.twEarly();
             startTime_ = ds.twEarly();
+
             slack_ = ds.twLate() - ds.twEarly();
-            release_ = ds.releaseTime();
         }
         else
-        {
-            // Wait duration applies only to later trips. Slack is always the
-            // minimum across trips; in particular, if there's a trip with
-            // time warp, then there is no slack.
-            duration_ += std::max<Duration>(ds.twEarly() - startTime, 0);
+            // Slack is always the minimum across trips; in particular, if
+            // there's a trip with time warp, then there is no slack.
             slack_ = std::min(slack_, ds.twLate() - ds.twEarly());
-        }
 
         if (ds.twLate() < startTime)
         {
             timeWarp_ += startTime - ds.twLate();
+            slack_ = 0;
             startTime = ds.twLate() + ds.duration() - ds.timeWarp();
         }
         else
         {
             auto const start = std::max(startTime, ds.twEarly());
+            duration_ += std::max<Duration>(ds.twEarly() - startTime, 0);
             startTime = start + ds.duration() - ds.timeWarp();
         }
     }
@@ -302,9 +301,6 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     timeWarp_ += duration_ - timeWarp_ > vehData.maxDuration
                      ? duration_ - timeWarp_ - vehData.maxDuration
                      : 0;
-
-    if (timeWarp_ > 0)
-        slack_ = 0;
 
     makeSchedule(data);
 }
@@ -321,7 +317,6 @@ Route::Route(Trips trips,
              Duration timeWarp,
              Duration travel,
              Duration service,
-             Duration release,
              Duration startTime,
              Duration slack,
              Cost prizes,
@@ -343,7 +338,6 @@ Route::Route(Trips trips,
       timeWarp_(timeWarp),
       travel_(travel),
       service_(service),
-      release_(release),
       startTime_(startTime),
       slack_(slack),
       prizes_(prizes),
@@ -427,7 +421,7 @@ Duration Route::endTime() const { return startTime_ + duration_ - timeWarp_; }
 
 Duration Route::slack() const { return slack_; }
 
-Duration Route::releaseTime() const { return release_; }
+Duration Route::releaseTime() const { return trips_[0].releaseTime(); }
 
 Cost Route::prizes() const { return prizes_; }
 
