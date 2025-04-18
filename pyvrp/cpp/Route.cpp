@@ -281,18 +281,20 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         // a trip with time warp, then there is no slack.
         slack_ = std::min(slack_, ds.twLate() - ds.twEarly());
 
-        if (ds.twLate() < startTime)  // time warp: we need to start before
-        {                             // we feasibly can.
-            slack_ = 0;
-            timeWarp_ += startTime - ds.twLate();
-            startTime = ds.twLate() + ds.duration() - ds.timeWarp();
-        }
-        else  // then we can start at a feasible time, but there might be a
-        {     // bit of extra waiting time.
-            auto const start = std::max(startTime, ds.twEarly());
-            duration_ += start - startTime;
-            startTime = start + ds.duration() - ds.timeWarp();
-        }
+        // Determines the actual starting point of this trip. If we must start
+        // before we can, then this trip is infeasible, and we may need to add
+        // time warp. If we do have a feasible starting moment we may need to
+        // add wait duration.
+        auto const actualStartTime
+            = ds.twLate() < startTime ? std::max(ds.twLate(), ds.releaseTime())
+                                      : std::max(startTime, ds.twEarly());
+
+        if (actualStartTime < startTime)  // we must start before we can, so we
+            slack_ = 0;                   // have time warp and thus no slack.
+
+        timeWarp_ += std::max<Duration>(startTime - actualStartTime, 0);
+        duration_ += std::max<Duration>(actualStartTime - startTime, 0);
+        startTime = actualStartTime + ds.duration() - ds.timeWarp();
     }
 
     durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_);
