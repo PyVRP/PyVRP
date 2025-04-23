@@ -259,8 +259,8 @@ void Route::update()
     DurationSegment const depotStart(start, start.serviceDuration);
     durAt[0] = DurationSegment::merge(0, vehStart, depotStart);
 
-    DurationSegment const depotEnd(vehicleType_, vehicleType_.twLate);
-    DurationSegment const vehEnd(data.location(endDepot()), 0);
+    DurationSegment const depotEnd(data.location(endDepot()), 0);
+    DurationSegment const vehEnd(vehicleType_, vehicleType_.twLate);
     durAt[nodes.size() - 1] = DurationSegment::merge(0, depotEnd, vehEnd);
 
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
