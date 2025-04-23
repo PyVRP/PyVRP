@@ -279,7 +279,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
 
         // Slack is always the minimum across trips; in particular, if there is
         // a trip with time warp, then there is no slack.
-        slack_ = std::min(slack_, ds.twLate() - ds.twEarly());
+        slack_ = std::min(slack_, ds.slack());
 
         // Determines the actual starting point of this trip. If we must start
         // before we can, then this trip is infeasible, and we may need to add

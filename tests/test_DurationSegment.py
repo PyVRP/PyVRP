@@ -157,3 +157,15 @@ def test_bug_fix_overflow_more_timewarp_than_duration():
     # tw_late.
     ds = DurationSegment.merge(0, ds1, ds2)
     assert_equal(ds.time_warp(), 18)
+
+
+@pytest.mark.parametrize(("tw_early", "tw_late"), [(0, 10), (5, 7), (0, 3)])
+def test_slack(tw_early: int, tw_late: int):
+    """
+    Tests that the slack computation functions correctly for a simple duration
+    segment.
+    """
+    ds = DurationSegment(0, 0, tw_early, tw_late, 0)
+    assert_equal(ds.tw_early(), tw_early)
+    assert_equal(ds.tw_late(), tw_late)
+    assert_equal(ds.slack(), tw_late - tw_early)

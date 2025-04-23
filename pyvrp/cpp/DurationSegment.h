@@ -87,6 +87,12 @@ public:
     [[nodiscard]] Duration twLate() const;
 
     /**
+     * Slack on this route, that is, the amount of time between the earliest
+     * and latest route start.
+     */
+    [[nodiscard]] Duration slack() const;
+
+    /**
      * Earliest possible release time of the clients in this route segment.
      */
     [[nodiscard]] Duration releaseTime() const;

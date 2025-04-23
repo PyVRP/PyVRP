@@ -1112,6 +1112,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("tw_late",
              &DurationSegment::twLate,
              DOC(pyvrp, DurationSegment, twLate))
+        .def("slack",
+             &DurationSegment::slack,
+             DOC(pyvrp, DurationSegment, slack))
         .def("time_warp",
              &DurationSegment::timeWarp,
              py::arg("max_duration")
