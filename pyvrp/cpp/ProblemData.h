@@ -486,7 +486,7 @@ public:
                     std::optional<Duration> startLate = std::nullopt,
                     std::vector<Load> initialLoad = {},
                     std::vector<size_t> reloadDepots = {},
-                    size_t maxReloads = 0,
+                    size_t maxReloads = std::numeric_limits<size_t>::max(),
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
