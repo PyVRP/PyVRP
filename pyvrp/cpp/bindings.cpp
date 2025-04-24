@@ -264,7 +264,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("start_late") = py::none(),
              py::arg("initial_load") = py::list(),
              py::arg("reload_depots") = py::list(),
-             py::arg("max_reloads") = 0,
+             py::arg("max_reloads") = std::numeric_limits<size_t>::max(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)

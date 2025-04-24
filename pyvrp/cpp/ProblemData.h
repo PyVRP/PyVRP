@@ -349,7 +349,7 @@ public:
      *     start_late: int | None = None,
      *     initial_load: list[int] = [],
      *     reload_depots: list[int] = [],
-     *     max_reloads: int = 0,
+     *     max_reloads: int = np.iinfo(np.int64).max,
      *     *,
      *     name: str = "",
      * )
@@ -404,7 +404,7 @@ public:
      *     to an empty list, in which case no reloads are allowed.
      * max_reloads
      *     Maximum number of reloads the vehicle may perform on a route.
-     *     Defaults to 0, in which case no reloads are allowed.
+     *     Unconstrained if not explicitly provided.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *

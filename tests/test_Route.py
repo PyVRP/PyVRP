@@ -568,13 +568,11 @@ def test_raises_multiple_trips_without_reload_depots(ok_small):
     Tests that the route constructor raises when there is more than one trip,
     yet the vehicle type does not support reloading.
     """
-    veh_type = ok_small.vehicle_type(0).replace(max_reloads=2)
-    data = ok_small.replace(vehicle_types=[veh_type])
-    assert_equal(len(data.vehicle_type(0).reload_depots), 0)
+    assert_equal(len(ok_small.vehicle_type(0).reload_depots), 0)
 
-    trips = [Trip(data, [1, 2], 0), Trip(data, [3], 0)]
+    trips = [Trip(ok_small, [1, 2], 0), Trip(ok_small, [3], 0)]
     with assert_raises(ValueError):
-        Route(data, trips, 0)
+        Route(ok_small, trips, 0)
 
 
 def test_raises_vehicle_max_reloads(ok_small_multiple_trips):
@@ -736,7 +734,7 @@ def test_small_example_from_cattaruzza_paper():
     data = ProblemData(
         clients=clients,
         depots=[depot],
-        vehicle_types=[VehicleType(reload_depots=[0], max_reloads=3)],
+        vehicle_types=[VehicleType(reload_depots=[0])],
         distance_matrices=[matrix],
         duration_matrices=[matrix],
     )
@@ -777,7 +775,7 @@ def test_multi_trip_with_release_times():
             Client(0, 0, tw_early=80, tw_late=150, release_time=100),
         ],
         depots=[Depot(0, 0, service_duration=20)],
-        vehicle_types=[VehicleType(reload_depots=[0], max_reloads=10)],
+        vehicle_types=[VehicleType(reload_depots=[0])],
         distance_matrices=[matrix],
         duration_matrices=[matrix],
     )

@@ -124,7 +124,7 @@ def test_inserts_best_reload_depot():
     mat[0, 2:] = 100
     mat[2:, 0] = 100
 
-    veh_type = VehicleType(capacity=[5], reload_depots=[0, 1], max_reloads=1)
+    veh_type = VehicleType(capacity=[5], reload_depots=[0, 1])
     data = ProblemData(
         clients=[Client(0, 0, delivery=[5]), Client(0, 0, delivery=[5])],
         depots=[Depot(0, 0), Depot(0, 0)],

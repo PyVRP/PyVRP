@@ -140,7 +140,7 @@ class VehicleType:
         start_late: int | None = None,
         initial_load: list[int] = [],
         reload_depots: list[int] = [],
-        max_reloads: int = 0,
+        max_reloads: int = ...,
         *,
         name: str = "",
     ) -> None: ...

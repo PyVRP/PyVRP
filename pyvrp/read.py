@@ -291,7 +291,7 @@ class _InstanceParser:
 
     def max_reloads(self) -> np.ndarray:
         if "vehicles_max_reloads" not in self.instance:
-            return np.full(self.num_vehicles, 0)
+            return np.full(self.num_vehicles, _INT_MAX)
 
         max_reloads = self.instance["vehicles_max_reloads"]
 
