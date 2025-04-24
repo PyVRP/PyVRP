@@ -41,6 +41,8 @@ def plot_route_schedule(
     ax
         Axes object to draw the plot on. One will be created if not provided.
     """
+    # TODO release time / multi trip
+    # TODO use route.schedule()
     if not ax:
         _, ax = plt.subplots()
 
