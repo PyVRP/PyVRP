@@ -50,7 +50,7 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = "^3.10,<3.14"
+python = ">=3.10,<4.0"
 numpy = [
     # Numpy 1.26 is the first version of numpy that supports Python 3.12+.
     { version = ">=1.15.2", python = "<3.12" },
@@ -95,7 +95,7 @@ codecov = "*"
 meson = "^1.0.0"
 ninja = "^1.11.1"
 gcovr = "^7.2"
-docblock = "^0.1.5"
+docblock = ">=0.1.6"
 
 
 [tool.poetry.scripts]
