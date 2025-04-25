@@ -402,7 +402,7 @@ size_t ProblemData::VehicleType::maxTrips() const
 {
     // When maxReloads is at its maximum size, maxReloads + 1 wraps around to 0,
     // and then std::max() ensures we still return a reasonable value.
-    return std::max(maxReloads, maxReloads + 1);
+    return reloadDepots.empty() ? 1 : std::max(maxReloads, maxReloads + 1);
 }
 
 bool ProblemData::VehicleType::operator==(VehicleType const &other) const
