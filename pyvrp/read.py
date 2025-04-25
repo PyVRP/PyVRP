@@ -23,6 +23,7 @@ from pyvrp.exceptions import ScalingWarning
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
 _INT_MAX = np.iinfo(np.int64).max
+_UINT_MAX = np.iinfo(np.uint64).max
 
 
 ROUND_FUNCS: dict[str, _RoundingFunc] = {
@@ -291,7 +292,7 @@ class _InstanceParser:
 
     def max_reloads(self) -> np.ndarray:
         if "vehicles_max_reloads" not in self.instance:
-            return np.full(self.num_vehicles, _INT_MAX)
+            return np.full(self.num_vehicles, _UINT_MAX)
 
         max_reloads = self.instance["vehicles_max_reloads"]
 

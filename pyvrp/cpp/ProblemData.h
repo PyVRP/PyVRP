@@ -349,7 +349,7 @@ public:
      *     start_late: int | None = None,
      *     initial_load: list[int] = [],
      *     reload_depots: list[int] = [],
-     *     max_reloads: int = np.iinfo(np.int64).max,
+     *     max_reloads: int = np.iinfo(np.uint64).max,
      *     *,
      *     name: str = "",
      * )

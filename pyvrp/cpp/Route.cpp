@@ -104,9 +104,6 @@ void Route::validate(ProblemData const &data) const
     if (trips_.size() > vehData.maxTrips())
         throw std::invalid_argument("Vehicle cannot perform this many trips.");
 
-    if (vehData.reloadDepots.empty() && trips_.size() > 1)
-        throw std::invalid_argument("Vehicle cannot perform multiple trips.");
-
     if (trips_[0].startDepot() != startDepot_)
     {
         auto const *msg = "Route must start at vehicle's start_depot.";
