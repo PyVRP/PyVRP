@@ -50,7 +50,7 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = "^3.10,<3.14"
+python = ">=3.10,<4"  # NOTE: Cannot write without the upper bound because 'docblock' defines it.
 numpy = [
     # Numpy 1.26 is the first version of numpy that supports Python 3.12+.
     { version = ">=1.15.2", python = "<3.12" },
