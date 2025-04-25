@@ -7,6 +7,7 @@ from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
 
+_INT_MAX = np.iinfo(np.int64).max
 _MAX_SIZE = np.iinfo(np.uint64).max
 
 
@@ -1213,3 +1214,14 @@ def test_vehicle_type_max_trips(ok_small_multiple_trips):
     veh_type = veh_type.replace(max_reloads=_MAX_SIZE)
     assert_equal(veh_type.max_reloads, _MAX_SIZE)
     assert_equal(veh_type.max_trips, _MAX_SIZE)
+
+
+def test_vehicle_max_trips_is_one_if_no_reloads(ok_small):
+    """
+    Tests that a vehicle type's max_trips is one if there's no reload depots,
+    despite max_reloads being unconstrained.
+    """
+    veh_type = ok_small.vehicle_type(0)
+    assert_equal(veh_type.reload_depots, [])
+    assert_equal(veh_type.max_reloads, _INT_MAX)
+    assert_equal(veh_type.max_trips, 1)
