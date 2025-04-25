@@ -133,35 +133,48 @@ void Route::validate(ProblemData const &data) const
 
 void Route::makeSchedule(ProblemData const &data)
 {
-    // TODO release time / multi trip
     schedule_.clear();
-    schedule_.reserve(size() + 2 * numTrips());  // clients and start/end depots
+    schedule_.reserve(size() + numTrips() + 1);  // clients and depots
 
     auto const &vehData = data.vehicleType(vehicleType_);
     auto const &durations = data.durationMatrix(vehData.profile);
 
     auto now = startTime_;
+    auto const handle
+        = [&](auto const &where, size_t location, size_t trip, Duration service)
+    {
+        auto const wait = std::max<Duration>(where.twEarly - now, 0);
+        auto const tw = std::max<Duration>(now - where.twLate, 0);
+
+        now += wait;
+        now -= tw;
+
+        schedule_.emplace_back(location, trip, now, now + service, wait, tw);
+
+        now += service;
+    };
+
     for (size_t tripIdx = 0; tripIdx != trips_.size(); ++tripIdx)
     {
-        auto const handle
-            = [&](auto const &where, size_t location, Duration service)
-        {
-            auto const wait = std::max<Duration>(where.twEarly - now, 0);
-            auto const tw = std::max<Duration>(now - where.twLate, 0);
-
-            now += wait;
-            now -= tw;
-
-            schedule_.emplace_back(
-                location, tripIdx, now, now + service, wait, tw);
-
-            now += service;
-        };
-
         auto const &trip = trips_[tripIdx];
-
         ProblemData::Depot const &start = data.location(trip.startDepot());
-        handle(start, trip.startDepot(), start.serviceDuration);
+
+        auto const earliestStart = std::max(start.twEarly, trip.releaseTime());
+        auto const latestStart = std::max(start.twLate, trip.releaseTime());
+        auto const wait = std::max<Duration>(earliestStart - now, 0);
+        auto const tw = std::max<Duration>(now - latestStart, 0);
+
+        now += wait;
+        now -= tw;
+
+        schedule_.emplace_back(trip.startDepot(),
+                               tripIdx,
+                               now,
+                               now + start.serviceDuration,
+                               wait,
+                               tw);
+
+        now += start.serviceDuration;
 
         size_t prevClient = trip.startDepot();
         for (auto const client : trip)
@@ -169,16 +182,16 @@ void Route::makeSchedule(ProblemData const &data)
             now += durations(prevClient, client);
 
             ProblemData::Client const &clientData = data.location(client);
-            handle(clientData, client, clientData.serviceDuration);
+            handle(clientData, client, tripIdx, clientData.serviceDuration);
 
             prevClient = client;
         }
 
         now += durations(prevClient, trip.endDepot());
-
-        ProblemData::Depot const &end = data.location(trip.endDepot());
-        handle(end, trip.endDepot(), 0);
     }
+
+    ProblemData::Depot const &end = data.location(endDepot_);
+    handle(end, endDepot_, numTrips(), 0);
 }
 
 Route::Route(ProblemData const &data, Visits visits, size_t vehicleType)

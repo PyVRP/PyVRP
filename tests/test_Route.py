@@ -662,7 +662,7 @@ def test_schedule_multi_trip_example(ok_small_multiple_trips):
 
     schedule = route.schedule()
     locations = [visit.location for visit in schedule]
-    assert_equal(locations, [0, 1, 2, 0, 0, 3, 4, 0])
+    assert_equal(locations, [0, 1, 2, 0, 3, 4, 0])
 
 
 def test_index_multiple_trips(ok_small_multiple_trips):
@@ -814,4 +814,14 @@ def test_multi_trip_with_release_times():
     assert_equal(route.time_warp(), 0)
     assert_equal(route.slack(), 0)  # the schedule is tight
 
-    # TODO test schedule
+    schedule = route.schedule()
+
+    assert_equal(schedule[0].start_service, 50)
+    assert_equal(schedule[0].end_service, 70)
+
+    assert_equal(schedule[3].start_service, 100)
+    assert_equal(schedule[3].end_service, 120)
+    assert_equal(schedule[3].wait_duration, 5)
+
+    assert_equal(schedule[-1].start_service, 150)
+    assert_equal(schedule[-1].end_service, 150)
