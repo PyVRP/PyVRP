@@ -714,7 +714,7 @@ def test_small_example_from_cattaruzza_paper():
     depot = Depot(0, 0, tw_early=0, tw_late=200, service_duration=20)
     clients = [
         # Figure 1 details release times for some clients. But release times
-        # are actually binding in the example, so they are not needed.
+        # are not actually binding in the example, so they are not needed.
         Client(0, 0, tw_early=100, tw_late=120, service_duration=5),
         Client(0, 0, tw_early=50, tw_late=75, service_duration=5),
         Client(0, 0, tw_early=50, tw_late=75, service_duration=5),
@@ -825,3 +825,23 @@ def test_multi_trip_with_release_times():
 
     assert_equal(schedule[-1].start_service, 150)
     assert_equal(schedule[-1].end_service, 150)
+
+
+def test_multi_trip_initial_load(ok_small_multiple_trips):
+    """
+    Tests that initial load is correctly calculated in a multi-trip setting.
+    """
+    old_type = ok_small_multiple_trips.vehicle_type(0)
+    new_type = old_type.replace(initial_load=[5])
+    data = ok_small_multiple_trips.replace(vehicle_types=[new_type])
+
+    trip1 = Trip(data, [1, 2], 0)
+    trip2 = Trip(data, [3, 4], 0)
+    route = Route(data, [trip1, trip2], 0)
+
+    # The trips themselves are fine, but the vehicle has initial load, and that
+    # causes the first trip - which has 10 delivery load already - to exceed
+    # the vehicle's capacity.
+    assert_equal(trip1.excess_load(), [0])
+    assert_equal(trip2.excess_load(), [0])
+    assert_equal(route.excess_load(), [5])

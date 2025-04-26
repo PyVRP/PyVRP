@@ -1032,3 +1032,24 @@ def test_bug_reload_swaps_pickup_delivery_swap(small_spd):
     assert_equal(route.load_after(2).delivery(), 34)
     assert_equal(route.load_after(2).pickup(), 50)
     assert_equal(route.load_after(2).load(), 50)
+
+
+def test_multi_trip_initial_load(ok_small_multiple_trips):
+    """
+    Tests that initial load is correctly calculated in a multi-trip setting.
+    """
+    old_type = ok_small_multiple_trips.vehicle_type(0)
+    new_type = old_type.replace(initial_load=[5])
+    data = ok_small_multiple_trips.replace(vehicle_types=[new_type])
+
+    route = Route(data, 0, 0)
+    for loc in [1, 2, 0, 3, 4]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    # There's five excess load on the first trip, due to five initial load
+    # already on the vehicle upon departure from the starting depot.
+    assert_equal(route.excess_load(), [5])
+    assert_equal(route.load_at(0).load(), 5)
+    assert_equal(route.load_before(3).load(), 15)
+    assert_equal(route.load_after(3).load(), 8)
