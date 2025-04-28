@@ -42,12 +42,19 @@ class DurationSegment
     Duration twEarly_ = 0;      // Earliest visit moment of first client
     Duration twLate_ = 0;       // Latest visit moment of first client
     Duration releaseTime_ = 0;  // Earliest allowed moment to leave the depot
+    Duration cumDuration_ = 0;  // TODO
+    Duration cumTimeWarp_ = 0;  // TODO
 
 public:
     [[nodiscard]] static inline DurationSegment
     merge(Duration const edgeDuration,
           DurationSegment const &first,
           DurationSegment const &second);
+
+    /**
+     * TODO
+     */
+    DurationSegment finalise(Duration startTime) const;
 
     /**
      * The total duration of this route segment.
@@ -119,7 +126,9 @@ public:
                            Duration timeWarp,
                            Duration twEarly,
                            Duration twLate,
-                           Duration releaseTime);
+                           Duration releaseTime,
+                           Duration cumDuration = 0,
+                           Duration cumTimeWarp = 0);
 
     // Move or copy construct from the other duration segment.
     inline DurationSegment(DurationSegment const &) = default;
@@ -168,11 +177,11 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
 #endif
 }
 
-Duration DurationSegment::duration() const { return duration_; }
+Duration DurationSegment::duration() const { return cumDuration_ + duration_; }
 
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
-    return timeWarp_
+    return cumTimeWarp_ + timeWarp_
            + std::max<Duration>(releaseTime_ - twLate_, 0)
            // Max duration constraint applies only to net route duration,
            // subtracting existing time warp. Use ternary to avoid underflow.
@@ -185,12 +194,16 @@ DurationSegment::DurationSegment(Duration duration,
                                  Duration timeWarp,
                                  Duration twEarly,
                                  Duration twLate,
-                                 Duration releaseTime)
+                                 Duration releaseTime,
+                                 Duration cumDuration,
+                                 Duration cumTimeWarp)
     : duration_(duration),
       timeWarp_(timeWarp),
       twEarly_(twEarly),
       twLate_(twLate),
-      releaseTime_(releaseTime)
+      releaseTime_(releaseTime),
+      cumDuration_(cumDuration),
+      cumTimeWarp_(cumTimeWarp)
 {
 }
 }  // namespace pyvrp

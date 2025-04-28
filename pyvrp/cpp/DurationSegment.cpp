@@ -5,6 +5,21 @@
 using pyvrp::Duration;
 using pyvrp::DurationSegment;
 
+DurationSegment DurationSegment::finalise(Duration startTime) const
+{
+    auto const actualStart = twLate() < startTime
+                                 ? std::max(twLate(), releaseTime())
+                                 : std::max(startTime, twEarly());
+
+    return {std::max<Duration>(actualStart - startTime, 0),
+            std::max<Duration>(startTime - actualStart, 0),
+            actualStart,
+            actualStart + std::max<Duration>(twLate() - actualStart, 0),
+            0,
+            duration(),
+            timeWarp()};
+}
+
 Duration DurationSegment::twEarly() const
 {
     // There are two cases:
