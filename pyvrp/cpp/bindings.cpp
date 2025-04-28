@@ -1088,6 +1088,10 @@ PYBIND11_MODULE(_pyvrp, m)
              &LoadSegment::excessLoad,
              py::arg("capacity"),
              DOC(pyvrp, LoadSegment, excessLoad))
+        .def("finalise",
+             &LoadSegment::finalise,
+             py::arg("capacity"),
+             DOC(pyvrp, LoadSegment, finalise))
         .def_static(
             "merge", &LoadSegment::merge, py::arg("first"), py::arg("second"));
 

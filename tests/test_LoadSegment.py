@@ -73,3 +73,21 @@ def test_excess_load_capacity():
     assert_equal(merged.load(), 7)
     assert_equal(merged.excess_load(7), 35)
     assert_equal(merged.excess_load(0), 42)
+
+
+@pytest.mark.parametrize(
+    ("capacity", "exp_excess"),
+    [(10, 20), (5, 20), (0, 25)],
+)
+def test_finalise(capacity: int, exp_excess: int):
+    """
+    Tests that excess load is correctly tracked by finalised load segments.
+    """
+    segment = LoadSegment(5, 5, 5, 20)  # 20 excess load, and 5 segment load
+    finalised = segment.finalise(capacity)
+
+    # Finalised segments track cumulative excess load - the rest resets.
+    assert_equal(finalised.delivery(), 0)
+    assert_equal(finalised.pickup(), 0)
+    assert_equal(finalised.load(), 0)
+    assert_equal(finalised.excess_load(capacity), exp_excess)
