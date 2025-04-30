@@ -40,13 +40,13 @@ namespace pyvrp
  */
 class DurationSegment
 {
-    Duration duration_ = 0;     // Total duration, incl. waiting and servicing
-    Duration timeWarp_ = 0;     // Cumulative time warp
-    Duration twEarly_ = 0;      // Earliest visit moment of first client
-    Duration twLate_ = 0;       // Latest visit moment of first client
-    Duration releaseTime_ = 0;  // Earliest allowed moment to leave the depot
-    Duration cumDuration_ = 0;  // TODO
-    Duration cumTimeWarp_ = 0;  // TODO
+    Duration duration_ = 0;     // total duration of current tip
+    Duration timeWarp_ = 0;     // time warp on current trip
+    Duration twEarly_ = 0;      // earliest start moment of current trip
+    Duration twLate_ = 0;       // latest start moment of current trip
+    Duration releaseTime_ = 0;  // earliest departure moment on current trip
+    Duration cumDuration_ = 0;  // cumulative duration of other trips in segment
+    Duration cumTimeWarp_ = 0;  // cumulative tw of other trips in segment
 
 public:
     [[nodiscard]] static inline DurationSegment
@@ -156,10 +156,6 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
 #ifdef PYVRP_NO_TIME_WINDOWS
     return {};
 #else
-    // DurationSegment::merge evaluates left-to-right, so these cumulative
-    // fields must not already be set on the second argument.
-    assert(second.cumDuration_ == 0 && second.cumTimeWarp_ == 0);
-
     // atSecond is the time (relative to our starting time) at which we arrive
     // at the second's initial location.
     auto const atSecond = first.duration_ - first.timeWarp_ + edgeDuration;
@@ -184,8 +180,8 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
             std::max(second.twEarly_ - atSecond, first.twEarly_) - diffWait,
             std::min(secondLate, first.twLate_) + diffTw,
             std::max(first.releaseTime_, second.releaseTime_),
-            first.cumDuration_,   // evaluated left to right
-            first.cumTimeWarp_};  // evaluated left to right
+            first.cumDuration_ + second.cumDuration_,
+            first.cumTimeWarp_ + second.cumTimeWarp_};
 #endif
 }
 
@@ -200,16 +196,14 @@ Duration DurationSegment::duration() const
 
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
-    auto const duration = cumDuration_ + duration_;
     auto const timeWarp = cumTimeWarp_ + timeWarp_;
+    auto const netDuration = duration() - timeWarp;
 
     return timeWarp
            + std::max<Duration>(releaseTime_ - twLate_, 0)
            // Max duration constraint applies only to net route duration,
            // subtracting existing time warp. Use ternary to avoid underflow.
-           + (duration - timeWarp > maxDuration
-                  ? duration - timeWarp - maxDuration
-                  : 0);
+           + (netDuration > maxDuration ? netDuration - maxDuration : 0);
 }
 
 DurationSegment::DurationSegment(Duration duration,
