@@ -5,6 +5,9 @@
 #include "Measure.h"
 #include "ProblemData.h"
 
+#include <cassert>
+#include <iosfwd>
+
 namespace pyvrp
 {
 /**
@@ -52,7 +55,16 @@ public:
           DurationSegment const &second);
 
     /**
-     * TODO
+     * Finalises this segment, and returns a new segment where all duration and
+     * time warp have been moved to their cumulative fields, and the segment's
+     * start and end times have been adjusted given the ``startTime`` argument.
+     * This is useful for multi-trip, because the finalised segment can be
+     * concatenated with segments of subsequent trips.
+     *
+     * Parameters
+     * ----------
+     * start_time
+     *     Time at which this segment must start.
      */
     DurationSegment finalise(Duration startTime) const;
 
@@ -150,6 +162,10 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
 #ifdef PYVRP_NO_TIME_WINDOWS
     return {};
 #else
+    // DurationSegment::merge evaluates left-to-right, so these cumulative
+    // fields must not already be set on the second argument.
+    assert(second.cumDuration_ == 0 && second.cumTimeWarp_ == 0);
+
     // atSecond is the time (relative to our starting time) at which we arrive
     // at the second's initial location.
     auto const atSecond = first.duration_ - first.timeWarp_ + edgeDuration;
@@ -173,7 +189,9 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
             first.timeWarp_ + second.timeWarp_ + diffTw,
             std::max(second.twEarly_ - atSecond, first.twEarly_) - diffWait,
             std::min(secondLate, first.twLate_) + diffTw,
-            std::max(first.releaseTime_, second.releaseTime_)};
+            std::max(first.releaseTime_, second.releaseTime_),
+            first.cumDuration_,   // evaluated left to right
+            first.cumTimeWarp_};  // evaluated left to right
 #endif
 }
 
@@ -181,12 +199,15 @@ Duration DurationSegment::duration() const { return cumDuration_ + duration_; }
 
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {
-    return cumTimeWarp_ + timeWarp_
+    auto const duration = cumDuration_ + duration_;
+    auto const timeWarp = cumTimeWarp_ + timeWarp_;
+
+    return timeWarp
            + std::max<Duration>(releaseTime_ - twLate_, 0)
            // Max duration constraint applies only to net route duration,
            // subtracting existing time warp. Use ternary to avoid underflow.
-           + (duration_ - timeWarp_ > maxDuration
-                  ? duration_ - timeWarp_ - maxDuration
+           + (duration - timeWarp > maxDuration
+                  ? duration - timeWarp - maxDuration
                   : 0);
 }
 
@@ -207,5 +228,8 @@ DurationSegment::DurationSegment(Duration duration,
 {
 }
 }  // namespace pyvrp
+
+std::ostream &operator<<(std::ostream &out,
+                         pyvrp::DurationSegment const &segment);
 
 #endif  // PYVRP_DURATIONSEGMENT_H

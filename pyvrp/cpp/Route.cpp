@@ -251,15 +251,14 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
 
     // Duration statistics.
     auto const &durations = data.durationMatrix(vehData.profile);
-    Duration startTime = 0;
+    DurationSegment ds = {vehData, vehData.startLate};
     for (size_t idx = 0; idx != numTrips(); ++idx)
     {
+        Duration startTime = ds.twEarly();
         auto const &trip = trips_[idx];
 
         ProblemData::Depot const &start = data.location(trip.startDepot());
-        DurationSegment ds = {start, start.serviceDuration};
-        if (idx == 0)  // vehicle to first depot
-            ds = DurationSegment::merge(0, {vehData, vehData.startLate}, ds);
+        ds = DurationSegment::merge(0, ds, {start, start.serviceDuration});
 
         size_t prevClient = trip.startDepot();
         for (auto const client : trip)
@@ -275,12 +274,6 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         ds = DurationSegment::merge(
             durations(prevClient, trip.endDepot()), ds, {end, 0});
 
-        if (idx == numTrips() - 1)  // last depot to vehicle
-            ds = DurationSegment::merge(0, ds, {vehData, vehData.twLate});
-
-        duration_ += ds.duration();
-        timeWarp_ += ds.timeWarp();
-
         if (idx == 0)
         {
             startTime = ds.twEarly();
@@ -290,27 +283,13 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         // Slack is always the minimum across trips; in particular, if there is
         // a trip with time warp, then there is no slack.
         slack_ = std::min(slack_, ds.slack());
-
-        // Determines the actual starting point of this trip. If we must start
-        // before we can, then this trip is infeasible, and we may need to add
-        // time warp. If we do have a feasible starting moment we may need to
-        // add wait duration.
-        auto const actualStartTime
-            = ds.twLate() < startTime ? std::max(ds.twLate(), ds.releaseTime())
-                                      : std::max(startTime, ds.twEarly());
-
-        if (actualStartTime < startTime)  // we must start before we can, so we
-            slack_ = 0;                   // have time warp and thus no slack.
-
-        timeWarp_ += std::max<Duration>(startTime - actualStartTime, 0);
-        duration_ += std::max<Duration>(actualStartTime - startTime, 0);
-        startTime = actualStartTime + ds.duration() - ds.timeWarp();
+        ds = ds.finalise(startTime);
     }
 
+    ds = DurationSegment::merge(0, ds, {vehData, vehData.twLate});
+    duration_ = ds.duration();
     durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_);
-    timeWarp_ += duration_ - timeWarp_ > vehData.maxDuration
-                     ? duration_ - timeWarp_ - vehData.maxDuration
-                     : 0;
+    timeWarp_ = ds.timeWarp(vehData.maxDuration);
 
     makeSchedule(data);
 }

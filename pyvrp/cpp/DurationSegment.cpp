@@ -1,23 +1,27 @@
 #include "DurationSegment.h"
 
-#include <cassert>
+#include <fstream>
 
 using pyvrp::Duration;
 using pyvrp::DurationSegment;
 
 DurationSegment DurationSegment::finalise(Duration startTime) const
 {
-    auto const actualStart = twLate() < startTime
-                                 ? std::max(twLate(), releaseTime())
-                                 : std::max(startTime, twEarly());
+    // See Cattaruzza et al. (2016) for details. This function adapts equations
+    // (11) -- (14) of https://doi.org/10.1287/trsc.2015.0608.
+    auto const extraWait = std::max<Duration>(twEarly() - startTime, 0);
+    auto const duration = duration_ + extraWait;
 
-    return {std::max<Duration>(actualStart - startTime, 0),
-            std::max<Duration>(startTime - actualStart, 0),
-            actualStart,
-            actualStart + std::max<Duration>(twLate() - actualStart, 0),
+    auto const start = std::max(startTime, releaseTime_);
+    auto const timeWarp = timeWarp_ + std::max<Duration>(start - twLate_, 0);
+
+    return {0,
             0,
-            duration(),
-            timeWarp()};
+            startTime + duration - timeWarp,
+            std::numeric_limits<Duration>::max(),
+            0,
+            cumDuration_ + duration,
+            cumTimeWarp_ + timeWarp};
 }
 
 Duration DurationSegment::twEarly() const
@@ -65,4 +69,15 @@ DurationSegment::DurationSegment(ProblemData::VehicleType const &vehicleType,
       twLate_(twLate),
       releaseTime_(0)
 {
+}
+
+std::ostream &operator<<(std::ostream &out, DurationSegment const &segment)
+{
+    // clang-format off
+    return out << segment.twEarly() 
+               << ' ' << segment.twLate()
+               << ' ' << segment.releaseTime()
+               << ' ' << segment.duration()
+               << ' ' << segment.timeWarp();
+    // clang-format on
 }
