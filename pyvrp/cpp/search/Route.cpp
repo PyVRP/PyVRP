@@ -283,7 +283,7 @@ void Route::update()
 
     durBefore.resize(nodes.size());
     durBefore[0] = durAt[0];
-    for (size_t idx = 1; idx != nodes.size(); ++idx)
+    for (size_t idx = 1; idx != nodes.size(); ++idx)  // TODO
         durBefore[idx]
             = DurationSegment::merge(durMat(visits[idx - 1], visits[idx]),
                                      durBefore[idx - 1],
@@ -291,7 +291,7 @@ void Route::update()
 
     durAfter.resize(nodes.size());
     durAfter[nodes.size() - 1] = durAt[nodes.size() - 1];
-    for (size_t idx = nodes.size() - 1; idx != 0; --idx)
+    for (size_t idx = nodes.size() - 1; idx != 0; --idx)  // TODO
         durAfter[idx - 1]
             = DurationSegment::merge(durMat(visits[idx - 1], visits[idx]),
                                      durAt[idx - 1],
