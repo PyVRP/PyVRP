@@ -896,16 +896,23 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
     auto const profile = route()->profile();
     auto const &matrix = data.durationMatrix(profile);
 
-    auto const fn = [&matrix, profile](auto segment, auto &&...args)
+    auto const fn = [&](auto segment, auto &&...args)
     {
         auto durSegment = segment.duration(profile);
         auto last = segment.last();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
+            if (other.first() < data.numDepots())  // other starts at a depot
+                durSegment = durSegment.finalise();
+
             durSegment = DurationSegment::merge(matrix(last, other.first()),
                                                 durSegment,
                                                 other.duration(profile));
+
+            if (other.last() < data.numDepots())  // other ends at a depot
+                durSegment = durSegment.finalise();
+
             last = other.last();
 
             if constexpr (sizeof...(args) != 0)
