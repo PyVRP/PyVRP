@@ -189,7 +189,7 @@ Duration DurationSegment::duration() const
 {
     // We may need to wait for the release of our clients, in which case there
     // is additional wait time. But we only account for that on later trips,
-    // because we assume that the first trip can be postponed until such a time.
+    // because we assume that the first trip can simply be postponed.
     auto const wait = std::max<Duration>(twEarly() - twEarly_, 0);
     return cumDuration_ + duration_ + (cumDuration_ > 0 ? wait : 0);
 }

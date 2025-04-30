@@ -894,24 +894,34 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
     auto const &data = route()->data;
     auto const profile = route()->profile();
-    auto const &matrix = data.durationMatrix(profile);
+    auto const &durations = data.durationMatrix(profile);
 
     auto const fn = [&](auto segment, auto &&...args)
     {
-        auto durSegment = segment.duration(profile);
+        auto ds = segment.duration(profile);
         auto last = segment.last();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            if (other.first() < data.numDepots())  // other starts at a depot
-                durSegment = durSegment.finalise();
+            auto const otherDS = other.duration(profile);
+            auto edgeDuration = durations(last, other.first());
 
-            durSegment = DurationSegment::merge(matrix(last, other.first()),
-                                                durSegment,
-                                                other.duration(profile));
+            if (other.first() < data.numDepots())
+            {
+                // Other starts at a depot, so we are now at the end of a trip.
+                // Then we need to account for travel to the (end) depot because
+                // we cannot finalise until we have arrived at a depot.
+                ProblemData::Depot const &depot = data.location(other.first());
+                ds = DurationSegment::merge(edgeDuration, ds, {depot, 0});
+
+                ds = ds.finalise();
+                edgeDuration = 0;
+            }
+
+            ds = DurationSegment::merge(edgeDuration, ds, otherDS);
 
             if (other.last() < data.numDepots())  // other ends at a depot
-                durSegment = durSegment.finalise();
+                ds = ds.finalise();
 
             last = other.last();
 
@@ -920,7 +930,7 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
         };
 
         merge(merge, std::forward<decltype(args)>(args)...);
-        return durSegment;
+        return ds;
     };
 
     return std::apply(fn, segments_);
