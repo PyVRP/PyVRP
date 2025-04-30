@@ -275,7 +275,7 @@ void Route::update()
         else
         {
             ProblemData::Depot const &depot = data.location(node->client());
-            durAt[idx] = {depot, depot.serviceDuration};
+            durAt[idx] = {depot, 0};  // TODO hack
         }
     }
 
@@ -283,19 +283,43 @@ void Route::update()
 
     durBefore.resize(nodes.size());
     durBefore[0] = durAt[0];
-    for (size_t idx = 1; idx != nodes.size(); ++idx)  // TODO
-        durBefore[idx]
-            = DurationSegment::merge(durMat(visits[idx - 1], visits[idx]),
-                                     durBefore[idx - 1],
-                                     durAt[idx]);
+    for (size_t idx = 1; idx != nodes.size(); ++idx)
+    {
+        auto const prev = idx - 1;
+        auto const before = nodes[prev]->isReloadDepot()
+                                ? durBefore[prev].finalise()
+                                : durBefore[prev];
+
+        auto edgeDur = durMat(visits[prev], visits[idx]);  // TODO hack
+        if (nodes[prev]->isReloadDepot())
+        {
+            auto const loc = nodes[prev]->client();
+            ProblemData::Depot const &depot = data.location(loc);
+            edgeDur += depot.serviceDuration;
+        }
+
+        durBefore[idx] = DurationSegment::merge(edgeDur, before, durAt[idx]);
+    }
 
     durAfter.resize(nodes.size());
     durAfter[nodes.size() - 1] = durAt[nodes.size() - 1];
-    for (size_t idx = nodes.size() - 1; idx != 0; --idx)  // TODO
-        durAfter[idx - 1]
-            = DurationSegment::merge(durMat(visits[idx - 1], visits[idx]),
-                                     durAt[idx - 1],
-                                     durAfter[idx]);
+    for (size_t idx = nodes.size() - 1; idx != 0; --idx)
+    {
+        auto const prev = idx - 1;
+        auto const after = nodes[idx]->isReloadDepot()
+                               ? durAfter[idx].finalise()
+                               : durAfter[idx];
+
+        auto edgeDur = durMat(visits[prev], visits[idx]);  // TODO hack
+        if (nodes[idx]->isReloadDepot())
+        {
+            auto const loc = nodes[idx]->client();
+            ProblemData::Depot const &depot = data.location(loc);
+            edgeDur += depot.serviceDuration;
+        }
+
+        durAfter[prev] = DurationSegment::merge(edgeDur, durAt[prev], after);
+    }
 #endif
 
     // Load.
@@ -308,25 +332,22 @@ void Route::update()
         loadAt[dim][nodes.size() - 1] = {};
 
         for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-            if (nodes[idx]->isReloadDepot())
-                loadAt[dim][idx] = {};
-            else
-                loadAt[dim][idx] = LoadSegment{data.location(visits[idx]), dim};
+            loadAt[dim][idx]
+                = nodes[idx]->isReloadDepot()
+                      ? LoadSegment{}
+                      : LoadSegment{data.location(visits[idx]), dim};
 
         loadBefore[dim].resize(nodes.size());
         loadBefore[dim][0] = loadAt[dim][0];
         for (size_t idx = 1; idx != nodes.size(); ++idx)
-            if (nodes[idx - 1]->isReloadDepot())
-                // Then we restart from here, but keep track of any excess load
-                // observed so far.
-                loadBefore[dim][idx]
-                    = {loadAt[dim][idx].delivery(),
-                       loadAt[dim][idx].pickup(),
-                       loadAt[dim][idx].load(),
-                       loadBefore[dim][idx - 1].excessLoad(capacity)};
-            else
-                loadBefore[dim][idx] = LoadSegment::merge(
-                    loadBefore[dim][idx - 1], loadAt[dim][idx]);
+        {
+            auto const prev = idx - 1;
+            auto const before = nodes[prev]->isReloadDepot()
+                                    ? loadBefore[dim][prev].finalise(capacity)
+                                    : loadBefore[dim][prev];
+
+            loadBefore[dim][idx] = LoadSegment::merge(before, loadAt[dim][idx]);
+        }
 
         load_[dim] = 0;
         excessLoad_[dim]
@@ -337,17 +358,14 @@ void Route::update()
         loadAfter[dim].resize(nodes.size());
         loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
         for (size_t idx = nodes.size() - 1; idx != 0; --idx)
-            if (nodes[idx]->isReloadDepot())
-                // Then we restart from here, but keep track of any excess load
-                // observed so far.
-                loadAfter[dim][idx - 1]
-                    = {loadAt[dim][idx - 1].delivery(),
-                       loadAt[dim][idx - 1].pickup(),
-                       loadAt[dim][idx - 1].load(),
-                       loadAfter[dim][idx].excessLoad(capacity)};
-            else
-                loadAfter[dim][idx - 1] = LoadSegment::merge(
-                    loadAt[dim][idx - 1], loadAfter[dim][idx]);
+        {
+            auto const prev = idx - 1;
+            auto const after = nodes[idx]->isReloadDepot()
+                                   ? loadAfter[dim][idx].finalise(capacity)
+                                   : loadAfter[dim][idx];
+
+            loadAfter[dim][prev] = LoadSegment::merge(loadAt[dim][prev], after);
+        }
     }
 
 #ifndef NDEBUG

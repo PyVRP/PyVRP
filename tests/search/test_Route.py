@@ -1053,3 +1053,45 @@ def test_multi_trip_initial_load(ok_small_multiple_trips):
     assert_equal(route.load_at(0).load(), 5)
     assert_equal(route.load_before(3).load(), 15)
     assert_equal(route.load_after(3).load(), 8)
+
+
+def test_multi_trip_with_release_times():
+    """
+    Test a small example with multiple trips and (binding) release times. See
+    the test of the same name for ``pyvrp::Route`` for further details.
+    """
+    matrix = [
+        [0, 10, 0, 20],
+        [0, 0, 10, 0],
+        [5, 0, 0, 0],
+        [10, 0, 0, 0],
+    ]
+
+    data = ProblemData(
+        clients=[
+            Client(0, 0, tw_early=60, tw_late=100, release_time=40),
+            Client(0, 0, tw_early=70, tw_late=90, release_time=50),
+            Client(0, 0, tw_early=80, tw_late=150, release_time=100),
+        ],
+        depots=[Depot(0, 0, service_duration=20)],
+        vehicle_types=[VehicleType(reload_depots=[0])],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+    )
+
+    route = Route(data, 0, 0)
+    for loc in [1, 2, 0, 3]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    # Some route- and trip-level statistics. We start at time 50, end at 150.
+    # We arrive at the reload depot at time 95, which marks the end of first
+    # trip and the start of the second. There should be no time warp involved.
+    assert_equal(route.duration(), 100)
+    assert_equal(route.time_warp(), 0)
+
+    trip1 = route.duration_before(3)
+    assert_equal(trip1.duration(), 45)  # from 50 to 95
+
+    trip2 = route.duration_after(3)
+    assert_equal(trip2.duration(), 55)  # from 95 to 150
