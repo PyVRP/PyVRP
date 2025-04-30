@@ -1126,7 +1126,6 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, DurationSegment, timeWarp))
         .def("finalise",
              &DurationSegment::finalise,
-             py::arg("start_time"),
              DOC(pyvrp, DurationSegment, finalise))
         .def_static("merge",
                     &DurationSegment::merge,

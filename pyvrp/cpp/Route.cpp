@@ -254,7 +254,6 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     DurationSegment ds = {vehData, vehData.startLate};
     for (size_t idx = 0; idx != numTrips(); ++idx)
     {
-        Duration startTime = ds.twEarly();
         auto const &trip = trips_[idx];
 
         ProblemData::Depot const &start = data.location(trip.startDepot());
@@ -275,15 +274,12 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
             durations(prevClient, trip.endDepot()), ds, {end, 0});
 
         if (idx == 0)
-        {
-            startTime = ds.twEarly();
             startTime_ = ds.twEarly();
-        }
 
         // Slack is always the minimum across trips; in particular, if there is
         // a trip with time warp, then there is no slack.
         slack_ = std::min(slack_, ds.slack());
-        ds = ds.finalise(startTime);
+        ds = ds.finalise();
     }
 
     ds = DurationSegment::merge(0, ds, {vehData, vehData.twLate});

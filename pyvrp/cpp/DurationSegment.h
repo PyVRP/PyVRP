@@ -55,18 +55,12 @@ public:
           DurationSegment const &second);
 
     /**
-     * Finalises this segment, and returns a new segment where all duration and
-     * time warp have been moved to their cumulative fields, and the segment's
-     * start and end times have been adjusted given the ``startTime`` argument.
-     * This is useful for multi-trip, because the finalised segment can be
+     * Finalises this segment, and returns a new segment where release times
+     * have been reset, and all other statistics have been suitably adjusted.
+     * This is useful for multi-trip because the finalised segment can be
      * concatenated with segments of subsequent trips.
-     *
-     * Parameters
-     * ----------
-     * start_time
-     *     Time at which this segment must start.
      */
-    DurationSegment finalise(Duration startTime) const;
+    DurationSegment finalise() const;
 
     /**
      * The total duration of this route segment.
@@ -195,7 +189,14 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
 #endif
 }
 
-Duration DurationSegment::duration() const { return cumDuration_ + duration_; }
+Duration DurationSegment::duration() const
+{
+    // We may need to wait for the release of our clients, in which case there
+    // is additional wait time. But we only account for that on later trips,
+    // because we assume that the first trip can be postponed until such a time.
+    auto const wait = std::max<Duration>(twEarly() - twEarly_, 0);
+    return cumDuration_ + duration_ + (cumDuration_ > 0 ? wait : 0);
+}
 
 Duration DurationSegment::timeWarp(Duration const maxDuration) const
 {

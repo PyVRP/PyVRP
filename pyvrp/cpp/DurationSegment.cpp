@@ -5,23 +5,18 @@
 using pyvrp::Duration;
 using pyvrp::DurationSegment;
 
-DurationSegment DurationSegment::finalise(Duration startTime) const
+DurationSegment DurationSegment::finalise() const
 {
-    // See Cattaruzza et al. (2016) for details. This function adapts equations
-    // (11) -- (14) of https://doi.org/10.1287/trsc.2015.0608.
-    auto const extraWait = std::max<Duration>(twEarly() - startTime, 0);
-    auto const duration = duration_ + extraWait;
-
-    auto const start = std::max(startTime, releaseTime_);
-    auto const timeWarp = timeWarp_ + std::max<Duration>(start - twLate_, 0);
+    auto const tripDuration = duration() - cumDuration_;
+    auto const tripTimeWarp = timeWarp() - cumTimeWarp_;
 
     return {0,
             0,
-            startTime + duration - timeWarp,
+            twEarly() + tripDuration - tripTimeWarp,
             std::numeric_limits<Duration>::max(),
             0,
-            cumDuration_ + duration,
-            cumTimeWarp_ + timeWarp};
+            duration(),
+            timeWarp()};
 }
 
 Duration DurationSegment::twEarly() const
