@@ -287,15 +287,15 @@ void Route::update()
     {
         auto const prev = idx - 1;
         auto const before = nodes[prev]->isReloadDepot()
-                                ? durBefore[prev].finalise()
+                                ? durBefore[prev].finaliseBack()
                                 : durBefore[prev];
 
-        auto edgeDur = durMat(visits[prev], visits[idx]);  // TODO hack
+        auto edgeDur = durMat(visits[prev], visits[idx]);
         if (nodes[prev]->isReloadDepot())
         {
             auto const loc = nodes[prev]->client();
             ProblemData::Depot const &depot = data.location(loc);
-            edgeDur += depot.serviceDuration;
+            edgeDur += depot.serviceDuration;  // TODO hack
         }
 
         durBefore[idx] = DurationSegment::merge(edgeDur, before, durAt[idx]);
@@ -307,15 +307,15 @@ void Route::update()
     {
         auto const prev = idx - 1;
         auto const after = nodes[idx]->isReloadDepot()
-                               ? durAfter[idx].finalise()
+                               ? durAfter[idx].finaliseFront()
                                : durAfter[idx];
 
-        auto edgeDur = durMat(visits[prev], visits[idx]);  // TODO hack
-        if (nodes[idx]->isReloadDepot())
+        auto edgeDur = durMat(visits[prev], visits[idx]);
+        if (nodes[prev]->isReloadDepot())
         {
-            auto const loc = nodes[idx]->client();
+            auto const loc = nodes[prev]->client();
             ProblemData::Depot const &depot = data.location(loc);
-            edgeDur += depot.serviceDuration;
+            edgeDur += depot.serviceDuration;  // TODO hack
         }
 
         durAfter[prev] = DurationSegment::merge(edgeDur, durAt[prev], after);

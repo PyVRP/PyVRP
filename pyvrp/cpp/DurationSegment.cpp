@@ -5,11 +5,16 @@
 using pyvrp::Duration;
 using pyvrp::DurationSegment;
 
-DurationSegment DurationSegment::finalise() const
+DurationSegment DurationSegment::finaliseBack() const
 {
     auto const tripDuration = duration() - cumDuration_;
     auto const tripTimeWarp = timeWarp() - cumTimeWarp_;
 
+    // We finalise at the end of this segment. That means that a subsequent trip
+    // can start at the earliest at twEarly + trip duration - trip time warp.
+    // This segment does not constrain latest starts for subsequent trips. Note
+    // that we can reset the release times because we've already taken that into
+    // account in our earliest start time.
     return {0,
             0,
             twEarly() + tripDuration - tripTimeWarp,
@@ -17,6 +22,14 @@ DurationSegment DurationSegment::finalise() const
             0,
             duration(),
             timeWarp()};
+}
+
+DurationSegment DurationSegment::finaliseFront() const
+{
+    // We finalise at the start of this segment. This is pretty easy: we just
+    // need to make sure our segment is visited between twEarly and twLate,
+    // like before.
+    return {0, 0, twEarly(), twLate(), 0, duration(), timeWarp()};
 }
 
 Duration DurationSegment::twEarly() const

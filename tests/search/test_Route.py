@@ -1084,14 +1084,35 @@ def test_multi_trip_with_release_times():
         route.append(Node(loc=loc))
     route.update()
 
-    # Some route- and trip-level statistics. We start at time 50, end at 150.
-    # We arrive at the reload depot at time 95, which marks the end of first
-    # trip and the start of the second. There should be no time warp involved.
+    # The two trips run from [50, 95] and [100, 150]. There's 5 wait duration
+    # in between the two trips, for a total route duration of 100.
     assert_equal(route.duration(), 100)
     assert_equal(route.time_warp(), 0)
 
+    # Duration segment associated with the first trip from 50 to 95.
     trip1 = route.duration_before(3)
-    assert_equal(trip1.duration(), 45)  # from 50 to 95
+    assert_equal(trip1.tw_early(), 50)
+    assert_equal(trip1.tw_late(), 50)
+    assert_equal(trip1.duration(), 45)
 
+    # Duration segment associated with the second trip from 100 to 150.
     trip2 = route.duration_after(3)
-    assert_equal(trip2.duration(), 55)  # from 95 to 150
+    assert_equal(trip2.tw_early(), 100)
+    assert_equal(trip2.tw_late(), 110)
+    assert_equal(trip2.duration(), 50)
+
+    # Prefix duration segment tracking the whole route (associated with the end
+    # depot).
+    before = route.duration_before(5)
+    assert_equal(before.tw_early(), 100)  # of last trip
+    assert_equal(before.tw_late(), 110)  # of last trip
+    assert_equal(before.duration(), 100)
+    assert_equal(before.time_warp(), 0)
+
+    # Postfix duration segment tracking the whole route (associated with the
+    # start depot).
+    after = route.duration_after(0)
+    assert_equal(after.tw_early(), 50)  # of first trip
+    assert_equal(after.tw_late(), 50)  # of first trip
+    assert_equal(after.duration(), 100)
+    assert_equal(after.time_warp(), 0)

@@ -156,10 +156,10 @@ void Route::makeSchedule(ProblemData const &data)
         auto const &trip = trips_[tripIdx];
         ProblemData::Depot const &start = data.location(trip.startDepot());
 
-        auto const earliestStart = std::max(start.twEarly, trip.releaseTime());
-        auto const latestStart = std::max(start.twLate, trip.releaseTime());
+        auto const earliestStart = std::max(
+            start.twEarly, std::min(trip.releaseTime(), start.twLate));
         auto const wait = std::max<Duration>(earliestStart - now, 0);
-        auto const tw = std::max<Duration>(now - latestStart, 0);
+        auto const tw = std::max<Duration>(now - start.twLate, 0);
 
         now += wait;
         now -= tw;
@@ -249,40 +249,38 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         }
     }
 
-    // Duration statistics.
+    // Duration statistics. We iterate in reverse, that is, from the last to
+    // the first visit.
     auto const &durations = data.durationMatrix(vehData.profile);
-    DurationSegment ds = {vehData, vehData.startLate};
-    for (size_t idx = 0; idx != numTrips(); ++idx)
+    DurationSegment ds = {vehData, vehData.twLate};
+    for (auto trip = trips_.rbegin(); trip != trips_.rend(); ++trip)
     {
-        auto const &trip = trips_[idx];
+        ProblemData::Depot const &end = data.location(trip->endDepot());
+        ds = DurationSegment::merge(0, {end, 0}, ds);
 
-        ProblemData::Depot const &start = data.location(trip.startDepot());
-        ds = DurationSegment::merge(0, ds, {start, start.serviceDuration});
-
-        size_t prevClient = trip.startDepot();
-        for (auto const client : trip)
+        size_t nextClient = trip->endDepot();
+        for (auto it = trip->rbegin(); it != trip->rend(); ++it)
         {
-            auto const edgeDuration = durations(prevClient, client);
+            auto const client = *it;
+            auto const edgeDuration = durations(client, nextClient);
             DurationSegment const clientDS = {data.location(client)};
-            ds = DurationSegment::merge(edgeDuration, ds, clientDS);
 
-            prevClient = client;
+            ds = DurationSegment::merge(edgeDuration, clientDS, ds);
+            nextClient = client;
         }
 
-        ProblemData::Depot const &end = data.location(trip.endDepot());
-        ds = DurationSegment::merge(
-            durations(prevClient, trip.endDepot()), ds, {end, 0});
+        auto const edgeDuration = durations(trip->startDepot(), nextClient);
+        ProblemData::Depot const &start = data.location(trip->startDepot());
+        DurationSegment const depotDS = {start, start.serviceDuration};
 
-        if (idx == 0)
-            startTime_ = ds.twEarly();
-
-        // Slack is always the minimum across trips; in particular, if there is
-        // a trip with time warp, then there is no slack.
-        slack_ = std::min(slack_, ds.slack());
-        ds = ds.finalise();
+        ds = DurationSegment::merge(edgeDuration, depotDS, ds);
+        ds = ds.finaliseFront();
     }
 
-    ds = DurationSegment::merge(0, ds, {vehData, vehData.twLate});
+    ds = DurationSegment::merge(0, {vehData, vehData.startLate}, ds);
+
+    startTime_ = ds.twEarly();
+    slack_ = ds.slack();
     duration_ = ds.duration();
     durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_);
     timeWarp_ = ds.timeWarp(vehData.maxDuration);

@@ -141,6 +141,15 @@ Trip::Client Trip::operator[](size_t idx) const { return visits_[idx]; }
 Trip::Visits::const_iterator Trip::begin() const { return visits_.begin(); }
 Trip::Visits::const_iterator Trip::end() const { return visits_.end(); }
 
+Trip::Visits::const_reverse_iterator Trip::rbegin() const
+{
+    return visits_.rbegin();
+}
+Trip::Visits::const_reverse_iterator Trip::rend() const
+{
+    return visits_.rend();
+}
+
 Trip::Visits const &Trip::visits() const { return visits_; }
 
 Distance Trip::distance() const { return distance_; }

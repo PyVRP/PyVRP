@@ -785,7 +785,7 @@ Cost Route::unitDistanceCost() const { return vehicleType_.unitDistanceCost; }
 Duration Route::duration() const
 {
     assert(!dirty);
-    return durBefore.back().duration();
+    return durAfter[0].duration();
 }
 
 Cost Route::durationCost() const
@@ -803,7 +803,7 @@ Distance Route::maxDistance() const { return vehicleType_.maxDistance; }
 Duration Route::timeWarp() const
 {
     assert(!dirty);
-    return durBefore.back().timeWarp(maxDuration());
+    return durAfter[0].timeWarp(maxDuration());
 }
 
 size_t Route::profile() const { return vehicleType_.profile; }
@@ -894,7 +894,7 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
     auto const &data = route()->data;
     auto const profile = route()->profile();
-    auto const &durations = data.durationMatrix(profile);
+    auto const &matrix = data.durationMatrix(profile);
 
     auto const fn = [&](auto segment, auto &&...args)
     {
@@ -903,26 +903,9 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            auto const otherDS = other.duration(profile);
-            auto edgeDuration = durations(last, other.first());
-
-            if (other.first() < data.numDepots())
-            {
-                // Other starts at a depot, so we are now at the end of a trip.
-                // Then we need to account for travel to the (end) depot because
-                // we cannot finalise until we have arrived at a depot.
-                ProblemData::Depot const &depot = data.location(other.first());
-                ds = DurationSegment::merge(edgeDuration, ds, {depot, 0});
-
-                ds = ds.finalise();
-                edgeDuration = 0;
-            }
-
-            ds = DurationSegment::merge(edgeDuration, ds, otherDS);
-
-            if (other.last() < data.numDepots())  // other ends at a depot
-                ds = ds.finalise();
-
+            // TODO finalise at depots
+            ds = DurationSegment::merge(
+                matrix(last, other.first()), ds, other.duration(profile));
             last = other.last();
 
             if constexpr (sizeof...(args) != 0)
