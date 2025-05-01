@@ -46,8 +46,6 @@ Duration DurationSegment::twEarly() const
 
 Duration DurationSegment::twLate() const { return twLate_; }
 
-Duration DurationSegment::slack() const { return twLate() - twEarly(); }
-
 Duration DurationSegment::releaseTime() const { return releaseTime_; }
 
 DurationSegment::DurationSegment(ProblemData::Client const &client)

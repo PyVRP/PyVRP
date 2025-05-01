@@ -110,12 +110,6 @@ public:
     [[nodiscard]] Duration twLate() const;
 
     /**
-     * Slack on this route, that is, the amount of time between the earliest
-     * and latest route start.
-     */
-    [[nodiscard]] Duration slack() const;
-
-    /**
      * Earliest possible release time of the clients in this route segment.
      */
     [[nodiscard]] Duration releaseTime() const;
@@ -143,8 +137,8 @@ public:
                            Duration twEarly,
                            Duration twLate,
                            Duration releaseTime,
-                           Duration cumDuration = 0,
-                           Duration cumTimeWarp = 0);
+                           Duration cumDuration,
+                           Duration cumTimeWarp);
 
     // Move or copy construct from the other duration segment.
     inline DurationSegment(DurationSegment const &) = default;

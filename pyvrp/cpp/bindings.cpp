@@ -1101,12 +1101,16 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
                       pyvrp::Duration>(),
              py::arg("duration"),
              py::arg("time_warp"),
              py::arg("tw_early"),
              py::arg("tw_late"),
-             py::arg("release_time"))
+             py::arg("release_time"),
+             py::arg("cum_duration"),
+             py::arg("cum_time_warp"))
         .def("duration",
              &DurationSegment::duration,
              DOC(pyvrp, DurationSegment, duration))
@@ -1116,9 +1120,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("tw_late",
              &DurationSegment::twLate,
              DOC(pyvrp, DurationSegment, twLate))
-        .def("slack",
-             &DurationSegment::slack,
-             DOC(pyvrp, DurationSegment, slack))
         .def("time_warp",
              &DurationSegment::timeWarp,
              py::arg("max_duration")

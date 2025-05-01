@@ -279,10 +279,10 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
 
     ds = DurationSegment::merge(0, {vehData, vehData.startLate}, ds);
 
-    startTime_ = ds.twEarly();
-    slack_ = ds.slack();
     duration_ = ds.duration();
     durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_);
+    startTime_ = ds.twEarly();
+    slack_ = ds.twLate() - ds.twEarly();
     timeWarp_ = ds.timeWarp(vehData.maxDuration);
 
     makeSchedule(data);
