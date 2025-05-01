@@ -17,6 +17,8 @@ namespace pyvrp
  *     tw_early: int,
  *     tw_late: int,
  *     release_time: int,
+ *     cum_duration: int,
+ *     cum_time_warp: int,
  * )
  *
  * Creates a duration segment.
@@ -28,15 +30,19 @@ namespace pyvrp
  * Parameters
  * ----------
  * duration
- *     Total duration, including waiting time.
+ *     Total duration, including waiting time, of the curren trip.
  * time_warp
- *     Total time warp on the route segment.
+ *     Total time warp on the current trip.
  * tw_early
- *     Earliest visit moment of the first client.
+ *     Earliest visit moment of the first client of the current trip.
  * tw_late
- *     Latest visit moment of the first client.
+ *     Latest visit moment of the first client of the current trip.
  * release_time
- *     Earliest moment to start the route segment.
+ *     Earliest moment to start this trip segment.
+ * cum_duration
+ *     Cumulative duration of other trips in segment.
+ * cum_time_warp
+ *     Cumulative time warp of other trips in segment.
  */
 class DurationSegment
 {
@@ -44,7 +50,7 @@ class DurationSegment
     Duration timeWarp_ = 0;     // time warp on current trip
     Duration twEarly_ = 0;      // earliest start moment of current trip
     Duration twLate_ = 0;       // latest start moment of current trip
-    Duration releaseTime_ = 0;  // earliest departure moment on current trip
+    Duration releaseTime_ = 0;  // earliest depot leave moment on current trip
     Duration cumDuration_ = 0;  // cumulative duration of other trips in segment
     Duration cumTimeWarp_ = 0;  // cumulative tw of other trips in segment
 
