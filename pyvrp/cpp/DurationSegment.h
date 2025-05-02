@@ -17,8 +17,9 @@ namespace pyvrp
  *     tw_early: int,
  *     tw_late: int,
  *     release_time: int,
- *     cum_duration: int,
- *     cum_time_warp: int,
+ *     cum_duration: int = 0,
+ *     cum_time_warp: int = 0,
+ *     end_late: int = np.iinfo(np.int64).max,
  * )
  *
  * Creates a duration segment.
@@ -43,16 +44,19 @@ namespace pyvrp
  *     Cumulative duration of other trips in segment.
  * cum_time_warp
  *     Cumulative time warp of other trips in segment.
+ * end_late
+ *     TODO
  */
 class DurationSegment
 {
-    Duration duration_ = 0;     // total duration of current tip
-    Duration timeWarp_ = 0;     // time warp on current trip
-    Duration twEarly_ = 0;      // earliest start moment of current trip
-    Duration twLate_ = 0;       // latest start moment of current trip
-    Duration releaseTime_ = 0;  // earliest depot leave moment on current trip
-    Duration cumDuration_ = 0;  // cumulative duration of other trips in segment
-    Duration cumTimeWarp_ = 0;  // cumulative tw of other trips in segment
+    Duration duration_ = 0;                                   // of current trip
+    Duration timeWarp_ = 0;                                   // of current trip
+    Duration twEarly_ = 0;                                    // of current trip
+    Duration twLate_ = std::numeric_limits<Duration>::max();  // of current trip
+    Duration releaseTime_ = 0;                                // of current trip
+    Duration cumDuration_ = 0;  // cumulative, excl. current trip
+    Duration cumTimeWarp_ = 0;  // cumulative, excl. current trip
+    Duration endLate_ = std::numeric_limits<Duration>::max();  // of prev trip
 
 public:
     [[nodiscard]] static inline DurationSegment
@@ -79,12 +83,12 @@ public:
     DurationSegment finaliseFront() const;
 
     /**
-     * The total duration of this route segment.
+     * The total duration of this segment.
      */
     [[nodiscard]] inline Duration duration() const;
 
     /**
-     * Returns the time warp on this route segment. Additionally, any time warp
+     * Returns the time warp on this segment. Additionally, any time warp
      * incurred by violating the maximum duration argument is also counted.
      *
      * Parameters
@@ -100,23 +104,26 @@ public:
      *     Total time warp on this route segment.
      */
     [[nodiscard]] inline Duration
-    timeWarp(Duration const maxDuration
-             = std::numeric_limits<Duration>::max()) const;
+    timeWarp(Duration maxDuration = std::numeric_limits<Duration>::max()) const;
 
     /**
-     * Earliest start time for this route segment that results in minimum route
-     * segment duration.
+     * Earliest start time for the current trip.
      */
     [[nodiscard]] Duration twEarly() const;
 
     /**
-     * Latest start time for this route segment that results in minimum route
-     * segment duration.
+     * Latest start time for the current trip.
      */
     [[nodiscard]] Duration twLate() const;
 
     /**
-     * Earliest possible release time of the clients in this route segment.
+     * Latest end time of the trip immediately preceding the current trip. This
+     * is tracked to account for possible wait duration between trips.
+     */
+    [[nodiscard]] Duration endLate() const;
+
+    /**
+     * Release time of the clients on the current trip of this segment.
      */
     [[nodiscard]] Duration releaseTime() const;
 
@@ -143,8 +150,10 @@ public:
                            Duration twEarly,
                            Duration twLate,
                            Duration releaseTime,
-                           Duration cumDuration,
-                           Duration cumTimeWarp);
+                           Duration cumDuration = 0,
+                           Duration cumTimeWarp = 0,
+                           Duration endLate
+                           = std::numeric_limits<Duration>::max());
 
     // Move or copy construct from the other duration segment.
     inline DurationSegment(DurationSegment const &) = default;
@@ -191,13 +200,18 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
             std::min(secondLate, first.twLate_) + diffTw,
             std::max(first.releaseTime_, second.releaseTime_),
             first.cumDuration_ + second.cumDuration_,
-            first.cumTimeWarp_ + second.cumTimeWarp_};
+            first.cumTimeWarp_ + second.cumTimeWarp_,
+            first.endLate_};  // this field evaluates left-to-right
 #endif
 }
 
-Duration DurationSegment::duration() const { return cumDuration_ + duration_; }
+Duration DurationSegment::duration() const
+{
+    auto const duration = cumDuration_ + duration_;
+    return duration + std::max<Duration>(twEarly() - endLate_, 0);
+}
 
-Duration DurationSegment::timeWarp(Duration const maxDuration) const
+Duration DurationSegment::timeWarp(Duration maxDuration) const
 {
     auto const timeWarp = cumTimeWarp_ + timeWarp_;
     auto const netDuration = duration() - timeWarp;
@@ -215,19 +229,21 @@ DurationSegment::DurationSegment(Duration duration,
                                  Duration twLate,
                                  Duration releaseTime,
                                  Duration cumDuration,
-                                 Duration cumTimeWarp)
+                                 Duration cumTimeWarp,
+                                 Duration endLate)
     : duration_(duration),
       timeWarp_(timeWarp),
       twEarly_(twEarly),
       twLate_(twLate),
       releaseTime_(releaseTime),
       cumDuration_(cumDuration),
-      cumTimeWarp_(cumTimeWarp)
+      cumTimeWarp_(cumTimeWarp),
+      endLate_(endLate)
 {
 }
 }  // namespace pyvrp
 
-std::ostream &operator<<(std::ostream &out,
+std::ostream &operator<<(std::ostream &out,  // helpful for debugging
                          pyvrp::DurationSegment const &segment);
 
 #endif  // PYVRP_DURATIONSEGMENT_H

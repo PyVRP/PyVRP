@@ -13,7 +13,7 @@ def test_time_warp_when_there_is_existing_time_warp(existing_time_warp):
     Tests that the ``time_warp()`` returns existing time warp when no
     segments have been merged yet.
     """
-    ds1 = DurationSegment(0, existing_time_warp, 0, 0, 0, 0, 0)
+    ds1 = DurationSegment(0, existing_time_warp, 0, 0, 0)
     assert_equal(ds1.time_warp(), existing_time_warp)
 
 
@@ -21,8 +21,8 @@ def test_merge_two():
     """
     Tests merging two duration segments.
     """
-    ds1 = DurationSegment(5, 0, 0, 5, 0, 0, 0)
-    ds2 = DurationSegment(0, 5, 3, 6, 0, 0, 0)
+    ds1 = DurationSegment(5, 0, 0, 5, 0)
+    ds2 = DurationSegment(0, 5, 3, 6, 0)
 
     mat = np.asarray([[1, 4], [1, 2]])
     merged = DurationSegment.merge(mat[0, 1], ds1, ds2)
@@ -36,7 +36,7 @@ def test_merge_two():
 
     # Now, let's add a bit of release time (3), so that the total time warp
     # should become 8 + 3 = 11.
-    ds2 = DurationSegment(0, 5, 3, 6, 3, 0, 0)
+    ds2 = DurationSegment(0, 5, 3, 6, 3)
     merged = DurationSegment.merge(mat[0, 1], ds1, ds2)
     assert_equal(merged.time_warp(), 11)
 
@@ -47,8 +47,8 @@ def test_merging_two_previously_merged_duration_segments():
     segments, when both have time warp.
     """
     time_warp = 1
-    ds1 = DurationSegment(5, time_warp, 0, 5, 0, 0, 0)  # depot
-    ds2 = DurationSegment(1, time_warp, 3, 6, 0, 0, 0)  # client 1
+    ds1 = DurationSegment(5, time_warp, 0, 5, 0)  # depot
+    ds2 = DurationSegment(1, time_warp, 3, 6, 0)  # client 1
 
     # Each of these segments has some initial time warp.
     assert_equal(ds1.time_warp(), 1)
@@ -90,7 +90,7 @@ def test_max_duration_argument():
     Tests that the ``max_duration`` argument is evaluated correctly, and indeed
     increases the time warp if it's violated.
     """
-    ds = DurationSegment(5, 0, 0, 0, 0, 0, 0)  # five duration
+    ds = DurationSegment(5, 0, 0, 0, 0)  # five duration
 
     assert_equal(ds.time_warp(), 0)  # default not duration limited
     assert_equal(ds.time_warp(max_duration=2), 3)
@@ -147,10 +147,10 @@ def test_bug_fix_overflow_more_timewarp_than_duration():
     segment that has more time warp than duration with another duration segment
     that has ``twLate = INT_MAX`` results in integer overflow.
     """
-    ds1 = DurationSegment(9, 18, 0, 18, 0, 0, 0)
+    ds1 = DurationSegment(9, 18, 0, 18, 0)
     assert_(ds1.duration() < ds1.time_warp())
 
-    ds2 = DurationSegment(0, 0, 0, np.iinfo(np.int64).max, 0, 0, 0)
+    ds2 = DurationSegment(0, 0, 0, np.iinfo(np.int64).max, 0)
     assert_equal(ds2.tw_late(), np.iinfo(np.int64).max)
 
     # ds1 has 9 duration and 18 time warp, which results in an arrival time of
@@ -159,3 +159,17 @@ def test_bug_fix_overflow_more_timewarp_than_duration():
     # tw_late.
     ds = DurationSegment.merge(0, ds1, ds2)
     assert_equal(ds.time_warp(), 18)
+
+
+def test_finalise_back():
+    """
+    TODO
+    """
+    pass  # TODO test some complicated examples
+
+
+def test_finalise_front():
+    """
+    TODO
+    """
+    pass  # TODO test some complicated examples

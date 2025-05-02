@@ -9,19 +9,28 @@ DurationSegment DurationSegment::finaliseBack() const
 {
     auto const tripDuration = duration() - cumDuration_;
     auto const tripTimeWarp = timeWarp() - cumTimeWarp_;
+    auto const netDuration = tripDuration - tripTimeWarp;
 
     // We finalise at the end of this segment. That means that a subsequent trip
-    // can start at the earliest at twEarly + trip duration - trip time warp.
-    // This segment does not constrain latest starts for subsequent trips. Note
-    // that we can reset the release times because we've already taken that into
-    // account in our earliest start time.
+    // can start at the earliest at twEarly + netDuration. This segment does not
+    // constrain latest starts for subsequent trips, but we do track that this
+    // segment ends at the latest at twLate + netDuration.
     return {0,
             0,
-            twEarly() + tripDuration - tripTimeWarp,
+            twEarly() + netDuration,
+            // The next segment after this is free to start at any time after
+            // this segment can end, so the latest start is not constrained.
+            // Starting after our latest end, however, incurs wait duration.
+            // That is tracked by the endLate attribute.
             std::numeric_limits<Duration>::max(),
             0,
             duration(),
-            timeWarp()};
+            timeWarp(),
+            // The latest time at which this segment can end. A subsequent
+            // segment can start later than this (since that's unconstrained),
+            // but doing so adds wait duration between this end time and the
+            // subsequent segment's start time.
+            twLate() + netDuration};
 }
 
 DurationSegment DurationSegment::finaliseFront() const
@@ -46,11 +55,12 @@ Duration DurationSegment::twEarly() const
 
 Duration DurationSegment::twLate() const { return twLate_; }
 
+Duration DurationSegment::endLate() const { return endLate_; }
+
 Duration DurationSegment::releaseTime() const { return releaseTime_; }
 
 DurationSegment::DurationSegment(ProblemData::Client const &client)
     : duration_(client.serviceDuration),
-      timeWarp_(0),
       twEarly_(client.twEarly),
       twLate_(client.twLate),
       releaseTime_(client.releaseTime)
@@ -59,31 +69,24 @@ DurationSegment::DurationSegment(ProblemData::Client const &client)
 
 DurationSegment::DurationSegment(ProblemData::Depot const &depot,
                                  Duration const serviceDuration)
-    : duration_(serviceDuration),
-      timeWarp_(0),
-      twEarly_(depot.twEarly),
-      twLate_(depot.twLate),
-      releaseTime_(0)
+    : duration_(serviceDuration), twEarly_(depot.twEarly), twLate_(depot.twLate)
 {
 }
 
 DurationSegment::DurationSegment(ProblemData::VehicleType const &vehicleType,
                                  Duration const twLate)
-    : duration_(0),
-      timeWarp_(0),
-      twEarly_(vehicleType.twEarly),
-      twLate_(twLate),
-      releaseTime_(0)
+    : twEarly_(vehicleType.twEarly), twLate_(twLate)
 {
 }
 
 std::ostream &operator<<(std::ostream &out, DurationSegment const &segment)
 {
     // clang-format off
-    return out << segment.twEarly() 
+    return out << segment.duration() 
+               << ' ' << segment.timeWarp()
+               << ' ' << segment.twEarly()
                << ' ' << segment.twLate()
                << ' ' << segment.releaseTime()
-               << ' ' << segment.duration()
-               << ' ' << segment.timeWarp();
+               << ' ' << segment.endLate();
     // clang-format on
 }

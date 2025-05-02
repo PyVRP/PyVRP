@@ -275,11 +275,11 @@ void Route::update()
         else
         {
             ProblemData::Depot const &depot = data.location(node->client());
-            durAt[idx] = {depot, 0};  // TODO hack
+            durAt[idx] = {depot, depot.serviceDuration};
         }
     }
 
-    auto const &durMat = data.durationMatrix(profile());
+    auto const &durations = data.durationMatrix(profile());
 
     durBefore.resize(nodes.size());
     durBefore[0] = durAt[0];
@@ -290,35 +290,21 @@ void Route::update()
                                 ? durBefore[prev].finaliseBack()
                                 : durBefore[prev];
 
-        auto edgeDur = durMat(visits[prev], visits[idx]);
-        if (nodes[prev]->isReloadDepot())
-        {
-            auto const loc = nodes[prev]->client();
-            ProblemData::Depot const &depot = data.location(loc);
-            edgeDur += depot.serviceDuration;  // TODO hack
-        }
-
+        auto const edgeDur = durations(visits[prev], visits[idx]);
         durBefore[idx] = DurationSegment::merge(edgeDur, before, durAt[idx]);
     }
 
     durAfter.resize(nodes.size());
     durAfter[nodes.size() - 1] = durAt[nodes.size() - 1];
-    for (size_t idx = nodes.size() - 1; idx != 0; --idx)
+    for (size_t next = nodes.size() - 1; next != 0; --next)
     {
-        auto const prev = idx - 1;
-        auto const after = nodes[idx]->isReloadDepot()
-                               ? durAfter[idx].finaliseFront()
-                               : durAfter[idx];
+        auto const idx = next - 1;
+        auto const after = nodes[next]->isReloadDepot()
+                               ? durAfter[next].finaliseFront()
+                               : durAfter[next];
 
-        auto edgeDur = durMat(visits[prev], visits[idx]);
-        if (nodes[prev]->isReloadDepot())
-        {
-            auto const loc = nodes[prev]->client();
-            ProblemData::Depot const &depot = data.location(loc);
-            edgeDur += depot.serviceDuration;  // TODO hack
-        }
-
-        durAfter[prev] = DurationSegment::merge(edgeDur, durAt[prev], after);
+        auto const edgeDur = durations(visits[idx], visits[next]);
+        durAfter[idx] = DurationSegment::merge(edgeDur, durAt[idx], after);
     }
 #endif
 
