@@ -45,7 +45,7 @@ namespace pyvrp
  * cum_time_warp
  *     Cumulative time warp of other trips in segment.
  * end_late
- *     TODO
+ *     Latest end time of the previous trip, if any.
  */
 class DurationSegment
 {
