@@ -31,7 +31,8 @@ DurationSegment::DurationSegment(ProblemData::Client const &client)
 }
 
 DurationSegment::DurationSegment(ProblemData::Depot const &depot)
-    : timeWarp_(0),
+    : duration_(0),
+      timeWarp_(0),
       twEarly_(depot.twEarly),
       twLate_(depot.twLate),
       releaseTime_(0)
