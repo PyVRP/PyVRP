@@ -39,9 +39,9 @@ std::ostream &operator<<(std::ostream &out, LoadSegment const &segment)
     auto const capacity = segment.load();
 
     // clang-format off
-    return out << segment.delivery() 
-               << ' ' << segment.pickup()
-               << ' ' << segment.load()
-               << ' ' << segment.excessLoad(capacity);
+    return out << "delivery=" << segment.delivery() 
+               << ", pickup=" << segment.pickup()
+               << ", load=" << segment.load()
+               << ", excess_load=" << segment.excessLoad(capacity);
     // clang-format on
 }

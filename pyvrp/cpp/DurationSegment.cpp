@@ -81,11 +81,11 @@ DurationSegment::DurationSegment(ProblemData::VehicleType const &vehicleType,
 std::ostream &operator<<(std::ostream &out, DurationSegment const &segment)
 {
     // clang-format off
-    return out << segment.duration() 
-               << ' ' << segment.timeWarp()
-               << ' ' << segment.twEarly()
-               << ' ' << segment.twLate()
-               << ' ' << segment.releaseTime()
-               << ' ' << segment.endLate();
+    return out << "duration=" << segment.duration() 
+               << ", time_warp=" << segment.timeWarp()
+               << ", tw_early=" << segment.twEarly()
+               << ", tw_late=" << segment.twLate()
+               << ", release_time=" << segment.releaseTime()
+               << ", end_late=" << segment.endLate();
     // clang-format on
 }
