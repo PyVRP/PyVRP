@@ -133,10 +133,9 @@ public:
     DurationSegment(ProblemData::Client const &client);
 
     /**
-     * Construct from attributes of the given depot and depot service duration.
+     * Construct from attributes of the given depot.
      */
-    DurationSegment(ProblemData::Depot const &depot,
-                    Duration const serviceDuration);
+    DurationSegment(ProblemData::Depot const &depot);
 
     /**
      * Construct from attributes of the given vehicle type and latest finish.

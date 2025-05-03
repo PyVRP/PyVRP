@@ -164,14 +164,7 @@ void Route::makeSchedule(ProblemData const &data)
         now += wait;
         now -= tw;
 
-        schedule_.emplace_back(trip.startDepot(),
-                               tripIdx,
-                               now,
-                               now + start.serviceDuration,
-                               wait,
-                               tw);
-
-        now += start.serviceDuration;
+        schedule_.emplace_back(trip.startDepot(), tripIdx, now, now, wait, tw);
 
         size_t prevClient = trip.startDepot();
         for (auto const client : trip)
@@ -256,22 +249,22 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     for (auto trip = trips_.rbegin(); trip != trips_.rend(); ++trip)
     {
         ProblemData::Depot const &end = data.location(trip->endDepot());
-        ds = DurationSegment::merge(0, {end, 0}, ds);
+        ds = DurationSegment::merge(0, {end}, ds);
 
         size_t nextClient = trip->endDepot();
         for (auto it = trip->rbegin(); it != trip->rend(); ++it)
         {
             auto const client = *it;
             auto const edgeDuration = durations(client, nextClient);
-            DurationSegment const clientDS = {data.location(client)};
+            ProblemData::Client const &clientData = data.location(client);
 
-            ds = DurationSegment::merge(edgeDuration, clientDS, ds);
+            ds = DurationSegment::merge(edgeDuration, {clientData}, ds);
             nextClient = client;
         }
 
         auto const edgeDuration = durations(trip->startDepot(), nextClient);
         ProblemData::Depot const &start = data.location(trip->startDepot());
-        DurationSegment const depotDS = {start, start.serviceDuration};
+        DurationSegment const depotDS = {start};
 
         ds = DurationSegment::merge(edgeDuration, depotDS, ds);
         ds = ds.finaliseFront();

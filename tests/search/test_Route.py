@@ -1061,7 +1061,7 @@ def test_multi_trip_with_release_times():
     the test of the same name for ``pyvrp::Route`` for further details.
     """
     matrix = [
-        [0, 10, 0, 20],
+        [0, 30, 20, 40],
         [0, 0, 10, 0],
         [5, 0, 0, 0],
         [10, 0, 0, 0],
@@ -1073,7 +1073,7 @@ def test_multi_trip_with_release_times():
             Client(0, 0, tw_early=70, tw_late=90, release_time=50),
             Client(0, 0, tw_early=80, tw_late=150, release_time=100),
         ],
-        depots=[Depot(0, 0, service_duration=20)],
+        depots=[Depot(0, 0)],
         vehicle_types=[VehicleType(reload_depots=[0])],
         distance_matrices=[matrix],
         duration_matrices=[matrix],

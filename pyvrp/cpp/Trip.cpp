@@ -60,9 +60,6 @@ Trip::Trip(ProblemData const &data,
             throw std::invalid_argument(msg.str());
         }
 
-    ProblemData::Depot const &start = data.location(startDepot_);
-    service_ += start.serviceDuration;
-
     auto const &distances = data.distanceMatrix(vehData.profile);
     auto const &durations = data.durationMatrix(vehData.profile);
 

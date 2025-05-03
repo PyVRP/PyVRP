@@ -256,10 +256,11 @@ void Route::update()
 
     ProblemData::Depot const &start = data.location(startDepot());
     DurationSegment const vehStart(vehicleType_, vehicleType_.startLate);
-    DurationSegment const depotStart(start, start.serviceDuration);
+    DurationSegment const depotStart(start);
     durAt[0] = DurationSegment::merge(0, vehStart, depotStart);
 
-    DurationSegment const depotEnd(data.location(endDepot()), 0);
+    ProblemData::Depot const &end = data.location(endDepot());
+    DurationSegment const depotEnd(end);
     DurationSegment const vehEnd(vehicleType_, vehicleType_.twLate);
     durAt[nodes.size() - 1] = DurationSegment::merge(0, depotEnd, vehEnd);
 
@@ -275,7 +276,7 @@ void Route::update()
         else
         {
             ProblemData::Depot const &depot = data.location(node->client());
-            durAt[idx] = {depot, depot.serviceDuration};
+            durAt[idx] = {depot};
         }
     }
 
