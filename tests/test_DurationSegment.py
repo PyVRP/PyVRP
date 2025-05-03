@@ -161,6 +161,13 @@ def test_bug_fix_overflow_more_timewarp_than_duration():
     assert_equal(ds.time_warp(), 18)
 
 
+def test_str():
+    """
+    TODO
+    """
+    pass
+
+
 def test_finalise_back():
     """
     TODO

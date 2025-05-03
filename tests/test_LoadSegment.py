@@ -91,3 +91,10 @@ def test_finalise(capacity: int, exp_excess: int):
     assert_equal(finalised.pickup(), 0)
     assert_equal(finalised.load(), 0)
     assert_equal(finalised.excess_load(capacity), exp_excess)
+
+
+def test_str():
+    """
+    TODO
+    """
+    pass

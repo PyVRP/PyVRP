@@ -1085,7 +1085,14 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("capacity"),
              DOC(pyvrp, LoadSegment, finalise))
         .def_static(
-            "merge", &LoadSegment::merge, py::arg("first"), py::arg("second"));
+            "merge", &LoadSegment::merge, py::arg("first"), py::arg("second"))
+        .def("__str__",
+             [](LoadSegment const &segment)
+             {
+                 std::stringstream stream;
+                 stream << segment;
+                 return stream.str();
+             });
 
     py::class_<DurationSegment>(
         m, "DurationSegment", DOC(pyvrp, DurationSegment))
@@ -1132,7 +1139,14 @@ PYBIND11_MODULE(_pyvrp, m)
                     &DurationSegment::merge,
                     py::arg("edge_duration"),
                     py::arg("first"),
-                    py::arg("second"));
+                    py::arg("second"))
+        .def("__str__",
+             [](DurationSegment const &segment)
+             {
+                 std::stringstream stream;
+                 stream << segment;
+                 return stream.str();
+             });
 
     py::class_<RandomNumberGenerator>(
         m, "RandomNumberGenerator", DOC(pyvrp, RandomNumberGenerator))
