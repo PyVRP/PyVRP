@@ -144,7 +144,7 @@ void Route::makeSchedule(ProblemData const &data)
     for (size_t tripIdx = 0; tripIdx != trips_.size(); ++tripIdx)
     {
         auto const handle
-            = [&](auto const &where, size_t location, Duration service)
+            = [&](auto const &where, size_t location, Duration service = 0)
         {
             auto const wait = std::max<Duration>(where.twEarly - now, 0);
             auto const tw = std::max<Duration>(now - where.twLate, 0);
@@ -161,7 +161,7 @@ void Route::makeSchedule(ProblemData const &data)
         auto const &trip = trips_[tripIdx];
 
         ProblemData::Depot const &start = data.location(trip.startDepot());
-        handle(start, trip.startDepot(), start.serviceDuration);
+        handle(start, trip.startDepot());
 
         size_t prevClient = trip.startDepot();
         for (auto const client : trip)
@@ -177,7 +177,7 @@ void Route::makeSchedule(ProblemData const &data)
         now += durations(prevClient, trip.endDepot());
 
         ProblemData::Depot const &end = data.location(trip.endDepot());
-        handle(end, trip.endDepot(), 0);
+        handle(end, trip.endDepot());
     }
 }
 
@@ -211,7 +211,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
 
         // TODO fix release time / multi trip
         ProblemData::Depot const &start = data.location(trip.startDepot());
-        ds = DurationSegment::merge(0, ds, {start, start.serviceDuration});
+        ds = DurationSegment::merge(0, ds, {start});
 
         distance_ += trip.distance();
         service_ += trip.serviceDuration();
@@ -243,15 +243,15 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         for (auto const client : trip)
         {
             auto const edgeDuration = durations(prevClient, client);
-            DurationSegment const clientDS = {data.location(client)};
-            ds = DurationSegment::merge(edgeDuration, ds, clientDS);
+            ProblemData::Client const &clientData = data.location(client);
+            ds = DurationSegment::merge(edgeDuration, ds, {clientData});
 
             prevClient = client;
         }
 
         ProblemData::Depot const &end = data.location(trip.endDepot());
         ds = DurationSegment::merge(
-            durations(prevClient, trip.endDepot()), ds, {end, 0});
+            durations(prevClient, trip.endDepot()), ds, {end});
     }
 
     distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
