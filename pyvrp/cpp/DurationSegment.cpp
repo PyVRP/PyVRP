@@ -7,30 +7,30 @@ using pyvrp::DurationSegment;
 
 DurationSegment DurationSegment::finaliseBack() const
 {
-    auto const tripDuration = duration() - cumDuration_;
-    auto const tripTimeWarp = timeWarp() - cumTimeWarp_;
-    auto const netDuration = tripDuration - tripTimeWarp;
+    DurationSegment const prevTrip = {0, 0, endEarly_, endLate_, 0};
+    DurationSegment const currTrip = {tripDuration(),
+                                      tripTimeWarp(),
+                                      twEarly(),
+                                      twLate(),
+                                      0,
+                                      cumDuration_,
+                                      cumTimeWarp_};
 
-    // We finalise at the end of this segment. That means that a subsequent trip
-    // can start at the earliest at twEarly + netDuration. This segment does not
-    // constrain latest starts for subsequent trips, but we do track that this
-    // segment ends at the latest at twLate + netDuration.
+    auto const adjusted = merge(0, prevTrip, currTrip);
+    auto const netDuration = adjusted.tripDuration() - adjusted.tripTimeWarp();
+
     return {0,
             0,
-            twEarly() + netDuration,
+            adjusted.twEarly() + netDuration,
             // The next segment after this is free to start at any time after
             // this segment can end, so the latest start is not constrained.
-            // Starting after our latest end, however, incurs wait duration.
-            // That is tracked by the endLate attribute.
+            // Starting after our latest end will incur wait duration.
             std::numeric_limits<Duration>::max(),
             0,
-            duration(),
-            timeWarp(),
-            // The latest time at which this segment can end. A subsequent
-            // segment can start later than this (since that's unconstrained),
-            // but doing so adds wait duration between this end time and the
-            // subsequent segment's start time.
-            twLate() + netDuration};
+            adjusted.duration(),
+            adjusted.timeWarp(),
+            adjusted.twEarly() + netDuration,
+            adjusted.twLate() + netDuration};
 }
 
 DurationSegment DurationSegment::finaliseFront() const
@@ -40,6 +40,10 @@ DurationSegment DurationSegment::finaliseFront() const
     // like before.
     return {0, 0, twEarly(), twLate(), 0, duration(), timeWarp()};
 }
+
+Duration DurationSegment::tripDuration() const { return duration_; }
+
+Duration DurationSegment::tripTimeWarp() const { return timeWarp_; }
 
 Duration DurationSegment::twEarly() const
 {
@@ -54,6 +58,8 @@ Duration DurationSegment::twEarly() const
 }
 
 Duration DurationSegment::twLate() const { return twLate_; }
+
+Duration DurationSegment::endEarly() const { return endEarly_; }
 
 Duration DurationSegment::endLate() const { return endLate_; }
 
@@ -86,6 +92,7 @@ std::ostream &operator<<(std::ostream &out, DurationSegment const &segment)
                << ", tw_early=" << segment.twEarly()
                << ", tw_late=" << segment.twLate()
                << ", release_time=" << segment.releaseTime()
+               << ", end_early=" << segment.endEarly()
                << ", end_late=" << segment.endLate();
     // clang-format on
 }
