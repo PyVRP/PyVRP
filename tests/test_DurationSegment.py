@@ -172,6 +172,7 @@ def test_str():
         tw_early=5,
         tw_late=7,
         release_time=6,
+        end_early=0,
         end_late=3,
     )
 
@@ -180,6 +181,7 @@ def test_str():
     assert_("tw_early=6" in str(segment))  # is max(tw_early, release_time)
     assert_("tw_late=7" in str(segment))
     assert_("release_time=6" in str(segment))
+    assert_("end_early=0" in str(segment))
     assert_("end_late=3" in str(segment))
 
 
