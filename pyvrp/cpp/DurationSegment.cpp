@@ -45,18 +45,6 @@ Duration DurationSegment::tripDuration() const { return duration_; }
 
 Duration DurationSegment::tripTimeWarp() const { return timeWarp_; }
 
-Duration DurationSegment::twEarly() const
-{
-    // There are two cases:
-    // 1) When twLate_ < releaseTime_ there is time warp from release times. As
-    //    twEarly_ <= twLate, we then return twLate_ to minimise this time warp.
-    // 2) When twLate >= releaseTime_, there is a feasible start time that does
-    //    not cause time warp due to release times. Then we return either the
-    //    earliest start time, or the release time, whichever is larger.
-    assert(twEarly_ <= twLate_);
-    return std::max(twEarly_, std::min(twLate_, releaseTime_));
-}
-
 Duration DurationSegment::twLate() const { return twLate_; }
 
 Duration DurationSegment::endEarly() const { return endEarly_; }
