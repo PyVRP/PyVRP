@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_equal
+from numpy.testing import assert_, assert_equal
 
 from pyvrp._pyvrp import LoadSegment
 
@@ -95,6 +95,11 @@ def test_finalise(capacity: int, exp_excess: int):
 
 def test_str():
     """
-    TODO
+    Tests that the load segment's string representation contains useful
+    debugging information.
     """
-    pass
+    segment = LoadSegment(delivery=2, pickup=3, load=5, excess_load=7)
+    assert_("delivery=2" in str(segment))
+    assert_("pickup=3" in str(segment))
+    assert_("load=5" in str(segment))
+    assert_("excess_load=7" in str(segment))

@@ -163,9 +163,24 @@ def test_bug_fix_overflow_more_timewarp_than_duration():
 
 def test_str():
     """
-    TODO
+    Tests that the duration segment's string representation contains useful
+    debugging information.
     """
-    pass
+    segment = DurationSegment(
+        duration=2,
+        time_warp=3,
+        tw_early=5,
+        tw_late=7,
+        release_time=6,
+        end_late=3,
+    )
+
+    assert_("duration=5" in str(segment))  # includes end_late to release_time
+    assert_("time_warp=3" in str(segment))
+    assert_("tw_early=6" in str(segment))  # is max(tw_early, release_time)
+    assert_("tw_late=7" in str(segment))
+    assert_("release_time=6" in str(segment))
+    assert_("end_late=3" in str(segment))
 
 
 def test_finalise_back():
