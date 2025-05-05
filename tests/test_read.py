@@ -542,21 +542,32 @@ def test_read_solution_multiple_vehicle_types(ok_small_multi_depot):
 
 def test_reading_unit_distance_cost():
     """
-    Tests that reading an instance with unit distance cost is not rounded.
+    Tests that reading an instance with unit distance cost works correctly,
+    particularly that the unit costs are incorporated in the routing profiles.
     """
     data = read("data/OkSmallUnitDistanceCost.txt", "exact")
+
+    # All three vehicles have a different unit distance cost, so there
+    # should be three types and three profiles.
     assert_equal(data.num_vehicle_types, 3)
+    assert_equal(data.num_profiles, 3)
 
     for idx, veh_type in enumerate(data.vehicle_types()):
+        # Each vehicle type has a different profile, but the unit distance
+        # cost should stay at 1 (default).
         assert_equal(veh_type.profile, idx)
+        assert_equal(veh_type.unit_distance_cost, 1)
 
+    # Unit distance costs are instead incorporated in the distance matrices.
+    # The first vehicle type has a unit distance cost of 1, so we take this
+    # matrix as baseline. The other matrices should be scaled versions of that.
     dist_mats = data.distance_matrices()
-    unit_distance_costs = (1, 1.01, 1.99)
+    unit_distance_costs = [1, 0.01, 9.99]
+    baseline = dist_mats[0]
 
     for idx in range(data.num_vehicle_types):
-        dist = dist_mats[0]
         current = dist_mats[idx]
-        assert_equal(current, dist * unit_distance_costs[idx])
+        assert_equal(current, baseline * unit_distance_costs[idx])
 
 
 def test_read_hfvrp_instance():
