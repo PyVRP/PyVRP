@@ -301,7 +301,8 @@ def test_finalise_front():
 
 def test_repeated_merge_and_finalise_back():
     """
-    TODO
+    Tests finalise_back() in a common multi-trip scenario, where we merge
+    several duration segments.
     """
     # We model a route consisting of two trips with duration segments segment1
     # and segment2.
@@ -335,3 +336,23 @@ def test_repeated_merge_and_finalise_back():
     assert_equal(finalised2.tw_late(), _INT_MAX)
     assert_equal(finalised2.end_early(), 150)
     assert_equal(finalised2.end_late(), 150)
+
+
+def test_finalise_nonzero_route_slack():
+    """
+    Tests that finalising segments with loose time windows results in positive
+    route slack.
+    """
+    segment1 = DurationSegment(0, 0, 0, 100, 0)
+    segment2 = DurationSegment(0, 0, 50, 75, 0)
+
+    finalised1 = segment1.finalise_back()
+    assert_equal(finalised1.end_early(), 0)
+    assert_equal(finalised1.end_late(), 100)
+    assert_equal(finalised1.slack(), 100)
+
+    merged = DurationSegment.merge(0, finalised1, segment2)
+    finalised2 = merged.finalise_back()
+    assert_equal(finalised2.end_early(), 50)
+    assert_equal(finalised2.end_late(), 75)
+    assert_equal(finalised2.slack(), 25)
