@@ -10,6 +10,7 @@ from numpy.testing import (
     assert_warns,
 )
 
+from pyvrp import CostEvaluator
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from tests.helpers import read, read_solution
@@ -537,3 +538,77 @@ def test_read_solution_multiple_vehicle_types(ok_small_multi_depot):
     # the first type is not used.
     assert_equal(routes[0].vehicle_type(), 0)
     assert_equal(routes[1].vehicle_type(), 1)
+
+
+def test_reading_unit_distance_cost():
+    """
+    Tests that reading an instance with unit distance cost is not rounded.
+    """
+    data = read("data/OkSmallUnitDistanceCost.txt", "exact")
+    assert_equal(data.num_vehicle_types, 3)
+
+    for idx, veh_type in enumerate(data.vehicle_types()):
+        assert_equal(veh_type.profile, idx)
+
+    dist_mats = data.distance_matrices()
+    unit_distance_costs = (1, 1.01, 1.99)
+
+    for idx in range(data.num_vehicle_types):
+        dist = dist_mats[0]
+        current = dist_mats[idx]
+        assert_equal(current, dist * unit_distance_costs[idx])
+
+
+def test_read_hfvrp_instance():
+    """
+    Tests that reading a HFVRP instance happens correctly, particularly the
+    heterogeneous vehicles data sections.
+    """
+    data = read("data/X115-HVRP.vrp", "exact")
+
+    # One routing profile per unique unit distance cost.
+    assert_equal(data.num_profiles, 3)
+    assert_equal(len(data.distance_matrices()), 3)
+    assert_equal(len(data.duration_matrices()), 3)
+
+    # Each vehicle type has different attributes. We only check the first two.
+    veh_type1 = data.vehicle_type(0)
+    assert_equal(veh_type1.num_available, 11)
+    assert_equal(veh_type1.capacity, [54_000])
+    assert_equal(veh_type1.fixed_cost, 146_000)
+    assert_equal(veh_type1.profile, 0)
+
+    veh_type2 = data.vehicle_type(1)
+    assert_equal(veh_type2.num_available, 7)
+    assert_equal(veh_type2.capacity, [131_000])
+    assert_equal(veh_type2.fixed_cost, 436_000)
+    assert_equal(veh_type2.profile, 1)
+
+    # Unit distances are incorporated in the profile instead of as vehicle type
+    # property. The first vehicle type has unit distance cost of 0.58, while
+    # the second vehicle type has unit distance cost of 1. We check that the
+    # distance and duration matrices reflect this.
+    dist1 = data.distance_matrix(veh_type1.profile)
+    dur1 = data.duration_matrix(veh_type1.profile)
+    dist2 = data.distance_matrix(veh_type2.profile)
+    dur2 = data.duration_matrix(veh_type2.profile)
+
+    assert_equal(dist1, np.round(dist2 * 0.58))
+    assert_equal(dur1, np.round(dur2 * 0.58))
+
+
+def test_read_hfvrp_solution():
+    """
+    Tests that reading a HFVRP solution results in the correct routes and
+    objective value.
+    """
+    data = read("data/X115-HVRP.vrp", "exact")
+    sol = read_solution("data/X115-HVRP.sol", data)
+    cost_eval = CostEvaluator([0], 0, 0)
+
+    cost = cost_eval.cost(sol)
+    assert_equal(cost, 19412563)
+
+    route = sol.routes()[0]
+    visits = [25, 51, 19, 108, 48, 60, 86, 87, 73, 106, 66, 17, 15]
+    assert_equal(route.visits(), visits)
