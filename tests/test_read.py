@@ -554,11 +554,12 @@ def test_reading_unit_distance_cost():
 
     for idx, veh_type in enumerate(data.vehicle_types()):
         # Each vehicle type has a different profile, but the unit distance
-        # cost should stay at 1 (default).
+        # cost should stay at 1 (default) even though the data specifies
+        # different costs per vehicle type.
         assert_equal(veh_type.profile, idx)
         assert_equal(veh_type.unit_distance_cost, 1)
 
-    # Unit distance costs are instead incorporated in the distance matrices.
+    # Instead, unit distance costs are incorporated in the distance matrices.
     # The first vehicle type has a unit distance cost of 1, so we take this
     # matrix as baseline. The other matrices should be scaled versions of that.
     dist_mats = data.distance_matrices()

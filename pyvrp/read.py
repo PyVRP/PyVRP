@@ -280,7 +280,7 @@ class _InstanceParser:
         if "vehicles_unit_distance_cost" not in self.instance:
             return np.ones(self.num_vehicles, dtype=np.int64)
 
-        # Do not round unit distance costs to prevent double scaling in the
+        # Unit distance costs are unrounded to prevent double scaling in the
         # total distance cost calculation (unit_distance_cost * distance).
         return self.instance["vehicles_unit_distance_cost"]
 
