@@ -604,11 +604,13 @@ def test_read_hfvrp_solution():
     """
     data = read("data/X115-HVRP.vrp", "exact")
     sol = read_solution("data/X115-HVRP.sol", data)
+    routes = sol.routes()
+
+    assert_equal(routes[1].visits(), [59, 35, 99, 49, 79, 47, 109, 18])
+    assert_equal(routes[-1].visits(), [5, 6, 3, 93, 42, 9])
+
+    assert_equal(routes[1].vehicle_type(), 0)
+    assert_equal(routes[-1].vehicle_type(), 2)
+
     cost_eval = CostEvaluator([0], 0, 0)
-
-    cost = cost_eval.cost(sol)
-    assert_equal(cost, 19412563)
-
-    route = sol.routes()[0]
-    visits = [25, 51, 19, 108, 48, 60, 86, 87, 73, 106, 66, 17, 15]
-    assert_equal(route.visits(), visits)
+    assert_equal(cost_eval.cost(sol), 19412563)

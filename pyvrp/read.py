@@ -280,8 +280,8 @@ class _InstanceParser:
         if "vehicles_unit_distance_cost" not in self.instance:
             return np.ones(self.num_vehicles, dtype=np.int64)
 
-        # Do not round unit distance costs to prevent double scaling when
-        # calculating the total distance cost (unit_distance_cost * distance).
+        # Do not round unit distance costs to prevent double scaling in the
+        # total distance cost calculation (unit_distance_cost * distance).
         return self.instance["vehicles_unit_distance_cost"]
 
     def mutually_exclusive_groups(self) -> list[list[int]]:
