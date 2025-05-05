@@ -903,10 +903,26 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            // TODO finalise at depots
-            ds = DurationSegment::merge(
-                matrix(last, other.first()), ds, other.duration(profile));
+            auto edgeDur = matrix(last, other.first());
+
+            if (other.first() < data.numDepots())  // other starts at a depot
+            {
+                // We can only finalise the current segment at the start depot,
+                // so we first need to travel there.
+                ProblemData::Depot const &start = data.location(other.first());
+                ds = DurationSegment::merge(edgeDur, ds, {start});
+
+                // We finalise at the start depot, so the travel duration to
+                // the next segment is now zero.
+                ds = ds.finaliseBack();
+                edgeDur = 0;
+            }
+
+            ds = DurationSegment::merge(edgeDur, ds, other.duration(profile));
             last = other.last();
+
+            if (other.last() < data.numDepots())  // other ends at a depot
+                ds = ds.finaliseBack();
 
             if constexpr (sizeof...(args) != 0)
                 self(self, std::forward<decltype(args)>(args)...);
