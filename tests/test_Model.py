@@ -1050,3 +1050,13 @@ def test_model_solves_multi_trip_instance():
     assert_({2} in visit_sets)
     assert_({3, 4} in visit_sets)
     assert_({5, 6} in visit_sets)
+
+
+def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
+    """
+    TODO
+    """
+    m = Model.from_data(mtvrptw_release_times)
+    res = m.solve(stop=MaxIterations(50))
+    print(res)
+    assert False
