@@ -589,11 +589,11 @@ def test_read_hfvrp_instance():
     # the second vehicle type has unit distance cost of 1. We check that the
     # distance and duration matrices reflect this.
     dist1 = data.distance_matrix(veh_type1.profile)
-    dur1 = data.duration_matrix(veh_type1.profile)
     dist2 = data.distance_matrix(veh_type2.profile)
-    dur2 = data.duration_matrix(veh_type2.profile)
-
     assert_equal(dist1, np.round(dist2 * 0.58))
+
+    dur1 = data.duration_matrix(veh_type1.profile)
+    dur2 = data.duration_matrix(veh_type2.profile)
     assert_equal(dur1, np.round(dur2 * 0.58))
 
 
