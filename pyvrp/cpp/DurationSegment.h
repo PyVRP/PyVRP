@@ -141,6 +141,13 @@ public:
     [[nodiscard]] Duration endLate() const;
 
     /**
+     * Slack in the route schedule. This is the amount of time by which the
+     * start of the current trip can be delayed without increasing the overall
+     * route duration.
+     */
+    [[nodiscard]] Duration slack() const;
+
+    /**
      * Release time of the clients on the current trip of this segment.
      */
     [[nodiscard]] Duration releaseTime() const;

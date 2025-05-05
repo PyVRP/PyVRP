@@ -212,10 +212,10 @@ def test_finalise_back_with_time_warp_from_release_time():
     # not constrained in their latest start (since we could wait indefinitely).
     # We also track when the finalised segment would end at the earliest and
     # latest.
-    assert_equal(finalised.tw_early(), 70)
+    assert_equal(finalised.tw_early(), 75)
     assert_equal(finalised.tw_late(), _INT_MAX)
-    assert_equal(finalised.end_early(), 70)
-    assert_equal(finalised.end_late(), 70)
+    assert_equal(finalised.end_early(), 75)
+    assert_equal(finalised.end_late(), 75)
     assert_equal(finalised.release_time(), 0)
 
 
@@ -297,3 +297,41 @@ def test_finalise_front():
     assert_equal(finalised.tw_early(), 50)
     assert_equal(finalised.tw_late(), 50)
     assert_equal(finalised.release_time(), 0)
+
+
+def test_repeated_merge_and_finalise_back():
+    """
+    TODO
+    """
+    # We model a route consisting of two trips with duration segments segment1
+    # and segment2.
+    segment1 = DurationSegment(45, 0, 30, 50, 50)
+    segment2 = DurationSegment(50, 0, 70, 110, 100)
+
+    # segment1 finalises at a reload depot, so we need to finalise at the end.
+    finalised1 = segment1.finalise_back()
+    assert_equal(finalised1.tw_early(), 95)
+    assert_equal(finalised1.tw_late(), _INT_MAX)
+    assert_equal(finalised1.end_early(), 95)
+    assert_equal(finalised1.end_late(), 95)
+
+    # Next we execute the second trip, so we merge segment2.
+    merged = DurationSegment.merge(0, finalised1, segment2)
+    assert_equal(merged.duration(), 100)  # including 5 wait time
+    assert_equal(merged.tw_early(), 100)
+    assert_equal(merged.tw_late(), 110)
+    assert_equal(merged.release_time(), 100)
+
+    # While the second trip may start between [100, 110] without increasing the
+    # trip duration, waiting beyond 100 will increase the route duration. Thus,
+    # there is zero slack.
+    assert_equal(merged.slack(), 0)
+
+    # Return to the end depot. Duration should not change, but we do need to
+    # make sure the end times are correct.
+    finalised2 = merged.finalise_back()
+    assert_equal(finalised2.duration(), 100)
+    assert_equal(finalised2.tw_early(), 150)
+    assert_equal(finalised2.tw_late(), _INT_MAX)
+    assert_equal(finalised2.end_early(), 150)
+    assert_equal(finalised2.end_late(), 150)

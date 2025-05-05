@@ -1149,6 +1149,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("trip_time_warp",
              &DurationSegment::tripTimeWarp,
              DOC(pyvrp, DurationSegment, tripTimeWarp))
+        .def("slack",
+             &DurationSegment::slack,
+             DOC(pyvrp, DurationSegment, slack))
         .def_static("merge",
                     &DurationSegment::merge,
                     py::arg("edge_duration"),

@@ -7,31 +7,38 @@ using pyvrp::DurationSegment;
 
 DurationSegment DurationSegment::finaliseBack() const
 {
-    DurationSegment const prevTrip = {0, 0, endEarly_, endLate_, 0};
-    DurationSegment const currTrip = {tripDuration(),
-                                      tripTimeWarp(),
-                                      twEarly(),
-                                      twLate(),
-                                      0,
-                                      cumDuration_,
-                                      cumTimeWarp_};
+    // We finalise this segment via several repeated merges: first, from the
+    // [end early, end late] time windows of the previous trip. Then, the
+    // release times of our current trip, if they are binding. Finally, we merge
+    // with the current trip, using just the earliest and latest start moments
+    // implied by our time windows. This results in a finalised segment.
+    DurationSegment const prev = {0, 0, endEarly_, endLate_, 0};
+    DurationSegment const curr = {duration_, timeWarp_, twEarly_, twLate_, 0};
+    DurationSegment const release = {0,
+                                     0,
+                                     std::max(twEarly_, releaseTime_),
+                                     std::max(twLate_, releaseTime_),
+                                     0};
 
-    auto const adjusted = merge(0, prevTrip, currTrip);
-    auto const netDuration = adjusted.tripDuration() - adjusted.tripTimeWarp();
+    auto const finalised = merge(0, merge(0, prev, release), curr);
+    auto const netDur = finalised.tripDuration() - finalised.tripTimeWarp();
+    auto const endLate
+        = finalised.twLate() > std::numeric_limits<Duration>::max() - netDur
+              ? std::numeric_limits<Duration>::max()
+              : finalised.twLate() + netDur;
 
-    // TODO check overflow
     return {0,
             0,
-            adjusted.twEarly() + netDuration,
+            finalised.twEarly() + netDur,
             // The next segment after this is free to start at any time after
             // this segment can end, so the latest start is not constrained.
             // Starting after our latest end will incur wait duration.
             std::numeric_limits<Duration>::max(),
             0,
-            adjusted.duration(),
-            adjusted.timeWarp(),
-            adjusted.twEarly() + netDuration,
-            adjusted.twLate() + netDuration};
+            cumDuration_ + finalised.duration(),
+            cumTimeWarp_ + finalised.timeWarp(),
+            finalised.twEarly() + netDur,
+            endLate};
 }
 
 DurationSegment DurationSegment::finaliseFront() const
@@ -57,6 +64,11 @@ Duration DurationSegment::twLate() const { return twLate_; }
 Duration DurationSegment::endEarly() const { return endEarly_; }
 
 Duration DurationSegment::endLate() const { return endLate_; }
+
+Duration DurationSegment::slack() const
+{
+    return std::min(twLate() - twEarly(), endLate() - endEarly());
+}
 
 Duration DurationSegment::releaseTime() const { return releaseTime_; }
 
