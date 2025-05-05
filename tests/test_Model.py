@@ -1059,4 +1059,7 @@ def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
     m = Model.from_data(mtvrptw_release_times)
     res = m.solve(stop=MaxIterations(50))
     print(res)
+
+    # OPT is 1068.7 - see table EC.9, p. ec25 of the online supplement
+    # (here: https://doi.org/10.1287/trsc.2022.1161).
     assert False
