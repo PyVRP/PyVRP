@@ -23,7 +23,7 @@ DurationSegment DurationSegment::finaliseBack() const
     auto const finalised = merge(0, merge(0, prev, release), curr);
     auto const netDur = finalised.tripDuration() - finalised.tripTimeWarp();
     auto const endLate
-        = finalised.twLate() > std::numeric_limits<Duration>::max() - netDur
+        = netDur > std::numeric_limits<Duration>::max() - finalised.twLate()
               ? std::numeric_limits<Duration>::max()
               : finalised.twLate() + netDur;
 
