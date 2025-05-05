@@ -26,13 +26,13 @@ namespace pyvrp
  * Creates a duration segment.
  *
  * Duration segments can be efficiently concatenated, and track statistics
- * about route duration and time warp resulting from visiting clients in the
- * concatenated order.
+ * about route and trip duration and time warp resulting from visiting clients
+ * in the concatenated order.
  *
  * Parameters
  * ----------
  * duration
- *     Total duration, including waiting time, of the curren trip.
+ *     Total duration, including waiting time, of the current trip.
  * time_warp
  *     Total time warp on the current trip.
  * tw_early
@@ -40,7 +40,7 @@ namespace pyvrp
  * tw_late
  *     Latest visit moment of the first client of the current trip.
  * release_time
- *     Earliest moment to start this trip segment.
+ *     Earliest moment to start this trip segment at the depot.
  * cum_duration
  *     Cumulative duration of other trips in segment.
  * cum_time_warp
@@ -219,8 +219,8 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
             std::max(first.releaseTime_, second.releaseTime_),
             first.cumDuration_ + second.cumDuration_,
             first.cumTimeWarp_ + second.cumTimeWarp_,
-            first.endEarly_,  // evaluated left-to-right
-            first.endLate_};  // evaluated left-to-right
+            first.endEarly_,  // field is evaluated left-to-right
+            first.endLate_};  // field is evaluated left-to-right
 #endif
 }
 

@@ -6,6 +6,8 @@ from numpy.testing import assert_, assert_equal
 
 from pyvrp._pyvrp import DurationSegment
 
+_INT_MAX = np.iinfo(np.int64).max
+
 
 @pytest.mark.parametrize("existing_time_warp", [2, 5, 10])
 def test_time_warp_when_there_is_existing_time_warp(existing_time_warp):
@@ -185,15 +187,113 @@ def test_str():
     assert_("end_late=3" in str(segment))
 
 
-def test_finalise_back():
+def test_finalise_back_with_time_warp_from_release_time():
     """
-    TODO
+    Tests finalise_back() when there's time warp due to the release time.
     """
-    pass  # TODO test some complicated examples
+    # Release time is 75, which is after tw_late of 70. So we have 5 time warp
+    # from this.
+    segment = DurationSegment(5, 0, 50, 70, 75)
+    assert_equal(segment.tw_early(), 70)
+    assert_equal(segment.tw_late(), 70)
+    assert_equal(segment.release_time(), 75)
+    assert_equal(segment.duration(), 5)
+    assert_equal(segment.time_warp(), 5)  # due to release time
+
+    # Tests that finalising moves all duration and time warp to the cumulative
+    # fields.
+    finalised = segment.finalise_back()
+    assert_equal(finalised.duration(), 5)
+    assert_equal(finalised.trip_duration(), 0)
+    assert_equal(finalised.time_warp(), 5)
+    assert_equal(finalised.trip_time_warp(), 0)
+
+    # Finalised segments cannot start before the original segments, but are
+    # not constrained in their latest start (since we could wait indefinitely).
+    # We also track when the finalised segment would end at the earliest and
+    # latest.
+    assert_equal(finalised.tw_early(), 70)
+    assert_equal(finalised.tw_late(), _INT_MAX)
+    assert_equal(finalised.end_early(), 70)
+    assert_equal(finalised.end_late(), 70)
+    assert_equal(finalised.release_time(), 0)
+
+
+@pytest.mark.parametrize(
+    ("end_early", "end_late", "exp_duration", "exp_time_warp"),
+    [
+        (95, 95, 5, 0),  # ends at 95, we start at 100. 5 wait duration.
+        (95, 100, 0, 0),  # can end at 100, so we can immediately start.
+        (120, 120, 0, 10),  # ends at 120, while we must start by 110. 10 tw.
+        (110, 120, 0, 0),  # can end at 110, so we can immediately start.
+        (95, 120, 0, 0),  # we can start immediately between 100 and 110.
+    ],
+)
+def test_duration_and_time_warp_from_end_times(
+    end_early: int,
+    end_late: int,
+    exp_duration: int,
+    exp_time_warp: int,
+):
+    """
+    Tests wait duration and/or time warp due to the end_early and end_late
+    attributes.
+    """
+    segment = DurationSegment(
+        0, 0, 100, 110, 0, end_early=end_early, end_late=end_late
+    )
+
+    assert_equal(segment.duration(), exp_duration)
+    assert_equal(segment.time_warp(), exp_time_warp)
+
+
+@pytest.mark.parametrize(
+    ("release_time", "end_early", "exp_time_warp"),
+    [
+        (100, 100, 0),  # we can feasibly start at 100, so no time warp
+        (110, 100, 10),  # we need to wait until 110, but tw_late=100
+        (100, 110, 10),  # same as previous
+        (110, 110, 10),  # and now both: we only incur time warp once
+    ],
+)
+def test_time_warp_end_early_release_time(
+    release_time: int,
+    end_early: int,
+    exp_time_warp: int,
+):
+    """
+    Tests that time warp due to a late release time of the current trip, or
+    late end time of the previous trip, results in the expected amount of time
+    warp: we need to warp back from the latest of these two times.
+    """
+    segment = DurationSegment(0, 0, 0, 100, release_time, end_early=end_early)
+    assert_equal(segment.tw_late(), 100)
+    assert_equal(segment.time_warp(), exp_time_warp)
 
 
 def test_finalise_front():
     """
-    TODO
+    Tests that finalise_front() correctly finalises the segment.
     """
-    pass  # TODO test some complicated examples
+    segment = DurationSegment(5, 5, 40, 50, 50)
+    assert_equal(segment.duration(), 5)
+    assert_equal(segment.time_warp(), 5)
+    assert_equal(segment.trip_duration(), 5)
+    assert_equal(segment.trip_time_warp(), 5)
+
+    assert_equal(segment.tw_early(), 50)
+    assert_equal(segment.tw_late(), 50)
+    assert_equal(segment.release_time(), 50)
+
+    # Test that finalising moves all duration and time warp to the cumulative
+    # fields.
+    finalised = segment.finalise_front()
+    assert_equal(finalised.duration(), 5)
+    assert_equal(finalised.time_warp(), 5)
+    assert_equal(finalised.trip_duration(), 0)
+    assert_equal(finalised.trip_time_warp(), 0)
+
+    # Same tw_early and tw_late as segment, but no release time.
+    assert_equal(finalised.tw_early(), 50)
+    assert_equal(finalised.tw_late(), 50)
+    assert_equal(finalised.release_time(), 0)

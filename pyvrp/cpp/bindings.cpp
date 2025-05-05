@@ -1117,6 +1117,12 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("duration",
              &DurationSegment::duration,
              DOC(pyvrp, DurationSegment, duration))
+        .def("finalise_back",
+             &DurationSegment::finaliseBack,
+             DOC(pyvrp, DurationSegment, finaliseBack))
+        .def("finalise_front",
+             &DurationSegment::finaliseFront,
+             DOC(pyvrp, DurationSegment, finaliseFront))
         .def("tw_early",
              &DurationSegment::twEarly,
              DOC(pyvrp, DurationSegment, twEarly))
@@ -1129,17 +1135,20 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("end_late",
              &DurationSegment::endLate,
              DOC(pyvrp, DurationSegment, endLate))
+        .def("release_time",
+             &DurationSegment::releaseTime,
+             DOC(pyvrp, DurationSegment, releaseTime))
         .def("time_warp",
              &DurationSegment::timeWarp,
              py::arg("max_duration")
              = std::numeric_limits<pyvrp::Duration>::max(),
              DOC(pyvrp, DurationSegment, timeWarp))
-        .def("finalise_back",
-             &DurationSegment::finaliseBack,
-             DOC(pyvrp, DurationSegment, finaliseBack))
-        .def("finalise_front",
-             &DurationSegment::finaliseFront,
-             DOC(pyvrp, DurationSegment, finaliseFront))
+        .def("trip_duration",
+             &DurationSegment::tripDuration,
+             DOC(pyvrp, DurationSegment, tripDuration))
+        .def("trip_time_warp",
+             &DurationSegment::tripTimeWarp,
+             DOC(pyvrp, DurationSegment, tripTimeWarp))
         .def_static("merge",
                     &DurationSegment::merge,
                     py::arg("edge_duration"),

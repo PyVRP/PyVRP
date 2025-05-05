@@ -19,6 +19,7 @@ DurationSegment DurationSegment::finaliseBack() const
     auto const adjusted = merge(0, prevTrip, currTrip);
     auto const netDuration = adjusted.tripDuration() - adjusted.tripTimeWarp();
 
+    // TODO check overflow
     return {0,
             0,
             adjusted.twEarly() + netDuration,
@@ -41,9 +42,15 @@ DurationSegment DurationSegment::finaliseFront() const
     return {0, 0, twEarly(), twLate(), 0, duration(), timeWarp()};
 }
 
-Duration DurationSegment::tripDuration() const { return duration_; }
+Duration DurationSegment::tripDuration() const
+{
+    return duration() - cumDuration_;
+}
 
-Duration DurationSegment::tripTimeWarp() const { return timeWarp_; }
+Duration DurationSegment::tripTimeWarp() const
+{
+    return timeWarp() - cumTimeWarp_;
+}
 
 Duration DurationSegment::twLate() const { return twLate_; }
 
