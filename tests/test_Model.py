@@ -1054,12 +1054,21 @@ def test_model_solves_multi_trip_instance():
 
 def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
     """
-    TODO
+    Smoke test that tests if the model can solve a multi-trip VRP instance
+    with release times. The instance is due to [1]_.
+
+    References
+    ----------
+    .. [1] Yu Yang (2023). An Exact Price-Cut-and-Enumerate Method for the
+           Capacitated Multitrip Vehicle Routing Problem with Time Windows.
+           *Transportation Science* 57(1): 230-251.
+           https://doi.org/10.1287/trsc.2022.1161
     """
     m = Model.from_data(mtvrptw_release_times)
-    res = m.solve(stop=MaxIterations(50))
-    print(res)
+    res = m.solve(stop=MaxIterations(5))
+    assert_(res.is_feasible())
 
-    # OPT is 1068.7 - see table EC.9, p. ec25 of the online supplement
-    # (here: https://doi.org/10.1287/trsc.2022.1161).
-    assert False
+    # The optimal solution to this instance has cost 10687; see table EC.9 on
+    # page ec25 of the online supplement. The following is a smoke test to
+    # verify that we are not too far (>20%) away after a few iterations.
+    assert_(res.cost() < 1.2 * 10687)
