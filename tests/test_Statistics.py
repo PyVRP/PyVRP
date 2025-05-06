@@ -28,7 +28,7 @@ def test_csv_serialises_correctly(ok_small, tmp_path):
     csv_path = tmp_path / "test.csv"
     assert_(not csv_path.exists())
 
-    # Write the collected statistcs to the CSV file location, and check that
+    # Write the collected statistics to the CSV file location, and check that
     # the file now does exist.
     collected_stats.to_csv(csv_path)
     assert_(csv_path.exists())
