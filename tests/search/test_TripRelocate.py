@@ -222,9 +222,6 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
     """
     TODO
     """
-    route1 = Route(mtvrptw_release_times, 0, 0)
-    route2 = Route(mtvrptw_release_times, 1, 0)
-
     # This route visits 34, reloads, and then visits 23, 38, and 48. The
     # distance is 172. The route is as follows:
     # - Leave the depot at 1458.
@@ -234,6 +231,7 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
     # - Visit 38 at 1223, adding 540 time warp. Leave at 1313.
     # - Visit 48 at 2856, leave at 2946.
     # - Return to depot at 2957.
+    route1 = Route(mtvrptw_release_times, 0, 0)
     for loc in [34, 0, 23, 38, 48]:
         route1.append(Node(loc=loc))
     route1.update()
@@ -241,36 +239,40 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
     assert_equal(route1.time_warp(), 540)
     assert_equal(route1.duration(), 2957 + 540 - 1458)
 
-    # This route visits 16 and 6. The distance is 108.
-    # - Leave the depot at 1894.
-    # - Visit 16 at 1934, leave at 2024.
-    # - Visit 6 at 657, adding 1410 time warp. Leave at 747.
-    # - Return to depot at 772.
-    for loc in [16, 6]:
-        route2.append(Node(loc=loc))
+    # This route visits 6. The distance is 50.
+    # - Leave the depot at 472.
+    # - Visit 6 at 497, leave at 587.
+    # - Return to depot at 612.
+    route2 = Route(mtvrptw_release_times, 1, 0)
+    route2.append(Node(loc=6))
     route2.update()
 
-    assert_equal(route2.time_warp(), 1410)
-    assert_equal(route2.duration(), 772 + 1410 - 1894)
-
-    cost_eval = CostEvaluator([0], 1, 0)
-    old_cost1 = route1.distance() + cost_eval.tw_penalty(route1.time_warp())
-    old_cost2 = route2.distance() + cost_eval.tw_penalty(route2.time_warp())
+    assert_equal(route2.time_warp(), 0)
+    assert_equal(route2.duration(), 612 - 472)
 
     assert_equal(str(route1), "34 | 23 38 48")
-    assert_equal(str(route2), "16 6")
+    assert_equal(str(route2), "6")
 
     op = TripRelocate(mtvrptw_release_times)
+    cost_eval = CostEvaluator([0], 1, 0)
     delta_cost = op.evaluate(route1[3], route2[1], cost_eval)
     assert_(delta_cost < 0)
 
     op.apply(route1[3], route2[1])
     assert_equal(str(route1), "34 | 38 48")
-    assert_equal(str(route2), "16 23 | 6")
+    assert_equal(str(route2), "6 | 23")
 
+    # This route now no longer visits 23. The new distance is 152. The new time
+    # warp is 425.
     route1.update()
+
+    # This route now visits 6, reloads, and then visits 23. The new distance is
+    # 112. There is no time warp.
     route2.update()
 
-    new_cost1 = route1.distance() + cost_eval.tw_penalty(route1.time_warp())
-    new_cost2 = route2.distance() + cost_eval.tw_penalty(route2.time_warp())
-    assert_equal(new_cost1 + new_cost2, old_cost1 + old_cost2 + delta_cost)
+    assert_equal(route1.time_warp(), 425)
+    assert_(not route2.has_time_warp())
+
+    delta_dist = 50 + 172 - 152 - 112  # = old minus new
+    delta_time_warp = 540 - 425  # = old minus new
+    assert_equal(delta_cost, delta_dist + delta_time_warp)
