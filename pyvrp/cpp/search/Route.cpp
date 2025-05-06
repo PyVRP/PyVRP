@@ -370,8 +370,14 @@ std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
         if (route[idx]->isReloadDepot())
             out << '|';
         else
-            out << route[idx]->client();
+            out << *route[idx];
     }
 
     return out;
+}
+
+std::ostream &operator<<(std::ostream &out,
+                         pyvrp::search::Route::Node const &node)
+{
+    return out << node.client();
 }

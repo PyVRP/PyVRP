@@ -979,4 +979,7 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 // Outputs a route into a given ostream in human-readable format
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route);
 
+std::ostream &operator<<(std::ostream &out,  // for debugging
+                         pyvrp::search::Route::Node const &node);
+
 #endif  // PYVRP_SEARCH_ROUTE_H
