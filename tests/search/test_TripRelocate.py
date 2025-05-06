@@ -218,7 +218,7 @@ def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
     assert_equal(route.num_trips(), route.max_trips())
 
 
-def test_trip_relocate_bug(mtvrptw_release_times):
+def test_trip_relocate_bug_release_times(mtvrptw_release_times):
     """
     TODO
     """
