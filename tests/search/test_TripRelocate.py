@@ -220,35 +220,39 @@ def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
 
 def test_trip_relocate_bug_release_times(mtvrptw_release_times):
     """
-    TODO
+    This test exercises a bug that previously resulted in an incorrect time
+    warp calculation caused by DurationSegment.finalise_front() not working
+    correctly - it did not properly account for release times.
     """
-    # This route visits 34, reloads, and then visits 23, 38, and 48. The
-    # distance is 172. The route is as follows:
-    # - Leave the depot at 1458.
-    # - Visit 34 at 1490, leave at 1580.
-    # - Return to reload depot at 1612.
-    # - Visit 23 at 1643, leave at 1733.
-    # - Visit 38 at 1223, adding 540 time warp. Leave at 1313.
-    # - Visit 48 at 2856, leave at 2946.
-    # - Return to depot at 2957.
+    # This route visits 34, reloads, and then visits 23, 38, and 48, as
+    # follows:
+    # - Leave the depot at 14579.
+    # - Visit 34 at 14902, leave at 15802.
+    # - Return to reload depot at 16125.
+    # - Visit 23 at 16430, leave at 17330.
+    # - Visit 38 at 12230, adding 5395 time warp. Leave at 13130.
+    # - Visit 48 at 28560, leave at 29460.
+    # - Return to depot at 29567.
     route1 = Route(mtvrptw_release_times, 0, 0)
     for loc in [34, 0, 23, 38, 48]:
         route1.append(Node(loc=loc))
     route1.update()
 
-    assert_equal(route1.time_warp(), 540)
-    assert_equal(route1.duration(), 2957 + 540 - 1458)
+    assert_equal(route1.distance(), 1713)
+    assert_equal(route1.time_warp(), 5395)
+    assert_equal(route1.duration(), 29567 + 5395 - 14579)
 
-    # This route visits 6. The distance is 50.
-    # - Leave the depot at 472.
-    # - Visit 6 at 497, leave at 587.
-    # - Return to depot at 612.
+    # This route visits 6, as follows:
+    # - Leave the depot at 4718.
+    # - Visit 6 at 4970, leave at 5870.
+    # - Return to depot at 6122.
     route2 = Route(mtvrptw_release_times, 1, 0)
     route2.append(Node(loc=6))
     route2.update()
 
+    assert_equal(route2.distance(), 504)
     assert_equal(route2.time_warp(), 0)
-    assert_equal(route2.duration(), 612 - 472)
+    assert_equal(route2.duration(), 6122 - 4718)
 
     assert_equal(str(route1), "34 | 23 38 48")
     assert_equal(str(route2), "6")
@@ -262,17 +266,14 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
     assert_equal(str(route1), "34 | 38 48")
     assert_equal(str(route2), "6 | 23")
 
-    # This route now no longer visits 23. The new distance is 152. The new time
-    # warp is 425.
     route1.update()
+    assert_equal(route1.distance(), 1525)
+    assert_equal(route1.time_warp(), 2865)
 
-    # This route now visits 6, reloads, and then visits 23. The new distance is
-    # 112. There is no time warp.
     route2.update()
-
-    assert_equal(route1.time_warp(), 425)
+    assert_equal(route2.distance(), 1114)
     assert_(not route2.has_time_warp())
 
-    delta_dist = 50 + 172 - 152 - 112  # = old minus new
-    delta_time_warp = 540 - 425  # = old minus new
+    delta_dist = 1525 + 1114 - 504 - 1713  # = new minus old
+    delta_time_warp = 2865 - 5395  # = new minus old
     assert_equal(delta_cost, delta_dist + delta_time_warp)

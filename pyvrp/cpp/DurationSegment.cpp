@@ -12,7 +12,7 @@ DurationSegment DurationSegment::finaliseBack() const
     // release times of our current trip, if they are binding. Finally, we merge
     // with the current trip, using just the earliest and latest start moments
     // implied by our time windows. This results in a finalised segment.
-    DurationSegment const prev = {0, 0, endEarly_, endLate_, 0};
+    DurationSegment const prev = {0, 0, prevEndEarly_, prevEndLate_, 0};
     DurationSegment const curr = {duration_, timeWarp_, twEarly_, twLate_, 0};
     DurationSegment const release = {0,
                                      0,
@@ -43,10 +43,23 @@ DurationSegment DurationSegment::finaliseBack() const
 
 DurationSegment DurationSegment::finaliseFront() const
 {
-    // We finalise at the start of this segment. This is pretty easy: we just
-    // need to make sure our segment is visited between twEarly and twLate,
-    // like before.
-    return {0, 0, twEarly(), twLate(), 0, duration(), timeWarp()};
+    // We finalise at the start of this segment. This is pretty easy, via a
+    // merge on an artificial node with our release times, if they are binding.
+    DurationSegment const curr = {duration_, timeWarp_, twEarly_, twLate_, 0};
+    DurationSegment const release = {0,
+                                     0,
+                                     std::max(twEarly_, releaseTime_),
+                                     std::max(twLate_, releaseTime_),
+                                     0};
+
+    auto const finalised = merge(0, release, curr);
+    return {0,
+            0,
+            finalised.twEarly(),
+            finalised.twLate(),
+            0,
+            cumDuration_ + finalised.duration(),
+            cumTimeWarp_ + finalised.timeWarp()};
 }
 
 Duration DurationSegment::tripDuration() const
@@ -61,13 +74,13 @@ Duration DurationSegment::tripTimeWarp() const
 
 Duration DurationSegment::twLate() const { return twLate_; }
 
-Duration DurationSegment::endEarly() const { return endEarly_; }
+Duration DurationSegment::prevEndEarly() const { return prevEndEarly_; }
 
-Duration DurationSegment::endLate() const { return endLate_; }
+Duration DurationSegment::prevEndLate() const { return prevEndLate_; }
 
 Duration DurationSegment::slack() const
 {
-    return std::min(twLate() - twEarly(), endLate() - endEarly());
+    return std::min(twLate() - twEarly(), prevEndLate() - prevEndEarly());
 }
 
 Duration DurationSegment::releaseTime() const { return releaseTime_; }
@@ -99,7 +112,7 @@ std::ostream &operator<<(std::ostream &out, DurationSegment const &segment)
                << ", tw_early=" << segment.twEarly()
                << ", tw_late=" << segment.twLate()
                << ", release_time=" << segment.releaseTime()
-               << ", end_early=" << segment.endEarly()
-               << ", end_late=" << segment.endLate();
+               << ", prev_end_early=" << segment.prevEndEarly()
+               << ", prev_end_late=" << segment.prevEndLate();
     // clang-format on
 }

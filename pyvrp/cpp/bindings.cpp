@@ -1112,8 +1112,9 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("release_time"),
              py::arg("cum_duration") = 0,
              py::arg("cum_time_warp") = 0,
-             py::arg("end_early") = 0,
-             py::arg("end_late") = std::numeric_limits<pyvrp::Duration>::max())
+             py::arg("prev_end_early") = 0,
+             py::arg("prev_end_late")
+             = std::numeric_limits<pyvrp::Duration>::max())
         .def("duration",
              &DurationSegment::duration,
              DOC(pyvrp, DurationSegment, duration))
@@ -1129,12 +1130,12 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("tw_late",
              &DurationSegment::twLate,
              DOC(pyvrp, DurationSegment, twLate))
-        .def("end_early",
-             &DurationSegment::endEarly,
-             DOC(pyvrp, DurationSegment, endEarly))
-        .def("end_late",
-             &DurationSegment::endLate,
-             DOC(pyvrp, DurationSegment, endLate))
+        .def("prev_end_early",
+             &DurationSegment::prevEndEarly,
+             DOC(pyvrp, DurationSegment, prevEndEarly))
+        .def("prev_end_late",
+             &DurationSegment::prevEndLate,
+             DOC(pyvrp, DurationSegment, prevEndLate))
         .def("release_time",
              &DurationSegment::releaseTime,
              DOC(pyvrp, DurationSegment, releaseTime))

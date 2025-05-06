@@ -174,17 +174,17 @@ def test_str():
         tw_early=5,
         tw_late=7,
         release_time=6,
-        end_early=0,
-        end_late=3,
+        prev_end_early=0,
+        prev_end_late=3,
     )
 
-    assert_("duration=5" in str(segment))  # includes end_late to release_time
+    assert_("duration=5" in str(segment))  # incl prev_end_late to release_time
     assert_("time_warp=3" in str(segment))
     assert_("tw_early=6" in str(segment))  # is max(tw_early, release_time)
     assert_("tw_late=7" in str(segment))
     assert_("release_time=6" in str(segment))
-    assert_("end_early=0" in str(segment))
-    assert_("end_late=3" in str(segment))
+    assert_("prev_end_early=0" in str(segment))
+    assert_("prev_end_late=3" in str(segment))
 
 
 def test_finalise_back_with_time_warp_from_release_time():
@@ -214,33 +214,39 @@ def test_finalise_back_with_time_warp_from_release_time():
     # latest.
     assert_equal(finalised.tw_early(), 75)
     assert_equal(finalised.tw_late(), _INT_MAX)
-    assert_equal(finalised.end_early(), 75)
-    assert_equal(finalised.end_late(), 75)
+    assert_equal(finalised.prev_end_early(), 75)
+    assert_equal(finalised.prev_end_late(), 75)
     assert_equal(finalised.release_time(), 0)
 
 
 @pytest.mark.parametrize(
-    ("end_early", "end_late", "exp_duration", "exp_time_warp"),
+    ("prev_end_early", "prev_end_late", "exp_duration", "exp_time_warp"),
     [
-        (95, 95, 5, 0),  # ends at 95, we start at 100. 5 wait duration.
-        (95, 100, 0, 0),  # can end at 100, so we can immediately start.
-        (120, 120, 0, 10),  # ends at 120, while we must start by 110. 10 tw.
-        (110, 120, 0, 0),  # can end at 110, so we can immediately start.
+        (95, 95, 5, 0),  # prev ends at 95, we start at 100. 5 wait duration.
+        (95, 100, 0, 0),  # prev can end at 100, so we can immediately start.
+        (120, 120, 0, 10),  # prev ends at 120; we must start by 110. 10 tw.
+        (110, 120, 0, 0),  # prev can end at 110, so we can immediately start.
         (95, 120, 0, 0),  # we can start immediately between 100 and 110.
     ],
 )
-def test_duration_and_time_warp_from_end_times(
-    end_early: int,
-    end_late: int,
+def test_duration_and_time_warp_from_prev_end_times(
+    prev_end_early: int,
+    prev_end_late: int,
     exp_duration: int,
     exp_time_warp: int,
 ):
     """
-    Tests wait duration and/or time warp due to the end_early and end_late
-    attributes.
+    Tests wait duration and/or time warp due to the prev_end_early and
+    prev_end_late attributes.
     """
     segment = DurationSegment(
-        0, 0, 100, 110, 0, end_early=end_early, end_late=end_late
+        0,
+        0,
+        100,
+        110,
+        0,
+        prev_end_early=prev_end_early,
+        prev_end_late=prev_end_late,
     )
 
     assert_equal(segment.duration(), exp_duration)
@@ -248,17 +254,17 @@ def test_duration_and_time_warp_from_end_times(
 
 
 @pytest.mark.parametrize(
-    ("release_time", "end_early", "exp_time_warp"),
+    ("release_time", "prev_end_early", "exp_time_warp"),
     [
-        (100, 100, 0),  # we can feasibly start at 100, so no time warp
-        (110, 100, 10),  # we need to wait until 110, but tw_late=100
-        (100, 110, 10),  # same as previous
-        (110, 110, 10),  # and now both: we only incur time warp once
+        (100, 100, 0),  # we can feasibly start at 100, so no time warp.
+        (110, 100, 10),  # we need to wait until 110, but tw_late=100.
+        (100, 110, 10),  # same as previous.
+        (110, 110, 10),  # and now both: we only incur time warp once.
     ],
 )
 def test_time_warp_end_early_release_time(
     release_time: int,
-    end_early: int,
+    prev_end_early: int,
     exp_time_warp: int,
 ):
     """
@@ -266,7 +272,10 @@ def test_time_warp_end_early_release_time(
     late end time of the previous trip, results in the expected amount of time
     warp: we need to warp back from the latest of these two times.
     """
-    segment = DurationSegment(0, 0, 0, 100, release_time, end_early=end_early)
+    segment = DurationSegment(
+        0, 0, 0, 100, release_time, prev_end_early=prev_end_early
+    )
+
     assert_equal(segment.tw_late(), 100)
     assert_equal(segment.time_warp(), exp_time_warp)
 
@@ -313,8 +322,8 @@ def test_repeated_merge_and_finalise_back():
     finalised1 = segment1.finalise_back()
     assert_equal(finalised1.tw_early(), 95)
     assert_equal(finalised1.tw_late(), _INT_MAX)
-    assert_equal(finalised1.end_early(), 95)
-    assert_equal(finalised1.end_late(), 95)
+    assert_equal(finalised1.prev_end_early(), 95)
+    assert_equal(finalised1.prev_end_late(), 95)
 
     # Next we execute the second trip, so we merge segment2.
     merged = DurationSegment.merge(0, finalised1, segment2)
@@ -334,8 +343,8 @@ def test_repeated_merge_and_finalise_back():
     assert_equal(finalised2.duration(), 100)
     assert_equal(finalised2.tw_early(), 150)
     assert_equal(finalised2.tw_late(), _INT_MAX)
-    assert_equal(finalised2.end_early(), 150)
-    assert_equal(finalised2.end_late(), 150)
+    assert_equal(finalised2.prev_end_early(), 150)
+    assert_equal(finalised2.prev_end_late(), 150)
 
 
 def test_finalise_nonzero_route_slack():
@@ -347,12 +356,12 @@ def test_finalise_nonzero_route_slack():
     segment2 = DurationSegment(0, 0, 50, 75, 0)
 
     finalised1 = segment1.finalise_back()
-    assert_equal(finalised1.end_early(), 0)
-    assert_equal(finalised1.end_late(), 100)
+    assert_equal(finalised1.prev_end_early(), 0)
+    assert_equal(finalised1.prev_end_late(), 100)
     assert_equal(finalised1.slack(), 100)
 
     merged = DurationSegment.merge(0, finalised1, segment2)
     finalised2 = merged.finalise_back()
-    assert_equal(finalised2.end_early(), 50)
-    assert_equal(finalised2.end_late(), 75)
+    assert_equal(finalised2.prev_end_early(), 50)
+    assert_equal(finalised2.prev_end_late(), 75)
     assert_equal(finalised2.slack(), 25)

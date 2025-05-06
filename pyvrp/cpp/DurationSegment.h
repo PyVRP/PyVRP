@@ -19,8 +19,8 @@ namespace pyvrp
  *     release_time: int,
  *     cum_duration: int = 0,
  *     cum_time_warp: int = 0,
- *     end_early: int = 0,
- *     end_late: int = np.iinfo(np.int64).max,
+ *     prev_end_early: int = 0,
+ *     prev_end_late: int = np.iinfo(np.int64).max,
  * )
  *
  * Creates a duration segment.
@@ -45,9 +45,9 @@ namespace pyvrp
  *     Cumulative duration of other trips in segment.
  * cum_time_warp
  *     Cumulative time warp of other trips in segment.
- * end_early
+ * prev_end_early
  *     Earliest end time of the previous trip, if any. Default unconstrained.
- * end_late
+ * prev_end_late
  *     Latest end time of the previous trip, if any. Default unconstrained.
  */
 class DurationSegment
@@ -57,10 +57,11 @@ class DurationSegment
     Duration twEarly_ = 0;                                    // of current trip
     Duration twLate_ = std::numeric_limits<Duration>::max();  // of current trip
     Duration releaseTime_ = 0;                                // of current trip
-    Duration cumDuration_ = 0;  // cumulative, excl. current trip
-    Duration cumTimeWarp_ = 0;  // cumulative, excl. current trip
-    Duration endEarly_ = 0;     // of prev trip
-    Duration endLate_ = std::numeric_limits<Duration>::max();  // of prev trip
+    Duration cumDuration_ = 0;   // cumulative, excl. current trip
+    Duration cumTimeWarp_ = 0;   // cumulative, excl. current trip
+    Duration prevEndEarly_ = 0;  // of prev trip
+    Duration prevEndLate_
+        = std::numeric_limits<Duration>::max();  // of prev trip
 
 public:
     [[nodiscard]] static inline DurationSegment
@@ -133,12 +134,12 @@ public:
     /**
      * Earliest end time of the previous trip.
      */
-    [[nodiscard]] Duration endEarly() const;
+    [[nodiscard]] Duration prevEndEarly() const;
 
     /**
      * Latest end time of the previous trip.
      */
-    [[nodiscard]] Duration endLate() const;
+    [[nodiscard]] Duration prevEndLate() const;
 
     /**
      * Slack in the route schedule. This is the amount of time by which the
@@ -176,8 +177,8 @@ public:
                            Duration releaseTime,
                            Duration cumDuration = 0,
                            Duration cumTimeWarp = 0,
-                           Duration endEarly = 0,
-                           Duration endLate
+                           Duration prevEndEarly = 0,
+                           Duration prevEndLate
                            = std::numeric_limits<Duration>::max());
 
     // Move or copy construct from the other duration segment.
@@ -226,15 +227,15 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
             std::max(first.releaseTime_, second.releaseTime_),
             first.cumDuration_ + second.cumDuration_,
             first.cumTimeWarp_ + second.cumTimeWarp_,
-            first.endEarly_,  // field is evaluated left-to-right
-            first.endLate_};  // field is evaluated left-to-right
+            first.prevEndEarly_,  // field is evaluated left-to-right
+            first.prevEndLate_};  // field is evaluated left-to-right
 #endif
 }
 
 Duration DurationSegment::duration() const
 {
     auto const duration = cumDuration_ + duration_;
-    return duration + std::max<Duration>(twEarly() - endLate_, 0);
+    return duration + std::max<Duration>(twEarly() - prevEndLate_, 0);
 }
 
 Duration DurationSegment::timeWarp(Duration maxDuration) const
@@ -243,7 +244,8 @@ Duration DurationSegment::timeWarp(Duration maxDuration) const
     auto const netDuration = duration() - timeWarp;
 
     return timeWarp
-           + std::max<Duration>(std::max(releaseTime_, endEarly_) - twLate_, 0)
+           + std::max<Duration>(std::max(releaseTime_, prevEndEarly_) - twLate_,
+                                0)
            // Max duration constraint applies only to net route duration,
            // subtracting existing time warp. Use ternary to avoid underflow.
            + (netDuration > maxDuration ? netDuration - maxDuration : 0);
@@ -268,8 +270,8 @@ DurationSegment::DurationSegment(Duration duration,
                                  Duration releaseTime,
                                  Duration cumDuration,
                                  Duration cumTimeWarp,
-                                 Duration endEarly,
-                                 Duration endLate)
+                                 Duration prevEndEarly,
+                                 Duration prevEndLate)
     : duration_(duration),
       timeWarp_(timeWarp),
       twEarly_(twEarly),
@@ -277,8 +279,8 @@ DurationSegment::DurationSegment(Duration duration,
       releaseTime_(releaseTime),
       cumDuration_(cumDuration),
       cumTimeWarp_(cumTimeWarp),
-      endEarly_(endEarly),
-      endLate_(endLate)
+      prevEndEarly_(prevEndEarly),
+      prevEndLate_(prevEndLate)
 {
 }
 }  // namespace pyvrp
