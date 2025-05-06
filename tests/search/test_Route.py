@@ -498,7 +498,7 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
         ((0, 1000), (0, 1000)),  # same as depot
         ((0, 500), (0, 500)),  # earlier tw_late, should lower tw_late
         ((250, 1000), (250, 1000)),  # later tw_early, should increase tw_early
-        ((300, 600), (300, 600)),  # both more restricitve
+        ((300, 600), (300, 600)),  # both more restrictive
     ],
 )
 def test_shift_duration_depot_time_window_interaction(
