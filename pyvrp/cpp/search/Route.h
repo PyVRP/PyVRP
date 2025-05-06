@@ -921,11 +921,13 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
             ds = DurationSegment::merge(edgeDur, ds, other.duration(profile));
             last = other.last();
 
-            if (other.last() < data.numDepots())  // other ends at a depot
-                ds = ds.finaliseBack();
-
             if constexpr (sizeof...(args) != 0)
+            {
+                if (other.last() < data.numDepots())  // other ends at a depot
+                    ds = ds.finaliseBack();
+
                 self(self, std::forward<decltype(args)>(args)...);
+            }
         };
 
         merge(merge, std::forward<decltype(args)>(args)...);
@@ -952,11 +954,13 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 
             segment = LoadSegment::merge(segment, other.load(dimension));
 
-            if (other.last() < data.numDepots())  // other ends at a depot
-                segment = segment.finalise(capacity[dimension]);
-
             if constexpr (sizeof...(args) != 0)
+            {
+                if (other.last() < data.numDepots())  // other ends at a depot
+                    segment = segment.finalise(capacity[dimension]);
+
                 self(self, std::forward<decltype(args)>(args)...);
+            }
         };
 
         merge(merge, std::forward<decltype(args)>(args)...);
