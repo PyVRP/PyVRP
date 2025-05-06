@@ -225,36 +225,48 @@ def test_trip_relocate_bug(mtvrptw_release_times):
     route1 = Route(mtvrptw_release_times, 0, 0)
     route2 = Route(mtvrptw_release_times, 1, 0)
 
-    for loc in [34, 41, 40, 22, 49, 28, 0, 23, 38, 24, 48, 39, 42, 51]:
+    for loc in [34, 0, 23, 38, 48]:
         route1.append(Node(loc=loc))
     route1.update()
 
-    for loc in [8, 16, 19, 43, 6, 32, 13, 57, 14, 66, 67, 20, 27, 69]:
+    for loc in [16, 6]:
         route2.append(Node(loc=loc))
     route2.update()
 
-    print(route1.time_warp(), route1.excess_load(), route1.distance())
-    print(route2.time_warp(), route2.excess_load(), route2.distance())
+    cost_eval = CostEvaluator([1.9176417377504462], 1, 1)
+    old_cost1 = (
+        route1.distance()
+        + cost_eval.tw_penalty(route1.time_warp())
+        + cost_eval.load_penalty(route1.excess_load()[0], 0, 0)
+    )
+    old_cost2 = (
+        route2.distance()
+        + cost_eval.tw_penalty(route2.time_warp())
+        + cost_eval.load_penalty(route2.excess_load()[0], 0, 0)
+    )
 
-    assert_equal(str(route1), "34 41 40 22 49 28 | 23 38 24 48 39 42 51")
-    assert_equal(str(route2), "8 16 19 43 6 32 13 57 14 66 67 20 27 69")
+    assert_equal(str(route1), "34 | 23 38 48")
+    assert_equal(str(route2), "16 6")
 
     op = TripRelocate(mtvrptw_release_times)
-    cost_eval = CostEvaluator([1.9176417377504462], 1, 1)
+    delta_cost = op.evaluate(route1[3], route2[1], cost_eval)
+    assert_(delta_cost < 0)
 
-    # TODO unsure if correct (probably not):
-    # stat              r1   r2
-    # tw before         6477 6030
-    # tw after          6627 6237
-    # load before         10  160
-    # load after           0  100
-    # distance before    448  423
-    # distance after     428  506
-    delta_cost = op.evaluate(route1[8], route2[2], cost_eval)
-    assert_equal(delta_cost, -13)
+    op.apply(route1[3], route2[1])
+    assert_equal(str(route1), "34 | 38 48")
+    assert_equal(str(route2), "16 23 | 6")
 
-    op.apply(route1[8], route2[2])
-    assert_equal(str(route1), "34 41 40 22 49 28 | 38 24 48 39 42 51")
-    assert_equal(str(route2), "8 16 23 | 19 43 6 32 13 57 14 66 67 20 27 69")
+    route1.update()
+    route2.update()
 
-    assert False
+    new_cost1 = (
+        route1.distance()
+        + cost_eval.tw_penalty(route1.time_warp())
+        + cost_eval.load_penalty(route1.excess_load()[0], 0, 0)
+    )
+    new_cost2 = (
+        route2.distance()
+        + cost_eval.tw_penalty(route2.time_warp())
+        + cost_eval.load_penalty(route2.excess_load()[0], 0, 0)
+    )
+    assert_equal(new_cost1 + new_cost2, old_cost1 + old_cost2 + delta_cost)
