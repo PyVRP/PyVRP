@@ -207,7 +207,7 @@ def test_time_warp_penalty_update_increase(ok_small):
 
 def test_time_warp_penalty_update_decrease(ok_small):
     """
-    Tests that the time warp violation penalty is decreased when sufficently
+    Tests that the time warp violation penalty is decreased when sufficiently
     many time window feasible solutions have been generated since the last
     update.
     """

@@ -543,7 +543,7 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
 
 def test_time_warp_return_to_depot():
     """
-    This tests wether the calculated total duration and time warp includes the
+    This tests whether the calculated total duration and time warp includes the
     travel back to the depot.
     """
     data = ProblemData(
