@@ -168,7 +168,7 @@ def test_plot_demands_raises_for_out_of_bounds_load_dimension():
 
 def test_plots_do_not_raise_when_there_are_no_feasible_sols(ok_small, recwarn):
     """
-    Tests the small bug identified in #724 is fixed. The issue occured that we
+    Tests the small bug identified in #724 is fixed. The issue occurred that we
     used to set an axis limit that could be NaN when no feasible solution has
     yet been found.
     """

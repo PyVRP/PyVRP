@@ -294,7 +294,7 @@ class Model:
 
            If ``profile`` is not provided, the edge is a base edge that will be
            set for all profiles in the model. Any profile-specific edge takes
-           precendence over a base edge with the same ``frm`` and ``to``
+           precedence over a base edge with the same ``frm`` and ``to``
            locations.
         """
         if profile is not None:

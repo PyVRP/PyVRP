@@ -554,7 +554,7 @@ def test_local_search_inserts_reload_depots(ok_small_multiple_trips):
 
 def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     """
-    Tests that the local search removes usless reload depots from the given
+    Tests that the local search removes useless reload depots from the given
     solution.
     """
     data = ok_small_multiple_trips
