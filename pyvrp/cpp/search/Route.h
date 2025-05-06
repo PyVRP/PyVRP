@@ -901,19 +901,22 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
         auto ds = segment.duration(profile);
         auto last = segment.last();
 
+        if (segment.last() < data.numDepots())  // ends at depot
+            ds = ds.finaliseBack();
+
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
             auto edgeDur = matrix(last, other.first());
 
             if (other.first() < data.numDepots())  // other starts at a depot
             {
-                // We can only finalise the current segment at the start depot,
-                // so we first need to travel there.
-                ProblemData::Depot const &start = data.location(other.first());
-                ds = DurationSegment::merge(edgeDur, ds, {start});
+                // We can only finalise the current segment at the depot, so we
+                // first need to travel there.
+                ProblemData::Depot const &depot = data.location(other.first());
+                ds = DurationSegment::merge(edgeDur, ds, {depot});
 
-                // We finalise at the start depot, so the travel duration to
-                // the next segment is now zero.
+                // We finalise by travelling to the depot, so the remaining
+                // travel duration is now zero.
                 ds = ds.finaliseBack();
                 edgeDur = 0;
             }
@@ -943,28 +946,30 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
     auto const &data = route()->data;
     auto const &capacity = route()->capacity();
 
-    auto const fn = [&](auto &&...args)
+    auto const fn = [&](auto segment, auto &&...args)
     {
-        LoadSegment segment;
+        auto ls = segment.load(dimension);
+        if (segment.last() < data.numDepots())
+            ls = ls.finalise(capacity[dimension]);
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
             if (other.first() < data.numDepots())  // other starts at a depot
-                segment = segment.finalise(capacity[dimension]);
+                ls = ls.finalise(capacity[dimension]);
 
-            segment = LoadSegment::merge(segment, other.load(dimension));
+            ls = LoadSegment::merge(ls, other.load(dimension));
 
             if constexpr (sizeof...(args) != 0)
             {
                 if (other.last() < data.numDepots())  // other ends at a depot
-                    segment = segment.finalise(capacity[dimension]);
+                    ls = ls.finalise(capacity[dimension]);
 
                 self(self, std::forward<decltype(args)>(args)...);
             }
         };
 
         merge(merge, std::forward<decltype(args)>(args)...);
-        return segment.excessLoad(capacity[dimension]);
+        return ls.excessLoad(capacity[dimension]);
     };
 
     return std::apply(fn, segments_);
