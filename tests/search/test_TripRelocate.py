@@ -233,17 +233,9 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
         route2.append(Node(loc=loc))
     route2.update()
 
-    cost_eval = CostEvaluator([1.9176417377504462], 1, 1)
-    old_cost1 = (
-        route1.distance()
-        + cost_eval.tw_penalty(route1.time_warp())
-        + cost_eval.load_penalty(route1.excess_load()[0], 0, 0)
-    )
-    old_cost2 = (
-        route2.distance()
-        + cost_eval.tw_penalty(route2.time_warp())
-        + cost_eval.load_penalty(route2.excess_load()[0], 0, 0)
-    )
+    cost_eval = CostEvaluator([0], 1, 0)
+    old_cost1 = route1.distance() + cost_eval.tw_penalty(route1.time_warp())
+    old_cost2 = route2.distance() + cost_eval.tw_penalty(route2.time_warp())
 
     assert_equal(str(route1), "34 | 23 38 48")
     assert_equal(str(route2), "16 6")
@@ -259,14 +251,6 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
     route1.update()
     route2.update()
 
-    new_cost1 = (
-        route1.distance()
-        + cost_eval.tw_penalty(route1.time_warp())
-        + cost_eval.load_penalty(route1.excess_load()[0], 0, 0)
-    )
-    new_cost2 = (
-        route2.distance()
-        + cost_eval.tw_penalty(route2.time_warp())
-        + cost_eval.load_penalty(route2.excess_load()[0], 0, 0)
-    )
+    new_cost1 = route1.distance() + cost_eval.tw_penalty(route1.time_warp())
+    new_cost2 = route2.distance() + cost_eval.tw_penalty(route2.time_warp())
     assert_equal(new_cost1 + new_cost2, old_cost1 + old_cost2 + delta_cost)
