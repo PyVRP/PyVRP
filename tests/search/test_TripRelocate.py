@@ -225,13 +225,33 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
     route1 = Route(mtvrptw_release_times, 0, 0)
     route2 = Route(mtvrptw_release_times, 1, 0)
 
+    # This route visits 34, reloads, and then visits 23, 38, and 48. The
+    # distance is 172. The route is as follows:
+    # - Leave the depot at 1458.
+    # - Visit 34 at 1490, leave at 1580.
+    # - Return to reload depot at 1612.
+    # - Visit 23 at 1643, leave at 1733.
+    # - Visit 38 at 1223, adding 540 time warp. Leave at 1313.
+    # - Visit 48 at 2856, leave at 2946.
+    # - Return to depot at 2957.
     for loc in [34, 0, 23, 38, 48]:
         route1.append(Node(loc=loc))
     route1.update()
 
+    assert_equal(route1.time_warp(), 540)
+    assert_equal(route1.duration(), 2957 + 540 - 1458)
+
+    # This route visits 16 and 6. The distance is 108.
+    # - Leave the depot at 1894.
+    # - Visit 16 at 1934, leave at 2024.
+    # - Visit 6 at 657, adding 1410 time warp. Leave at 747.
+    # - Return to depot at 772.
     for loc in [16, 6]:
         route2.append(Node(loc=loc))
     route2.update()
+
+    assert_equal(route2.time_warp(), 1410)
+    assert_equal(route2.duration(), 772 + 1410 - 1894)
 
     cost_eval = CostEvaluator([0], 1, 0)
     old_cost1 = route1.distance() + cost_eval.tw_penalty(route1.time_warp())
