@@ -1,4 +1,5 @@
 import pickle
+from itertools import pairwise
 
 import numpy as np
 import pytest
@@ -826,3 +827,26 @@ def test_multi_trip_initial_load(ok_small_multiple_trips):
     assert_equal(trip1.excess_load(), [0])
     assert_equal(trip2.excess_load(), [0])
     assert_equal(route.excess_load(), [5])
+
+
+@pytest.mark.parametrize(
+    "trips",
+    [
+        [[61, 64, 49, 55, 54, 53], [70, 11, 10, 8]],
+        [[5, 2, 1, 7, 3, 4], [18, 19, 16, 14, 12]],
+        [[20, 22, 24, 27, 30, 29, 6], [68, 57, 40, 44, 46], [15, 17, 13, 9]],
+    ],
+)
+def test_multi_trip_release_time_routes(mtvrptw_release_times, trips):
+    """
+    Tests a few routes from a solution to this multi-trip instance with release
+    times. These routes were part of a best-found solution after a 5min run, so
+    they should be feasible. Furthermore, the release times of each trip should
+    obviously be non-decreasing.
+    """
+    trips = [Trip(mtvrptw_release_times, visits, 0) for visits in trips]
+    route = Route(mtvrptw_release_times, trips, 0)
+    assert_(route.is_feasible())
+
+    for trip1, trip2 in pairwise(trips):
+        assert_(trip1.release_time() <= trip2.release_time())
