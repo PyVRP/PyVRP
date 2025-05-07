@@ -217,10 +217,10 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
 DurationSegment DurationSegment::finaliseBack() const
 {
     // We finalise this segment via several repeated merges: first, from the
-    // [end early, end late] time windows of the previous trip. Then, the
-    // release times of our current trip, if they are binding. Finally, we merge
-    // with the current trip, using just the earliest and latest start moments
-    // implied by our time windows. This results in a finalised segment.
+    // latest end time of the previous trip. Then, the release times of our
+    // current trip, if they are binding. Finally, we merge with the current
+    // trip, using our earliest and latest start moments. This results in a
+    // finalised segment.
     DurationSegment const prev = {0, 0, 0, prevEndLate_, 0};
     DurationSegment const curr = {duration_, timeWarp_, twEarly_, twLate_, 0};
     DurationSegment const release = {0,
@@ -237,6 +237,8 @@ DurationSegment DurationSegment::finaliseBack() const
             // this segment can end, so the latest start is not constrained.
             // However, starting after our latest end will incur wait duration.
             std::numeric_limits<Duration>::max(),
+            // The next trip cannot leave the depot before we end our trip. In
+            // that sense, it is equivalent to a release time.
             finalised.endEarly(),
             cumDuration_ + finalised.duration(),
             cumTimeWarp_ + finalised.timeWarp(),
