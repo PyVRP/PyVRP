@@ -174,7 +174,6 @@ def test_str():
         tw_early=5,
         tw_late=7,
         release_time=6,
-        prev_end_early=0,
         prev_end_late=3,
     )
 
@@ -183,7 +182,6 @@ def test_str():
     assert_("tw_early=6" in str(segment))  # is max(tw_early, release_time)
     assert_("tw_late=7" in str(segment))
     assert_("release_time=6" in str(segment))
-    assert_("prev_end_early=0" in str(segment))
     assert_("prev_end_late=3" in str(segment))
 
 
@@ -211,9 +209,8 @@ def test_finalise_back_with_time_warp_from_release_time():
     # latest.
     assert_equal(finalised.tw_early(), 75)
     assert_equal(finalised.tw_late(), _INT_MAX)
-    assert_equal(finalised.prev_end_early(), 75)
+    assert_equal(finalised.release_time(), 75)
     assert_equal(finalised.prev_end_late(), 75)
-    assert_equal(finalised.release_time(), 0)
 
 
 @pytest.mark.parametrize(
@@ -233,16 +230,15 @@ def test_duration_and_time_warp_from_prev_end_times(
     exp_time_warp: int,
 ):
     """
-    Tests wait duration and/or time warp due to the prev_end_early and
-    prev_end_late attributes.
+    Tests wait duration and/or time warp due to attributes associated with the
+    early and latest start of the previous trip.
     """
     segment = DurationSegment(
         0,
         0,
         100,
         110,
-        0,
-        prev_end_early=prev_end_early,
+        release_time=prev_end_early,
         prev_end_late=prev_end_late,
     )
 
@@ -251,28 +247,18 @@ def test_duration_and_time_warp_from_prev_end_times(
 
 
 @pytest.mark.parametrize(
-    ("release_time", "prev_end_early", "exp_time_warp"),
+    ("release_time", "exp_time_warp"),
     [
-        (100, 100, 0),  # we can feasibly start at 100, so no time warp.
-        (110, 100, 10),  # we need to wait until 110, but tw_late=100.
-        (100, 110, 10),  # same as previous.
-        (110, 110, 10),  # and now both: we only incur time warp once.
+        (100, 0),  # we can feasibly start at 100, so no time warp.
+        (110, 10),  # we need to wait until 110, but tw_late=100.
     ],
 )
-def test_time_warp_end_early_release_time(
-    release_time: int,
-    prev_end_early: int,
-    exp_time_warp: int,
-):
+def test_time_warp_from_release_time(release_time: int, exp_time_warp: int):
     """
-    Tests that time warp due to a late release time of the current trip, or
-    late end time of the previous trip, results in the expected amount of time
-    warp: we need to warp back from the latest of these two times.
+    Tests that time warp due to a late release time of the current trip results
+    in the expected amount of time warp.
     """
-    segment = DurationSegment(
-        0, 0, 0, 100, release_time, prev_end_early=prev_end_early
-    )
-
+    segment = DurationSegment(0, 0, 0, 100, release_time)
     assert_equal(segment.tw_late(), 100)
     assert_equal(segment.time_warp(), exp_time_warp)
 
@@ -314,7 +300,7 @@ def test_repeated_merge_and_finalise_back():
     finalised1 = segment1.finalise_back()
     assert_equal(finalised1.tw_early(), 95)
     assert_equal(finalised1.tw_late(), _INT_MAX)
-    assert_equal(finalised1.prev_end_early(), 95)
+    assert_equal(finalised1.release_time(), 95)
     assert_equal(finalised1.prev_end_late(), 95)
 
     # Next we execute the second trip, so we merge segment2.
@@ -324,39 +310,14 @@ def test_repeated_merge_and_finalise_back():
     assert_equal(merged.tw_late(), 110)
     assert_equal(merged.release_time(), 100)
 
-    # While the second trip may start between [100, 110] without increasing the
-    # trip duration, waiting beyond 100 will increase the route duration. Thus,
-    # there is zero slack.
-    assert_equal(merged.slack(), 0)
-
     # Return to the end depot. Duration should not change, but we do need to
     # make sure the end times are correct.
     finalised2 = merged.finalise_back()
     assert_equal(finalised2.duration(), 100)
     assert_equal(finalised2.tw_early(), 150)
     assert_equal(finalised2.tw_late(), _INT_MAX)
-    assert_equal(finalised2.prev_end_early(), 150)
+    assert_equal(finalised2.release_time(), 150)
     assert_equal(finalised2.prev_end_late(), 150)
-
-
-def test_finalise_nonzero_route_slack():
-    """
-    Tests that finalising segments with loose time windows results in positive
-    route slack.
-    """
-    segment1 = DurationSegment(0, 0, 0, 100, 0)
-    segment2 = DurationSegment(0, 0, 50, 75, 0)
-
-    finalised1 = segment1.finalise_back()
-    assert_equal(finalised1.prev_end_early(), 0)
-    assert_equal(finalised1.prev_end_late(), 100)
-    assert_equal(finalised1.slack(), 100)
-
-    merged = DurationSegment.merge(0, finalised1, segment2)
-    finalised2 = merged.finalise_back()
-    assert_equal(finalised2.prev_end_early(), 50)
-    assert_equal(finalised2.prev_end_late(), 75)
-    assert_equal(finalised2.slack(), 25)
 
 
 def test_end_early_and_late():

@@ -19,7 +19,6 @@ namespace pyvrp
  *     release_time: int,
  *     cum_duration: int = 0,
  *     cum_time_warp: int = 0,
- *     prev_end_early: int = 0,
  *     prev_end_late: int = np.iinfo(np.int64).max,
  * )
  *
@@ -45,8 +44,6 @@ namespace pyvrp
  *     Cumulative duration of other trips in segment.
  * cum_time_warp
  *     Cumulative time warp of other trips in segment.
- * prev_end_early
- *     Earliest end time of the previous trip, if any. Default unconstrained.
  * prev_end_late
  *     Latest end time of the previous trip, if any. Default unconstrained.
  */
@@ -57,9 +54,8 @@ class DurationSegment
     Duration twEarly_ = 0;                                    // of current trip
     Duration twLate_ = std::numeric_limits<Duration>::max();  // of current trip
     Duration releaseTime_ = 0;                                // of current trip
-    Duration cumDuration_ = 0;   // cumulative, excl. current trip
-    Duration cumTimeWarp_ = 0;   // cumulative, excl. current trip
-    Duration prevEndEarly_ = 0;  // of prev trip
+    Duration cumDuration_ = 0;  // cumulative, excl. current trip
+    Duration cumTimeWarp_ = 0;  // cumulative, excl. current trip
     Duration prevEndLate_
         = std::numeric_limits<Duration>::max();  // of prev trip
 
@@ -132,21 +128,9 @@ public:
     [[nodiscard]] inline Duration endLate() const;
 
     /**
-     * Earliest end time of the previous trip.
-     */
-    [[nodiscard]] Duration prevEndEarly() const;
-
-    /**
      * Latest end time of the previous trip.
      */
     [[nodiscard]] Duration prevEndLate() const;
-
-    /**
-     * Slack in the route schedule. This is the amount of time by which the
-     * start of the current trip can be delayed without increasing the overall
-     * route duration.
-     */
-    [[nodiscard]] Duration slack() const;
 
     /**
      * Release time of the clients on the current trip of this segment.
@@ -177,7 +161,6 @@ public:
                            Duration releaseTime,
                            Duration cumDuration = 0,
                            Duration cumTimeWarp = 0,
-                           Duration prevEndEarly = 0,
                            Duration prevEndLate
                            = std::numeric_limits<Duration>::max());
 
@@ -227,7 +210,6 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
             std::max(first.releaseTime_, second.releaseTime_),
             first.cumDuration_ + second.cumDuration_,
             first.cumTimeWarp_ + second.cumTimeWarp_,
-            first.prevEndEarly_,  // field is evaluated left-to-right
             first.prevEndLate_};  // field is evaluated left-to-right
 #endif
 }
@@ -239,7 +221,7 @@ DurationSegment DurationSegment::finaliseBack() const
     // release times of our current trip, if they are binding. Finally, we merge
     // with the current trip, using just the earliest and latest start moments
     // implied by our time windows. This results in a finalised segment.
-    DurationSegment const prev = {0, 0, prevEndEarly_, prevEndLate_, 0};
+    DurationSegment const prev = {0, 0, 0, prevEndLate_, 0};
     DurationSegment const curr = {duration_, timeWarp_, twEarly_, twLate_, 0};
     DurationSegment const release = {0,
                                      0,
@@ -255,10 +237,9 @@ DurationSegment DurationSegment::finaliseBack() const
             // this segment can end, so the latest start is not constrained.
             // However, starting after our latest end will incur wait duration.
             std::numeric_limits<Duration>::max(),
-            0,
+            finalised.endEarly(),
             cumDuration_ + finalised.duration(),
             cumTimeWarp_ + finalised.timeWarp(),
-            finalised.endEarly(),
             finalised.endLate()};
 }
 
@@ -288,8 +269,7 @@ Duration DurationSegment::timeWarp(Duration maxDuration) const
     auto const netDuration = duration() - timeWarp;
 
     return timeWarp
-           + std::max<Duration>(std::max(releaseTime_, prevEndEarly_) - twLate_,
-                                0)
+           + std::max<Duration>(releaseTime_ - twLate_, 0)
            // Max duration constraint applies only to net route duration,
            // subtracting existing time warp. Use ternary to avoid underflow.
            + (netDuration > maxDuration ? netDuration - maxDuration : 0);
@@ -333,7 +313,6 @@ DurationSegment::DurationSegment(Duration duration,
                                  Duration releaseTime,
                                  Duration cumDuration,
                                  Duration cumTimeWarp,
-                                 Duration prevEndEarly,
                                  Duration prevEndLate)
     : duration_(duration),
       timeWarp_(timeWarp),
@@ -342,7 +321,6 @@ DurationSegment::DurationSegment(Duration duration,
       releaseTime_(releaseTime),
       cumDuration_(cumDuration),
       cumTimeWarp_(cumTimeWarp),
-      prevEndEarly_(prevEndEarly),
       prevEndLate_(prevEndLate)
 {
 }

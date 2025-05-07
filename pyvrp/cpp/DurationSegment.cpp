@@ -5,14 +5,7 @@
 using pyvrp::Duration;
 using pyvrp::DurationSegment;
 
-Duration DurationSegment::prevEndEarly() const { return prevEndEarly_; }
-
 Duration DurationSegment::prevEndLate() const { return prevEndLate_; }
-
-Duration DurationSegment::slack() const
-{
-    return std::min(twLate() - twEarly(), prevEndLate() - prevEndEarly());
-}
 
 Duration DurationSegment::releaseTime() const { return releaseTime_; }
 
@@ -43,7 +36,6 @@ std::ostream &operator<<(std::ostream &out, DurationSegment const &segment)
                << ", tw_early=" << segment.twEarly()
                << ", tw_late=" << segment.twLate()
                << ", release_time=" << segment.releaseTime()
-               << ", prev_end_early=" << segment.prevEndEarly()
                << ", prev_end_late=" << segment.prevEndLate();
     // clang-format on
 }
