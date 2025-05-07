@@ -233,9 +233,9 @@ DurationSegment DurationSegment::finaliseBack() const
     return {0,
             0,
             finalised.endEarly(),
-            // The next segment after this is free to start at any time after
-            // this segment can end, so the latest start is not constrained.
-            // However, starting after our latest end will incur wait duration.
+            // The next trip is free to start at any time after this trip can
+            // end, so the latest start is not constrained. However, starting
+            // after our latest end will incur wait duration at the depot.
             std::numeric_limits<Duration>::max(),
             // The next trip cannot leave the depot before we end our trip. In
             // that sense, it is equivalent to a release time.
@@ -248,7 +248,7 @@ DurationSegment DurationSegment::finaliseBack() const
 DurationSegment DurationSegment::finaliseFront() const
 {
     // We finalise at the start of this segment. This is pretty easy, via a
-    // merge on an artificial node with our release times, if they are binding.
+    // merge with our release times, if they are binding.
     DurationSegment const curr = {duration_, timeWarp_, twEarly_, twLate_, 0};
     DurationSegment const release = {0,
                                      0,
