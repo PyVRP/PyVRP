@@ -270,6 +270,20 @@ class _InstanceParser:
 
         return self.round_func(max_durations)
 
+    def fixed_costs(self) -> np.ndarray:
+        if "vehicles_fixed_cost" not in self.instance:
+            return np.zeros(self.num_vehicles, dtype=np.int64)
+
+        return self.round_func(self.instance["vehicles_fixed_cost"])
+
+    def unit_distance_costs(self) -> np.ndarray:
+        if "vehicles_unit_distance_cost" not in self.instance:
+            return np.ones(self.num_vehicles, dtype=np.int64)
+
+        # Unit distance costs are unrounded to prevent double scaling in the
+        # total distance cost calculation (unit_distance_cost * distance).
+        return self.instance["vehicles_unit_distance_cost"]
+
     def mutually_exclusive_groups(self) -> list[list[int]]:
         if "mutually_exclusive_group" not in self.instance:
             return []
@@ -373,6 +387,8 @@ class _ProblemDataBuilder:
             self.parser.vehicles_depots(),
             self.parser.max_distances(),
             self.parser.max_durations(),
+            self.parser.fixed_costs(),
+            self.parser.unit_distance_costs(),
         )
 
         if any(len(attr) != num_vehicles for attr in vehicles_data):
@@ -389,25 +405,36 @@ class _ProblemDataBuilder:
             capacity = tuple(np.atleast_1d(capacity))
             type2idcs[(capacity, *veh_type)].append(vehicle)
 
-        client2profile = self._allowed2profile()
+        type2profile = self._type2profile()
         time_windows = self.parser.time_windows()
 
         vehicle_types = []
         for attributes, vehicles in type2idcs.items():
-            (capacity, clients, depot_idx, max_dist, max_duration) = attributes
+            (
+                capacity,
+                clients,
+                depot_idx,
+                max_dist,
+                max_duration,
+                fixed_cost,
+                unit_dist_cost,
+            ) = attributes
 
             vehicle_type = VehicleType(
                 num_available=len(vehicles),
                 capacity=capacity,
                 start_depot=depot_idx,
                 end_depot=depot_idx,
+                fixed_cost=fixed_cost,
                 # The literature specifies depot time windows. We do not have
                 # depot time windows but instead set those on the vehicles.
                 tw_early=time_windows[depot_idx][0],
                 tw_late=time_windows[depot_idx][1],
                 max_duration=max_duration,
                 max_distance=max_dist,
-                profile=client2profile[clients],
+                # Allowed clients and unit distance costs are incorporated in
+                # routing profiles rather than as properties of vehicle types.
+                profile=type2profile[(clients, unit_dist_cost)],
                 # A bit hacky, but this csv-like name is really useful to track
                 # the actual vehicles that make up this vehicle type.
                 name=",".join(map(str, vehicles)),
@@ -430,11 +457,17 @@ class _ProblemDataBuilder:
             distances[0, backhaul] = MAX_VALUE
             distances[np.ix_(backhaul, linehaul)] = MAX_VALUE
 
-        allowed2profile = self._allowed2profile()
-        num_profiles = len(allowed2profile)
+        type2profile = self._type2profile()
+        num_profiles = len(type2profile)
         dist_mats = [distances.copy() for _ in range(num_profiles)]
 
-        for allowed_clients, type_idx in allowed2profile.items():
+        for veh_type, type_idx in type2profile.items():
+            allowed_clients, unit_dist_cost = veh_type
+
+            # Incorporate unit distance costs in profile.
+            dist_mats[type_idx] = dist_mats[type_idx] * unit_dist_cost
+            dist_mats[type_idx] = np.round(dist_mats[type_idx]).astype(int)
+
             if len(allowed_clients) == self.parser.num_clients:
                 # True if this feature is unused, and the distance matrix for
                 # this profile does not have to be modified.
@@ -473,11 +506,18 @@ class _ProblemDataBuilder:
         groups = self.parser.mutually_exclusive_groups()
         return [ClientGroup(group) for group in groups]
 
-    def _allowed2profile(self) -> dict[tuple[int, ...], int]:
-        allowed_clients2profile_idx = {}
+    def _type2profile(self) -> dict[tuple[tuple[int, ...], int], int]:
+        """
+        Maps a vehicle type's allowed clients and unit distance cost to its
+        unique profile index.
+        """
+        type2profile_idx = {}
         profile_idx = count(0)
-        for clients in self.parser.allowed_clients():
-            if clients not in allowed_clients2profile_idx:
-                allowed_clients2profile_idx[clients] = next(profile_idx)
+        allowed_clients = self.parser.allowed_clients()
+        unit_dist_costs = self.parser.unit_distance_costs()
 
-        return allowed_clients2profile_idx
+        for veh_type in zip(allowed_clients, unit_dist_costs):
+            if veh_type not in type2profile_idx:
+                type2profile_idx[veh_type] = next(profile_idx)
+
+        return type2profile_idx
