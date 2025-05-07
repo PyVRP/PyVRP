@@ -357,3 +357,16 @@ def test_finalise_nonzero_route_slack():
     assert_equal(finalised2.prev_end_early(), 50)
     assert_equal(finalised2.prev_end_late(), 75)
     assert_equal(finalised2.slack(), 25)
+
+
+def test_end_early_and_late():
+    """
+    Tests the end_early() and end_late() computations for a small example.
+    """
+    segment = DurationSegment(40, 30, 10, 20, 0, 15, 5)
+    assert_equal(segment.tw_early(), 10)
+    assert_equal(segment.tw_late(), 20)
+    assert_equal(segment.duration(), 40 + 15)  # includes cumulative
+    assert_equal(segment.time_warp(), 30 + 5)  # includes cumulative
+    assert_equal(segment.end_early(), 20)  # ignores cumulative
+    assert_equal(segment.end_late(), 30)  # ignores cumulative

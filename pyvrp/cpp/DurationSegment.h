@@ -122,6 +122,16 @@ public:
     [[nodiscard]] Duration twLate() const;
 
     /**
+     * Earliest end time of the current trip.
+     */
+    [[nodiscard]] Duration endEarly() const;
+
+    /**
+     * Latest end time of the current trip.
+     */
+    [[nodiscard]] Duration endLate() const;
+
+    /**
      * Earliest end time of the previous trip.
      */
     [[nodiscard]] Duration prevEndEarly() const;

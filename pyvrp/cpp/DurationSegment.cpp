@@ -21,24 +21,18 @@ DurationSegment DurationSegment::finaliseBack() const
                                      0};
 
     auto const finalised = merge(0, merge(0, prev, release), curr);
-    auto const netDur = finalised.duration() - finalised.timeWarp();
-    auto const endLate
-        = netDur > std::numeric_limits<Duration>::max() - finalised.twLate()
-              ? std::numeric_limits<Duration>::max()
-              : finalised.twLate() + netDur;
-
     return {0,
             0,
-            finalised.twEarly() + netDur,
+            finalised.endEarly(),
             // The next segment after this is free to start at any time after
             // this segment can end, so the latest start is not constrained.
-            // Starting after our latest end will incur wait duration.
+            // However, starting after our latest end will incur wait duration.
             std::numeric_limits<Duration>::max(),
             0,
             cumDuration_ + finalised.duration(),
             cumTimeWarp_ + finalised.timeWarp(),
-            finalised.twEarly() + netDur,
-            endLate};
+            finalised.endEarly(),
+            finalised.endLate()};
 }
 
 DurationSegment DurationSegment::finaliseFront() const
@@ -56,6 +50,23 @@ DurationSegment DurationSegment::finaliseFront() const
 }
 
 Duration DurationSegment::twLate() const { return twLate_; }
+
+Duration DurationSegment::endEarly() const
+{
+    auto const tripDuration = duration() - cumDuration_;
+    auto const tripTimeWarp = timeWarp() - cumTimeWarp_;
+    return twEarly() + tripDuration - tripTimeWarp;
+}
+
+Duration DurationSegment::endLate() const
+{
+    auto const tripDuration = duration() - cumDuration_;
+    auto const tripTimeWarp = timeWarp() - cumTimeWarp_;
+    auto const netDuration = tripDuration - tripTimeWarp;
+    return netDuration > std::numeric_limits<Duration>::max() - twLate()
+               ? std::numeric_limits<Duration>::max()
+               : twLate() + netDuration;
+}
 
 Duration DurationSegment::prevEndEarly() const { return prevEndEarly_; }
 

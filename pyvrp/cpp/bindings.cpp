@@ -1130,6 +1130,12 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("tw_late",
              &DurationSegment::twLate,
              DOC(pyvrp, DurationSegment, twLate))
+        .def("end_early",
+             &DurationSegment::endEarly,
+             DOC(pyvrp, DurationSegment, endEarly))
+        .def("end_late",
+             &DurationSegment::endLate,
+             DOC(pyvrp, DurationSegment, endLate))
         .def("prev_end_early",
              &DurationSegment::prevEndEarly,
              DOC(pyvrp, DurationSegment, prevEndEarly))
