@@ -76,7 +76,7 @@ public:
      * multiple trips because the finalised segment can be concatenated with
      * segments of later trips.
      */
-    DurationSegment finaliseBack() const;
+    [[nodiscard]] inline DurationSegment finaliseBack() const;
 
     /**
      * Finalises this segment towards the front (at the start of the segment),
@@ -85,7 +85,7 @@ public:
      * multiple trips because the finalised segment can be concatenated with
      * segments of earlier trips.
      */
-    DurationSegment finaliseFront() const;
+    [[nodiscard]] inline DurationSegment finaliseFront() const;
 
     /**
      * The total duration of the whole segment.
@@ -119,17 +119,17 @@ public:
     /**
      * Latest start time for the current trip.
      */
-    [[nodiscard]] Duration twLate() const;
+    [[nodiscard]] inline Duration twLate() const;
 
     /**
      * Earliest end time of the current trip.
      */
-    [[nodiscard]] Duration endEarly() const;
+    [[nodiscard]] inline Duration endEarly() const;
 
     /**
      * Latest end time of the current trip.
      */
-    [[nodiscard]] Duration endLate() const;
+    [[nodiscard]] inline Duration endLate() const;
 
     /**
      * Earliest end time of the previous trip.
@@ -232,6 +232,50 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
 #endif
 }
 
+DurationSegment DurationSegment::finaliseBack() const
+{
+    // We finalise this segment via several repeated merges: first, from the
+    // [end early, end late] time windows of the previous trip. Then, the
+    // release times of our current trip, if they are binding. Finally, we merge
+    // with the current trip, using just the earliest and latest start moments
+    // implied by our time windows. This results in a finalised segment.
+    DurationSegment const prev = {0, 0, prevEndEarly_, prevEndLate_, 0};
+    DurationSegment const curr = {duration_, timeWarp_, twEarly_, twLate_, 0};
+    DurationSegment const release = {0,
+                                     0,
+                                     std::max(twEarly_, releaseTime_),
+                                     std::max(twLate_, releaseTime_),
+                                     0};
+
+    auto const finalised = merge(0, merge(0, prev, release), curr);
+    return {0,
+            0,
+            finalised.endEarly(),
+            // The next segment after this is free to start at any time after
+            // this segment can end, so the latest start is not constrained.
+            // However, starting after our latest end will incur wait duration.
+            std::numeric_limits<Duration>::max(),
+            0,
+            cumDuration_ + finalised.duration(),
+            cumTimeWarp_ + finalised.timeWarp(),
+            finalised.endEarly(),
+            finalised.endLate()};
+}
+
+DurationSegment DurationSegment::finaliseFront() const
+{
+    // We finalise at the start of this segment. This is pretty easy, via a
+    // merge on an artificial node with our release times, if they are binding.
+    DurationSegment const curr = {duration_, timeWarp_, twEarly_, twLate_, 0};
+    DurationSegment const release = {0,
+                                     0,
+                                     std::max(twEarly_, releaseTime_),
+                                     std::max(twLate_, releaseTime_),
+                                     0};
+
+    return merge(0, release, curr);
+}
+
 Duration DurationSegment::duration() const
 {
     auto const duration = cumDuration_ + duration_;
@@ -261,6 +305,25 @@ Duration DurationSegment::twEarly() const
     //    earliest start time, or the release time, whichever is larger.
     assert(twEarly_ <= twLate_);
     return std::max(twEarly_, std::min(twLate_, releaseTime_));
+}
+
+Duration DurationSegment::twLate() const { return twLate_; }
+
+Duration DurationSegment::endEarly() const
+{
+    auto const tripDuration = duration() - cumDuration_;
+    auto const tripTimeWarp = timeWarp() - cumTimeWarp_;
+    return twEarly() + tripDuration - tripTimeWarp;
+}
+
+Duration DurationSegment::endLate() const
+{
+    auto const tripDuration = duration() - cumDuration_;
+    auto const tripTimeWarp = timeWarp() - cumTimeWarp_;
+    auto const netDuration = tripDuration - tripTimeWarp;
+    return netDuration > std::numeric_limits<Duration>::max() - twLate()
+               ? std::numeric_limits<Duration>::max()
+               : twLate() + netDuration;
 }
 
 DurationSegment::DurationSegment(Duration duration,

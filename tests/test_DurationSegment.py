@@ -370,3 +370,21 @@ def test_end_early_and_late():
     assert_equal(segment.time_warp(), 30 + 5)  # includes cumulative
     assert_equal(segment.end_early(), 20)  # ignores cumulative
     assert_equal(segment.end_late(), 30)  # ignores cumulative
+
+
+def test_finalise_back_front_merge_same_thing():
+    """
+    Tests that finalising either the front or the back and then merging on the
+    appropriate side results in segments with the same duration and time warp
+    attributes.
+    """
+    ds1 = DurationSegment(50, 0, 70, 110, 100)
+    ds2 = DurationSegment(45, 0, 30, 50, 50)
+
+    # Finalise the first segment at its back, then merge. Or finalise the
+    # second segment at the front and then merge. This should result in the
+    # same segment w.r.t. time warp and duration.
+    finalise_back = DurationSegment.merge(0, ds1.finalise_back(), ds2)
+    finalise_front = DurationSegment.merge(0, ds1, ds2.finalise_front())
+    assert_equal(finalise_back.time_warp(), finalise_front.time_warp())
+    assert_equal(finalise_back.duration(), finalise_front.duration())

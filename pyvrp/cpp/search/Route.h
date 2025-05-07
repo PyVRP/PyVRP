@@ -914,10 +914,10 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
                 // first need to travel there.
                 ProblemData::Depot const &depot = data.location(other.first());
                 ds = DurationSegment::merge(edgeDur, ds, {depot});
+                ds = ds.finaliseBack();
 
                 // We finalise by travelling to the depot, so the remaining
                 // travel duration is now zero.
-                ds = ds.finaliseBack();
                 edgeDur = 0;
             }
 
@@ -949,7 +949,7 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
     auto const fn = [&](auto segment, auto &&...args)
     {
         auto ls = segment.load(dimension);
-        if (segment.last() < data.numDepots())
+        if (segment.last() < data.numDepots())  // ends at depot
             ls = ls.finalise(capacity[dimension]);
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)

@@ -5,11 +5,6 @@
 using pyvrp::Load;
 using pyvrp::LoadSegment;
 
-LoadSegment LoadSegment::finalise(Load capacity) const
-{
-    return {0, 0, 0, excessLoad(capacity)};
-}
-
 Load LoadSegment::delivery() const { return delivery_; }
 
 Load LoadSegment::pickup() const { return pickup_; }

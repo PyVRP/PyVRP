@@ -44,7 +44,7 @@ public:
      * useful with reloading, because the finalised segment can be concatenated
      * with load segments of subsequent trips.
      */
-    LoadSegment finalise(Load capacity) const;
+    [[nodiscard]] inline LoadSegment finalise(Load capacity) const;
 
     /**
      * Returns the delivery amount, that is, the total amount of load delivered
@@ -111,6 +111,11 @@ LoadSegment LoadSegment::merge(LoadSegment const &first,
 Load LoadSegment::excessLoad(Load capacity) const
 {
     return excessLoad_ + std::max<Load>(load_ - capacity, 0);
+}
+
+LoadSegment LoadSegment::finalise(Load capacity) const
+{
+    return {0, 0, 0, excessLoad(capacity)};
 }
 
 LoadSegment::LoadSegment(Load delivery, Load pickup, Load load, Load excessLoad)
