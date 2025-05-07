@@ -21,7 +21,7 @@ DurationSegment DurationSegment::finaliseBack() const
                                      0};
 
     auto const finalised = merge(0, merge(0, prev, release), curr);
-    auto const netDur = finalised.tripDuration() - finalised.tripTimeWarp();
+    auto const netDur = finalised.duration() - finalised.timeWarp();
     auto const endLate
         = netDur > std::numeric_limits<Duration>::max() - finalised.twLate()
               ? std::numeric_limits<Duration>::max()
@@ -52,24 +52,7 @@ DurationSegment DurationSegment::finaliseFront() const
                                      std::max(twLate_, releaseTime_),
                                      0};
 
-    auto const finalised = merge(0, release, curr);
-    return {0,
-            0,
-            finalised.twEarly(),
-            finalised.twLate(),
-            0,
-            cumDuration_ + finalised.duration(),
-            cumTimeWarp_ + finalised.timeWarp()};
-}
-
-Duration DurationSegment::tripDuration() const
-{
-    return duration() - cumDuration_;
-}
-
-Duration DurationSegment::tripTimeWarp() const
-{
-    return timeWarp() - cumTimeWarp_;
+    return merge(0, release, curr);
 }
 
 Duration DurationSegment::twLate() const { return twLate_; }

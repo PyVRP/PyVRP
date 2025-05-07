@@ -93,11 +93,6 @@ public:
     [[nodiscard]] inline Duration duration() const;
 
     /**
-     * Total duration of the current trip.
-     */
-    [[nodiscard]] Duration tripDuration() const;
-
-    /**
      * Returns the time warp on this whole segment. Additionally, any time warp
      * incurred by violating the maximum duration argument is also counted.
      *
@@ -115,11 +110,6 @@ public:
      */
     [[nodiscard]] inline Duration
     timeWarp(Duration maxDuration = std::numeric_limits<Duration>::max()) const;
-
-    /**
-     * Total time warp of the current trip.
-     */
-    [[nodiscard]] Duration tripTimeWarp() const;
 
     /**
      * Earliest start time for the current trip.

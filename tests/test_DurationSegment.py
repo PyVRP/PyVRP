@@ -200,13 +200,10 @@ def test_finalise_back_with_time_warp_from_release_time():
     assert_equal(segment.duration(), 5)
     assert_equal(segment.time_warp(), 5)  # due to release time
 
-    # Tests that finalising moves all duration and time warp to the cumulative
-    # fields.
+    # Tests that finalising does not affect duration and time warp.
     finalised = segment.finalise_back()
     assert_equal(finalised.duration(), 5)
-    assert_equal(finalised.trip_duration(), 0)
     assert_equal(finalised.time_warp(), 5)
-    assert_equal(finalised.trip_time_warp(), 0)
 
     # Finalised segments cannot start before the original segments, but are
     # not constrained in their latest start (since we could wait indefinitely).
@@ -287,20 +284,15 @@ def test_finalise_front():
     segment = DurationSegment(5, 5, 40, 50, 50)
     assert_equal(segment.duration(), 5)
     assert_equal(segment.time_warp(), 5)
-    assert_equal(segment.trip_duration(), 5)
-    assert_equal(segment.trip_time_warp(), 5)
 
     assert_equal(segment.tw_early(), 50)
     assert_equal(segment.tw_late(), 50)
     assert_equal(segment.release_time(), 50)
 
-    # Test that finalising moves all duration and time warp to the cumulative
-    # fields.
+    # Test that finalising does not affect duration and time warp.
     finalised = segment.finalise_front()
     assert_equal(finalised.duration(), 5)
     assert_equal(finalised.time_warp(), 5)
-    assert_equal(finalised.trip_duration(), 0)
-    assert_equal(finalised.trip_time_warp(), 0)
 
     # Same tw_early and tw_late as segment, but no release time.
     assert_equal(finalised.tw_early(), 50)

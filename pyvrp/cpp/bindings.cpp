@@ -1144,12 +1144,6 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_duration")
              = std::numeric_limits<pyvrp::Duration>::max(),
              DOC(pyvrp, DurationSegment, timeWarp))
-        .def("trip_duration",
-             &DurationSegment::tripDuration,
-             DOC(pyvrp, DurationSegment, tripDuration))
-        .def("trip_time_warp",
-             &DurationSegment::tripTimeWarp,
-             DOC(pyvrp, DurationSegment, tripTimeWarp))
         .def("slack",
              &DurationSegment::slack,
              DOC(pyvrp, DurationSegment, slack))
