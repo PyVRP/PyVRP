@@ -119,11 +119,3 @@ PyVRP supports the following data sections:
    ``VEHICLES_MAX_DURATION_SECTION``
       Maximum route duration for each vehicle.
       Route durations are assumed to be unconstrained if this section is not present.
-
-   ``VEHICLES_FIXED_COST_SECTION``
-      Fixed cost for each vehicle.
-      Assumed to be zero if this section is not present.
-
-   ``VEHICLES_UNIT_DISTANCE_COST_SECTION``
-      Unit distance cost for each vehicle.
-      Assumed to be one if this section is not present.
