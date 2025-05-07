@@ -237,8 +237,8 @@ DurationSegment DurationSegment::finaliseBack() const
             // end, so the latest start is not constrained. However, starting
             // after our latest end will incur wait duration at the depot.
             std::numeric_limits<Duration>::max(),
-            // The next trip cannot leave the depot before we end our trip. In
-            // that sense, it is equivalent to a release time.
+            // The next trip cannot leave the depot before we return, so we
+            // impose our earliest end as a release time.
             finalised.endEarly(),
             cumDuration_ + finalised.duration(),
             cumTimeWarp_ + finalised.timeWarp(),
