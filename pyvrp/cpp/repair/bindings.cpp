@@ -15,6 +15,7 @@ PYBIND11_MODULE(_repair, m)
           py::arg("unplanned"),
           py::arg("data"),
           py::arg("cost_evaluator"),
+          py::call_guard<py::gil_scoped_release>(),
           DOC(pyvrp, repair, greedyRepair));
 
     m.def("nearest_route_insert",
@@ -23,5 +24,6 @@ PYBIND11_MODULE(_repair, m)
           py::arg("unplanned"),
           py::arg("data"),
           py::arg("cost_evaluator"),
+          py::call_guard<py::gil_scoped_release>(),
           DOC(pyvrp, repair, nearestRouteInsert));
 }
