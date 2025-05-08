@@ -1140,6 +1140,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("release_time",
              &DurationSegment::releaseTime,
              DOC(pyvrp, DurationSegment, releaseTime))
+        .def("slack",
+             &DurationSegment::slack,
+             DOC(pyvrp, DurationSegment, slack))
         .def("time_warp",
              &DurationSegment::timeWarp,
              py::arg("max_duration")

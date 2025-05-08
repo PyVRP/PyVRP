@@ -137,6 +137,13 @@ public:
      */
     [[nodiscard]] Duration releaseTime() const;
 
+    /**
+     * Slack in the route schedule. This is the amount of time by which the
+     * start of the current trip can be delayed without increasing the overall
+     * route duration.
+     */
+    [[nodiscard]] Duration slack() const;
+
     DurationSegment() = default;  // default is all zero
 
     // Construct from attributes of the given client.

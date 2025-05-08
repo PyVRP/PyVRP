@@ -9,6 +9,15 @@ Duration DurationSegment::prevEndLate() const { return prevEndLate_; }
 
 Duration DurationSegment::releaseTime() const { return releaseTime_; }
 
+Duration DurationSegment::slack() const
+{
+    // We have wait duration if release time is after the end of the previous
+    // trip. Starting any later only increases that wait duration, so there
+    // is then definitely no slack.
+    auto const prevSlack = std::max<Duration>(prevEndLate_ - releaseTime_, 0);
+    return std::min(twLate() - twEarly(), prevSlack);
+}
+
 DurationSegment::DurationSegment(ProblemData::Client const &client)
     : duration_(client.serviceDuration),
       twEarly_(client.twEarly),

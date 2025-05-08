@@ -310,6 +310,11 @@ def test_repeated_merge_and_finalise_back():
     assert_equal(merged.tw_late(), 110)
     assert_equal(merged.release_time(), 100)
 
+    # While the second trip may start between [100, 110] without increasing the
+    # trip duration, waiting beyond 100 will increase the route duration. Thus,
+    # there is zero slack.
+    assert_equal(merged.slack(), 0)
+
     # Return to the end depot. Duration should not change, but we do need to
     # make sure the end times are correct.
     finalised2 = merged.finalise_back()
@@ -318,6 +323,26 @@ def test_repeated_merge_and_finalise_back():
     assert_equal(finalised2.tw_late(), _INT_MAX)
     assert_equal(finalised2.release_time(), 150)
     assert_equal(finalised2.prev_end_late(), 150)
+
+
+def test_finalise_nonzero_route_slack():
+    """
+    Tests that finalising segments with loose time windows results in positive
+    route slack.
+    """
+    segment1 = DurationSegment(0, 0, 0, 100, 0)
+    segment2 = DurationSegment(0, 0, 50, 75, 0)
+
+    finalised1 = segment1.finalise_back()
+    assert_equal(finalised1.release_time(), 0)
+    assert_equal(finalised1.prev_end_late(), 100)
+    assert_equal(finalised1.slack(), 100)
+
+    merged = DurationSegment.merge(0, finalised1, segment2)
+    finalised2 = merged.finalise_back()
+    assert_equal(finalised2.release_time(), 50)
+    assert_equal(finalised2.prev_end_late(), 75)
+    assert_equal(finalised2.slack(), 25)
 
 
 def test_end_early_and_late():
