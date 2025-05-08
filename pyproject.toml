@@ -129,8 +129,8 @@ ignore_missing_imports = true
 addopts = [
     "--cov",
     "--cov-report=xml",
-    "--cov-report=term",   
-   "--numprocesses=auto",
+    "--cov-report=term",
+    "--numprocesses=auto",
 ]
 testpaths = "tests"
 
