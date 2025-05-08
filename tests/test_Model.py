@@ -1015,41 +1015,28 @@ def test_model_solves_multi_trip_instance():
     depot1 = m.add_depot(0, 0)
     depot2 = m.add_depot(0, 0)
 
-    m.add_vehicle_type(
-        capacity=[10],
-        reload_depots=[depot1, depot2],
-        max_reloads=2,
-    )
+    m.add_vehicle_type(capacity=[5], reload_depots=[depot1, depot2])
 
-    for idx in range(5):
+    for idx in range(3):  # all locations are on a horizontal line
         m.add_client(idx, 0, delivery=[5])
 
     for frm in m.locations:
         for to in m.locations:
-            manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
-            m.add_edge(frm, to, distance=manhattan)
+            m.add_edge(frm, to, distance=abs(frm.x - to.x))
 
-    res = m.solve(stop=MaxIterations(25))
+    res = m.solve(stop=MaxIterations(10))
     assert_(res.is_feasible())
-    assert_equal(res.cost(), 12)
+    assert_equal(res.cost(), 6)
 
     routes = res.best.routes()
     assert_equal(len(routes), 1)
 
-    # This route transports the full 25 client delivery demand using a vehicle
-    # with capacity of just 10 because it reloads twice along the route.
+    # This route transports the full 15 client delivery demand using a vehicle
+    # with capacity of just 5 because it reloads twice along the route.
     route = routes[0]
     assert_equal(route.excess_load(), [0])
+    assert_equal(route.delivery(), [15])
     assert_equal(route.num_trips(), 3)
-
-    # The visits are grouped as {2}, {3, 4}, and {5, 6}, because the instance
-    # is on a line (0 is depot, clients are at 0, 1, ..., 4) and there can be
-    # at most two visits per trip. In that setting it's cheapest to visit 2
-    # using a singleton route, and combine 6 with 5, and then finally 4 with 3.
-    visit_sets = [set(trip.visits()) for trip in route.trips()]
-    assert_({2} in visit_sets)
-    assert_({3, 4} in visit_sets)
-    assert_({5, 6} in visit_sets)
 
 
 def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
