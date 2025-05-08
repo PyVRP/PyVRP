@@ -223,20 +223,13 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
 
 DurationSegment DurationSegment::finaliseBack() const
 {
-    // We finalise this segment via several repeated merges: first, from the
-    // latest end time of the previous trip. Then, the release times of our
-    // current trip, if they are binding. Finally, we merge with the current
-    // trip, using our earliest and latest start moments. This results in a
-    // finalised segment.
+    // We finalise this segment by taking into account the end time of the
+    // previous trip, and then merging with this segment, finalised at the
+    // start, because that accounts for release times and our earliest and
+    // latest start.
     DurationSegment const prev = {0, 0, 0, prevEndLate_, 0};
-    DurationSegment const curr = {duration_, timeWarp_, twEarly_, twLate_, 0};
-    DurationSegment const release = {0,
-                                     0,
-                                     std::max(twEarly_, releaseTime_),
-                                     std::max(twLate_, releaseTime_),
-                                     0};
+    auto const finalised = merge(0, prev, finaliseFront());
 
-    auto const finalised = merge(0, merge(0, prev, release), curr);
     return {0,
             0,
             finalised.endEarly(),
