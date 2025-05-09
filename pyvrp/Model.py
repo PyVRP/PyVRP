@@ -296,6 +296,12 @@ class Model:
            set for all profiles in the model. Any profile-specific edge takes
            precedence over a base edge with the same ``frm`` and ``to``
            locations.
+
+        .. note::
+
+           If called repeatedly with the same ``frm``, ``to``, and ``profile``
+           arguments, only the edge constructed last is used. PyVRP does not
+           support multigraphs.
         """
         if profile is not None:
             return profile.add_edge(frm, to, distance, duration)
