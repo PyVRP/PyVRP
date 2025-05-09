@@ -1,6 +1,5 @@
 from numpy.testing import assert_, assert_equal
 
-from pyvrp.GeneticAlgorithm import GeneticAlgorithmParams
 from pyvrp.PenaltyManager import PenaltyParams
 from pyvrp.Population import PopulationParams
 from pyvrp.search import (
@@ -22,7 +21,6 @@ def test_default_values():
     """
     params = SolveParams()
 
-    assert_equal(params.genetic, GeneticAlgorithmParams())
     assert_equal(params.penalty, PenaltyParams())
     assert_equal(params.population, PopulationParams())
     assert_equal(params.neighbourhood, NeighbourhoodParams())
@@ -36,14 +34,12 @@ def test_solve_params_from_file():
     """
     params = SolveParams.from_file(DATA_DIR / "test_config.toml")
 
-    genetic = GeneticAlgorithmParams(0.1, 200)
     penalty = PenaltyParams(12, 100, 1.25, 0.85, 0.43)
     population = PopulationParams(10, 20, 3, 4, 0.0, 1.0)
     neighbourhood = NeighbourhoodParams(0, 0, 20, True, True)
     node_ops = [Exchange10, SwapTails]
     route_ops = [SwapStar]
 
-    assert_equal(params.genetic, genetic)
     assert_equal(params.penalty, penalty)
     assert_equal(params.population, population)
     assert_equal(params.neighbourhood, neighbourhood)

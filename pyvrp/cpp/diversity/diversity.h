@@ -57,6 +57,9 @@ typedef std::function<double(Solution const &, Solution const &)>
  *     maximally diverse, a value of zero indicates they are the same.
  */
 double brokenPairsDistance(Solution const &first, Solution const &second);
+
+std::vector<size_t> differentNeighbours(Solution const &first,
+                                        Solution const &second);
 }  // namespace pyvrp::diversity
 
 #endif  // PYVRP_DIVERSITY_H
