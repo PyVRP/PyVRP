@@ -683,13 +683,15 @@ def test_iter_empty_trips(ok_small_multiple_trips):
 
 def test_small_example_from_cattaruzza_paper():
     """
-    Tests a small multi-trip VRP example. The data are from the paper by
-    Cattaruzza et al. (2016), corresponding to their Figure 1.
+    Tests a small multi-trip VRP example. The data are from [1]_, corresponding
+    to their Figure 1.
 
-    Cattaruzza, D., N. Absi, and D. Feillet (2016). The Multi-Trip Vehicle
-    Routing Problem with Time Windows and Release Dates.
-    *Transportation Science* 50(2): 676 - 693.
-    https://doi.org/10.1287/trsc.2015.0608.
+    References
+    ----------
+    .. [1] D. Cattaruzza, N. Absi, and D. Feillet (2016). The Multi-Trip
+           Vehicle Routing Problem with Time Windows and Release Dates.
+           *Transportation Science* 50(2): 676-693.
+           https://doi.org/10.1287/trsc.2015.0608.
     """
     # The paper has 20 service duration at the depot. We do not have this field
     # so we instead add the 20 extra time to the outgoing depot arcs.

@@ -1049,7 +1049,7 @@ def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
     .. [1] Yu Yang (2023). An Exact Price-Cut-and-Enumerate Method for the
            Capacitated Multitrip Vehicle Routing Problem with Time Windows.
            *Transportation Science* 57(1): 230-251.
-           https://doi.org/10.1287/trsc.2022.1161
+           https://doi.org/10.1287/trsc.2022.1161.
     """
     m = Model.from_data(mtvrptw_release_times)
     res = m.solve(stop=MaxIterations(5))
