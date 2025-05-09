@@ -189,7 +189,7 @@ class _InstanceParser:
             # Some instances describe a uniform service time as a single value
             # that applies to all clients.
             service_times = np.full(self.num_locations, service_times)
-            service_times[0] = 0
+            service_times[: self.num_depots] = 0
 
         return self.round_func(service_times)
 
@@ -207,6 +207,19 @@ class _InstanceParser:
             return np.zeros(self.num_locations, dtype=np.int64)
 
         return self.round_func(self.instance["release_time"])
+
+    def reload_depots(self) -> list[tuple[int, ...]]:
+        if "vehicles_reload_depot" not in self.instance:
+            return [tuple() for _ in range(self.num_vehicles)]
+
+        reload_depots = self.instance["vehicles_reload_depot"]
+
+        if isinstance(reload_depots[0], Number):
+            # Some instances describe only one reload depot per vehicle, so
+            # we first cast it to a 2D array.
+            reload_depots = np.atleast_2d(reload_depots).T
+
+        return [tuple(idx - 1 for idx in depots) for depots in reload_depots]
 
     def prizes(self) -> np.ndarray:
         if "prize" not in self.instance:
@@ -232,9 +245,15 @@ class _InstanceParser:
             client_idcs = tuple(range(self.num_depots, self.num_locations))
             return [client_idcs for _ in range(self.num_vehicles)]
 
+        allowed_clients = self.instance["vehicles_allowed_clients"]
+
+        if isinstance(allowed_clients[0], Number):
+            # Some instances describe only one allowed client per vehicle, so
+            # we first cast it to a 2D array.
+            allowed_clients = np.atleast_2d(allowed_clients).T
+
         return [
-            tuple(idx - 1 for idx in clients)
-            for clients in self.instance["vehicles_allowed_clients"]
+            tuple(idx - 1 for idx in clients) for clients in allowed_clients
         ]
 
     def vehicles_depots(self) -> np.ndarray:
@@ -270,14 +289,31 @@ class _InstanceParser:
 
         return self.round_func(max_durations)
 
+    def max_reloads(self) -> np.ndarray:
+        if "vehicles_max_reloads" not in self.instance:
+            return np.full(self.num_vehicles, 0)
+
+        max_reloads = self.instance["vehicles_max_reloads"]
+
+        if isinstance(max_reloads, Number):
+            # Some instances describe a uniform max reloads constraint as a
+            # single value that applies to all vehicles.
+            return np.full(self.num_vehicles, max_reloads)
+
+        return max_reloads
+
     def mutually_exclusive_groups(self) -> list[list[int]]:
         if "mutually_exclusive_group" not in self.instance:
             return []
 
-        raw_groups = [
-            [idx - 1 for idx in group]
-            for group in self.instance["mutually_exclusive_group"]
-        ]
+        groups = self.instance["mutually_exclusive_group"]
+
+        if isinstance(groups[0], Number):
+            # Some instances describe only one client per group, so we first
+            # cast it to a 2D array.
+            groups = np.atleast_2d(groups).T
+
+        raw_groups = [[idx - 1 for idx in group] for group in groups]
 
         # Only keep groups if they have more than one member. Empty groups or
         # groups with one member are trivial to decide, so there is no point
@@ -370,9 +406,11 @@ class _ProblemDataBuilder:
         vehicles_data = (
             self.parser.capacities(),
             self.parser.allowed_clients(),
+            self.parser.reload_depots(),
             self.parser.vehicles_depots(),
             self.parser.max_distances(),
             self.parser.max_durations(),
+            self.parser.max_reloads(),
         )
 
         if any(len(attr) != num_vehicles for attr in vehicles_data):
@@ -394,20 +432,30 @@ class _ProblemDataBuilder:
 
         vehicle_types = []
         for attributes, vehicles in type2idcs.items():
-            (capacity, clients, depot_idx, max_dist, max_duration) = attributes
+            (
+                capacity,
+                clients,
+                reloads,
+                depot,
+                max_distance,
+                max_duration,
+                max_reloads,
+            ) = attributes
 
             vehicle_type = VehicleType(
                 num_available=len(vehicles),
                 capacity=capacity,
-                start_depot=depot_idx,
-                end_depot=depot_idx,
+                start_depot=depot,
+                end_depot=depot,
                 # The literature specifies depot time windows. We do not have
                 # depot time windows but instead set those on the vehicles.
-                tw_early=time_windows[depot_idx][0],
-                tw_late=time_windows[depot_idx][1],
+                tw_early=time_windows[depot][0],
+                tw_late=time_windows[depot][1],
                 max_duration=max_duration,
-                max_distance=max_dist,
+                max_distance=max_distance,
                 profile=client2profile[clients],
+                reload_depots=reloads,
+                max_reloads=max_reloads,
                 # A bit hacky, but this csv-like name is really useful to track
                 # the actual vehicles that make up this vehicle type.
                 name=",".join(map(str, vehicles)),

@@ -75,6 +75,15 @@ def ok_small_multiple_load():
 
 
 @pytest.fixture(scope="session")
+def ok_small_multiple_trips():
+    """
+    Fixture that returns the OkSmall instance, but where vehicles may also
+    reload at the depot.
+    """
+    return read("data/OkSmallMultipleTrips.txt")
+
+
+@pytest.fixture(scope="session")
 def ok_small_mutually_exclusive_groups():
     """
     Fixture that returns the OkSmall instance, but where the first three

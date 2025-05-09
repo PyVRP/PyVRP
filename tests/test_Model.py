@@ -960,7 +960,7 @@ def test_bug_client_group_indices():
     assert_equal(len(group2), 1)
 
 
-def test_integer_or_list_vehicle_capacity_and_load_arguments():
+def test_integer_vehicle_capacity_and_load_arguments_are_promoted_to_lists():
     """
     Tests that passing an integer capacity or initial load functions the same
     way as passing a list of a single integer - the integer arguments are
@@ -976,3 +976,77 @@ def test_integer_or_list_vehicle_capacity_and_load_arguments():
     assert_(veh1 == veh2)
     assert_equal(veh2.capacity, [10])
     assert_equal(veh2.initial_load, [1])
+
+
+def test_adding_vehicle_reload_depots():
+    """
+    Smoke test that checks adding reload depots to the vehicle type works
+    correctly.
+    """
+    m = Model()
+    depot1 = m.add_depot(x=0, y=0)
+    depot2 = m.add_depot(x=1, y=1)
+
+    veh_type1 = m.add_vehicle_type(reload_depots=[depot1])
+    assert_equal(veh_type1.reload_depots, [0])
+
+    veh_type2 = m.add_vehicle_type(reload_depots=[depot1, depot2])
+    assert_equal(veh_type2.reload_depots, [0, 1])
+
+
+def test_adding_unknown_reload_depots_raises():
+    """
+    Tests that passing an unknown reload depot when creating a new vehicle
+    type raises.
+    """
+    m = Model()
+    depot = Depot(x=0, y=0)  # not in model
+
+    with assert_raises(ValueError):
+        m.add_vehicle_type(reload_depots=[depot])
+
+
+def test_model_solves_multi_trip_instance():
+    """
+    Smoke test to check that the model can solve an instance with multiple
+    trips / reloading.
+    """
+    m = Model()
+    depot1 = m.add_depot(0, 0)
+    depot2 = m.add_depot(0, 0)
+
+    m.add_vehicle_type(
+        capacity=[10],
+        reload_depots=[depot1, depot2],
+        max_reloads=2,
+    )
+
+    for idx in range(5):
+        m.add_client(idx, 0, delivery=[5])
+
+    for frm in m.locations:
+        for to in m.locations:
+            manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, distance=manhattan)
+
+    res = m.solve(stop=MaxIterations(25))
+    assert_(res.is_feasible())
+    assert_equal(res.cost(), 12)
+
+    routes = res.best.routes()
+    assert_equal(len(routes), 1)
+
+    # This route transports the full 25 client delivery demand using a vehicle
+    # with capacity of just 10 because it reloads twice along the route.
+    route = routes[0]
+    assert_equal(route.excess_load(), [0])
+    assert_equal(route.num_trips(), 3)
+
+    # The visits are grouped as {2}, {3, 4}, and {5, 6}, because the instance
+    # is on a line (0 is depot, clients are at 0, 1, ..., 4) and there can be
+    # at most two visits per trip. In that setting it's cheapest to visit 2
+    # using a singleton route, and combine 6 with 5, and then finally 4 with 3.
+    visit_sets = [set(trip.visits()) for trip in route.trips()]
+    assert_({2} in visit_sets)
+    assert_({3, 4} in visit_sets)
+    assert_({5, 6} in visit_sets)

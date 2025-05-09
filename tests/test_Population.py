@@ -141,7 +141,7 @@ def test_add_triggers_purge(ok_small):
     # RNG is fixed, and this next solution is feasible. Since we now have a
     # feasible population that is of maximal size, adding this solution should
     # trigger survivor selection (purge). Survivor selection reduces the
-    # feasible subpopulation to min_pop_size, so the overal population is then
+    # feasible subpopulation to min_pop_size, so the overall population is then
     # just num_infeas + min_pop_size.
     sol = Solution.make_random(ok_small, rng)
     assert_(sol.is_feasible())

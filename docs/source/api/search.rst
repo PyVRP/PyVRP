@@ -73,6 +73,9 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    .. autoclass:: SwapTails
       :exclude-members: evaluate, apply
 
+   .. autoclass:: TripRelocate
+      :exclude-members: evaluate, apply
+
 
 Route operators
 ---------------

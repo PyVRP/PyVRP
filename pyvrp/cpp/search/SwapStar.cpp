@@ -10,15 +10,14 @@ using pyvrp::search::SwapStar;
 
 void SwapStar::updateRemovalCosts(Route *R, CostEvaluator const &costEvaluator)
 {
-    for (size_t idx = 1; idx != R->size() + 1; ++idx)
+    for (auto const *U : *R)
     {
+        auto const idx = U->idx();
         auto const proposal
             = Route::Proposal(R->before(idx - 1), R->after(idx + 1));
 
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true, true>(deltaCost, proposal);
-
-        auto const *U = (*R)[idx];
         removalCosts(R->idx(), U->client()) = deltaCost;
     }
 
@@ -34,7 +33,7 @@ void SwapStar::updateInsertPoints(Route *R,
     auto &insertPoints = insertCache(R->idx(), U->client());
     insertPoints.fill({std::numeric_limits<Cost>::max(), nullptr});
 
-    for (size_t idx = 0; idx != R->size() + 1; ++idx)
+    for (size_t idx = 0; idx != R->size() - 1; ++idx)
     {
         auto const proposal = Route::Proposal(
             R->before(idx), U->route()->at(U->idx()), R->after(idx + 1));
@@ -108,7 +107,10 @@ SwapStar::InsertPoint SwapStar::bestInsertPoint(
         updateInsertPoints(route, U, costEvaluator);
 
     for (auto [cost, where] : insertCache(route->idx(), U->client()))
-        if (where && where != V && n(where) != V)  // only if V is not adjacent
+        if (where && where != V && n(where) != V && V->trip() == where->trip())
+            // Only if V is not adjacent. We also require that V is in the same
+            // trip as the node we plan to remove, because we cannot currently
+            // evaluate segments with intermediate reloads in them.
             return std::make_pair(cost, where);
 
     // As a fallback option, we consider inserting in the place of V.
@@ -129,6 +131,7 @@ Cost SwapStar::evaluateMove(Route::Node const *U,
 {
     assert(V->route() == remove->route());
     assert(V != remove);
+    assert(!remove->isDepot());
 
     auto const *route = V->route();
 
@@ -183,6 +186,8 @@ Cost SwapStar::evaluate(Route *routeU,
     for (auto *U : *routeU)
         for (auto *V : *routeV)
         {
+            assert(!U->isDepot() && !V->isDepot());
+
             // The following lines compute a delta cost of removing U and V from
             // their own routes and inserting them into the other's route in the
             // best place. This is approximate since removal and insertion are

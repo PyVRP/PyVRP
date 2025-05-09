@@ -66,6 +66,7 @@ class Result:
             "Solution results",
             "================",
             f"    # routes: {self.best.num_routes()}",
+            f"     # trips: {self.best.num_trips()}",
             f"   # clients: {self.best.num_clients()}",
             f"   objective: {obj_str}",
             f"    distance: {self.best.distance()}",
