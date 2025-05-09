@@ -226,9 +226,9 @@ DurationSegment DurationSegment::finaliseBack() const
     // We finalise this segment by taking into account the end time of the
     // previous trip, and then merging with this segment, finalised at the
     // start, because that accounts for release times and our earliest and
-    // latest start.
+    // latest start (and, as a consequence, end).
     DurationSegment const prev = {0, 0, 0, prevEndLate_, 0};
-    auto const finalised = merge(0, prev, finaliseFront());
+    DurationSegment const finalised = merge(0, prev, finaliseFront());
 
     return {0,
             0,
