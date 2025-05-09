@@ -4,10 +4,12 @@
 #include "Measure.h"
 #include "ProblemData.h"
 
+#include <iosfwd>
+
 namespace pyvrp
 {
 /**
- * LoadSegment(delivery: int, pickup: int, load: int, excess_load: int)
+ * LoadSegment(delivery: int, pickup: int, load: int, excess_load: int = 0)
  *
  * Creates a new load segment for delivery and pickup loads in a single
  * dimension. These load segments can be efficiently concatenated, and track
@@ -42,7 +44,7 @@ public:
      * useful with reloading, because the finalised segment can be concatenated
      * with load segments of subsequent trips.
      */
-    LoadSegment finalise(Load capacity) const;
+    [[nodiscard]] inline LoadSegment finalise(Load capacity) const;
 
     /**
      * Returns the delivery amount, that is, the total amount of load delivered
@@ -80,7 +82,10 @@ public:
     LoadSegment(ProblemData::VehicleType const &vehicleType, size_t dimension);
 
     // Construct from raw data.
-    inline LoadSegment(Load delivery, Load pickup, Load load, Load excessLoad);
+    inline LoadSegment(Load delivery,
+                       Load pickup,
+                       Load load,
+                       Load excessLoad = 0);
 
     // Move or copy construct from the other load segment.
     inline LoadSegment(LoadSegment const &) = default;
@@ -108,10 +113,18 @@ Load LoadSegment::excessLoad(Load capacity) const
     return excessLoad_ + std::max<Load>(load_ - capacity, 0);
 }
 
+LoadSegment LoadSegment::finalise(Load capacity) const
+{
+    return {0, 0, 0, excessLoad(capacity)};
+}
+
 LoadSegment::LoadSegment(Load delivery, Load pickup, Load load, Load excessLoad)
     : delivery_(delivery), pickup_(pickup), load_(load), excessLoad_(excessLoad)
 {
 }
 }  // namespace pyvrp
+
+std::ostream &operator<<(std::ostream &out,  // helpful for debugging
+                         pyvrp::LoadSegment const &segment);
 
 #endif  // PYVRP_LOADSEGMENT_H

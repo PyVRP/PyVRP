@@ -47,16 +47,13 @@ def plot_route_schedule(
     vehicle_type = data.vehicle_type(route.vehicle_type())
     distances = data.distance_matrix(vehicle_type.profile)
     durations = data.duration_matrix(vehicle_type.profile)
-    horizon = vehicle_type.tw_late - vehicle_type.tw_early
 
     track_load = load_dimension < data.num_load_dimensions
 
     # Initialise tracking variables
-    t = route.start_time()
     drive_time = 0
     serv_time = 0
     dist = 0
-    slack = horizon
 
     load = 0
     if track_load:
@@ -76,57 +73,44 @@ def plot_route_schedule(
         trace_drive_serv.append((dist, drive_time + serv_time))
         trace_load.append((dist, load))
 
-    add_traces(dist, t, drive_time, serv_time, load)
-    add_traces(dist, t, drive_time, serv_time, load)
-
     prev_idx = vehicle_type.start_depot
-    for idx in [*list(route), vehicle_type.end_depot]:
+    for visit in route.schedule():
+        idx = visit.location
         stop = data.location(idx)
 
-        if isinstance(stop, Client):
-            tw_early = stop.tw_early
-            tw_late = stop.tw_late
-        else:
-            tw_early = vehicle_type.tw_early
-            tw_late = vehicle_type.tw_late
+        drive_time += durations[prev_idx, idx]
+        dist += distances[prev_idx, idx]
 
-        delta_time = durations[prev_idx, idx]
-        delta_dist = distances[prev_idx, idx]
-        t += delta_time
-        drive_time += delta_time
-        dist += delta_dist
+        arrive = visit.start_service - visit.wait_duration
+        add_traces(dist, arrive, drive_time, serv_time, load)
 
-        add_traces(dist, t, drive_time, serv_time, load)
-
-        if t < tw_early:
-            t = tw_early
-
-        slack = min(slack, tw_late - t)
-        if t > tw_late:
-            timewarp_lines.append(((dist, t), (dist, tw_late)))
-            t = tw_late
+        if visit.time_warp > 0:
+            true_arrive = visit.start_service + visit.time_warp
+            timewarp_lines.append(((dist, true_arrive), (dist, stop.tw_late)))
 
         if isinstance(stop, Client) and track_load:
             load -= stop.delivery[load_dimension]
             load += stop.pickup[load_dimension]
 
-        add_traces(dist, t, drive_time, serv_time, load)
+        add_traces(dist, visit.start_service, drive_time, serv_time, load)
 
-        if isinstance(stop, Client):
-            t += stop.service_duration
-            serv_time += stop.service_duration
+        serv_time += visit.service_duration
+        add_traces(dist, visit.end_service, drive_time, serv_time, load)
 
-            add_traces(dist, t, drive_time, serv_time, load)
-
-            timewindow_lines.append(((dist, tw_early), (dist, tw_late)))
+        timewindow_lines.append(((dist, stop.tw_early), (dist, stop.tw_late)))
 
         prev_idx = idx
 
     xs, ys = zip(*trace_time)
     ax.plot(xs, ys, label="Time (earliest)")
-    if slack > 0:
+
+    if route.slack() > 0:
         ax.fill_between(
-            xs, ys, np.array(ys) + slack, alpha=0.3, label="Time (slack)"
+            xs,
+            ys,
+            np.array(ys) + route.slack(),
+            alpha=0.3,
+            label="Time (slack)",
         )
 
     ax.plot(

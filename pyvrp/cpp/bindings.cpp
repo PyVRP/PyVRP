@@ -256,7 +256,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("start_late") = py::none(),
              py::arg("initial_load") = py::list(),
              py::arg("reload_depots") = py::list(),
-             py::arg("max_reloads") = 0,
+             py::arg("max_reloads") = std::numeric_limits<size_t>::max(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -747,7 +747,6 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.timeWarp(),
                                       route.travelDuration(),
                                       route.serviceDuration(),
-                                      route.releaseTime(),
                                       route.startTime(),
                                       route.slack(),
                                       route.prizes(),
@@ -774,15 +773,14 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[9].cast<pyvrp::Duration>(),             // time warp
                     t[10].cast<pyvrp::Duration>(),            // travel
                     t[11].cast<pyvrp::Duration>(),            // service
-                    t[12].cast<pyvrp::Duration>(),            // release
-                    t[13].cast<pyvrp::Duration>(),            // start time
-                    t[14].cast<pyvrp::Duration>(),            // slack
-                    t[15].cast<pyvrp::Cost>(),                // prizes
-                    t[16].cast<std::pair<double, double>>(),  // centroid
-                    t[17].cast<size_t>(),                     // vehicle type
-                    t[18].cast<size_t>(),                     // start depot
-                    t[19].cast<size_t>(),                     // end depot
-                    t[20].cast<Schedule>());                  // visit schedule
+                    t[12].cast<pyvrp::Duration>(),            // start time
+                    t[13].cast<pyvrp::Duration>(),            // slack
+                    t[14].cast<pyvrp::Cost>(),                // prizes
+                    t[15].cast<std::pair<double, double>>(),  // centroid
+                    t[16].cast<size_t>(),                     // vehicle type
+                    t[17].cast<size_t>(),                     // start depot
+                    t[18].cast<size_t>(),                     // end depot
+                    t[19].cast<Schedule>());                  // visit schedule
 
                 return route;
             }))
@@ -1072,7 +1070,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("delivery"),
              py::arg("pickup"),
              py::arg("load"),
-             py::arg("excess_load"))
+             py::arg("excess_load") = 0)
         .def("delivery",
              &LoadSegment::delivery,
              DOC(pyvrp, LoadSegment, delivery))
@@ -1082,12 +1080,26 @@ PYBIND11_MODULE(_pyvrp, m)
              &LoadSegment::excessLoad,
              py::arg("capacity"),
              DOC(pyvrp, LoadSegment, excessLoad))
+        .def("finalise",
+             &LoadSegment::finalise,
+             py::arg("capacity"),
+             DOC(pyvrp, LoadSegment, finalise))
         .def_static(
-            "merge", &LoadSegment::merge, py::arg("first"), py::arg("second"));
+            "merge", &LoadSegment::merge, py::arg("first"), py::arg("second"))
+        .def("__str__",
+             [](LoadSegment const &segment)
+             {
+                 std::stringstream stream;
+                 stream << segment;
+                 return stream.str();
+             });
 
     py::class_<DurationSegment>(
         m, "DurationSegment", DOC(pyvrp, DurationSegment))
         .def(py::init<pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
@@ -1096,16 +1108,41 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("time_warp"),
              py::arg("tw_early"),
              py::arg("tw_late"),
-             py::arg("release_time"))
+             py::arg("release_time"),
+             py::arg("cum_duration") = 0,
+             py::arg("cum_time_warp") = 0,
+             py::arg("prev_end_late")
+             = std::numeric_limits<pyvrp::Duration>::max())
         .def("duration",
              &DurationSegment::duration,
              DOC(pyvrp, DurationSegment, duration))
+        .def("finalise_back",
+             &DurationSegment::finaliseBack,
+             DOC(pyvrp, DurationSegment, finaliseBack))
+        .def("finalise_front",
+             &DurationSegment::finaliseFront,
+             DOC(pyvrp, DurationSegment, finaliseFront))
         .def("tw_early",
              &DurationSegment::twEarly,
              DOC(pyvrp, DurationSegment, twEarly))
         .def("tw_late",
              &DurationSegment::twLate,
              DOC(pyvrp, DurationSegment, twLate))
+        .def("end_early",
+             &DurationSegment::endEarly,
+             DOC(pyvrp, DurationSegment, endEarly))
+        .def("end_late",
+             &DurationSegment::endLate,
+             DOC(pyvrp, DurationSegment, endLate))
+        .def("prev_end_late",
+             &DurationSegment::prevEndLate,
+             DOC(pyvrp, DurationSegment, prevEndLate))
+        .def("release_time",
+             &DurationSegment::releaseTime,
+             DOC(pyvrp, DurationSegment, releaseTime))
+        .def("slack",
+             &DurationSegment::slack,
+             DOC(pyvrp, DurationSegment, slack))
         .def("time_warp",
              &DurationSegment::timeWarp,
              py::arg("max_duration")
@@ -1115,7 +1152,14 @@ PYBIND11_MODULE(_pyvrp, m)
                     &DurationSegment::merge,
                     py::arg("edge_duration"),
                     py::arg("first"),
-                    py::arg("second"));
+                    py::arg("second"))
+        .def("__str__",
+             [](DurationSegment const &segment)
+             {
+                 std::stringstream stream;
+                 stream << segment;
+                 return stream.str();
+             });
 
     py::class_<RandomNumberGenerator>(
         m, "RandomNumberGenerator", DOC(pyvrp, RandomNumberGenerator))

@@ -130,4 +130,4 @@ PyVRP supports the following data sections:
 
    ``VEHICLES_MAX_RELOADS_SECTION``
       Maximum number of reloads per route, for each vehicle.
-      Reloads are not allowed if this section is not present.
+      Assumed unconstrained if this section is not present.

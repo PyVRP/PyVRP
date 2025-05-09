@@ -120,7 +120,6 @@ private:
     Duration timeWarp_ = 0;         // Total time warp on this route
     Duration travel_ = 0;           // Total *travel* duration on this route
     Duration service_ = 0;          // Total *service* duration on this route
-    Duration release_ = 0;          // Release time of this route
     Duration startTime_ = 0;        // (earliest) start time of this route
     Duration slack_ = 0;            // Total time slack on this route
     Cost prizes_ = 0;               // Total value of prizes on this route
@@ -265,7 +264,7 @@ public:
 
     /**
      * Earliest time at which this route can leave the depot. Follows from the
-     * release times of clients visited on this route.
+     * release times of clients visited on the first trip of this route.
      *
      * .. note::
      *
@@ -341,7 +340,6 @@ public:
           Duration timeWarp,
           Duration travel,
           Duration service,
-          Duration release,
           Duration startTime,
           Duration slack,
           Cost prizes,

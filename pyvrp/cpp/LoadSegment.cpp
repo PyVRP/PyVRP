@@ -1,12 +1,9 @@
 #include "LoadSegment.h"
 
+#include <fstream>
+
 using pyvrp::Load;
 using pyvrp::LoadSegment;
-
-LoadSegment LoadSegment::finalise(Load capacity) const
-{
-    return {0, 0, 0, excessLoad(capacity)};
-}
 
 Load LoadSegment::delivery() const { return delivery_; }
 
@@ -17,18 +14,29 @@ Load LoadSegment::load() const { return load_; }
 LoadSegment::LoadSegment(ProblemData::Client const &client, size_t dimension)
     : delivery_(client.delivery[dimension]),
       pickup_(client.pickup[dimension]),
-      load_(std::max<Load>(delivery_, pickup_)),
-      excessLoad_(0)
+      load_(std::max<Load>(delivery_, pickup_))
 {
 }
 
 LoadSegment::LoadSegment(ProblemData::VehicleType const &vehicleType,
                          size_t dimension)
-    : delivery_(0),
-      // Initial load is always a pickup quantity: it's already on the vehicle,
-      // and needs to be dropped off at a (reload) depot.
+    :  // Initial load is always a pickup quantity: it's already on the vehicle,
+       // and needs to be dropped off at a (reload) depot.
       pickup_(vehicleType.initialLoad[dimension]),
-      load_(vehicleType.initialLoad[dimension]),
-      excessLoad_(0)
+      load_(vehicleType.initialLoad[dimension])
 {
+}
+
+std::ostream &operator<<(std::ostream &out, LoadSegment const &segment)
+{
+    // Define 'capacity' as current load, so we can see only the cumulative
+    // excess load when printing.
+    auto const capacity = segment.load();
+
+    // clang-format off
+    return out << "delivery=" << segment.delivery() 
+               << ", pickup=" << segment.pickup()
+               << ", load=" << segment.load()
+               << ", excess_load=" << segment.excessLoad(capacity);
+    // clang-format on
 }
