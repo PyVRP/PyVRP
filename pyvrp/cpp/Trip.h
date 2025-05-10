@@ -64,6 +64,9 @@ public:
     [[nodiscard]] Visits::const_iterator begin() const;
     [[nodiscard]] Visits::const_iterator end() const;
 
+    [[nodiscard]] Visits::const_reverse_iterator rbegin() const;
+    [[nodiscard]] Visits::const_reverse_iterator rend() const;
+
     /**
      * Trip visits, as a list of clients.
      */

@@ -1032,3 +1032,87 @@ def test_bug_reload_swaps_pickup_delivery_swap(small_spd):
     assert_equal(route.load_after(2).delivery(), 34)
     assert_equal(route.load_after(2).pickup(), 50)
     assert_equal(route.load_after(2).load(), 50)
+
+
+def test_multi_trip_initial_load(ok_small_multiple_trips):
+    """
+    Tests that initial load is correctly calculated in a multi-trip setting.
+    """
+    old_type = ok_small_multiple_trips.vehicle_type(0)
+    new_type = old_type.replace(initial_load=[5])
+    data = ok_small_multiple_trips.replace(vehicle_types=[new_type])
+
+    route = Route(data, 0, 0)
+    for loc in [1, 2, 0, 3, 4]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    # There's five excess load on the first trip, due to five initial load
+    # already on the vehicle upon departure from the starting depot.
+    assert_equal(route.excess_load(), [5])
+    assert_equal(route.load_at(0).load(), 5)
+    assert_equal(route.load_before(3).load(), 15)
+    assert_equal(route.load_after(3).load(), 8)
+
+
+def test_multi_trip_with_release_times():
+    """
+    Test a small example with multiple trips and (binding) release times. See
+    the test of the same name for ``pyvrp::Route`` for further details.
+    """
+    matrix = [
+        [0, 30, 20, 40],
+        [0, 0, 10, 0],
+        [5, 0, 0, 0],
+        [10, 0, 0, 0],
+    ]
+
+    data = ProblemData(
+        clients=[
+            Client(0, 0, tw_early=60, tw_late=100, release_time=40),
+            Client(0, 0, tw_early=70, tw_late=90, release_time=50),
+            Client(0, 0, tw_early=80, tw_late=150, release_time=100),
+        ],
+        depots=[Depot(0, 0)],
+        vehicle_types=[VehicleType(reload_depots=[0])],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+    )
+
+    route = Route(data, 0, 0)
+    for loc in [1, 2, 0, 3]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    # The two trips run from [50, 95] and [100, 150]. There's 5 wait duration
+    # in between the two trips, for a total route duration of 100.
+    assert_equal(route.duration(), 100)
+    assert_equal(route.time_warp(), 0)
+
+    # Duration segment associated with the first trip from 50 to 95.
+    trip1 = route.duration_before(3)
+    assert_equal(trip1.tw_early(), 50)
+    assert_equal(trip1.tw_late(), 50)
+    assert_equal(trip1.duration(), 45)
+
+    # Duration segment associated with the second trip from 100 to 150.
+    trip2 = route.duration_after(3)
+    assert_equal(trip2.tw_early(), 100)
+    assert_equal(trip2.tw_late(), 110)
+    assert_equal(trip2.duration(), 50)
+
+    # Prefix duration segment tracking the whole route (associated with the end
+    # depot).
+    before = route.duration_before(5)
+    assert_equal(before.tw_early(), 100)  # of last trip
+    assert_equal(before.tw_late(), 110)  # of last trip
+    assert_equal(before.duration(), 100)
+    assert_equal(before.time_warp(), 0)
+
+    # Postfix duration segment tracking the whole route (associated with the
+    # start depot).
+    after = route.duration_after(0)
+    assert_equal(after.tw_early(), 50)  # of first trip
+    assert_equal(after.tw_late(), 50)  # of first trip
+    assert_equal(after.duration(), 100)
+    assert_equal(after.time_warp(), 0)

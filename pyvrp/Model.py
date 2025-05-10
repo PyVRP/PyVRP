@@ -335,7 +335,7 @@ class Model:
         start_late: int | None = None,
         initial_load: int | list[int] = [],
         reload_depots: list[Depot] = [],
-        max_reloads: int = 0,
+        max_reloads: int = np.iinfo(np.uint64).max,
         *,
         name: str = "",
     ) -> VehicleType:

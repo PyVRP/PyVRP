@@ -1,4 +1,5 @@
 import pickle
+from itertools import pairwise
 
 import numpy as np
 import pytest
@@ -547,13 +548,11 @@ def test_raises_multiple_trips_without_reload_depots(ok_small):
     Tests that the route constructor raises when there is more than one trip,
     yet the vehicle type does not support reloading.
     """
-    veh_type = ok_small.vehicle_type(0).replace(max_reloads=2)
-    data = ok_small.replace(vehicle_types=[veh_type])
-    assert_equal(len(data.vehicle_type(0).reload_depots), 0)
+    assert_equal(len(ok_small.vehicle_type(0).reload_depots), 0)
 
-    trips = [Trip(data, [1, 2], 0), Trip(data, [3], 0)]
+    trips = [Trip(ok_small, [1, 2], 0), Trip(ok_small, [3], 0)]
     with assert_raises(ValueError):
-        Route(data, trips, 0)
+        Route(ok_small, trips, 0)
 
 
 def test_raises_vehicle_max_reloads(ok_small_multiple_trips):
@@ -643,7 +642,7 @@ def test_schedule_multi_trip_example(ok_small_multiple_trips):
 
     schedule = route.schedule()
     locations = [visit.location for visit in schedule]
-    assert_equal(locations, [0, 1, 2, 0, 0, 3, 4, 0])
+    assert_equal(locations, [0, 1, 2, 0, 3, 4, 0])
 
 
 def test_index_multiple_trips(ok_small_multiple_trips):
@@ -682,4 +681,174 @@ def test_iter_empty_trips(ok_small_multiple_trips):
     assert_equal(list(route), [1, 2, 3, 4])
 
 
-# TODO test release time / multi trip
+def test_small_example_from_cattaruzza_paper():
+    """
+    Tests a small multi-trip VRP example. The data are from [1]_, corresponding
+    to their Figure 1.
+
+    References
+    ----------
+    .. [1] D. Cattaruzza, N. Absi, and D. Feillet (2016). The Multi-Trip
+           Vehicle Routing Problem with Time Windows and Release Dates.
+           *Transportation Science* 50(2): 676-693.
+           https://doi.org/10.1287/trsc.2015.0608.
+    """
+    # The paper has 20 service duration at the depot. We do not have this field
+    # so we instead add the 20 extra time to the outgoing depot arcs.
+    depot = Depot(0, 0, tw_early=0, tw_late=200)
+    clients = [
+        # Figure 1 details release times for some clients. But release times
+        # are not actually binding in the example, so they are not needed.
+        Client(0, 0, tw_early=100, tw_late=120, service_duration=5),
+        Client(0, 0, tw_early=50, tw_late=75, service_duration=5),
+        Client(0, 0, tw_early=50, tw_late=75, service_duration=5),
+        Client(0, 0, tw_early=50, tw_late=100, service_duration=5),
+        Client(0, 0, tw_early=50, tw_late=100, service_duration=5),
+    ]
+
+    matrix = [
+        [0, 25, 35, 40, 30, 35],  # +20 for depot service duration
+        [5, 0, 20, 20, 15, 15],
+        [15, 20, 0, 40, 20, 30],
+        [20, 20, 40, 0, 30, 10],
+        [10, 15, 20, 30, 0, 20],
+        [15, 15, 30, 10, 20, 0],
+    ]
+
+    data = ProblemData(
+        clients=clients,
+        depots=[depot],
+        vehicle_types=[VehicleType(reload_depots=[0])],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+    )
+
+    trip1 = Trip(data, [5, 3], 0)
+    trip2 = Trip(data, [1], 0)
+    trip3 = Trip(data, [4], 0)
+    trip4 = Trip(data, [2], 0)
+    route = Route(data, [trip1, trip2, trip3, trip4], 0)
+
+    # These values were verified from the paper, and where needed calculated
+    # manually. Note that the paper setting requires the first trip to start
+    # immediately, which results in 15 wait duration. We do not require this,
+    # instead starting a little later to avoid the wait duration. The other
+    # quantities reported below match the paper.
+    assert_equal(route.start_time(), 15)
+    assert_equal(route.end_time(), 95)
+    assert_equal(route.time_warp(), 75 + 55)  # two time warp violations
+    assert_equal(route.slack(), 0)  # there is time warp, so no slack
+    assert_equal(route.service_duration(), 25)  # at clients
+    assert_equal(route.travel_duration(), 185)  # incl. 80 'service' at depots
+
+
+def test_multi_trip_with_release_times():
+    """
+    Test a small example with multiple trips and (binding) release times.
+    """
+    matrix = [
+        [0, 30, 20, 40],
+        [0, 0, 10, 0],
+        [5, 0, 0, 0],
+        [10, 0, 0, 0],
+    ]
+
+    data = ProblemData(
+        clients=[
+            Client(0, 0, tw_early=60, tw_late=100, release_time=40),
+            Client(0, 0, tw_early=70, tw_late=90, release_time=50),
+            Client(0, 0, tw_early=80, tw_late=150, release_time=100),
+        ],
+        depots=[Depot(0, 0)],
+        vehicle_types=[VehicleType(reload_depots=[0])],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+    )
+
+    trip1 = Trip(data, [1, 2], 0)
+    trip2 = Trip(data, [3], 0)
+
+    assert_equal(trip1.release_time(), 50)
+    assert_equal(trip2.release_time(), 100)
+
+    # Route should have a release time corresponding to its first trip.
+    route = Route(data, [trip1, trip2], 0)
+    assert_equal(route.release_time(), trip1.release_time())
+
+    # Travel is explained better below.
+    assert_equal(trip1.travel_duration(), 45)
+    assert_equal(trip2.travel_duration(), 50)
+    assert_equal(route.travel_duration(), 95)
+
+    # No service.
+    assert_equal(trip1.service_duration(), 0)
+    assert_equal(trip2.service_duration(), 0)
+    assert_equal(route.service_duration(), 0)
+
+    # Some route-level statistics. We start at 50, the release time for the
+    # first trip. Then we drive to client 1 and arrive at 80. We do service,
+    # and drive to 2, where we arrive at 90. Again, service and drive to 0,
+    # where we arrive at 95. We then wait until 100, the release time for the
+    # second trip. We then drive to 3, where we arrive at 140. We service, and
+    # drive back to the depot, where we arrive at 150. We finish at 150.
+    assert_equal(route.start_time(), 50)
+    assert_equal(route.duration(), 100)
+    assert_equal(route.end_time(), 150)
+    assert_equal(route.wait_duration(), 5)  # waiting for release time
+    assert_equal(route.time_warp(), 0)
+    assert_equal(route.slack(), 0)  # the schedule is tight
+
+    schedule = route.schedule()
+
+    assert_equal(schedule[0].start_service, 50)
+    assert_equal(schedule[0].end_service, 50)
+
+    assert_equal(schedule[3].start_service, 100)
+    assert_equal(schedule[3].end_service, 100)
+    assert_equal(schedule[3].wait_duration, 5)
+
+    assert_equal(schedule[-1].start_service, 150)
+    assert_equal(schedule[-1].end_service, 150)
+
+
+def test_multi_trip_initial_load(ok_small_multiple_trips):
+    """
+    Tests that initial load is correctly calculated in a multi-trip setting.
+    """
+    old_type = ok_small_multiple_trips.vehicle_type(0)
+    new_type = old_type.replace(initial_load=[5])
+    data = ok_small_multiple_trips.replace(vehicle_types=[new_type])
+
+    trip1 = Trip(data, [1, 2], 0)
+    trip2 = Trip(data, [3, 4], 0)
+    route = Route(data, [trip1, trip2], 0)
+
+    # The trips themselves are fine, but the vehicle has initial load, and that
+    # causes the first trip - which has 10 delivery load already - to exceed
+    # the vehicle's capacity.
+    assert_equal(trip1.excess_load(), [0])
+    assert_equal(trip2.excess_load(), [0])
+    assert_equal(route.excess_load(), [5])
+
+
+@pytest.mark.parametrize(
+    "trips",
+    [
+        [[61, 64, 49, 55, 54, 53], [70, 11, 10, 8]],
+        [[5, 2, 1, 7, 3, 4], [18, 19, 16, 14, 12]],
+        [[20, 22, 24, 27, 30, 29, 6], [68, 57, 40, 44, 46], [15, 17, 13, 9]],
+    ],
+)
+def test_multi_trip_release_time_routes(mtvrptw_release_times, trips):
+    """
+    Tests a few routes from a solution to this multi-trip instance with release
+    times. These routes were part of a best-found solution after a 5min run, so
+    they should be feasible. Furthermore, the release times of each trip should
+    obviously be non-decreasing.
+    """
+    trips = [Trip(mtvrptw_release_times, visits, 0) for visits in trips]
+    route = Route(mtvrptw_release_times, trips, 0)
+    assert_(route.is_feasible())
+
+    for trip1, trip2 in pairwise(trips):
+        assert_(trip1.release_time() <= trip2.release_time())

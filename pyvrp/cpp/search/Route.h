@@ -785,7 +785,7 @@ Cost Route::unitDistanceCost() const { return vehicleType_.unitDistanceCost; }
 Duration Route::duration() const
 {
     assert(!dirty);
-    return durBefore.back().duration();
+    return durAfter[0].duration();
 }
 
 Cost Route::durationCost() const
@@ -803,7 +803,7 @@ Distance Route::maxDistance() const { return vehicleType_.maxDistance; }
 Duration Route::timeWarp() const
 {
     assert(!dirty);
-    return durBefore.back().timeWarp(maxDuration());
+    return durAfter[0].timeWarp(maxDuration());
 }
 
 size_t Route::profile() const { return vehicleType_.profile; }
@@ -896,24 +896,45 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
     auto const profile = route()->profile();
     auto const &matrix = data.durationMatrix(profile);
 
-    auto const fn = [&matrix, profile](auto segment, auto &&...args)
+    auto const fn = [&](auto segment, auto &&...args)
     {
-        auto durSegment = segment.duration(profile);
+        auto ds = segment.duration(profile);
         auto last = segment.last();
+
+        if (segment.last() < data.numDepots())  // ends at depot
+            ds = ds.finaliseBack();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            durSegment = DurationSegment::merge(matrix(last, other.first()),
-                                                durSegment,
-                                                other.duration(profile));
+            auto edgeDur = matrix(last, other.first());
+
+            if (other.first() < data.numDepots())  // other starts at a depot
+            {
+                // We can only finalise the current segment at the depot, so we
+                // first need to travel there.
+                ProblemData::Depot const &depot = data.location(other.first());
+                ds = DurationSegment::merge(edgeDur, ds, {depot});
+                ds = ds.finaliseBack();
+
+                // We finalise by travelling to the depot, so the remaining
+                // travel duration is now zero.
+                edgeDur = 0;
+            }
+
+            ds = DurationSegment::merge(edgeDur, ds, other.duration(profile));
             last = other.last();
 
             if constexpr (sizeof...(args) != 0)
+            {
+                if (other.last() < data.numDepots())  // other ends at a depot
+                    ds = ds.finaliseBack();
+
                 self(self, std::forward<decltype(args)>(args)...);
+            }
         };
 
         merge(merge, std::forward<decltype(args)>(args)...);
-        return durSegment;
+        return ds;
     };
 
     return std::apply(fn, segments_);
@@ -925,26 +946,30 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
     auto const &data = route()->data;
     auto const &capacity = route()->capacity();
 
-    auto const fn = [&](auto &&...args)
+    auto const fn = [&](auto segment, auto &&...args)
     {
-        LoadSegment segment;
+        auto ls = segment.load(dimension);
+        if (segment.last() < data.numDepots())  // ends at depot
+            ls = ls.finalise(capacity[dimension]);
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
             if (other.first() < data.numDepots())  // other starts at a depot
-                segment = segment.finalise(capacity[dimension]);
+                ls = ls.finalise(capacity[dimension]);
 
-            segment = LoadSegment::merge(segment, other.load(dimension));
-
-            if (other.last() < data.numDepots())  // other ends at a depot
-                segment = segment.finalise(capacity[dimension]);
+            ls = LoadSegment::merge(ls, other.load(dimension));
 
             if constexpr (sizeof...(args) != 0)
+            {
+                if (other.last() < data.numDepots())  // other ends at a depot
+                    ls = ls.finalise(capacity[dimension]);
+
                 self(self, std::forward<decltype(args)>(args)...);
+            }
         };
 
         merge(merge, std::forward<decltype(args)>(args)...);
-        return segment.excessLoad(capacity[dimension]);
+        return ls.excessLoad(capacity[dimension]);
     };
 
     return std::apply(fn, segments_);
@@ -953,5 +978,8 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 
 // Outputs a route into a given ostream in human-readable format
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route);
+
+std::ostream &operator<<(std::ostream &out,  // for debugging
+                         pyvrp::search::Route::Node const &node);
 
 #endif  // PYVRP_SEARCH_ROUTE_H

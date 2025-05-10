@@ -397,7 +397,14 @@ PYBIND11_MODULE(_search, m)
         .def("is_depot", &Route::Node::isDepot)
         .def("is_start_depot", &Route::Node::isStartDepot)
         .def("is_end_depot", &Route::Node::isEndDepot)
-        .def("is_reload_depot", &Route::Node::isReloadDepot);
+        .def("is_reload_depot", &Route::Node::isReloadDepot)
+        .def("__str__",
+             [](Route::Node const &node)
+             {
+                 std::stringstream stream;
+                 stream << node;
+                 return stream.str();
+             });
 
     m.def("insert_cost",
           &insertCost,

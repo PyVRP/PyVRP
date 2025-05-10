@@ -1209,3 +1209,14 @@ def test_vehicle_type_max_trips(ok_small_multiple_trips):
     veh_type = veh_type.replace(max_reloads=_MAX_SIZE)
     assert_equal(veh_type.max_reloads, _MAX_SIZE)
     assert_equal(veh_type.max_trips, _MAX_SIZE)
+
+
+def test_vehicle_max_trips_is_one_if_no_reload_depots(ok_small):
+    """
+    Tests that a vehicle type's max_trips is one if there's no reload depots,
+    despite max_reloads being unconstrained.
+    """
+    veh_type = ok_small.vehicle_type(0)
+    assert_equal(veh_type.reload_depots, [])
+    assert_equal(veh_type.max_reloads, _MAX_SIZE)
+    assert_equal(veh_type.max_trips, 1)

@@ -109,6 +109,15 @@ def gtsp():
 
 
 @pytest.fixture(scope="session")
+def mtvrptw_release_times():
+    """
+    Fixture that returns a multi-trip instance with time windows and release
+    times, of 70 clients.
+    """
+    return read("data/C201R0.25.vrp", round_func="dimacs")
+
+
+@pytest.fixture(scope="session")
 def ok_small_two_profiles(ok_small):
     """
     Fixture that returns the OkSmall instance, with two profiles, the second
