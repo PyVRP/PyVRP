@@ -1,13 +1,13 @@
 Benchmarking
 ============
 
-To run a benchmark, one can use the command line interface PyVRP provides.
-After installation, it is available as ``pyvrp`` from the command line.
+To run a benchmark, one can use `Bench<https://github.com/PyVRP/Bench>`_, PyVRP's benchmarking command line interface.
+After installation, it is available as ``bench`` from the command line.
 To find out about available options, run
 
 .. code-block:: shell
 
-   pyvrp --help
+   bench --help
 
 We use the following instances and configurations to benchmark PyVRP:
 
