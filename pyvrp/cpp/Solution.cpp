@@ -247,8 +247,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
          ++client)
     {
         ProblemData::Client const &clientData = data.location(client);
-        if (clientData.required && !isVisited[client])
-            numMissingClients_ += 1;
+        numMissingClients_ += clientData.required && !isVisited[client];
     }
 
     for (auto const &group : data.groups())
