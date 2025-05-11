@@ -52,7 +52,7 @@ jobs:
         # CodSpeed to make sense, so we have to build in debugoptimized mode.
         run: |
           poetry install --only-root
-          poetry run python build_extensions.py --build_type debugoptimized
+          poetry run python build_extensions.py --build_type debugoptimized --clean
       - name: Run benchmarks
         # We evaluate the microbenchmarks using the release build.
         uses: CodSpeedHQ/action@v3
