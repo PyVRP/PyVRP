@@ -185,7 +185,8 @@ private:
     std::vector<size_t> visits;  // Locations in this route, incl. depots
     std::pair<double, double> centroid_;  // Center point of route's clients
 
-    std::vector<Distance> cumDist;  // Dist of depot -> client (incl.)
+    std::vector<Distance> cumDist;        // Dist of depot -> client (incl.)
+    std::vector<Duration> edgeDurations;  // Edge duration of prev to index
 
     // Load data, for each load dimension. These vectors form matrices, where
     // the rows index the load dimension, and the columns the nodes.
@@ -567,15 +568,27 @@ DistanceSegment Route::SegmentBetween::distance(size_t profile) const
 
 DurationSegment Route::SegmentBetween::duration(size_t profile) const
 {
-    auto const &mat = route_.data.durationMatrix(profile);
     auto durSegment = route_.durAt[start];
+
+    if (profile != route_.profile())  // then we have to compute the duration
+    {                                 // segment from scratch.
+        auto const &mat = route_.data.durationMatrix(profile);
+
+        for (size_t step = start; step != end; ++step)
+        {
+            auto edgeDur = mat(route_.visits[step], route_.visits[step + 1]);
+            auto const &durAt = route_.durAt[step + 1];
+            durSegment = DurationSegment::merge(edgeDur, durSegment, durAt);
+        }
+
+        return durSegment;
+    }
 
     for (size_t step = start; step != end; ++step)
     {
-        auto const from = route_.visits[step];
-        auto const to = route_.visits[step + 1];
+        auto const edgeDur = route_.edgeDurations[step + 1];
         auto const &durAt = route_.durAt[step + 1];
-        durSegment = DurationSegment::merge(mat(from, to), durSegment, durAt);
+        durSegment = DurationSegment::merge(edgeDur, durSegment, durAt);
     }
 
     return durSegment;
