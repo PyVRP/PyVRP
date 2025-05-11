@@ -51,7 +51,7 @@ jobs:
         # release mode by default, but we'd like to have debug symbols for
         # CodSpeed to make sense, so we have to build in debugoptimized mode.
         run: |
-          poetry run install --only-root
+          poetry install --only-root
           poetry run python build_extensions.py --build_type debugoptimized
       - name: Run benchmarks
         # We evaluate the microbenchmarks using the release build.
