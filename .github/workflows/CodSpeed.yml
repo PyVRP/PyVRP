@@ -48,8 +48,11 @@ jobs:
       - name: Build pyvrp
         # First, we install the project into the poetry environment. This
         # ensures imports like "from pyvrp import X" work. This builds in
-        # release mode by default.
-        run: poetry install --only-root
+        # release mode by default, but we'd like to have debug symbols for
+        # CodSpeed to make sense, so we have to build in debugoptimized mode.
+        run: |
+          poetry run install --only-root
+          poetry run python build_extensions.py --build_type debugoptimized
       - name: Run benchmarks
         # We evaluate the microbenchmarks using the release build.
         uses: CodSpeedHQ/action@v3
