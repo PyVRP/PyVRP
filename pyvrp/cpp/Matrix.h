@@ -28,7 +28,7 @@ public:
      */
     explicit Matrix(size_t nRows, size_t nCols, T value = {});
 
-    explicit Matrix(std::vector<T> data, size_t nRows, size_t nCols);
+    explicit Matrix(std::vector<T> &&data, size_t nRows, size_t nCols);
 
     bool operator==(Matrix const &other) const = default;
 
@@ -66,8 +66,8 @@ Matrix<T>::Matrix(size_t nRows, size_t nCols, T value)
 }
 
 template <typename T>
-Matrix<T>::Matrix(std::vector<T> data, size_t nRows, size_t nCols)
-    : cols_(nCols), rows_(nRows), data_(std::move(data))
+Matrix<T>::Matrix(std::vector<T> &&data, size_t nRows, size_t nCols)
+    : cols_(nCols), rows_(nRows), data_(std::forward<std::vector<T>>(data))
 {
     assert(cols_ * rows_ == data_.size());
 }
