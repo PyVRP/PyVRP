@@ -72,7 +72,7 @@ public:
         return value;
     }
 
-    // Retreives the underlying value.
+    // Retrieves the underlying value.
     [[nodiscard]] Value get() const;
 
     // In-place unary operators.
@@ -86,7 +86,7 @@ public:
     [[nodiscard]] std::strong_ordering operator<=>(Measure const &other) const;
 };
 
-// Retreives the underlying value.
+// Retrieves the underlying value.
 template <MeasureType Type> Value Measure<Type>::get() const { return value; }
 
 // In-place unary operators.

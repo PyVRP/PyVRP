@@ -189,15 +189,19 @@ void Route::update()
 
     ProblemData::Depot const &start = data.location(startDepot());
     DurationSegment const vehStart(vehicleType_, vehicleType_.startLate);
-    DurationSegment const depotStart(start, start.serviceDuration);
+    DurationSegment const depotStart(start);
     durAt[0] = DurationSegment::merge(0, vehStart, depotStart);
 
-    DurationSegment const depotEnd(vehicleType_, vehicleType_.twLate);
-    DurationSegment const vehEnd(data.location(endDepot()), 0);
+    ProblemData::Depot const &end = data.location(endDepot());
+    DurationSegment const depotEnd(end);
+    DurationSegment const vehEnd(vehicleType_, vehicleType_.twLate);
     durAt[nodes.size() - 1] = DurationSegment::merge(0, depotEnd, vehEnd);
 
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-        durAt[idx] = {data.location(visits[idx])};
+    {
+        ProblemData::Client const &client = data.location(visits[idx]);
+        durAt[idx] = {client};
+    }
 
     auto const &durMat = data.durationMatrix(profile());
 

@@ -254,7 +254,6 @@ class Model:
         self,
         x: int,
         y: int,
-        service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
         *,
@@ -264,14 +263,7 @@ class Model:
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Depot` instance.
         """
-        depot = Depot(
-            x=x,
-            y=y,
-            service_duration=service_duration,
-            tw_early=tw_early,
-            tw_late=tw_late,
-            name=name,
-        )
+        depot = Depot(x=x, y=y, tw_early=tw_early, tw_late=tw_late, name=name)
 
         self._depots.append(depot)
 
@@ -302,8 +294,14 @@ class Model:
 
            If ``profile`` is not provided, the edge is a base edge that will be
            set for all profiles in the model. Any profile-specific edge takes
-           precendence over a base edge with the same ``frm`` and ``to``
+           precedence over a base edge with the same ``frm`` and ``to``
            locations.
+
+        .. note::
+
+           If called repeatedly with the same ``frm``, ``to``, and ``profile``
+           arguments, only the edge constructed last is used. PyVRP does not
+           support multigraphs.
         """
         if profile is not None:
             return profile.add_edge(frm, to, distance, duration)

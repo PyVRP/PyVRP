@@ -30,9 +30,8 @@ DurationSegment::DurationSegment(ProblemData::Client const &client)
 {
 }
 
-DurationSegment::DurationSegment(ProblemData::Depot const &depot,
-                                 Duration const serviceDuration)
-    : duration_(serviceDuration),
+DurationSegment::DurationSegment(ProblemData::Depot const &depot)
+    : duration_(0),
       timeWarp_(0),
       twEarly_(depot.twEarly),
       twLate_(depot.twLate),
