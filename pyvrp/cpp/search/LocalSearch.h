@@ -27,10 +27,12 @@ class LocalSearch
     // numLocations, but nothing is stored for the depots!)
     Neighbours neighbours_;
 
-    std::vector<size_t> orderNodes;   // node order used by LS::search
-    std::vector<size_t> orderRoutes;  // route order used by LS::intensify
-    DynamicBitset candidates;         // candidates nodes to consider for moves
+    std::vector<size_t> orderNodes;         // node order used by LS::search
+    std::vector<size_t> orderRoutes;        // route order used by LS::intensify
+    std::vector<std::pair<size_t, size_t>>  // vehicle type order (incl. offset)
+        orderVehTypes;                      // used by LS::applyEmptyRouteMoves
 
+    DynamicBitset candidates;       // candidates nodes to consider for moves
     std::vector<int> lastModified;  // tracks when routes were last modified
 
     std::vector<Route::Node> nodes;
