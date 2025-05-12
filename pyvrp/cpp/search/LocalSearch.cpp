@@ -231,7 +231,7 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
 {
     assert(U->route());
 
-    for (auto const [vehType, offset] : orderVehTypes)
+    for (auto const &[vehType, offset] : orderVehTypes)
     {
         auto const begin = routes.begin() + offset;
         auto const end = begin + data.vehicleType(vehType).numAvailable;
