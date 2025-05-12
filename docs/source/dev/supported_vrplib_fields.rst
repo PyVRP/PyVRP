@@ -125,5 +125,5 @@ PyVRP supports the following data sections:
       Route durations are assumed to be unconstrained if this section is not present.
 
    ``VEHICLES_UNIT_DISTANCE_COST_SECTION``
-      Cost per distance unit for each vehicle.
+      Cost per distance unit travelled for each vehicle.
       Unit distance costs are assumed to be one if this section is not present.
