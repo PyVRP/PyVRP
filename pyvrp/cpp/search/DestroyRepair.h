@@ -6,6 +6,7 @@
 #include "RandomNumberGenerator.h"
 #include "Route.h"
 #include "Solution.h"
+#include "SwapTails.h"
 
 #include <vector>
 
@@ -14,6 +15,8 @@ namespace pyvrp::search
 class DestroyRepair
 {
     using Neighbours = std::vector<std::vector<size_t>>;
+
+    SwapTails op;
 
     ProblemData const &data;
     RandomNumberGenerator &rng;
@@ -36,6 +39,7 @@ class DestroyRepair
     void destroy(size_t numDestroy);
     void concentric(size_t numDestroy);
     void strings(size_t numDestroy);
+    void swaproutes(size_t numDestroy);
 
     // Repair the solution.
     void repair(CostEvaluator const &costEvaluator);

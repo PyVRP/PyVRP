@@ -25,6 +25,9 @@ void DestroyRepair::destroy(size_t numDestroy)
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
     auto const dIdx = rng.randint(2);
 
+    if (rng.randint(2))
+        swaproutes(numDestroy);  // rename to change route type upgrade route
+
     if (dIdx == 0)
         concentric(numDestroy);
     else
@@ -84,6 +87,38 @@ void DestroyRepair::strings(size_t numDestroy)
     }
 }
 
+void DestroyRepair::swaproutes(size_t numDestroy)
+{
+    auto const idxU = rng.randint(data.numClients()) + data.numDepots();
+    auto *rU = nodes[idxU].route();
+
+    // Find the indices of empty routes per vehicle type.
+    std::vector<size_t> emptyRouteIdcs;
+    auto begin = routes.begin();
+
+    for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
+    {
+        auto const end = begin + data.vehicleType(vehType).numAvailable;
+        auto const pred = [](auto const &route) { return route.empty(); };
+        auto empty = std::find_if(begin, end, pred);
+
+        if (empty != end && rU->vehicleType() != vehType)
+            emptyRouteIdcs.push_back(std::distance(routes.begin(), empty));
+
+        begin = end;
+    }
+
+    if (!emptyRouteIdcs.empty())
+    {
+        // Change the vehicle type of the route.
+        std::shuffle(emptyRouteIdcs.begin(), emptyRouteIdcs.end(), rng);
+        auto &empty = routes[emptyRouteIdcs[0]];
+        op.apply((*rU)[0], empty[0]);
+        rU->update();
+        empty.update();
+    }
+}
+
 void DestroyRepair::repair(CostEvaluator const &costEvaluator)
 {
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
@@ -130,6 +165,8 @@ void DestroyRepair::greedyInsert(CostEvaluator const &costEvaluator)
 
             if (empty != end)  // try inserting U into the empty route.
             {
+                if (rng.randint(3) > 0)
+                    continue;
                 auto const cost
                     = insertCost(U, (*empty)[0], data, costEvaluator);
                 if (cost < bestCost)
@@ -245,7 +282,8 @@ DestroyRepair::DestroyRepair(ProblemData const &data,
     : data(data),
       rng(rng),
       neighbours_(data.numLocations()),
-      orderNodes(data.numClients())
+      orderNodes(data.numClients()),
+      op(data)
 
 {
     std::iota(orderNodes.begin(), orderNodes.end(), data.numDepots());

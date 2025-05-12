@@ -159,12 +159,8 @@ def solve(
     """
     rng = RandomNumberGenerator(seed=seed)
 
-    VALUE = 1000
-    penalty_params = PenaltyParams(solutions_between_updates=VALUE)
-    pm = PenaltyManager(
-        initial_penalties=([VALUE], VALUE, VALUE),
-        params=penalty_params,
-    )
+    VALUE = 100_000
+    pm = PenaltyManager(initial_penalties=([VALUE], VALUE, VALUE))
 
     nbhd = compute_neighbours(data)
     max_runtime = stop.criteria[0]._max_runtime  # hack
