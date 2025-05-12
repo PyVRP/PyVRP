@@ -155,6 +155,8 @@ void LocalSearch::shuffle(RandomNumberGenerator &rng)
 
     std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
+
+    std::shuffle(orderVehTypes.begin(), orderVehTypes.end(), rng);
 }
 
 bool LocalSearch::applyNodeOps(Route::Node *U,
@@ -229,16 +231,15 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
 {
     assert(U->route());
 
-    auto begin = routes.begin();
-    for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
+    for (auto const [vehType, offset] : orderVehTypes)
     {
+        auto const begin = routes.begin() + offset;
         auto const end = begin + data.vehicleType(vehType).numAvailable;
         auto const pred = [](auto const &route) { return route.empty(); };
         auto empty = std::find_if(begin, end, pred);
-        begin = end;
 
-        if (empty != end)  // try inserting U into the empty route.
-            applyNodeOps(U, (*empty)[0], costEvaluator);
+        if (empty != end && applyNodeOps(U, (*empty)[0], costEvaluator))
+            break;
     }
 }
 
@@ -472,6 +473,13 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
 
     std::iota(orderNodes.begin(), orderNodes.end(), data.numDepots());
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
+
+    size_t offset = 0;
+    for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
+    {
+        orderVehTypes.emplace_back(vehType, offset);
+        offset += data.vehicleType(vehType).numAvailable;
+    }
 
     nodes.reserve(data.numLocations());
     for (size_t loc = 0; loc != data.numLocations(); ++loc)
