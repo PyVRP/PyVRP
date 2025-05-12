@@ -10,6 +10,7 @@ from numpy.testing import (
     assert_warns,
 )
 
+from pyvrp import CostEvaluator
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from tests.helpers import read, read_solution
@@ -537,3 +538,64 @@ def test_read_solution_multiple_vehicle_types(ok_small_multi_depot):
     # the first type is not used.
     assert_equal(routes[0].vehicle_type(), 0)
     assert_equal(routes[1].vehicle_type(), 1)
+
+
+def test_reading_unit_distance_cost():
+    """
+    Tests that reading an instance with unit distance cost works correctly,
+    particularly that the unit costs are part of the vehicle types and not
+    rounded.
+    """
+    data = read("data/OkSmallUnitDistanceCost.txt", "exact")
+
+    # All three vehicles have a different unit distance cost, so there
+    # should be three different vehicle types.
+    assert_equal(data.num_vehicle_types, 3)
+
+    for idx, veh_type in enumerate(data.vehicle_types(), 1):
+        # Unit distance costs are not scaled by the rounding convention.
+        assert_equal(veh_type.unit_distance_cost, idx)
+
+
+def test_read_hfvrp_instance():
+    """
+    Tests that reading a HFVRP instance happens correctly, particularly the
+    heterogeneous vehicles data sections.
+    """
+    data = read("data/X115-HVRP.vrp", "exact")
+
+    # One routing profile per unique unit distance cost.
+    assert_equal(data.num_vehicles, 19)
+    assert_equal(data.num_vehicle_types, 3)
+
+    # Each vehicle type has different attributes. We only check the first two.
+    veh_type1 = data.vehicle_type(0)
+    assert_equal(veh_type1.num_available, 11)
+    assert_equal(veh_type1.capacity, [54_000])
+    assert_equal(veh_type1.fixed_cost, 14_600_000)
+    assert_equal(veh_type1.unit_distance_cost, 58)
+
+    veh_type2 = data.vehicle_type(1)
+    assert_equal(veh_type2.num_available, 7)
+    assert_equal(veh_type2.capacity, [131_000])
+    assert_equal(veh_type2.fixed_cost, 43_600_000)
+    assert_equal(veh_type2.unit_distance_cost, 100)
+
+
+def test_read_hfvrp_solution():
+    """
+    Tests that reading a HFVRP solution results in the correct routes and
+    objective value.
+    """
+    data = read("data/X115-HVRP.vrp", "exact")
+    sol = read_solution("data/X115-HVRP.sol", data)
+    routes = sol.routes()
+
+    assert_equal(routes[1].visits(), [59, 35, 99, 49, 79, 47, 109, 18])
+    assert_equal(routes[-1].visits(), [5, 6, 3, 93, 42, 9])
+
+    assert_equal(routes[1].vehicle_type(), 0)
+    assert_equal(routes[-1].vehicle_type(), 2)
+
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(cost_eval.cost(sol), 1941256006)
