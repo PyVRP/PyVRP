@@ -543,17 +543,14 @@ def test_read_solution_multiple_vehicle_types(ok_small_multi_depot):
 def test_reading_unit_distance_cost():
     """
     Tests that reading an instance with unit distance cost works correctly,
-    particularly that the unit costs are part of the vehicle types and not
-    rounded.
+    particularly that the unit distance costs are correctly added to the
+    vehicle types and are not affected by the round func.
     """
     data = read("data/OkSmallUnitDistanceCost.txt", "exact")
 
-    # All three vehicles have a different unit distance cost, so there
-    # should be three different vehicle types.
     assert_equal(data.num_vehicle_types, 3)
 
     for idx, veh_type in enumerate(data.vehicle_types(), 1):
-        # Unit distance costs are not scaled by the rounding convention.
         assert_equal(veh_type.unit_distance_cost, idx)
 
 
