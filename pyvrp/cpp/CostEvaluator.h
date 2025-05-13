@@ -279,14 +279,9 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
                 proposal.loadSegment(dim).load(), capacity[dim], dim);
     }
 
-    if (route->unitDurationCost() != 0 || route->hasTimeWarp()
-        || !proposal.isHomogeneous() || proposal.size() >= route->size())
-    {
-        auto const duration = proposal.durationSegment();
-        out += route->unitDurationCost()
-               * static_cast<Cost>(duration.duration());
-        out += twPenalty(duration.timeWarp(route->maxDuration()));
-    }
+    auto const duration = proposal.durationSegment();
+    out += route->unitDurationCost() * static_cast<Cost>(duration.duration());
+    out += twPenalty(duration.timeWarp(route->maxDuration()));
 
     return true;
 }
@@ -353,23 +348,13 @@ bool CostEvaluator::deltaCost(Cost &out,
         if (out >= 0)
             return false;
 
-    if (uRoute->unitDurationCost() != 0 || uRoute->hasTimeWarp()
-        || !uProposal.isHomogeneous() || uProposal.size() >= uRoute->size())
-    {
-        auto const uDuration = uProposal.durationSegment();
-        out += uRoute->unitDurationCost()
-               * static_cast<Cost>(uDuration.duration());
-        out += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
-    }
+    auto const uDuration = uProposal.durationSegment();
+    out += uRoute->unitDurationCost() * static_cast<Cost>(uDuration.duration());
+    out += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
 
-    if (vRoute->unitDurationCost() != 0 || vRoute->hasTimeWarp()
-        || !vProposal.isHomogeneous() || vProposal.size() >= vRoute->size())
-    {
-        auto const vDuration = vProposal.durationSegment();
-        out += vRoute->unitDurationCost()
-               * static_cast<Cost>(vDuration.duration());
-        out += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
-    }
+    auto const vDuration = vProposal.durationSegment();
+    out += vRoute->unitDurationCost() * static_cast<Cost>(vDuration.duration());
+    out += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
 
     return true;
 }

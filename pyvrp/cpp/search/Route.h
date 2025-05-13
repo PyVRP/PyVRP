@@ -825,6 +825,10 @@ DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 template <Segment... Segments>
 DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
+    if (!route()->hasTimeWarp() && route()->unitDurationCost() == 0
+        && isHomogeneous() && size() < route()->size())
+        return {};
+
     auto const &data = route()->data;
     auto const profile = route()->profile();
     auto const &matrix = data.durationMatrix(profile);
