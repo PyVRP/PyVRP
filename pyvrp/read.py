@@ -270,6 +270,20 @@ class _InstanceParser:
 
         return self.round_func(max_durations)
 
+    def fixed_costs(self) -> np.ndarray:
+        if "vehicles_fixed_cost" not in self.instance:
+            return np.zeros(self.num_vehicles, dtype=np.int64)
+
+        return self.round_func(self.instance["vehicles_fixed_cost"])
+
+    def unit_distance_costs(self) -> np.ndarray:
+        if "vehicles_unit_distance_cost" not in self.instance:
+            return np.ones(self.num_vehicles, dtype=np.int64)
+
+        # Unit distance costs are unrounded to prevent double scaling in the
+        # total distance cost calculation (unit_distance_cost * distance).
+        return self.instance["vehicles_unit_distance_cost"]
+
     def mutually_exclusive_groups(self) -> list[list[int]]:
         if "mutually_exclusive_group" not in self.instance:
             return []
@@ -373,6 +387,8 @@ class _ProblemDataBuilder:
             self.parser.vehicles_depots(),
             self.parser.max_distances(),
             self.parser.max_durations(),
+            self.parser.fixed_costs(),
+            self.parser.unit_distance_costs(),
         )
 
         if any(len(attr) != num_vehicles for attr in vehicles_data):
@@ -394,19 +410,29 @@ class _ProblemDataBuilder:
 
         vehicle_types = []
         for attributes, vehicles in type2idcs.items():
-            (capacity, clients, depot_idx, max_dist, max_duration) = attributes
+            (
+                capacity,
+                clients,
+                depot_idx,
+                max_dist,
+                max_duration,
+                fixed_cost,
+                unit_distance_cost,
+            ) = attributes
 
             vehicle_type = VehicleType(
                 num_available=len(vehicles),
                 capacity=capacity,
                 start_depot=depot_idx,
                 end_depot=depot_idx,
+                fixed_cost=fixed_cost,
                 # The literature specifies depot time windows. We do not have
                 # depot time windows but instead set those on the vehicles.
                 tw_early=time_windows[depot_idx][0],
                 tw_late=time_windows[depot_idx][1],
                 max_duration=max_duration,
                 max_distance=max_dist,
+                unit_distance_cost=unit_distance_cost,
                 profile=client2profile[clients],
                 # A bit hacky, but this csv-like name is really useful to track
                 # the actual vehicles that make up this vehicle type.
