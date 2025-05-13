@@ -1,5 +1,6 @@
 #include "Solution.h"
 #include "DurationSegment.h"
+#include "DynamicBitset.h"
 
 #include <algorithm>
 #include <fstream>
@@ -232,7 +233,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
         throw std::runtime_error(msg);
     }
 
-    std::vector<size_t> visits(data.numLocations(), 0);
+    DynamicBitset isVisited(data.numLocations());
     std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes)
     {
@@ -241,23 +242,25 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 
         usedVehicles[route.vehicleType()]++;
         for (auto const client : route)
-            visits[client]++;
+        {
+            if (isVisited[client])  // client is also visited by an earlier
+            {                       // route if this is true
+                std::ostringstream msg;
+                msg << "Client " << client << " is visited more than once.";
+                throw std::runtime_error(msg.str());
+            }
+
+            isVisited[client] = true;
+        }
     }
 
     for (size_t client = data.numDepots(); client != data.numLocations();
          ++client)
-    {
-        ProblemData::Client const &clientData = data.location(client);
-        if (clientData.required && visits[client] == 0)
-            numMissingClients_ += 1;
-
-        if (visits[client] > 1)
-        {
-            std::ostringstream msg;
-            msg << "Client " << client << " is visited more than once.";
-            throw std::runtime_error(msg.str());
+        if (!isVisited[client])  // we need to check if the client visit
+        {                        // is required if this is true
+            ProblemData::Client const &clientData = data.location(client);
+            numMissingClients_ += clientData.required;
         }
-    }
 
     for (auto const &group : data.groups())
     {
@@ -265,7 +268,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
         // of the clients in the group is in the solution. When the group is
         // not required, we relax this to at most one client.
         assert(group.mutuallyExclusive);
-        auto const inSol = [&](auto client) { return visits[client] == 1; };
+        auto const inSol = [&](auto client) { return isVisited[client]; };
         auto const numInSol = std::count_if(group.begin(), group.end(), inSol);
         isGroupFeas_ &= group.required ? numInSol == 1 : numInSol <= 1;
     }
