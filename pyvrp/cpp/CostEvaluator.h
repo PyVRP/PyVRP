@@ -355,13 +355,23 @@ bool CostEvaluator::deltaCost(Cost &out,
         if (out >= 0)
             return false;
 
-    auto const uDuration = uProposal.durationSegment();
-    out += uRoute->unitDurationCost() * static_cast<Cost>(uDuration.duration());
-    out += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
+    if (uRoute->unitDurationCost() > 0 || uRoute->hasTimeWarp()
+        || !uProposal.isHomogeneous() || uProposal.size() >= uRoute->size())
+    {
+        auto const uDuration = uProposal.durationSegment();
+        out += uRoute->unitDurationCost()
+               * static_cast<Cost>(uDuration.duration());
+        out += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
+    }
 
-    auto const vDuration = vProposal.durationSegment();
-    out += vRoute->unitDurationCost() * static_cast<Cost>(vDuration.duration());
-    out += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
+    if (vRoute->unitDurationCost() > 0 || vRoute->hasTimeWarp()
+        || !vProposal.isHomogeneous() || vProposal.size() >= vRoute->size())
+    {
+        auto const vDuration = vProposal.durationSegment();
+        out += vRoute->unitDurationCost()
+               * static_cast<Cost>(vDuration.duration());
+        out += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
+    }
 
     return true;
 }
