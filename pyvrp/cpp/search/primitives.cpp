@@ -17,8 +17,11 @@ public:
     {
     }
 
+    pyvrp::search::Route const *route() const { return nullptr; }
+
     size_t first() const { return client; }
     size_t last() const { return client; }
+    size_t size() const { return 1; }
 
     pyvrp::DistanceSegment distance([[maybe_unused]] size_t profile) const
     {

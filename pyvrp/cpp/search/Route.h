@@ -12,6 +12,18 @@
 
 namespace pyvrp::search
 {
+// This defines the minimal interface required for a segment of visits.
+template <typename T>
+concept Segment = requires(T arg, size_t profile, size_t dimension) {
+    { arg.route() };
+    { arg.first() } -> std::same_as<size_t>;
+    { arg.last() } -> std::same_as<size_t>;
+    { arg.size() } -> std::same_as<size_t>;
+    { arg.distance(profile) } -> std::convertible_to<DistanceSegment>;
+    { arg.duration(profile) } -> std::convertible_to<DurationSegment>;
+    { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
+};
+
 /**
  * This ``Route`` class supports fast delta cost computations and in-place
  * modification. It can be used to implement move evaluations.
@@ -37,7 +49,7 @@ public:
      * can be efficiently evaluated by calling appropriate member functions for
      * concatenation schemes detailing the newly proposed route's statistics.
      */
-    template <typename... Segments> class Proposal
+    template <Segment... Segments> class Proposal
     {
         std::tuple<Segments...> segments_;
 
@@ -748,7 +760,7 @@ Route::SegmentBetween Route::between(size_t start, size_t end) const
     return {*this, start, end};
 }
 
-template <typename... Segments>
+template <Segment... Segments>
 Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     : segments_(std::forward<Segments>(segments)...)
 {
@@ -759,20 +771,19 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     assert(first.route() == last.route());  // must start and end at same route
 }
 
-template <typename... Segments>
-size_t Route::Proposal<Segments...>::size() const
+template <Segment... Segments> size_t Route::Proposal<Segments...>::size() const
 {
     return std::apply([](auto &&...args) { return (args.size() + ...); },
                       segments_);
 }
 
-template <typename... Segments>
+template <Segment... Segments>
 Route const *Route::Proposal<Segments...>::route() const
 {
     return std::get<0>(segments_).route();
 }
 
-template <typename... Segments>
+template <Segment... Segments>
 bool Route::Proposal<Segments...>::isHomogeneous() const
 {
     auto const *target = route();
@@ -781,7 +792,7 @@ bool Route::Proposal<Segments...>::isHomogeneous() const
                       segments_);
 }
 
-template <typename... Segments>
+template <Segment... Segments>
 DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
 {
     auto const &data = route()->data;
@@ -811,7 +822,7 @@ DistanceSegment Route::Proposal<Segments...>::distanceSegment() const
     return std::apply(fn, segments_);
 }
 
-template <typename... Segments>
+template <Segment... Segments>
 DurationSegment Route::Proposal<Segments...>::durationSegment() const
 {
     auto const &data = route()->data;
@@ -841,7 +852,7 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
     return std::apply(fn, segments_);
 }
 
-template <typename... Segments>
+template <Segment... Segments>
 LoadSegment Route::Proposal<Segments...>::loadSegment(size_t dimension) const
 {
     auto const fn = [dimension](auto &&...args)

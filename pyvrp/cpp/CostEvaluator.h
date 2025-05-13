@@ -279,6 +279,13 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
                 proposal.loadSegment(dim).load(), capacity[dim], dim);
     }
 
+    auto const hasDurationCost = route->unitDurationCost() != 0;
+    auto const hasTimeWarp = route->hasTimeWarp();
+
+    if (proposal.isHomogeneous() && proposal.size() < route->size()
+        && !hasDurationCost && !hasTimeWarp)
+        return true;
+
     auto const duration = proposal.durationSegment();
     out += route->unitDurationCost() * static_cast<Cost>(duration.duration());
     out += twPenalty(duration.timeWarp(route->maxDuration()));
