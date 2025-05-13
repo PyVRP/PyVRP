@@ -88,7 +88,7 @@ void SubPopulation::remove(iter const &iterator)
     for (auto &[params, solution, fitness, proximity] : items)
         // Remove solution from other proximities.
         for (size_t idx = 0; idx != proximity.size(); ++idx)
-            if (proximity[idx].second == &*iterator->solution)
+            if (proximity[idx].second == iterator->solution.get())
             {
                 proximity.erase(proximity.begin() + idx);
                 break;
