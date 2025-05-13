@@ -6,6 +6,7 @@
 #include "diversity/diversity.h"
 
 #include <functional>
+#include <memory>
 #include <vector>
 
 namespace pyvrp
@@ -97,12 +98,7 @@ public:
         using Proximity = std::vector<std::pair<double, Solution const *>>;
 
         PopulationParams const *params;
-
-        // Note that this pointer is not owned by the Item - it is merely a
-        // reference to memory owned and allocated by the SubPopulation this
-        // item is part of. The SubPopulation remains responsible for managing
-        // that memory.
-        Solution const *solution;
+        std::shared_ptr<Solution const> solution;
 
         // Fitness should be used carefully: only directly after updateFitness
         // was called. At any other moment, it will be outdated.
@@ -122,8 +118,6 @@ public:
     SubPopulation(diversity::DiversityMeasure divOp,
                   PopulationParams const &params);
 
-    ~SubPopulation();
-
     /**
      * Adds the given solution to the subpopulation. Survivor selection is
      * automatically triggered when the population reaches its maximum size.
@@ -135,7 +129,8 @@ public:
      * cost_evaluator
      *     CostEvaluator to use to compute the cost.
      */
-    void add(Solution const *solution, CostEvaluator const &costEvaluator);
+    void add(std::shared_ptr<Solution const> solution,
+             CostEvaluator const &costEvaluator);
 
     std::vector<Item>::const_iterator cbegin() const;
 

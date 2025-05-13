@@ -45,18 +45,11 @@ SubPopulation::SubPopulation(diversity::DiversityMeasure divOp,
 {
 }
 
-SubPopulation::~SubPopulation()
-{
-    for (auto &item : items)
-        delete item.solution;
-}
-
-void SubPopulation::add(Solution const *solution,
+void SubPopulation::add(std::shared_ptr<Solution const> solution,
                         CostEvaluator const &costEvaluator)
 {
     // Copy the given solution into a new memory location, and use that from
     // now on.
-    solution = new Solution(*solution);
     Item item = {&params, solution, 0.0, {}};
 
     for (auto &other : items)  // update distance to other solutions
@@ -66,11 +59,11 @@ void SubPopulation::add(Solution const *solution,
 
         auto &oProx = other.proximity;
         auto place = std::lower_bound(oProx.begin(), oProx.end(), div, cmp);
-        oProx.emplace(place, div, solution);
+        oProx.emplace(place, div, solution.get());
 
         auto &iProx = item.proximity;
         place = std::lower_bound(iProx.begin(), iProx.end(), div, cmp);
-        iProx.emplace(place, div, other.solution);
+        iProx.emplace(place, div, other.solution.get());
     }
 
     items.push_back(item);  // add solution
@@ -95,14 +88,13 @@ void SubPopulation::remove(iter const &iterator)
     for (auto &[params, solution, fitness, proximity] : items)
         // Remove solution from other proximities.
         for (size_t idx = 0; idx != proximity.size(); ++idx)
-            if (proximity[idx].second == iterator->solution)
+            if (proximity[idx].second == &*iterator->solution)
             {
                 proximity.erase(proximity.begin() + idx);
                 break;
             }
 
-    delete iterator->solution;  // dispose of manually allocated memory
-    items.erase(iterator);      // before the item is removed.
+    items.erase(iterator);
 }
 
 void SubPopulation::purge(CostEvaluator const &costEvaluator)
