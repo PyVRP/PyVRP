@@ -24,18 +24,22 @@ concept Segment = requires(T arg, size_t profile, size_t dimension) {
     { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
 };
 
-template <std::size_t... I, class Tp>
-constexpr auto reverse_tuple_impl(std::index_sequence<I...>, Tp const &tp)
+namespace detail
 {
-    return std::make_tuple(std::get<sizeof...(I) - 1 - I>(tp)...);
+template <class Tuple, std::size_t... Indices>
+auto constexpr reverse_impl(Tuple &&tuple, std::index_sequence<Indices...>)
+{
+    return std::make_tuple(std::get<sizeof...(Indices) - 1 - Indices>(
+        std::forward<Tuple>(tuple))...);
 }
 
-template <class Tp> constexpr auto reverse_tuple(Tp const &tp)
+template <class Tuple> auto constexpr reverse(Tuple &&tuple)
 {
-    auto constexpr size = std::tuple_size<Tp>::value;
+    auto constexpr size = std::tuple_size_v<std::remove_reference_t<Tuple>>;
     auto constexpr indices = std::make_index_sequence<size>{};
-    return reverse_tuple_impl(indices, tp);
+    return reverse_impl(tuple, indices);
 }
+}  // namespace detail
 
 /**
  * This ``Route`` class supports fast delta cost computations and in-place
@@ -910,6 +914,9 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
     auto const profile = route()->profile();
     auto const &matrix = data.durationMatrix(profile);
 
+    // Finalising is expensive with duration segments. However, finaliseFront is
+    // significantly less expensive than finaliseBack. To use it, we iterate the
+    // segments in reverse (right to left, rather than default left to right).
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto ds = segment.duration(profile);
@@ -951,7 +958,7 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
         return ds;
     };
 
-    return std::apply(fn, reverse_tuple(segments_));
+    return std::apply(fn, detail::reverse(segments_));
 }
 
 template <Segment... Segments>
