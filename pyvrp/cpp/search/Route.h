@@ -868,7 +868,7 @@ Distance Route::Proposal<Segments...>::distance() const
     auto const profile = route()->profile();
     auto const &matrix = data.distanceMatrix(profile);
 
-    auto const fn = [&matrix, profile](auto segment, auto &&...args)
+    auto const fn = [&matrix, profile](auto &&segment, auto &&...args)
     {
         auto distance = segment.distance(profile);
         auto last = segment.last();
@@ -896,7 +896,7 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
     auto const profile = route()->profile();
     auto const &matrix = data.durationMatrix(profile);
 
-    auto const fn = [&](auto segment, auto &&...args)
+    auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto ds = segment.duration(profile);
         auto last = segment.last();
@@ -946,7 +946,7 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
     auto const &data = route()->data;
     auto const &capacity = route()->capacity();
 
-    auto const fn = [&](auto segment, auto &&...args)
+    auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto ls = segment.load(dimension);
         if (segment.last() < data.numDepots())  // ends at depot
