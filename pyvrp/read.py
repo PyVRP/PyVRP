@@ -15,6 +15,7 @@ from pyvrp._pyvrp import (
     ProblemData,
     Route,
     Solution,
+    Trip,
     VehicleType,
 )
 from pyvrp.constants import MAX_VALUE
@@ -91,6 +92,24 @@ def read(
     return builder.data()
 
 
+def _split(lst: list[int | str], delimiter: str) -> list[list]:
+    """
+    Splits a list into sublists at each occurrence of the delimiter.
+    """
+    current: list = []
+    result: list[list] = []
+
+    for val in lst:
+        if val == delimiter:
+            result.append(current)
+            current = []
+        else:
+            current.append(val)
+
+    result.append(current)
+    return result
+
+
 def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
     """
     Reads a solution in ``VRPLIB`` format from the give file location, and
@@ -117,11 +136,17 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
     for idx, veh_type in enumerate(data.vehicle_types()):
         veh2type.extend([idx] * veh_type.num_available)
 
-    routes = [
-        Route(data, visits, veh2type[idx])
-        for idx, visits in enumerate(sol["routes"])
-        if visits
-    ]
+    routes = []
+    for idx, route in enumerate(sol["routes"]):
+        if not route:
+            continue
+
+        # Split route into a lists of trip visits at each occurence of the
+        # "|" delimiter.
+        trip_visits = _split(route, "|")
+        trips = [Trip(data, visits, veh2type[idx]) for visits in trip_visits]
+        routes.append(Route(data, trips, veh2type[idx]))
+
     return Solution(data, routes)
 
 
