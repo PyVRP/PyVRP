@@ -123,6 +123,7 @@ private:
 
         inline size_t first() const;  // client at start
         inline size_t last() const;   // end depot
+        inline size_t size() const;
 
         inline SegmentAfter(Route const &route, size_t start);
         inline DistanceSegment distance(size_t profile) const;
@@ -144,6 +145,7 @@ private:
 
         inline size_t first() const;  // start depot
         inline size_t last() const;   // client at end
+        inline size_t size() const;
 
         inline SegmentBefore(Route const &route, size_t end);
         inline DistanceSegment distance(size_t profile) const;
@@ -166,6 +168,7 @@ private:
 
         inline size_t first() const;  // client at start
         inline size_t last() const;   // client at end
+        inline size_t size() const;
 
         inline SegmentBetween(Route const &route, size_t start, size_t end);
         inline DistanceSegment distance(size_t profile) const;
@@ -531,14 +534,17 @@ LoadSegment const &Route::SegmentBefore::load(size_t dimension) const
 Route const *Route::SegmentBefore::route() const { return &route_; }
 size_t Route::SegmentBefore::first() const { return route_.visits.front(); }
 size_t Route::SegmentBefore::last() const { return route_.visits[end]; }
+size_t Route::SegmentBefore::size() const { return end + 1; }
 
 Route const *Route::SegmentAfter::route() const { return &route_; }
 size_t Route::SegmentAfter::first() const { return route_.visits[start]; }
 size_t Route::SegmentAfter::last() const { return route_.visits.back(); }
+size_t Route::SegmentAfter::size() const { return route_.size() + 2 - start; }
 
 Route const *Route::SegmentBetween::route() const { return &route_; }
 size_t Route::SegmentBetween::first() const { return route_.visits[start]; }
 size_t Route::SegmentBetween::last() const { return route_.visits[end]; }
+size_t Route::SegmentBetween::size() const { return end - start + 1; }
 
 DistanceSegment Route::SegmentBetween::distance(size_t profile) const
 {
