@@ -279,16 +279,14 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
                 proposal.loadSegment(dim).load(), capacity[dim], dim);
     }
 
-    auto const hasDurationCost = route->unitDurationCost() != 0;
-    auto const hasTimeWarp = route->hasTimeWarp();
-
-    if (proposal.isHomogeneous() && proposal.size() < route->size()
-        && !hasDurationCost && !hasTimeWarp)
-        return true;
-
-    auto const duration = proposal.durationSegment();
-    out += route->unitDurationCost() * static_cast<Cost>(duration.duration());
-    out += twPenalty(duration.timeWarp(route->maxDuration()));
+    if (route->unitDurationCost() != 0 || route->hasTimeWarp()
+        || !proposal.isHomogeneous() || proposal.size() >= route->size())
+    {
+        auto const duration = proposal.durationSegment();
+        out += route->unitDurationCost()
+               * static_cast<Cost>(duration.duration());
+        out += twPenalty(duration.timeWarp(route->maxDuration()));
+    }
 
     return true;
 }
@@ -355,7 +353,7 @@ bool CostEvaluator::deltaCost(Cost &out,
         if (out >= 0)
             return false;
 
-    if (uRoute->unitDurationCost() > 0 || uRoute->hasTimeWarp()
+    if (uRoute->unitDurationCost() != 0 || uRoute->hasTimeWarp()
         || !uProposal.isHomogeneous() || uProposal.size() >= uRoute->size())
     {
         auto const uDuration = uProposal.durationSegment();
@@ -364,7 +362,7 @@ bool CostEvaluator::deltaCost(Cost &out,
         out += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
     }
 
-    if (vRoute->unitDurationCost() > 0 || vRoute->hasTimeWarp()
+    if (vRoute->unitDurationCost() != 0 || vRoute->hasTimeWarp()
         || !vProposal.isHomogeneous() || vProposal.size() >= vRoute->size())
     {
         auto const vDuration = vProposal.durationSegment();
