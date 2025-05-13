@@ -9,6 +9,7 @@
 #include <cassert>
 #include <concepts>
 #include <iosfwd>
+#include <utility>
 
 namespace pyvrp::search
 {
@@ -22,6 +23,23 @@ concept Segment = requires(T arg, size_t profile, size_t dimension) {
     { arg.duration(profile) } -> std::convertible_to<DurationSegment>;
     { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
 };
+
+namespace detail
+{
+template <class Tuple, std::size_t... Indices>
+auto constexpr reverse_impl(Tuple &&tuple, std::index_sequence<Indices...>)
+{
+    return std::make_tuple(std::get<sizeof...(Indices) - 1 - Indices>(
+        std::forward<Tuple>(tuple))...);
+}
+
+template <class Tuple> auto constexpr reverse(Tuple &&tuple)
+{
+    auto constexpr size = std::tuple_size_v<std::remove_reference_t<Tuple>>;
+    auto constexpr indices = std::make_index_sequence<size>{};
+    return reverse_impl(tuple, indices);
+}
+}  // namespace detail
 
 /**
  * This ``Route`` class supports fast delta cost computations and in-place
@@ -896,38 +914,41 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
     auto const profile = route()->profile();
     auto const &matrix = data.durationMatrix(profile);
 
+    // Finalising is expensive with duration segments. However, finaliseFront is
+    // significantly less expensive than finaliseBack. To use it, we iterate the
+    // segments in reverse (right to left, rather than default left to right).
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto ds = segment.duration(profile);
-        auto last = segment.last();
+        auto first = segment.first();
 
-        if (segment.last() < data.numDepots())  // ends at depot
-            ds = ds.finaliseBack();
+        if (first < data.numDepots())  // segment starts at depot
+            ds = ds.finaliseFront();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            auto edgeDur = matrix(last, other.first());
+            auto edgeDur = matrix(other.last(), first);
 
-            if (other.first() < data.numDepots())  // other starts at a depot
+            if (other.last() < data.numDepots())  // other ends at a depot
             {
                 // We can only finalise the current segment at the depot, so we
                 // first need to travel there.
-                ProblemData::Depot const &depot = data.location(other.first());
-                ds = DurationSegment::merge(edgeDur, ds, {depot});
-                ds = ds.finaliseBack();
+                ProblemData::Depot const &depot = data.location(other.last());
+                ds = DurationSegment::merge(edgeDur, {depot}, ds);
+                ds = ds.finaliseFront();
 
                 // We finalise by travelling to the depot, so the remaining
                 // travel duration is now zero.
                 edgeDur = 0;
             }
 
-            ds = DurationSegment::merge(edgeDur, ds, other.duration(profile));
-            last = other.last();
+            ds = DurationSegment::merge(edgeDur, other.duration(profile), ds);
+            first = other.first();
 
             if constexpr (sizeof...(args) != 0)
             {
-                if (other.last() < data.numDepots())  // other ends at a depot
-                    ds = ds.finaliseBack();
+                if (first < data.numDepots())  // other starts at a depot
+                    ds = ds.finaliseFront();
 
                 self(self, std::forward<decltype(args)>(args)...);
             }
@@ -937,7 +958,7 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
         return ds;
     };
 
-    return std::apply(fn, segments_);
+    return std::apply(fn, detail::reverse(segments_));
 }
 
 template <Segment... Segments>
