@@ -45,11 +45,22 @@ public:
         Proposal(Segments &&...segments);
 
         /**
+         * Size (number of locations) of the newly proposed route.
+         */
+        size_t size() const;
+
+        /**
          * The proposal's route. This is the route associated with the first
          * segment, and determines i.a. the vehicle type and route profile used
          * in the proposal.
          */
         Route const *route() const;
+
+        /**
+         * Whether this proposal consists of route segments that all belong to
+         * the same route.
+         */
+        bool isHomogeneous() const;
 
         DistanceSegment distanceSegment() const;
         DurationSegment durationSegment() const;
@@ -749,9 +760,25 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
 }
 
 template <typename... Segments>
+size_t Route::Proposal<Segments...>::size() const
+{
+    return std::apply([](auto &&...args) { return (args.size() + ...); },
+                      segments_);
+}
+
+template <typename... Segments>
 Route const *Route::Proposal<Segments...>::route() const
 {
     return std::get<0>(segments_).route();
+}
+
+template <typename... Segments>
+bool Route::Proposal<Segments...>::isHomogeneous() const
+{
+    auto const *target = route();
+    return std::apply([&target](auto &&...args)
+                      { return ((args.route() == target) && ...); },
+                      segments_);
 }
 
 template <typename... Segments>
