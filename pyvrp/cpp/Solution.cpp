@@ -245,11 +245,11 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 
     for (size_t client = data.numDepots(); client != data.numLocations();
          ++client)
-    {
-        ProblemData::Client const &clientData = data.location(client);
-        if (clientData.required && !isVisited[client])
-            numMissingClients_ += 1;
-    }
+        if (!isVisited[client])  // then we need to check if the client visit
+        {                        // is required
+            ProblemData::Client const &clientData = data.location(client);
+            numMissingClients_ += clientData.required;
+        }
 
     for (auto const &group : data.groups())
     {
