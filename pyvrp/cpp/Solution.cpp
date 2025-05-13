@@ -232,8 +232,8 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
         usedVehicles[route.vehicleType()]++;
         for (auto const client : route)
         {
-            if (isVisited[client])
-            {
+            if (isVisited[client])  // client is also visited by an earlier
+            {                       // route if this is true
                 std::ostringstream msg;
                 msg << "Client " << client << " is visited more than once.";
                 throw std::runtime_error(msg.str());
@@ -245,8 +245,8 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 
     for (size_t client = data.numDepots(); client != data.numLocations();
          ++client)
-        if (!isVisited[client])  // then we need to check if the client visit
-        {                        // is required
+        if (!isVisited[client])  // we need to check if the client visit
+        {                        // is required if this is true
             ProblemData::Client const &clientData = data.location(client);
             numMissingClients_ += clientData.required;
         }
