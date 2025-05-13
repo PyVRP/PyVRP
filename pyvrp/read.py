@@ -132,9 +132,10 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
 
     # We assume that the routes are listed in order of vehicle types as
     # determined by ``read()``.
-    veh2type = []
-    for idx, veh_type in enumerate(data.vehicle_types()):
-        veh2type.extend([idx] * veh_type.num_available)
+    veh2type = {}
+    for veh_type_idx, veh_type in enumerate(data.vehicle_types()):
+        for veh_idx in veh_type.name.split(","):
+            veh2type[int(veh_idx)] = veh_type_idx
 
     routes = []
     for idx, route in enumerate(sol["routes"]):

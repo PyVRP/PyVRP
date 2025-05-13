@@ -561,19 +561,26 @@ def test_multi_trip_instance():
 
 
 def test_read_solution_multiple_trips(ok_small_multiple_trips):
+    """
+    Tests that reading a solution to a multi-trip problem is parsed correctly.
+    """
     data = ok_small_multiple_trips
 
     solution = read_solution("data/OkSmallMultipleTrips.sol", data)
     assert_equal(solution.num_routes(), 2)
     assert_equal(solution.num_trips(), 3)
 
-    route1 = solution.routes()[0]
+    routes = solution.routes()
+
+    route1 = routes[0]
     assert_equal(route1.num_trips(), 2)
+    assert_equal(route1.vehicle_type(), 0)
     assert_equal(route1.trip(0).visits(), [1])
     assert_equal(route1.trip(1).visits(), [2])
 
-    route2 = solution.routes()[1]
+    route2 = routes[1]
     assert_equal(route2.num_trips(), 1)
+    assert_equal(route2.vehicle_type(), 1)
     assert_equal(route2.trip(0).visits(), [3, 4])
 
 
