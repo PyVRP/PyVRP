@@ -923,6 +923,7 @@ template <Segment... Segments>
 std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 {
     auto const &data = route()->data;
+    auto const maxDuration = route()->maxDuration();
     auto const profile = route()->profile();
     auto const &matrix = data.durationMatrix(profile);
 
@@ -967,43 +968,43 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
         };
 
         merge(merge, std::forward<decltype(args)>(args)...);
-        return ds;
+        return std::make_pair(ds.duration(), ds.timeWarp(maxDuration));
     };
 
-    auto const ds = std::apply(fn, detail::reverse(segments_));
-    return std::make_pair(ds.duration(), ds.timeWarp(route()->maxDuration()));
+    return std::apply(fn, detail::reverse(segments_));
 }
 
 template <Segment... Segments>
 Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 {
     auto const &data = route()->data;
-    auto const &capacity = route()->capacity();
+    auto const &capacities = route()->capacity();
+    auto const capacity = capacities[dimension];
 
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto ls = segment.load(dimension);
         if (segment.last() < data.numDepots())  // ends at depot
-            ls = ls.finalise(capacity[dimension]);
+            ls = ls.finalise(capacity);
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
             if (other.first() < data.numDepots())  // other starts at a depot
-                ls = ls.finalise(capacity[dimension]);
+                ls = ls.finalise(capacity);
 
             ls = LoadSegment::merge(ls, other.load(dimension));
 
             if constexpr (sizeof...(args) != 0)
             {
                 if (other.last() < data.numDepots())  // other ends at a depot
-                    ls = ls.finalise(capacity[dimension]);
+                    ls = ls.finalise(capacity);
 
                 self(self, std::forward<decltype(args)>(args)...);
             }
         };
 
         merge(merge, std::forward<decltype(args)>(args)...);
-        return ls.excessLoad(capacity[dimension]);
+        return ls.excessLoad(capacity);
     };
 
     return std::apply(fn, segments_);
