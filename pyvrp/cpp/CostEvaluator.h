@@ -7,6 +7,7 @@
 #include <cassert>
 #include <concepts>
 #include <limits>
+#include <utility>
 #include <vector>
 
 namespace pyvrp
@@ -38,9 +39,9 @@ concept PrizeCostEvaluatable = CostEvaluatable<T> && requires(T arg) {
 template <typename T>
 concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
     { arg.route() };
-    { arg.distance() };
-    { arg.durationSegment() };
-    { arg.excessLoad(dimension) };
+    { arg.distance() } -> std::same_as<Distance>;
+    { arg.duration() } -> std::convertible_to<std::pair<Duration, Duration>>;
+    { arg.excessLoad(dimension) } -> std::same_as<Load>;
 };
 
 /**
@@ -278,9 +279,9 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
             out += loadPenalty(proposal.excessLoad(dim), 0, dim);
     }
 
-    auto const duration = proposal.durationSegment();
-    out += route->unitDurationCost() * static_cast<Cost>(duration.duration());
-    out += twPenalty(duration.timeWarp(route->maxDuration()));
+    auto const [duration, timeWarp] = proposal.duration();
+    out += route->unitDurationCost() * static_cast<Cost>(duration);
+    out += twPenalty(timeWarp);
 
     return true;
 }
@@ -345,13 +346,13 @@ bool CostEvaluator::deltaCost(Cost &out,
         if (out >= 0)
             return false;
 
-    auto const uDuration = uProposal.durationSegment();
-    out += uRoute->unitDurationCost() * static_cast<Cost>(uDuration.duration());
-    out += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
+    auto const [uDuration, uTimeWarp] = uProposal.duration();
+    out += uRoute->unitDurationCost() * static_cast<Cost>(uDuration);
+    out += twPenalty(uTimeWarp);
 
-    auto const vDuration = vProposal.durationSegment();
-    out += vRoute->unitDurationCost() * static_cast<Cost>(vDuration.duration());
-    out += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
+    auto const [vDuration, vTimeWarp] = vProposal.duration();
+    out += vRoute->unitDurationCost() * static_cast<Cost>(vDuration);
+    out += twPenalty(vTimeWarp);
 
     return true;
 }
