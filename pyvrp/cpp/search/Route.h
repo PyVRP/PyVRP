@@ -77,8 +77,20 @@ public:
          */
         Route const *route() const;
 
+        /**
+         * Returns the travel distance of the proposed route.
+         */
         Distance distance() const;
-        DurationSegment durationSegment() const;
+
+        /**
+         * Returns a pair of (duration, time warp) attributes of the proposed
+         * route.
+         */
+        std::pair<Duration, Duration> duration() const;
+
+        /**
+         * Returns the excess load of the proposed route.
+         */
         Load excessLoad(size_t dimension) const;
     };
 
@@ -908,7 +920,7 @@ Distance Route::Proposal<Segments...>::distance() const
 }
 
 template <Segment... Segments>
-DurationSegment Route::Proposal<Segments...>::durationSegment() const
+std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 {
     auto const &data = route()->data;
     auto const profile = route()->profile();
@@ -958,7 +970,8 @@ DurationSegment Route::Proposal<Segments...>::durationSegment() const
         return ds;
     };
 
-    return std::apply(fn, detail::reverse(segments_));
+    auto const ds = std::apply(fn, detail::reverse(segments_));
+    return std::make_pair(ds.duration(), ds.timeWarp(route()->maxDuration()));
 }
 
 template <Segment... Segments>
