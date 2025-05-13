@@ -1,3 +1,0 @@
-[submodule "instances"]
-	path = instances
-	url = https://github.com/PyVRP/Instances.git
