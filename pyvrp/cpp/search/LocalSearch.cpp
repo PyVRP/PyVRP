@@ -231,6 +231,10 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
 {
     assert(U->route());
 
+    // We apply moves involving empty routes in the (randomised) order of
+    // orderVehTypes. This helps because empty vehicle moves incur fixed cost,
+    // and a purely greedy approach over-prioritises vehicles with low fixed
+    // costs but possibly high variable costs.
     for (auto const &[vehType, offset] : orderVehTypes)
     {
         auto const begin = routes.begin() + offset;
