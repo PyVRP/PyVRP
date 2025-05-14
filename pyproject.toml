@@ -57,7 +57,7 @@ numpy = [
     { version = ">=1.26.0", python = ">=3.12" }
 ]
 matplotlib = ">=2.2.0"
-vrplib = "^1.6.0"
+vrplib = "^1.4.0"
 tqdm = "^4.64.1"
 tomli = "^2.0.1"
 
