@@ -181,10 +181,7 @@ class _InstanceParser:
         return self.round_func(self.instance["node_coord"])
 
     def service_times(self) -> np.ndarray:
-        if "service_time" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
-
-        service_times = self.instance["service_time"]
+        service_times = self.instance.get("service_time", 0)
 
         if isinstance(service_times, Number):
             # Some instances describe a uniform service time as a single value
@@ -204,10 +201,9 @@ class _InstanceParser:
         return self.round_func(self.instance["time_window"])
 
     def release_times(self) -> np.ndarray:
-        if "release_time" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
-
-        return self.round_func(self.instance["release_time"])
+        release_times = self.instance.get("release_time", 0)
+        shape = self.num_locations
+        return self.round_func(np.broadcast_to(release_times, shape))
 
     def reload_depots(self) -> list[tuple[int, ...]]:
         if "vehicles_reload_depot" not in self.instance:
@@ -269,53 +265,30 @@ class _InstanceParser:
             return np.full(self.num_vehicles, _INT_MAX)
 
         max_distances = self.instance["vehicles_max_distance"]
-
-        if isinstance(max_distances, Number):
-            # Some instances describe a uniform max distance as a single
-            # value that applies to all vehicles.
-            max_distances = np.full(self.num_vehicles, max_distances)
-
-        return self.round_func(max_distances)
+        shape = self.num_vehicles
+        return self.round_func(np.broadcast_to(max_distances, shape))
 
     def max_durations(self) -> np.ndarray:
         if "vehicles_max_duration" not in self.instance:
             return np.full(self.num_vehicles, _INT_MAX)
 
         max_durations = self.instance["vehicles_max_duration"]
-
-        if isinstance(max_durations, Number):
-            # Some instances describe a uniform max duration as a single
-            # value that applies to all vehicles.
-            max_durations = np.full(self.num_vehicles, max_durations)
-
-        return self.round_func(max_durations)
+        shape = self.num_vehicles
+        return self.round_func(np.broadcast_to(max_durations, shape))
 
     def max_reloads(self) -> np.ndarray:
-        if "vehicles_max_reloads" not in self.instance:
-            return np.full(self.num_vehicles, _UINT_MAX)
-
-        max_reloads = self.instance["vehicles_max_reloads"]
-
-        if isinstance(max_reloads, Number):
-            # Some instances describe a uniform max reloads constraint as a
-            # single value that applies to all vehicles.
-            return np.full(self.num_vehicles, max_reloads)
-
-        return max_reloads
+        max_reloads = self.instance.get("vehicles_max_reloads", _UINT_MAX)
+        return np.broadcast_to(max_reloads, self.num_vehicles)
 
     def fixed_costs(self) -> np.ndarray:
-        if "vehicles_fixed_cost" not in self.instance:
-            return np.zeros(self.num_vehicles, dtype=np.int64)
-
-        return self.round_func(self.instance["vehicles_fixed_cost"])
+        fixed_costs = self.instance.get("vehicles_fixed_cost", 0)
+        return self.round_func(np.broadcast_to(fixed_costs, self.num_vehicles))
 
     def unit_distance_costs(self) -> np.ndarray:
-        if "vehicles_unit_distance_cost" not in self.instance:
-            return np.ones(self.num_vehicles, dtype=np.int64)
-
         # Unit distance costs are unrounded to prevent double scaling in the
         # total distance cost calculation (unit_distance_cost * distance).
-        return self.instance["vehicles_unit_distance_cost"]
+        unit_cost = self.instance.get("vehicles_unit_distance_cost", 1)
+        return np.broadcast_to(unit_cost, self.num_vehicles)
 
     def mutually_exclusive_groups(self) -> list[list[int]]:
         if "mutually_exclusive_group" not in self.instance:
