@@ -1,6 +1,6 @@
 import pathlib
 from collections import defaultdict
-from itertools import count
+from itertools import count, pairwise
 from numbers import Number
 from typing import Callable
 from warnings import warn
@@ -15,6 +15,7 @@ from pyvrp._pyvrp import (
     ProblemData,
     Route,
     Solution,
+    Trip,
     VehicleType,
 )
 from pyvrp.constants import MAX_VALUE
@@ -102,7 +103,8 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         File location to read. Assumes the solution in the file on the given
         location is in ``VRPLIB`` solution format.
     data
-        Problem data instance that the solution is based on.
+        Problem data instance that the solution is based on. See
+        :meth:`~pyvrp.read` for details.
 
     Returns
     -------
@@ -117,11 +119,36 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
     for idx, veh_type in enumerate(data.vehicle_types()):
         veh2type.extend([idx] * veh_type.num_available)
 
-    routes = [
-        Route(data, visits, veh2type[idx])
-        for idx, visits in enumerate(sol["routes"])
-        if visits
-    ]
+    routes = []
+    for idx, route in enumerate(sol["routes"]):
+        if not route:
+            continue
+
+        route_visits = np.array(route, dtype=int)
+        depot_idcs = np.flatnonzero(route_visits < data.num_depots)
+
+        trip_visits = np.split(route_visits, depot_idcs)
+        trip_visits = [
+            # These visits include the reload depots for later trips as the
+            # first trip visit, which we need to skip.
+            trip_visits[trip_idx > 0 :]
+            for trip_idx, trip_visits in enumerate(trip_visits)
+        ]
+
+        veh_type = data.vehicle_type(veh2type[idx])
+        depots = [
+            veh_type.start_depot,
+            *route_visits[depot_idcs],
+            veh_type.end_depot,
+        ]
+
+        trips = [
+            Trip(data, visits, veh2type[idx], start, end)
+            for visits, (start, end) in zip(trip_visits, pairwise(depots))
+        ]
+
+        routes.append(Route(data, trips, veh2type[idx]))
+
     return Solution(data, routes)
 
 
