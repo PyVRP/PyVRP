@@ -11,6 +11,7 @@ from pyvrp import Client, ClientGroup, Depot, Model, Profile, VehicleType
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import MaxIterations
+from tests.helpers import read_solution
 
 
 def test_model_data():
@@ -1055,7 +1056,12 @@ def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
     res = m.solve(stop=MaxIterations(5))
     assert_(res.is_feasible())
 
-    # The optimal solution to this instance has cost 10687; see table EC.9 on
-    # page ec25 of the online supplement. The following is a smoke test to
-    # verify that we are not too far (>20%) away after a few iterations.
-    assert_(res.cost() < 1.2 * 10687)
+    opt = read_solution("data/C201R0.25.sol", mtvrptw_release_times)
+    assert_(opt.is_feasible())
+
+    # A proven optimal solution to this instance has cost 10687. The following
+    # is a smoke test to verify that we are not too far (>10%) away after a few
+    # iterations.
+    opt_cost = opt.distance_cost()
+    assert_equal(opt_cost, 10687)
+    assert_(res.cost() < 1.1 * opt_cost)
