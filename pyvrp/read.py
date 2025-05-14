@@ -1,6 +1,6 @@
 import pathlib
 from collections import defaultdict
-from itertools import count, groupby, pairwise
+from itertools import count, pairwise
 from numbers import Number
 from typing import Callable
 from warnings import warn
@@ -114,34 +114,38 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
 
     # We assume that the routes are listed in order of vehicle types as
     # determined by ``read()``.
-    veh2type = {}
-    for veh_type_idx, veh_type in enumerate(data.vehicle_types()):
-        for veh_idx in veh_type.name.split(","):
-            veh2type[int(veh_idx)] = veh_type_idx
+    veh2type = []
+    for idx, veh_type in enumerate(data.vehicle_types()):
+        veh2type.extend([idx] * veh_type.num_available)
 
     routes = []
     for idx, route in enumerate(sol["routes"]):
         if not route:
             continue
 
-        veh_type_idx = veh2type[idx]
-        veh_type = data.vehicle_type(veh_type_idx)
-        reload_idcs = veh_type.reload_depots
-
-        # Split route visits at each occurence of reload depots (assuming there
-        # are no consecutive reload depot visits).
-        groups = [
-            (is_reload, list(visits))
-            for is_reload, visits in groupby(route, lambda x: x in reload_idcs)
+        route_visits = np.array(route, dtype=int)
+        depot_idcs = np.flatnonzero(route_visits < data.num_depots)
+        trip_visits = [
+            # These visits include the reload depots for later trips as the
+            # first visit, which we need to skip.
+            trip_visits[trip_idx > 0 :]
+            for trip_idx, trip_visits in enumerate(
+                np.split(route_visits, depot_idcs)
+            )
         ]
-        reloads = [visits[0] for is_reload, visits in groups if is_reload]
-        trip_visits = [visits for is_reload, visits in groups if not is_reload]
 
-        depots = pairwise([veh_type.start_depot, *reloads, veh_type.end_depot])
+        veh_type = data.vehicle_type(veh2type[idx])
+        depots = [
+            veh_type.start_depot,
+            *route_visits[depot_idcs],
+            veh_type.end_depot,
+        ]
+
         trips = [
-            Trip(data, visits, veh_type_idx, start, end)
-            for visits, (start, end) in zip(trip_visits, depots)
+            Trip(data, visits, veh2type[idx], start, end)
+            for visits, (start, end) in zip(trip_visits, pairwise(depots))
         ]
+
         routes.append(Route(data, trips, veh2type[idx]))
 
     return Solution(data, routes)
