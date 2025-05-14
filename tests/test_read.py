@@ -560,28 +560,28 @@ def test_multi_trip_instance():
     assert_equal(veh_type1.max_reloads, 1)
 
 
-def test_read_solution_multiple_trips(ok_small_multiple_trips):
+def test_read_solution_multiple_reload_depots():
     """
-    Tests that reading a solution to a multi-trip problem is parsed correctly.
+    Tests that reading a solution to a problem with multiple reload depots is
+    parsed correctly.
     """
-    data = ok_small_multiple_trips
+    data = read("data/OkSmallMultipleReloadDepots.txt")
 
-    solution = read_solution("data/OkSmallMultipleTrips.sol", data)
-    assert_equal(solution.num_routes(), 2)
-    assert_equal(solution.num_trips(), 3)
+    solution = read_solution("data/OkSmallMultipleReloadDepots.sol", data)
+    assert_equal(solution.num_routes(), 1)
+    assert_equal(solution.num_trips(), 2)
 
-    routes = solution.routes()
+    route = solution.routes()[0]
 
-    route1 = routes[0]
-    assert_equal(route1.num_trips(), 2)
-    assert_equal(route1.vehicle_type(), 0)
-    assert_equal(route1.trip(0).visits(), [1])
-    assert_equal(route1.trip(1).visits(), [2])
+    trip1 = route.trip(0)
+    assert_equal(trip1.visits(), [2])
+    assert_equal(trip1.start_depot(), 0)
+    assert_equal(trip1.end_depot(), 1)
 
-    route2 = routes[1]
-    assert_equal(route2.num_trips(), 1)
-    assert_equal(route2.vehicle_type(), 1)
-    assert_equal(route2.trip(0).visits(), [3, 4])
+    trip2 = route.trip(1)
+    assert_equal(trip2.visits(), [3, 4])
+    assert_equal(trip2.start_depot(), 1)
+    assert_equal(trip2.end_depot(), 0)
 
 
 def test_2d_data_sections_are_correctly_casted_from_1d():
