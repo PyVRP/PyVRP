@@ -321,7 +321,13 @@ public:
 
     bool operator==(Route const &other) const;
 
+    Route &operator=(Route const &other) = default;
+    Route &operator=(Route &&other) = default;
+
     Route() = delete;
+
+    Route(Route const &other) = default;
+    Route(Route &&other) = default;
 
     Route(ProblemData const &data, Trips trips, VehicleType vehicleType);
 

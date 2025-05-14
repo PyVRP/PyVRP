@@ -145,7 +145,13 @@ public:
 
     bool operator==(Trip const &other) const;
 
+    Trip &operator=(Trip const &other) = default;
+    Trip &operator=(Trip &&other) = default;
+
     Trip() = delete;
+
+    Trip(Trip const &other) = default;
+    Trip(Trip &&other) = default;
 
     Trip(ProblemData const &data,
          Visits visits,
