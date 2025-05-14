@@ -114,10 +114,12 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
     sol = vrplib.read_solution(str(where))
 
     # We assume that the routes are listed in order of vehicle types as
-    # determined by ``read()``.
-    veh2type = []
+    # determined by ``read()``. We particularly rely on the indices ``read()``
+    # encodes in the vehicle type's name to map between vehicles and types.
+    veh2type = np.zeros((data.num_vehicles,), dtype=int)
     for idx, veh_type in enumerate(data.vehicle_types()):
-        veh2type.extend([idx] * veh_type.num_available)
+        idcs = list(map(int, veh_type.name.split(",")))
+        veh2type[idcs] = idx
 
     routes = []
     for idx, route in enumerate(sol["routes"]):
