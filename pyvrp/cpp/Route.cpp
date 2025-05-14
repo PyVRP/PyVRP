@@ -274,7 +274,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
 
     duration_ = ds.duration();
     durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_);
-    startTime_ = ds.twEarly();
+    startTime_ = ds.startEarly();
     slack_ = ds.slack();
     timeWarp_ = ds.timeWarp(vehData.maxDuration);
 
