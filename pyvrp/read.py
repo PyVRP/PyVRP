@@ -103,7 +103,8 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         File location to read. Assumes the solution in the file on the given
         location is in ``VRPLIB`` solution format.
     data
-        Problem data instance that the solution is based on.
+        Problem data instance that the solution is based on. See
+        :meth:`~pyvrp.read` for details.
 
     Returns
     -------
