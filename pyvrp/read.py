@@ -125,13 +125,13 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
 
         route_visits = np.array(route, dtype=int)
         depot_idcs = np.flatnonzero(route_visits < data.num_depots)
+
+        trip_visits = np.split(route_visits, depot_idcs)
         trip_visits = [
             # These visits include the reload depots for later trips as the
-            # first visit, which we need to skip.
+            # first trip visit, which we need to skip.
             trip_visits[trip_idx > 0 :]
-            for trip_idx, trip_visits in enumerate(
-                np.split(route_visits, depot_idcs)
-            )
+            for trip_idx, trip_visits in enumerate(trip_visits)
         ]
 
         veh_type = data.vehicle_type(veh2type[idx])
