@@ -128,16 +128,14 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         veh_type = data.vehicle_type(veh_type_idx)
         reload_idcs = veh_type.reload_depots
 
-        # This splits the route into sublists at each occurrence of a reload
-        # depot. Each group is a (k, v) pair where `k` is True if a reload
-        # depot is encountered or False otherwise, and `v` lists the idcs of
-        # consecutive values that satisfy the same truth value.
+        # Split route visits at each occurence of reload depots (assuming there
+        # are no consecutive reload depot visits).
         groups = [
-            (is_reload, list(idcs))
-            for is_reload, idcs in groupby(route, lambda x: x in reload_idcs)
+            (is_reload, list(visits))
+            for is_reload, visits in groupby(route, lambda x: x in reload_idcs)
         ]
-        reloads = [idcs[0] for is_reload, idcs in groups if is_reload]
-        trip_visits = [idcs for is_reload, idcs in groups if not is_reload]
+        reloads = [visits[0] for is_reload, visits in groups if is_reload]
+        trip_visits = [visits for is_reload, visits in groups if not is_reload]
 
         depots = pairwise([veh_type.start_depot, *reloads, veh_type.end_depot])
         trips = [
