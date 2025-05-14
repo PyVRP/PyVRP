@@ -18,6 +18,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <memory>
 #include <sstream>
 #include <string>
 #include <variant>
@@ -792,7 +793,8 @@ PYBIND11_MODULE(_pyvrp, m)
                  return stream.str();
              });
 
-    py::class_<Solution>(m, "Solution", DOC(pyvrp, Solution))
+    py::class_<Solution, std::shared_ptr<Solution>>(
+        m, "Solution", DOC(pyvrp, Solution))
         // Since Route implements __len__ and __getitem__, it is convertible to
         // std::vector<size_t> and thus a list of Routes is a valid argument for
         // both constructors. We want to avoid using the second constructor
