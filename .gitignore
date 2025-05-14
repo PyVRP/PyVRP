@@ -169,6 +169,7 @@ release/
 # Profiler results
 *.prof
 perf.data*
+heaptrack.*.gz
 
 # Data files
 data/
