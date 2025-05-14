@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Client, Depot, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
@@ -80,11 +80,15 @@ def test_route_depots_are_depots(ok_small):
     assert_equal(route.end_depot(), ok_small.vehicle_type(0).end_depot)
 
     for loc in range(1, 3):
-        # The depots flank the clients at indices {1, ..., len(route)}. Thus,
-        # depots are at indices 0 and len(route) + 1.
         route.append(Node(loc=loc))
+
         assert_(route[0].is_depot())
-        assert_(route[len(route) + 1].is_depot())
+        assert_(route[0].is_start_depot())
+        assert_(not route[0].is_end_depot())
+
+        assert_(route[-1].is_depot())
+        assert_(route[-1].is_end_depot())
+        assert_(not route[-1].is_start_depot())
 
 
 def test_route_append_increases_route_len(ok_small):
@@ -92,16 +96,16 @@ def test_route_append_increases_route_len(ok_small):
     Tests that appending nodes to a route increases the route's length.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
-    assert_equal(len(route), 0)
+    assert_equal(route.num_clients(), 0)
 
     node = Node(loc=1)
     route.append(node)
-    assert_equal(len(route), 1)
+    assert_equal(route.num_clients(), 1)
     assert_(route[1] is node)  # pointers, so must be same object
 
     node = Node(loc=2)
     route.append(node)
-    assert_equal(len(route), 2)
+    assert_equal(route.num_clients(), 2)
     assert_(route[2] is node)  # pointers, so must be same object
 
 
@@ -111,18 +115,19 @@ def test_route_insert(ok_small):
     to the end, inserting places at the given index.
     """
     route = Route(ok_small, idx=0, vehicle_type=0)
-    assert_equal(len(route), 0)
+    assert_equal(route.num_clients(), 0)
+    assert_equal(route.num_depots(), 2)
 
     # Insert a few nodes so we have an actual route.
     route.append(Node(loc=1))
     route.append(Node(loc=2))
-    assert_equal(len(route), 2)
+    assert_equal(route.num_clients(), 2)
     assert_equal(route[1].client, 1)
     assert_equal(route[2].client, 2)
 
     # # Now insert a new nodes at index 1.
     route.insert(1, Node(loc=3))
-    assert_equal(len(route), 3)
+    assert_equal(route.num_clients(), 3)
     assert_equal(route[1].client, 3)
     assert_equal(route[2].client, 1)
     assert_equal(route[3].client, 2)
@@ -139,13 +144,28 @@ def test_route_iter_returns_all_clients(ok_small):
         route.append(Node(loc=loc))
 
     nodes = [node for node in route]
-    assert_equal(len(nodes), len(route))
+    assert_equal(len(nodes), route.num_clients())
 
-    # Iterating the Route object returns all clients, not the depots at index
-    # ``0`` and index ``len(route) + 1`` in the Route object.
+    # Iterating the Route object returns only clients, not the depots.
     assert_equal(nodes[0], route[1])
     assert_equal(nodes[1], route[2])
     assert_equal(nodes[2], route[3])
+
+
+def test_iter_skips_reload_depots(ok_small_multiple_trips):
+    """
+    Tests that iterating a route skips (repeated) reload depots.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=100)
+    data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
+
+    route = Route(data, 0, 0)
+    for loc in [0, 0, 0]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    assert_equal(route.num_clients(), 0)  # there are no clients
+    assert_equal(list(route), [])  # and thus iteration yields an empty list
 
 
 def test_route_add_and_delete_client_leaves_route_empty(ok_small):
@@ -155,10 +175,10 @@ def test_route_add_and_delete_client_leaves_route_empty(ok_small):
     route = Route(ok_small, idx=0, vehicle_type=0)
 
     route.append(Node(loc=1))
-    assert_equal(len(route), 1)
+    assert_equal(route.num_clients(), 1)
 
     del route[1]
-    assert_equal(len(route), 0)
+    assert_equal(route.num_clients(), 0)
 
 
 def test_route_delete_reduces_size_by_one(ok_small):
@@ -169,10 +189,10 @@ def test_route_delete_reduces_size_by_one(ok_small):
 
     route.append(Node(loc=1))
     route.append(Node(loc=2))
-    assert_equal(len(route), 2)
+    assert_equal(route.num_clients(), 2)
 
     del route[1]
-    assert_equal(len(route), 1)
+    assert_equal(route.num_clients(), 1)
     assert_equal(route[1].client, 2)
 
 
@@ -187,10 +207,10 @@ def test_route_clear_empties_entire_route(ok_small, num_nodes: int):
     for loc in range(1, num_nodes + 1):
         route.append(Node(loc=loc))
 
-    assert_equal(len(route), num_nodes)
+    assert_equal(route.num_clients(), num_nodes)
 
     route.clear()
-    assert_equal(len(route), 0)
+    assert_equal(route.num_clients(), 0)
 
 
 def test_excess_load(ok_small):
@@ -252,18 +272,15 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     )
 
     # Distances on various segments of the route.
-    distances = ok_small.distance_matrix(profile=0)
-    assert_equal(route.dist_between(0, 1).distance(), distances[0, client])
-    assert_equal(route.dist_between(1, 2).distance(), distances[client, 0])
-    assert_equal(
-        route.dist_between(0, 2).distance(),
-        distances[0, client] + distances[client, 0],
-    )
+    dists = ok_small.distance_matrix(profile=0)
+    assert_equal(route.dist_between(0, 1), dists[0, client])
+    assert_equal(route.dist_between(1, 2), dists[client, 0])
+    assert_equal(route.dist_between(0, 2), dists[0, client] + dists[client, 0])
 
     # This should always be zero because distance is a property of the edges,
     # not the nodes.
-    assert_equal(route.dist_at(0).distance(), 0)
-    assert_equal(route.dist_at(1).distance(), 0)
+    assert_equal(route.dist_at(0), 0)
+    assert_equal(route.dist_at(1), 0)
 
 
 def test_route_overlaps_with_self_no_matter_the_tolerance_value(ok_small):
@@ -330,9 +347,9 @@ def test_route_duration_access(ok_small):
         route.append(Node(loc=client))
     route.update()
 
-    for idx in range(len(route) + 2):
-        is_depot = idx % (len(route) + 1) == 0
-        loc = ok_small.location(idx % (len(route) + 1))
+    for idx in range(len(route)):
+        is_depot = idx % (len(route) - 1) == 0
+        loc = ok_small.location(idx % (route.num_clients() + 1))
         ds = route.duration_at(idx)
 
         assert_equal(ds.time_warp(), 0)
@@ -443,7 +460,7 @@ def test_duration_between_equal_to_before_after_when_one_is_depot(ok_small):
         assert_equal(before.time_warp(), between_before.time_warp())
 
         after = route.duration_after(idx)
-        between_after = route.duration_between(idx, len(route) + 1)
+        between_after = route.duration_between(idx, len(route) - 1)
         assert_equal(after.duration(), between_after.duration())
         assert_equal(after.time_warp(), between_after.time_warp())
 
@@ -457,7 +474,7 @@ def test_duration_between_single_route_has_correct_time_warp(ok_small):
     for client in range(ok_small.num_depots, ok_small.num_locations):
         route.append(Node(loc=client))
 
-    assert_equal(len(route), ok_small.num_clients)
+    assert_equal(route.num_clients(), ok_small.num_clients)
 
     route.update()
     assert_(route.has_time_warp())
@@ -486,9 +503,7 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
         route.append(Node(loc=client))
     route.update()
 
-    assert_equal(
-        route.distance(), route.dist_between(0, len(route) + 1).distance()
-    )
+    assert_equal(route.distance(), route.dist_between(0, len(route) - 1))
 
 
 @pytest.mark.parametrize(
@@ -519,7 +534,7 @@ def test_shift_duration_depot_time_window_interaction(
     )
 
     route = Route(data, idx=0, vehicle_type=0)
-    assert_equal(len(route), 0)
+    assert_equal(route.num_clients(), 0)
 
     for idx in [0, 1]:
         ds = route.duration_at(idx)
@@ -642,13 +657,11 @@ def test_dist_between_equal_to_before_after_when_one_is_depot(ok_small):
     route.update()
 
     for idx in [1, 2, 3, 4]:
-        before = route.dist_before(idx)
-        between_before = route.dist_between(0, idx)
-        assert_equal(before.distance(), between_before.distance())
-
-        after = route.dist_after(idx)
-        between_after = route.dist_between(idx, len(route) + 1)
-        assert_equal(after.distance(), between_after.distance())
+        assert_equal(route.dist_before(idx), route.dist_between(0, idx))
+        assert_equal(
+            route.dist_after(idx),
+            route.dist_between(idx, len(route) - 1),
+        )
 
 
 def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
@@ -670,7 +683,7 @@ def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
         assert_equal(before.delivery(), between_before.delivery())
 
         after = route.load_after(idx)
-        between_after = route.load_between(idx, len(route) + 1)
+        between_after = route.load_between(idx, len(route) - 1)
         assert_equal(after.load(), between_after.load())
         assert_equal(after.pickup(), between_after.pickup())
         assert_equal(after.delivery(), between_after.delivery())
@@ -744,7 +757,7 @@ def test_load_between_equal_to_before_after_when_one_is_depot_different_dims(
             assert_equal(before.delivery(), between_before.delivery())
 
             after = route.load_after(idx, dim)
-            between_after = route.load_between(idx, len(route) + 1, dim)
+            between_after = route.load_between(idx, len(route) - 1, dim)
 
             assert_equal(after.load(), between_after.load())
             assert_equal(after.pickup(), between_after.pickup())
@@ -767,8 +780,8 @@ def test_distance_different_profiles(ok_small_two_profiles):
 
     # Let's test with a different profile. The distance on the route should be
     # double using the second profile.
-    depot_to_depot = route.dist_between(0, len(route) + 1, profile=1)
-    assert_equal(depot_to_depot.distance(), 2 * route.distance())
+    depot_to_depot = route.dist_between(0, len(route) - 1, profile=1)
+    assert_equal(depot_to_depot, 2 * route.distance())
 
 
 def test_duration_different_profiles(ok_small_two_profiles):
@@ -790,7 +803,7 @@ def test_duration_different_profiles(ok_small_two_profiles):
     # *duration* doubles, since e.g. service duration remains the same. There
     # is no wait time, so the new duration is twice the original duration,
     # adjusted for the service duration.
-    depot_to_depot = route.duration_between(0, len(route) + 1, profile=1)
+    depot_to_depot = route.duration_between(0, len(route) - 1, profile=1)
     service = sum(c.service_duration for c in data.clients())
     assert_equal(depot_to_depot.duration(), 2 * route.duration() - service)
 
@@ -864,3 +877,242 @@ def test_initial_load_calculation(ok_small):
 
     new_route = Route(new_data, 0, 0)
     assert_equal(new_route.load(), [5])
+
+
+def test_multi_trip_depots(ok_small_multiple_trips):
+    """
+    Tests that a depot nodes correctly identify as start, end, or reload depot
+    nodes.
+    """
+    route = Route(ok_small_multiple_trips, 0, 0)
+    for loc in [1, 0, 4]:
+        node = Node(loc=loc)
+        route.append(node)
+
+    assert_(route[0].is_depot())  # 0 is the start depot
+    assert_(route[0].is_start_depot())
+    assert_(not route[0].is_end_depot())
+    assert_(not route[0].is_reload_depot())
+
+    assert_(route[2].is_depot())  # 2 is a reload depot
+    assert_(not route[2].is_start_depot())
+    assert_(not route[2].is_end_depot())
+    assert_(route[2].is_reload_depot())
+
+    assert_(route[4].is_depot())  # 4 is the end depot
+    assert_(not route[4].is_start_depot())
+    assert_(route[4].is_end_depot())
+    assert_(not route[4].is_reload_depot())
+
+    # Each depot starts a new trip, and implicitly ends the last.
+    assert_equal(route[0].trip, 0)
+    assert_equal(route[2].trip, 1)
+    assert_equal(route[4].trip, 2)
+
+
+def test_multi_trip_load_evaluation(ok_small_multiple_trips):
+    """
+    Tests load evaluation of a route with multiple trips.
+    """
+    route = Route(ok_small_multiple_trips, 0, 0)
+    for loc in [1, 2, 0, 3, 4]:
+        node = Node(loc=loc)
+        route.append(node)
+
+    route.update()
+
+    # Overall route load statistics: there's 18 load being transported, 10 on
+    # the first trip and 8 on the second. Because that's below the capacity of
+    # 10 on each trip, there is no excess load.
+    assert_equal(route.load(), [18])
+    assert_equal(route.excess_load(), [0])
+
+    start1, end1 = (0, 3)  # start/end of first trip
+    before1 = route.load_before(end1)
+    after1 = route.load_after(start1)
+
+    assert_equal(before1.load(), 10)
+    assert_equal(after1.load(), 10)
+
+    start2, end2 = (3, 6)  # start/end of second trip
+    before2 = route.load_before(end2)
+    after2 = route.load_after(start2)
+
+    assert_equal(before2.load(), 8)
+    assert_equal(after2.load(), 8)
+
+
+def test_route_remove_reload_depot(ok_small_multiple_trips):
+    """
+    Tests that removing reload depots from the route correctly reduces the
+    number of depots, and does not affect the start and end depots.
+    """
+    route = Route(ok_small_multiple_trips, 0, 0)
+    route.append(Node(loc=0))
+
+    assert_equal(route.num_depots(), 3)  # start, end, and one reload depot
+    assert_(route[1].is_reload_depot())
+
+    assert_equal(route[0].trip, 0)
+    assert_equal(route[1].trip, 1)
+    assert_equal(route[2].trip, 2)
+
+    del route[1]
+    assert_equal(route.num_depots(), 2)
+    assert_(not route[1].is_reload_depot())
+
+    assert_equal(route[0].trip, 0)
+    assert_equal(route[1].trip, 1)
+
+
+def test_remove_multiple_reload_depots(ok_small_multiple_trips):
+    """
+    Tests that removing a reload depot from a route with multiple reload depots
+    correctly updates the following depots.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=2)
+    data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
+
+    route = Route(data, 0, 0)
+    for loc in [0, 0]:
+        route.append(Node(loc=loc))
+
+    assert_(route[1].is_reload_depot())
+    assert_(route[2].is_reload_depot())
+    assert_equal(route[1].trip, 1)
+    assert_equal(route[2].trip, 2)
+    assert_equal(route[3].trip, 3)
+
+    del route[1]
+    assert_(route[1].is_reload_depot())
+    assert_(route[2].is_end_depot())
+    assert_equal(route[1].trip, 1)
+    assert_equal(route[2].trip, 2)
+
+
+def test_route_raises_too_many_trips(ok_small_multiple_trips):
+    """
+    Tests that the route raises when a modification inserts too many reload
+    depots and we exceed the maximum number of allowed trips.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0)
+    assert_equal(veh_type.max_reloads, 1)
+
+    route = Route(ok_small_multiple_trips, 0, 0)
+    route.append(Node(loc=0))  # first reload, is OK
+
+    with assert_raises(ValueError):  # second reload, should raise
+        route.append(Node(loc=0))
+
+
+def test_bug_reload_swaps_pickup_delivery_swap(small_spd):
+    """
+    Tests a bug that materialised when reloading, where the reload depot
+    segment accidentally swapped delivery and pickup arguments, causing a
+    wrong load evaluation.
+    """
+    veh_type = small_spd.vehicle_type(0)
+    new_type = veh_type.replace(reload_depots=[0], max_reloads=2)
+    data = small_spd.replace(vehicle_types=[new_type])
+
+    route = Route(data, 0, 0)
+    for loc in [1, 0, 3, 4]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    client3 = data.location(3)
+    client4 = data.location(4)
+    assert_equal(client3.delivery[0] + client4.delivery[0], 34)
+    assert_equal(client3.pickup[0] + client4.pickup[0], 50)
+
+    assert_equal(route.load_before(5).delivery(), 34)
+    assert_equal(route.load_before(5).pickup(), 50)
+    assert_equal(route.load_before(5).load(), 50)
+
+    assert_equal(route.load_after(2).delivery(), 34)
+    assert_equal(route.load_after(2).pickup(), 50)
+    assert_equal(route.load_after(2).load(), 50)
+
+
+def test_multi_trip_initial_load(ok_small_multiple_trips):
+    """
+    Tests that initial load is correctly calculated in a multi-trip setting.
+    """
+    old_type = ok_small_multiple_trips.vehicle_type(0)
+    new_type = old_type.replace(initial_load=[5])
+    data = ok_small_multiple_trips.replace(vehicle_types=[new_type])
+
+    route = Route(data, 0, 0)
+    for loc in [1, 2, 0, 3, 4]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    # There's five excess load on the first trip, due to five initial load
+    # already on the vehicle upon departure from the starting depot.
+    assert_equal(route.excess_load(), [5])
+    assert_equal(route.load_at(0).load(), 5)
+    assert_equal(route.load_before(3).load(), 15)
+    assert_equal(route.load_after(3).load(), 8)
+
+
+def test_multi_trip_with_release_times():
+    """
+    Test a small example with multiple trips and (binding) release times. See
+    the test of the same name for ``pyvrp::Route`` for further details.
+    """
+    matrix = [
+        [0, 30, 20, 40],
+        [0, 0, 10, 0],
+        [5, 0, 0, 0],
+        [10, 0, 0, 0],
+    ]
+
+    data = ProblemData(
+        clients=[
+            Client(0, 0, tw_early=60, tw_late=100, release_time=40),
+            Client(0, 0, tw_early=70, tw_late=90, release_time=50),
+            Client(0, 0, tw_early=80, tw_late=150, release_time=100),
+        ],
+        depots=[Depot(0, 0)],
+        vehicle_types=[VehicleType(reload_depots=[0])],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+    )
+
+    route = Route(data, 0, 0)
+    for loc in [1, 2, 0, 3]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    # The two trips run from [50, 95] and [100, 150]. There's 5 wait duration
+    # in between the two trips, for a total route duration of 100.
+    assert_equal(route.duration(), 100)
+    assert_equal(route.time_warp(), 0)
+
+    # Duration segment associated with the first trip from 50 to 95.
+    trip1 = route.duration_before(3)
+    assert_equal(trip1.tw_early(), 50)
+    assert_equal(trip1.tw_late(), 50)
+    assert_equal(trip1.duration(), 45)
+
+    # Duration segment associated with the second trip from 100 to 150.
+    trip2 = route.duration_after(3)
+    assert_equal(trip2.tw_early(), 100)
+    assert_equal(trip2.tw_late(), 110)
+    assert_equal(trip2.duration(), 50)
+
+    # Prefix duration segment tracking the whole route (associated with the end
+    # depot).
+    before = route.duration_before(5)
+    assert_equal(before.tw_early(), 100)  # of last trip
+    assert_equal(before.tw_late(), 110)  # of last trip
+    assert_equal(before.duration(), 100)
+    assert_equal(before.time_warp(), 0)
+
+    # Postfix duration segment tracking the whole route (associated with the
+    # start depot).
+    after = route.duration_after(0)
+    assert_equal(after.tw_early(), 50)  # of first trip
+    assert_equal(after.tw_late(), 50)  # of first trip
+    assert_equal(after.duration(), 100)
+    assert_equal(after.time_warp(), 0)

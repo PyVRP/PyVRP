@@ -1,5 +1,6 @@
 #include "LocalSearch.h"
 #include "Measure.h"
+#include "Trip.h"
 #include "primitives.h"
 
 #include <algorithm>
@@ -75,6 +76,10 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!U->route())  // we already evaluated inserting U, so there is
                 continue;     // nothing left to be done for this client.
 
+            // If U borders a reload depot, try removing it.
+            applyDepotRemovalMove(p(U), costEvaluator);
+            applyDepotRemovalMove(n(U), costEvaluator);
+
             // We next apply the regular node operators. These work on pairs
             // of nodes (U, V), where both U and V are in the solution.
             for (auto const vClient : neighbours_[uClient])
@@ -90,7 +95,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    if (p(V)->isDepot() && applyNodeOps(U, p(V), costEvaluator))
+                    if (p(V)->isStartDepot()
+                        && applyNodeOps(U, p(V), costEvaluator))
                         continue;
                 }
             }
@@ -224,6 +230,23 @@ bool LocalSearch::applyRouteOps(Route *U,
     }
 
     return false;
+}
+
+void LocalSearch::applyDepotRemovalMove(Route::Node *U,
+                                        CostEvaluator const &CostEvaluator)
+{
+    if (!U->isReloadDepot())
+        return;
+
+    // We remove the depot when that's either better, or neutral. It can be
+    // neutral if for example it's the same depot visited consecutively, but
+    // that's then unnecessary.
+    if (removeCost(U, data, CostEvaluator) <= 0)
+    {
+        auto *route = U->route();
+        route->remove(U->idx());
+        update(route, route);
+    }
 }
 
 void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
@@ -391,19 +414,32 @@ void LocalSearch::loadSolution(Solution const &solution)
     // Load routes from solution.
     for (auto const &solRoute : solution.routes())
     {
-        // Set up a container of all node visits. This lets us insert all nodes
-        // in one go, requiring no intermediate updates.
-        std::vector<Route::Node *> visits;
-        visits.reserve(solRoute.size());
-        for (auto const client : solRoute)
-            visits.push_back(&nodes[client]);
-
         // Determine index of next route of this type to load, where we rely
         // on solution to be valid to not exceed the number of vehicles per
         // vehicle type.
         auto const idx = vehicleOffset[solRoute.vehicleType()]++;
-        routes[idx].insert(1, visits.begin(), visits.end());
-        routes[idx].update();
+        auto &route = routes[idx];
+
+        // Routes use a representation with nodes for each client, reload depot
+        // (one per trip), and start/end depots. The start depot doubles as the
+        // reload depot for the first trip.
+        route.reserve(solRoute.size() + solRoute.numTrips() + 1);
+
+        for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
+        {
+            auto const &trip = solRoute.trip(tripIdx);
+
+            if (tripIdx != 0)  // then we first insert a trip delimiter.
+            {
+                Route::Node depot = {trip.startDepot()};
+                route.push_back(&depot);
+            }
+
+            for (auto const client : trip)
+                route.push_back(&nodes[client]);
+        }
+
+        route.update();
     }
 
     for (auto *routeOp : routeOps)
@@ -415,18 +451,43 @@ Solution LocalSearch::exportSolution() const
     std::vector<pyvrp::Route> solRoutes;
     solRoutes.reserve(data.numVehicles());
 
+    std::vector<Trip> trips;
+    std::vector<size_t> visits;
+
     for (auto const &route : routes)
     {
         if (route.empty())
             continue;
 
-        std::vector<size_t> visits;
-        visits.reserve(route.size());
+        trips.clear();
+        trips.reserve(route.numTrips());
 
-        for (auto *node : route)
-            visits.push_back(node->client());
+        visits.clear();
+        visits.reserve(route.numClients());
 
-        solRoutes.emplace_back(data, visits, route.vehicleType());
+        auto const *prevDepot = route[0];
+        for (size_t idx = 1; idx != route.size(); ++idx)
+        {
+            auto const *node = route[idx];
+
+            if (!node->isDepot())
+            {
+                visits.push_back(node->client());
+                continue;
+            }
+
+            trips.emplace_back(data,
+                               visits,
+                               route.vehicleType(),
+                               prevDepot->client(),
+                               node->client());
+
+            visits.clear();
+            prevDepot = node;
+        }
+
+        assert(trips.size() == route.numTrips());
+        solRoutes.emplace_back(data, trips, route.vehicleType());
     }
 
     return {data, solRoutes};

@@ -206,15 +206,15 @@ def test_relocate_after_depot_should_work(ok_small):
     assert_(op.evaluate(nodes[-1], route2[0], cost_evaluator) < 0)
 
     assert_(nodes[-1].route is route1)
-    assert_equal(len(route1), 3)
-    assert_equal(len(route2), 0)
+    assert_equal(route1.num_clients(), 3)
+    assert_equal(route2.num_clients(), 0)
 
     # Apply the move and check that the routes and nodes are appropriately
     # updated.
     op.apply(nodes[-1], route2[0])
     assert_(nodes[-1].route is route2)
-    assert_equal(len(route1), 2)
-    assert_equal(len(route2), 1)
+    assert_equal(route1.num_clients(), 2)
+    assert_equal(route2.num_clients(), 1)
 
 
 def test_relocate_only_happens_when_distance_and_duration_allow_it():
@@ -572,3 +572,22 @@ def test_swap_with_different_profiles(ok_small_two_profiles):
     delta = dist1[0, 4] + dist1[4, 0] + dist2[0, 3] + dist2[3, 0]
     delta -= route1.distance() + route2.distance()
     assert_equal(op.evaluate(route1[1], route2[1], cost_eval), delta)
+
+
+def test_swap_does_not_swap_depots(ok_small_multiple_trips):
+    """
+    Tests that the exchange operator does not attempt moves that include moving
+    a reload depot.
+    """
+    data = ok_small_multiple_trips
+
+    route = Route(data, 0, 0)  # route is 1 2 | 3 4
+    for loc in [1, 2, 0, 3, 4]:
+        route.append(Node(loc=loc))
+    route.update()
+
+    op = Exchange21(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+
+    # This move overlaps with reload depot at index 3, so cannot be evaluated.
+    assert_equal(op.evaluate(route[2], route[4], cost_eval), 0)

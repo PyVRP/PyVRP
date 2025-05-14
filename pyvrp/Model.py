@@ -334,6 +334,8 @@ class Model:
         profile: Profile | None = None,
         start_late: int | None = None,
         initial_load: int | list[int] = [],
+        reload_depots: list[Depot] = [],
+        max_reloads: int = np.iinfo(np.uint64).max,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -373,6 +375,15 @@ class Model:
         else:
             raise ValueError("The given profile is not in this model.")
 
+        reloads: list[int] = []
+        for depot in reload_depots:
+            depot_idx = _idx_by_id(depot, self._depots)
+            if depot_idx is not None:
+                reloads.append(depot_idx)
+            else:
+                msg = "The given reload depot is not in this model."
+                raise ValueError(msg)
+
         init_load = initial_load
         if isinstance(init_load, int):
             init_load = [init_load]
@@ -392,6 +403,8 @@ class Model:
             profile=profile_idx,
             start_late=start_late,
             initial_load=init_load,
+            reload_depots=reloads,
+            max_reloads=max_reloads,
             name=name,
         )
 
