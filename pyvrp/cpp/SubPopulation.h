@@ -109,7 +109,7 @@ public:
     };
 
 private:
-    std::vector<Item> items;
+    std::vector<Item> items_;
 
     // Removes the element at the given iterator location from the items.
     void remove(std::vector<Item>::iterator const &iterator);
@@ -129,7 +129,7 @@ public:
      * cost_evaluator
      *     CostEvaluator to use to compute the cost.
      */
-    void add(std::shared_ptr<Solution const> solution,
+    void add(std::shared_ptr<Solution const> const &solution,
              CostEvaluator const &costEvaluator);
 
     std::vector<Item>::const_iterator cbegin() const;
