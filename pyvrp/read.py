@@ -281,9 +281,6 @@ class _InstanceParser:
         return self.round_func(np.broadcast_to(max_durations, shape))
 
     def max_reloads(self) -> np.ndarray:
-        if "vehicles_max_reloads" not in self.instance:
-            return np.full(self.num_vehicles, _UINT_MAX)
-
         max_reloads = self.instance.get("vehicles_max_reloads", _UINT_MAX)
         return np.broadcast_to(max_reloads, self.num_vehicles)
 
