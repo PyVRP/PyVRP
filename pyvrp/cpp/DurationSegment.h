@@ -189,9 +189,7 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
     // Because clients' default time windows are [0, INT_MAX], the ternaries in
     // this method are carefully designed to avoid integer over- and underflow
     // issues. Be very careful when changing things here!
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return {};
-#else
+
     // atSecond is the time (relative to our starting time) at which we arrive
     // at the second's initial location.
     auto const atSecond = first.duration_ - first.timeWarp_ + edgeDuration;
@@ -220,7 +218,6 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
             first.cumDuration_ + second.cumDuration_,
             first.cumTimeWarp_ + second.cumTimeWarp_,
             first.prevEndLate_};  // field is evaluated left-to-right
-#endif
 }
 
 DurationSegment DurationSegment::finaliseBack() const

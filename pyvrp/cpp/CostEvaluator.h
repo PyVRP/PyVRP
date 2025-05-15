@@ -208,11 +208,7 @@ Cost CostEvaluator::loadPenalty(Load load,
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return 0;
-#else
     return static_cast<Cost>(timeWarp.get() * twPenalty_);
-#endif
 }
 
 Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance) const
