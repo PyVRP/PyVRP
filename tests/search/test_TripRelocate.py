@@ -4,7 +4,7 @@ from numpy.testing import assert_, assert_equal
 
 from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
 from pyvrp.search import TripRelocate
-from pyvrp.search._search import Node, Route
+from tests.helpers import make_search_route
 
 
 def test_inserts_depot_single_route(ok_small_multiple_trips):
@@ -12,10 +12,7 @@ def test_inserts_depot_single_route(ok_small_multiple_trips):
     Tests that TripRelocate inserts a reload depot along with the node
     relocation in the same route.
     """
-    route = Route(ok_small_multiple_trips, 0, 0)
-    for loc in [1, 2, 3, 4]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(ok_small_multiple_trips, [1, 2, 3, 4])
 
     assert_equal(str(route), "1 2 3 4")
     assert_equal(route.num_depots(), 2)
@@ -48,14 +45,8 @@ def test_inserts_depot_across_routes(ok_small_multiple_trips):
     Tests that TripRelocate inserts a reload depot along with the node
     relocation across routes.
     """
-    route1 = Route(ok_small_multiple_trips, 0, 0)
-    route1.append(Node(loc=3))
-    route1.update()
-
-    route2 = Route(ok_small_multiple_trips, 1, 0)
-    for loc in [1, 2, 4]:
-        route2.append(Node(loc=loc))
-    route2.update()
+    route1 = make_search_route(ok_small_multiple_trips, [3], idx=0)
+    route2 = make_search_route(ok_small_multiple_trips, [1, 2, 4], idx=1)
 
     assert_equal(str(route1), "3")
     assert_equal(str(route2), "1 2 4")
@@ -98,10 +89,7 @@ def test_reload_depot_before_or_after_relocate(
     TripRelocate evaluates placing a reload depot either before or after the
     relocated node. This test checks if it picks the best option.
     """
-    route = Route(ok_small_multiple_trips, 0, 0)
-    for loc in [1, 2, 3, 4]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(ok_small_multiple_trips, [1, 2, 3, 4])
 
     op = TripRelocate(ok_small_multiple_trips)
     cost_eval = CostEvaluator([load_penalty], 1, 0)
@@ -133,10 +121,7 @@ def test_inserts_best_reload_depot():
         duration_matrices=[mat],
     )
 
-    route = Route(data, 0, 0)
-    route.append(Node(loc=2))
-    route.append(Node(loc=3))
-    route.update()
+    route = make_search_route(data, [2, 3])
 
     assert_(route.has_excess_load())
     assert_equal(route.excess_load(), [5])
@@ -179,13 +164,8 @@ def test_fixed_vehicle_cost():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    route1 = Route(data, 0, 0)
-    route1.append(Node(loc=1))
-    route1.update()
-
-    route2 = Route(data, 1, 0)
-    route2.append(Node(loc=2))
-    route2.update()
+    route1 = make_search_route(data, [1], idx=0)
+    route2 = make_search_route(data, [2], idx=1)
 
     op = TripRelocate(data)
     cost_eval = CostEvaluator([0], 0, 0)
@@ -200,10 +180,7 @@ def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
     Tests that TripRelocate does not evaluate moves that would result in more
     trips than the vehicle on the route can execute.
     """
-    route = Route(ok_small_multiple_trips, 0, 0)
-    for loc in [3, 0, 1, 2, 4]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(ok_small_multiple_trips, [3, 0, 1, 2, 4])
 
     assert_equal(str(route), "3 | 1 2 4")
     assert_equal(route.excess_load(), [5])
@@ -233,10 +210,7 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
     # - Visit 38 at 12230, adding 5395 time warp. Leave at 13130.
     # - Visit 48 at 28560, leave at 29460.
     # - Return to depot at 29567.
-    route1 = Route(mtvrptw_release_times, 0, 0)
-    for loc in [34, 0, 23, 38, 48]:
-        route1.append(Node(loc=loc))
-    route1.update()
+    route1 = make_search_route(mtvrptw_release_times, [34, 0, 23, 38, 48])
 
     assert_equal(route1.distance(), 1713)
     assert_equal(route1.time_warp(), 5395)
@@ -246,9 +220,7 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
     # - Leave the depot at 4718.
     # - Visit 6 at 4970, leave at 5870.
     # - Return to depot at 6122.
-    route2 = Route(mtvrptw_release_times, 1, 0)
-    route2.append(Node(loc=6))
-    route2.update()
+    route2 = make_search_route(mtvrptw_release_times, [6], idx=1)
 
     assert_equal(route2.distance(), 504)
     assert_equal(route2.time_warp(), 0)

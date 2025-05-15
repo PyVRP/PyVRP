@@ -9,6 +9,7 @@ from pyvrp.search._search import (
     insert_cost,
     remove_cost,
 )
+from tests.helpers import make_search_route
 
 
 def test_insert_cost_zero_when_not_allowed(ok_small):
@@ -17,11 +18,7 @@ def test_insert_cost_zero_when_not_allowed(ok_small):
     the only case where it shortcuts to return a non-negative delta cost.
     """
     cost_eval = CostEvaluator([1], 1, 0)
-
-    route = Route(ok_small, idx=0, vehicle_type=0)
-    for loc in [1, 2]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(ok_small, [1, 2])
 
     # Inserting the depot is not possible.
     assert_equal(insert_cost(route[0], route[1], ok_small, cost_eval), 0)
@@ -36,11 +33,7 @@ def test_insert_cost(ok_small):
     Tests that the insert_cost() method works correctly on a few basic cases.
     """
     cost_eval = CostEvaluator([1], 1, 0)
-
-    route = Route(ok_small, idx=0, vehicle_type=0)
-    for loc in [1, 2]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(ok_small, [1, 2])
 
     # This adds arcs 1 -> 4 -> 2, and removes arcs 1 -> 2. The added distances
     # is 1593 + 1090, the removed distance 1992. This also adds 5 additional
@@ -97,11 +90,7 @@ def test_remove_cost_zero_when_not_allowed(ok_small):
     the only case where it shortcuts to return a non-negative delta cost.
     """
     cost_eval = CostEvaluator([1], 1, 0)
-
-    route = Route(ok_small, idx=0, vehicle_type=0)
-    for loc in [1, 2]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(ok_small, [1, 2])
 
     # Removing the depot is not possible.
     assert_equal(remove_cost(route[0], ok_small, cost_eval), 0)
@@ -116,11 +105,7 @@ def test_remove(ok_small):
     Tests that the remove_cost() method works correctly on a few basic cases.
     """
     cost_eval = CostEvaluator([1], 1, 0)
-
-    route = Route(ok_small, idx=0, vehicle_type=0)
-    for loc in [1, 2]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(ok_small, [1, 2])
 
     # Purely distance. Removes arcs 0 -> 1 -> 2, adds arc 0 -> 2. This change
     # has delta distance of 1944 - 1544 - 1992 = -1592.
@@ -175,16 +160,12 @@ def test_remove_fixed_vehicle_cost():
     # can happen due to vehicle changes. In this, case we evaluate removing the
     # only client on a route. That makes the route empty, and removes the fixed
     # vehicle cost of 7 for this vehicle type.
-    route = Route(data, idx=0, vehicle_type=0)
-    route.append(Node(loc=1))
-    route.update()
+    route = make_search_route(data, [1], vehicle_type=0)
     assert_equal(remove_cost(route[1], data, cost_eval), -7)
 
     # Same story for this route, but now we have a different vehicle type with
     # fixed cost 13.
-    route = Route(data, idx=0, vehicle_type=1)
-    route.append(Node(loc=1))
-    route.update()
+    route = make_search_route(data, [1], vehicle_type=1)
     assert_equal(remove_cost(route[1], data, cost_eval), -13)
 
 
@@ -247,10 +228,7 @@ def test_remove_reload_depot(ok_small_multiple_trips):
     Tests that remove_cost() correctly evaluates removing a reload depot.
     """
     data = ok_small_multiple_trips
-    route = Route(data, 0, 0)
-    for loc in [1, 2, 0, 3, 4]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(data, [1, 2, 0, 3, 4])
 
     assert_(not route.has_excess_load())
     assert_(route[3].is_reload_depot())
@@ -272,10 +250,7 @@ def test_remove_consecutive_reload_depots(ok_small_multiple_trips):
     """
     veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=2)
     data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
-    route = Route(data, 0, 0)
-    for loc in [1, 2, 0, 0, 3, 4]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(data, [1, 2, 0, 0, 3, 4])
 
     assert_(route[3].is_reload_depot())
     assert_(route[4].is_reload_depot())

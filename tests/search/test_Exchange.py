@@ -27,6 +27,7 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._search import Node, Route
+from tests.helpers import make_search_route
 
 
 @pytest.mark.parametrize(
@@ -414,10 +415,7 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
 
     op = operator(data)
 
-    route = Route(data, idx=0, vehicle_type=0)
-    for loc in [1, 2, 3]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(data, [1, 2, 3])
 
     # Route is 1 -> 2 -> 3, and stores 1's pickup amount (5) before dropping
     # off 3's delivery amount (5). So total load is 10, and the excess load 5.
@@ -580,11 +578,7 @@ def test_swap_does_not_swap_depots(ok_small_multiple_trips):
     a reload depot.
     """
     data = ok_small_multiple_trips
-
-    route = Route(data, 0, 0)  # route is 1 2 | 3 4
-    for loc in [1, 2, 0, 3, 4]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(data, [1, 2, 0, 3, 4])  # route is 1 2 | 3 4
 
     op = Exchange21(data)
     cost_eval = CostEvaluator([0], 0, 0)
