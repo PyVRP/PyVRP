@@ -31,7 +31,7 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - HFVRP
      - MTVRPTWR
    * - 15 May 2025
-     - `0.11.0 <https://github.com/PyVRP/PyVRP/tree/68d07577540431fe6a6fb26117e7598fcc270226>`_
+     - `0.11.0 <https://github.com/PyVRP/PyVRP/tree/a06232deafd53f5024ede9e813fad70ec2a325c5>`_
      - TODO
      - TODO
      - TODO
