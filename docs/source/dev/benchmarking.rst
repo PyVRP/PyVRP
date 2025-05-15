@@ -40,6 +40,10 @@ We use the following instances and configurations to benchmark PyVRP:
   For this benchmark, PyVRP needs to be compiled with the CVRP problem setting, and the ``round`` rounding function should be used.
   Additionally, the configuration specified in ``configs/cvrp.toml`` should be used.
 
+* For the HFVRP, TODO
+
+* For the MTVRPTWR, TODO
+
 The time limit should be scaled by the PassMark score of your CPU.
 Each instance is run ten times with different seeds.
 Each run is performed on a single core.
