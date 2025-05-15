@@ -356,12 +356,12 @@ def test_route_duration_access(ok_small):
 
         if is_depot:
             vehicle_type = ok_small.vehicle_type(route.vehicle_type)
-            assert_equal(ds.tw_early(), vehicle_type.tw_early)
-            assert_equal(ds.tw_late(), vehicle_type.tw_late)
+            assert_equal(ds.start_early(), vehicle_type.tw_early)
+            assert_equal(ds.start_late(), vehicle_type.tw_late)
             assert_equal(ds.duration(), 0)
         else:
-            assert_equal(ds.tw_early(), loc.tw_early)
-            assert_equal(ds.tw_late(), loc.tw_late)
+            assert_equal(ds.start_early(), loc.tw_early)
+            assert_equal(ds.start_late(), loc.tw_late)
             assert_equal(ds.duration(), loc.service_duration)
 
 
@@ -379,14 +379,14 @@ def test_route_duration_access_with_latest_start(ok_small):
 
     # Start depot
     start_ds = route.duration_at(0)
-    assert_equal(start_ds.tw_early(), vehicle_type.tw_early)
-    assert_equal(start_ds.tw_late(), vehicle_type.start_late)
+    assert_equal(start_ds.start_early(), vehicle_type.tw_early)
+    assert_equal(start_ds.start_late(), vehicle_type.start_late)
     assert_equal(start_ds.duration(), 0)
 
     # End depot
     end_ds = route.duration_at(1)
-    assert_equal(end_ds.tw_early(), vehicle_type.tw_early)
-    assert_equal(end_ds.tw_late(), vehicle_type.tw_late)
+    assert_equal(end_ds.start_early(), vehicle_type.tw_early)
+    assert_equal(end_ds.start_late(), vehicle_type.tw_late)
     assert_equal(end_ds.duration(), 0)
 
 
@@ -413,9 +413,9 @@ def test_latest_start(ok_small: ProblemData, start_late: int, expected: int):
     route.update()
 
     assert_equal(route.duration(), expected)
-    # Starting the route before 14'056 results in wait time, so tw_early should
-    # be this start time if this does not exceed the latest start of the route.
-    assert_equal(route.duration_after(0).tw_early(), min(start_late, 14_056))
+    # Starting the route before 14'056 results in wait time, so start_early
+    # should be this start time if it does not exceed the route's latest start.
+    assert_equal(route.duration_after(0).start_early(), min(start_late, 14056))
 
 
 @pytest.mark.parametrize("loc", [1, 2, 3, 4])
@@ -507,20 +507,20 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
 
 
 @pytest.mark.parametrize(
-    ("shift_tw", "expected_tw"),
+    ("shift_tw", "expected_start"),
     [
         ((0, np.iinfo(np.int64).max), (0, 1000)),  # should default to depot
         ((0, 1000), (0, 1000)),  # same as depot
-        ((0, 500), (0, 500)),  # earlier tw_late, should lower tw_late
-        ((250, 1000), (250, 1000)),  # later tw_early, should increase tw_early
+        ((0, 500), (0, 500)),  # should lower start_late
+        ((250, 1000), (250, 1000)),  # should increase start_early
         ((300, 600), (300, 600)),  # both more restrictive
     ],
 )
 def test_shift_duration_depot_time_window_interaction(
-    shift_tw: tuple[int, int], expected_tw: tuple[int, int]
+    shift_tw: tuple[int, int], expected_start: tuple[int, int]
 ):
     """
-    Tests that the route's depot time window is restricted to the most
+    Tests that the route start at the depot is restricted to the most
     restrictive of [depot early, depot late] and [shift early, shift late].
     The depot time window defaults to [0, 1_000], and the shift time window
     varies around that.
@@ -538,8 +538,8 @@ def test_shift_duration_depot_time_window_interaction(
 
     for idx in [0, 1]:
         ds = route.duration_at(idx)
-        assert_equal(ds.tw_early(), expected_tw[0])
-        assert_equal(ds.tw_late(), expected_tw[1])
+        assert_equal(ds.start_early(), expected_start[0])
+        assert_equal(ds.start_late(), expected_start[1])
 
 
 @pytest.mark.parametrize("clients", [(1, 2, 3, 4), (1, 2), (3, 4)])
@@ -1091,28 +1091,28 @@ def test_multi_trip_with_release_times():
 
     # Duration segment associated with the first trip from 50 to 95.
     trip1 = route.duration_before(3)
-    assert_equal(trip1.tw_early(), 50)
-    assert_equal(trip1.tw_late(), 50)
+    assert_equal(trip1.start_early(), 50)
+    assert_equal(trip1.start_late(), 50)
     assert_equal(trip1.duration(), 45)
 
     # Duration segment associated with the second trip from 100 to 150.
     trip2 = route.duration_after(3)
-    assert_equal(trip2.tw_early(), 100)
-    assert_equal(trip2.tw_late(), 110)
+    assert_equal(trip2.start_early(), 100)
+    assert_equal(trip2.start_late(), 110)
     assert_equal(trip2.duration(), 50)
 
     # Prefix duration segment tracking the whole route (associated with the end
     # depot).
     before = route.duration_before(5)
-    assert_equal(before.tw_early(), 100)  # of last trip
-    assert_equal(before.tw_late(), 110)  # of last trip
+    assert_equal(before.start_early(), 100)  # of last trip
+    assert_equal(before.start_late(), 110)  # of last trip
     assert_equal(before.duration(), 100)
     assert_equal(before.time_warp(), 0)
 
     # Postfix duration segment tracking the whole route (associated with the
     # start depot).
     after = route.duration_after(0)
-    assert_equal(after.tw_early(), 50)  # of first trip
-    assert_equal(after.tw_late(), 50)  # of first trip
+    assert_equal(after.start_early(), 50)  # of first trip
+    assert_equal(after.start_late(), 50)  # of first trip
     assert_equal(after.duration(), 100)
     assert_equal(after.time_warp(), 0)

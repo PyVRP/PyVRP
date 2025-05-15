@@ -1108,8 +1108,8 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration>(),
              py::arg("duration"),
              py::arg("time_warp"),
-             py::arg("tw_early"),
-             py::arg("tw_late"),
+             py::arg("start_early"),
+             py::arg("start_late"),
              py::arg("release_time"),
              py::arg("cum_duration") = 0,
              py::arg("cum_time_warp") = 0,
@@ -1124,12 +1124,12 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("finalise_front",
              &DurationSegment::finaliseFront,
              DOC(pyvrp, DurationSegment, finaliseFront))
-        .def("tw_early",
-             &DurationSegment::twEarly,
-             DOC(pyvrp, DurationSegment, twEarly))
-        .def("tw_late",
-             &DurationSegment::twLate,
-             DOC(pyvrp, DurationSegment, twLate))
+        .def("start_early",
+             &DurationSegment::startEarly,
+             DOC(pyvrp, DurationSegment, startEarly))
+        .def("start_late",
+             &DurationSegment::startLate,
+             DOC(pyvrp, DurationSegment, startLate))
         .def("end_early",
              &DurationSegment::endEarly,
              DOC(pyvrp, DurationSegment, endEarly))
