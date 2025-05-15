@@ -38,7 +38,7 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - 0.93%
      - 0.58%
      - 0.76%
-     - 1.95%
+     - 2.53%
    * - 7 November 2024
      - `0.10.0 <https://github.com/PyVRP/PyVRP/tree/17a305390ab8daab59bf31abd21b497cca3de37d>`_
      - 0.25%
