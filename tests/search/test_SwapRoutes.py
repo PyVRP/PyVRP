@@ -45,15 +45,9 @@ def test_evaluate_same_vehicle_type(ok_small):
     Tests that evaluate() returns 0 in case the same vehicle types are used,
     since in that case swapping cannot result in cost savings.
     """
-    route1 = Route(ok_small, idx=0, vehicle_type=0)
-    route2 = Route(ok_small, idx=1, vehicle_type=0)
+    route1 = make_search_route(ok_small, [1], idx=0, vehicle_type=0)
+    route2 = make_search_route(ok_small, [2], idx=1, vehicle_type=0)
     assert_equal(route1.vehicle_type, route2.vehicle_type)
-
-    route1.append(Node(loc=1))
-    route2.append(Node(loc=2))
-
-    route1.update()
-    route2.update()
 
     op = SwapRoutes(ok_small)
     cost_eval = CostEvaluator([1], 1, 0)
@@ -65,9 +59,7 @@ def test_same_route(ok_small):
     Tests that evaluate() returns 0 in case the same routes are passed in,
     since then swapping has no effect.
     """
-    route = Route(ok_small, idx=0, vehicle_type=0)
-    route.append(Node(loc=1))
-    route.update()
+    route = make_search_route(ok_small, [1])
 
     op = SwapRoutes(ok_small)
     cost_eval = CostEvaluator([1], 1, 0)
