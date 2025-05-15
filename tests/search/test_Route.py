@@ -4,6 +4,7 @@ from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Client, Depot, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
+from tests.helpers import make_search_route
 
 
 @pytest.mark.parametrize("loc", [0, 1, 10])
@@ -138,11 +139,7 @@ def test_route_iter_returns_all_clients(ok_small):
     Tests that iterating over a route returns all clients in the route, but
     not the depots.
     """
-    route = Route(ok_small, idx=0, vehicle_type=0)
-
-    for loc in [1, 2, 3]:
-        route.append(Node(loc=loc))
-
+    route = make_search_route(ok_small, [1, 2, 3])
     nodes = [node for node in route]
     assert_equal(len(nodes), route.num_clients())
 
@@ -159,11 +156,7 @@ def test_iter_skips_reload_depots(ok_small_multiple_trips):
     veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=100)
     data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
 
-    route = Route(data, 0, 0)
-    for loc in [0, 0, 0]:
-        route.append(Node(loc=loc))
-    route.update()
-
+    route = make_search_route(data, [0, 0, 0])
     assert_equal(route.num_clients(), 0)  # there are no clients
     assert_equal(list(route), [])  # and thus iteration yields an empty list
 
@@ -217,10 +210,7 @@ def test_excess_load(ok_small):
     """
     Tests that the route calculations excess load correctly.
     """
-    route = Route(ok_small, idx=0, vehicle_type=0)
-    for loc in [1, 2, 3, 4]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(ok_small, [1, 2, 3, 4])
 
     # The instance has four clients, which have a total delivery demand of 18.
     # The only vehicle type in the instance has a capacity of 10, so this route
@@ -252,9 +242,7 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     """
     assert_equal(ok_small.num_load_dimensions, 1)
 
-    route = Route(ok_small, idx=0, vehicle_type=0)
-    route.append(Node(loc=client))
-    route.update()
+    route = make_search_route(ok_small, [client])
 
     # Only the client has any delivery demand, so the total route load should
     # be equal to it.
@@ -287,12 +275,7 @@ def test_route_overlaps_with_self_no_matter_the_tolerance_value(ok_small):
     """
     Tests that a route always overlaps with itself.
     """
-    route = Route(ok_small, idx=0, vehicle_type=0)
-    route.append(Node(loc=1))
-    route.append(Node(loc=2))
-
-    route.update()
-
+    route = make_search_route(ok_small, [1, 2])
     assert_(route.overlaps_with(route, 0))
     assert_(route.overlaps_with(route, 0.5))
     assert_(route.overlaps_with(route, 1))
@@ -303,15 +286,8 @@ def test_all_routes_overlap_with_maximum_tolerance_value(ok_small):
     Tests that any route overlaps with any other route with the maximum
     tolerance value.
     """
-    route1 = Route(ok_small, idx=0, vehicle_type=0)
-    for loc in [1, 2]:
-        route1.append(Node(loc=loc))
-    route1.update()
-
-    route2 = Route(ok_small, idx=0, vehicle_type=0)
-    for loc in [3, 4]:
-        route2.append(Node(loc=loc))
-    route2.update()
+    route1 = make_search_route(ok_small, [1, 2], idx=0)
+    route2 = make_search_route(ok_small, [3, 4], idx=1)
 
     # The routes are clearly not the same, and don't overlap with zero
     # tolerance.
@@ -547,11 +523,7 @@ def test_route_centroid(ok_small, clients):
     """
     Tests that Route computes the center point of client locations correctly.
     """
-    route = Route(ok_small, 0, 0)
-    for client in clients:
-        route.append(Node(loc=client))
-
-    route.update()
+    route = make_search_route(ok_small, clients)
 
     x = [ok_small.location(client).x for client in clients]
     y = [ok_small.location(client).y for client in clients]
@@ -633,11 +605,7 @@ def test_is_feasible(
     """
     vehicle_type = VehicleType(3, capacity=[10], max_distance=6_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
-
-    route = Route(data, 0, 0)
-    for client in visits:
-        route.append(Node(loc=client))
-    route.update()
+    route = make_search_route(data, visits)
 
     assert_equal(route.is_feasible(), load_feas and time_feas and dist_feas)
     assert_equal(not route.has_excess_distance(), dist_feas)
@@ -724,11 +692,7 @@ def test_load_between_multiple_dimensions(frm, to, dim, expected):
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    route = Route(data, idx=0, vehicle_type=0)
-    route.append(Node(loc=1))
-    route.append(Node(loc=2))
-    route.update()
-
+    route = make_search_route(data, [1, 2])
     assert_equal(route.load_between(frm, to, dimension=dim).load(), expected)
 
 
@@ -884,10 +848,7 @@ def test_multi_trip_depots(ok_small_multiple_trips):
     Tests that a depot nodes correctly identify as start, end, or reload depot
     nodes.
     """
-    route = Route(ok_small_multiple_trips, 0, 0)
-    for loc in [1, 0, 4]:
-        node = Node(loc=loc)
-        route.append(node)
+    route = make_search_route(ok_small_multiple_trips, [1, 0, 4])
 
     assert_(route[0].is_depot())  # 0 is the start depot
     assert_(route[0].is_start_depot())
@@ -914,12 +875,7 @@ def test_multi_trip_load_evaluation(ok_small_multiple_trips):
     """
     Tests load evaluation of a route with multiple trips.
     """
-    route = Route(ok_small_multiple_trips, 0, 0)
-    for loc in [1, 2, 0, 3, 4]:
-        node = Node(loc=loc)
-        route.append(node)
-
-    route.update()
+    route = make_search_route(ok_small_multiple_trips, [1, 2, 0, 3, 4])
 
     # Overall route load statistics: there's 18 load being transported, 10 on
     # the first trip and 8 on the second. Because that's below the capacity of
@@ -972,10 +928,7 @@ def test_remove_multiple_reload_depots(ok_small_multiple_trips):
     """
     veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=2)
     data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
-
-    route = Route(data, 0, 0)
-    for loc in [0, 0]:
-        route.append(Node(loc=loc))
+    route = make_search_route(data, [0, 0])
 
     assert_(route[1].is_reload_depot())
     assert_(route[2].is_reload_depot())
@@ -1014,11 +967,7 @@ def test_bug_reload_swaps_pickup_delivery_swap(small_spd):
     veh_type = small_spd.vehicle_type(0)
     new_type = veh_type.replace(reload_depots=[0], max_reloads=2)
     data = small_spd.replace(vehicle_types=[new_type])
-
-    route = Route(data, 0, 0)
-    for loc in [1, 0, 3, 4]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(data, [1, 0, 3, 4])
 
     client3 = data.location(3)
     client4 = data.location(4)
@@ -1041,11 +990,7 @@ def test_multi_trip_initial_load(ok_small_multiple_trips):
     old_type = ok_small_multiple_trips.vehicle_type(0)
     new_type = old_type.replace(initial_load=[5])
     data = ok_small_multiple_trips.replace(vehicle_types=[new_type])
-
-    route = Route(data, 0, 0)
-    for loc in [1, 2, 0, 3, 4]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(data, [1, 2, 0, 3, 4])
 
     # There's five excess load on the first trip, due to five initial load
     # already on the vehicle upon departure from the starting depot.
@@ -1079,10 +1024,7 @@ def test_multi_trip_with_release_times():
         duration_matrices=[matrix],
     )
 
-    route = Route(data, 0, 0)
-    for loc in [1, 2, 0, 3]:
-        route.append(Node(loc=loc))
-    route.update()
+    route = make_search_route(data, [1, 2, 0, 3])
 
     # The two trips run from [50, 95] and [100, 150]. There's 5 wait duration
     # in between the two trips, for a total route duration of 100.
