@@ -283,7 +283,7 @@ void Route::update()
     auto const &durations = data.durationMatrix(profile());
 
     durBefore.resize(nodes.size());
-    durBefore[0] = durAt[0];
+    durBefore[0] = {start, 0};
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
         auto const prev = idx - 1;
@@ -291,10 +291,18 @@ void Route::update()
                                 ? durBefore[prev].finaliseBack()
                                 : durBefore[prev];
 
-        // TODO depot service duration
+        auto at = durAt[idx];
+        if (nodes[idx]->isDepot())
+        {
+            ProblemData::Depot const &depot = data.location(visits[idx]);
+            at = {depot, 0};
+        }
 
-        auto const edgeDur = durations(visits[prev], visits[idx]);
-        durBefore[idx] = DurationSegment::merge(edgeDur, before, durAt[idx]);
+        auto edgeDur = durations(visits[prev], visits[idx]);
+        if (nodes[prev]->isDepot())
+            edgeDur += durAt[prev].duration();
+
+        durBefore[idx] = DurationSegment::merge(edgeDur, before, at);
     }
 
     durAfter.resize(nodes.size());

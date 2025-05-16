@@ -1058,3 +1058,40 @@ def test_multi_trip_with_release_times():
     assert_equal(after.start_late(), 50)  # of first trip
     assert_equal(after.duration(), 100)
     assert_equal(after.time_warp(), 0)
+
+
+def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
+    """
+    Tests that the route duration caches correctly account for depot service
+    duration, which is only incurred at the start of a trip.
+    """
+    old_depot = ok_small_multiple_trips.location(0)
+    new_depot = Depot(old_depot.x, old_depot.y, service_duration=200)
+    data = ok_small_multiple_trips.replace(depots=[new_depot])
+
+    route = make_search_route(data, [3, 4, 0, 1, 2])
+    assert_(route.is_feasible())
+
+    # Service durations are only applied at start and reload depots, not at the
+    # end of a route.
+    assert_equal(route.duration_at(0).duration(), 200)  # start service
+    assert_equal(route.duration_at(3).duration(), 200)  # reload service
+    assert_equal(route.duration_at(6).duration(), 0)  # end, no service
+
+    # We should not have to pay for depot service duration on the segment
+    # ending at the reload depot.
+    first_trip = make_search_route(data, [3, 4])
+    before_reload = route.duration_before(3)
+    assert_equal(first_trip.duration(), before_reload.duration())
+
+    # There is no duration before the start depot (because the depot service is
+    # part of the next trip), and the duration before the end depot corresponds
+    # to the entire trip.
+    assert_equal(route.duration_before(0).duration(), 0)
+    assert_equal(route.duration_before(6).duration(), route.duration())
+
+    # Instead, we should incur this service duration only on trips leaving the
+    # reload depot.
+    second_trip = make_search_route(data, [1, 2])
+    after_reload = route.duration_after(3)
+    assert_equal(second_trip.duration(), after_reload.duration())
