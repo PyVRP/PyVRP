@@ -264,6 +264,7 @@ public:
      * Depot(
      *    x: int,
      *    y: int,
+     *    service_duration: int = 0,
      *    tw_early: int = 0,
      *    tw_late: int = np.iinfo(np.int64).max,
      *    *,
@@ -280,6 +281,8 @@ public:
      * y
      *     Vertical coordinate of this depot, that is, the 'y' part of the
      *     depot's (x, y) location tuple.
+     * service_duration
+     *     Time it takes to e.g. load a vehicle at this depot. Default 0.
      * tw_early
      *     Opening time of this depot. Default 0.
      * tw_late
@@ -293,6 +296,8 @@ public:
      *     Horizontal coordinate of this depot.
      * y
      *     Vertical coordinate of this depot.
+     * service_duration
+     *     Time it takes to e.g. load a vehicle at this depot.
      * tw_early
      *     Opening time of this depot.
      * tw_late
@@ -304,12 +309,14 @@ public:
     {
         Coordinate const x;
         Coordinate const y;
+        Duration const serviceDuration;
         Duration const twEarly;  // Depot opening time
         Duration const twLate;   // Depot closing time
         char const *name;        // Depot name (for reference)
 
         Depot(Coordinate x,
               Coordinate y,
+              Duration serviceDuration = 0,
               Duration twEarly = 0,
               Duration twLate = std::numeric_limits<Duration>::max(),
               std::string name = "");

@@ -32,8 +32,7 @@ public:
 
     pyvrp::DurationSegment duration([[maybe_unused]] size_t profile) const
     {
-        pyvrp::ProblemData::Client const &clientData = data.location(client);
-        return {clientData};
+        return {data.location(client)};
     }
 
     pyvrp::LoadSegment load(size_t dimension) const

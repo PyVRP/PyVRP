@@ -23,12 +23,6 @@ Modelling
 
 .. glossary::
 
-   How do I model vehicle load or service duration at the depots?
-
-      PyVRP's :class:`~pyvrp._pyvrp.Depot` object indeed does not have a load or service duration attribute.
-      Instead, this can be modelled by adding the time for loading or servicing the vehicle at the depot to the duration of all the edges leaving the depot.
-      This is an equivalent way of modelling depot service duration.
-
    How can I model vehicle-specific service durations?
 
       Rather than specifying an explicit service duration for the clients or depots, add the service duration to the duration all the edges leaving the location.

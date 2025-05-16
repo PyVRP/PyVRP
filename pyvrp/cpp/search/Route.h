@@ -971,7 +971,8 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
                 // We can only finalise the current segment at the depot, so we
                 // first need to travel there.
                 ProblemData::Depot const &depot = data.location(other.last());
-                ds = DurationSegment::merge(edgeDur, {depot}, ds);
+                DurationSegment depotDS = {depot, depot.serviceDuration};
+                ds = DurationSegment::merge(edgeDur, depotDS, ds);
                 ds = ds.finaliseFront();
 
                 // We finalise by travelling to the depot, so the remaining

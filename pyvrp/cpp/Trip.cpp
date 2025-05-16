@@ -63,6 +63,9 @@ Trip::Trip(ProblemData const &data,
     auto const &distances = data.distanceMatrix(vehData.profile);
     auto const &durations = data.durationMatrix(vehData.profile);
 
+    ProblemData::Depot const &start = data.location(startDepot_);
+    service_ += start.serviceDuration;
+
     std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
     for (size_t prevClient = startDepot_; auto const client : visits_)
     {

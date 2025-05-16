@@ -214,7 +214,7 @@ public:
     [[nodiscard]] Cost durationCost() const;
 
     /**
-     * Total duration of client service on this route.
+     * Total duration of service on this route, at depots and clients.
      */
     [[nodiscard]] Duration serviceDuration() const;
 

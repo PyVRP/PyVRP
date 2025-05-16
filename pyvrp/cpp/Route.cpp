@@ -249,7 +249,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     for (auto trip = trips_.rbegin(); trip != trips_.rend(); ++trip)
     {
         ProblemData::Depot const &end = data.location(trip->endDepot());
-        ds = DurationSegment::merge(0, {end}, ds);
+        ds = DurationSegment::merge(0, {end, 0}, ds);
 
         size_t nextClient = trip->endDepot();
         for (auto it = trip->rbegin(); it != trip->rend(); ++it)
@@ -264,7 +264,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
 
         auto const edgeDuration = durations(trip->startDepot(), nextClient);
         ProblemData::Depot const &start = data.location(trip->startDepot());
-        DurationSegment const depotDS = {start};
+        DurationSegment const depotDS = {start, start.serviceDuration};
 
         ds = DurationSegment::merge(edgeDuration, depotDS, ds);
         ds = ds.finaliseFront();
