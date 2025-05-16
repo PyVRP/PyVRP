@@ -1072,12 +1072,6 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     route = make_search_route(data, [3, 4, 0, 1, 2])
     assert_(route.is_feasible())
 
-    # Service durations are only applied at start and reload depots, not at the
-    # end of a route.
-    assert_equal(route.duration_at(0).duration(), 200)  # start service
-    assert_equal(route.duration_at(3).duration(), 200)  # reload service
-    assert_equal(route.duration_at(6).duration(), 0)  # end, no service
-
     # We should not have to pay for depot service duration on the segment
     # ending at the reload depot.
     first_trip = make_search_route(data, [3, 4])

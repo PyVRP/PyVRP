@@ -256,7 +256,7 @@ void Route::update()
 
     ProblemData::Depot const &start = data.location(startDepot());
     DurationSegment const vehStart(vehicleType_, vehicleType_.startLate);
-    DurationSegment const depotStart(start, start.serviceDuration);
+    DurationSegment const depotStart(start, 0);
     durAt[0] = DurationSegment::merge(0, vehStart, depotStart);
 
     ProblemData::Depot const &end = data.location(endDepot());
@@ -276,14 +276,14 @@ void Route::update()
         else
         {
             ProblemData::Depot const &depot = data.location(node->client());
-            durAt[idx] = {depot, depot.serviceDuration};
+            durAt[idx] = {depot, 0};
         }
     }
 
     auto const &durations = data.durationMatrix(profile());
 
     durBefore.resize(nodes.size());
-    durBefore[0] = {start, 0};
+    durBefore[0] = durAt[0];
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
         auto const prev = idx - 1;
@@ -291,18 +291,14 @@ void Route::update()
                                 ? durBefore[prev].finaliseBack()
                                 : durBefore[prev];
 
-        auto at = durAt[idx];
-        if (nodes[idx]->isDepot())
-        {
-            ProblemData::Depot const &depot = data.location(visits[idx]);
-            at = {depot, 0};
-        }
-
         auto edgeDur = durations(visits[prev], visits[idx]);
         if (nodes[prev]->isDepot())
-            edgeDur += durAt[prev].duration();
+        {
+            ProblemData::Depot const &depot = data.location(visits[prev]);
+            edgeDur += depot.serviceDuration;
+        }
 
-        durBefore[idx] = DurationSegment::merge(edgeDur, before, at);
+        durBefore[idx] = DurationSegment::merge(edgeDur, before, durAt[idx]);
     }
 
     durAfter.resize(nodes.size());
@@ -314,7 +310,13 @@ void Route::update()
                                ? durAfter[next].finaliseFront()
                                : durAfter[next];
 
-        auto const edgeDur = durations(visits[idx], visits[next]);
+        auto edgeDur = durations(visits[idx], visits[next]);
+        if (nodes[idx]->isDepot())
+        {
+            ProblemData::Depot const &depot = data.location(visits[idx]);
+            edgeDur += depot.serviceDuration;
+        }
+
         durAfter[idx] = DurationSegment::merge(edgeDur, durAt[idx], after);
     }
 #endif

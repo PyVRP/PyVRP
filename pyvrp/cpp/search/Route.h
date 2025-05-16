@@ -985,7 +985,7 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 
             if constexpr (sizeof...(args) != 0)
             {
-                if (first < data.numDepots())  // other starts at a depot
+                if (first < data.numDepots())  // segment starts at a depot
                     ds = ds.finaliseFront();
 
                 self(self, std::forward<decltype(args)>(args)...);
