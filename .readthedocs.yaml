@@ -8,8 +8,6 @@ build:
     post_create_environment:
       - pip install uv
     post_install:
-      # VIRTUAL_ENV needs to be set manually for now; see
-      # https://github.com/readthedocs/readthedocs.org/issues/11150 for details.
       - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --group docs --group examples
 
 sphinx:
