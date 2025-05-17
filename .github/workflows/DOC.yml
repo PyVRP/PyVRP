@@ -3,6 +3,7 @@ name: DOC
 on:
   push:
     branches: [ main ]
+  pull_request:
 
 concurrency:
   group: "pages"
