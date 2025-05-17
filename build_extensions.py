@@ -1,5 +1,4 @@
 import argparse
-import os
 import pathlib
 from subprocess import check_call
 
@@ -127,9 +126,7 @@ def main():
     cwd = pathlib.Path.cwd()
     build_dir = cwd / args.build_dir
 
-    if args.clean or os.environ.get("CIBUILDWHEEL", "0") == "1":
-        # Always start from an entirely clean build when building wheels in
-        # the CI. Else only do so when expressly asked.
+    if args.clean:
         install_dir = cwd / "pyvrp"
         clean(build_dir, install_dir)
 
