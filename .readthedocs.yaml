@@ -8,9 +8,6 @@ build:
     post_create_environment:
       - pip install uv
     post_install:
-      # Needs to be separated: the project can only be built once all dependencies are already present because uv cannot
-      # organise this on its own.
-      - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --no-install-project
       - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --group docs --group examples
 
 sphinx:

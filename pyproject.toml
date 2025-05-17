@@ -50,7 +50,6 @@ pyvrp = "pyvrp.cli:main"
 
 [dependency-groups]
 build = [
-    "poetry-core>=1.0.0",
     "meson>=1.0.0",
     "ninja>=1.11.1",
     "gcovr>=7.2",
@@ -83,7 +82,6 @@ examples = [
 
 [tool.uv]
 default-groups = ["build", "dev"]
-no-build-isolation-package = ["pyvrp"]
 package = true
 
 
@@ -181,9 +179,9 @@ packages = [
 
 [tool.poetry.build]
 generate-setup-file = false
-script = "build_extensions.py"
+script = "build_extension_wrapper.py"
 
 
 [build-system]
-requires = ["poetry-core", "uv", "meson", "ninja", "docblock"]
+requires = ["poetry-core>=1.0.0", "uv", "meson", "ninja", "docblock"]
 build-backend = "poetry.core.masonry.api"

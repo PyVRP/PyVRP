@@ -22,24 +22,9 @@ Now, change into the PyVRP directory, and set-up the virtual environment using `
 .. code-block:: shell
 
    cd PyVRP
-   uv sync --no-install-project
-
-We need to pass ``--no-install-project`` this once, to ensure the virtual environment is correctly set up before building PyVRP.
-This might take a minute, but only needs to be done once.
-Then, proceed with:
-
-.. code-block:: shell
-
    uv sync
 
-.. note::
-
-   If you want to build the documentation or run the examples, also specify the ``docs`` and ``examples`` groups:
-
-   .. code-block:: shell
-
-      uv sync --group docs --group examples
-
+Syncing might take a little while, but only needs to be done once.
 Now make sure everything runs smoothly, by executing the test suite:
 
 .. code-block:: shell

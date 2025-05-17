@@ -5,7 +5,6 @@ on:
     types: [ created ]
   push:
     branches: [ main ]
-  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -41,7 +40,7 @@ jobs:
     name: Deploy to PyPI
     needs: [ build ]
     runs-on: ubuntu-22.04
-    # if: github.event_name == 'release' && github.event.action == 'created'
+    if: github.event_name == 'release' && github.event.action == 'created'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -61,6 +60,6 @@ jobs:
         run: uv build --sdist
       - name: List packaged distributions
         run: ls -la dist/
-      # - name: Deploy to PyPI
-      #   run: |
-      #     uv publish --token ${{ secrets.PYPI_TOKEN }}
+      - name: Deploy to PyPI
+        run: |
+          uv publish --token ${{ secrets.PYPI_TOKEN }}
