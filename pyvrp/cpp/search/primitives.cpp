@@ -103,3 +103,62 @@ pyvrp::Cost pyvrp::search::inplaceCost(Route::Node *U,
 
     return deltaCost;
 }
+
+void pyvrp::search::loadSolution(Solution const &solution,
+                                 ProblemData const &data,
+                                 std::vector<Route> &routes,
+                                 std::vector<Route::Node> &nodes)
+{
+    // First empty all routes.
+    for (auto &route : routes)
+        route.clear();
+
+    // Determine offsets for vehicle types.
+    std::vector<size_t> vehicleOffset(data.numVehicleTypes(), 0);
+    for (size_t vehType = 1; vehType < data.numVehicleTypes(); vehType++)
+    {
+        auto const prevAvail = data.vehicleType(vehType - 1).numAvailable;
+        vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
+    }
+
+    // Load routes from solution.
+    for (auto const &solRoute : solution.routes())
+    {
+        // Set up a container of all node visits. This lets us insert all
+        // nodes in one go, requiring no intermediate updates.
+        std::vector<Route::Node *> visits;
+        visits.reserve(solRoute.size());
+        for (auto const client : solRoute)
+            visits.push_back(&nodes[client]);
+
+        // Determine index of next route of this type to load, where we rely
+        // on solution to be valid to not exceed the number of vehicles per
+        // vehicle type.
+        auto const idx = vehicleOffset[solRoute.vehicleType()]++;
+        routes[idx].insert(1, visits.begin(), visits.end());
+        routes[idx].update();
+    }
+}
+
+pyvrp::Solution pyvrp::search::exportSolution(std::vector<Route> const &routes,
+                                              ProblemData const &data)
+{
+    std::vector<pyvrp::Route> solRoutes;
+    solRoutes.reserve(data.numVehicles());
+
+    for (auto const &route : routes)
+    {
+        if (route.empty())
+            continue;
+
+        std::vector<size_t> visits;
+        visits.reserve(route.size());
+
+        for (auto *node : route)
+            visits.push_back(node->client());
+
+        solRoutes.emplace_back(data, visits, route.vehicleType());
+    }
+
+    return {data, solRoutes};
+}

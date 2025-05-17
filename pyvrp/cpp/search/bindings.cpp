@@ -20,8 +20,10 @@ namespace py = pybind11;
 using pyvrp::RandomNumberGenerator;
 using pyvrp::search::DestroyRepair;
 using pyvrp::search::Exchange;
+using pyvrp::search::exportSolution;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
+using pyvrp::search::loadSolution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
 using pyvrp::search::removeCost;
@@ -231,12 +233,6 @@ PYBIND11_MODULE(_search, m)
              py::arg("rng"),
              py::arg("neighbours"),
              py::keep_alive<1, 2>())  // keep data alive until DR is freed
-        .def("set_neighbours",
-             &DestroyRepair::setNeighbours,
-             py::arg("neighbours"))
-        .def("neighbours",
-             &DestroyRepair::neighbours,
-             py::return_value_policy::reference_internal)
         .def("__call__",
              &DestroyRepair::operator(),
              py::arg("solution"),
@@ -413,4 +409,18 @@ PYBIND11_MODULE(_search, m)
           py::arg("data"),
           py::arg("cost_evaluator"),
           DOC(pyvrp, search, removeCost));
+
+    m.def("load_solution",
+          &loadSolution,
+          py::arg("solution"),
+          py::arg("data"),
+          py::arg("routes"),
+          py::arg("nodes"),
+          DOC(pyvrp, search, loadSolution));
+
+    m.def("export_solution",
+          &exportSolution,
+          py::arg("routes"),
+          py::arg("data"),
+          DOC(pyvrp, search, exportSolution));
 }
