@@ -3,7 +3,6 @@ name: DOC
 on:
   push:
     branches: [ main ]
-  pull_request:
 
 concurrency:
   group: "pages"
@@ -44,8 +43,6 @@ jobs:
   deploy:
     name: "Deploy documentation"
     needs: [ build ]
-    runs-on: ubuntu-22.04
-    if: github.ref == 'refs/heads/main'
     # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
     permissions:
       pages: write
@@ -53,6 +50,8 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-22.04
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Deploy documentation
         id: deployment
