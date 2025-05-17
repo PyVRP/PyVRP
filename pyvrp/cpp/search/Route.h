@@ -278,20 +278,20 @@ private:
     std::vector<size_t> visits;  // Locations in this route, incl. depots
     std::pair<double, double> centroid_;  // Center point of route's clients
 
-    std::vector<Distance> cumDist;  // Dist of depot -> client (incl.)
+    std::vector<Distance> cumDist;  // Dist of start -> node (incl.)
 
     // Load data, for each load dimension. These vectors form matrices, where
     // the rows index the load dimension, and the columns the nodes.
     std::vector<LoadSegments> loadAt;      // Load data at each node
-    std::vector<LoadSegments> loadAfter;   // Load of client -> depot (incl)
-    std::vector<LoadSegments> loadBefore;  // Load of depot -> client (incl)
+    std::vector<LoadSegments> loadAfter;   // Load of node -> end (incl)
+    std::vector<LoadSegments> loadBefore;  // Load of start -> node (incl)
 
     std::vector<Load> load_;        // Route loads (for each dimension)
     std::vector<Load> excessLoad_;  // Route excess load (for each dimension)
 
     std::vector<DurationSegment> durAt;      // Duration data at each node
-    std::vector<DurationSegment> durAfter;   // Dur of client -> depot (incl.)
-    std::vector<DurationSegment> durBefore;  // Dur of depot -> client (incl.)
+    std::vector<DurationSegment> durAfter;   // Dur of node -> end (incl.)
+    std::vector<DurationSegment> durBefore;  // Dur of start -> node (incl.)
 
 #ifndef NDEBUG
     // When debug assertions are enabled, we use this flag to check whether
@@ -969,9 +969,9 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
             if (other.last() < data.numDepots())  // other ends at a depot
             {
                 // We can only finalise the current segment at the depot, so we
-                // first need to travel there.
-                ProblemData::Depot const &depot = data.location(other.last());
-                ds = DurationSegment::merge(edgeDur, {depot}, ds);
+                // need to travel there. The depot time windows restrictions are
+                // already handled by the other segment.
+                ds = DurationSegment::merge(edgeDur, {}, ds);
                 ds = ds.finaliseFront();
 
                 // We finalise by travelling to the depot, so the remaining
@@ -984,7 +984,7 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 
             if constexpr (sizeof...(args) != 0)
             {
-                if (first < data.numDepots())  // other starts at a depot
+                if (first < data.numDepots())  // segment starts at a depot
                     ds = ds.finaliseFront();
 
                 self(self, std::forward<decltype(args)>(args)...);
