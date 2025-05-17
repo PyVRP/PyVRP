@@ -1058,3 +1058,33 @@ def test_multi_trip_with_release_times():
     assert_equal(after.start_late(), 50)  # of first trip
     assert_equal(after.duration(), 100)
     assert_equal(after.time_warp(), 0)
+
+
+def test_multi_trip_duration_caches(ok_small_multiple_trips):
+    """
+    Tests that the route duration caches correctly account for reload depots.
+    """
+    route = make_search_route(ok_small_multiple_trips, [3, 4, 0, 1, 2])
+    assert_(route.is_feasible())
+
+    # Test the prefix cache for the trip [3, 4], ending at the reload depot at
+    # index 3. We also test direct computation (``duration_between``) for good
+    # measure, and compare against a route corresponding to the first trip.
+    first_trip = make_search_route(ok_small_multiple_trips, [3, 4])
+    before_reload = route.duration_before(3)
+    between_start_reload = route.duration_between(0, 3)
+    assert_equal(first_trip.duration(), before_reload.duration())
+    assert_equal(between_start_reload.duration(), before_reload.duration())
+
+    # Test the postfix cache for the trip [1, 2], starting at the reload depot
+    # at index 3. We again test direct computation, and compare against a route
+    # corresponding to the second trip.
+    second_trip = make_search_route(ok_small_multiple_trips, [1, 2])
+    after_reload = route.duration_after(3)
+    between_reload_end = route.duration_between(3, 6)
+    assert_equal(second_trip.duration(), after_reload.duration())
+    assert_equal(between_reload_end.duration(), after_reload.duration())
+
+    # The trip durations should together sum to the route duration.
+    trips_duration = first_trip.duration() + second_trip.duration()
+    assert_equal(route.duration(), trips_duration)
