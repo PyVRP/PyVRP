@@ -25,11 +25,6 @@ if compiler.has_argument('-Wno-dangling-reference')
     add_project_arguments('-Wno-dangling-reference', language: 'cpp')
 endif
 
-
-# Ignore clang warnings due to deprecated build flags.
-# See https://github.com/mesonbuild/meson/issues/14440.
-add_project_arguments('-Wno-error=#warnings', language: 'cpp')
-
 # We first compile static libraries that contains all regular, C++ code, one
 # per extension module. These are linked against when we compile the actual 
 # Python extension modules down below. We also define the top-level source 
