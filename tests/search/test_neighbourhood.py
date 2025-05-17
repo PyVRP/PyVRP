@@ -73,6 +73,7 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
     )
 
 
+# fmt: off
 @mark.parametrize(
     (
         "weight_wait_time",
@@ -84,7 +85,6 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
         "expected_neighbours_check",
     ),
     [
-        # fmt: off
         (20, 20, 10, True, False, 2,
          {1, 3, 4, 5, 6, 7, 8, 45, 46, 100}),
         (20, 20, 10, True, True, 2,
@@ -96,9 +96,9 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
         (18, 20, 34, True, False, 99,
          {9, 10, 11, 12, 13, 14, 15, 16, 20, 22, 24, 47, 52, 53, 55, 56, 57,
           58, 59, 60, 64, 65, 66, 69, 74, 80, 82, 83, 86, 87, 88, 90, 91, 98}),
-        # fmt: on
     ],
 )
+# fmt: on
 def test_compute_neighbours(
     rc208,
     weight_wait_time: int,

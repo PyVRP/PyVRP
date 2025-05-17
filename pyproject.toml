@@ -90,14 +90,16 @@ line-length = 79
 
 
 [tool.ruff]
-ignore-init-module-imports = true
 line-length = 79
+
+
+[tool.ruff.lint]
 select = [
     "E", "F", "I", "NPY", "PYI", "Q", "RET", "RSE", "RUF", "SLF", "SIM", "TC"
 ]
 
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 case-sensitive = true
 known-first-party = ["pyvrp", "tests"]
 
