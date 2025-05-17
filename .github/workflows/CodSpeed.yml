@@ -45,7 +45,7 @@ jobs:
         # sense, so we have to build in debugoptimized mode.
         run: |
           uv sync
-          uv run python build_extensions.py --build_type debugoptimized --clean
+          uv run build_extensions.py --build_type debugoptimized --clean
       - name: Run benchmarks
         # We evaluate the microbenchmarks using the release build.
         uses: CodSpeedHQ/action@v3

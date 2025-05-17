@@ -69,13 +69,13 @@ Now that the virtual environment has bee prepared, these (and more) can be made 
 
 .. code-block:: shell
 
-   uv run python build_extensions.py
+   uv run build_extensions.py
 
 The script takes a number of command-line arguments, which you can discover using
 
 .. code-block:: shell
 
-   uv run python build_extensions.py --help
+   uv run build_extensions.py --help
 
 We use the Meson build system to compile the C++ extensions.
 Meson is configured using the ``meson.build`` file in the repository root. 
@@ -92,7 +92,7 @@ First, build PyVRP in debug mode:
 
 .. code-block:: shell
 
-   uv run python build_extensions.py --build_type debug
+   uv run build_extensions.py --build_type debug
 
 Create a test Python file that calls some C++ code, like so:
 
@@ -136,7 +136,7 @@ First, build a debug optimised build of PyVRP, as follows:
 
 .. code-block:: shell
 
-   uv run python build_extensions.py --build_type debugoptimized
+   uv run build_extensions.py --build_type debugoptimized
 
 This ensures all debug symbols are retained, so the profiling output contains meaningful information.
 Next, we need to use a profiling tool, which varies based on your operating system.
