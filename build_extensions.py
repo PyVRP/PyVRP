@@ -66,8 +66,8 @@ def configure(
     *additional: list[str],
 ):
     cwd = pathlib.Path.cwd()
+    # fmt: off
     args = [
-        # fmt: off
         build_dir,
         "--buildtype", build_type,
         f"-Dpython.platlibdir={cwd.absolute()}",
@@ -75,8 +75,8 @@ def configure(
         f"-Dstrip={'true' if build_type == 'release' else 'false'}",
         f"-Db_coverage={'true' if build_type != 'release' else 'false'}",
         *additional,
-        # fmt: on
     ]
+    # fmt: on
 
     cmd = "configure" if build_dir.exists() else "setup"
     check_call(["meson", cmd, *args])  # type: ignore

@@ -32,7 +32,7 @@ class Edge:
         loops have nonzero distance or duration values.
     """
 
-    __slots__ = ["frm", "to", "distance", "duration"]
+    __slots__ = ["distance", "duration", "frm", "to"]
 
     def __init__(
         self,
