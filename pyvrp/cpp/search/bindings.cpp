@@ -1,6 +1,8 @@
 #include "bindings.h"
+#include "DestroyRepair.h"
 #include "Exchange.h"
 #include "LocalSearch.h"
+#include "RandomNumberGenerator.h"
 #include "Route.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
@@ -16,9 +18,13 @@
 
 namespace py = pybind11;
 
+using pyvrp::RandomNumberGenerator;
+using pyvrp::search::DestroyRepair;
 using pyvrp::search::Exchange;
+using pyvrp::search::exportSolution;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
+using pyvrp::search::loadSolution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
 using pyvrp::search::removeCost;
@@ -215,6 +221,7 @@ PYBIND11_MODULE(_search, m)
              &LocalSearch::operator(),
              py::arg("solution"),
              py::arg("cost_evaluator"),
+             py::arg("candidates"),
              py::call_guard<py::gil_scoped_release>())
         .def("search",
              py::overload_cast<pyvrp::Solution const &,
@@ -231,6 +238,21 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>())
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
+
+    py::class_<DestroyRepair>(m, "DestroyRepair")
+        .def(py::init<pyvrp::ProblemData const &,
+                      RandomNumberGenerator &,
+                      std::vector<std::vector<size_t>>>(),
+             py::arg("data"),
+             py::arg("rng"),
+             py::arg("neighbours"),
+             py::keep_alive<1, 2>())  // keep data alive until DR is freed
+        .def("__call__",
+             &DestroyRepair::operator(),
+             py::arg("solution"),
+             py::arg("cost_evaluator"),
+             py::arg("num_destroy"),
+             py::call_guard<py::gil_scoped_release>());
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
         .def(py::init<pyvrp::ProblemData const &, size_t, size_t>(),
@@ -428,4 +450,18 @@ PYBIND11_MODULE(_search, m)
           py::arg("data"),
           py::arg("cost_evaluator"),
           DOC(pyvrp, search, removeCost));
+
+    m.def("load_solution",
+          &loadSolution,
+          py::arg("solution"),
+          py::arg("data"),
+          py::arg("routes"),
+          py::arg("nodes"),
+          DOC(pyvrp, search, loadSolution));
+
+    m.def("export_solution",
+          &exportSolution,
+          py::arg("routes"),
+          py::arg("data"),
+          DOC(pyvrp, search, exportSolution));
 }

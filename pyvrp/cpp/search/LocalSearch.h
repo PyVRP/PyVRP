@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_LOCALSEARCH_H
 
 #include "CostEvaluator.h"
+#include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
@@ -31,6 +32,7 @@ class LocalSearch
     std::vector<std::pair<size_t, size_t>>  // vehicle type order (incl. offset)
         orderVehTypes;                      // used by LS::applyEmptyRouteMoves
 
+    DynamicBitset candidates;       // candidates nodes to consider for moves
     std::vector<int> lastModified;  // tracks when routes were last modified
 
     std::vector<Route::Node> nodes;
@@ -39,14 +41,9 @@ class LocalSearch
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
 
+    int numEvaluations = 0;        // Number of delta cost evaluations
     int numMoves = 0;              // Operator counter
     bool searchCompleted = false;  // No further improving move found?
-
-    // Load an initial solution that we will attempt to improve.
-    void loadSolution(Solution const &solution);
-
-    // Export the LS solution back into a solution.
-    Solution exportSolution() const;
 
     // Tests the node pair (U, V).
     bool applyNodeOps(Route::Node *U,
@@ -113,7 +110,8 @@ public:
      * improvements are made.
      */
     Solution operator()(Solution const &solution,
-                        CostEvaluator const &costEvaluator);
+                        CostEvaluator const &costEvaluator,
+                        std::vector<size_t> const &candidateNodes);
 
     /**
      * Performs regular (node-based) local search around the given solution,
