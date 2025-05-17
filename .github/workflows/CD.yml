@@ -58,7 +58,7 @@ jobs:
           merge-multiple: true
           path: dist/
       - name: Build sdist
-        run: uv build sdist
+        run: uv build --sdist
       - name: List packaged distributions
         run: ls -la dist/
       # - name: Deploy to PyPI

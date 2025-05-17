@@ -183,5 +183,5 @@ script = "build_extensions.py"
 
 
 [build-system]
-requires = ["uv", "poetry-core>=1.0.0", "meson", "ninja", "docblock"]
+requires = ["poetry-core>=1.0.0", "uv", "meson", "ninja", "docblock"]
 build-backend = "poetry.core.masonry.api"
