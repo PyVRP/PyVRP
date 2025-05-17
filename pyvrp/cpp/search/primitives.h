@@ -67,7 +67,7 @@ Cost inplaceCost(Route::Node *U,
  * Parameters
  * ----------
  * U
- *     Node to remove. Must currently be in a route.
+ *     Node to remove (client or reload depot). Must currently be in a route.
  * data
  *     Problem data instance.
  * cost_evaluator

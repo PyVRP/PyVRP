@@ -10,7 +10,7 @@ Feel free to suggest new entries!
    Concatenation scheme
 
       These are used in the C++ part of the codebase to quickly compute statistics of a :term:`Route segment`.
-      See the ``DistanceSegment`` or ``DurationSegment`` in the codebase for examples.
+      See ``DurationSegment`` or ``LoadSegment`` in the codebase for examples.
 
    Penalised cost
 

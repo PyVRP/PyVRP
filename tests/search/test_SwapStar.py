@@ -20,6 +20,7 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._search import Node, Route
+from tests.helpers import make_search_route
 
 
 def test_swap_star_identifies_additional_moves_over_regular_swap(rc208):
@@ -165,19 +166,8 @@ def test_wrong_load_calculation_bug():
         duration_matrices=[np.zeros((5, 5), dtype=int)],
     )
 
-    nodes = [Node(loc=loc) for loc in range(data.num_locations)]
-
-    # First route is 0 -> 1 -> 2 -> 0.
-    route1 = Route(data, idx=0, vehicle_type=0)
-    route1.append(nodes[1])
-    route1.append(nodes[2])
-    route1.update()
-
-    # Second route is 0 -> 3 -> 4 -> 0.
-    route2 = Route(data, idx=1, vehicle_type=0)
-    route2.append(nodes[3])
-    route2.append(nodes[4])
-    route2.update()
+    route1 = make_search_route(data, [1, 2], idx=0)
+    route2 = make_search_route(data, [3, 4], idx=1)
 
     cost_eval = CostEvaluator([1_000], 1, 0)
     swap_star = SwapStar(data, overlap_tolerance=1)
@@ -202,16 +192,8 @@ def test_max_distance(ok_small):
     """
 
     def make_routes(data):
-        route1 = Route(data, idx=0, vehicle_type=0)
-        route1.append(Node(loc=1))
-        route1.append(Node(loc=2))
-        route1.append(Node(loc=3))
-        route1.update()
-
-        route2 = Route(data, idx=1, vehicle_type=0)
-        route2.append(Node(loc=4))
-        route2.update()
-
+        route1 = make_search_route(data, [1, 2, 3], idx=0)
+        route2 = make_search_route(data, [4], idx=1)
         return route1, route2
 
     cost_eval = CostEvaluator([0], 0, 10)  # only max distance is penalised
@@ -260,23 +242,14 @@ def test_swap_star_overlap_tolerance(ok_small):
             VehicleType(1, capacity=[20]),
         ]
     )
-    nodes = [Node(loc=loc) for loc in range(data.num_locations)]
 
-    route1 = Route(data, idx=0, vehicle_type=0)
-    route1.append(nodes[1])
-    route1.append(nodes[2])
-    route1.append(nodes[4])
-    route1.update()
-
-    route2 = Route(data, idx=1, vehicle_type=1)
-    route2.append(nodes[3])
-    route2.update()
-
-    cost_eval = CostEvaluator([1_000], 0, 0)
+    route1 = make_search_route(data, [1, 2, 4], idx=0, vehicle_type=0)
+    route2 = make_search_route(data, [3], idx=1, vehicle_type=1)
 
     # Overlap tolerance is zero, so no routes should have overlap and thus the
     # move should evaluate to 0.
     swap_star = SwapStar(data, overlap_tolerance=0)
+    cost_eval = CostEvaluator([1_000], 0, 0)
     assert_equal(swap_star.evaluate(route1, route2, cost_eval), 0)
 
     # But with full overlap tolerance, all routes should be checked. That

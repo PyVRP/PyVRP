@@ -53,6 +53,10 @@ class LocalSearch
     // Tests the route pair (U, V).
     bool applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
 
+    // Tests a move removing the given reload depot.
+    void applyDepotRemovalMove(Route::Node *U,
+                               CostEvaluator const &CostEvaluator);
+
     // Tests moves involving empty routes.
     void applyEmptyRouteMoves(Route::Node *U,
                               CostEvaluator const &costEvaluator);

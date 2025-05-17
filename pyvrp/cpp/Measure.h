@@ -44,7 +44,7 @@ using Load = Measure<MeasureType::LOAD>;
  */
 template <MeasureType _> class Measure
 {
-    Value value;
+    Value value = 0;
 
 public:
     // Default construction initialises to 0.

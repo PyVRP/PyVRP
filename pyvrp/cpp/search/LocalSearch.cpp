@@ -1,6 +1,7 @@
 #include "LocalSearch.h"
 #include "DynamicBitset.h"
 #include "Measure.h"
+#include "Trip.h"
 #include "primitives.h"
 
 #include <algorithm>
@@ -90,6 +91,12 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
             candidates[uClient] = false;
 
+            // If U borders a reload depot, try removing it.
+            applyDepotRemovalMove(p(U), costEvaluator);
+            applyDepotRemovalMove(n(U), costEvaluator);
+
+            // We next apply the regular node operators. These work on pairs
+            // of nodes (U, V), where both U and V are in the solution.
             for (auto const vClient : neighbours_[uClient])
             {
                 auto *V = &nodes[vClient];
@@ -103,7 +110,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    if (p(V)->isDepot() && applyNodeOps(U, p(V), costEvaluator))
+                    if (p(V)->isStartDepot()
+                        && applyNodeOps(U, p(V), costEvaluator))
                         continue;
                 }
             }
@@ -263,11 +271,32 @@ bool LocalSearch::applyRouteOps(Route *U,
     return false;
 }
 
+void LocalSearch::applyDepotRemovalMove(Route::Node *U,
+                                        CostEvaluator const &CostEvaluator)
+{
+    if (!U->isReloadDepot())
+        return;
+
+    // We remove the depot when that's either better, or neutral. It can be
+    // neutral if for example it's the same depot visited consecutively, but
+    // that's then unnecessary.
+    if (removeCost(U, data, CostEvaluator) <= 0)
+    {
+        auto *route = U->route();
+        route->remove(U->idx());
+        update(route, route);
+    }
+}
+
 void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
                                        CostEvaluator const &costEvaluator)
 {
     assert(U->route());
 
+    // We apply moves involving empty routes in the (randomised) order of
+    // orderVehTypes. This helps because empty vehicle moves incur fixed cost,
+    // and a purely greedy approach over-prioritises vehicles with low fixed
+    // costs but possibly high variable costs.
     for (auto const &[vehType, offset] : orderVehTypes)
     {
         auto const begin = routes.begin() + offset;

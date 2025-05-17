@@ -17,6 +17,7 @@ from ._search import RouteOperator as RouteOperator
 from ._search import SwapRoutes as SwapRoutes
 from ._search import SwapStar as SwapStar
 from ._search import SwapTails as SwapTails
+from ._search import TripRelocate as TripRelocate
 from .neighbourhood import NeighbourhoodParams as NeighbourhoodParams
 from .neighbourhood import compute_neighbours as compute_neighbours
 
@@ -31,6 +32,7 @@ NODE_OPERATORS: list[Type[NodeOperator]] = [
     # Exchange32,
     # Exchange33,
     SwapTails,
+    TripRelocate,
 ]
 
 ROUTE_OPERATORS: list[Type[RouteOperator]] = [
