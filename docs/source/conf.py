@@ -21,7 +21,7 @@ copyright = f"2022 - {now.year}, {authors}"
 
 with open("../../pyproject.toml", "rb") as fh:
     pyproj = tomli.load(fh)
-    release = version = pyproj["tool"]["poetry"]["version"]
+    release = version = pyproj["project"]["version"]
 
 with open("versions.json") as fh:  # type: ignore
     version_info = json.load(fh)
