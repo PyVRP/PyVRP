@@ -93,7 +93,7 @@ line-length = 79
 ignore-init-module-imports = true
 line-length = 79
 select = [
-    "E", "F", "I", "NPY", "PYI", "Q", "RET", "RSE", "RUF", "SLF", "SIM", "TCH"
+    "E", "F", "I", "NPY", "PYI", "Q", "RET", "RSE", "RUF", "SLF", "SIM", "TC"
 ]
 
 
