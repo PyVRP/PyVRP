@@ -1,6 +1,6 @@
 #include "Solution.h"
 #include "DurationSegment.h"
-#include "LoadSegment.h"
+#include "DynamicBitset.h"
 
 #include <algorithm>
 #include <fstream>
@@ -24,6 +24,7 @@ void Solution::evaluate(ProblemData const &data)
     for (auto const &client : data.clients())
         allPrizes += client.prize;
 
+    excessLoad_ = std::vector<Load>(data.numLoadDimensions(), 0);
     for (auto const &route : routes_)
     {
         // Whole solution statistics.
@@ -35,8 +36,11 @@ void Solution::evaluate(ProblemData const &data)
         durationCost_ += route.durationCost();
         excessDistance_ += route.excessDistance();
         timeWarp_ += route.timeWarp();
-        excessLoad_ += route.excessLoad();
         fixedVehicleCost_ += data.vehicleType(route.vehicleType()).fixedCost;
+
+        auto const &excessLoad = route.excessLoad();
+        for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+            excessLoad_[dim] += excessLoad[dim];
     }
 
     uncollectedPrizes_ = allPrizes - prizes_;
@@ -45,6 +49,15 @@ void Solution::evaluate(ProblemData const &data)
 bool Solution::empty() const { return numClients() == 0 && numRoutes() == 0; }
 
 size_t Solution::numRoutes() const { return routes_.size(); }
+
+size_t Solution::numTrips() const
+{
+    return std::accumulate(routes_.begin(),
+                           routes_.end(),
+                           0,
+                           [](size_t count, auto const &route)
+                           { return count + route.numTrips(); });
+}
 
 size_t Solution::numClients() const { return numClients_; }
 
@@ -69,7 +82,12 @@ bool Solution::isGroupFeasible() const { return isGroupFeas_; }
 
 bool Solution::isComplete() const { return numMissingClients_ == 0; }
 
-bool Solution::hasExcessLoad() const { return excessLoad_ > 0; }
+bool Solution::hasExcessLoad() const
+{
+    return std::any_of(excessLoad_.begin(),
+                       excessLoad_.end(),
+                       [](auto const excess) { return excess > 0; });
+}
 
 bool Solution::hasExcessDistance() const { return excessDistance_ > 0; }
 
@@ -83,7 +101,7 @@ Duration Solution::duration() const { return duration_; }
 
 Cost Solution::durationCost() const { return durationCost_; }
 
-Load Solution::excessLoad() const { return excessLoad_; }
+std::vector<Load> const &Solution::excessLoad() const { return excessLoad_; }
 
 Distance Solution::excessDistance() const { return excessDistance_; }
 
@@ -95,19 +113,19 @@ Cost Solution::uncollectedPrizes() const { return uncollectedPrizes_; }
 
 Duration Solution::timeWarp() const { return timeWarp_; }
 
-void Solution::makeNeighbours(ProblemData const &data)
+void Solution::makeNeighbours()
 {
     for (auto const &route : routes_)
-    {
-        auto const &vehicleType = data.vehicleType(route.vehicleType());
-        auto const startDepot = vehicleType.startDepot;
-        auto const endDepot = vehicleType.endDepot;
+        for (auto const &trip : route.trips())
+        {
+            auto const startDepot = trip.startDepot();
+            auto const endDepot = trip.endDepot();
 
-        for (size_t idx = 0; idx != route.size(); ++idx)
-            neighbours_[route[idx]] = {
-                idx == 0 ? startDepot : route[idx - 1],                // pred
-                idx == route.size() - 1 ? endDepot : route[idx + 1]};  // succ
-    }
+            for (size_t idx = 0; idx != trip.size(); ++idx)
+                neighbours_[trip[idx]] = {
+                    idx == 0 ? startDepot : trip[idx - 1],               // pred
+                    idx == trip.size() - 1 ? endDepot : trip[idx + 1]};  // succ
+        }
 }
 
 bool Solution::operator==(Solution const &other) const
@@ -117,7 +135,6 @@ bool Solution::operator==(Solution const &other) const
                               && duration_ == other.duration_
                               && distanceCost_ == other.distanceCost_
                               && durationCost_ == other.durationCost_
-                              && excessLoad_ == other.excessLoad_
                               && timeWarp_ == other.timeWarp_
                               && isGroupFeas_ == other.isGroupFeas_
                               && routes_.size() == other.routes_.size()
@@ -127,10 +144,11 @@ bool Solution::operator==(Solution const &other) const
     if (!attributeChecks)
         return false;
 
-    // The visits are the same for both solutions, but the vehicle assignments
-    // need not be. We check this via a mapping from the first client in each
-    // route to the vehicle type of that route. We need to base this on the
-    // visits since the route order can differ between solutions.
+    // The visits are the same for both solutions, but the vehicle
+    // assignments need not be. We check this via a mapping from the first
+    // client in each route to the vehicle type of that route. We need to
+    // base this on the visits since the route order can differ between
+    // solutions.
     std::unordered_map<Client, VehicleType> client2vehType;
     for (auto const &route : routes_)
         client2vehType[route[0]] = route.vehicleType();
@@ -158,9 +176,9 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     // Shuffle clients to create random routes.
     std::shuffle(clients.begin(), clients.end(), rng);
 
-    // Distribute clients evenly over the routes: the total number of clients
-    // per vehicle, with an adjustment in case the division is not perfect and
-    // there are not enough vehicles for single-client routes.
+    // Distribute clients evenly over the routes: the total number of
+    // clients per vehicle, with an adjustment in case the division is not
+    // perfect and there are not enough vehicles for single-client routes.
     auto const numVehicles = data.numVehicles();
     auto const numClients = clients.size();
     auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
@@ -182,9 +200,10 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     }
 
     if (data.numVehicleTypes() > 1)
-        // Shuffle vehicle types when there is more than one. This ensures some
-        // additional diversity in the initial solutions, which sometimes (e.g.
-        // with heterogeneous fleet VRP) matters for consistent convergence.
+        // Shuffle vehicle types when there is more than one. This ensures
+        // some additional diversity in the initial solutions, which
+        // sometimes (e.g. with heterogeneous fleet VRP) matters for
+        // consistent convergence.
         std::shuffle(vehTypes.begin(), vehTypes.end(), rng);
 
     routes_.reserve(numRoutes);
@@ -214,7 +233,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
         throw std::runtime_error(msg);
     }
 
-    std::vector<size_t> visits(data.numLocations(), 0);
+    DynamicBitset isVisited(data.numLocations());
     std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes)
     {
@@ -223,31 +242,33 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 
         usedVehicles[route.vehicleType()]++;
         for (auto const client : route)
-            visits[client]++;
+        {
+            if (isVisited[client])  // client is also visited by an earlier
+            {                       // route if this is true
+                std::ostringstream msg;
+                msg << "Client " << client << " is visited more than once.";
+                throw std::runtime_error(msg.str());
+            }
+
+            isVisited[client] = true;
+        }
     }
 
     for (size_t client = data.numDepots(); client != data.numLocations();
          ++client)
-    {
-        ProblemData::Client const &clientData = data.location(client);
-        if (clientData.required && visits[client] == 0)
-            numMissingClients_ += 1;
-
-        if (visits[client] > 1)
-        {
-            std::ostringstream msg;
-            msg << "Client " << client << " is visited more than once.";
-            throw std::runtime_error(msg.str());
+        if (!isVisited[client])  // we need to check if the client visit
+        {                        // is required if this is true
+            ProblemData::Client const &clientData = data.location(client);
+            numMissingClients_ += clientData.required;
         }
-    }
 
     for (auto const &group : data.groups())
     {
-        // The solution is feasible w.r.t. this client group if exactly one of
-        // the clients in the group is in the solution. When the group is not
-        // required, we relax this to at most one client.
+        // The solution is feasible w.r.t. this client group if exactly one
+        // of the clients in the group is in the solution. When the group is
+        // not required, we relax this to at most one client.
         assert(group.mutuallyExclusive);
-        auto const inSol = [&](auto client) { return visits[client] == 1; };
+        auto const inSol = [&](auto client) { return isVisited[client]; };
         auto const numInSol = std::count_if(group.begin(), group.end(), inSol);
         isGroupFeas_ &= group.required ? numInSol == 1 : numInSol <= 1;
     }
@@ -262,7 +283,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
             throw std::runtime_error(msg.str());
         }
 
-    makeNeighbours(data);
+    makeNeighbours();
     evaluate(data);
 }
 
@@ -273,13 +294,13 @@ Solution::Solution(size_t numClients,
                    Duration duration,
                    Cost durationCost,
                    Distance excessDistance,
-                   Load excessLoad,
+                   std::vector<Load> excessLoad,
                    Cost fixedVehicleCost,
                    Cost prizes,
                    Cost uncollectedPrizes,
                    Duration timeWarp,
                    bool isGroupFeasible,
-                   Routes const &routes,
+                   Routes routes,
                    Neighbours neighbours)
     : numClients_(numClients),
       numMissingClients_(numMissingClients),
@@ -288,14 +309,14 @@ Solution::Solution(size_t numClients,
       duration_(duration),
       durationCost_(durationCost),
       excessDistance_(excessDistance),
-      excessLoad_(excessLoad),
+      excessLoad_(std::move(excessLoad)),
       fixedVehicleCost_(fixedVehicleCost),
       prizes_(prizes),
       uncollectedPrizes_(uncollectedPrizes),
       timeWarp_(timeWarp),
       isGroupFeas_(isGroupFeasible),
-      routes_(routes),
-      neighbours_(neighbours)
+      routes_(std::move(routes)),
+      neighbours_(std::move(neighbours))
 {
 }
 

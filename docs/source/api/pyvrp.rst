@@ -87,6 +87,9 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoclass:: Solution
       :members:
 
+   .. autoclass:: Trip
+      :members:
+
    .. autoclass:: Client
       :members:
 
@@ -101,6 +104,9 @@ This object can be used to obtain the best observed solution, and detailed runti
       :members:
 
    .. autoclass:: ProblemData
+      :members:
+
+   .. autoclass:: ScheduledVisit
       :members:
 
    .. autoclass:: DynamicBitset

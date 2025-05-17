@@ -107,36 +107,44 @@ class PenaltyManager:
 
     Parameters
     ----------
+    initial_penalties
+        Initial penalty values for units of load (idx 0), duration (1), and
+        distance (2) violations. These values are clipped to the range
+        ``[MIN_PENALTY, MAX_PENALTY]``.
     params
         PenaltyManager parameters. If not provided, a default will be used.
-    initial_penalties
-        Initial penalty values for unit load (idx 0), duration (1), and
-        distance (2) violations. Defaults to ``(20, 6, 6)`` for backwards
-        compatibility. These values are clipped to the range ``[MIN_PENALTY,
-        MAX_PENALTY]``.
     """
 
-    MIN_PENALTY = 1
-    MAX_PENALTY = 100_000
-    FEAS_TOL = 0.05
+    MIN_PENALTY: float = 0.1
+    MAX_PENALTY: float = 100_000.0
+    FEAS_TOL: float = 0.05
 
     def __init__(
         self,
+        initial_penalties: tuple[list[float], float, float],
         params: PenaltyParams = PenaltyParams(),
-        initial_penalties: tuple[int, int, int] = (20, 6, 6),
     ):
         self._params = params
         self._penalties = np.clip(
-            initial_penalties,
+            initial_penalties[0] + list(initial_penalties[1:]),
             self.MIN_PENALTY,
             self.MAX_PENALTY,
         )
 
+        # Tracks recent feasibilities for each penalty dimension.
         self._feas_lists: list[list[bool]] = [
-            [],  # tracks recent load feasibility
-            [],  # track recent time feasibility
-            [],  # track recent distance feasibility
+            [] for _ in range(len(self._penalties))
         ]
+
+    def penalties(self) -> tuple[list[float], float, float]:
+        """
+        Returns the current penalty values.
+        """
+        return (
+            self._penalties[:-2].tolist(),  # loads
+            self._penalties[-2],  # duration
+            self._penalties[-1],  # distance
+        )
 
     @classmethod
     def init_from(
@@ -157,33 +165,46 @@ class PenaltyManager:
         """
         distances = data.distance_matrices()
         durations = data.duration_matrices()
-        edge_costs = [  # edge costs per vehicle type
-            veh_type.unit_distance_cost * distances[veh_type.profile]
-            + veh_type.unit_duration_cost * durations[veh_type.profile]
+
+        # We first determine the elementwise minimum cost across all vehicle
+        # types. This is the cheapest way any edge can be traversed.
+        unique_edge_costs = {
+            (
+                veh_type.unit_distance_cost,
+                veh_type.unit_duration_cost,
+                veh_type.profile,
+            )
             for veh_type in data.vehicle_types()
-        ]
+        }
+
+        first, *rest = unique_edge_costs
+        unit_dist, unit_dur, prof = first
+        edge_costs = unit_dist * distances[prof] + unit_dur * durations[prof]
+        for unit_dist, unit_dur, prof in rest:
+            mat = unit_dist * distances[prof] + unit_dur * durations[prof]
+            np.minimum(edge_costs, mat, out=edge_costs)
 
         # Best edge cost/distance/duration over all vehicle types and profiles,
         # and then average that for the entire matrix to obtain an "average
         # best" edge cost/distance/duration.
-        avg_cost = np.minimum.reduce(edge_costs).mean()
+        avg_cost = edge_costs.mean()
         avg_distance = np.minimum.reduce(distances).mean()
         avg_duration = np.minimum.reduce(durations).mean()
 
-        avg_load = 0
-        if data.num_clients != 0:
+        avg_load = np.zeros((data.num_load_dimensions,))
+        if data.num_clients != 0 and data.num_load_dimensions != 0:
             pickups = np.array([c.pickup for c in data.clients()])
             deliveries = np.array([c.delivery for c in data.clients()])
-            avg_load = np.maximum(pickups, deliveries).mean()
+            avg_load = np.maximum(pickups, deliveries).mean(axis=0)
 
         # Initial penalty parameters are meant to weigh an average increase
         # in the relevant value by the same amount as the average edge cost.
-        init_load = round(avg_cost / max(avg_load, 1))
-        init_tw = round(avg_cost / max(avg_duration, 1))
-        init_dist = round(avg_cost / max(avg_distance, 1))
-        return cls(params, (init_load, init_tw, init_dist))
+        init_load = avg_cost / np.maximum(avg_load, 1)
+        init_tw = avg_cost / max(avg_duration, 1)
+        init_dist = avg_cost / max(avg_distance, 1)
+        return cls((init_load.tolist(), init_tw, init_dist), params)
 
-    def _compute(self, penalty: int, feas_percentage: float) -> int:
+    def _compute(self, penalty: float, feas_percentage: float) -> float:
         # Computes and returns the new penalty value, given the current value
         # and the percentage of feasible solutions since the last update.
         diff = self._params.target_feasible - feas_percentage
@@ -191,15 +212,12 @@ class PenaltyManager:
         if abs(diff) < self.FEAS_TOL:
             return penalty
 
-        # +/- 1 to ensure we do not get stuck at the same integer values.
         if diff > 0:
-            new_penalty = self._params.penalty_increase * penalty + 1
+            new_penalty = self._params.penalty_increase * penalty
         else:
-            new_penalty = self._params.penalty_decrease * penalty - 1
+            new_penalty = self._params.penalty_decrease * penalty
 
-        clipped = int(np.clip(new_penalty, self.MIN_PENALTY, self.MAX_PENALTY))
-
-        if clipped == self.MAX_PENALTY:
+        if new_penalty >= self.MAX_PENALTY:
             msg = """
             A penalty parameter has reached its maximum value. This means PyVRP
             struggles to find a feasible solution for the instance that's being
@@ -209,9 +227,9 @@ class PenaltyManager:
             """
             warn(msg, PenaltyBoundWarning)
 
-        return clipped
+        return np.clip(new_penalty, self.MIN_PENALTY, self.MAX_PENALTY)
 
-    def _register(self, feas_list: list[bool], penalty: int, is_feas: bool):
+    def _register(self, feas_list: list[bool], penalty: float, is_feas: bool):
         feas_list.append(is_feas)
 
         if len(feas_list) != self._params.solutions_between_updates:
@@ -225,13 +243,13 @@ class PenaltyManager:
         """
         Registers the feasibility dimensions of the given solution.
         """
-        args = [
-            not sol.has_excess_load(),
+        is_feasible = [
+            *[excess == 0 for excess in sol.excess_load()],
             not sol.has_time_warp(),
             not sol.has_excess_distance(),
         ]
 
-        for idx, is_feas in enumerate(args):
+        for idx, is_feas in enumerate(is_feasible):
             feas_list = self._feas_lists[idx]
             penalty = self._penalties[idx]
             self._penalties[idx] = self._register(feas_list, penalty, is_feas)
@@ -240,10 +258,12 @@ class PenaltyManager:
         """
         Get a cost evaluator using the current penalty values.
         """
-        return CostEvaluator(*self._penalties)
+        *loads, tw, dist = self._penalties
+        return CostEvaluator(loads, tw, dist)
 
     def booster_cost_evaluator(self) -> CostEvaluator:
         """
         Get a cost evaluator using the boosted current penalty values.
         """
-        return CostEvaluator(*(self._penalties * self._params.repair_booster))
+        *loads, tw, dist = self._penalties * self._params.repair_booster
+        return CostEvaluator(loads, tw, dist)

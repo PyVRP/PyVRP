@@ -45,64 +45,54 @@ SubPopulation::SubPopulation(diversity::DiversityMeasure divOp,
 {
 }
 
-SubPopulation::~SubPopulation()
-{
-    for (auto &item : items)
-        delete item.solution;
-}
-
-void SubPopulation::add(Solution const *solution,
+void SubPopulation::add(std::shared_ptr<Solution const> const &solution,
                         CostEvaluator const &costEvaluator)
 {
-    // Copy the given solution into a new memory location, and use that from
-    // now on.
-    solution = new Solution(*solution);
     Item item = {&params, solution, 0.0, {}};
 
-    for (auto &other : items)  // update distance to other solutions
+    for (auto &other : items_)  // update distance to other solutions
     {
         auto const div = divOp(*solution, *other.solution);
         auto cmp = [](auto &elem, auto &value) { return elem.first < value; };
 
         auto &oProx = other.proximity;
         auto place = std::lower_bound(oProx.begin(), oProx.end(), div, cmp);
-        oProx.emplace(place, div, solution);
+        oProx.emplace(place, div, solution.get());
 
         auto &iProx = item.proximity;
         place = std::lower_bound(iProx.begin(), iProx.end(), div, cmp);
-        iProx.emplace(place, div, other.solution);
+        iProx.emplace(place, div, other.solution.get());
     }
 
-    items.push_back(item);  // add solution
+    items_.push_back(item);  // add solution
 
     if (size() > params.maxPopSize())
         purge(costEvaluator);
 }
 
-size_t SubPopulation::size() const { return items.size(); }
+size_t SubPopulation::size() const { return items_.size(); }
 
 SubPopulation::Item const &SubPopulation::operator[](size_t idx) const
 {
-    return items[idx];
+    return items_[idx];
 }
 
-const_iter SubPopulation::cbegin() const { return items.cbegin(); }
+const_iter SubPopulation::cbegin() const { return items_.cbegin(); }
 
-const_iter SubPopulation::cend() const { return items.cend(); }
+const_iter SubPopulation::cend() const { return items_.cend(); }
 
 void SubPopulation::remove(iter const &iterator)
 {
-    for (auto &[params, solution, fitness, proximity] : items)
+    for (auto &[params, solution, fitness, proximity] : items_)
         // Remove solution from other proximities.
         for (size_t idx = 0; idx != proximity.size(); ++idx)
-            if (proximity[idx].second == iterator->solution)
+            if (proximity[idx].second == iterator->solution.get())
             {
                 proximity.erase(proximity.begin() + idx);
                 break;
             }
 
-    delete iterator->solution;  // dispose of manually allocated memory
-    items.erase(iterator);      // before the item is removed.
+    items_.erase(iterator);
 }
 
 void SubPopulation::purge(CostEvaluator const &costEvaluator)
@@ -111,15 +101,14 @@ void SubPopulation::purge(CostEvaluator const &costEvaluator)
     while (size() > params.minPopSize)
     {
         // Remove duplicates from the subpopulation (if they exist)
-        auto const pred = [&](auto &iterator)
+        auto const pred = [&](auto &item)
         {
-            return !iterator.proximity.empty()
-                   && *iterator.proximity[0].second == *iterator.solution;
+            return !item.proximity.empty()
+                   && *item.proximity[0].second == *item.solution;
         };
 
-        auto const duplicate = std::find_if(items.begin(), items.end(), pred);
-
-        if (duplicate == items.end())  // there are no more duplicates
+        auto const duplicate = std::find_if(items_.begin(), items_.end(), pred);
+        if (duplicate == items_.end())  // there are no more duplicates
             break;
 
         remove(duplicate);
@@ -130,8 +119,8 @@ void SubPopulation::purge(CostEvaluator const &costEvaluator)
         // Before using fitness, we must update fitness
         updateFitness(costEvaluator);
         auto const worstFitness = std::max_element(
-            items.begin(),
-            items.end(),
+            items_.begin(),
+            items_.end(),
             [](auto const &a, auto const &b) { return a.fitness < b.fitness; });
 
         remove(worstFitness);
@@ -140,7 +129,7 @@ void SubPopulation::purge(CostEvaluator const &costEvaluator)
 
 void SubPopulation::updateFitness(CostEvaluator const &costEvaluator)
 {
-    if (items.empty())
+    if (items_.empty())
         return;
 
     // clang-format off
@@ -151,15 +140,15 @@ void SubPopulation::updateFitness(CostEvaluator const &costEvaluator)
         byCost.end(),
         [&](size_t a, size_t b)
         {
-            return costEvaluator.penalisedCost(*items[a].solution)
-                   < costEvaluator.penalisedCost(*items[b].solution);
+            return costEvaluator.penalisedCost(*items_[a].solution)
+                   < costEvaluator.penalisedCost(*items_[b].solution);
         });
     // clang-format on
 
     std::vector<std::pair<double, size_t>> diversity;
     for (size_t costRank = 0; costRank != size(); costRank++)
     {
-        auto const dist = items[byCost[costRank]].avgDistanceClosest();
+        auto const dist = items_[byCost[costRank]].avgDistanceClosest();
         diversity.emplace_back(-dist, costRank);  // higher is better
     }
 
@@ -173,7 +162,7 @@ void SubPopulation::updateFitness(CostEvaluator const &costEvaluator)
     {
         auto const costRank = diversity[divRank].second;
         auto const idx = byCost[costRank];
-        items[idx].fitness = (costRank + divWeight * divRank) / (2 * popSize);
+        items_[idx].fitness = (costRank + divWeight * divRank) / (2 * popSize);
     }
 }
 

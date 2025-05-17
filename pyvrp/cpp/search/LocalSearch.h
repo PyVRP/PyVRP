@@ -26,8 +26,10 @@ class LocalSearch
     // numLocations, but nothing is stored for the depots!)
     Neighbours neighbours_;
 
-    std::vector<size_t> orderNodes;   // node order used by LS::search
-    std::vector<size_t> orderRoutes;  // route order used by LS::intensify
+    std::vector<size_t> orderNodes;         // node order used by LS::search
+    std::vector<size_t> orderRoutes;        // route order used by LS::intensify
+    std::vector<std::pair<size_t, size_t>>  // vehicle type order (incl. offset)
+        orderVehTypes;                      // used by LS::applyEmptyRouteMoves
 
     std::vector<int> lastModified;  // tracks when routes were last modified
 
@@ -54,6 +56,10 @@ class LocalSearch
     // Tests the route pair (U, V).
     bool applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
 
+    // Tests a move removing the given reload depot.
+    void applyDepotRemovalMove(Route::Node *U,
+                               CostEvaluator const &CostEvaluator);
+
     // Tests moves involving empty routes.
     void applyEmptyRouteMoves(Route::Node *U,
                               CostEvaluator const &costEvaluator);
@@ -72,8 +78,7 @@ class LocalSearch
     void search(CostEvaluator const &costEvaluator);
 
     // Performs intensify on the currently loaded solution.
-    void intensify(CostEvaluator const &costEvaluator,
-                   double overlapTolerance = 0.05);
+    void intensify(CostEvaluator const &costEvaluator);
 
     // Evaluate and apply inserting U after one of its neighbours if it's an
     // improving move or required for feasibility.
@@ -122,8 +127,7 @@ public:
      * solution, and returns a new, hopefully improved solution.
      */
     Solution intensify(Solution const &solution,
-                       CostEvaluator const &costEvaluator,
-                       double overlapTolerance = 0.05);
+                       CostEvaluator const &costEvaluator);
 
     /**
      * Shuffles the order in which the node and route pairs are evaluated, and

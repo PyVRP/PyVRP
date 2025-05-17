@@ -1,6 +1,6 @@
 import numpy as np
+import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
-from pytest import mark
 
 from pyvrp import (
     Client,
@@ -10,6 +10,7 @@ from pyvrp import (
     RandomNumberGenerator,
     Route,
     Solution,
+    Trip,
     VehicleType,
 )
 from pyvrp.search import (
@@ -17,7 +18,9 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
+    SwapRoutes,
     SwapStar,
+    TripRelocate,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -30,7 +33,7 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     neighbourhood definition, they cannot do anything with an empty
     neighbourhood.
     """
-    cost_evaluator = CostEvaluator(20, 6, 0)
+    cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     neighbours = [[] for _ in range(ok_small.num_locations)]
@@ -45,7 +48,7 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     assert_equal(ls.search(sol, cost_evaluator), sol)
 
 
-@mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
+@pytest.mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
 def test_raises_when_neighbourhood_dimensions_do_not_match(ok_small, size):
     """
     Tests that the local search raises when the neighbourhood size does not
@@ -81,7 +84,7 @@ def test_raises_when_neighbourhood_contains_self_or_depot(ok_small):
         LocalSearch(ok_small, rng, neighbours)
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     (
         "weight_wait_time",
         "weight_time_warp",
@@ -161,14 +164,14 @@ def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):
 
     # With 0 timewarp penalty, the solution should not change since
     # the solution [2, 1, 3, 4] has larger distance.
-    improved_sol = ls.search(sol, CostEvaluator(0, 0, 0))
+    improved_sol = ls.search(sol, CostEvaluator([0], 0, 0))
     assert_equal(sol, improved_sol)
 
     # Now doing it again with a large TW penalty, we must find the alternative
     # solution
     # (previously this was not the case since due to caching the current TW was
     # computed as being zero, causing the move to be evaluated as worse)
-    cost_evaluator_tw = CostEvaluator(0, 1000, 0)
+    cost_evaluator_tw = CostEvaluator([0], 1000, 0)
     improved_sol = ls.search(sol, cost_evaluator_tw)
     improved_cost = cost_evaluator_tw.penalised_cost(improved_sol)
     assert_(improved_cost < cost_evaluator_tw.penalised_cost(sol))
@@ -179,7 +182,7 @@ def test_prize_collecting(prize_collecting):
     Tests that local search works on a small prize-collecting instance.
     """
     rng = RandomNumberGenerator(seed=42)
-    cost_evaluator = CostEvaluator(1, 1, 0)
+    cost_evaluator = CostEvaluator([1], 1, 0)
 
     sol = Solution.make_random(prize_collecting, rng)
     sol_cost = cost_evaluator.penalised_cost(sol)
@@ -207,7 +210,7 @@ def test_cpp_shuffle_results_in_different_solution(rc208):
     ls.add_node_operator(Exchange10(rc208))
     ls.add_node_operator(Exchange11(rc208))
 
-    cost_evaluator = CostEvaluator(1, 1, 0)
+    cost_evaluator = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(rc208, rng)
 
     # LocalSearch::search is deterministic, so two calls with the same base
@@ -237,7 +240,7 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     ls.add_node_operator(Exchange10(rc208))
     ls.add_node_operator(Exchange11(rc208))
 
-    cost_evaluator = CostEvaluator(1, 1, 0)
+    cost_evaluator = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(rc208, rng)
 
     improved = ls.search(sol, cost_evaluator)
@@ -245,8 +248,8 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     # Now make the instance heterogeneous and update the local search.
     data = rc208.replace(
         vehicle_types=[
-            VehicleType(25, capacity=10_000),
-            VehicleType(25, capacity=10_000),
+            VehicleType(25, capacity=[10_000]),
+            VehicleType(25, capacity=[10_000]),
         ]
     )
 
@@ -273,15 +276,15 @@ def test_bugfix_vehicle_type_offsets(ok_small):
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(1, capacity=10),
-            VehicleType(2, capacity=10),
+            VehicleType(1, capacity=[10]),
+            VehicleType(2, capacity=[10]),
         ]
     )
 
     ls = cpp_LocalSearch(data, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
 
-    cost_evaluator = CostEvaluator(1, 1, 0)
+    cost_evaluator = CostEvaluator([1], 1, 0)
 
     current = Solution(data, [Route(data, [1, 3], 1), Route(data, [2, 4], 1)])
     current_cost = cost_evaluator.penalised_cost(current)
@@ -292,51 +295,6 @@ def test_bugfix_vehicle_type_offsets(ok_small):
     assert_(improved_cost <= current_cost)
 
 
-def test_intensify_overlap_tolerance(rc208):
-    """
-    Tests that the local search's intensifying route operators respect the
-    route overlap tolerance argument.
-    """
-    rng = RandomNumberGenerator(seed=42)
-
-    neighbours = compute_neighbours(rc208)
-    ls = LocalSearch(rc208, rng, neighbours)
-    ls.add_route_operator(SwapStar(rc208))
-
-    cost_eval = CostEvaluator(1, 1, 0)
-    sol = Solution.make_random(rc208, rng)
-
-    # Overlap tolerance is zero, so no routes should have overlap and thus
-    # no intensification should take place.
-    unchanged = ls.intensify(sol, cost_eval, overlap_tolerance=0)
-    assert_equal(unchanged, sol)
-
-    # But with full overlap tolerance, all routes should be checked. That
-    # should lead to an improvement over the random solution.
-    better = ls.intensify(sol, cost_eval, overlap_tolerance=1)
-    assert_(better != sol)
-    assert_(cost_eval.penalised_cost(better) < cost_eval.penalised_cost(sol))
-
-
-@mark.parametrize("tol", [-1.0, -0.01, 1.01, 10.9, 1000])
-def test_intensify_overlap_tolerance_raises_outside_unit_interval(rc208, tol):
-    """
-    Tests that calling ``intensify()`` raises when the overlap tolerance
-    argument is not in [0, 1].
-    """
-    rng = RandomNumberGenerator(seed=42)
-
-    neighbours = compute_neighbours(rc208)
-    ls = LocalSearch(rc208, rng, neighbours)
-    ls.add_route_operator(SwapStar(rc208))
-
-    cost_eval = CostEvaluator(1, 1, 0)
-    sol = Solution.make_random(rc208, rng)
-
-    with assert_raises(RuntimeError):  # each tolerance value is outside [0, 1]
-        ls.intensify(sol, cost_eval, overlap_tolerance=tol)
-
-
 def test_no_op_results_in_same_solution(ok_small):
     """
     Tests that calling local search without first adding node or route
@@ -345,7 +303,7 @@ def test_no_op_results_in_same_solution(ok_small):
     """
     rng = RandomNumberGenerator(seed=42)
 
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(ok_small, rng)
 
     # Empty local search does not actually search anything, so it should return
@@ -367,7 +325,7 @@ def test_intensify_can_improve_solution_further(rc208):
     ls.add_node_operator(Exchange11(rc208))
     ls.add_route_operator(SwapStar(rc208))
 
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     # The following solution is locally optimal w.r.t. the node operators. This
     # solution cannot be improved further by repeated calls to ``search()``.
@@ -390,6 +348,40 @@ def test_intensify_can_improve_solution_further(rc208):
         assert_equal(ls.intensify(intensify_opt, cost_eval), intensify_opt)
 
 
+def test_intensify_can_swap_routes(ok_small):
+    """
+    Tests that the bug identified in #742 is fixed. The intensify method should
+    be able to improve a solution by swapping routes.
+    """
+    rng = RandomNumberGenerator(seed=42)
+
+    data = ok_small.replace(
+        vehicle_types=[
+            VehicleType(1, capacity=[5]),
+            VehicleType(1, capacity=[20]),
+        ]
+    )
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_route_operator(SwapRoutes(data))
+
+    # High load penalty, so the solution is penalised for having excess load.
+    cost_eval = CostEvaluator([100_000], 0, 0)
+    route1 = Route(data, [1, 2, 3], 0)  # Excess load: 13 - 5 = 8
+    route2 = Route(data, [4], 1)  # Excess load: 0
+    init_sol = Solution(data, [route1, route2])
+    init_cost = cost_eval.penalised_cost(init_sol)
+
+    assert_equal(init_sol.excess_load(), [8])
+
+    # This solution can be improved by using the intensifying route operators
+    # to swap the routes in the solution.
+    intensify_sol = ls.intensify(init_sol, cost_eval)
+    intensify_cost = cost_eval.penalised_cost(intensify_sol)
+
+    assert_(intensify_cost < init_cost)
+    assert_equal(intensify_sol.excess_load(), [0])
+
+
 def test_local_search_completes_incomplete_solutions(ok_small_prizes):
     """
     Tests that the local search object improve solutions that are incomplete,
@@ -401,7 +393,7 @@ def test_local_search_completes_incomplete_solutions(ok_small_prizes):
     ls = LocalSearch(ok_small_prizes, rng, compute_neighbours(ok_small_prizes))
     ls.add_node_operator(Exchange10(ok_small_prizes))
 
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution(ok_small_prizes, [[2], [3, 4]])
     assert_(not sol.is_complete())  # 1 is required but not visited
 
@@ -419,13 +411,13 @@ def test_local_search_does_not_remove_required_clients():
         clients=[
             # This client cannot be removed, even though it causes significant
             # load violations.
-            Client(x=1, y=1, delivery=100, required=True),
-            # This client can be removed, and should be , because the prize is
-            # not worth the detour.
-            Client(x=2, y=2, prize=0, required=False),
+            Client(x=1, y=1, delivery=[100], required=True),
+            # This client can and should be removed, because the prize is not
+            # worth the detour.
+            Client(x=2, y=2, delivery=[0], prize=0, required=False),
         ],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(1, capacity=50)],
+        vehicle_types=[VehicleType(1, capacity=[50])],
         distance_matrices=[np.where(np.eye(3), 0, 10)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
@@ -439,7 +431,7 @@ def test_local_search_does_not_remove_required_clients():
     # Test that the improved solution contains the first client, but removes
     # the second. The first client is required, so could not be removed, but
     # the second could and that is an improving move.
-    cost_eval = CostEvaluator(100, 100, 0)
+    cost_eval = CostEvaluator([100], 100, 0)
     new_sol = ls.search(sol, cost_eval)
     assert_equal(new_sol.num_clients(), 1)
     assert_(new_sol.is_complete())
@@ -463,7 +455,7 @@ def test_mutually_exclusive_group(gtsp):
     ls.add_node_operator(Exchange10(gtsp))
 
     sol = Solution.make_random(gtsp, rng)
-    cost_eval = CostEvaluator(20, 6, 0)
+    cost_eval = CostEvaluator([20], 6, 0)
     improved = ls(sol, cost_eval)
 
     assert_(not sol.is_group_feasible())
@@ -490,7 +482,7 @@ def test_mutually_exclusive_group_not_in_solution(
     sol = Solution(ok_small_mutually_exclusive_groups, [[4]])
     assert_(not sol.is_group_feasible())
 
-    improved = ls(sol, CostEvaluator(20, 6, 0))
+    improved = ls(sol, CostEvaluator([20], 6, 0))
     assert_(improved.is_group_feasible())
 
 
@@ -507,7 +499,7 @@ def test_swap_if_improving_mutually_exclusive_group(
     ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
     ls.add_node_operator(Exchange10(ok_small_mutually_exclusive_groups))
 
-    cost_eval = CostEvaluator(20, 6, 0)
+    cost_eval = CostEvaluator([20], 6, 0)
     sol = Solution(ok_small_mutually_exclusive_groups, [[1, 4]])
     improved = ls(sol, cost_eval)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
@@ -515,3 +507,71 @@ def test_swap_if_improving_mutually_exclusive_group(
     routes = improved.routes()
     assert_equal(improved.num_routes(), 1)
     assert_equal(routes[0].visits(), [3, 4])
+
+
+def test_no_op_multi_trip_instance(ok_small_multiple_trips):
+    """
+    Tests that loading and exporting a multi-trip instance correctly returns an
+    equivalent solution when no operators are available.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbours = [[] for _ in range(ok_small_multiple_trips.num_locations)]
+    ls = LocalSearch(ok_small_multiple_trips, rng, neighbours)
+
+    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
+    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
+    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+
+    sol = Solution(ok_small_multiple_trips, [route])
+    cost_eval = CostEvaluator([20], 6, 0)
+    assert_equal(ls(sol, cost_eval), sol)
+
+
+def test_local_search_inserts_reload_depots(ok_small_multiple_trips):
+    """
+    Tests that the local search routine inserts a reload depot when that is
+    beneficial.
+    """
+    rng = RandomNumberGenerator(seed=2)
+    neighbours = compute_neighbours(ok_small_multiple_trips)
+
+    ls = LocalSearch(ok_small_multiple_trips, rng, neighbours)
+    ls.add_node_operator(TripRelocate(ok_small_multiple_trips))
+
+    sol = Solution(ok_small_multiple_trips, [[1, 2, 3, 4]])
+    assert_(sol.has_excess_load())
+
+    cost_eval = CostEvaluator([1_000], 0, 0)
+    improved = ls(sol, cost_eval)
+
+    assert_(not improved.has_excess_load())
+    assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
+
+    assert_equal(improved.num_routes(), 1)
+    assert_equal(improved.num_trips(), 2)
+    assert_(not improved.has_excess_load())
+
+
+def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
+    """
+    Tests that the local search removes useless reload depots from the given
+    solution.
+    """
+    data = ok_small_multiple_trips
+    rng = RandomNumberGenerator(seed=2)
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_node_operator(Exchange10(data))
+
+    route1 = Route(data, [Trip(data, [1], 0), Trip(data, [3], 0)], 0)
+    route2 = Route(data, [2, 4], 0)
+    sol = Solution(data, [route1, route2])
+
+    cost_eval = CostEvaluator([1_000], 0, 0)
+    improved = ls(sol, cost_eval)
+    assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
+
+    # The local search should have removed the reload depot from the first
+    # route, because that was not providing any value.
+    routes = improved.routes()
+    assert_(str(routes[0]), "1 3")
+    assert_(str(routes[1]), "2 4")

@@ -5,6 +5,7 @@
 #include "SwapRoutes.h"
 #include "SwapStar.h"
 #include "SwapTails.h"
+#include "TripRelocate.h"
 #include "primitives.h"
 #include "search_docs.h"
 
@@ -25,6 +26,7 @@ using pyvrp::search::Route;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
 using pyvrp::search::SwapTails;
+using pyvrp::search::TripRelocate;
 
 PYBIND11_MODULE(_search, m)
 {
@@ -155,8 +157,9 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &SwapRoutes::apply, py::arg("U"), py::arg("V"));
 
     py::class_<SwapStar, RouteOp>(m, "SwapStar", DOC(pyvrp, search, SwapStar))
-        .def(py::init<pyvrp::ProblemData const &>(),
+        .def(py::init<pyvrp::ProblemData const &, double>(),
              py::arg("data"),
+             py::arg("overlap_tolerance") = 0.05,
              py::keep_alive<1, 2>())  // keep data alive
         .def("evaluate",
              &SwapStar::evaluate,
@@ -175,6 +178,18 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &SwapTails::apply, py::arg("U"), py::arg("V"));
+
+    py::class_<TripRelocate, NodeOp>(
+        m, "TripRelocate", DOC(pyvrp, search, TripRelocate))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("evaluate",
+             &TripRelocate::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &TripRelocate::apply, py::arg("U"), py::arg("V"));
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
@@ -210,11 +225,10 @@ PYBIND11_MODULE(_search, m)
              py::call_guard<py::gil_scoped_release>())
         .def("intensify",
              py::overload_cast<pyvrp::Solution const &,
-                               pyvrp::CostEvaluator const &,
-                               double const>(&LocalSearch::intensify),
+                               pyvrp::CostEvaluator const &>(
+                 &LocalSearch::intensify),
              py::arg("solution"),
              py::arg("cost_evaluator"),
-             py::arg("overlap_tolerance") = 0.05,
              py::call_guard<py::gil_scoped_release>())
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
 
@@ -226,11 +240,23 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("idx", &Route::idx)
         .def_property_readonly("vehicle_type", &Route::vehicleType)
+        .def("num_clients", &Route::numClients)
+        .def("num_depots", &Route::numDepots)
+        .def("num_trips", &Route::numTrips)
+        .def("max_trips", &Route::maxTrips)
         .def("__delitem__", &Route::remove, py::arg("idx"))
-        .def("__getitem__",
-             &Route::operator[],
-             py::arg("idx"),
-             py::return_value_policy::reference_internal)
+        .def(
+            "__getitem__",
+            [](Route const &route, int idx)
+            {
+                // int so we also support negative offsets from the end.
+                idx = idx < 0 ? route.size() + idx : idx;
+                if (idx < 0 || static_cast<size_t>(idx) >= route.size())
+                    throw py::index_error();
+                return route[idx];
+            },
+            py::arg("idx"),
+            py::return_value_policy::reference_internal)
         .def(
             "__iter__",
             [](Route const &route)
@@ -248,12 +274,16 @@ PYBIND11_MODULE(_search, m)
         .def("has_excess_load", &Route::hasExcessLoad)
         .def("has_excess_distance", &Route::hasExcessDistance)
         .def("has_time_warp", &Route::hasTimeWarp)
-        .def("capacity", &Route::capacity)
+        .def("capacity",
+             &Route::capacity,
+             py::return_value_policy::reference_internal)
         .def("start_depot", &Route::startDepot)
         .def("end_depot", &Route::endDepot)
         .def("fixed_vehicle_cost", &Route::fixedVehicleCost)
-        .def("load", &Route::load)
-        .def("excess_load", &Route::excessLoad)
+        .def("load", &Route::load, py::return_value_policy::reference_internal)
+        .def("excess_load",
+             &Route::excessLoad,
+             py::return_value_policy::reference_internal)
         .def("excess_distance", &Route::excessDistance)
         .def("distance", &Route::distance)
         .def("distance_cost", &Route::distanceCost)
@@ -280,36 +310,39 @@ PYBIND11_MODULE(_search, m)
             py::arg("profile") = 0)
         .def(
             "dist_after",
-            [](Route const &route, size_t start, size_t profile)
-            { return route.after(start).distance(profile); },
-            py::arg("start"),
-            py::arg("profile") = 0)
-        .def(
-            "dist_before",
-            [](Route const &route, size_t end, size_t profile)
-            { return route.before(end).distance(profile); },
-            py::arg("end"),
-            py::arg("profile") = 0)
-        .def(
-            "load_at",
-            [](Route const &route, size_t idx) { return route.at(idx).load(); },
-            py::arg("idx"))
-        .def(
-            "load_between",
-            [](Route const &route, size_t start, size_t end)
-            { return route.between(start, end).load(); },
-            py::arg("start"),
-            py::arg("end"))
-        .def(
-            "load_after",
             [](Route const &route, size_t start)
-            { return route.after(start).load(); },
+            { return route.after(start).distance(route.profile()); },
             py::arg("start"))
         .def(
-            "load_before",
+            "dist_before",
             [](Route const &route, size_t end)
-            { return route.before(end).load(); },
+            { return route.before(end).distance(route.profile()); },
             py::arg("end"))
+        .def(
+            "load_at",
+            [](Route const &route, size_t idx, size_t dimension)
+            { return route.at(idx).load(dimension); },
+            py::arg("idx"),
+            py::arg("dimension") = 0)
+        .def(
+            "load_between",
+            [](Route const &route, size_t start, size_t end, size_t dimension)
+            { return route.between(start, end).load(dimension); },
+            py::arg("start"),
+            py::arg("end"),
+            py::arg("dimension") = 0)
+        .def(
+            "load_after",
+            [](Route const &route, size_t start, size_t dimension)
+            { return route.after(start).load(dimension); },
+            py::arg("start"),
+            py::arg("dimension") = 0)
+        .def(
+            "load_before",
+            [](Route const &route, size_t end, size_t dimension)
+            { return route.before(end).load(dimension); },
+            py::arg("end"),
+            py::arg("dimension") = 0)
         .def(
             "duration_at",
             [](Route const &route, size_t idx, size_t profile)
@@ -325,16 +358,14 @@ PYBIND11_MODULE(_search, m)
             py::arg("profile") = 0)
         .def(
             "duration_after",
-            [](Route const &route, size_t start, size_t profile)
-            { return route.after(start).duration(profile); },
-            py::arg("start"),
-            py::arg("profile") = 0)
+            [](Route const &route, size_t start)
+            { return route.after(start).duration(route.profile()); },
+            py::arg("start"))
         .def(
             "duration_before",
-            [](Route const &route, size_t end, size_t profile)
-            { return route.before(end).duration(profile); },
-            py::arg("end"),
-            py::arg("profile") = 0)
+            [](Route const &route, size_t end)
+            { return route.before(end).duration(route.profile()); },
+            py::arg("end"))
         .def("centroid", &Route::centroid)
         .def("overlaps_with",
              &Route::overlapsWith,
@@ -346,20 +377,34 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>(),  // keep node alive
              py::keep_alive<2, 1>())  // keep route alive
         .def("clear", &Route::clear)
-        .def("insert",
-             &Route::insert,
-             py::arg("idx"),
-             py::arg("node"),
-             py::keep_alive<1, 3>(),  // keep node alive
-             py::keep_alive<3, 1>())  // keep route alive
+        .def(
+            "insert",
+            [](Route &route, size_t idx, Route::Node *node)
+            { route.insert(idx, node); },
+            py::arg("idx"),
+            py::arg("node"),
+            py::keep_alive<1, 3>(),  // keep node alive
+            py::keep_alive<3, 1>())  // keep route alive
+        .def_static("swap", &Route::swap, py::arg("first"), py::arg("second"))
         .def("update", &Route::update);
 
     py::class_<Route::Node>(m, "Node", DOC(pyvrp, search, Route, Node))
         .def(py::init<size_t>(), py::arg("loc"))
         .def_property_readonly("client", &Route::Node::client)
         .def_property_readonly("idx", &Route::Node::idx)
+        .def_property_readonly("trip", &Route::Node::trip)
         .def_property_readonly("route", &Route::Node::route)
-        .def("is_depot", &Route::Node::isDepot);
+        .def("is_depot", &Route::Node::isDepot)
+        .def("is_start_depot", &Route::Node::isStartDepot)
+        .def("is_end_depot", &Route::Node::isEndDepot)
+        .def("is_reload_depot", &Route::Node::isReloadDepot)
+        .def("__str__",
+             [](Route::Node const &node)
+             {
+                 std::stringstream stream;
+                 stream << node;
+                 return stream.str();
+             });
 
     m.def("insert_cost",
           &insertCost,

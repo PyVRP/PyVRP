@@ -1,6 +1,6 @@
 import pathlib
 from collections import defaultdict
-from itertools import count
+from itertools import count, pairwise
 from numbers import Number
 from typing import Callable
 from warnings import warn
@@ -8,14 +8,23 @@ from warnings import warn
 import numpy as np
 import vrplib
 
-from pyvrp._pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
+from pyvrp._pyvrp import (
+    Client,
+    ClientGroup,
+    Depot,
+    ProblemData,
+    Route,
+    Solution,
+    Trip,
+    VehicleType,
+)
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 
-_Routes = list[list[int]]
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
 _INT_MAX = np.iinfo(np.int64).max
+_UINT_MAX = np.iinfo(np.uint64).max
 
 
 ROUND_FUNCS: dict[str, _RoundingFunc] = {
@@ -83,24 +92,66 @@ def read(
     return builder.data()
 
 
-def read_solution(where: str | pathlib.Path) -> _Routes:
+def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
     """
     Reads a solution in ``VRPLIB`` format from the give file location, and
-    returns the routes contained in it.
+    returns the corresponding Solution object.
 
     Parameters
     ----------
     where
         File location to read. Assumes the solution in the file on the given
         location is in ``VRPLIB`` solution format.
+    data
+        Problem data instance that the solution is based on. See
+        :meth:`~pyvrp.read` for details.
 
     Returns
     -------
-    list
-        List of routes, where each route is a list of client numbers.
+    Solution
+        Solution object constructed from the read data.
     """
     sol = vrplib.read_solution(str(where))
-    return sol["routes"]  # type: ignore
+
+    # We assume that the routes are listed in order of vehicle types as
+    # determined by ``read()``. We particularly rely on the indices ``read()``
+    # encodes in the vehicle type's name to map between vehicles and types.
+    veh2type = np.zeros((data.num_vehicles,), dtype=int)
+    for idx, veh_type in enumerate(data.vehicle_types()):
+        idcs = list(map(int, veh_type.name.split(",")))
+        veh2type[idcs] = idx
+
+    routes = []
+    for idx, route in enumerate(sol["routes"]):
+        if not route:
+            continue
+
+        route_visits = np.array(route, dtype=int)
+        depot_idcs = np.flatnonzero(route_visits < data.num_depots)
+
+        trip_visits = np.split(route_visits, depot_idcs)
+        trip_visits = [
+            # These visits include the reload depots for later trips as the
+            # first trip visit, which we need to skip.
+            trip_visits[trip_idx > 0 :]
+            for trip_idx, trip_visits in enumerate(trip_visits)
+        ]
+
+        veh_type = data.vehicle_type(veh2type[idx])
+        depots = [
+            veh_type.start_depot,
+            *route_visits[depot_idcs],
+            veh_type.end_depot,
+        ]
+
+        trips = [
+            Trip(data, visits, veh2type[idx], start, end)
+            for visits, (start, end) in zip(trip_visits, pairwise(depots))
+        ]
+
+        routes.append(Route(data, trips, veh2type[idx]))
+
+    return Solution(data, routes)
 
 
 class _InstanceParser:
@@ -140,13 +191,13 @@ class _InstanceParser:
 
     def backhauls(self) -> np.ndarray:
         if "backhaul" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
+            return np.zeros((self.num_locations, 1), dtype=np.int64)
 
         return self.round_func(self.instance["backhaul"])
 
     def demands(self) -> np.ndarray:
         if "demand" not in self.instance and "linehaul" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
+            return np.zeros((self.num_locations, 1), dtype=np.int64)
 
         return self.round_func(
             self.instance.get("demand", self.instance.get("linehaul"))
@@ -159,16 +210,13 @@ class _InstanceParser:
         return self.round_func(self.instance["node_coord"])
 
     def service_times(self) -> np.ndarray:
-        if "service_time" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
-
-        service_times = self.instance["service_time"]
+        service_times = self.instance.get("service_time", 0)
 
         if isinstance(service_times, Number):
             # Some instances describe a uniform service time as a single value
             # that applies to all clients.
             service_times = np.full(self.num_locations, service_times)
-            service_times[0] = 0
+            service_times[: self.num_depots] = 0
 
         return self.round_func(service_times)
 
@@ -182,10 +230,22 @@ class _InstanceParser:
         return self.round_func(self.instance["time_window"])
 
     def release_times(self) -> np.ndarray:
-        if "release_time" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.int64)
+        release_times = self.instance.get("release_time", 0)
+        shape = self.num_locations
+        return self.round_func(np.broadcast_to(release_times, shape))
 
-        return self.round_func(self.instance["release_time"])
+    def reload_depots(self) -> list[tuple[int, ...]]:
+        if "vehicles_reload_depot" not in self.instance:
+            return [tuple() for _ in range(self.num_vehicles)]
+
+        reload_depots = self.instance["vehicles_reload_depot"]
+
+        if isinstance(reload_depots[0], Number):
+            # Some instances describe only one reload depot per vehicle, so
+            # we first cast it to a 2D array.
+            reload_depots = np.atleast_2d(reload_depots).T
+
+        return [tuple(idx - 1 for idx in depots) for depots in reload_depots]
 
     def prizes(self) -> np.ndarray:
         if "prize" not in self.instance:
@@ -211,9 +271,15 @@ class _InstanceParser:
             client_idcs = tuple(range(self.num_depots, self.num_locations))
             return [client_idcs for _ in range(self.num_vehicles)]
 
+        allowed_clients = self.instance["vehicles_allowed_clients"]
+
+        if isinstance(allowed_clients[0], Number):
+            # Some instances describe only one allowed client per vehicle, so
+            # we first cast it to a 2D array.
+            allowed_clients = np.atleast_2d(allowed_clients).T
+
         return [
-            tuple(idx - 1 for idx in clients)
-            for clients in self.instance["vehicles_allowed_clients"]
+            tuple(idx - 1 for idx in clients) for clients in allowed_clients
         ]
 
     def vehicles_depots(self) -> np.ndarray:
@@ -228,35 +294,43 @@ class _InstanceParser:
             return np.full(self.num_vehicles, _INT_MAX)
 
         max_distances = self.instance["vehicles_max_distance"]
-
-        if isinstance(max_distances, Number):
-            # Some instances describe a uniform max distance as a single
-            # value that applies to all vehicles.
-            max_distances = np.full(self.num_vehicles, max_distances)
-
-        return self.round_func(max_distances)
+        shape = self.num_vehicles
+        return self.round_func(np.broadcast_to(max_distances, shape))
 
     def max_durations(self) -> np.ndarray:
         if "vehicles_max_duration" not in self.instance:
             return np.full(self.num_vehicles, _INT_MAX)
 
         max_durations = self.instance["vehicles_max_duration"]
+        shape = self.num_vehicles
+        return self.round_func(np.broadcast_to(max_durations, shape))
 
-        if isinstance(max_durations, Number):
-            # Some instances describe a uniform max duration as a single
-            # value that applies to all vehicles.
-            max_durations = np.full(self.num_vehicles, max_durations)
+    def max_reloads(self) -> np.ndarray:
+        max_reloads = self.instance.get("vehicles_max_reloads", _UINT_MAX)
+        return np.broadcast_to(max_reloads, self.num_vehicles)
 
-        return self.round_func(max_durations)
+    def fixed_costs(self) -> np.ndarray:
+        fixed_costs = self.instance.get("vehicles_fixed_cost", 0)
+        return self.round_func(np.broadcast_to(fixed_costs, self.num_vehicles))
+
+    def unit_distance_costs(self) -> np.ndarray:
+        # Unit distance costs are unrounded to prevent double scaling in the
+        # total distance cost calculation (unit_distance_cost * distance).
+        unit_cost = self.instance.get("vehicles_unit_distance_cost", 1)
+        return np.broadcast_to(unit_cost, self.num_vehicles)
 
     def mutually_exclusive_groups(self) -> list[list[int]]:
         if "mutually_exclusive_group" not in self.instance:
             return []
 
-        raw_groups = [
-            [idx - 1 for idx in group]
-            for group in self.instance["mutually_exclusive_group"]
-        ]
+        groups = self.instance["mutually_exclusive_group"]
+
+        if isinstance(groups[0], Number):
+            # Some instances describe only one client per group, so we first
+            # cast it to a 2D array.
+            groups = np.atleast_2d(groups).T
+
+        raw_groups = [[idx - 1 for idx in group] for group in groups]
 
         # Only keep groups if they have more than one member. Empty groups or
         # groups with one member are trivial to decide, so there is no point
@@ -331,8 +405,8 @@ class _ProblemDataBuilder:
             Client(
                 x=coords[idx][0],
                 y=coords[idx][1],
-                delivery=demands[idx],
-                pickup=backhauls[idx],
+                delivery=np.atleast_1d(demands[idx]),
+                pickup=np.atleast_1d(backhauls[idx]),
                 service_duration=service_duration[idx],
                 tw_early=time_windows[idx][0],
                 tw_late=time_windows[idx][1],
@@ -349,9 +423,13 @@ class _ProblemDataBuilder:
         vehicles_data = (
             self.parser.capacities(),
             self.parser.allowed_clients(),
+            self.parser.reload_depots(),
             self.parser.vehicles_depots(),
             self.parser.max_distances(),
             self.parser.max_durations(),
+            self.parser.max_reloads(),
+            self.parser.fixed_costs(),
+            self.parser.unit_distance_costs(),
         )
 
         if any(len(attr) != num_vehicles for attr in vehicles_data):
@@ -364,28 +442,43 @@ class _ProblemDataBuilder:
         # VRPLIB instances includes data for each available vehicle. We group
         # vehicles by their attributes to create unique vehicle types.
         type2idcs = defaultdict(list)
-        for vehicle, veh_type in enumerate(zip(*vehicles_data)):
-            type2idcs[veh_type].append(vehicle)
+        for vehicle, (capacity, *veh_type) in enumerate(zip(*vehicles_data)):
+            capacity = tuple(np.atleast_1d(capacity))
+            type2idcs[(capacity, *veh_type)].append(vehicle)
 
         client2profile = self._allowed2profile()
         time_windows = self.parser.time_windows()
 
         vehicle_types = []
         for attributes, vehicles in type2idcs.items():
-            (capacity, clients, depot_idx, max_dist, max_duration) = attributes
+            (
+                capacity,
+                clients,
+                reloads,
+                depot,
+                max_distance,
+                max_duration,
+                max_reloads,
+                fixed_cost,
+                unit_distance_cost,
+            ) = attributes
 
             vehicle_type = VehicleType(
                 num_available=len(vehicles),
                 capacity=capacity,
-                start_depot=depot_idx,
-                end_depot=depot_idx,
+                start_depot=depot,
+                end_depot=depot,
+                fixed_cost=fixed_cost,
                 # The literature specifies depot time windows. We do not have
                 # depot time windows but instead set those on the vehicles.
-                tw_early=time_windows[depot_idx][0],
-                tw_late=time_windows[depot_idx][1],
+                tw_early=time_windows[depot][0],
+                tw_late=time_windows[depot][1],
                 max_duration=max_duration,
-                max_distance=max_dist,
+                max_distance=max_distance,
+                unit_distance_cost=unit_distance_cost,
                 profile=client2profile[clients],
+                reload_depots=reloads,
+                max_reloads=max_reloads,
                 # A bit hacky, but this csv-like name is really useful to track
                 # the actual vehicles that make up this vehicle type.
                 name=",".join(map(str, vehicles)),

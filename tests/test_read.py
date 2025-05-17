@@ -10,9 +10,10 @@ from numpy.testing import (
     assert_warns,
 )
 
+from pyvrp import CostEvaluator
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
-from tests.helpers import read
+from tests.helpers import read, read_solution
 
 
 @pytest.mark.parametrize(
@@ -59,7 +60,7 @@ def test_reading_OkSmall_instance():
     assert_equal(data.num_clients, 4)
     assert_equal(data.num_vehicles, 3)
     assert_equal(data.num_vehicle_types, 1)
-    assert_equal(data.vehicle_type(0).capacity, 10)
+    assert_equal(data.vehicle_type(0).capacity, [10])
 
     # From the NODE_COORD_SECTION in the file
     expected = [
@@ -93,7 +94,7 @@ def test_reading_OkSmall_instance():
     expected = [0, 5, 5, 3, 5]
 
     for loc in range(1, data.num_locations):  # excl. depot (has no delivery)
-        assert_equal(data.location(loc).delivery, expected[loc])
+        assert_equal(data.location(loc).delivery, [expected[loc]])
 
     # From the TIME_WINDOW_SECTION in the file
     expected = [
@@ -130,7 +131,7 @@ def test_reading_vrplib_instance():
     assert_equal(data.num_clients, 21)
     assert_equal(data.num_depots, 1)
     assert_equal(data.num_locations, 22)
-    assert_equal(data.vehicle_type(0).capacity, 60_000)
+    assert_equal(data.vehicle_type(0).capacity, [60_000])
 
     assert_equal(len(data.depots()), data.num_depots)
     assert_equal(len(data.clients()), data.num_clients)
@@ -298,7 +299,7 @@ def test_mdvrptw_instance():
         assert_equal(vehicle_type.num_available, 10)
         assert_equal(vehicle_type.start_depot, idx)
         assert_equal(vehicle_type.end_depot, idx)
-        assert_equal(vehicle_type.capacity, 200)
+        assert_equal(vehicle_type.capacity, [200])
         assert_equal(vehicle_type.max_duration, 450)
 
         # Essentially all vehicle indices for each depot, separated by a comma.
@@ -323,6 +324,7 @@ def test_vrpspd_instance():
     """
     data = read("data/SmallVRPSPD.vrp", round_func="round")
 
+    assert_equal(data.num_load_dimensions, 1)
     assert_equal(data.num_locations, 5)
     assert_equal(data.num_depots, 1)
     assert_equal(data.num_clients, 4)
@@ -332,7 +334,7 @@ def test_vrpspd_instance():
 
     vehicle_type = data.vehicle_type(0)
     assert_equal(vehicle_type.num_available, 4)
-    assert_equal(vehicle_type.capacity, 200)
+    assert_equal(vehicle_type.capacity, [200])
 
     # The first client is a linehaul client (only delivery, no pickup), and
     # the second client is a backhaul client (only pickup, no delivery). All
@@ -341,8 +343,8 @@ def test_vrpspd_instance():
     pickups = [0, 3, 10, 40]
 
     for idx, client in enumerate(data.clients()):
-        assert_equal(client.delivery, deliveries[idx])
-        assert_equal(client.pickup, pickups[idx])
+        assert_equal(client.delivery[0], deliveries[idx])
+        assert_equal(client.pickup[0], pickups[idx])
 
     # Test that distance/duration are not set to a large value, as in VRPB.
     assert_equal(np.max(data.distance_matrix(profile=0)), 39)
@@ -357,6 +359,7 @@ def test_vrpb_instance():
     """
     data = read("data/X-n101-50-k13.vrp", round_func="round")
 
+    assert_equal(data.num_load_dimensions, 1)
     assert_equal(data.num_locations, 101)
     assert_equal(data.num_depots, 1)
     assert_equal(data.num_clients, 100)
@@ -366,18 +369,18 @@ def test_vrpb_instance():
 
     vehicle_type = data.vehicle_type(0)
     assert_equal(vehicle_type.num_available, 100)
-    assert_equal(vehicle_type.capacity, 206)
+    assert_equal(vehicle_type.capacity, [206])
 
     # The first 50 clients are linehaul, the rest are backhaul.
     clients = data.clients()
 
     for client in clients[:50]:
-        assert_equal(client.pickup, 0)
-        assert_(client.delivery > 0)
+        assert_equal(client.pickup, [0])
+        assert_(client.delivery[0] > 0)
 
     for client in clients[50:]:
-        assert_(client.pickup > 0)
-        assert_equal(client.delivery, 0)
+        assert_(client.pickup[0] > 0)
+        assert_equal(client.delivery, [0])
 
     # Tests that distance/duration from depot to backhaul clients is set to
     # ``MAX_VALUE``, as well as for backhaul to linehaul clients.
@@ -437,7 +440,7 @@ def test_reading_allowed_clients():
     assert_equal(data.num_vehicle_types, 2)
 
     veh_type1 = data.vehicle_type(0)
-    assert_equal(veh_type1.capacity, 10)
+    assert_equal(veh_type1.capacity, [10])
     assert_equal(veh_type1.num_available, 2)
     assert_equal(veh_type1.profile, 0)
 
@@ -449,7 +452,7 @@ def test_reading_allowed_clients():
     assert_(np.all(duration_matrix != MAX_VALUE))
 
     veh_type2 = data.vehicle_type(1)
-    assert_equal(veh_type2.capacity, 10)
+    assert_equal(veh_type2.capacity, [10])
     assert_equal(veh_type2.num_available, 1)
     assert_equal(veh_type2.profile, 1)
 
@@ -478,13 +481,13 @@ def test_sdvrptw_instance():
     # Each vehicle type has a different capacity. We only check the first two.
     veh_type1 = data.vehicle_type(0)
     assert_equal(veh_type1.num_available, 2)
-    assert_equal(veh_type1.capacity, 100)
+    assert_equal(veh_type1.capacity, [100])
     assert_equal(veh_type1.max_duration, 500)
     assert_equal(veh_type1.profile, 0)
 
     veh_type2 = data.vehicle_type(1)
     assert_equal(veh_type2.num_available, 2)
-    assert_equal(veh_type2.capacity, 150)
+    assert_equal(veh_type2.capacity, [150])
     assert_equal(veh_type2.max_duration, 500)
     assert_equal(veh_type2.profile, 1)
 
@@ -500,3 +503,167 @@ def test_sdvrptw_instance():
         assert_equal(distance_matrix[client, idcs], MAX_VALUE)
         assert_equal(duration_matrix[idcs, client], MAX_VALUE)
         assert_equal(duration_matrix[client, idcs], MAX_VALUE)
+
+
+def test_read_solution_single_vehicle_type(ok_small):
+    """
+    Tests that reading a solution with a single vehicle type works correctly.
+    """
+    solution = read_solution("data/OkSmall.sol", ok_small)
+    routes = solution.routes()
+
+    assert_equal(routes[0].visits(), [1, 2])
+    assert_equal(routes[1].visits(), [3, 4])
+
+    assert_equal(routes[0].vehicle_type(), 0)
+    assert_equal(routes[1].vehicle_type(), 0)
+
+
+def test_read_solution_multiple_vehicle_types(ok_small_multi_depot):
+    """
+    Tests that reading a solution with multiple vehicle types works correctly.
+    """
+    solution = read_solution(
+        "data/OkSmallMultipleDepots.sol", ok_small_multi_depot
+    )
+    routes = solution.routes()
+
+    # The solution file shows three routes, but empty routes are ignored.
+    assert_equal(solution.num_routes(), 2)
+    assert_equal(routes[0].visits(), [2])
+    assert_equal(routes[1].visits(), [3, 4])
+
+    # The instance has two vehicle types: two of the first type and one of the
+    # second type. Because the second route was empty, the second vehicle of
+    # the first type is not used.
+    assert_equal(routes[0].vehicle_type(), 0)
+    assert_equal(routes[1].vehicle_type(), 1)
+
+
+def test_multi_trip_instance():
+    """
+    Tests that a small multi-trip instance with vehicle reload options is
+    parsed correctly.
+    """
+    data = read("data/OkSmallMultipleTrips.txt")
+    assert_equal(data.num_depots, 1)
+    assert_equal(data.num_vehicles, 3)
+    assert_equal(data.num_vehicle_types, 2)
+
+    veh_type1 = data.vehicle_type(0)
+    assert_equal(veh_type1.num_available, 2)
+    assert_equal(veh_type1.reload_depots, [0])
+    assert_equal(veh_type1.max_reloads, 1)
+
+    veh_type2 = data.vehicle_type(1)
+    assert_equal(veh_type2.num_available, 1)
+    assert_equal(veh_type2.reload_depots, [])
+    assert_equal(veh_type1.max_reloads, 1)
+
+
+def test_read_solution_multiple_reload_depots():
+    """
+    Tests that reading a solution to a problem with multiple reload depots is
+    parsed correctly.
+    """
+    data = read("data/OkSmallMultipleReloadDepots.txt")
+
+    solution = read_solution("data/OkSmallMultipleReloadDepots.sol", data)
+    assert_equal(solution.num_routes(), 1)
+    assert_equal(solution.num_trips(), 2)
+
+    route = solution.routes()[0]
+
+    trip1 = route.trip(0)
+    assert_equal(trip1.visits(), [2])
+    assert_equal(trip1.start_depot(), 0)
+    assert_equal(trip1.end_depot(), 1)
+
+    trip2 = route.trip(1)
+    assert_equal(trip2.visits(), [3, 4])
+    assert_equal(trip2.start_depot(), 1)
+    assert_equal(trip2.end_depot(), 0)
+
+
+def test_2d_data_sections_are_correctly_casted_from_1d():
+    """
+    Tests that data sections that are expected to be 2D arrays (reload depots,
+    allowed clients, mutually exclusive groups) are correctly cast from 1D
+    arrays. This happens when the data section only has one element per row.
+    """
+    data = read("data/CastDataSection2D.txt")
+
+    for idx, veh_type in enumerate(data.vehicle_types()):
+        assert_equal(veh_type.reload_depots, [idx])
+
+        dist = data.distance_matrix(veh_type.profile)
+        dur = data.duration_matrix(veh_type.profile)
+
+        # Client at location 3 is allowed.
+        assert_(np.all(dist[: data.num_depots, 3] != MAX_VALUE))
+        assert_(np.all(dur[: data.num_depots, 3] != MAX_VALUE))
+
+        # Client at location 4 is not allowed.
+        assert_equal(dist[: data.num_depots, 4], MAX_VALUE)
+        assert_equal(dur[: data.num_depots, 4], MAX_VALUE)
+
+    # No groups because groups with 1 client are ignored.
+    assert_equal(data.num_groups, 0)
+
+
+def test_reading_unit_distance_cost():
+    """
+    Tests that reading an instance with unit distance cost works correctly,
+    particularly that the unit distance costs are correctly added to the
+    vehicle types and are not affected by the round func.
+    """
+    data = read("data/OkSmallUnitDistanceCost.txt", "exact")
+
+    assert_equal(data.num_vehicle_types, 3)
+
+    for idx, veh_type in enumerate(data.vehicle_types(), 1):
+        assert_equal(veh_type.unit_distance_cost, idx)
+
+
+def test_read_hfvrp_instance():
+    """
+    Tests that reading a HFVRP instance happens correctly, particularly the
+    heterogeneous vehicles data sections.
+    """
+    data = read("data/X115-HVRP.vrp", "exact")
+
+    # One routing profile per unique unit distance cost.
+    assert_equal(data.num_vehicles, 19)
+    assert_equal(data.num_vehicle_types, 3)
+
+    # Each vehicle type has different attributes. We only check the first two.
+    veh_type1 = data.vehicle_type(0)
+    assert_equal(veh_type1.num_available, 11)
+    assert_equal(veh_type1.capacity, [54_000])
+    assert_equal(veh_type1.fixed_cost, 14_600_000)
+    assert_equal(veh_type1.unit_distance_cost, 58)
+
+    veh_type2 = data.vehicle_type(1)
+    assert_equal(veh_type2.num_available, 7)
+    assert_equal(veh_type2.capacity, [131_000])
+    assert_equal(veh_type2.fixed_cost, 43_600_000)
+    assert_equal(veh_type2.unit_distance_cost, 100)
+
+
+def test_read_hfvrp_solution():
+    """
+    Tests that reading a HFVRP solution results in the correct routes and
+    objective value.
+    """
+    data = read("data/X115-HVRP.vrp", "exact")
+    sol = read_solution("data/X115-HVRP.sol", data)
+    routes = sol.routes()
+
+    assert_equal(routes[1].visits(), [59, 35, 99, 49, 79, 47, 109, 18])
+    assert_equal(routes[-1].visits(), [5, 6, 3, 93, 42, 9])
+
+    assert_equal(routes[1].vehicle_type(), 0)
+    assert_equal(routes[-1].vehicle_type(), 2)
+
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(cost_eval.cost(sol), 1941256006)

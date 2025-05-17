@@ -70,8 +70,8 @@ public:
      * Client(
      *    x: int,
      *    y: int,
-     *    delivery: int = 0,
-     *    pickup: int = 0,
+     *    delivery: list[int] = [],
+     *    pickup: list[int] = [],
      *    service_duration: int = 0,
      *    tw_early: int = 0,
      *    tw_late: int = np.iinfo(np.int64).max,
@@ -83,7 +83,8 @@ public:
      *    name: str = "",
      * )
      *
-     * Simple data object storing all client data as (read-only) properties.
+     * Simple data object storing all client data as properties. See also
+     * :doc:`../setup/concepts` for further information about these properties.
      *
      * Parameters
      * ----------
@@ -94,9 +95,9 @@ public:
      *     Vertical coordinate of this client, that is, the 'y' part of the
      *     client's (x, y) location tuple.
      * delivery
-     *     The amount this client demands from the depot. Default 0.
+     *     The amounts this client demands from the depot.
      * pickup
-     *     The amount this client ships back to the depot. Default 0.
+     *     The amounts this client ships back to the depot.
      * service_duration
      *     Amount of time a vehicle needs to spend at this client before
      *     resuming its route. Service should start (but not necessarily end)
@@ -110,8 +111,8 @@ public:
      *     Unconstrained if not provided.
      * release_time
      *     Earliest time at which this client is released, that is, the earliest
-     *     time at which a vehicle may leave the depot to visit this client.
-     *     Default 0.
+     *     time at which a vehicle may leave the depot on a trip to visit this
+     *     client. Default 0.
      * prize
      *     Prize collected by visiting this client. Default 0. If this client
      *     is not required, the prize needs to be sufficiently large to offset
@@ -133,9 +134,9 @@ public:
      * y
      *     Vertical coordinate of this client.
      * delivery
-     *     Client delivery amount, shipped from depot.
+     *     Client delivery amounts shipped from the depot.
      * pickup
-     *     Client pickup amount, returned back to depot.
+     *     Client pickup amounts returned to the depot.
      * service_duration
      *     Amount of time a vehicle needs to spend at this client before
      *     resuming its route.
@@ -144,8 +145,8 @@ public:
      * tw_late
      *     Latest time at which this client may be visited to start service.
      * release_time
-     *     Earliest time at which a vehicle may leave the depot to visit this
-     *     client.
+     *     Earliest time at which a vehicle may leave the depot on a trip to
+     *     visit this client.
      * prize
      *     Prize collected by visiting this client.
      * required
@@ -159,11 +160,11 @@ public:
     {
         Coordinate const x;
         Coordinate const y;
-        Load const delivery;
-        Load const pickup;
         Duration const serviceDuration;
-        Duration const twEarly;      // Earliest possible start of service
-        Duration const twLate;       // Latest possible start of service
+        Duration const twEarly;  // Earliest possible start of service
+        Duration const twLate;   // Latest possible start of service
+        std::vector<Load> const delivery;
+        std::vector<Load> const pickup;
         Duration const releaseTime;  // Earliest possible time to leave depot
         Cost const prize;            // Prize for visiting this client
         bool const required;         // Must client be in solution?
@@ -172,8 +173,8 @@ public:
 
         Client(Coordinate x,
                Coordinate y,
-               Load delivery = 0,
-               Load pickup = 0,
+               std::vector<Load> delivery = {},
+               std::vector<Load> pickup = {},
                Duration serviceDuration = 0,
                Duration twEarly = 0,
                Duration twLate = std::numeric_limits<Duration>::max(),
@@ -263,6 +264,8 @@ public:
      * Depot(
      *    x: int,
      *    y: int,
+     *    tw_early: int = 0,
+     *    tw_late: int = np.iinfo(np.int64).max,
      *    *,
      *    name: str = "",
      * )
@@ -277,6 +280,10 @@ public:
      * y
      *     Vertical coordinate of this depot, that is, the 'y' part of the
      *     depot's (x, y) location tuple.
+     * tw_early
+     *     Opening time of this depot. Default 0.
+     * tw_late
+     *     Closing time of this depot. Default unconstrained.
      * name
      *     Free-form name field for this depot. Default empty.
      *
@@ -286,6 +293,10 @@ public:
      *     Horizontal coordinate of this depot.
      * y
      *     Vertical coordinate of this depot.
+     * tw_early
+     *     Opening time of this depot.
+     * tw_late
+     *     Closing time of this depot.
      * name
      *     Free-form name field for this depot.
      */
@@ -293,9 +304,15 @@ public:
     {
         Coordinate const x;
         Coordinate const y;
-        char const *name;  // Depot name (for reference)
+        Duration const twEarly;  // Depot opening time
+        Duration const twLate;   // Depot closing time
+        char const *name;        // Depot name (for reference)
 
-        Depot(Coordinate x, Coordinate y, std::string name = "");
+        Depot(Coordinate x,
+              Coordinate y,
+              Duration twEarly = 0,
+              Duration twLate = std::numeric_limits<Duration>::max(),
+              std::string name = "");
 
         bool operator==(Depot const &other) const;
 
@@ -311,7 +328,7 @@ public:
     /**
      * VehicleType(
      *     num_available: int = 1,
-     *     capacity: int = 0,
+     *     capacity: list[int] = [],
      *     start_depot: int = 0,
      *     end_depot: int = 0,
      *     fixed_cost: int = 0,
@@ -322,11 +339,16 @@ public:
      *     unit_distance_cost: int = 1,
      *     unit_duration_cost: int = 0,
      *     profile: int = 0,
+     *     start_late: int | None = None,
+     *     initial_load: list[int] = [],
+     *     reload_depots: list[int] = [],
+     *     max_reloads: int = np.iinfo(np.uint64).max,
      *     *,
      *     name: str = "",
      * )
      *
-     * Simple data object storing all vehicle type data as properties.
+     * Simple data object storing all vehicle type data as properties. See also
+     * :doc:`../setup/concepts` for further information about these properties.
      *
      * Parameters
      * ----------
@@ -334,9 +356,9 @@ public:
      *     Number of vehicles of this type that are available. Must be positive.
      *     Default 1.
      * capacity
-     *     Capacity of this vehicle type. This is the maximum total delivery or
-     *     pickup amount the vehicle can store along the route. Must be
-     *     non-negative. Default 0.
+     *     Capacities of this vehicle type, per load dimension. This capacity is
+     *     the maximum total delivery or pickup amount that the vehicle can
+     *     store along the route.
      * start_depot
      *     Depot (location index) where vehicles of this type start their
      *     routes. Default 0 (first depot).
@@ -361,6 +383,21 @@ public:
      *     type. Default 0.
      * profile
      *     This vehicle type's routing profile. Default 0, the first profile.
+     * start_late
+     *     Latest start of the vehicle type's shift. Unconstrained if not
+     *     provided.
+     * initial_load
+     *     Load already on the vehicle that need to be dropped off at a depot.
+     *     This load is present irrespective of any client visits. By default
+     *     this value is zero, and the vehicle only considers loads from client
+     *     visits.
+     * reload_depots
+     *     List of reload depots (location indices) this vehicle may visit along
+     *     its route, to empty and reload for subsequent client visits. Defaults
+     *     to an empty list, in which case no reloads are allowed.
+     * max_reloads
+     *     Maximum number of reloads the vehicle may perform on a route.
+     *     Unconstrained if not explicitly provided.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -369,7 +406,7 @@ public:
      * num_available
      *     Number of vehicles of this type that are available.
      * capacity
-     *     Capacity (maximum total demand) of this vehicle type.
+     *     Capacities of this vehicle type, per load dimension.
      * start_depot
      *     Start location associated with these vehicles.
      * end_depot
@@ -393,27 +430,42 @@ public:
      *     Cost per unit of duration on routes using vehicles of this type.
      * profile
      *     This vehicle type's routing profile.
+     * start_late
+     *     Latest start of the vehicle type's shift. This is equal to
+     *     ``tw_late`` when the latest start is not constrained.
+     * initial_load
+     *     Load already on the vehicle that need to be dropped off at a depot.
+     *     This load is present irrespective of any client visits.
+     * reload_depots
+     *     List of reload locations this vehicle may visit along it route, to
+     *     empty and reload.
+     * max_reloads
+     *     Maximum number of reloads the vehicle may perform on a route.
      * name
      *     Free-form name field for this vehicle type.
      */
     struct VehicleType
     {
-        size_t const numAvailable;    // Available vehicles of this type
-        size_t const startDepot;      // Departure depot location
-        size_t const endDepot;        // Return depot location
-        Load const capacity;          // This type's vehicle capacity
-        Duration const twEarly;       // Start of shift
-        Duration const twLate;        // End of shift
-        Duration const maxDuration;   // Maximum route duration
-        Distance const maxDistance;   // Maximum route distance
+        size_t const numAvailable;         // Available vehicles of this type
+        size_t const startDepot;           // Departure depot location
+        size_t const endDepot;             // Return depot location
+        std::vector<Load> const capacity;  // This type's vehicle capacity
+        Duration const twEarly;            // Start of shift
+        Duration const twLate;             // End of shift
+        Duration const maxDuration;        // Maximum route duration
+        Distance const maxDistance;        // Maximum route distance
         Cost const fixedCost;         // Fixed cost of using this vehicle type
         Cost const unitDistanceCost;  // Variable cost per unit of distance
         Cost const unitDurationCost;  // Variable cost per unit of duration
         size_t const profile;         // Distance and duration profile
-        char const *name;             // Type name (for reference)
+        Duration const startLate;     // Latest start of shift
+        std::vector<Load> const initialLoad;     // Initially used capacity
+        std::vector<size_t> const reloadDepots;  // Reload locations
+        size_t const maxReloads;                 // Maximum number of reloads
+        char const *name;                        // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
-                    Load capacity = 0,
+                    std::vector<Load> capacity = {},
                     size_t startDepot = 0,
                     size_t endDepot = 0,
                     Cost fixedCost = 0,
@@ -424,6 +476,10 @@ public:
                     Cost unitDistanceCost = 1,
                     Cost unitDurationCost = 0,
                     size_t profile = 0,
+                    std::optional<Duration> startLate = std::nullopt,
+                    std::vector<Load> initialLoad = {},
+                    std::vector<size_t> reloadDepots = {},
+                    size_t maxReloads = std::numeric_limits<size_t>::max(),
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -441,7 +497,7 @@ public:
          * for the given parameters, which are used instead.
          */
         VehicleType replace(std::optional<size_t> numAvailable,
-                            std::optional<Load> capacity,
+                            std::optional<std::vector<Load>> capacity,
                             std::optional<size_t> startDepot,
                             std::optional<size_t> endDepot,
                             std::optional<Cost> fixedCost,
@@ -452,7 +508,16 @@ public:
                             std::optional<Cost> unitDistanceCost,
                             std::optional<Cost> unitDurationCost,
                             std::optional<size_t> profile,
+                            std::optional<Duration> startLate,
+                            std::optional<std::vector<Load>> initialLoad,
+                            std::optional<std::vector<size_t>> reloadDepots,
+                            std::optional<size_t> maxReloads,
                             std::optional<std::string> name) const;
+
+        /**
+         * Returns the maximum number of trips these vehicle can execute.
+         */
+        size_t maxTrips() const;
     };
 
 private:
@@ -477,6 +542,7 @@ private:
     std::vector<ClientGroup> const groups_;        // Client groups
 
     size_t const numVehicles_;
+    size_t const numLoadDimensions_;
 
 public:
     bool operator==(ProblemData const &other) const = default;
@@ -633,6 +699,11 @@ public:
     [[nodiscard]] size_t numProfiles() const;
 
     /**
+     * Number of load dimensions in this problem instance.
+     */
+    [[nodiscard]] size_t numLoadDimensions() const;
+
+    /**
      * Returns a new ProblemData instance with the same data as this instance,
      * except for the given parameters, which are used instead.
      *
@@ -655,7 +726,7 @@ public:
      * -------
      * ProblemData
      *    A new ProblemData instance with possibly replaced data.
-     * */
+     */
     ProblemData replace(std::optional<std::vector<Client>> &clients,
                         std::optional<std::vector<Depot>> &depots,
                         std::optional<std::vector<VehicleType>> &vehicleTypes,

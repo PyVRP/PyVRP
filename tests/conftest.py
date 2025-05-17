@@ -66,6 +66,24 @@ def ok_small_multi_depot():
 
 
 @pytest.fixture(scope="session")
+def ok_small_multiple_load():
+    """
+    Fixture that returns the OkSmall instance, but where the vehicles and
+    clients have two load dimensions.
+    """
+    return read("data/OkSmallMultipleLoad.txt")
+
+
+@pytest.fixture(scope="session")
+def ok_small_multiple_trips():
+    """
+    Fixture that returns the OkSmall instance, but where vehicles may also
+    reload at the depot.
+    """
+    return read("data/OkSmallMultipleTrips.txt")
+
+
+@pytest.fixture(scope="session")
 def ok_small_mutually_exclusive_groups():
     """
     Fixture that returns the OkSmall instance, but where the first three
@@ -91,6 +109,15 @@ def gtsp():
 
 
 @pytest.fixture(scope="session")
+def mtvrptw_release_times():
+    """
+    Fixture that returns a multi-trip instance with time windows and release
+    times, of 70 clients.
+    """
+    return read("data/C201R0.25.vrp", round_func="dimacs")
+
+
+@pytest.fixture(scope="session")
 def ok_small_two_profiles(ok_small):
     """
     Fixture that returns the OkSmall instance, with two profiles, the second
@@ -102,7 +129,7 @@ def ok_small_two_profiles(ok_small):
         duration_matrices=[durations, 2 * durations],
         distance_matrices=[distances, 2 * distances],
         vehicle_types=[
-            VehicleType(3, 10, profile=0),
-            VehicleType(3, 10, profile=1),
+            VehicleType(3, [10], profile=0),
+            VehicleType(3, [10], profile=1),
         ],
     )

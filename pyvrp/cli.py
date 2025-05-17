@@ -41,7 +41,11 @@ def tabulate(headers: list[str], rows: np.ndarray) -> str:
 def write_solution(where: Path, data: ProblemData, result: Result):
     with open(where, "w") as fh:
         if data.num_vehicle_types == 1:
-            fh.write(str(result.best))
+            for idx, route in enumerate(result.best.routes(), 1):
+                visits = [str(visit.location) for visit in route.schedule()]
+                visits = visits[1:-1]  # skip start and end depots
+                fh.write(f"Route #{idx}: {' '.join(visits)}\n")
+
             fh.write(f"Cost: {round(result.cost(), 2)}\n")
             return
 
@@ -55,7 +59,9 @@ def write_solution(where: Path, data: ProblemData, result: Result):
 
         routes = [f"Route #{idx + 1}:" for idx in range(data.num_vehicles)]
         for route in result.best.routes():
-            visits = map(str, route.visits())
+            visits = [str(visit.location) for visit in route.schedule()]
+            visits = visits[1:-1]  # skip start and end depots
+
             vehicle = next(type2vehicle[route.vehicle_type()])
             routes[vehicle] += " " + " ".join(visits)
 

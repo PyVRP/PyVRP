@@ -10,7 +10,7 @@ def test_raises_when_not_tsp(ok_small):
     Tests that the ordered crossover (OX) operator raises when used on a data
     instance that is not a TSP.
     """
-    cost_eval = CostEvaluator(20, 6, 0)
+    cost_eval = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
     sol = Solution(ok_small, [[1, 2], [3, 4]])
 
@@ -48,7 +48,7 @@ def test_prize_collecting_instance(prize_collecting):
     """
     Tests that OX functions correctly when there are optional clients.
     """
-    data = prize_collecting.replace(vehicle_types=[VehicleType()])
+    data = prize_collecting.replace(vehicle_types=[VehicleType(capacity=[0])])
 
     sol1 = Solution(data, [[4, 5, 6, 7, 8]])
     sol2 = Solution(data, [[2, 3, 4, 5]])
@@ -75,9 +75,9 @@ def test_empty_solution(prize_collecting):
     This can occur during prize collecting, and in that case there is nothing
     to exchange via crossover.
     """
-    data = prize_collecting.replace(vehicle_types=[VehicleType()])
+    data = prize_collecting.replace(vehicle_types=[VehicleType(capacity=[0])])
 
-    cost_evaluator = CostEvaluator(20, 6, 0)
+    cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     empty = Solution(data, [])
@@ -94,7 +94,7 @@ def test_wrap_around(ok_small):
     """
     Tests that OX wraps around properly on a small instance.
     """
-    data = ok_small.replace(vehicle_types=[VehicleType()])
+    data = ok_small.replace(vehicle_types=[VehicleType(capacity=[0])])
 
     sol1 = Solution(data, [[1, 3, 2, 4]])
     sol2 = Solution(data, [[4, 1, 2, 3]])

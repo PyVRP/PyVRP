@@ -4,7 +4,6 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -34,17 +33,25 @@ jobs:
             python-version: '3.13'
     steps:
       - uses: actions/checkout@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
         with:
-          version: "0.4.27"
-          enable-cache: true
-      - name: Install Python version
-        run: uv python install ${{ matrix.python-version }}
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Update pip and poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        id: cache-python
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-python-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
       - name: Install Python dependencies
-        run: uv sync --no-install-project
-      - name: Install poetry
-        run: uv tool install poetry
+        if: steps.cache-python.outputs.cache-hit != 'true'
+        run: poetry install --no-root --with examples
       - name: Cache pre-commit
         uses: actions/cache@v4
         id: cache-pre-commit
@@ -53,9 +60,9 @@ jobs:
           key: pre-commit-${{ env.pythonLocation }}-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Install pre-commit
         if: steps.cache-pre-commit.outputs.cache-hit != 'true'
-        run: uv run --no-sync pre-commit install --install-hooks
+        run: poetry run pre-commit install --install-hooks
       - name: Run pre-commit
-        run: uv run --no-sync pre-commit run --all-files
+        run: poetry run pre-commit run --all-files
       - if: matrix.compiler == 'clang'
         name: Set up clang
         run: |
@@ -75,18 +82,17 @@ jobs:
           echo "CC=gcc" >> $GITHUB_ENV
           echo "CXX=g++" >> $GITHUB_ENV
       - name: Build pyvrp
-        # This step consists of two commands. First, we install the project into
-        # the environment. This ensures imports like "from pyvrp import X" work.
-        # But uv builds in release mode by default, which is undesirable
-        # for testing. So we also compile a debug build directly afterwards.
+        # First, we install the project into the poetry environment. Ensures
+        # imports like "from pyvrp import X" work. This builds in release mode
+        # by default, but we need a debug build for test coverage.
         run: |
-          uv sync
-          uv run python build_extensions.py --build_type debug --clean
+          poetry install --only-root
+          poetry run python build_extensions.py --build_type debug --clean
       - name: Run tests and generate coverage reports
         run: |
-          uv run pytest
-          uv run ninja coverage-xml -C build
-      - uses: codecov/codecov-action@v4
+          poetry run pytest
+          poetry run ninja coverage-xml -C build
+      - uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -94,7 +100,9 @@ jobs:
           files: build/meson-logs/coverage.xml
       - if: matrix.compiler == 'gcc'
         name: Install Valgrind
-        run: sudo apt install valgrind
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y valgrind
       - if: matrix.compiler == 'gcc'
         # Run this only when using GCC, because for some reason Valgrind has issues with
         # some of the outputs Clang produces.
@@ -104,5 +112,5 @@ jobs:
         # malloc.
         # TODO also run with --leak-check=full?
         run: |
-          VALGRIND_CMD="uv run pyvrp tests/data/RC208.vrp --round_func dimacs --max_runtime 0.5 --seed 1"
-          uv run env PYTHONMALLOC=malloc valgrind --tool=memcheck --quiet $VALGRIND_CMD
+          VALGRIND_CMD="pyvrp tests/data/RC208.vrp --round_func dimacs --max_runtime 0.5 --seed 1"
+          poetry run env PYTHONMALLOC=malloc valgrind --tool=memcheck --quiet $VALGRIND_CMD

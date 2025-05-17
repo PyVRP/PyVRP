@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 from warnings import warn
 
 import numpy as np
@@ -184,8 +184,8 @@ class Model:
         self,
         x: int,
         y: int,
-        delivery: int = 0,
-        pickup: int = 0,
+        delivery: int | list[int] = [],
+        pickup: int | list[int] = [],
         service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
@@ -209,8 +209,8 @@ class Model:
         """
         if group is None:
             group_idx = None
-        elif group in self._groups:
-            group_idx = self._groups.index(group)
+        elif (idx := _idx_by_id(group, self._groups)) is not None:
+            group_idx = idx
         else:
             raise ValueError("The given group is not in this model instance.")
 
@@ -222,8 +222,8 @@ class Model:
         client = Client(
             x=x,
             y=y,
-            delivery=delivery,
-            pickup=pickup,
+            delivery=[delivery] if isinstance(delivery, int) else delivery,
+            pickup=[pickup] if isinstance(pickup, int) else pickup,
             service_duration=service_duration,
             tw_early=tw_early,
             tw_late=tw_late,
@@ -254,6 +254,8 @@ class Model:
         self,
         x: int,
         y: int,
+        tw_early: int = 0,
+        tw_late: int = np.iinfo(np.int64).max,
         *,
         name: str = "",
     ) -> Depot:
@@ -261,7 +263,8 @@ class Model:
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Depot` instance.
         """
-        depot = Depot(x=x, y=y, name=name)
+        depot = Depot(x=x, y=y, tw_early=tw_early, tw_late=tw_late, name=name)
+
         self._depots.append(depot)
 
         for group in self._groups:  # new depot invalidates client indices
@@ -291,8 +294,14 @@ class Model:
 
            If ``profile`` is not provided, the edge is a base edge that will be
            set for all profiles in the model. Any profile-specific edge takes
-           precendence over a base edge with the same ``frm`` and ``to``
+           precedence over a base edge with the same ``frm`` and ``to``
            locations.
+
+        .. note::
+
+           If called repeatedly with the same ``frm``, ``to``, and ``profile``
+           arguments, only the edge constructed last is used. PyVRP does not
+           support multigraphs.
         """
         if profile is not None:
             return profile.add_edge(frm, to, distance, duration)
@@ -312,7 +321,7 @@ class Model:
     def add_vehicle_type(
         self,
         num_available: int = 1,
-        capacity: int = 0,
+        capacity: int | list[int] = [],
         start_depot: Depot | None = None,
         end_depot: Depot | None = None,
         fixed_cost: int = 0,
@@ -323,6 +332,10 @@ class Model:
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
         profile: Profile | None = None,
+        start_late: int | None = None,
+        initial_load: int | list[int] = [],
+        reload_depots: list[Depot] = [],
+        max_reloads: int = np.iinfo(np.uint64).max,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -343,28 +356,41 @@ class Model:
         """
         if start_depot is None:
             start_idx = 0
-        elif start_depot in self._depots:
-            start_idx = self._depots.index(start_depot)
+        elif (idx := _idx_by_id(start_depot, self._depots)) is not None:
+            start_idx = idx
         else:
             raise ValueError("The given start depot is not in this model.")
 
         if end_depot is None:
             end_idx = 0
-        elif end_depot in self._depots:
-            end_idx = self._depots.index(end_depot)
+        elif (idx := _idx_by_id(end_depot, self._depots)) is not None:
+            end_idx = idx
         else:
             raise ValueError("The given end depot is not in this model.")
 
         if profile is None:
             profile_idx = 0
-        elif profile in self._profiles:
-            profile_idx = self._profiles.index(profile)
+        elif (idx := _idx_by_id(profile, self._profiles)) is not None:
+            profile_idx = idx
         else:
             raise ValueError("The given profile is not in this model.")
 
+        reloads: list[int] = []
+        for depot in reload_depots:
+            depot_idx = _idx_by_id(depot, self._depots)
+            if depot_idx is not None:
+                reloads.append(depot_idx)
+            else:
+                msg = "The given reload depot is not in this model."
+                raise ValueError(msg)
+
+        init_load = initial_load
+        if isinstance(init_load, int):
+            init_load = [init_load]
+
         vehicle_type = VehicleType(
             num_available=num_available,
-            capacity=capacity,
+            capacity=[capacity] if isinstance(capacity, int) else capacity,
             start_depot=start_idx,
             end_depot=end_idx,
             fixed_cost=fixed_cost,
@@ -375,6 +401,10 @@ class Model:
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
             profile=profile_idx,
+            start_late=start_late,
+            initial_load=init_load,
+            reload_depots=reloads,
+            max_reloads=max_reloads,
             name=name,
         )
 
@@ -469,3 +499,17 @@ class Model:
             found solution.
         """
         return solve(self.data(), stop, seed, collect_stats, display, params)
+
+
+def _idx_by_id(item: object, container: Sequence[object]) -> int | None:
+    """
+    Obtains the index of item in the container by identity rather than equality
+    (as would happen with index()). This is important for various objects in
+    the Model, because objects that compare equal may not be the same as the
+    one intended. See #681 for a bug caused by this.
+    """
+    for idx, other in enumerate(container):
+        if item is other:
+            return idx
+
+    return None

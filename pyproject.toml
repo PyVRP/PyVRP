@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyvrp"
-version = "0.10.0a0"
+version = "0.12.0a0"
 description = "A state-of-the-art vehicle routing problem solver."
 authors = [
     "Niels Wouda <nielswouda@gmail.com>",
@@ -17,6 +17,7 @@ keywords = [
     "metaheuristic",
 ]
 include = [
+    { path = "benchmarks/", format = "sdist" },
     { path = "docs/", format = "sdist" },
     { path = "tests/", format = "sdist" },
 
@@ -44,94 +45,63 @@ classifiers = [
 ]
 
 
-[tool.poetry.scripts]
-pyvrp = "pyvrp.cli:main"
+[tool.poetry.urls]
+"Tracker" = "https://github.com/PyVRP/PyVRP/issues"
 
 
-[project]
-name = "pyvrp"
-version = "0.10.0a0"
-description = "A state-of-the-art vehicle routing problem solver."
-authors = [
-    { name = "Niels Wouda", email = "nielswouda@gmail.com" },
-    { name = "Leon Lan", email = "leon.lanyidong@gmail.com" },
-    { name = "Wouter Kool", email = "wouter.kool@ortec.com" }
+[tool.poetry.dependencies]
+python = ">=3.10,<4.0"
+numpy = [
+    # Numpy 1.26 is the first version of numpy that supports Python 3.12+.
+    { version = ">=1.15.2", python = "<3.12" },
+    { version = ">=1.26.0", python = ">=3.12" }
 ]
-license = { file = "LICENSE.md" }
-readme = "README.md"
-keywords = [
-    "vehicle routing problem",
-    "hybrid genetic search",
-    "metaheuristic",
-]
-classifiers = [
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "Development Status :: 5 - Production/Stable",
-    "Topic :: Software Development",
-    "Topic :: Scientific/Engineering",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-]
-requires-python = ">=3.10"
-dependencies = [
-    "numpy>=1.15.2; python_version < '3.12'",
-    "numpy>=1.26.0; python_version >= '3.12'",
-    "matplotlib>=2.2.0",
-    "vrplib~=1.4",
-    "tqdm~=4.64",
-    "tomli~=2.0"
-]
+matplotlib = ">=2.2.0"
+vrplib = "^1.4.0"
+tqdm = "^4.64.1"
+tomli = "^2.0.1"
 
 
-[project.urls]
-Homepage = "https://pyvrp.org/"
-Documentation = "https://pyvrp.org/"
-Repository = "https://github.com/PyVRP/PyVRP"
-Issues = "https://github.com/PyVRP/PyVRP/issues"
+[tool.poetry.group.docs]
+optional = true
 
 
-[project.scripts]
-pyvrp = "pyvrp.cli:main"
+[tool.poetry.group.docs.dependencies]
+sphinx = ">=7.3.0,<8.2.0"
+nbsphinx = ">=0.8.9"
+ipython = ">=8.6.0"
+numpydoc = ">=1.5.0"
+sphinx-immaterial = ">=0.11.12"
 
 
-[dependency-groups]
-dev = [
-    "pre-commit~=2.20",
-    "pytest>=6.0.0",
-    "pytest-cov>=2.6.1",
-    "codecov"
-]
+[tool.poetry.group.examples]
+optional = true
+
+
+[tool.poetry.group.examples.dependencies]
+jupyter = ">=1.0.0"
+tabulate = "^0.9.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^2.20.0"
+pytest = ">=6.0.0"
+pytest-cov = "^6.1.1"
+pytest-codspeed = ">=2.2.1"
+pytest-xdist = "^3.6.1"
+pytest-sugar = "^1.0.0"
+codecov = "*"
+
 # These are used in the build script: for compiling the library (meson, ninja)
 # and generating docs (docblock) and coverage reports (gcovr).
-build = [
-    "hatchling>=1.13",
-    "editables>=0.5",
-    "meson~=1.0",
-    "ninja~=1.11",
-    "gcovr~=7.2",
-    "docblock~=0.1",
-]
-docs = [
-    "sphinx>=7.3.0",
-    "nbsphinx>=0.8.9",
-    "ipython>=8.6.0",
-    "numpydoc>=1.5.0",
-    "sphinx-immaterial>=0.11.12"
-]
-examples = [
-    "jupyter>=1.0.0",
-    "tabulate~=0.9.0",
-]
+meson = "^1.0.0"
+ninja = "^1.11.1"
+gcovr = "^7.2"
+docblock = ">=0.1.6"
 
 
-[tool.uv]
-default-groups = ["dev", "build"]
-no-build-isolation-package = ["pyvrp"]
+[tool.poetry.scripts]
+pyvrp = "pyvrp.cli:main"
 
 
 [tool.black]
@@ -142,7 +112,7 @@ line-length = 79
 ignore-init-module-imports = true
 line-length = 79
 select = [
-    "E", "F", "I", "NPY", "PYI", "Q", "RET", "RSE", "RUF", "SLF", "SIM", "TCH"
+    "E", "F", "I", "NPY", "PYI", "Q", "RET", "RSE", "RUF", "SLF", "SIM", "TC"
 ]
 
 
@@ -156,7 +126,12 @@ ignore_missing_imports = true
 
 
 [tool.pytest.ini_options]
-addopts = "--cov --cov-report=xml --cov-report=term"
+addopts = [
+    "--cov",
+    "--cov-report=xml",
+    "--cov-report=term",
+    "--numprocesses=auto",
+]
 testpaths = "tests"
 
 
@@ -166,9 +141,10 @@ omit = [
     "extract_docstrings.py",  # build script
     "pyvrp/show_versions.py",  # only prints debug information
     "pyvrp/cli.py",  # tested in other ways than unit tests
-    "*/tests/*",
-    "venv/*",
+    ".venv/*",
+    "benchmarks/*",
     "docs/*",
+    "tests/*",
 ]
 
 
@@ -186,37 +162,22 @@ exclude_lines = [
 build = "cp310-* cp311-* cp312-* cp313-*"
 skip = "pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
 build-frontend = "build"
-test-requires = "pytest>=6.0.0 pytest-cov>=2.6.1"
+test-requires = [
+    "pytest>=6.0.0",
+    "pytest-cov>=6.1.1",
+    "pytest-xdist>=3.6.1",
+    "pytest-sugar>=1.0.0",
+]
 test-command = "pytest {package}/tests"
 
 
+[tool.poetry.build]
+generate-setup-file = false
+script = "build_extensions.py"
+
+
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-
-[tool.hatch.build.targets.sdist]
-include = [
-    "docs/",
-    "tests/",
-    "meson.build",
-    "meson_options.txt",
-    "build_extensions.py",
-    "extract_docstrings.py",
-    "subprojects/*.wrap",
-]
-exclude = [
-    "docs/build",
-    "subprojects/*/",
-]
-
-
-[tool.hatch.build.targets.wheel]
-artifacts = [
-    "pyvrp/**/*.so",
-    "pyvrp/**/*.pyd",
-]
-
-
-[tool.hatch.build.targets.wheel.hooks.custom]
-path = "build_extensions.py"
+# We need meson and ninja to build the C++ extensions, and docblock to extract
+# documentation for the extensions.
+requires = ["poetry", "meson", "ninja", "docblock"]
+build-backend = "poetry.core.masonry.api"

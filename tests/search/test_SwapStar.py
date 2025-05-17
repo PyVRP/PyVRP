@@ -1,5 +1,6 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
+import pytest
+from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import (
@@ -19,6 +20,7 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._search import Node, Route
+from tests.helpers import make_search_route
 
 
 def test_swap_star_identifies_additional_moves_over_regular_swap(rc208):
@@ -28,7 +30,7 @@ def test_swap_star_identifies_additional_moves_over_regular_swap(rc208):
     Thus, SWAP* should still be able to identify additional improving moves
     after (1, 1)-exchange gets stuck.
     """
-    cost_evaluator = CostEvaluator(20, 6, 0)
+    cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
     # For a fair comparison we should not hamper the node operator with
@@ -37,15 +39,13 @@ def test_swap_star_identifies_additional_moves_over_regular_swap(rc208):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
 
     ls.add_node_operator(Exchange11(rc208))
-    ls.add_route_operator(SwapStar(rc208))
+    ls.add_route_operator(SwapStar(rc208, overlap_tolerance=1))
 
     for _ in range(10):  # repeat a few times to really make sure
         sol = Solution.make_random(rc208, rng)
 
         swap_sol = ls.search(sol, cost_evaluator)
-        swap_star_sol = ls.intensify(
-            swap_sol, cost_evaluator, overlap_tolerance=1
-        )
+        swap_star_sol = ls.intensify(swap_sol, cost_evaluator)
 
         # The regular swap operator should have been able to improve the random
         # solution. After swap gets stuck, SWAP* should still be able to
@@ -62,18 +62,18 @@ def test_swap_star_on_RC208_instance(rc208, seed: int):
     """
     Evaluate SWAP* on the RC208 instance, over a few seeds.
     """
-    cost_evaluator = CostEvaluator(20, 6, 0)
+    cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=seed)
 
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    ls.add_route_operator(SwapStar(rc208))
+    ls.add_route_operator(SwapStar(rc208, overlap_tolerance=1))
 
     # Make an initial solution that consists of two routes, by randomly
     # splitting the single-route solution.
     route = list(range(rc208.num_depots, rc208.num_locations))
     split = rng.randint(rc208.num_clients)
     sol = Solution(rc208, [route[:split], route[split:]])
-    improved_sol = ls.intensify(sol, cost_evaluator, overlap_tolerance=1)
+    improved_sol = ls.intensify(sol, cost_evaluator)
 
     # The new solution should strictly improve on our original solution, but
     # cannot use more routes since SWAP* does not create routes.
@@ -123,8 +123,8 @@ def test_swap_star_can_swap_in_place():
     route2.append(nodes[3])
     route2.update()
 
-    cost_eval = CostEvaluator(1, 1, 0)
-    swap_star = SwapStar(data)
+    cost_eval = CostEvaluator([], 1, 0)
+    swap_star = SwapStar(data, overlap_tolerance=1)
 
     # Best is to exchange clients 1 and 3. The cost delta is all distance: it
     # saves one expensive arc of cost 10, by replacing it with one of cost 1.
@@ -145,13 +145,13 @@ def test_wrong_load_calculation_bug():
     """
     data = ProblemData(
         clients=[
-            Client(x=1, y=1, delivery=0),
-            Client(x=2, y=2, delivery=0),
-            Client(x=3, y=3, delivery=15),
-            Client(x=4, y=4, delivery=0),
+            Client(x=1, y=1, delivery=[0]),
+            Client(x=2, y=2, delivery=[0]),
+            Client(x=3, y=3, delivery=[15]),
+            Client(x=4, y=4, delivery=[0]),
         ],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(num_available=2, capacity=12)],
+        vehicle_types=[VehicleType(num_available=2, capacity=[12])],
         distance_matrices=[
             np.asarray(
                 [
@@ -166,22 +166,11 @@ def test_wrong_load_calculation_bug():
         duration_matrices=[np.zeros((5, 5), dtype=int)],
     )
 
-    nodes = [Node(loc=loc) for loc in range(data.num_locations)]
+    route1 = make_search_route(data, [1, 2], idx=0)
+    route2 = make_search_route(data, [3, 4], idx=1)
 
-    # First route is 0 -> 1 -> 2 -> 0.
-    route1 = Route(data, idx=0, vehicle_type=0)
-    route1.append(nodes[1])
-    route1.append(nodes[2])
-    route1.update()
-
-    # Second route is 0 -> 3 -> 4 -> 0.
-    route2 = Route(data, idx=1, vehicle_type=0)
-    route2.append(nodes[3])
-    route2.append(nodes[4])
-    route2.update()
-
-    cost_eval = CostEvaluator(1_000, 1, 0)
-    swap_star = SwapStar(data)
+    cost_eval = CostEvaluator([1_000], 1, 0)
+    swap_star = SwapStar(data, overlap_tolerance=1)
 
     # Optimal is 0 -> 3 -> 1 -> 0 and 0 -> 4 -> 2 -> 0. This exchanges four
     # costly arcs of distance 10 for four arcs of distance 1, so the diff is
@@ -203,25 +192,17 @@ def test_max_distance(ok_small):
     """
 
     def make_routes(data):
-        route1 = Route(data, idx=0, vehicle_type=0)
-        route1.append(Node(loc=1))
-        route1.append(Node(loc=2))
-        route1.append(Node(loc=3))
-        route1.update()
-
-        route2 = Route(data, idx=1, vehicle_type=0)
-        route2.append(Node(loc=4))
-        route2.update()
-
+        route1 = make_search_route(data, [1, 2, 3], idx=0)
+        route2 = make_search_route(data, [4], idx=1)
         return route1, route2
 
-    cost_eval = CostEvaluator(0, 0, 10)  # only max distance is penalised
+    cost_eval = CostEvaluator([0], 0, 10)  # only max distance is penalised
 
     route1, route2 = make_routes(ok_small)
     assert_equal(route1.distance(), 6_220)
     assert_equal(route2.distance(), 2_951)
 
-    swap_star = SwapStar(ok_small)
+    swap_star = SwapStar(ok_small, overlap_tolerance=1)
     assert_equal(swap_star.evaluate(route1, route2, cost_eval), -1_043)
     swap_star.apply(route1, route2)
 
@@ -237,14 +218,51 @@ def test_max_distance(ok_small):
 
     # Now restrict the maximum route distance to 5_000, so that aspect needs
     # to be taken into account as well.
-    vehicle_type = VehicleType(3, capacity=10, max_distance=5_000)
+    vehicle_type = VehicleType(3, capacity=[10], max_distance=5_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     # Same route plan remains optimal, but now there is a large cost reduction
     # due to route1 dropping below the maximum distance value of 5_000. The
     # delta cost is large due to this distance penalty reduction, and the same
     # distance difference as before.
-    swap_star = SwapStar(data)
+    swap_star = SwapStar(data, overlap_tolerance=1)
     route1, route2 = make_routes(data)
     assert_equal(swap_star.evaluate(route1, route2, cost_eval), -13_243)
     assert_equal(10 * (6_220 - 5_000) + 1_043, 13_243)
+
+
+def test_swap_star_overlap_tolerance(ok_small):
+    """
+    Tests that SwapStar respects the overlap tolerance argument when evaluating
+    moves.
+    """
+    data = ok_small.replace(
+        vehicle_types=[
+            VehicleType(1, capacity=[5]),
+            VehicleType(1, capacity=[20]),
+        ]
+    )
+
+    route1 = make_search_route(data, [1, 2, 4], idx=0, vehicle_type=0)
+    route2 = make_search_route(data, [3], idx=1, vehicle_type=1)
+
+    # Overlap tolerance is zero, so no routes should have overlap and thus the
+    # move should evaluate to 0.
+    swap_star = SwapStar(data, overlap_tolerance=0)
+    cost_eval = CostEvaluator([1_000], 0, 0)
+    assert_equal(swap_star.evaluate(route1, route2, cost_eval), 0)
+
+    # But with full overlap tolerance, all routes should be checked. That
+    # should lead to an improving move.
+    swap_star = SwapStar(data, overlap_tolerance=1)
+    assert_(swap_star.evaluate(route1, route2, cost_eval) < 0)
+
+
+@pytest.mark.parametrize("tol", [-1.0, -0.01, 1.01, 10.9, 1000])
+def test_swap_star_raises_overlap_tolerance_outside_unit_interval(rc208, tol):
+    """
+    Tests that SwapStar constructor raises when the overlap tolerance argument
+    is not in [0, 1].
+    """
+    with assert_raises(ValueError):  # each tolerance value is outside [0, 1]
+        SwapStar(rc208, overlap_tolerance=tol)

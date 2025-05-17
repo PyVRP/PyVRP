@@ -13,17 +13,18 @@ from pyvrp import (
 )
 from pyvrp import Route as SolRoute
 from pyvrp.search import LocalSearch, SwapTails
-from pyvrp.search._search import Node, Route
+from pyvrp.search._search import Node
+from tests.helpers import make_search_route
 
 
 @mark.parametrize(
     "vehicle_types",
     [
-        [VehicleType(capacity=10), VehicleType(capacity=10)],
-        [VehicleType(capacity=8), VehicleType(capacity=10)],
-        [VehicleType(capacity=10), VehicleType(capacity=8)],
-        [VehicleType(capacity=9), VehicleType(capacity=9)],
-        [VehicleType(capacity=8), VehicleType(capacity=8)],
+        [VehicleType(capacity=[10]), VehicleType(capacity=[10])],
+        [VehicleType(capacity=[8]), VehicleType(capacity=[10])],
+        [VehicleType(capacity=[10]), VehicleType(capacity=[8])],
+        [VehicleType(capacity=[9]), VehicleType(capacity=[9])],
+        [VehicleType(capacity=[8]), VehicleType(capacity=[8])],
     ],
 )
 def test_OkSmall_multiple_vehicle_types(
@@ -37,7 +38,7 @@ def test_OkSmall_multiple_vehicle_types(
     """
     data = ok_small.replace(vehicle_types=vehicle_types)
 
-    cost_evaluator = CostEvaluator(10_000, 6, 0)  # large load penalty
+    cost_evaluator = CostEvaluator([10_000], 6, 0)  # large load penalty
     rng = RandomNumberGenerator(seed=42)
 
     neighbours: list[list[int]] = [[], [2], [], [], []]  # only 1 -> 2
@@ -79,17 +80,11 @@ def test_move_involving_empty_routes():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    route1 = Route(data, idx=0, vehicle_type=0)
-    route2 = Route(data, idx=1, vehicle_type=1)
-
-    for loc in [1, 2]:
-        route1.append(Node(loc=loc))
-
-    route1.update()  # depot -> 1 -> 2 -> depot
-    route2.update()  # depot -> depot
+    route1 = make_search_route(data, [1, 2], idx=0, vehicle_type=0)
+    route2 = make_search_route(data, [], idx=1, vehicle_type=1)
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(0, 0, 0)
+    cost_eval = CostEvaluator([], 0, 0)
 
     # This move does not change the route structure, so the delta cost is 0.
     assert_equal(op.evaluate(route1[2], route2[0], cost_eval), 0)
@@ -115,15 +110,18 @@ def test_move_involving_empty_routes():
 
     # This move does not change the route structure, so the delta cost is 0.
     assert_equal(op.evaluate(route1[0], route2[2], cost_eval), 0)
+    assert_equal(op.evaluate(route2[2], route1[0], cost_eval), 0)
 
     # This move creates routes (depot -> 2 -> depot) and (depot -> 1 -> depot),
     # making route 1 non-empty and thus incurring its fixed cost of 10.
     assert_equal(op.evaluate(route1[0], route2[1], cost_eval), 10)
+    assert_equal(op.evaluate(route2[1], route1[0], cost_eval), 10)
 
     # This move creates routes (depot -> 1 -> 2 -> depot) and (depot -> depot),
     # making route 1 non-empty, while making route 2 empty. The total fixed
     # cost incurred is thus 10 - 100 = -90.
     assert_equal(op.evaluate(route1[0], route2[0], cost_eval), -90)
+    assert_equal(op.evaluate(route2[0], route1[0], cost_eval), -90)
 
 
 def test_move_involving_multiple_depots():
@@ -150,21 +148,14 @@ def test_move_involving_multiple_depots():
         duration_matrices=[np.zeros((4, 4), dtype=int)],
     )
 
-    # First route is 0 -> 3 -> 0.
-    route1 = Route(data, idx=0, vehicle_type=0)
-    route1.append(Node(loc=3))
-    route1.update()
-
-    # Second route is 1 -> 2 -> 1.
-    route2 = Route(data, idx=1, vehicle_type=1)
-    route2.append(Node(loc=2))
-    route2.update()
+    route1 = make_search_route(data, [3], idx=0, vehicle_type=0)
+    route2 = make_search_route(data, [2], idx=1, vehicle_type=1)
 
     assert_equal(route1.distance(), 16)
     assert_equal(route2.distance(), 16)
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(1, 1, 0)
+    cost_eval = CostEvaluator([], 1, 0)
 
     assert_equal(op.evaluate(route1[1], route2[1], cost_eval), 0)  # no-op
 
@@ -185,16 +176,11 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     data = ok_small_two_profiles
     dist1, dist2 = data.distance_matrices()
 
-    route1 = Route(data, idx=0, vehicle_type=0)
-    route1.append(Node(loc=3))
-    route1.update()
-
-    route2 = Route(data, idx=1, vehicle_type=1)
-    route2.append(Node(loc=2))
-    route2.update()
+    route1 = make_search_route(data, [3], idx=0, vehicle_type=0)
+    route2 = make_search_route(data, [2], idx=1, vehicle_type=1)
 
     op = SwapTails(data)
-    cost_eval = CostEvaluator(0, 0, 0)  # all zero so no costs from penalties
+    cost_eval = CostEvaluator([0], 0, 0)  # all zero so no costs from penalties
 
     # First route has profile 0, and its distance is thus computed using the
     # first distance matrix.

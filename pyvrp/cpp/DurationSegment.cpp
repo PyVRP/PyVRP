@@ -1,46 +1,50 @@
 #include "DurationSegment.h"
 
-#include <cassert>
+#include <fstream>
 
 using pyvrp::Duration;
 using pyvrp::DurationSegment;
 
-Duration DurationSegment::twEarly() const
-{
-    // There are two cases:
-    // 1) When twLate_ < releaseTime_ there is time warp from release times. As
-    //    twEarly_ <= twLate, we then return twLate_ to minimise this time warp.
-    // 2) When twLate >= releaseTime_, there is a feasible start time that does
-    //    not cause time warp due to release times. Then we return either the
-    //    earliest start time, or the release time, whichever is larger.
-    assert(twEarly_ <= twLate_);
-    return std::max(twEarly_, std::min(twLate_, releaseTime_));
-}
-
-Duration DurationSegment::twLate() const { return twLate_; }
+Duration DurationSegment::prevEndLate() const { return prevEndLate_; }
 
 Duration DurationSegment::releaseTime() const { return releaseTime_; }
 
-DurationSegment::DurationSegment(size_t idx, ProblemData::Client const &client)
-    : idxFirst_(idx),
-      idxLast_(idx),
-      duration_(client.serviceDuration),
-      timeWarp_(0),
-      twEarly_(client.twEarly),
-      twLate_(client.twLate),
+Duration DurationSegment::slack() const
+{
+    // We have wait duration if release time is after the end of the previous
+    // trip. Starting any later only increases that wait duration, so there
+    // is then definitely no slack.
+    auto const prevSlack = std::max<Duration>(prevEndLate_ - releaseTime_, 0);
+    return std::min(startLate() - startEarly(), prevSlack);
+}
+
+DurationSegment::DurationSegment(ProblemData::Client const &client)
+    : duration_(client.serviceDuration),
+      startEarly_(client.twEarly),
+      startLate_(client.twLate),
       releaseTime_(client.releaseTime)
 {
 }
 
-DurationSegment::DurationSegment(size_t depot,
-                                 ProblemData::VehicleType const &vehicleType)
-    : idxFirst_(depot),
-      idxLast_(depot),
-      duration_(0),
-      timeWarp_(0),
-      twEarly_(vehicleType.twEarly),
-      twLate_(vehicleType.twLate),
-      releaseTime_(0)
+DurationSegment::DurationSegment(ProblemData::Depot const &depot)
+    : startEarly_(depot.twEarly), startLate_(depot.twLate)
 {
-    assert(depot == vehicleType.startDepot || depot == vehicleType.endDepot);
+}
+
+DurationSegment::DurationSegment(ProblemData::VehicleType const &vehicleType,
+                                 Duration const twLate)
+    : startEarly_(vehicleType.twEarly), startLate_(twLate)
+{
+}
+
+std::ostream &operator<<(std::ostream &out, DurationSegment const &segment)
+{
+    // clang-format off
+    return out << "duration=" << segment.duration() 
+               << ", time_warp=" << segment.timeWarp()
+               << ", start_early=" << segment.startEarly()
+               << ", start_late=" << segment.startLate()
+               << ", release_time=" << segment.releaseTime()
+               << ", prev_end_late=" << segment.prevEndLate();
+    // clang-format on
 }
