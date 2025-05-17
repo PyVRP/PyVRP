@@ -14,10 +14,10 @@ Solution DestroyRepair::operator()(Solution const &solution,
                                    CostEvaluator const &costEvaluator,
                                    size_t numDestroy)
 {
-    loadSolution(solution);
+    loadSolution(solution, data, routes, nodes);
     destroy(numDestroy);
     repair(costEvaluator);
-    return exportSolution();
+    return exportSolution(routes, data);
 }
 
 void DestroyRepair::destroy(size_t numDestroy)
@@ -165,8 +165,9 @@ void DestroyRepair::greedyInsert(CostEvaluator const &costEvaluator)
 
             if (empty != end)  // try inserting U into the empty route.
             {
-                if (rng.randint(3) > 0)
-                    continue;
+                if (rng.randint(3) > 0)  // skip sometimes because too greedy
+                    continue;            // results in low fixed costs vehicles
+
                 auto const cost
                     = insertCost(U, (*empty)[0], data, costEvaluator);
                 if (cost < bestCost)
@@ -183,112 +184,18 @@ void DestroyRepair::greedyInsert(CostEvaluator const &costEvaluator)
     }
 }
 
-void DestroyRepair::update(Route *U, Route *V)
-{
-    U->update();
-
-    if (U != V)
-        V->update();
-}
-
-void DestroyRepair::loadSolution(Solution const &solution)
-{
-    // First empty all routes.
-    for (auto &route : routes)
-        route.clear();
-
-    // Determine offsets for vehicle types.
-    std::vector<size_t> vehicleOffset(data.numVehicleTypes(), 0);
-    for (size_t vehType = 1; vehType < data.numVehicleTypes(); vehType++)
-    {
-        auto const prevAvail = data.vehicleType(vehType - 1).numAvailable;
-        vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
-    }
-
-    // Load routes from solution.
-    for (auto const &solRoute : solution.routes())
-    {
-        // Set up a container of all node visits. This lets us insert all
-        // nodes in one go, requiring no intermediate updates.
-        std::vector<Route::Node *> visits;
-        visits.reserve(solRoute.size());
-        for (auto const client : solRoute)
-            visits.push_back(&nodes[client]);
-
-        // Determine index of next route of this type to load, where we rely
-        // on solution to be valid to not exceed the number of vehicles per
-        // vehicle type.
-        auto const idx = vehicleOffset[solRoute.vehicleType()]++;
-        routes[idx].insert(1, visits.begin(), visits.end());
-        routes[idx].update();
-    }
-}
-
-Solution DestroyRepair::exportSolution() const
-{
-    std::vector<pyvrp::Route> solRoutes;
-    solRoutes.reserve(data.numVehicles());
-
-    for (auto const &route : routes)
-    {
-        if (route.empty())
-            continue;
-
-        std::vector<size_t> visits;
-        visits.reserve(route.size());
-
-        for (auto *node : route)
-            visits.push_back(node->client());
-
-        solRoutes.emplace_back(data, visits, route.vehicleType());
-    }
-
-    return {data, solRoutes};
-}
-
-void DestroyRepair::setNeighbours(Neighbours neighbours)
-{
-    if (neighbours.size() != data.numLocations())
-        throw std::runtime_error("Neighbourhood dimensions do not match.");
-
-    for (size_t client = data.numDepots(); client != data.numLocations();
-         ++client)
-    {
-        auto const beginPos = neighbours[client].begin();
-        auto const endPos = neighbours[client].end();
-
-        auto const pred = [&](auto item)
-        { return item == client || item < data.numDepots(); };
-
-        if (std::any_of(beginPos, endPos, pred))
-        {
-            throw std::runtime_error("Neighbourhood of client "
-                                     + std::to_string(client)
-                                     + " contains itself or a depot.");
-        }
-    }
-
-    neighbours_ = neighbours;
-}
-
-DestroyRepair::Neighbours const &DestroyRepair::neighbours() const
-{
-    return neighbours_;
-}
-
 DestroyRepair::DestroyRepair(ProblemData const &data,
                              RandomNumberGenerator &rng,
                              Neighbours neighbours)
     : data(data),
       rng(rng),
-      neighbours_(data.numLocations()),
+      neighbours_(neighbours),
       orderNodes(data.numClients()),
       op(data)
 
 {
     std::iota(orderNodes.begin(), orderNodes.end(), data.numDepots());
 
-    setNeighbours(neighbours);
     nodes.reserve(data.numLocations());
     for (size_t loc = 0; loc != data.numLocations(); ++loc)
         nodes.emplace_back(loc);

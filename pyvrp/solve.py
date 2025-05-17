@@ -163,8 +163,8 @@ def solve(
     pm = PenaltyManager(initial_penalties=([VALUE], VALUE, VALUE))
 
     nbhd = compute_neighbours(data)
-    max_runtime = stop.criteria[0]._max_runtime  # hack
-    perturb = DestroyRepair(data, rng, nbhd, max_runtime)
+    max_runtime = stop.criteria[0]._max_runtime  # type: ignore # noqa
+    perturb = DestroyRepair(data, rng, nbhd)
     ls = LocalSearch(data, rng, nbhd)
 
     for node_op in params.node_ops:

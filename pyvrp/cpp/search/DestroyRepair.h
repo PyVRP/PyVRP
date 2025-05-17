@@ -29,12 +29,6 @@ class DestroyRepair
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
 
-    // Load an initial solution that we will attempt to improve.
-    void loadSolution(Solution const &solution);
-
-    // Export the LS solution back into a solution.
-    Solution exportSolution() const;
-
     // Destroy the solution.
     void destroy(size_t numDestroy);
     void concentric(size_t numDestroy);
@@ -45,25 +39,9 @@ class DestroyRepair
     void repair(CostEvaluator const &costEvaluator);
     void greedyInsert(CostEvaluator const &costEvaluator);
 
-    // Updates solution state after an improving local search move.
-    void update(Route *U, Route *V);
-
 public:
     /**
-     * Set neighbourhood structure to use by the local search. For each client,
-     * the neighbourhood structure is a vector of nearby clients. Depots have
-     * no nearby client.
-     */
-    void setNeighbours(Neighbours neighbours);
-
-    /**
-     * @return The neighbourhood structure currently in use.
-     */
-    Neighbours const &neighbours() const;
-
-    /**
-     * Iteratively calls ``search()`` and ``intensify()`` until no further
-     * improvements are made.
+     * Destroys and repairs a solution with randomly selected operators.
      */
     Solution operator()(Solution const &solution,
                         CostEvaluator const &costEvaluator,

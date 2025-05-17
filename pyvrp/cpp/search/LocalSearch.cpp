@@ -15,7 +15,7 @@ Solution LocalSearch::operator()(Solution const &solution,
                                  std::vector<size_t> const &candidateNodes)
 {
     numEvaluations = 0;
-    loadSolution(solution);
+    loadSolution(solution, data, routes, nodes);
 
     candidates.reset();
     for (auto idx : candidateNodes)
@@ -24,23 +24,23 @@ Solution LocalSearch::operator()(Solution const &solution,
     search(costEvaluator);
     intensify(costEvaluator);
 
-    return exportSolution();
+    return exportSolution(routes, data);
 }
 
 Solution LocalSearch::search(Solution const &solution,
                              CostEvaluator const &costEvaluator)
 {
-    loadSolution(solution);
+    loadSolution(solution, data, routes, nodes);
     search(costEvaluator);
-    return exportSolution();
+    return exportSolution(routes, data);
 }
 
 Solution LocalSearch::intensify(Solution const &solution,
                                 CostEvaluator const &costEvaluator)
 {
-    loadSolution(solution);
+    loadSolution(solution, data, routes, nodes);
     intensify(costEvaluator);
-    return exportSolution();
+    return exportSolution(routes, data);
 }
 
 void LocalSearch::search(CostEvaluator const &costEvaluator)
@@ -405,64 +405,6 @@ void LocalSearch::update(Route *U, Route *V)
         for (auto *op : routeOps)  // this is used by some route operators
             op->update(V);         // to keep caches in sync.
     }
-}
-
-void LocalSearch::loadSolution(Solution const &solution)
-{
-    // First empty all routes.
-    for (auto &route : routes)
-        route.clear();
-
-    // Determine offsets for vehicle types.
-    std::vector<size_t> vehicleOffset(data.numVehicleTypes(), 0);
-    for (size_t vehType = 1; vehType < data.numVehicleTypes(); vehType++)
-    {
-        auto const prevAvail = data.vehicleType(vehType - 1).numAvailable;
-        vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
-    }
-
-    // Load routes from solution.
-    for (auto const &solRoute : solution.routes())
-    {
-        // Set up a container of all node visits. This lets us insert all nodes
-        // in one go, requiring no intermediate updates.
-        std::vector<Route::Node *> visits;
-        visits.reserve(solRoute.size());
-        for (auto const client : solRoute)
-            visits.push_back(&nodes[client]);
-
-        // Determine index of next route of this type to load, where we rely
-        // on solution to be valid to not exceed the number of vehicles per
-        // vehicle type.
-        auto const idx = vehicleOffset[solRoute.vehicleType()]++;
-        routes[idx].insert(1, visits.begin(), visits.end());
-        routes[idx].update();
-    }
-
-    for (auto *routeOp : routeOps)
-        routeOp->init(solution);
-}
-
-Solution LocalSearch::exportSolution() const
-{
-    std::vector<pyvrp::Route> solRoutes;
-    solRoutes.reserve(data.numVehicles());
-
-    for (auto const &route : routes)
-    {
-        if (route.empty())
-            continue;
-
-        std::vector<size_t> visits;
-        visits.reserve(route.size());
-
-        for (auto *node : route)
-            visits.push_back(node->client());
-
-        solRoutes.emplace_back(data, visits, route.vehicleType());
-    }
-
-    return {data, solRoutes};
 }
 
 void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }

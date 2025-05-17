@@ -45,12 +45,6 @@ class LocalSearch
     int numMoves = 0;              // Operator counter
     bool searchCompleted = false;  // No further improving move found?
 
-    // Load an initial solution that we will attempt to improve.
-    void loadSolution(Solution const &solution);
-
-    // Export the LS solution back into a solution.
-    Solution exportSolution() const;
-
     // Tests the node pair (U, V).
     bool applyNodeOps(Route::Node *U,
                       Route::Node *V,

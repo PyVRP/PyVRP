@@ -1,5 +1,3 @@
-import time
-
 from pyvrp._pyvrp import (
     CostEvaluator,
     ProblemData,
@@ -15,13 +13,8 @@ class DestroyRepair:
         data: ProblemData,
         rng: RandomNumberGenerator,
         neighbours: list[list[int]],
-        max_runtime: float,
     ):
         self._dr = _DestroyRepair(data, rng, neighbours)
-        self._rng = rng
-
-        self._start_time = time.perf_counter()
-        self._max_runtime = max_runtime
 
     def __call__(
         self,
