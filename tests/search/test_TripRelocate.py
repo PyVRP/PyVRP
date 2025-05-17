@@ -249,3 +249,11 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
     delta_dist = 1525 + 1114 - 504 - 1713  # = new minus old
     delta_time_warp = 2865 - 5395  # = new minus old
     assert_equal(delta_cost, delta_dist + delta_time_warp)
+
+
+def test_depot_service_duration():
+    """
+    Tests that reload depot insertions are correctly evaluated when the reload
+    depot has service duration.
+    """
+    pass  # TODO
