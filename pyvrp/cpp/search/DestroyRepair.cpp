@@ -91,6 +91,8 @@ void DestroyRepair::swaproutes(size_t numDestroy)
 {
     auto const idxU = rng.randint(data.numClients()) + data.numDepots();
     auto *rU = nodes[idxU].route();
+    if (!rU)  // no route so skip
+        return;
 
     // Find the indices of empty routes per vehicle type.
     std::vector<size_t> emptyRouteIdcs;
@@ -134,7 +136,11 @@ void DestroyRepair::greedyInsert(CostEvaluator const &costEvaluator)
             continue;
 
         ProblemData::Client const &uData = data.location(client);
-        if (!uData.required)  // skip optional clients
+
+        // Skip optional clients most of the times. We don't always
+        // skip/let this over to LS, because LS only inserts optional clients
+        // greedily and this type of insertion changes the search space.
+        if (!uData.required & (rng.randint(100) > 0))
             continue;
 
         Route::Node *UAfter = routes[0][0];

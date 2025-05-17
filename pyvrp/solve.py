@@ -179,7 +179,7 @@ def solve(
         max_runtime=max_runtime,
     )
 
-    cm = ConvergenceManager(initial_num_destroy=30, max_runtime=max_runtime)
+    cm = ConvergenceManager(initial_num_destroy=50, max_runtime=max_runtime)
     ils_args = (data, pm, rng, perturb, ls, accept, cm, params.ils)
     algo = IteratedLocalSearch(*ils_args)  # type: ignore
     init = Solution.make_random(data, rng)

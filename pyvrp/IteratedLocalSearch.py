@@ -29,7 +29,7 @@ class IteratedLocalSearchParams:
     Parameters for the iterated local search algorithm.
     """
 
-    num_iter_no_improvement: int = 50_000
+    num_iter_no_improvement: int = 5_000
 
     def __post_init__(self):
         if self.num_iter_no_improvement < 0:
@@ -129,7 +129,7 @@ class IteratedLocalSearch:
             perturbed = self._perturb(
                 current,
                 self._pm.booster_cost_evaluator(),
-                self._conv_manager.num_destroy,
+                max(10, self._conv_manager.num_destroy),
             )
             diff = different_neighbours(current, perturbed)
             candidate = self._search(
