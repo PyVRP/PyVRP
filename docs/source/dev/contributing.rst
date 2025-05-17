@@ -22,6 +22,14 @@ Now, change into the PyVRP directory, and set-up the virtual environment using `
 .. code-block:: shell
 
    cd PyVRP
+   uv sync --no-install-project
+
+We need to pass ``--no-install-project`` this once, to ensure the virtual environment is correctly set up before building PyVRP.
+This might take a minute, but only needs to be done once.
+Then, proceed with:
+
+.. code-block:: shell
+
    uv sync
 
 .. note::
@@ -32,7 +40,6 @@ Now, change into the PyVRP directory, and set-up the virtual environment using `
 
       uv sync --group docs --group examples
 
-This might take a minute, but only needs to be done once.
 Now make sure everything runs smoothly, by executing the test suite:
 
 .. code-block:: shell
@@ -73,7 +80,7 @@ Building the extensions
 PyVRP uses a number of native Python extensions that are written in C++ for performance.
 These extensions are built every time ``uv sync`` is used, but that command builds everything in release mode.
 While developing, one typically wants to use debug builds.
-These (and more) can be made by using the ``build_extensions.py`` script directly, as follows:
+Now that the virtual environment has bee prepared, these (and more) can be made by using the ``build_extensions.py`` script directly, as follows:
 
 .. code-block:: shell
 

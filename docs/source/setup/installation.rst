@@ -44,6 +44,7 @@ This goes like so:
 .. code-block:: shell
 
    cd PyVRP
+   uv sync --no-install-project
    uv sync --group examples
 
 This might take a minute to resolve, but only needs to be done once.

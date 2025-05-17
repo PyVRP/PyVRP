@@ -24,6 +24,8 @@ jobs:
           version: "0.7.5"
           enable-cache: true
           python-version: "3.13"
+      - name: Install Python dependencies
+        run: uv sync --no-install-project
       - name: Install pandoc
         run: sudo apt install pandoc
       - name: Set up GCC
