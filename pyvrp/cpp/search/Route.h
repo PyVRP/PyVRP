@@ -719,8 +719,15 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
     {
         auto const from = route_.visits[step];
         auto const to = route_.visits[step + 1];
+        auto edgeDur = mat(from, to);
+        if (from < route_.data.numDepots())
+        {
+            ProblemData::Depot const &depot = route_.data.location(from);
+            edgeDur += depot.serviceDuration;
+        }
+
         auto const &durAt = route_.durAt[step + 1];
-        durSegment = DurationSegment::merge(mat(from, to), durSegment, durAt);
+        durSegment = DurationSegment::merge(edgeDur, durSegment, durAt);
     }
 
     return durSegment;
@@ -968,8 +975,8 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 
             if (other.last() < data.numDepots())  // other ends at a depot
             {
-                // We can only finalise the current segment at the depot, so we
-                // first need to travel there.
+                // We can only finalise the current segment at the reload depot,
+                // so we first need to travel there and service.
                 ProblemData::Depot const &depot = data.location(other.last());
                 DurationSegment depotDS = {depot, depot.serviceDuration};
                 ds = DurationSegment::merge(edgeDur, depotDS, ds);

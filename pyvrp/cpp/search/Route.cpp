@@ -266,18 +266,11 @@ void Route::update()
 
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
     {
-        auto const *node = nodes[idx];
-
-        if (!node->isReloadDepot())
-        {
-            ProblemData::Client const &client = data.location(node->client());
-            durAt[idx] = {client};
-        }
-        else
-        {
-            ProblemData::Depot const &depot = data.location(node->client());
-            durAt[idx] = {depot, 0};
-        }
+        auto const location = data.location(visits[idx]);
+        if (visits[idx] >= data.numDepots())  // is client
+            durAt[idx] = {location};
+        else  // is depot
+            durAt[idx] = {location, 0};
     }
 
     auto const &durations = data.durationMatrix(profile());

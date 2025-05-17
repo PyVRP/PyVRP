@@ -37,7 +37,7 @@ public:
     pyvrp::DurationSegment duration([[maybe_unused]] size_t profile) const
     {
         pyvrp::ProblemData::Depot const &depot = data_.location(depot_);
-        return {depot, depot.serviceDuration};
+        return {depot, 0};
     }
 
     pyvrp::LoadSegment load([[maybe_unused]] size_t dimension) const
