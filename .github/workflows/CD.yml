@@ -5,7 +5,6 @@ on:
     types: [ created ]
   push:
     branches: [ main ]
-  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -61,6 +60,6 @@ jobs:
         run: uv build --sdist
       - name: List packaged distributions
         run: ls -la dist/
-      # - name: Deploy to PyPI
-      #   run: |
-      #     uv publish --token ${{ secrets.PYPI_TOKEN }}
+      - name: Deploy to PyPI
+        run: |
+          uv publish --token ${{ secrets.PYPI_TOKEN }}
