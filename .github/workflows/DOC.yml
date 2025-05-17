@@ -33,7 +33,7 @@ jobs:
           echo "CC=gcc-11" >> $GITHUB_ENV
           echo "CXX=g++-11" >> $GITHUB_ENV
       - name: Build PyVRP
-        run: uv sync
+        run: uv sync --group docs --group examples
       - name: Build documentation
         run: uv run make html --directory=docs
       - name: Upload documentation
