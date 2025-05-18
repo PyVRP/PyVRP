@@ -19,7 +19,7 @@ def main():
         install_dir = cwd / "pyvrp"
 
         clean(build_dir, install_dir)
-        build(build_dir, "release", "vrptw", verbose=False)
+        build(build_dir, build_type="release", verbose=False)
 
 
 if __name__ == "__main__":

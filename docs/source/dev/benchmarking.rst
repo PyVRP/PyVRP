@@ -14,7 +14,7 @@ We use the following instances and configurations to benchmark PyVRP:
 * For the CVRP, we use `the X-instances of Uchoa <http://vrp.atd-lab.inf.puc-rio.br/media/com_vrp/instances/Vrp-Set-X.tgz>`_.
   Each instance has :math:`n` clients; the runtimes are computed as :math:`2.4 n` seconds on a reference CPU with PassMark score 2183.
   Thus, an instance with 100 clients is ran for 240 seconds, assuming a CPU with PassMark score 2183.
-  For this benchmark, PyVRP needs to be compiled with the CVRP problem setting, and the ``round`` rounding function should be used.
+  For this benchmark, the ``round`` rounding function should be used.
   Additionally, the configuration specified in ``configs/cvrp.toml`` should be used.
 
 * For the VRPTW, we use `the Gehring and Homberger instances <http://vrp.atd-lab.inf.puc-rio.br/media/com_vrp/instances/Vrp-Set-HG.tgz>`_, particularly those with 1000 clients.
@@ -37,14 +37,14 @@ We use the following instances and configurations to benchmark PyVRP:
   These instances range in size from 523 to 1000 clients.
   Each instance has :math:`n` clients; the runtimes are computed as :math:`2.4 n` seconds on a reference CPU with PassMark score 2000.
   Thus, an instance with 100 clients is ran for 240 seconds, assuming a CPU with PassMark score 2000.
-  For this benchmark, PyVRP needs to be compiled with the CVRP problem setting, and the ``round`` rounding function should be used.
+  For this benchmark, the ``round`` rounding function should be used.
   Additionally, the configuration specified in ``configs/cvrp.toml`` should be used.
 
 * For the HFVRP, we use `the HFVRP instances of Pessoa et al. (2018) <https://github.com/PyVRP/Instances/tree/main/HFVRP#hfvrp>`_.
   These instances range in size from 100 to 1000 clients, and are based on the X instances for CVRP.
   Each instance has :math:`n` clients; the runtimes are computed as :math:`2.4 n` seconds on a reference CPU with PassMark score 2000.
   Thus, an instance with 100 clients is ran for 240 seconds, assuming a CPU with PassMark score 2000.
-  For this benchmark, PyVRP needs to be compiled with the CVRP problem setting, and the ``exact`` rounding function should be used.
+  For this benchmark, the ``exact`` rounding function should be used.
   Additionally, the configuration specified in ``configs/cvrp.toml`` should be used.
 
 * For the MTVRPTWR, we use `the instances of Yang (2023) and Yang (2024) <https://github.com/PyVRP/Instances/tree/main/MTVRPTWR#mtvrptwr>`_.
