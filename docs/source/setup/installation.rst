@@ -31,7 +31,7 @@ To run the example notebooks locally, first clone the repository:
 
    git clone https://github.com/PyVRP/PyVRP.git
 
-Then, make sure your Python version has ``uv``:
+Then, make sure to have [``uv``](https://docs.astral.sh/uv/getting-started/installation/) installed:
 
 .. code-block:: shell
 
