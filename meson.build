@@ -1,7 +1,14 @@
 project(
     'pyvrp',
     'cpp',
-    version: run_command('uv', 'version', '--short', check: true).stdout(),
+    version: run_command(
+        'grep',
+        '-oPm1',
+         # Matches lines with 'version = "XXX"', and extracts the XXX part.
+        'version\s*=\s*"\K[^"]+(?=")',
+        'pyproject.toml',
+        check: true,
+    ).stdout(),
     default_options: [
         'cpp_std=c++20',
         'b_ndebug=if-release',  # disables asserts in release builds
