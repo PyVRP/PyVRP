@@ -1,3 +1,7 @@
+"""
+Builds the native extensions.
+"""
+
 import argparse
 import pathlib
 from subprocess import check_call

@@ -1,3 +1,10 @@
+"""
+Wrapper file for building the native extensions. This file wraps the
+build_extensions script, and uses a temporary build directory for Meson.
+That's useful for ``uv sync`` and the default build backend, which should
+work in isolation.
+"""
+
 import pathlib
 import tempfile
 

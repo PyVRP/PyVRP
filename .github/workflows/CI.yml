@@ -81,7 +81,7 @@ jobs:
         # by default, but we need a debug build for test coverage.
         run: |
           uv sync
-          uv run build_extensions.py --build_type debug --clean
+          uv run buildtools/build_extensions.py --build_type debug --clean
       - name: Run tests and generate coverage reports
         run: |
           uv run pytest

@@ -65,21 +65,21 @@ Building the extensions
 PyVRP uses a number of native Python extensions that are written in C++ for performance.
 These extensions are built every time ``uv sync`` is used, but that command builds everything in release mode.
 While developing, one typically wants to use debug builds.
-Now that the virtual environment has bee prepared, these (and more) can be made by using the ``build_extensions.py`` script directly, as follows:
+Now that the virtual environment has bee prepared, these (and more) can be made by using the ``buildtools/build_extensions.py`` script directly, as follows:
 
 .. code-block:: shell
 
-   uv run build_extensions.py
+   uv run buildtools/build_extensions.py
 
 The script takes a number of command-line arguments, which you can discover using
 
 .. code-block:: shell
 
-   uv run build_extensions.py --help
+   uv run buildtools/build_extensions.py --help
 
 We use the Meson build system to compile the C++ extensions.
 Meson is configured using the ``meson.build`` file in the repository root. 
-You should not have to touch this file often: all compilation is handled via the ``build_extensions.py`` script.
+You should not have to touch this file often: all compilation is handled via the ``buildtools/build_extensions.py`` script.
 
 
 Debugging the extensions
@@ -92,7 +92,7 @@ First, build PyVRP in debug mode:
 
 .. code-block:: shell
 
-   uv run build_extensions.py --build_type debug
+   uv run buildtools/build_extensions.py --build_type debug
 
 Create a test Python file that calls some C++ code, like so:
 
@@ -136,7 +136,7 @@ First, build a debug optimised build of PyVRP, as follows:
 
 .. code-block:: shell
 
-   uv run build_extensions.py --build_type debugoptimized
+   uv run buildtools/build_extensions.py --build_type debugoptimized
 
 This ensures all debug symbols are retained, so the profiling output contains meaningful information.
 Next, we need to use a profiling tool, which varies based on your operating system.
