@@ -21,7 +21,7 @@ copyright = f"2022 - {now.year}, {authors}"
 
 with open("../../pyproject.toml", "rb") as fh:
     pyproj = tomli.load(fh)
-    release = version = pyproj["tool"]["poetry"]["version"]
+    release = version = pyproj["project"]["version"]
 
 with open("versions.json") as fh:  # type: ignore
     version_info = json.load(fh)
@@ -76,7 +76,7 @@ def linkcode_resolve(domain: str, info: dict) -> str | None:
     rel_path = source[source.rfind("pyvrp/") :]
     line_num = inspect.getsourcelines(obj)[1]
 
-    cmd = "git rev-parse --short HEAD".split()
+    cmd = ["git", "rev-parse", "--short", "HEAD"]
     revision = subprocess.check_output(cmd).strip().decode("ascii")
 
     return f"{repo_url}/blob/{revision}/{rel_path}#L{line_num}"
