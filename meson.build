@@ -2,13 +2,12 @@ project(
     'pyvrp',
     'cpp',
     version: run_command(
-        'grep',
-        '-oPm1',
-         # Matches lines with 'version = "XXX"', and extracts the XXX part.
-        'version\s*=\s*"\K[^"]+(?=")',
+        'awk',
+        # Matches first line with 'version = "XXX"', and extracts "XXX".
+        '/version/ { print $3; exit }',
         'pyproject.toml',
         check: true,
-    ).stdout(),
+    ).stdout().replace('"', ''),  # strip quotes from command output
     default_options: [
         'cpp_std=c++20',
         'b_ndebug=if-release',  # disables asserts in release builds
