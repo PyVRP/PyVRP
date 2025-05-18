@@ -65,7 +65,7 @@ Building the extensions
 PyVRP uses a number of native Python extensions that are written in C++ for performance.
 These extensions are built every time ``uv sync`` is used, but that command builds everything in release mode.
 While developing, one typically wants to use debug builds.
-Now that the virtual environment has bee prepared, these (and more) can be made by using the ``buildtools/build_extensions.py`` script directly, as follows:
+Now that the virtual environment has been prepared, these (and more) can be made by using the ``buildtools/build_extensions.py`` script directly, as follows:
 
 .. code-block:: shell
 

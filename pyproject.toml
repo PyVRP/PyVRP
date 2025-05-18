@@ -38,10 +38,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://pyvrp.org/"
-Documentation = "https://pyvrp.org/"
-Repository = "https://github.com/PyVRP/PyVRP"
-Tracker = "https://github.com/PyVRP/PyVRP/issues"
+homepage = "https://pyvrp.org/"
+documentation = "https://pyvrp.org/"
+source = "https://github.com/PyVRP/PyVRP"
+issues = "https://github.com/PyVRP/PyVRP/issues"
 
 
 [project.scripts]
