@@ -17,12 +17,6 @@ project(
     ]
 )
 
-if get_option('problem') == 'cvrp'
-    # CVRP does not have time windows, so we set a flag that compiles time 
-    # window stuff out of the extension modules.
-    add_project_arguments('-DPYVRP_NO_TIME_WINDOWS', language: 'cpp')
-endif
-
 compiler = meson.get_compiler('cpp')
 if compiler.has_argument('-Wno-dangling-reference')
     # This is a new diagnostic in GCC 13 and up, but it is a bit buggy right

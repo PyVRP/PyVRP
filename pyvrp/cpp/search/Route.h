@@ -636,11 +636,7 @@ DurationSegment
 Route::SegmentAfter::duration([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return {};
-#else
     return route_.durAfter[start];
-#endif
 }
 
 LoadSegment const &Route::SegmentAfter::load(size_t dimension) const
@@ -658,11 +654,7 @@ DurationSegment
 Route::SegmentBefore::duration([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return {};
-#else
     return route_.durBefore[end];
-#endif
 }
 
 LoadSegment const &Route::SegmentBefore::load(size_t dimension) const
@@ -709,9 +701,6 @@ Distance Route::SegmentBetween::distance(size_t profile) const
 DurationSegment
 Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return {};
-#else
     auto const &mat = route_.data.durationMatrix(profile);
     auto durSegment = route_.durAt[start];
 
@@ -724,7 +713,6 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
     }
 
     return durSegment;
-#endif
 }
 
 LoadSegment Route::SegmentBetween::load(size_t dimension) const
@@ -760,12 +748,8 @@ bool Route::hasExcessDistance() const
 
 bool Route::hasTimeWarp() const
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return false;
-#else
     assert(!dirty);
     return timeWarp() > 0;
-#endif
 }
 
 size_t Route::idx() const { return idx_; }
@@ -828,11 +812,7 @@ Cost Route::unitDistanceCost() const { return vehicleType_.unitDistanceCost; }
 Duration Route::duration() const
 {
     assert(!dirty);
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return 0;
-#else
     return durAfter[0].duration();
-#endif
 }
 
 Cost Route::durationCost() const
@@ -850,11 +830,7 @@ Distance Route::maxDistance() const { return vehicleType_.maxDistance; }
 Duration Route::timeWarp() const
 {
     assert(!dirty);
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return 0;
-#else
     return durAfter[0].timeWarp(maxDuration());
-#endif
 }
 
 size_t Route::profile() const { return vehicleType_.profile; }
@@ -943,9 +919,6 @@ Distance Route::Proposal<Segments...>::distance() const
 template <Segment... Segments>
 std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return std::make_pair(0, 0);
-#else
     auto const &data = route()->data;
     auto const maxDuration = route()->maxDuration();
     auto const profile = route()->profile();
@@ -996,7 +969,6 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
     };
 
     return std::apply(fn, detail::reverse(segments_));
-#endif  // PYVRP_NO_TIME_WINDOWS
 }
 
 template <Segment... Segments>
