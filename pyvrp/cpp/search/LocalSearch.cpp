@@ -272,7 +272,7 @@ bool LocalSearch::applyRouteOps(Route *U,
 }
 
 void LocalSearch::applyDepotRemovalMove(Route::Node *U,
-                                        CostEvaluator const &CostEvaluator)
+                                        CostEvaluator const &costEvaluator)
 {
     if (!U->isReloadDepot())
         return;
@@ -280,7 +280,7 @@ void LocalSearch::applyDepotRemovalMove(Route::Node *U,
     // We remove the depot when that's either better, or neutral. It can be
     // neutral if for example it's the same depot visited consecutively, but
     // that's then unnecessary.
-    if (removeCost(U, data, CostEvaluator) <= 0)
+    if (removeCost(U, data, costEvaluator) <= 0)
     {
         auto *route = U->route();
         route->remove(U->idx());
