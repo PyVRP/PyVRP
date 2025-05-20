@@ -956,7 +956,7 @@ PYBIND11_MODULE(_pyvrp, m)
              &CostEvaluator::distPenalty,
              py::arg("distance"),
              py::arg("max_distance"),
-             DOC(pyvrp, CostEvaluator, twPenalty))
+             DOC(pyvrp, CostEvaluator, distPenalty))
         .def("penalised_cost",
              &CostEvaluator::penalisedCost<Solution>,
              py::arg("solution"),
