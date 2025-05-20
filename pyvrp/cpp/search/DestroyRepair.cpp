@@ -26,7 +26,9 @@ void DestroyRepair::destroy(size_t numDestroy)
     auto const dIdx = rng.randint(2);
 
     if (rng.randint(2))
-        swaproutes(numDestroy);  // rename to change route type upgrade route
+        // TODO this may segfault if the upgraded vehicle type does not
+        // allow for the same reload depots.
+        swaproutes(numDestroy);
 
     if (dIdx == 0)
         concentric(numDestroy);
