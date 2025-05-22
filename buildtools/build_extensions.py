@@ -1,5 +1,8 @@
+"""
+Builds the native extensions.
+"""
+
 import argparse
-import os
 import pathlib
 from subprocess import check_call
 
@@ -17,12 +20,6 @@ def parse_args():
         default="release",
         choices=["debug", "debugoptimized", "release"],
         help="The type of build to provide. Defaults to release mode.",
-    )
-    parser.add_argument(
-        "--problem",
-        default="vrptw",
-        choices=["cvrp", "vrptw"],
-        help="Which type of solver to compile. Defaults to 'vrptw'.",
     )
     parser.add_argument(
         "--clean",
@@ -62,21 +59,19 @@ def clean(build_dir: pathlib.Path, install_dir: pathlib.Path):
 def configure(
     build_dir: pathlib.Path,
     build_type: str,
-    problem: str,
     *additional: list[str],
 ):
     cwd = pathlib.Path.cwd()
+    # fmt: off
     args = [
-        # fmt: off
         build_dir,
         "--buildtype", build_type,
         f"-Dpython.platlibdir={cwd.absolute()}",
-        f"-Dproblem={problem}",
         f"-Dstrip={'true' if build_type == 'release' else 'false'}",
         f"-Db_coverage={'true' if build_type != 'release' else 'false'}",
         *additional,
-        # fmt: on
     ]
+    # fmt: on
 
     cmd = "configure" if build_dir.exists() else "setup"
     check_call(["meson", cmd, *args])  # type: ignore
@@ -94,16 +89,10 @@ def install(build_dir: pathlib.Path):
 def build(
     build_dir: pathlib.Path,
     build_type: str,
-    problem: str,
     verbose: bool,
     *additional: list[str],
 ):
-    configure(
-        build_dir,
-        build_type,
-        problem,
-        *additional,
-    )
+    configure(build_dir, build_type, *additional)
     compile(build_dir, verbose)
     install(build_dir)
 
@@ -127,16 +116,13 @@ def main():
     cwd = pathlib.Path.cwd()
     build_dir = cwd / args.build_dir
 
-    if args.clean or os.environ.get("CIBUILDWHEEL", "0") == "1":
-        # Always start from an entirely clean build when building wheels in
-        # the CI. Else only do so when expressly asked.
+    if args.clean:
         install_dir = cwd / "pyvrp"
         clean(build_dir, install_dir)
 
     build_args = (
         build_dir,
         args.build_type,
-        args.problem,
         args.verbose,
         *args.additional,
     )

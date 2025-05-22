@@ -32,7 +32,7 @@ class Edge:
         loops have nonzero distance or duration values.
     """
 
-    __slots__ = ["frm", "to", "distance", "duration"]
+    __slots__ = ["distance", "duration", "frm", "to"]
 
     def __init__(
         self,
@@ -254,7 +254,6 @@ class Model:
         self,
         x: int,
         y: int,
-        service_duration: int = 0,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
         *,
@@ -264,14 +263,7 @@ class Model:
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Depot` instance.
         """
-        depot = Depot(
-            x=x,
-            y=y,
-            service_duration=service_duration,
-            tw_early=tw_early,
-            tw_late=tw_late,
-            name=name,
-        )
+        depot = Depot(x=x, y=y, tw_early=tw_early, tw_late=tw_late, name=name)
 
         self._depots.append(depot)
 
@@ -302,8 +294,14 @@ class Model:
 
            If ``profile`` is not provided, the edge is a base edge that will be
            set for all profiles in the model. Any profile-specific edge takes
-           precendence over a base edge with the same ``frm`` and ``to``
+           precedence over a base edge with the same ``frm`` and ``to``
            locations.
+
+        .. note::
+
+           If called repeatedly with the same ``frm``, ``to``, and ``profile``
+           arguments, only the edge constructed last is used. PyVRP does not
+           support multigraphs.
         """
         if profile is not None:
             return profile.add_edge(frm, to, distance, duration)
@@ -336,6 +334,8 @@ class Model:
         profile: Profile | None = None,
         start_late: int | None = None,
         initial_load: int | list[int] = [],
+        reload_depots: list[Depot] = [],
+        max_reloads: int = np.iinfo(np.uint64).max,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -375,6 +375,15 @@ class Model:
         else:
             raise ValueError("The given profile is not in this model.")
 
+        reloads: list[int] = []
+        for depot in reload_depots:
+            depot_idx = _idx_by_id(depot, self._depots)
+            if depot_idx is not None:
+                reloads.append(depot_idx)
+            else:
+                msg = "The given reload depot is not in this model."
+                raise ValueError(msg)
+
         init_load = initial_load
         if isinstance(init_load, int):
             init_load = [init_load]
@@ -394,6 +403,8 @@ class Model:
             profile=profile_idx,
             start_late=start_late,
             initial_load=init_load,
+            reload_depots=reloads,
+            max_reloads=max_reloads,
             name=name,
         )
 

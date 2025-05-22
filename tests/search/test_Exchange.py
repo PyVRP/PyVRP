@@ -27,6 +27,7 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._search import Node, Route
+from tests.helpers import make_search_route
 
 
 @pytest.mark.parametrize(
@@ -206,15 +207,15 @@ def test_relocate_after_depot_should_work(ok_small):
     assert_(op.evaluate(nodes[-1], route2[0], cost_evaluator) < 0)
 
     assert_(nodes[-1].route is route1)
-    assert_equal(len(route1), 3)
-    assert_equal(len(route2), 0)
+    assert_equal(route1.num_clients(), 3)
+    assert_equal(route2.num_clients(), 0)
 
     # Apply the move and check that the routes and nodes are appropriately
     # updated.
     op.apply(nodes[-1], route2[0])
     assert_(nodes[-1].route is route2)
-    assert_equal(len(route1), 2)
-    assert_equal(len(route2), 1)
+    assert_equal(route1.num_clients(), 2)
+    assert_equal(route2.num_clients(), 1)
 
 
 def test_relocate_only_happens_when_distance_and_duration_allow_it():
@@ -334,13 +335,8 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 
-    route1 = Route(data, idx=0, vehicle_type=0)
-    for loc in [2, 4, 1, 3]:
-        route1.append(Node(loc=loc))
-    route1.update()
-
-    route2 = Route(data, idx=1, vehicle_type=0)
-    route2.update()
+    route1 = make_search_route(data, [2, 4, 1, 3])
+    route2 = make_search_route(data, [], idx=1)
 
     # First route is not empty, second route is. The operator evaluates moving
     # some nodes to the second route, which would use both of them. That should
@@ -369,16 +365,8 @@ def test_exchange_with_max_duration_constraint(ok_small, op, max_dur, cost):
     data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 
-    # Two routes: first route 0 -> 2 -> 4 -> 0, second route 0 -> 1 -> 3 -> 0.
-    route1 = Route(data, idx=0, vehicle_type=0)
-    for loc in [2, 4]:
-        route1.append(Node(loc=loc))
-    route1.update()
-
-    route2 = Route(data, idx=1, vehicle_type=0)
-    for loc in [1, 3]:
-        route2.append(Node(loc=loc))
-    route2.update()
+    route1 = make_search_route(data, [2, 4], idx=0)
+    route2 = make_search_route(data, [1, 3], idx=1)
 
     # Without maximum duration, route1 has a duration of 5_229 and no time warp
     # while route2 has a duration of 5_814 and timewarp 2_087, for a net
@@ -412,15 +400,9 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
         duration_matrices=[np.zeros((4, 4), dtype=int)],
     )
 
-    op = operator(data)
-
-    route = Route(data, idx=0, vehicle_type=0)
-    for loc in [1, 2, 3]:
-        route.append(Node(loc=loc))
-    route.update()
-
     # Route is 1 -> 2 -> 3, and stores 1's pickup amount (5) before dropping
     # off 3's delivery amount (5). So total load is 10, and the excess load 5.
+    route = make_search_route(data, [1, 2, 3])
     assert_(not route.is_feasible())
     assert_equal(route.load(), [10])
     assert_equal(route.excess_load(), [5])
@@ -429,6 +411,7 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
     # excess load. For (1, 1)-exchange, we evaluate swapping 1 and 3, which
     # would also resolve the excess load: the important bit is that we visit 3
     # before 1.
+    op = operator(data)
     cost_eval = CostEvaluator([1], 1, 0)
     assert_equal(op.evaluate(route[1], route[3], cost_eval), -5)
 
@@ -450,13 +433,8 @@ def test_relocate_max_distance(ok_small, max_distance: int, expected: int):
     vehicle_type = VehicleType(2, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    route1 = Route(data, idx=0, vehicle_type=0)
-    for loc in [1, 2]:
-        route1.append(Node(loc=loc))
-    route1.update()
-
-    route2 = Route(data, idx=1, vehicle_type=0)
-    route2.update()
+    route1 = make_search_route(data, [1, 2], idx=0)
+    route2 = make_search_route(data, [], idx=1)
 
     assert_equal(route1.distance(), 5_501)
     assert_equal(route1.excess_distance(), max(5_501 - max_distance, 0))
@@ -505,14 +483,8 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
     vehicle_type = VehicleType(2, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    route1 = Route(data, idx=0, vehicle_type=0)
-    for loc in [1, 2]:
-        route1.append(Node(loc=loc))
-    route1.update()
-
-    route2 = Route(data, idx=1, vehicle_type=0)
-    route2.append(Node(loc=3))
-    route2.update()
+    route1 = make_search_route(data, [1, 2], idx=0)
+    route2 = make_search_route(data, [3], idx=1)
 
     assert_equal(route1.distance(), 5_501)
     assert_equal(route1.excess_distance(), max(5_501 - max_distance, 0))
@@ -555,13 +527,8 @@ def test_swap_with_different_profiles(ok_small_two_profiles):
     """
     data = ok_small_two_profiles
 
-    route1 = Route(data, idx=0, vehicle_type=0)
-    route1.append(Node(loc=3))
-    route1.update()
-
-    route2 = Route(data, idx=1, vehicle_type=1)
-    route2.append(Node(loc=4))
-    route2.update()
+    route1 = make_search_route(data, [3], idx=0, vehicle_type=0)
+    route2 = make_search_route(data, [4], idx=1, vehicle_type=1)
 
     op = Exchange11(data)
     cost_eval = CostEvaluator([0], 0, 0)  # all zero so no costs from penalties
@@ -572,3 +539,18 @@ def test_swap_with_different_profiles(ok_small_two_profiles):
     delta = dist1[0, 4] + dist1[4, 0] + dist2[0, 3] + dist2[3, 0]
     delta -= route1.distance() + route2.distance()
     assert_equal(op.evaluate(route1[1], route2[1], cost_eval), delta)
+
+
+def test_swap_does_not_swap_depots(ok_small_multiple_trips):
+    """
+    Tests that the exchange operator does not attempt moves that include moving
+    a reload depot.
+    """
+    data = ok_small_multiple_trips
+    route = make_search_route(data, [1, 2, 0, 3, 4])  # route is 1 2 | 3 4
+
+    op = Exchange21(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+
+    # This move overlaps with reload depot at index 3, so cannot be evaluated.
+    assert_equal(op.evaluate(route[2], route[4], cost_eval), 0)

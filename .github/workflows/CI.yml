@@ -4,7 +4,6 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -40,19 +39,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Update pip and poetry
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-      - name: Cache Python dependencies
-        uses: actions/cache@v4
-        id: cache-python
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          path: ~/.cache/pypoetry
-          key: ${{ runner.os }}-python-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+          version: "0.7.5"
+          enable-cache: true
       - name: Install Python dependencies
-        if: steps.cache-python.outputs.cache-hit != 'true'
-        run: poetry install --no-root --with examples
+        run: uv sync --no-install-project
       - name: Cache pre-commit
         uses: actions/cache@v4
         id: cache-pre-commit
@@ -61,9 +54,9 @@ jobs:
           key: pre-commit-${{ env.pythonLocation }}-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Install pre-commit
         if: steps.cache-pre-commit.outputs.cache-hit != 'true'
-        run: poetry run pre-commit install --install-hooks
+        run: uv run --no-sync pre-commit install --install-hooks
       - name: Run pre-commit
-        run: poetry run pre-commit run --all-files
+        run: uv run --no-sync pre-commit run --all-files
       - if: matrix.compiler == 'clang'
         name: Set up clang
         run: |
@@ -83,16 +76,16 @@ jobs:
           echo "CC=gcc" >> $GITHUB_ENV
           echo "CXX=g++" >> $GITHUB_ENV
       - name: Build pyvrp
-        # First, we install the project into the poetry environment. Ensures
+        # First, we install the project into the environment. This ensures
         # imports like "from pyvrp import X" work. This builds in release mode
         # by default, but we need a debug build for test coverage.
         run: |
-          poetry install --only-root
-          poetry run python build_extensions.py --build_type debug --clean
+          uv sync
+          uv run buildtools/build_extensions.py --build_type debug --clean
       - name: Run tests and generate coverage reports
         run: |
-          poetry run pytest
-          poetry run ninja coverage-xml -C build
+          uv run pytest
+          uv run ninja coverage-xml -C build
       - uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
@@ -114,4 +107,4 @@ jobs:
         # TODO also run with --leak-check=full?
         run: |
           VALGRIND_CMD="bench solve tests/data/RC208.vrp --round_func dimacs --max_runtime 0.5 --seed 1"
-          poetry run env PYTHONMALLOC=malloc valgrind --tool=memcheck --quiet $VALGRIND_CMD
+          uv run env PYTHONMALLOC=malloc valgrind --tool=memcheck --quiet $VALGRIND_CMD
