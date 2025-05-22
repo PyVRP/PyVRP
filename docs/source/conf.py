@@ -1,6 +1,7 @@
 import datetime
 import importlib
 import inspect
+import json
 import os
 import shutil
 import subprocess
@@ -20,7 +21,10 @@ copyright = f"2022 - {now.year}, {authors}"
 
 with open("../../pyproject.toml", "rb") as fh:
     pyproj = tomli.load(fh)
-    release = version = pyproj["tool"]["poetry"]["version"]
+    release = version = pyproj["project"]["version"]
+
+with open("versions.json") as fh:  # type: ignore
+    version_info = json.load(fh)
 
 print("Copying example notebooks into docs/source/examples/")
 shutil.copytree("../../examples", "examples/", dirs_exist_ok=True)
@@ -72,7 +76,7 @@ def linkcode_resolve(domain: str, info: dict) -> str | None:
     rel_path = source[source.rfind("pyvrp/") :]
     line_num = inspect.getsourcelines(obj)[1]
 
-    cmd = "git rev-parse --short HEAD".split()
+    cmd = ["git", "rev-parse", "--short", "HEAD"]
     revision = subprocess.check_output(cmd).strip().decode("ascii")
 
     return f"{repo_url}/blob/{revision}/{rel_path}#L{line_num}"
@@ -153,63 +157,7 @@ html_theme_options = {
         },
     ],
     "version_dropdown": True,
-    "version_info": [  # TODO: move this out of the configuration file
-        {
-            "version": "",
-            "title": "Development",
-            "aliases": [],
-        },
-        {
-            "version": "https://pyvrp.github.io/v0.10.0",
-            "title": "v0.10.0",
-            "aliases": [],
-        },
-        {
-            "version": "https://pyvrp.github.io/v0.9.0",
-            "title": "v0.9.0",
-            "aliases": [],
-        },
-        {
-            "version": "https://pyvrp.github.io/v0.8.1",
-            "title": "v0.8.1",
-            "aliases": [],
-        },
-        {
-            "version": "https://pyvrp.github.io/v0.7.0",
-            "title": "v0.7.0",
-            "aliases": [],
-        },
-        {
-            "version": "https://pyvrp.github.io/v0.6.0",
-            "title": "v0.6.0",
-            "aliases": [],
-        },
-        {
-            "version": "https://pyvrp.github.io/v0.5.0",
-            "title": "v0.5.0",
-            "aliases": [],
-        },
-        {
-            "version": "https://pyvrp.github.io/v0.4.4",
-            "title": "v0.4.4",
-            "aliases": [],
-        },
-        {
-            "version": "https://pyvrp.github.io/v0.3.0",
-            "title": "v0.3.0",
-            "aliases": [],
-        },
-        {
-            "version": "https://pyvrp.github.io/v0.2.1",
-            "title": "v0.2.1",
-            "aliases": [],
-        },
-        {
-            "version": "https://pyvrp.github.io/v0.1.0",
-            "title": "v0.1.0",
-            "aliases": [],
-        },
-    ],
+    "version_info": version_info,
 }
 
 python_resolve_unqualified_typing = True

@@ -1,6 +1,5 @@
 #include "bindings.h"
 #include "CostEvaluator.h"
-#include "DistanceSegment.h"
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
 #include "LoadSegment.h"
@@ -10,6 +9,7 @@
 #include "Route.h"
 #include "Solution.h"
 #include "SubPopulation.h"
+#include "Trip.h"
 #include "pyvrp_docs.h"
 
 #include <pybind11/functional.h>
@@ -18,6 +18,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <memory>
 #include <sstream>
 #include <string>
 #include <variant>
@@ -25,7 +26,6 @@
 namespace py = pybind11;
 
 using pyvrp::CostEvaluator;
-using pyvrp::DistanceSegment;
 using pyvrp::DurationSegment;
 using pyvrp::DynamicBitset;
 using pyvrp::LoadSegment;
@@ -36,6 +36,7 @@ using pyvrp::RandomNumberGenerator;
 using pyvrp::Route;
 using pyvrp::Solution;
 using pyvrp::SubPopulation;
+using pyvrp::Trip;
 
 PYBIND11_MODULE(_pyvrp, m)
 {
@@ -92,8 +93,12 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("name") = "")
         .def_readonly("x", &ProblemData::Client::x)
         .def_readonly("y", &ProblemData::Client::y)
-        .def_readonly("delivery", &ProblemData::Client::delivery)
-        .def_readonly("pickup", &ProblemData::Client::pickup)
+        .def_readonly("delivery",
+                      &ProblemData::Client::delivery,
+                      py::return_value_policy::reference_internal)
+        .def_readonly("pickup",
+                      &ProblemData::Client::pickup,
+                      py::return_value_policy::reference_internal)
         .def_readonly("service_duration", &ProblemData::Client::serviceDuration)
         .def_readonly("tw_early", &ProblemData::Client::twEarly)
         .def_readonly("tw_late", &ProblemData::Client::twLate)
@@ -191,7 +196,9 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::ClientGroup::addClient,
              py::arg("client"))
         .def("clear", &ProblemData::ClientGroup::clear)
-        .def_property_readonly("clients", &ProblemData::ClientGroup::clients)
+        .def_property_readonly("clients",
+                               &ProblemData::ClientGroup::clients,
+                               py::return_value_policy::reference_internal)
         .def_readonly("required", &ProblemData::ClientGroup::required)
         .def_readonly("mutually_exclusive",
                       &ProblemData::ClientGroup::mutuallyExclusive)
@@ -230,6 +237,8 @@ PYBIND11_MODULE(_pyvrp, m)
                       size_t,
                       std::optional<pyvrp::Duration>,
                       std::vector<pyvrp::Load>,
+                      std::vector<size_t>,
+                      size_t,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
@@ -247,10 +256,14 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("profile") = 0,
              py::arg("start_late") = py::none(),
              py::arg("initial_load") = py::list(),
+             py::arg("reload_depots") = py::list(),
+             py::arg("max_reloads") = std::numeric_limits<size_t>::max(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
-        .def_readonly("capacity", &ProblemData::VehicleType::capacity)
+        .def_readonly("capacity",
+                      &ProblemData::VehicleType::capacity,
+                      py::return_value_policy::reference_internal)
         .def_readonly("start_depot", &ProblemData::VehicleType::startDepot)
         .def_readonly("end_depot", &ProblemData::VehicleType::endDepot)
         .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
@@ -264,7 +277,14 @@ PYBIND11_MODULE(_pyvrp, m)
                       &ProblemData::VehicleType::unitDurationCost)
         .def_readonly("profile", &ProblemData::VehicleType::profile)
         .def_readonly("start_late", &ProblemData::VehicleType::startLate)
-        .def_readonly("initial_load", &ProblemData::VehicleType::initialLoad)
+        .def_readonly("initial_load",
+                      &ProblemData::VehicleType::initialLoad,
+                      py::return_value_policy::reference_internal)
+        .def_readonly("reload_depots",
+                      &ProblemData::VehicleType::reloadDepots,
+                      py::return_value_policy::reference_internal)
+        .def_readonly("max_reloads", &ProblemData::VehicleType::maxReloads)
+        .def_property_readonly("max_trips", &ProblemData::VehicleType::maxTrips)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
@@ -284,6 +304,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("profile") = py::none(),
              py::arg("start_late") = py::none(),
              py::arg("initial_load") = py::none(),
+             py::arg("reload_depots") = py::none(),
+             py::arg("max_reloads") = py::none(),
              py::kw_only(),
              py::arg("name") = py::none(),
              DOC(pyvrp, ProblemData, VehicleType, replace))
@@ -304,6 +326,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.profile,
                                       vehicleType.startLate,
                                       vehicleType.initialLoad,
+                                      vehicleType.reloadDepots,
+                                      vehicleType.maxReloads,
                                       vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
@@ -322,7 +346,9 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[11].cast<size_t>(),           // profile
                     t[12].cast<pyvrp::Duration>(),  // start late
                     t[13].cast<std::vector<pyvrp::Load>>(),  // initial load
-                    t[14].cast<std::string>());              // name
+                    t[14].cast<std::vector<size_t>>(),       // reload depots
+                    t[15].cast<size_t>(),                    // max reloads
+                    t[16].cast<std::string>());              // name
 
                 return vehicleType;
             }))
@@ -472,8 +498,121 @@ PYBIND11_MODULE(_pyvrp, m)
                 return data;
             }));
 
+    py::class_<Trip>(m, "Trip", DOC(pyvrp, Trip))
+        .def(py::init<ProblemData const &,
+                      std::vector<size_t>,
+                      size_t,
+                      std::optional<size_t>,
+                      std::optional<size_t>>(),
+             py::arg("data"),
+             py::arg("visits"),
+             py::arg("vehicle_type"),
+             py::arg("start_depot") = py::none(),
+             py::arg("end_depot") = py::none())
+        .def("visits",
+             &Trip::visits,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Trip, visits))
+        .def("distance", &Trip::distance, DOC(pyvrp, Trip, distance))
+        .def("delivery",
+             &Trip::delivery,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Trip, delivery))
+        .def("pickup",
+             &Trip::pickup,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Trip, pickup))
+        .def("load",
+             &Trip::load,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Trip, load))
+        .def("excess_load",
+             &Trip::excessLoad,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Trip, excessLoad))
+        .def("travel_duration",
+             &Trip::travelDuration,
+             DOC(pyvrp, Trip, travelDuration))
+        .def("service_duration",
+             &Trip::serviceDuration,
+             DOC(pyvrp, Trip, serviceDuration))
+        .def("release_time", &Trip::releaseTime, DOC(pyvrp, Trip, releaseTime))
+        .def("prizes", &Trip::prizes, DOC(pyvrp, Trip, prizes))
+        .def("centroid", &Trip::centroid, DOC(pyvrp, Trip, centroid))
+        .def("vehicle_type", &Trip::vehicleType, DOC(pyvrp, Trip, vehicleType))
+        .def("start_depot", &Trip::startDepot, DOC(pyvrp, Trip, startDepot))
+        .def("end_depot", &Trip::endDepot, DOC(pyvrp, Trip, endDepot))
+        .def("has_excess_load",
+             &Trip::hasExcessLoad,
+             DOC(pyvrp, Trip, hasExcessLoad))
+        .def(py::self == py::self)  // this is __eq__
+        .def("__len__", &Trip::size, DOC(pyvrp, Trip, size))
+        .def(
+            "__iter__",
+            [](Trip const &trip)
+            { return py::make_iterator(trip.begin(), trip.end()); },
+            py::return_value_policy::reference_internal)
+        .def(
+            "__getitem__",
+            [](Trip const &trip, int idx)
+            {
+                // int so we also support negative offsets from the end.
+                idx = idx < 0 ? trip.size() + idx : idx;
+                if (idx < 0 || static_cast<size_t>(idx) >= trip.size())
+                    throw py::index_error();
+                return trip[idx];
+            },
+            py::arg("idx"))
+        .def(py::pickle(
+            [](Trip const &trip) {  // __getstate__
+                // Returns a tuple that completely encodes the trip's state.
+                return py::make_tuple(trip.visits(),
+                                      trip.distance(),
+                                      trip.delivery(),
+                                      trip.pickup(),
+                                      trip.load(),
+                                      trip.excessLoad(),
+                                      trip.travelDuration(),
+                                      trip.serviceDuration(),
+                                      trip.releaseTime(),
+                                      trip.prizes(),
+                                      trip.centroid(),
+                                      trip.vehicleType(),
+                                      trip.startDepot(),
+                                      trip.endDepot());
+            },
+            [](py::tuple t) {  // __setstate__
+                using Loads = std::vector<pyvrp::Load>;
+
+                Trip trip(t[0].cast<Trip::Visits>(),     // visits
+                          t[1].cast<pyvrp::Distance>(),  // distance
+                          t[2].cast<Loads>(),            // delivery
+                          t[3].cast<Loads>(),            // pickup
+                          t[4].cast<Loads>(),            // load
+                          t[5].cast<Loads>(),            // excess load
+                          t[6].cast<pyvrp::Duration>(),  // travel
+                          t[7].cast<pyvrp::Duration>(),  // service
+                          t[8].cast<pyvrp::Duration>(),  // release
+                          t[9].cast<pyvrp::Cost>(),      // prizes
+                          t[10].cast<std::pair<double, double>>(),  // centroid
+                          t[11].cast<size_t>(),   // vehicle type
+                          t[12].cast<size_t>(),   // start depot
+                          t[13].cast<size_t>());  // end depot
+
+                return trip;
+            }))
+        .def("__str__",
+             [](Trip const &trip)
+             {
+                 std::stringstream stream;
+                 stream << trip;
+                 return stream.str();
+             });
+
     py::class_<Route::ScheduledVisit>(
         m, "ScheduledVisit", DOC(pyvrp, Route, ScheduledVisit))
+        .def_readonly("location", &Route::ScheduledVisit::location)
+        .def_readonly("trip", &Route::ScheduledVisit::trip)
         .def_readonly("start_service", &Route::ScheduledVisit::startService)
         .def_readonly("end_service", &Route::ScheduledVisit::endService)
         .def_readonly("wait_duration", &Route::ScheduledVisit::waitDuration)
@@ -482,17 +621,21 @@ PYBIND11_MODULE(_pyvrp, m)
                                &Route::ScheduledVisit::serviceDuration)
         .def(py::pickle(
             [](Route::ScheduledVisit const &visit) {  // __getstate__
-                return py::make_tuple(visit.startService,
+                return py::make_tuple(visit.location,
+                                      visit.trip,
+                                      visit.startService,
                                       visit.endService,
                                       visit.waitDuration,
                                       visit.timeWarp);
             },
             [](py::tuple t) {  // __setstate__
                 Route::ScheduledVisit visit(
-                    t[0].cast<pyvrp::Duration>(),   // start service
-                    t[1].cast<pyvrp::Duration>(),   // end service
-                    t[2].cast<pyvrp::Duration>(),   // wait duration
-                    t[3].cast<pyvrp::Duration>());  // time warp
+                    t[0].cast<size_t>(),            // location
+                    t[1].cast<size_t>(),            // trip
+                    t[2].cast<pyvrp::Duration>(),   // start service
+                    t[3].cast<pyvrp::Duration>(),   // end service
+                    t[4].cast<pyvrp::Duration>(),   // wait duration
+                    t[5].cast<pyvrp::Duration>());  // time warp
 
                 return visit;
             }));
@@ -502,6 +645,20 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("data"),
              py::arg("visits"),
              py::arg("vehicle_type"))
+        .def(py::init<ProblemData const &, std::vector<Trip>, size_t>(),
+             py::arg("data"),
+             py::arg("visits"),  // name is compatible with other constructor
+             py::arg("vehicle_type"))
+        .def("num_trips", &Route::numTrips, DOC(pyvrp, Route, numTrips))
+        .def("trips",
+             &Route::trips,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, trips))
+        .def("trip",
+             &Route::trip,
+             py::arg("idx"),
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, trip))
         .def("visits",
              &Route::visits,
              py::return_value_policy::reference_internal,
@@ -513,9 +670,18 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("excess_distance",
              &Route::excessDistance,
              DOC(pyvrp, Route, excessDistance))
-        .def("delivery", &Route::delivery, DOC(pyvrp, Route, delivery))
-        .def("pickup", &Route::pickup, DOC(pyvrp, Route, pickup))
-        .def("excess_load", &Route::excessLoad, DOC(pyvrp, Route, excessLoad))
+        .def("delivery",
+             &Route::delivery,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, delivery))
+        .def("pickup",
+             &Route::pickup,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, pickup))
+        .def("excess_load",
+             &Route::excessLoad,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, excessLoad))
         .def("duration", &Route::duration, DOC(pyvrp, Route, duration))
         .def("duration_cost",
              &Route::durationCost,
@@ -562,18 +728,15 @@ PYBIND11_MODULE(_pyvrp, m)
             "__getitem__",
             [](Route const &route, int idx)
             {
-                // int so we also support negative offsets from the end.
-                idx = idx < 0 ? route.size() + idx : idx;
-                if (idx < 0 || static_cast<size_t>(idx) >= route.size())
-                    throw py::index_error();
-                return route[idx];
+                // conditional so we support negative offsets from the end.
+                return route[idx < 0 ? route.size() + idx : idx];
             },
             py::arg("idx"))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](Route const &route) {  // __getstate__
                 // Returns a tuple that completely encodes the route's state.
-                return py::make_tuple(route.visits(),
+                return py::make_tuple(route.trips(),
                                       route.distance(),
                                       route.distanceCost(),
                                       route.excessDistance(),
@@ -585,8 +748,6 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.timeWarp(),
                                       route.travelDuration(),
                                       route.serviceDuration(),
-                                      route.waitDuration(),
-                                      route.releaseTime(),
                                       route.startTime(),
                                       route.slack(),
                                       route.prizes(),
@@ -597,10 +758,11 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.schedule());
             },
             [](py::tuple t) {  // __setstate__
+                using Trips = std::vector<Trip>;
                 using Schedule = std::vector<Route::ScheduledVisit>;
 
                 Route route(
-                    t[0].cast<std::vector<size_t>>(),         // visits
+                    t[0].cast<Trips>(),                       // trips
                     t[1].cast<pyvrp::Distance>(),             // distance
                     t[2].cast<pyvrp::Cost>(),                 // distance cost
                     t[3].cast<pyvrp::Distance>(),             // excess distance
@@ -612,16 +774,14 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[9].cast<pyvrp::Duration>(),             // time warp
                     t[10].cast<pyvrp::Duration>(),            // travel
                     t[11].cast<pyvrp::Duration>(),            // service
-                    t[12].cast<pyvrp::Duration>(),            // wait
-                    t[13].cast<pyvrp::Duration>(),            // release
-                    t[14].cast<pyvrp::Duration>(),            // start time
-                    t[15].cast<pyvrp::Duration>(),            // slack
-                    t[16].cast<pyvrp::Cost>(),                // prizes
-                    t[17].cast<std::pair<double, double>>(),  // centroid
-                    t[18].cast<size_t>(),                     // vehicle type
-                    t[19].cast<size_t>(),                     // start depot
-                    t[20].cast<size_t>(),                     // end depot
-                    t[21].cast<Schedule>());                  // visit schedule
+                    t[12].cast<pyvrp::Duration>(),            // start time
+                    t[13].cast<pyvrp::Duration>(),            // slack
+                    t[14].cast<pyvrp::Cost>(),                // prizes
+                    t[15].cast<std::pair<double, double>>(),  // centroid
+                    t[16].cast<size_t>(),                     // vehicle type
+                    t[17].cast<size_t>(),                     // start depot
+                    t[18].cast<size_t>(),                     // end depot
+                    t[19].cast<Schedule>());                  // visit schedule
 
                 return route;
             }))
@@ -633,7 +793,8 @@ PYBIND11_MODULE(_pyvrp, m)
                  return stream.str();
              });
 
-    py::class_<Solution>(m, "Solution", DOC(pyvrp, Solution))
+    py::class_<Solution, std::shared_ptr<Solution>>(
+        m, "Solution", DOC(pyvrp, Solution))
         // Since Route implements __len__ and __getitem__, it is convertible to
         // std::vector<size_t> and thus a list of Routes is a valid argument for
         // both constructors. We want to avoid using the second constructor
@@ -662,6 +823,7 @@ PYBIND11_MODULE(_pyvrp, m)
             })
         .def(
             "num_routes", &Solution::numRoutes, DOC(pyvrp, Solution, numRoutes))
+        .def("num_trips", &Solution::numTrips, DOC(pyvrp, Solution, numTrips))
         .def("num_clients",
              &Solution::numClients,
              DOC(pyvrp, Solution, numClients))
@@ -794,7 +956,7 @@ PYBIND11_MODULE(_pyvrp, m)
              &CostEvaluator::distPenalty,
              py::arg("distance"),
              py::arg("max_distance"),
-             DOC(pyvrp, CostEvaluator, twPenalty))
+             DOC(pyvrp, CostEvaluator, distPenalty))
         .def("penalised_cost",
              &CostEvaluator::penalisedCost<Solution>,
              py::arg("solution"),
@@ -905,30 +1067,34 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("cost_evaluator"),
              DOC(pyvrp, SubPopulation, updateFitness));
 
-    py::class_<DistanceSegment>(
-        m, "DistanceSegment", DOC(pyvrp, DistanceSegment))
-        .def(py::init<pyvrp::Distance>(), py::arg("distance"))
-        .def("distance",
-             &DistanceSegment::distance,
-             DOC(pyvrp, DistanceSegment, distance))
-        .def_static("merge",
-                    &DistanceSegment::merge,
-                    py::arg("edge_distance"),
-                    py::arg("first"),
-                    py::arg("second"));
-
     py::class_<LoadSegment>(m, "LoadSegment", DOC(pyvrp, LoadSegment))
-        .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
+        .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
              py::arg("delivery"),
              py::arg("pickup"),
-             py::arg("load"))
+             py::arg("load"),
+             py::arg("excess_load") = 0)
         .def("delivery",
              &LoadSegment::delivery,
              DOC(pyvrp, LoadSegment, delivery))
         .def("pickup", &LoadSegment::pickup, DOC(pyvrp, LoadSegment, pickup))
         .def("load", &LoadSegment::load, DOC(pyvrp, LoadSegment, load))
+        .def("excess_load",
+             &LoadSegment::excessLoad,
+             py::arg("capacity"),
+             DOC(pyvrp, LoadSegment, excessLoad))
+        .def("finalise",
+             &LoadSegment::finalise,
+             py::arg("capacity"),
+             DOC(pyvrp, LoadSegment, finalise))
         .def_static(
-            "merge", &LoadSegment::merge, py::arg("first"), py::arg("second"));
+            "merge", &LoadSegment::merge, py::arg("first"), py::arg("second"))
+        .def("__str__",
+             [](LoadSegment const &segment)
+             {
+                 std::stringstream stream;
+                 stream << segment;
+                 return stream.str();
+             });
 
     py::class_<DurationSegment>(
         m, "DurationSegment", DOC(pyvrp, DurationSegment))
@@ -936,21 +1102,49 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
                       pyvrp::Duration>(),
              py::arg("duration"),
              py::arg("time_warp"),
-             py::arg("tw_early"),
-             py::arg("tw_late"),
-             py::arg("release_time"))
+             py::arg("start_early"),
+             py::arg("start_late"),
+             py::arg("release_time"),
+             py::arg("cum_duration") = 0,
+             py::arg("cum_time_warp") = 0,
+             py::arg("prev_end_late")
+             = std::numeric_limits<pyvrp::Duration>::max())
         .def("duration",
              &DurationSegment::duration,
              DOC(pyvrp, DurationSegment, duration))
-        .def("tw_early",
-             &DurationSegment::twEarly,
-             DOC(pyvrp, DurationSegment, twEarly))
-        .def("tw_late",
-             &DurationSegment::twLate,
-             DOC(pyvrp, DurationSegment, twLate))
+        .def("finalise_back",
+             &DurationSegment::finaliseBack,
+             DOC(pyvrp, DurationSegment, finaliseBack))
+        .def("finalise_front",
+             &DurationSegment::finaliseFront,
+             DOC(pyvrp, DurationSegment, finaliseFront))
+        .def("start_early",
+             &DurationSegment::startEarly,
+             DOC(pyvrp, DurationSegment, startEarly))
+        .def("start_late",
+             &DurationSegment::startLate,
+             DOC(pyvrp, DurationSegment, startLate))
+        .def("end_early",
+             &DurationSegment::endEarly,
+             DOC(pyvrp, DurationSegment, endEarly))
+        .def("end_late",
+             &DurationSegment::endLate,
+             DOC(pyvrp, DurationSegment, endLate))
+        .def("prev_end_late",
+             &DurationSegment::prevEndLate,
+             DOC(pyvrp, DurationSegment, prevEndLate))
+        .def("release_time",
+             &DurationSegment::releaseTime,
+             DOC(pyvrp, DurationSegment, releaseTime))
+        .def("slack",
+             &DurationSegment::slack,
+             DOC(pyvrp, DurationSegment, slack))
         .def("time_warp",
              &DurationSegment::timeWarp,
              py::arg("max_duration")
@@ -960,7 +1154,14 @@ PYBIND11_MODULE(_pyvrp, m)
                     &DurationSegment::merge,
                     py::arg("edge_duration"),
                     py::arg("first"),
-                    py::arg("second"));
+                    py::arg("second"))
+        .def("__str__",
+             [](DurationSegment const &segment)
+             {
+                 std::stringstream stream;
+                 stream << segment;
+                 return stream.str();
+             });
 
     py::class_<RandomNumberGenerator>(
         m, "RandomNumberGenerator", DOC(pyvrp, RandomNumberGenerator))

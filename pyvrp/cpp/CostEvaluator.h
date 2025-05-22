@@ -7,6 +7,7 @@
 #include <cassert>
 #include <concepts>
 #include <limits>
+#include <utility>
 #include <vector>
 
 namespace pyvrp
@@ -38,9 +39,9 @@ concept PrizeCostEvaluatable = CostEvaluatable<T> && requires(T arg) {
 template <typename T>
 concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
     { arg.route() };
-    { arg.distanceSegment() };
-    { arg.durationSegment() };
-    { arg.loadSegment(dimension) };
+    { arg.distance() } -> std::same_as<Distance>;
+    { arg.duration() } -> std::convertible_to<std::pair<Duration, Duration>>;
+    { arg.excessLoad(dimension) } -> std::same_as<Load>;
 };
 
 /**
@@ -207,11 +208,7 @@ Cost CostEvaluator::loadPenalty(Load load,
 
 Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return 0;
-#else
     return static_cast<Cost>(timeWarp.get() * twPenalty_);
-#endif
 }
 
 Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance) const
@@ -263,9 +260,9 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     out -= route->durationCost();
     out -= twPenalty(route->timeWarp());
 
-    auto const dist = proposal.distanceSegment();
-    out += route->unitDistanceCost() * static_cast<Cost>(dist.distance());
-    out += distPenalty(dist.distance(), route->maxDistance());
+    auto const distance = proposal.distance();
+    out += route->unitDistanceCost() * static_cast<Cost>(distance);
+    out += distPenalty(distance, route->maxDistance());
 
     if constexpr (!exact)
         if (out >= 0)
@@ -275,13 +272,12 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     {
         auto const &capacity = route->capacity();
         for (size_t dim = 0; dim != capacity.size(); ++dim)
-            out += loadPenalty(
-                proposal.loadSegment(dim).load(), capacity[dim], dim);
+            out += loadPenalty(proposal.excessLoad(dim), 0, dim);
     }
 
-    auto const duration = proposal.durationSegment();
-    out += route->unitDurationCost() * static_cast<Cost>(duration.duration());
-    out += twPenalty(duration.timeWarp(route->maxDuration()));
+    auto const [duration, timeWarp] = proposal.duration();
+    out += route->unitDurationCost() * static_cast<Cost>(duration);
+    out += twPenalty(timeWarp);
 
     return true;
 }
@@ -319,13 +315,13 @@ bool CostEvaluator::deltaCost(Cost &out,
     out -= vRoute->durationCost();
     out -= twPenalty(vRoute->timeWarp());
 
-    auto const uDist = uProposal.distanceSegment();
-    out += uRoute->unitDistanceCost() * static_cast<Cost>(uDist.distance());
-    out += distPenalty(uDist.distance(), uRoute->maxDistance());
+    auto const uDist = uProposal.distance();
+    out += uRoute->unitDistanceCost() * static_cast<Cost>(uDist);
+    out += distPenalty(uDist, uRoute->maxDistance());
 
-    auto const vDist = vProposal.distanceSegment();
-    out += vRoute->unitDistanceCost() * static_cast<Cost>(vDist.distance());
-    out += distPenalty(vDist.distance(), vRoute->maxDistance());
+    auto const vDist = vProposal.distance();
+    out += vRoute->unitDistanceCost() * static_cast<Cost>(vDist);
+    out += distPenalty(vDist, vRoute->maxDistance());
 
     if constexpr (!exact)
         if (out >= 0)
@@ -335,26 +331,24 @@ bool CostEvaluator::deltaCost(Cost &out,
     {
         auto const &uCapacity = uRoute->capacity();
         for (size_t dim = 0; dim != uCapacity.size(); ++dim)
-            out += loadPenalty(
-                uProposal.loadSegment(dim).load(), uCapacity[dim], dim);
+            out += loadPenalty(uProposal.excessLoad(dim), 0, dim);
 
         auto const &vCapacity = vRoute->capacity();
         for (size_t dim = 0; dim != vCapacity.size(); ++dim)
-            out += loadPenalty(
-                vProposal.loadSegment(dim).load(), vCapacity[dim], dim);
+            out += loadPenalty(vProposal.excessLoad(dim), 0, dim);
     }
 
     if constexpr (!exact)
         if (out >= 0)
             return false;
 
-    auto const uDuration = uProposal.durationSegment();
-    out += uRoute->unitDurationCost() * static_cast<Cost>(uDuration.duration());
-    out += twPenalty(uDuration.timeWarp(uRoute->maxDuration()));
+    auto const [uDuration, uTimeWarp] = uProposal.duration();
+    out += uRoute->unitDurationCost() * static_cast<Cost>(uDuration);
+    out += twPenalty(uTimeWarp);
 
-    auto const vDuration = vProposal.durationSegment();
-    out += vRoute->unitDurationCost() * static_cast<Cost>(vDuration.duration());
-    out += twPenalty(vDuration.timeWarp(vRoute->maxDuration()));
+    auto const [vDuration, vTimeWarp] = vProposal.duration();
+    out += vRoute->unitDurationCost() * static_cast<Cost>(vDuration);
+    out += twPenalty(vTimeWarp);
 
     return true;
 }

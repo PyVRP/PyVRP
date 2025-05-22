@@ -53,6 +53,10 @@ PyVRP supports the following specifications:
       Maximum route duration for all vehicles.
       To specify heterogeneous maximum route durations, see :term:`VEHICLES_MAX_DURATION_SECTION`.
 
+   ``VEHICLES_MAX_RELOADS``
+      Maximum number of reloads per route for all vehicles.
+      To specify heterogeneous maximum reloads, see :term:`VEHICLES_MAX_RELOADS_SECTION`.
+
 Data sections
 -------------
 
@@ -112,6 +116,14 @@ PyVRP supports the following data sections:
       Depot assignments for each vehicle, typically used in multi-depot instances.
       Vehicles are assigned to the first depot if this section is not provided.
 
+   ``VEHICLES_RELOAD_DEPOT_SECTION``
+      Reload depot assignments for each vehicle, typically used in multi-trip instances.
+      Vehicles are not allowed to reload if this section is not provided.
+
+   ``VEHICLES_FIXED_COST_SECTION``
+      Cost incurred for each vehicle if used to serve clients.
+      Fixed costs are assumed to be zero if this section is not present.
+
    ``VEHICLES_MAX_DISTANCE_SECTION``
       Maximum route distance for each vehicle.
       Route distances are assumed to be unconstrained if this section is not present.
@@ -119,3 +131,11 @@ PyVRP supports the following data sections:
    ``VEHICLES_MAX_DURATION_SECTION``
       Maximum route duration for each vehicle.
       Route durations are assumed to be unconstrained if this section is not present.
+
+   ``VEHICLES_MAX_RELOADS_SECTION``
+      Maximum number of reloads per route, for each vehicle.
+      Assumed unconstrained if this section is not present.
+
+   ``VEHICLES_UNIT_DISTANCE_COST_SECTION``
+      Cost per distance unit travelled for each vehicle.
+      Unit distance costs are assumed to be one if this section is not present.

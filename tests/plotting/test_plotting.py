@@ -13,6 +13,7 @@ from pyvrp import (
     Route,
     Solution,
     Statistics,
+    Trip,
     VehicleType,
     plotting,
 )
@@ -48,6 +49,20 @@ def test_plot_solution_multiple_depots():
     ]
 
     plotting.plot_solution(Solution(data, routes), data)
+
+
+@img_comp(["plot_solution_multiple_trips"], **IMG_KWARGS)
+def test_plot_solution_multiple_trips(ok_small_multiple_trips):
+    """
+    Tests that plot_solution() correctly displays the reload depot visit that
+    separates multiple trips.
+    """
+    trip1 = Trip(ok_small_multiple_trips, [1, 3], 0)
+    trip2 = Trip(ok_small_multiple_trips, [2, 4], 0)
+    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+    sol = Solution(ok_small_multiple_trips, [route])
+
+    plotting.plot_solution(sol, ok_small_multiple_trips)
 
 
 @img_comp(["plot_solution_optional_clients"], **IMG_KWARGS)
@@ -153,7 +168,7 @@ def test_plot_demands_raises_for_out_of_bounds_load_dimension():
 
 def test_plots_do_not_raise_when_there_are_no_feasible_sols(ok_small, recwarn):
     """
-    Tests the small bug identified in #724 is fixed. The issue occured that we
+    Tests the small bug identified in #724 is fixed. The issue occurred that we
     used to set an axis limit that could be NaN when no feasible solution has
     yet been found.
     """

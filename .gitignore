@@ -124,7 +124,7 @@ ipython_config.py
 #   having no cross-platform support, pipenv may install dependencies that don't work, or not
 #   install all needed dependencies.
 Pipfile.lock
-poetry.lock
+uv.lock
 
 # celery beat schedule file
 celerybeat-schedule
@@ -156,6 +156,9 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# ruff
+.ruff_cache/
+
 # Pyre type checker
 .pyre/
 
@@ -169,6 +172,7 @@ release/
 # Profiler results
 *.prof
 perf.data*
+heaptrack.*.gz
 
 # Data files
 data/
