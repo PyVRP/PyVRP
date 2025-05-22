@@ -25,4 +25,3 @@ class AcceptanceCriterion(Protocol):
         bool
             Whether to accept the candidate solution (True), or not (False).
         """
-        ...
