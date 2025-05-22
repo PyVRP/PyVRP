@@ -19,3 +19,7 @@ IndentRequiresClause: true
 RequiresClausePosition: OwnLine
 RequiresExpressionIndentation: OuterScope
 AllowShortLambdasOnASingleLine: All
+---
+Language: Json
+BasedOnStyle: LLVM
+IndentWidth: 4

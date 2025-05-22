@@ -34,7 +34,7 @@ template <typename T> struct type_caster<pyvrp::Matrix<T>>
             return true;      // OK, and we have nothing to do.
 
         std::vector<T> data = {buf.data(), buf.data() + buf.size()};
-        value = pyvrp::Matrix<T>(data, buf.shape(0), buf.shape(1));
+        value = pyvrp::Matrix<T>(std::move(data), buf.shape(0), buf.shape(1));
 
         return true;
     }

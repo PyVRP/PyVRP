@@ -99,8 +99,10 @@ def _lower_bound(data: ProblemData) -> int:
         delivery = sum(c.delivery[dim] for c in data.clients())
         pickup = sum(c.pickup[dim] for c in data.clients())
         demand = max(delivery, pickup)
-        capacity = vehicle_type.capacity[dim]
 
+        # Vehicle capacity applies per trip - if more than one trip is allowed,
+        # the capacity needs to be scaled as well.
+        capacity = vehicle_type.capacity[dim] * vehicle_type.max_trips
         bound = max(int(np.ceil(demand / max(capacity, 1))), bound)
 
     return bound

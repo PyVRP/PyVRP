@@ -111,8 +111,8 @@ public:
      *     Unconstrained if not provided.
      * release_time
      *     Earliest time at which this client is released, that is, the earliest
-     *     time at which a vehicle may leave the depot to visit this client.
-     *     Default 0.
+     *     time at which a vehicle may leave the depot on a trip to visit this
+     *     client. Default 0.
      * prize
      *     Prize collected by visiting this client. Default 0. If this client
      *     is not required, the prize needs to be sufficiently large to offset
@@ -145,8 +145,8 @@ public:
      * tw_late
      *     Latest time at which this client may be visited to start service.
      * release_time
-     *     Earliest time at which a vehicle may leave the depot to visit this
-     *     client.
+     *     Earliest time at which a vehicle may leave the depot on a trip to
+     *     visit this client.
      * prize
      *     Prize collected by visiting this client.
      * required
@@ -341,6 +341,8 @@ public:
      *     profile: int = 0,
      *     start_late: int | None = None,
      *     initial_load: list[int] = [],
+     *     reload_depots: list[int] = [],
+     *     max_reloads: int = np.iinfo(np.uint64).max,
      *     *,
      *     name: str = "",
      * )
@@ -389,6 +391,13 @@ public:
      *     This load is present irrespective of any client visits. By default
      *     this value is zero, and the vehicle only considers loads from client
      *     visits.
+     * reload_depots
+     *     List of reload depots (location indices) this vehicle may visit along
+     *     its route, to empty and reload for subsequent client visits. Defaults
+     *     to an empty list, in which case no reloads are allowed.
+     * max_reloads
+     *     Maximum number of reloads the vehicle may perform on a route.
+     *     Unconstrained if not explicitly provided.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -427,6 +436,11 @@ public:
      * initial_load
      *     Load already on the vehicle that need to be dropped off at a depot.
      *     This load is present irrespective of any client visits.
+     * reload_depots
+     *     List of reload locations this vehicle may visit along it route, to
+     *     empty and reload.
+     * max_reloads
+     *     Maximum number of reloads the vehicle may perform on a route.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -445,8 +459,10 @@ public:
         Cost const unitDurationCost;  // Variable cost per unit of duration
         size_t const profile;         // Distance and duration profile
         Duration const startLate;     // Latest start of shift
-        std::vector<Load> const initialLoad;  // Initially used capacity
-        char const *name;                     // Type name (for reference)
+        std::vector<Load> const initialLoad;     // Initially used capacity
+        std::vector<size_t> const reloadDepots;  // Reload locations
+        size_t const maxReloads;                 // Maximum number of reloads
+        char const *name;                        // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
                     std::vector<Load> capacity = {},
@@ -462,6 +478,8 @@ public:
                     size_t profile = 0,
                     std::optional<Duration> startLate = std::nullopt,
                     std::vector<Load> initialLoad = {},
+                    std::vector<size_t> reloadDepots = {},
+                    size_t maxReloads = std::numeric_limits<size_t>::max(),
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -492,7 +510,14 @@ public:
                             std::optional<size_t> profile,
                             std::optional<Duration> startLate,
                             std::optional<std::vector<Load>> initialLoad,
+                            std::optional<std::vector<size_t>> reloadDepots,
+                            std::optional<size_t> maxReloads,
                             std::optional<std::string> name) const;
+
+        /**
+         * Returns the maximum number of trips these vehicle can execute.
+         */
+        size_t maxTrips() const;
     };
 
 private:

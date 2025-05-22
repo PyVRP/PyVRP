@@ -57,11 +57,13 @@ public:
 template <size_t N, size_t M>
 bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
 {
-    // size() is the position of the last client in the route. So the segment
-    // must include the depot if idx + move length - 1 (-1 since we're also
-    // moving the node *at* idx) is larger than size().
-    return node->idx() == 0
-           || (node->idx() + segLength - 1 > node->route()->size());
+    auto const first = node->idx();
+    auto const last = first + segLength - 1;
+    auto const &route = *node->route();
+
+    return first == 0                               // contains start depot
+           || last >= route.size() - 1              // contains end depot
+           || node->trip() != route[last]->trip();  // contains reload depot
 }
 
 template <size_t N, size_t M>
@@ -96,11 +98,11 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         auto const *vRoute = V->route();
 
         // We're going to incur V's fixed cost if V is currently empty.
-        if (V->idx() == 0 && vRoute->empty())
+        if (V->isStartDepot() && vRoute->empty())
             deltaCost += vRoute->fixedVehicleCost();
 
         // We lose U's fixed cost if we're moving all U's clients.
-        if (uRoute->size() == N)
+        if (uRoute->numClients() == N)
             deltaCost -= uRoute->fixedVehicleCost();
 
         auto const uProposal = Route::Proposal(uRoute->before(U->idx() - 1),
@@ -199,6 +201,10 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
     if constexpr (M > 0)
         if (containsDepot(V, M))
             return 0;
+
+    // We cannot easily evaluate across trips, so we cannot determine this move.
+    if (U->route() == V->route() && U->trip() != V->trip())
+        return 0;
 
     if constexpr (M == 0)  // special case where nothing in V is moved
     {

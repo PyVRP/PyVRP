@@ -7,6 +7,8 @@ from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
 
+_MAX_SIZE = np.iinfo(np.uint64).max
+
 
 @pytest.mark.parametrize(
     (
@@ -1161,3 +1163,60 @@ def test_raises_if_vehicle_and_depot_time_windows_do_not_overlap(
             distance_matrices=[np.zeros((2, 2), dtype=int)],
             duration_matrices=[np.zeros((2, 2), dtype=int)],
         )
+
+
+def test_validate_raises_for_invalid_reload_depot(ok_small):
+    """
+    Tests that the ProblemData's constructor validates the reload locations
+    reference existing depots, and raises if something is wrong.
+    """
+    assert_equal(ok_small.num_depots, 1)
+
+    old_vehicle_type = ok_small.vehicle_type(0)
+    new_vehicle_type = old_vehicle_type.replace(reload_depots=[1])
+    assert_equal(new_vehicle_type.reload_depots, [1])
+
+    # First check if the constructor raises. There's just one depot, but the
+    # reload depot references a depot at index 1, which does not exist.
+    mat = np.zeros((1, 1), dtype=int)
+    with assert_raises(IndexError):
+        ProblemData(
+            clients=[],
+            depots=[Depot(x=0, y=0)],
+            vehicle_types=[new_vehicle_type],
+            distance_matrices=[mat],
+            duration_matrices=[mat],
+        )
+
+    # Replacing the vehicle type on the OkSmall instance should similarly raise
+    # during argument validation.
+    with assert_raises(IndexError):
+        ok_small.replace(vehicle_types=[new_vehicle_type])
+
+
+def test_vehicle_type_max_trips(ok_small_multiple_trips):
+    """
+    Tests that the vehicle type correctly handles the case where max_reloads
+    is set to its largest allowed size - then max_trips should not overflow.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0)
+    assert_equal(veh_type.max_reloads, 1)
+    assert_equal(veh_type.max_trips, 2)
+
+    # Normally, max_trips == max_reloads + 1, but when max_reloads is at the
+    # maximum size, we do not want max_trips to overflow and wrap around to
+    # zero. These asserts check that does not happen.
+    veh_type = veh_type.replace(max_reloads=_MAX_SIZE)
+    assert_equal(veh_type.max_reloads, _MAX_SIZE)
+    assert_equal(veh_type.max_trips, _MAX_SIZE)
+
+
+def test_vehicle_max_trips_is_one_if_no_reload_depots(ok_small):
+    """
+    Tests that a vehicle type's max_trips is one if there's no reload depots,
+    despite max_reloads being unconstrained.
+    """
+    veh_type = ok_small.vehicle_type(0)
+    assert_equal(veh_type.reload_depots, [])
+    assert_equal(veh_type.max_reloads, _MAX_SIZE)
+    assert_equal(veh_type.max_trips, 1)
