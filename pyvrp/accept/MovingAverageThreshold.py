@@ -38,13 +38,13 @@ class MovingAverageThreshold:
     ----------
     eta
         Used to determine the threshold value. Larger values of :math:`\\eta`
-        result in more accepted candidate solutions. Must be nonnegative.
+        result in more accepted candidate solutions. Must be non-negative.
     gamma
         History size. Must be positive.
     max_runtime
-        Maximum runtime before converging :math:`\\eta` to zero. Must be
-        nonnegative. Default is ``float("inf")``, meaning that :math:`\\eta`
-        does not converge over time.
+        Maximum runtime in seconds. As the search approaches this time limit,
+        :math:`\\eta` converges to zero. Must be non-negative. Default is
+        ``float("inf")``, meaning that :math:`\\eta` stays constant.
 
     References
     ----------
@@ -55,7 +55,10 @@ class MovingAverageThreshold:
     """
 
     def __init__(
-        self, eta: float, gamma: int, max_runtime: float = float("inf")
+        self,
+        eta: float,
+        gamma: int,
+        max_runtime: float = float("inf"),
     ):
         if eta < 0:
             raise ValueError("eta must be non-negative.")
@@ -99,7 +102,7 @@ class MovingAverageThreshold:
         recent_avg = history.mean()
 
         runtime = min(perf_counter() - self._start_time, self._max_runtime)
-        pct_runtime = 1 - runtime / self.max_runtime if self.max_runtime else 0
-        factor = self.eta * pct_runtime
+        pct_elapsed = runtime / self.max_runtime if self.max_runtime else 1
+        factor = self.eta * (1 - pct_elapsed)
 
         return candidate <= recent_best + factor * (recent_avg - recent_best)

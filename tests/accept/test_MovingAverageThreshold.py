@@ -28,10 +28,11 @@ def test_raise_invalid_parameters(eta: float, gamma: int, max_runtime: float):
         (0.4, 4, 10),
     ],
 )
-def test_valid_parameters(eta: float, gamma: int, max_runtime: int):
+def test_attributes_are_correctly_set(
+    eta: float, gamma: int, max_runtime: int
+):
     """
-    Tests that nothing is raised when valid parameters are passed and
-    correctly set.
+    Tests that valid parameters are correctly set.
     """
     mat = MovingAverageThreshold(eta=eta, gamma=gamma, max_runtime=max_runtime)
 
@@ -46,9 +47,9 @@ def test_accepts_below_threshold():
     """
     mat = MovingAverageThreshold(eta=0.5, gamma=4)
     mat(1, 1, 1)
-    mat(1, 1, 0)
+    mat(1, 1, 2)
 
-    # The threshold is set at 0 + 0.5 * (0.5 - 0) = 0.25, candidate has cost 0.
+    # The threshold is set at 0 + 0.5 * (1 - 0) = 0.5, candidate has cost 0.
     assert_(mat(1, 1, 0))
 
 
@@ -60,7 +61,7 @@ def test_rejects_above_threshold():
     mat(1, 1, 2)
     mat(1, 1, 0)
 
-    # The threshold is set at 0 + 0.5 * (1 - 0) = 0, candidate has cost 1.
+    # The threshold is set at 0 + 0.5 * (1 - 0) = 0.5, candidate has cost 1.
     assert_(not mat(1, 1, 1))
 
 
@@ -81,21 +82,18 @@ def test_threshold_updates_with_history():
     Tests that MAT correctly updates the threshold based on the history of
     candidate solutions and also forgets older solutions.
     """
-    mat = MovingAverageThreshold(eta=0.5, gamma=2)
+    mat = MovingAverageThreshold(eta=1, gamma=2)
 
     # First candidate is always accepted.
     assert_(mat(1, 1, 2))
 
-    # Second candidate is rejected, because the threshold is set at
-    # 2 + 0.5 * (3 - 2) = 2.5.
+    # Threshold is set at 2 + 0.5 * (3 - 2) = 2.5, so reject.
     assert_(not mat(1, 1, 4))
 
-    # Third candidate is accepted, because the threshold is set at
-    # 1 + 0.5 * (2.5 - 1) = 1.75.
+    # Threshold is set at 1 + 0.5 * (2.5 - 1) = 1.75, so accept.
     assert_(mat(1, 1, 1))
 
-    # Fourth candidate is rejected, because the threshold is set at
-    # 1 + 0.5 * (1.5 - 1) = 1.25.
+    # Threshold is set at 1 + 0.5 * (1.5 - 1) = 1.25, so reject.
     assert_(not mat(1, 1, 2))
 
 
