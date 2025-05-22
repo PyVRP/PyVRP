@@ -33,6 +33,7 @@ dependencies = [
     "numpy>=1.26.0; python_version >= '3.12'",
     "matplotlib>=2.2.0",
     "vrplib>=1.4.0",
+    "tomli>=2.0.1",
 ]
 
 [project.urls]
@@ -81,7 +82,7 @@ package = true
 
 
 [tool.uv.sources]
-bench = { git = "https://github.com/PyVRP/Bench.git", rev = "adebd48" }
+bench = { git = "https://github.com/PyVRP/Bench.git" }
 
 
 [tool.black]
