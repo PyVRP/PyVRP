@@ -1,7 +1,7 @@
 Benchmarking
 ============
 
-To run a benchmark, one can use `Bench<https://github.com/PyVRP/Bench>`_, PyVRP's benchmarking command line interface.
+To run a benchmark, one can use `Bench <https://github.com/PyVRP/Bench>`_, PyVRP's benchmarking command line interface.
 After installation, it is available as ``bench`` from the command line.
 To find out about available options, run
 
@@ -59,4 +59,4 @@ Each run is performed on a single core.
 For each instance, we take the average objectives of these ten runs with different seeds.
 These are compared with the best-known solutions tracked in the ``PyVRP/Instances`` `repository <https://github.com/PyVRP/Instances>`_ to compute gaps.
 
-All benchmark instances can be found in the `Instances<https://github.com/PyVRP/Instances>`_ repository.
+All benchmark instances can be found in the `Instances <https://github.com/PyVRP/Instances>`_ repository.
