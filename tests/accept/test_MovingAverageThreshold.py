@@ -5,45 +5,39 @@ from pyvrp.accept import MovingAverageThreshold
 
 
 @mark.parametrize(
-    "eta, gamma",
+    "eta, gamma, max_runtime",
     [
-        (-1, 1),  # eta cannot be < 0
-        (1, -2),  # gamma cannot be < 0
-        (1, 0),  # gamma cannot be 0
+        (-1, 1, 0),  # eta cannot be < 0
+        (1, -2, 0),  # gamma cannot be < 0
+        (1, 0, 0),  # gamma cannot be 0
+        (1, 1, -1),  # max_runtime cannot be < 0
     ],
 )
-def test_raise_invalid_parameters(eta: float, gamma: int):
+def test_raise_invalid_parameters(eta: float, gamma: int, max_runtime: float):
     """
     Tests that a ValueError is raised when invalid parameters are passed.
     """
     with assert_raises(ValueError):
-        MovingAverageThreshold(eta=eta, gamma=gamma)
+        MovingAverageThreshold(eta=eta, gamma=gamma, max_runtime=max_runtime)
 
 
-@mark.parametrize("eta, gamma", [(1, 3), (0.4, 4)])
-def test_no_raise_valid_parameters(eta, gamma):
+@mark.parametrize(
+    "eta, gamma, max_runtime",
+    [
+        (1, 3, 0),
+        (0.4, 4, 10),
+    ],
+)
+def test_valid_parameters(eta: float, gamma: int, max_runtime: int):
     """
-    Tests that nothing is raised when valid parameters are passed.
+    Tests that nothing is raised when valid parameters are passed and
+    correctly set.
     """
-    MovingAverageThreshold(eta=eta, gamma=gamma)
+    mat = MovingAverageThreshold(eta=eta, gamma=gamma, max_runtime=max_runtime)
 
-
-@mark.parametrize("eta", [0, 0.01, 0.5, 0.99, 1])
-def test_eta(eta):
-    """
-    Teststhat the eta parameter is correctly set.
-    """
-    mat = MovingAverageThreshold(eta, 3)
     assert_equal(mat.eta, eta)
-
-
-@mark.parametrize("gamma", range(1, 3))
-def test_gamma(gamma):
-    """
-    Tests that the gamma parameter is correctly set.
-    """
-    mat = MovingAverageThreshold(0.5, gamma)
     assert_equal(mat.gamma, gamma)
+    assert_equal(mat.max_runtime, max_runtime)
 
 
 def test_accepts_below_threshold():
@@ -102,4 +96,18 @@ def test_threshold_updates_with_history():
 
     # Fourth candidate is rejected, because the threshold is set at
     # 1 + 0.5 * (1.5 - 1) = 1.25.
+    assert_(not mat(1, 1, 2))
+
+
+def test_threshold_converges_with_max_runtime():
+    """
+    Tests that MAT correctly converges the threshold based on the runtime.
+    """
+    mat = MovingAverageThreshold(eta=0.5, gamma=10, max_runtime=0)
+
+    mat(1, 1, 10)
+    mat(1, 1, 0)
+
+    # Even though the candidate solutions are (10, 0, 2), the threshold
+    # is set to 0 because the max runtime has elapsed.
     assert_(not mat(1, 1, 2))

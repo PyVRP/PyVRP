@@ -10,10 +10,15 @@ The :mod:`pyvrp.accept` module contains various acceptance criteria that determi
 An effective acceptance criterion finds balance between accepting worse solutions for exploration and keeping good solutions for exploitation.
 This helps the algorithm avoid getting stuck in local optima while still generally moving toward better solutions over time.
 
-All acceptance criteria implement the :class:`~pyvrp.stop.AcceptanceCriterion.AcceptanceCriterion` protocol.
+All acceptance criteria implement the :class:`~pyvrp.accept.AcceptanceCriterion.AcceptanceCriterion` protocol.
 
-.. automodule:: pyvrp.stop.AcceptanceCriterion
+.. automodule:: pyvrp.accept.AcceptanceCriterion
 
    .. autoclass:: AcceptanceCriterion
       :members:
       :special-members: __call__
+
+.. automodule:: pyvrp.accept.MovingAverageThreshold
+
+   .. autoclass:: MovingAverageThreshold
+      :members:

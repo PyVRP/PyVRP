@@ -8,8 +8,8 @@ class AcceptanceCriterion(Protocol):
 
     def __call__(self, best: float, current: float, candidate: float) -> bool:
         """
-        Determines whether to accept the proposed, candidate solution based on
-        this acceptance criterion and the solution costs.
+        Determines whether to accept the candidate solution based on the
+        this criterion and solution costs.
 
         Parameters
         ----------
