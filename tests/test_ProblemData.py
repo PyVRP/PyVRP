@@ -1220,3 +1220,62 @@ def test_vehicle_max_trips_is_one_if_no_reload_depots(ok_small):
     assert_equal(veh_type.reload_depots, [])
     assert_equal(veh_type.max_reloads, _MAX_SIZE)
     assert_equal(veh_type.max_trips, 1)
+
+
+def test_problem_data_from_json():
+    """
+    Tests that ProblemData.from_json correctly instantiates an object from
+    a minimal JSON dict.
+    """
+    json_data = {
+        "clients": [
+            {
+                "x": 1,
+                "y": 2,
+                "delivery": [3],
+                "pickup": [0],
+                "service_duration": 0,
+                "tw_early": 0,
+                "tw_late": 100,
+                "release_time": 0,
+                "prize": 0,
+                "required": True,
+                "group": None,
+                "name": "client1",
+            }
+        ],
+        "depots": [
+            {"x": 0, "y": 0, "tw_early": 0, "tw_late": 100, "name": "depot1"}
+        ],
+        "vehicle_types": [
+            {
+                "num_available": 1,
+                "capacity": [10],
+                "start_depot": 0,
+                "end_depot": 0,
+                "fixed_cost": 0,
+                "tw_early": 0,
+                "tw_late": 100,
+                "max_duration": 100,
+                "max_distance": 100,
+                "unit_distance_cost": 1,
+                "unit_duration_cost": 0,
+                "profile": 0,
+                "start_late": 0,
+                "initial_load": [0],
+                "reload_depots": [],
+                "max_reloads": 0,
+                "name": "veh1",
+            }
+        ],
+        "distance_matrices": [[[0, 1], [1, 0]]],
+        "duration_matrices": [[[0, 2], [2, 0]]],
+        "groups": [],
+    }
+    data = ProblemData.from_json(json_data)
+    assert isinstance(data, ProblemData)
+    assert data.num_clients == 1
+    assert data.num_depots == 1
+    assert data.num_vehicle_types == 1
+    assert data.num_profiles == 1
+    assert data.num_groups == 0
