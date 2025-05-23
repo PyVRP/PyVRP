@@ -968,7 +968,10 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 
             if constexpr (sizeof...(args) != 0)
             {
-                if (first < data.numDepots())  // segment starts at a depot
+                if (first < data.numDepots() && other.size() != 1)
+                    // Other starts at a depot and contains more than one node,
+                    // so there might be a release time component we need to
+                    // take into account. So we need to finalise again.
                     ds = ds.finaliseFront();
 
                 self(self, std::forward<decltype(args)>(args)...);
@@ -1007,7 +1010,10 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 
             if constexpr (sizeof...(args) != 0)
             {
-                if (other.last() < data.numDepots())  // other ends at a depot
+                if (other.last() < data.numDepots() && other.size() != 1)
+                    // Other ends at a depot and contains more than one node,
+                    // so there might be meaningful load on it. This means we
+                    // need to finalise again.
                     ls = ls.finalise(capacity);
 
                 self(self, std::forward<decltype(args)>(args)...);
