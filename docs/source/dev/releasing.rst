@@ -47,7 +47,7 @@ Regular release
    The latest docs can be downloaded from the ``DOC`` workflow associated with the released tag's commit.
    After pushing to the archive repository, update the version info in ``docs/source/versions.json`` to include a link to the newly archived documentation.
 
-10. **[SKIP IF PATCH]** Bump the version in ``pyproject.toml`` to the next prerelease, e.g. from ``0.12.0`` to ``0.13.0a0``.
+10. **[SKIP IF PATCH]** Bump the version in ``pyproject.toml`` to the next prerelease, *e.g.* from ``0.12.0`` to ``0.13.0a0``.
     Then commit this to ``main``, together with the updates to ``docs/source/versions.json``. 
 
 
