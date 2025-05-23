@@ -559,7 +559,7 @@ def test_swap_does_not_swap_depots(ok_small_multiple_trips):
 def test_bug_evaluating_move_with_initial_load():
     """
     Tests a bug where previously the move evaluated below would claim to result
-    in an improvement.
+    in an improvement. See #813 for details.
     """
     data = ProblemData(
         clients=[
