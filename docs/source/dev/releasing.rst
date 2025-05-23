@@ -80,5 +80,5 @@ This can be done as follows:
 4. Since ``main`` may have changed significantly since the release of ``v0.12.0``, ensure that the new cherry-picked commits work by recompiling and running the tests.
    If something does not work, fix it now.
 
-5. Once everything works, proceed as with a regular release.
+5. Once everything works, commit and proceed as with a regular release.
    Make sure to delete the temporary branch once you have pushed your new tag to GitHub.
