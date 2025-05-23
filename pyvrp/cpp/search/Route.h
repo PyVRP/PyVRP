@@ -880,6 +880,10 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     [[maybe_unused]] auto &&first = std::get<0>(segments_);
     [[maybe_unused]] auto &&last = std::get<sizeof...(Segments) - 1>(segments_);
     assert(first.route() == last.route());  // must start and end at same route
+
+    [[maybe_unused]] auto const *route = this->route();
+    assert(first.first() == route->startDepot());  // must start at route start
+    assert(last.last() == route->endDepot());      // must end at route end
 }
 
 template <Segment... Segments>
