@@ -9,7 +9,7 @@ from pyvrp.search import (
 )
 
 
-@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb"])
+@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr"])
 def test_all_operators(instance, benchmark, request):
     """
     Tests performance of the local search (with all default operators) on a few
@@ -49,7 +49,7 @@ def test_all_operators_on_vrptw_from_bks(benchmark, vrptw, vrptw_bks):
 
 
 @pytest.mark.parametrize("node_op", NODE_OPERATORS)
-@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb"])
+@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr"])
 def test_each_node_operator(node_op, instance, benchmark, request):
     """
     Tests performance of each node operator on a few instances.
@@ -65,7 +65,7 @@ def test_each_node_operator(node_op, instance, benchmark, request):
 
 
 @pytest.mark.parametrize("route_op", ROUTE_OPERATORS)
-@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb"])
+@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr"])
 def test_each_route_operator(route_op, instance, benchmark, request):
     """
     Tests performance of each route operator on a few instances.
