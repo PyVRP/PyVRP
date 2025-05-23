@@ -856,7 +856,8 @@ def test_multi_trip_release_time_routes(mtvrptw_release_times, trips):
 
 def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
     """
-    TODO
+    Ensures that the bug identified in #812 stays fixed. Before the fix, this
+    would trigger an assert because an empty trip would be indexed.
     """
     trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
     trip2 = Trip(ok_small_multiple_trips, [], 0)
