@@ -613,8 +613,14 @@ def test_bug_evaluating_move_with_initial_load():
     op = Exchange21(data)
     cost_eval = CostEvaluator([1], 0, 0)
 
-    route1 = make_search_route(data, [2, 3], idx=0, vehicle_type=0)
-    route2 = make_search_route(data, [1], idx=1, vehicle_type=0)
+    route1 = Route(data, idx=0, vehicle_type=0)
+    for loc in [2, 3]:
+        route1.append(Node(loc=loc))
+    route1.update()
+
+    route2 = Route(data, idx=1, vehicle_type=0)
+    route2.append(Node(loc=1))
+    route2.update()
 
     # This move just permutes the solution, turning route1 into route2, and
     # vice versa. Thus, the delta cost of this move should be zero.
