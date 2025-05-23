@@ -554,3 +554,31 @@ def test_swap_does_not_swap_depots(ok_small_multiple_trips):
 
     # This move overlaps with reload depot at index 3, so cannot be evaluated.
     assert_equal(op.evaluate(route[2], route[4], cost_eval), 0)
+
+
+def test_bug_evaluating_move_with_initial_load():
+    """
+    Tests a bug where previously the move evaluated below would claim to result
+    in an improvement. See #813 for details.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0, delivery=[1]),
+            Client(x=0, y=0, delivery=[1]),
+            Client(x=0, y=0, delivery=[0]),
+        ],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(2, capacity=[5], initial_load=[5])],
+        distance_matrices=[np.zeros((4, 4), dtype=int)],
+        duration_matrices=[np.zeros((4, 4), dtype=int)],
+    )
+
+    op = Exchange21(data)
+    cost_eval = CostEvaluator([1], 0, 0)
+
+    route1 = make_search_route(data, [2, 3], idx=0, vehicle_type=0)
+    route2 = make_search_route(data, [1], idx=1, vehicle_type=0)
+
+    # This move just permutes the solution, turning route1 into route2, and
+    # vice versa. Thus, the delta cost of this move should be zero.
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), 0)
