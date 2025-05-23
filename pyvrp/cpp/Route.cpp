@@ -69,7 +69,7 @@ Route::Iterator &Route::Iterator::operator++()
     // we continue to the next until we either exhaust all trips, or we find a
     // non-empty trip.
     ++trip_;
-    while (trip_ + 1 < trips.size() && trips[trip_].empty())
+    while (trip_ < trips.size() && trips[trip_].empty())
         ++trip_;
 
     idx_ = 0;
