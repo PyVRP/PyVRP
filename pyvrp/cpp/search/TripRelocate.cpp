@@ -28,6 +28,7 @@ public:
 
     size_t first() const { return depot_; }
     size_t last() const { return depot_; }
+    size_t size() const { return 1; }
 
     pyvrp::Distance distance([[maybe_unused]] size_t profile) const
     {

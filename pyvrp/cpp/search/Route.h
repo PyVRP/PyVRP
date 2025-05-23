@@ -19,6 +19,7 @@ concept Segment = requires(T arg, size_t profile, size_t dimension) {
     { arg.route() };
     { arg.first() } -> std::same_as<size_t>;
     { arg.last() } -> std::same_as<size_t>;
+    { arg.size() } -> std::same_as<size_t>;
     { arg.distance(profile) } -> std::convertible_to<Distance>;
     { arg.duration(profile) } -> std::convertible_to<DurationSegment>;
     { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
@@ -216,6 +217,7 @@ private:
 
         inline size_t first() const;  // client at start
         inline size_t last() const;   // end depot
+        inline size_t size() const;
 
         inline SegmentAfter(Route const &route, size_t start);
         inline Distance distance(size_t profile) const;
@@ -237,6 +239,7 @@ private:
 
         inline size_t first() const;  // start depot
         inline size_t last() const;   // client at end
+        inline size_t size() const;
 
         inline SegmentBefore(Route const &route, size_t end);
         inline Distance distance(size_t profile) const;
@@ -260,6 +263,7 @@ private:
 
         inline size_t first() const;  // client at start
         inline size_t last() const;   // client at end
+        inline size_t size() const;
 
         inline SegmentBetween(Route const &route, size_t start, size_t end);
         inline Distance distance(size_t profile) const;
@@ -665,14 +669,17 @@ LoadSegment const &Route::SegmentBefore::load(size_t dimension) const
 Route const *Route::SegmentBefore::route() const { return &route_; }
 size_t Route::SegmentBefore::first() const { return route_.visits.front(); }
 size_t Route::SegmentBefore::last() const { return route_.visits[end]; }
+size_t Route::SegmentBefore::size() const { return end + 1; }
 
 Route const *Route::SegmentAfter::route() const { return &route_; }
 size_t Route::SegmentAfter::first() const { return route_.visits[start]; }
 size_t Route::SegmentAfter::last() const { return route_.visits.back(); }
+size_t Route::SegmentAfter::size() const { return route_.size() - start; }
 
 Route const *Route::SegmentBetween::route() const { return &route_; }
 size_t Route::SegmentBetween::first() const { return route_.visits[start]; }
 size_t Route::SegmentBetween::last() const { return route_.visits[end]; }
+size_t Route::SegmentBetween::size() const { return end - start + 1; }
 
 Distance Route::SegmentBetween::distance(size_t profile) const
 {
@@ -985,7 +992,10 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto ls = segment.load(dimension);
-        if (segment.last() < data.numDepots())  // ends at depot
+        if (segment.last() < data.numDepots() && segment.size() != 1)
+            // Ends at a depot that is *not* the start depot. We should not
+            // finalise at the start depot, since that would immediately remove
+            // any initial load we might have.
             ls = ls.finalise(capacity);
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
