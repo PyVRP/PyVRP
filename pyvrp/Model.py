@@ -74,7 +74,7 @@ class Profile:
     edges: list[Edge]
     name: str
 
-    def __init__(self, name: str = ""):
+    def __init__(self, *, name: str = ""):
         self.edges = []
         self.name = name
 
@@ -315,7 +315,7 @@ class Model:
         self._edges.append(edge)
         return edge
 
-    def add_profile(self, name: str = "") -> Profile:
+    def add_profile(self, *, name: str = "") -> Profile:
         """
         Adds a new routing profile to the model.
         """
