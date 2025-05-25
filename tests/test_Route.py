@@ -863,4 +863,5 @@ def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
     trip2 = Trip(ok_small_multiple_trips, [], 0)
 
     route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
-    assert_equal([client for client in route], route.visits())
+    assert_equal([client for client in route], [1, 2])
+    assert_equal(route.visits(), [1, 2])
