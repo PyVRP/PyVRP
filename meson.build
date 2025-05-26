@@ -32,6 +32,8 @@ endif
 SRC_DIR = 'pyvrp' / 'cpp'
 INCLUDES = include_directories(SRC_DIR)
 
+nlohmann_json_dep = dependency('nlohmann_json', required: true)
+
 libpyvrp = static_library(
     'pyvrp',
     [
@@ -47,6 +49,7 @@ libpyvrp = static_library(
         SRC_DIR / 'DurationSegment.cpp',
     ],
     include_directories: INCLUDES,
+    dependencies: [nlohmann_json_dep],
 )
 
 libcrossover = static_library(
@@ -57,6 +60,7 @@ libcrossover = static_library(
     ],
     include_directories: INCLUDES,
     link_with: libpyvrp,
+    dependencies: [nlohmann_json_dep],
 )
 
 libdiversity = static_library(
@@ -66,6 +70,7 @@ libdiversity = static_library(
     ],
     include_directories: INCLUDES,
     link_with: libpyvrp,
+    dependencies: [nlohmann_json_dep],
 )
 
 libsearch = static_library(
@@ -81,6 +86,7 @@ libsearch = static_library(
     ],
     include_directories: INCLUDES,
     link_with: libpyvrp,
+    dependencies: [nlohmann_json_dep],
 )
 
 librepair = static_library(
@@ -92,6 +98,7 @@ librepair = static_library(
     ],
     include_directories: INCLUDES,
     link_with: [libpyvrp, libsearch],  # uses search to evaluate repair moves
+    dependencies: [nlohmann_json_dep],
 )
 
 # Extension as [extension name, subdirectory, core C++ library]. The extension
@@ -111,7 +118,7 @@ py = import('python').find_installation()
 dependencies = [
     py.dependency(),
     dependency('pybind11'),
-    dependency('nlohmann_json', required: true)
+    nlohmann_json_dep
 ]
 
 foreach extension : extensions
