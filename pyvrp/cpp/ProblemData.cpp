@@ -711,10 +711,9 @@ ProblemData ProblemData::from_json(const nlohmann::json &j)
         int release_time = c.at("release_time");
         int prize = c.at("prize");
         bool required = c.at("required");
-        std::optional<size_t> group
-            = c.contains("group") && !c.at("group").is_null()
-                  ? std::make_optional(c.at("group").get<size_t>())
-                  : std::nullopt;
+        std::optional<size_t> group;
+        if (c.contains("group") && !c.at("group").is_null())
+            group = c.at("group").get<size_t>();
         std::string name = c.at("name");
         clients.emplace_back(x,
                              y,
@@ -763,10 +762,9 @@ ProblemData ProblemData::from_json(const nlohmann::json &j)
         int unit_distance_cost = v.at("unit_distance_cost");
         int unit_duration_cost = v.at("unit_duration_cost");
         size_t profile = v.at("profile");
-        std::optional<int> start_late
-            = v.contains("start_late") && !v.at("start_late").is_null()
-                  ? std::make_optional(v.at("start_late").get<int>())
-                  : std::nullopt;
+        std::optional<int> start_late;
+        if (v.contains("start_late") && !v.at("start_late").is_null())
+            start_late = v.at("start_late").get<int>();
         std::vector<pyvrp::Value> initial_load_vals
             = v.at("initial_load").get<std::vector<pyvrp::Value>>();
         std::vector<Load> initial_load;
