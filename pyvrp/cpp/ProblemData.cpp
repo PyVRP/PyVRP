@@ -235,7 +235,7 @@ ProblemData::Depot::~Depot() { delete[] name; }
 bool ProblemData::Depot::operator==(Depot const &other) const
 {
     // clang-format off
-    return x == other.x 
+    return x == other.x
         && y == other.y
         && twEarly == other.twEarly
         && twLate == other.twLate
@@ -814,7 +814,8 @@ ProblemData ProblemData::from_json(const nlohmann::json &j)
         {
             std::vector<size_t> clients
                 = g.at("clients").get<std::vector<size_t>>();
-            bool required = g.at("required");
+            bool required
+                = g.contains("required") ? g.at("required").get<bool>() : false;
             groups.emplace_back(clients, required);
         }
     }
