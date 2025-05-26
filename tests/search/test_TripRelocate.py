@@ -236,16 +236,30 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
 
     op.apply(route1[3], route2[1])
     assert_equal(str(route1), "34 | 38 48")
-    assert_equal(str(route2), "6 | 23")
+    assert_equal(str(route2), "6 23 |")
 
     route1.update()
     assert_equal(route1.distance(), 1525)
     assert_equal(route1.time_warp(), 2865)
 
     route2.update()
-    assert_equal(route2.distance(), 1114)
+    assert_equal(route2.distance(), 797)
     assert_(not route2.has_time_warp())
 
-    delta_dist = 1525 + 1114 - 504 - 1713  # = new minus old
+    delta_dist = 1525 + 797 - 504 - 1713  # = new minus old
     delta_time_warp = 2865 - 5395  # = new minus old
     assert_equal(delta_cost, delta_dist + delta_time_warp)
+
+
+def test_can_insert_after_start_depot():
+    """
+    TODO
+    """
+    pass
+
+
+def test_can_insert_before_end_depot():
+    """
+    TODO
+    """
+    pass
