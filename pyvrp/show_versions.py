@@ -20,7 +20,6 @@ def show_versions():
          numpy: 1.24.2
     matplotlib: 3.7.0
         vrplib: 1.0.1
-          tqdm: 4.64.1
          tomli: 2.0.1
         Python: 3.9.13
     """
@@ -32,6 +31,5 @@ def show_versions():
     print(f"     numpy: {version('numpy')}")
     print(f"matplotlib: {version('matplotlib')}")
     print(f"    vrplib: {version('vrplib')}")
-    print(f"      tqdm: {version('tqdm')}")
     print(f"     tomli: {version('tomli')}")
     print(f"    Python: {python_version}")
