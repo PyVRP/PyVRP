@@ -26,8 +26,8 @@ if compiler.has_argument('-Wno-dangling-reference')
 endif
 
 # We first compile static libraries that contains all regular, C++ code, one
-# per extension module. These are linked against when we compile the actual 
-# Python extension modules down below. We also define the top-level source 
+# per extension module. These are linked against when we compile the actual
+# Python extension modules down below. We also define the top-level source
 # directory here, for convenience.
 SRC_DIR = 'pyvrp' / 'cpp'
 INCLUDES = include_directories(SRC_DIR)
@@ -96,7 +96,7 @@ librepair = static_library(
 
 # Extension as [extension name, subdirectory, core C++ library]. The extension
 # name names the eventual module name, subdirectory gives the source and
-# installation directories (relative to top-level directories), and the core 
+# installation directories (relative to top-level directories), and the core
 # C++ library is one of the static libraries we defined above.
 extensions = [
     ['pyvrp', '', libpyvrp],
@@ -108,9 +108,11 @@ extensions = [
 
 # Extension dependencies: Python itself, and pybind11.
 py = import('python').find_installation()
-dependencies = [py.dependency(), dependency('pybind11')]
-
-nlohmann_json_dep = dependency('nlohmann_json', required: true)
+dependencies = [
+    py.dependency(),
+    dependency('pybind11'),
+    dependency('nlohmann_json', required: true)
+]
 
 foreach extension : extensions
     rawname = extension[0]
