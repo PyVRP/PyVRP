@@ -194,12 +194,11 @@ pyvrp::Solution pyvrp::search::exportSolution(std::vector<Route> const &routes,
                 continue;
             }
 
-            if (!visits.empty())  // do not export empty trips
-                trips.emplace_back(data,
-                                   visits,
-                                   route.vehicleType(),
-                                   prevDepot->client(),
-                                   node->client());
+            trips.emplace_back(data,
+                               visits,
+                               route.vehicleType(),
+                               prevDepot->client(),
+                               node->client());
 
             visits.clear();
             prevDepot = node;

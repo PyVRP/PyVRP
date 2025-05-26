@@ -212,20 +212,16 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
             if (!n(U)->isDepot())
                 candidates[n(U)->client()] = true;
 
-            // TODO this segfaults -- V->client() results in a location idx
-            // that is larger than ``data.num_locations``. This seems to happen
-            // after applying applyNodeOps(U, p(V)) with p(V) being the start
-            // depot -- so V here in this context is a startDepot.
-            // if (!V->isDepot())
-            // {
-            //     candidates[V->client()] = true;
+            if (!V->isDepot())
+            {
+                candidates[V->client()] = true;
 
-            //     if (!p(V)->isDepot())
-            //         candidates[p(V)->client()] = true;
+                if (!p(V)->isDepot())
+                    candidates[p(V)->client()] = true;
 
-            //     if (!n(V)->isDepot())
-            //         candidates[n(V)->client()] = true;
-            // }
+                if (!n(V)->isDepot())
+                    candidates[n(V)->client()] = true;
+            }
 
             [[maybe_unused]] auto const costAfter
                 = costEvaluator.penalisedCost(*rU)

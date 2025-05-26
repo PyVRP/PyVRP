@@ -32,7 +32,7 @@ NODE_OPERATORS: list[Type[NodeOperator]] = [
     # Exchange32,
     # Exchange33,
     SwapTails,
-    TripRelocate,
+    # TripRelocate, # TODO fix this
 ]
 
 ROUTE_OPERATORS: list[Type[RouteOperator]] = [
