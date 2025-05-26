@@ -533,7 +533,7 @@ class _ProblemDataBuilder:
 
         if any(dist.max() > MAX_VALUE for dist in dist_mats):
             msg = """
-            The maximum distance value is very large. This might impact 
+            The maximum distance value is very large. This might impact
             numerical stability. Consider rescaling your input data.
             """
             warn(msg, ScalingWarning)
@@ -552,40 +552,3 @@ class _ProblemDataBuilder:
                 allowed_clients2profile_idx[clients] = next(profile_idx)
 
         return allowed_clients2profile_idx
-
-
-def _problem_data_from_json(cls, data: dict) -> ProblemData:
-    """
-    Creates a :class:`~pyvrp._pyvrp.ProblemData` instance from a JSON-like
-    dictionary.
-
-    Parameters
-    ----------
-    data : dict
-        Dictionary containing all fields required to instantiate a ProblemData
-        object. The structure must match the ProblemData constructor signature
-        (clients, depots, vehicle_types, distance_matrices, duration_matrices,
-        groups).
-
-    Returns
-    -------
-    ProblemData
-        Data instance constructed from the provided dictionary.
-    """
-    clients = [Client(**client) for client in data["clients"]]
-    depots = [Depot(**depot) for depot in data["depots"]]
-    vehicle_types = [VehicleType(**vt) for vt in data["vehicle_types"]]
-    distance_matrices = [np.array(mat) for mat in data["distance_matrices"]]
-    duration_matrices = [np.array(mat) for mat in data["duration_matrices"]]
-    groups = [ClientGroup(**group) for group in data.get("groups", [])]
-    return ProblemData(
-        clients=clients,
-        depots=depots,
-        vehicle_types=vehicle_types,
-        distance_matrices=distance_matrices,
-        duration_matrices=duration_matrices,
-        groups=groups,
-    )
-
-
-setattr(ProblemData, "from_json", classmethod(_problem_data_from_json))

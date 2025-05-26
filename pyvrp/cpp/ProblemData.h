@@ -7,6 +7,7 @@
 #include <cassert>
 #include <iosfwd>
 #include <limits>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
 #include <vector>
@@ -733,6 +734,45 @@ public:
                         std::optional<std::vector<Matrix<Distance>>> &distMats,
                         std::optional<std::vector<Matrix<Duration>>> &durMats,
                         std::optional<std::vector<ClientGroup>> &groups) const;
+
+    /**
+     * Creates a ProblemData instance from a JSON object (nlohmann::json).
+     *
+     * Parameters
+     * ----------
+     * j
+     *     JSON object containing all fields required to instantiate a
+     *     ProblemData object. The structure must match the ProblemData
+     *     constructor signature (clients, depots, vehicle_types,
+     *     distance_matrices, duration_matrices, groups).
+     *
+     * Returns
+     * -------
+     * ProblemData
+     *     Instance constructed from the JSON.
+     */
+    static ProblemData from_json(const nlohmann::json &j);
+
+    /**
+     * Creates a ProblemData instance from a Python dict.
+     *
+     * .. python::
+     *
+     *    ProblemData.from_dict(dict_obj)
+     *
+     * Parameters
+     * ----------
+     * dict_obj
+     *     Dictionary containing all fields required to instantiate a
+     *     ProblemData object. The structure must match the ProblemData
+     *     constructor signature (clients, depots, vehicle_types,
+     *     distance_matrices, duration_matrices, groups).
+     *
+     * Returns
+     * -------
+     * ProblemData
+     *     Instance constructed from the dictionary.
+     */
 
     ProblemData(std::vector<Client> clients,
                 std::vector<Depot> depots,

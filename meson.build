@@ -110,6 +110,8 @@ extensions = [
 py = import('python').find_installation()
 dependencies = [py.dependency(), dependency('pybind11')]
 
+nlohmann_json_dep = dependency('nlohmann_json', required: true)
+
 foreach extension : extensions
     rawname = extension[0]
     name = '_' + rawname
