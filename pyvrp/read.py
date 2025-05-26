@@ -533,7 +533,7 @@ class _ProblemDataBuilder:
 
         if any(dist.max() > MAX_VALUE for dist in dist_mats):
             msg = """
-            The maximum distance value is very large. This might impact 
+            The maximum distance value is very large. This might impact
             numerical stability. Consider rescaling your input data.
             """
             warn(msg, ScalingWarning)
