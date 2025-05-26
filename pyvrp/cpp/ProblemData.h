@@ -753,27 +753,6 @@ public:
      */
     static ProblemData from_json(const nlohmann::json &j);
 
-    /**
-     * Creates a ProblemData instance from a Python dict.
-     *
-     * .. python::
-     *
-     *    ProblemData.from_dict(dict_obj)
-     *
-     * Parameters
-     * ----------
-     * dict_obj
-     *     Dictionary containing all fields required to instantiate a
-     *     ProblemData object. The structure must match the ProblemData
-     *     constructor signature (clients, depots, vehicle_types,
-     *     distance_matrices, duration_matrices, groups).
-     *
-     * Returns
-     * -------
-     * ProblemData
-     *     Instance constructed from the dictionary.
-     */
-
     ProblemData(std::vector<Client> clients,
                 std::vector<Depot> depots,
                 std::vector<VehicleType> vehicleTypes,

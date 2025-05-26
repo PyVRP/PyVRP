@@ -518,7 +518,22 @@ PYBIND11_MODULE(_pyvrp, m)
                 return ProblemData::from_json(j);
             },
             py::arg("dict_obj"),
-            DOC(pyvrp, ProblemData, from_dict));
+            R"doc(
+                Creates a ProblemData instance from a Python dict.
+
+                Parameters
+                ----------
+                dict_obj
+                    Dictionary containing all fields required to instantiate a
+                    ProblemData object. The structure must match the ProblemData
+                    constructor signature (clients, depots, vehicle_types,
+                    distance_matrices, duration_matrices, groups).
+
+                Returns
+                -------
+                ProblemData
+                    Instance constructed from the dictionary.
+            )doc");
 
     py::class_<Trip>(m, "Trip", DOC(pyvrp, Trip))
         .def(py::init<ProblemData const &,
