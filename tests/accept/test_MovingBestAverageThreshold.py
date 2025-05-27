@@ -8,6 +8,7 @@ from pyvrp.accept import MovingBestAverageThreshold
     "weight, history_length, max_runtime, max_iterations",
     [
         (-1, 1, 0, 0),  # weight cannot be < 0
+        (2, 1, 0, 0),  # weight cannot be > 1
         (1, -2, 0, 0),  # history_length cannot be < 0
         (1, 0, 0, 0),  # history_length cannot be 0
         (1, 1, -1, 0),  # max_runtime cannot be < 0

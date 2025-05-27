@@ -21,29 +21,30 @@ class MovingBestAverageThreshold:
     :math:`s^j` is a recently observed solution.
 
     The weight :math:`w` is initially set at :math:`w_0 \in [0, 1]` and it
-    converges to zero as the search approaches its maximum runtime or
-    iterations. In each iteration, the weight is calculated as:
+    converges to zero as the search approaches its maximum runtime or number
+    of iterations. In each iteration, the weight is calculated as:
 
     .. math::
-        w = w_0 \times \min\left(1 - \frac{t}{T}, 1 - \frac{i}{I} \right)
+       w = w_0 \times \min\left(1 - \frac{t}{T}, 1 - \frac{i}{I} \right)
 
     where :math:`T \ge 0` and :math:`I \ge 0` are the maximum runtime and
     iterations parameters, and :math:`t` and :math:`i` are the elapsed runtime
     and number of iterations. The weight uses whichever limit (runtime or
     iterations) is most restrictive.
 
-    Note: The parameters :math:`w_0` and :math:`N` correspond to :math:`\eta`
-    and :math:`\gamma` respectively in [1]_.
+    .. note::
+       The parameters :math:`w_0` and :math:`N` correspond to :math:`\eta`
+       and :math:`\gamma` respectively in [1]_.
 
     Parameters
     ----------
     weight
         Initial weight parameter :math:`w_0` used to determine the threshold
         value. Larger values result in more accepted candidate solutions. Must
-        be non-negative.
+        be in [0, 1].
     history_length
-        The number of recent candidate solutions to consider when computing
-        the threshold value. Must be positive.
+        The number of recent candidate solutions :math:`N` to consider when
+        computing the threshold value. Must be positive.
     max_runtime
         Maximum runtime in seconds. As the search approaches this time limit,
         :math:`w \to 0`. Must be non-negative. Default is ``None``, meaning
@@ -58,7 +59,7 @@ class MovingBestAverageThreshold:
     .. [1] Máximo, V.R. and M.C.V. Nascimento. 2021. A hybrid adaptive iterated
            local search with diversification control to the capacitated vehicle
            routing problem, *European Journal of Operational Research* 294 (3):
-           1108 - 1119.
+           1108 - 1119. https://doi.org/10.1016/j.ejor.2021.02.024.
     """
 
     def __init__(
@@ -68,8 +69,8 @@ class MovingBestAverageThreshold:
         max_runtime: float | None = None,
         max_iterations: int | None = None,
     ):
-        if weight < 0:
-            raise ValueError("weight must be non-negative.")
+        if not (0 <= weight <= 1):
+            raise ValueError("weight must be in [0, 1].")
 
         if history_length <= 0:
             raise ValueError("history_length must be positive.")
@@ -105,47 +106,45 @@ class MovingBestAverageThreshold:
     def max_iterations(self) -> float | None:
         return self._max_iterations
 
-    @property
     def _runtime_budget(self) -> float:
         """
         Returns the remaining runtime budget as percentage of the maximum
         runtime.
         """
-        if self.max_runtime is None:
+        if self._max_runtime is None:
             return 1
 
-        if self.max_runtime == 0:
+        if self._max_runtime == 0:
             return 0
 
         runtime = perf_counter() - self._start_time
-        return 1 - runtime / self.max_runtime
+        return 1 - runtime / self._max_runtime
 
-    @property
     def _iteration_budget(self) -> float:
         """
         Returns the remaining iteration budget as percentage of the maximum
         number of iterations.
         """
-        if self.max_iterations is None:
+        if self._max_iterations is None:
             return 1
 
-        if self.max_iterations == 0:
+        if self._max_iterations == 0:
             return 0
 
-        return 1 - self._iters / self.max_iterations
+        return 1 - self._iters / self._max_iterations
 
     def __call__(self, best: float, current: float, candidate: float) -> bool:
-        idx = self._iters % self.history_length
+        idx = self._iters % self._history_length
         self._history[idx] = candidate
 
         history = self._history
-        if self._iters < self.history_length:  # not enough solutions observed
+        if self._iters < self._history_length:  # not enough solutions observed
             history = history[: self._iters + 1]
 
         recent_best = history.min()
         recent_avg = history.mean()
-        budget = min(self._runtime_budget, self._iteration_budget)
-        weight = self.weight * budget
+        budget = min(self._runtime_budget(), self._iteration_budget())
+        weight = self._weight * budget
 
         self._iters += 1
 
