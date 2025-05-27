@@ -18,7 +18,7 @@ All acceptance criteria implement the :class:`~pyvrp.accept.AcceptanceCriterion.
       :members:
       :special-members: __call__
 
-.. automodule:: pyvrp.accept.MovingAverageThreshold
+.. automodule:: pyvrp.accept.MovingBestAverageThreshold
 
-   .. autoclass:: MovingAverageThreshold
+   .. autoclass:: MovingBestAverageThreshold
       :members:

@@ -3,36 +3,37 @@ from time import perf_counter
 import numpy as np
 
 
-class MovingAverageThreshold:
+class MovingBestAverageThreshold:
     R"""
-    The Moving Average Threshold (MAT) criterion of [1]_. This criterion
-    accepts a candidate solution if it is better than a threshold value that is
-    based on the moving average of the objective values of recently observed
-    candidate solutions. The threshold is computed as:
+    The Moving Best Average Threshold criterion of [1]_. This criterion accepts
+    a candidate solution if it is better than a threshold value. This threshold
+    is based on the objective values of recently observed candidate solutions.
+    Specifically, it is a convex combination of the recent best and average
+    values, computed as:
 
     .. math::
 
-       f(s^*) + w \times \left(\sum_{j = 1}^N \frac{f(s^j)}{N} - f(s^*) \right)
+       (1 - w) \times f(s^*) + w \times \sum_{j = 1}^N \frac{f(s^j)}{N}
 
     where :math:`s^*` is the best solution observed in the last :math:`N`
     iterations, :math:`f(\cdot)` is the objective function,
     :math:`N \in \mathbb{N}` is the history length parameter, and each
     :math:`s^j` is a recently observed solution.
 
-    The dynamic weight :math:`w` converges to zero as the search approaches
-    its maximum runtime or iterations. It is calculated as:
+    The weight :math:`w` is initially set at :math:`w_0 \in [0, 1]` and it
+    converges to zero as the search approaches its maximum runtime or
+    iterations. In each iteration, the weight is calculated as:
 
     .. math::
         w = w_0 \times \min\left(1 - \frac{t}{T}, 1 - \frac{i}{I} \right)
 
-    where :math:`w_0 \ge 0` is the initial weight parameter, :math:`T \ge 0`
-    and :math:`I \ge 0` are the maximum runtime and iterations parameters,
-    and :math:`t` and :math:`i` are the elapsed runtime and number of
-    iterations. The dynamic weight uses whichever limit (runtime or iterations)
-    is most restrictive.
+    where :math:`T \ge 0` and :math:`I \ge 0` are the maximum runtime and
+    iterations parameters, and :math:`t` and :math:`i` are the elapsed runtime
+    and number of iterations. The weight uses whichever limit (runtime or
+    iterations) is most restrictive.
 
-    Note: The parameters ``weight`` and ``history_length`` correspond to
-    :math:`\eta` and :math:`\gamma` respectively in [1]_.
+    Note: The parameters :math:`w_0` and :math:`N` correspond to :math:`\eta`
+    and :math:`\gamma` respectively in [1]_.
 
     Parameters
     ----------
