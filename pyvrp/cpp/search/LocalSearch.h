@@ -26,13 +26,7 @@ public:
      * num_moves
      *     Number of evaluated node and route pair moves.
      * num_improving
-     *     Number of applied, improving moves.
-     * num_search_calls
-     *     Number of times :meth:`~pyvrp.search.LocalSearch.LocalSearch.search`
-     *     was called.
-     * num_intensify_calls
-     *     Number of times
-     *     :meth:`~pyvrp.search.LocalSearch.LocalSearch.intensify` was called.
+     *     Number of applied (improving) moves.
      */
     struct Statistics
     {
@@ -44,12 +38,6 @@ public:
         // Number of improving moves. Equivalent to the number of times
         // ``update()`` was called.
         size_t numImproving = 0;
-
-        // Number of times ``search()`` was called.
-        size_t numSearchCalls = 0;
-
-        // Number of times ``intensify`` was called.
-        size_t numIntensifyCalls = 0;
     };
 
 private:

@@ -42,8 +42,6 @@ Solution LocalSearch::intensify(Solution const &solution,
 
 void LocalSearch::search(CostEvaluator const &costEvaluator)
 {
-    stats_.numSearchCalls++;
-
     if (nodeOps.empty())
         return;
 
@@ -113,8 +111,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
 void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 {
-    stats_.numIntensifyCalls++;
-
     if (routeOps.empty())
         return;
 

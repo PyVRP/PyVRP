@@ -194,11 +194,7 @@ PYBIND11_MODULE(_search, m)
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))
         .def_readonly("num_moves", &LocalSearch::Statistics::numMoves)
-        .def_readonly("num_improving", &LocalSearch::Statistics::numImproving)
-        .def_readonly("num_search_calls",
-                      &LocalSearch::Statistics::numSearchCalls)
-        .def_readonly("num_intensify_calls",
-                      &LocalSearch::Statistics::numIntensifyCalls);
+        .def_readonly("num_improving", &LocalSearch::Statistics::numImproving);
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
