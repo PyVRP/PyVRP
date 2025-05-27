@@ -22,7 +22,7 @@ class MovingAverageThreshold:
     recently observed solution. The recently observed solutions are stored in
     a ``history`` attributed of size at most :math:`\\gamma`.
 
-    The algorithm incorporates a decreasing :math:`\\tilde{\\eta}` factor that
+    The algorithm incorporates a decreasing factor :math:`\\tilde{\\eta}` that
     converges to zero as the search approaches its maximum time limit or
     iterations. It is calculated as:
 
@@ -45,12 +45,12 @@ class MovingAverageThreshold:
         History size. Must be positive.
     max_runtime
         Maximum runtime in seconds. As the search approaches this time limit,
-        :math:`\\eta` converges to zero. Must be non-negative. Default is
-        ``float("inf")``, meaning that :math:`\\eta` stays constant.
+        :math:`\\tilde{\\eta} \\to 0`. Must be non-negative. Default is
+        ``float('inf')``, meaning that :math:`\\tilde{\\eta}` stays constant.
     max_iterations
         Maximum number of iterations. As the search approaches this limit,
-        :math:`\\eta` converges to zero. Must be non-negative. Default is
-        ``float("inf")``, meaning that :math:`\\eta` stays constant.
+        :math:`\\tilde{\\eta} \\to 0`. Must be non-negative. Default is
+        ``float('inf')``, meaning that :math:`\\tilde{\\eta}` stays constant.
 
     References
     ----------
