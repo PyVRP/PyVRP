@@ -21,7 +21,7 @@ class MovingAverageThreshold:
     :math:`N \\in \\mathbb{N}` is the history length parameter, and each
     :math:`s^j` is a recently observed solution.
 
-    The dynamic weight :math:`\\tilde{w}` converges to zero as the search \
+    The dynamic weight :math:`\\tilde{w}` converges to zero as the search
     approaches its maximum runtime or iterations. It is calculated as:
 
     .. math::
