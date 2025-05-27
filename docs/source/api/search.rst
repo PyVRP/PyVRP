@@ -17,15 +17,15 @@ All search methods implement the :class:`SearchMethod` protocol.
       :members:
       :special-members: __call___
 
-.. automodule:: pyvrp.search._search
-
-   .. autoclass:: LocalSearchStatistics
-
 .. automodule:: pyvrp.search.LocalSearch
 
    .. autoclass:: LocalSearch
       :members:
       :special-members: __call___
+
+.. automodule:: pyvrp.search._search
+
+   .. autoclass:: LocalSearchStatistics
 
 .. automodule:: pyvrp.search.neighbourhood
    :members:
@@ -44,6 +44,7 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
 
 
 .. automodule:: pyvrp.search._search
+   :noindex:
 
    .. autoclass:: NodeOperator
 

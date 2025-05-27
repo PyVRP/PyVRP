@@ -19,7 +19,20 @@ class LocalSearch
 public:
     /**
      * Simple data structure that tracks statistics about the number of local
-     * search moves applied to the currently loaded solution.
+     * search moves applied to the most recently improved solution.
+     *
+     * Attributes
+     * ----------
+     * num_moves
+     *     Number of evaluated node and route pair moves.
+     * num_improving
+     *     Number of applied, improving moves.
+     * num_search_calls
+     *     Number of times :meth:`~pyvrp.search.LocalSearch.LocalSearch.search`
+     *     was called.
+     * num_intensify_calls
+     *     Number of times
+     *     :meth:`~pyvrp.search.LocalSearch.LocalSearch.intensify` was called.
      */
     struct Statistics
     {

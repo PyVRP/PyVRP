@@ -191,7 +191,8 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &TripRelocate::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<LocalSearch::Statistics>(m, "LocalSearchStatistics")
+    py::class_<LocalSearch::Statistics>(
+        m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))
         .def_readonly("num_moves", &LocalSearch::Statistics::numMoves)
         .def_readonly("num_improving", &LocalSearch::Statistics::numImproving)
         .def_readonly("num_search_calls",
