@@ -2,7 +2,9 @@ Contributing
 ============
 
 Conversations about development and issues take place in the `GitHub repository <https://github.com/PyVRP/PyVRP/>`_.
-Feel free to open a new issue if you have something to discuss.
+If you are looking to make a contribution, please make sure to discuss the change first in a GitHub issue.
+This helps us scope the contribution before you commit many hours of work to it.
+Feel free to open a new issue if no appropriate issue already exists!
 
 
 Setting up a local installation
