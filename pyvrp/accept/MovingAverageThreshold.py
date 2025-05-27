@@ -34,6 +34,9 @@ class MovingAverageThreshold:
     iterations. The dynamic weight uses whichever limit (runtime or iterations)
     is most restrictive.
 
+    Note: The parameters ``weight`` and ``history_length`` correspond to
+    :math:`\\eta` and :math:`\\gamma` respectively in [1]_.
+
     Parameters
     ----------
     weight
