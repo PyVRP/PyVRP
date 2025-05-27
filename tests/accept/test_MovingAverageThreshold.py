@@ -5,40 +5,40 @@ from pyvrp.accept import MovingAverageThreshold
 
 
 @mark.parametrize(
-    "eta, gamma, max_runtime, max_iterations",
+    "weight, history_length, max_runtime, max_iterations",
     [
-        (-1, 1, 0, 0),  # eta cannot be < 0
-        (1, -2, 0, 0),  # gamma cannot be < 0
-        (1, 0, 0, 0),  # gamma cannot be 0
+        (-1, 1, 0, 0),  # weight cannot be < 0
+        (1, -2, 0, 0),  # history_length cannot be < 0
+        (1, 0, 0, 0),  # history_length cannot be 0
         (1, 1, -1, 0),  # max_runtime cannot be < 0
         (1, 1, 0, -1),  # max_iterations cannot be < 0
     ],
 )
 def test_raise_invalid_parameters(
-    eta: float, gamma: int, max_runtime: float, max_iterations: int
+    weight: float, history_length: int, max_runtime: float, max_iterations: int
 ):
     """
     Tests that a ValueError is raised when invalid parameters are passed.
     """
     with assert_raises(ValueError):
         MovingAverageThreshold(
-            eta=eta,
-            gamma=gamma,
+            weight=weight,
+            history_length=history_length,
             max_runtime=max_runtime,
             max_iterations=max_iterations,
         )
 
 
 @mark.parametrize(
-    "eta, gamma, max_runtime, max_iterations",
+    "weight, history_length, max_runtime, max_iterations",
     [
         (1, 2, 3, 4),
         (0.4, 4, 10.1, 100),
     ],
 )
 def test_attributes_are_correctly_set(
-    eta: float,
-    gamma: int,
+    weight: float,
+    history_length: int,
     max_runtime: float,
     max_iterations: int,
 ):
@@ -46,14 +46,14 @@ def test_attributes_are_correctly_set(
     Tests that valid parameters are correctly set.
     """
     mat = MovingAverageThreshold(
-        eta=eta,
-        gamma=gamma,
+        weight=weight,
+        history_length=history_length,
         max_runtime=max_runtime,
         max_iterations=max_iterations,
     )
 
-    assert_equal(mat.eta, eta)
-    assert_equal(mat.gamma, gamma)
+    assert_equal(mat.weight, weight)
+    assert_equal(mat.history_length, history_length)
     assert_equal(mat.max_runtime, max_runtime)
     assert_equal(mat.max_iterations, max_iterations)
 
@@ -62,7 +62,7 @@ def test_accepts_below_threshold():
     """
     Tests that MAT accepts a candidate solution below the threshold.
     """
-    mat = MovingAverageThreshold(eta=0.5, gamma=4)
+    mat = MovingAverageThreshold(weight=0.5, history_length=4)
     mat(1, 1, 1)
     mat(1, 1, 2)
 
@@ -74,7 +74,7 @@ def test_rejects_above_threshold():
     """
     Tests that MAT rejects a candidate solution above the threshold.
     """
-    mat = MovingAverageThreshold(eta=0.5, gamma=4)
+    mat = MovingAverageThreshold(weight=0.5, history_length=4)
     mat(1, 1, 2)
     mat(1, 1, 0)
 
@@ -86,7 +86,7 @@ def test_accepts_equal_threshold():
     """
     Tests that MAT accepts a candidate solution equal to the threshold.
     """
-    mat = MovingAverageThreshold(eta=0.5, gamma=4)
+    mat = MovingAverageThreshold(weight=0.5, history_length=4)
     mat(1, 1, 1)
     mat(1, 1, 1)
 
@@ -99,7 +99,7 @@ def test_threshold_updates_with_history():
     Tests that MAT correctly updates the threshold based on the history of
     candidate solutions and also forgets older solutions.
     """
-    mat = MovingAverageThreshold(eta=0.5, gamma=2)
+    mat = MovingAverageThreshold(weight=0.5, history_length=2)
 
     # First candidate is always accepted.
     assert_(mat(1, 1, 2))
@@ -114,13 +114,13 @@ def test_threshold_updates_with_history():
     assert_(not mat(1, 1, 2))
 
 
-def test_threshold_is_always_recent_best_with_gamma_one():
+def test_threshold_is_always_recent_best_with_history_length_one():
     """
-    Tests that MAT always accepts the candidate solution if gamma is 1.
+    Tests that MAT always accepts the candidate if history length is 1.
     """
-    mat = MovingAverageThreshold(eta=0.5, gamma=1)
+    mat = MovingAverageThreshold(weight=0.5, history_length=1)
 
-    # With gamma=1, the history always contains the candidate solution
+    # With history_length=1, the history always contains the candidate solution
     # and is of size 1, so the threshold is always equal to the candidate.
     assert_(mat(1, 1, 1))
     assert_(mat(1, 1, 10))
@@ -132,7 +132,7 @@ def test_threshold_converges_with_max_runtime():
     """
     Tests that MAT correctly converges the threshold based on the runtime.
     """
-    mat = MovingAverageThreshold(eta=1, gamma=10, max_runtime=0)
+    mat = MovingAverageThreshold(weight=1, history_length=10, max_runtime=0)
 
     mat(1, 1, 10)
     mat(1, 1, 1)
@@ -147,7 +147,7 @@ def test_threshold_converges_with_max_iterations():
     """
     Tests that MAT correctly converges the threshold based on iterations.
     """
-    mat = MovingAverageThreshold(eta=1, gamma=10, max_iterations=2)
+    mat = MovingAverageThreshold(weight=1, history_length=10, max_iterations=2)
 
     # Threshold is set at 2 + 1 * (2 - 2) = 2, so accept.
     assert_(mat(1, 1, 2))
@@ -166,7 +166,7 @@ def test_threshold_converges_with_most_restricting_limit():
     restrictive condition.
     """
     mat = MovingAverageThreshold(
-        eta=1, gamma=10, max_runtime=100, max_iterations=2
+        weight=1, history_length=10, max_runtime=100, max_iterations=2
     )
 
     mat(1, 1, 2)

@@ -12,45 +12,44 @@ class MovingAverageThreshold:
 
     .. math::
 
-       f(s^*) + \\tilde{\\eta} \\times \\left(
-          \\sum_{j = 1}^\\gamma \\frac{f(s^j)}{\\gamma} - f(s^*)
+       f(s^*) + \\tilde{w} \\times \\left(
+          \\sum_{j = 1}^N \\frac{f(s^j)}{N} - f(s^*)
        \\right)
 
-    where :math:`s^*` is the best solution observed in the last :math:`\\gamma`
-    iterations, :math:`f(\\cdot)` indicates the objective function,
-    :math:`\\gamma \\in \\mathbb{N}` is a parameter, and each :math:`s^j` is a
-    recently observed solution. The recently observed solutions are stored in
-    a ``history`` attributed of size at most :math:`\\gamma`.
+    where :math:`s^*` is the best solution observed in the last :math:`N`
+    iterations, :math:`f(\\cdot)` is the objective function,
+    :math:`N \\in \\mathbb{N}` is the history length parameter, and each
+    :math:`s^j` is a recently observed solution.
 
-    The algorithm incorporates a decreasing factor :math:`\\tilde{\\eta}` that
-    converges to zero as the search approaches its maximum time limit or
-    iterations. It is calculated as:
+    The dynamic weight :math:`\\tilde{w}` converges to zero as the search \
+    approaches its maximum runtime or iterations. It is calculated as:
 
     .. math::
-        \\tilde{\\eta} = \\eta \\times \\min\\left( 1 - \\frac{t}{T},
+        \\tilde{w} = w \\times \\min\\left( 1 - \\frac{t}{T},
             1 - \\frac{i}{I} \\right)
 
-    where :math:`\\eta \\ge 0` is a parameter, :math:`t` is the time elapsed
-    since the start of the algorithm, :math:`T` is the imposed maximum runtime,
-    :math:`i` is the number of iterations performed, and :math:`I` is the
-    maximum number of iterations allowed. The most restrictive limit between
-    the two is used to compute the factor.
+    where :math:`w \\ge 0` is the initial weight parameter, :math:`T \\ge 0`
+    and :math:`I \\ge 0` are the maximum runtime and iterations parameters,
+    and :math:`t` and :math:`i` are the elapsed runtime and number of
+    iterations. The dynamic weight uses whichever limit (runtime or iterations)
+    is most restrictive.
 
     Parameters
     ----------
-    eta
-        Used to determine the threshold value. Larger values of :math:`\\eta`
-        result in more accepted candidate solutions. Must be non-negative.
-    gamma
-        History size. Must be positive.
+    weight
+        Weight used to determine the threshold value. Larger values result in
+        more accepted candidate solutions. Must be non-negative.
+    history_length
+        The number of recent candidate solutions to consider when computing
+        the threshold value. Must be positive.
     max_runtime
         Maximum runtime in seconds. As the search approaches this time limit,
-        :math:`\\tilde{\\eta} \\to 0`. Must be non-negative. Default is
-        ``None``, meaning that :math:`\\tilde{\\eta}` stays constant.
+        :math:`\\tilde{w} \\to 0`. Must be non-negative. Default is
+        ``None``, meaning that :math:`\\tilde{w}` stays equal to :math:`w`.
     max_iterations
         Maximum number of iterations. As the search approaches this limit,
-        :math:`\\tilde{\\eta} \\to 0`. Must be non-negative. Default is
-        ``None``, meaning that :math:`\\tilde{\\eta}` stays constant.
+        :math:`\\tilde{w} \\to 0`. Must be non-negative. Default is
+        ``None``, meaning that :math:`\\tilde{w}` stays equal to :math:`w`.
 
     References
     ----------
@@ -62,16 +61,16 @@ class MovingAverageThreshold:
 
     def __init__(
         self,
-        eta: float,
-        gamma: int,
+        weight: float,
+        history_length: int,
         max_runtime: float | None = None,
         max_iterations: int | None = None,
     ):
-        if eta < 0:
-            raise ValueError("eta must be non-negative.")
+        if weight < 0:
+            raise ValueError("weight must be non-negative.")
 
-        if gamma <= 0:
-            raise ValueError("gamma must be positive.")
+        if history_length <= 0:
+            raise ValueError("history_length must be positive.")
 
         if max_runtime is not None and max_runtime < 0:
             raise ValueError("max_runtime must be non-negative.")
@@ -79,22 +78,22 @@ class MovingAverageThreshold:
         if max_iterations is not None and max_iterations < 0:
             raise ValueError("max_iterations must be non-negative.")
 
-        self._eta = eta
-        self._gamma = gamma
+        self._weight = weight
+        self._history_length = history_length
         self._max_runtime = max_runtime
         self._max_iterations = max_iterations
 
-        self._history = np.zeros(gamma)
+        self._history = np.zeros(history_length)
         self._start_time = perf_counter()
         self._iters = 0
 
     @property
-    def eta(self) -> float:
-        return self._eta
+    def weight(self) -> float:
+        return self._weight
 
     @property
-    def gamma(self) -> int:
-        return self._gamma
+    def history_length(self) -> int:
+        return self._history_length
 
     @property
     def max_runtime(self) -> float | None:
@@ -117,7 +116,7 @@ class MovingAverageThreshold:
             return 0
 
         runtime = perf_counter() - self._start_time
-        return max(1 - runtime / self.max_runtime, 0)
+        return 1 - runtime / self.max_runtime
 
     @property
     def _iteration_budget(self) -> float:
@@ -134,16 +133,17 @@ class MovingAverageThreshold:
         return 1 - self._iters / self.max_iterations
 
     def __call__(self, best: float, current: float, candidate: float) -> bool:
-        idx = self._iters % self.gamma
+        idx = self._iters % self.history_length
         self._history[idx] = candidate
 
         history = self._history
-        if self._iters < self.gamma:  # not yet enough solutions observed
+        if self._iters < self.history_length:  # not enough solutions observed
             history = history[: self._iters + 1]
 
         recent_best = history.min()
         recent_avg = history.mean()
-        factor = self.eta * min(self._runtime_budget, self._iteration_budget)
+        budget = min(self._runtime_budget, self._iteration_budget)
+        factor = self.weight * budget
 
         self._iters += 1
 
