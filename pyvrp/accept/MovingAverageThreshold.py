@@ -46,11 +46,11 @@ class MovingAverageThreshold:
     max_runtime
         Maximum runtime in seconds. As the search approaches this time limit,
         :math:`\\tilde{\\eta} \\to 0`. Must be non-negative. Default is
-        ``float('inf')``, meaning that :math:`\\tilde{\\eta}` stays constant.
+        ``None``, meaning that :math:`\\tilde{\\eta}` stays constant.
     max_iterations
         Maximum number of iterations. As the search approaches this limit,
         :math:`\\tilde{\\eta} \\to 0`. Must be non-negative. Default is
-        ``float('inf')``, meaning that :math:`\\tilde{\\eta}` stays constant.
+        ``None``, meaning that :math:`\\tilde{\\eta}` stays constant.
 
     References
     ----------
@@ -64,8 +64,8 @@ class MovingAverageThreshold:
         self,
         eta: float,
         gamma: int,
-        max_runtime: float = float("inf"),
-        max_iterations: float = float("inf"),
+        max_runtime: float | None = None,
+        max_iterations: int | None = None,
     ):
         if eta < 0:
             raise ValueError("eta must be non-negative.")
@@ -73,10 +73,10 @@ class MovingAverageThreshold:
         if gamma <= 0:
             raise ValueError("gamma must be positive.")
 
-        if max_runtime < 0:
+        if max_runtime is not None and max_runtime < 0:
             raise ValueError("max_runtime must be non-negative.")
 
-        if max_iterations < 0:
+        if max_iterations is not None and max_iterations < 0:
             raise ValueError("max_iterations must be non-negative.")
 
         self._eta = eta
@@ -97,12 +97,41 @@ class MovingAverageThreshold:
         return self._gamma
 
     @property
-    def max_runtime(self) -> float:
+    def max_runtime(self) -> float | None:
         return self._max_runtime
 
     @property
-    def max_iterations(self) -> float:
+    def max_iterations(self) -> float | None:
         return self._max_iterations
+
+    @property
+    def _runtime_budget(self) -> float:
+        """
+        Returns the remaining runtime budget as percentage of the maximum
+        runtime.
+        """
+        if self.max_runtime is None:
+            return 1
+
+        if self.max_runtime == 0:
+            return 0
+
+        runtime = perf_counter() - self._start_time
+        return max(1 - runtime / self.max_runtime, 0)
+
+    @property
+    def _iteration_budget(self) -> float:
+        """
+        Returns the remaining iteration budget as percentage of the maximum
+        iterations.
+        """
+        if self.max_iterations is None:
+            return 1
+
+        if self.max_iterations == 0:
+            return 0
+
+        return 1 - self._iters / self.max_iterations
 
     def __call__(self, best: float, current: float, candidate: float) -> bool:
         idx = self._iters % self.gamma
@@ -114,13 +143,7 @@ class MovingAverageThreshold:
 
         recent_best = history.min()
         recent_avg = history.mean()
-
-        runtime = min(perf_counter() - self._start_time, self.max_runtime)
-        pct_runtime = runtime / self.max_runtime if self.max_runtime else 1
-        pct_iters = (
-            self._iters / self.max_iterations if self.max_iterations else 1
-        )
-        factor = self.eta * min(1 - pct_runtime, 1 - pct_iters)
+        factor = self.eta * min(self._runtime_budget, self._iteration_budget)
 
         self._iters += 1
 

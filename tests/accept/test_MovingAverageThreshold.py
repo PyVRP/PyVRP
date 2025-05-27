@@ -40,7 +40,7 @@ def test_attributes_are_correctly_set(
     eta: float,
     gamma: int,
     max_runtime: float,
-    max_iterations: float,
+    max_iterations: int,
 ):
     """
     Tests that valid parameters are correctly set.
