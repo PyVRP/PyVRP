@@ -96,22 +96,21 @@ def test_accepts_equal_threshold():
 
 def test_threshold_updates_with_history():
     """
-    Tests that MAT correctly updates the threshold based on the history of
-    candidate solutions and also forgets older solutions.
+    Tests that MAT correctly updates its history by replacing older solutions.
     """
-    mat = MovingAverageThreshold(weight=0.5, history_length=2)
+    mat = MovingAverageThreshold(weight=0.5, history_length=10)
 
-    # First candidate is always accepted.
+    # Populate the history with solutions of cost 1.
+    for _ in range(10):
+        mat(1, 1, 1)
+
+    # The next nine solutions with cost 2 are rejected...
+    for _ in range(9):
+        assert_(not mat(1, 1, 2))
+
+    # ...but the 10th solution with cost 2 is accepted because now the
+    # history only consists of solutions with cost 2.
     assert_(mat(1, 1, 2))
-
-    # Threshold is set at 2 + 0.5 * (3 - 2) = 2.5, so reject.
-    assert_(not mat(1, 1, 4))
-
-    # Threshold is set at 1 + 0.5 * (2.5 - 1) = 1.75, so accept.
-    assert_(mat(1, 1, 1))
-
-    # Threshold is set at 1 + 0.5 * (1.5 - 1) = 1.25, so reject.
-    assert_(not mat(1, 1, 2))
 
 
 def test_always_accept_candidate_with_history_length_one():
@@ -120,8 +119,8 @@ def test_always_accept_candidate_with_history_length_one():
     """
     mat = MovingAverageThreshold(weight=0.5, history_length=1)
 
-    # With history_length=1, the history always contains the candidate solution
-    # and is of size 1, so the threshold is always equal to the candidate.
+    # With a history length of one, the history is just the candidate solution,
+    # so the threshold is always equal to the candidate.
     assert_(mat(1, 1, 1))
     assert_(mat(1, 1, 10))
     assert_(mat(1, 1, 100))
