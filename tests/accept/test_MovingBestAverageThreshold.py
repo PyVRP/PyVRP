@@ -184,6 +184,7 @@ def test_threshold_converges_with_zero_max_iterations():
     # the recent best solution.
     assert_(not mbat(1, 1, 3))
     assert_(not mbat(1, 1, 2))
+    assert_(mbat(1, 1, 1))
 
 
 def test_threshold_converges_with_max_iterations():
@@ -203,6 +204,7 @@ def test_threshold_converges_with_max_iterations():
     # We reached max iterations, so only candidates that are as good as recent
     # best solutions will be accepted.
     assert_(not mbat(1, 1, 1.01))
+    assert_(mbat(1, 1, 1))
 
 
 def test_threshold_converges_with_most_restricting_limit():

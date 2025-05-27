@@ -103,7 +103,7 @@ class MovingBestAverageThreshold:
         return self._max_runtime
 
     @property
-    def max_iterations(self) -> float | None:
+    def max_iterations(self) -> int | None:
         return self._max_iterations
 
     def _runtime_budget(self) -> float:
@@ -114,10 +114,11 @@ class MovingBestAverageThreshold:
         if self._max_runtime is None:
             return 1
 
-        if self._max_runtime == 0:
+        runtime = perf_counter() - self._start_time
+
+        if self._max_runtime == 0 or runtime > self._max_runtime:
             return 0
 
-        runtime = perf_counter() - self._start_time
         return 1 - runtime / self._max_runtime
 
     def _iteration_budget(self) -> float:
@@ -128,7 +129,7 @@ class MovingBestAverageThreshold:
         if self._max_iterations is None:
             return 1
 
-        if self._max_iterations == 0:
+        if self._max_iterations == 0 or self._iters > self._max_iterations:
             return 0
 
         return 1 - self._iters / self._max_iterations
@@ -148,4 +149,4 @@ class MovingBestAverageThreshold:
 
         self._iters += 1
 
-        return candidate <= recent_best + weight * (recent_avg - recent_best)
+        return candidate <= (1 - weight) * recent_best + weight * recent_avg
