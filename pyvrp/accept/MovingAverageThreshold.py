@@ -4,7 +4,7 @@ import numpy as np
 
 
 class MovingAverageThreshold:
-    """
+    R"""
     The Moving Average Threshold (MAT) criterion of [1]_. This criterion
     accepts a candidate solution if it is better than a threshold value that is
     based on the moving average of the objective values of recently observed
@@ -12,29 +12,27 @@ class MovingAverageThreshold:
 
     .. math::
 
-       f(s^*) + w \\times \\left(
-          \\sum_{j = 1}^N \\frac{f(s^j)}{N} - f(s^*)
-       \\right)
+       f(s^*) + w \times \left(\sum_{j = 1}^N \frac{f(s^j)}{N} - f(s^*) \right)
 
     where :math:`s^*` is the best solution observed in the last :math:`N`
-    iterations, :math:`f(\\cdot)` is the objective function,
-    :math:`N \\in \\mathbb{N}` is the history length parameter, and each
+    iterations, :math:`f(\cdot)` is the objective function,
+    :math:`N \in \mathbb{N}` is the history length parameter, and each
     :math:`s^j` is a recently observed solution.
 
     The dynamic weight :math:`w` converges to zero as the search approaches
     its maximum runtime or iterations. It is calculated as:
 
     .. math::
-        w = w_0 \\times \\min\\left(1 - \\frac{t}{T}, 1 - \\frac{i}{I} \\right)
+        w = w_0 \times \min\left(1 - \frac{t}{T}, 1 - \frac{i}{I} \right)
 
-    where :math:`w_0 \\ge 0` is the initial weight parameter, :math:`T \\ge 0`
-    and :math:`I \\ge 0` are the maximum runtime and iterations parameters,
+    where :math:`w_0 \ge 0` is the initial weight parameter, :math:`T \ge 0`
+    and :math:`I \ge 0` are the maximum runtime and iterations parameters,
     and :math:`t` and :math:`i` are the elapsed runtime and number of
     iterations. The dynamic weight uses whichever limit (runtime or iterations)
     is most restrictive.
 
     Note: The parameters ``weight`` and ``history_length`` correspond to
-    :math:`\\eta` and :math:`\\gamma` respectively in [1]_.
+    :math:`\eta` and :math:`\gamma` respectively in [1]_.
 
     Parameters
     ----------
@@ -47,11 +45,11 @@ class MovingAverageThreshold:
         the threshold value. Must be positive.
     max_runtime
         Maximum runtime in seconds. As the search approaches this time limit,
-        :math:`w \\to 0`. Must be non-negative. Default is ``None``, meaning
+        :math:`w \to 0`. Must be non-negative. Default is ``None``, meaning
         that :math:`w` stays equal to :math:`w_0`.
     max_iterations
         Maximum number of iterations. As the search approaches this limit,
-        :math:`w \\to 0`. Must be non-negative. Default is ``None``, meaning
+        :math:`w \to 0`. Must be non-negative. Default is ``None``, meaning
         that :math:`w` stays equal to :math:`w_0`.
 
     References
