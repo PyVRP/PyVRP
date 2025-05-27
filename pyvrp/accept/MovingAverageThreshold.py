@@ -12,7 +12,7 @@ class MovingAverageThreshold:
 
     .. math::
 
-       f(s^*) + \\tilde{w} \\times \\left(
+       f(s^*) + w \\times \\left(
           \\sum_{j = 1}^N \\frac{f(s^j)}{N} - f(s^*)
        \\right)
 
@@ -21,14 +21,13 @@ class MovingAverageThreshold:
     :math:`N \\in \\mathbb{N}` is the history length parameter, and each
     :math:`s^j` is a recently observed solution.
 
-    The dynamic weight :math:`\\tilde{w}` converges to zero as the search
-    approaches its maximum runtime or iterations. It is calculated as:
+    The dynamic weight :math:`w` converges to zero as the search approaches
+    its maximum runtime or iterations. It is calculated as:
 
     .. math::
-        \\tilde{w} = w \\times \\min\\left( 1 - \\frac{t}{T},
-            1 - \\frac{i}{I} \\right)
+        w = w_0 \\times \\min\\left(1 - \\frac{t}{T}, 1 - \\frac{i}{I} \\right)
 
-    where :math:`w \\ge 0` is the initial weight parameter, :math:`T \\ge 0`
+    where :math:`w_0 \\ge 0` is the initial weight parameter, :math:`T \\ge 0`
     and :math:`I \\ge 0` are the maximum runtime and iterations parameters,
     and :math:`t` and :math:`i` are the elapsed runtime and number of
     iterations. The dynamic weight uses whichever limit (runtime or iterations)
@@ -40,19 +39,20 @@ class MovingAverageThreshold:
     Parameters
     ----------
     weight
-        Weight used to determine the threshold value. Larger values result in
-        more accepted candidate solutions. Must be non-negative.
+        Initial weight parameter :math:`w_0` used to determine the threshold
+        value. Larger values result in more accepted candidate solutions. Must
+        be non-negative.
     history_length
         The number of recent candidate solutions to consider when computing
         the threshold value. Must be positive.
     max_runtime
         Maximum runtime in seconds. As the search approaches this time limit,
-        :math:`\\tilde{w} \\to 0`. Must be non-negative. Default is
-        ``None``, meaning that :math:`\\tilde{w}` stays equal to :math:`w`.
+        :math:`w \\to 0`. Must be non-negative. Default is ``None``, meaning
+        that :math:`w` stays equal to :math:`w_0`.
     max_iterations
         Maximum number of iterations. As the search approaches this limit,
-        :math:`\\tilde{w} \\to 0`. Must be non-negative. Default is
-        ``None``, meaning that :math:`\\tilde{w}` stays equal to :math:`w`.
+        :math:`w \\to 0`. Must be non-negative. Default is ``None``, meaning
+        that :math:`w` stays equal to :math:`w_0`.
 
     References
     ----------
@@ -125,7 +125,7 @@ class MovingAverageThreshold:
     def _iteration_budget(self) -> float:
         """
         Returns the remaining iteration budget as percentage of the maximum
-        iterations.
+        number of iterations.
         """
         if self.max_iterations is None:
             return 1
@@ -146,8 +146,8 @@ class MovingAverageThreshold:
         recent_best = history.min()
         recent_avg = history.mean()
         budget = min(self._runtime_budget, self._iteration_budget)
-        factor = self.weight * budget
+        weight = self.weight * budget
 
         self._iters += 1
 
-        return candidate <= recent_best + factor * (recent_avg - recent_best)
+        return candidate <= recent_best + weight * (recent_avg - recent_best)

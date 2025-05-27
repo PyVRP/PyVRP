@@ -114,7 +114,7 @@ def test_threshold_updates_with_history():
     assert_(not mat(1, 1, 2))
 
 
-def test_threshold_is_always_recent_best_with_history_length_one():
+def test_always_accept_candidate_with_history_length_one():
     """
     Tests that MAT always accepts the candidate if history length is 1.
     """
@@ -128,18 +128,56 @@ def test_threshold_is_always_recent_best_with_history_length_one():
     assert_(mat(1, 1, 1000))
 
 
-def test_threshold_converges_with_max_runtime():
+def test_only_accept_better_than_recent_best_with_weight_zero():
+    """
+    Tests that MAT only accepts candidates that are as good as the recent best
+    solution when the weight is zero.
+    """
+    mat = MovingAverageThreshold(weight=0, history_length=100)
+
+    assert_(mat(1, 1, 1))
+
+    assert_(not mat(1, 1, 1000))
+    assert_(not mat(1, 1, 1000))
+
+    # The weight is zero, so despite the recent average being very high, this
+    # candidate is still rejected because it is worse than the recent best.
+    assert_(not mat(1, 1, 1.01))
+
+
+def test_threshold_converges_with_zero_max_runtime():
     """
     Tests that MAT correctly converges the threshold based on the runtime.
     """
     mat = MovingAverageThreshold(weight=1, history_length=10, max_runtime=0)
 
-    mat(1, 1, 10)
-    mat(1, 1, 1)
+    # First solution is always accepted.
+    assert_(mat(1, 1, 1))
 
-    # Even though the candidate solutions are (10, 1, 2), the factor is set
-    # to 0 because we have reached the maximum runtime. MAT will then only
-    # accept candidate solutions that are as good as the recent best solution.
+    # The dynamic weight is set to 0 because we have reached the maximum
+    # runtime. MAT now only accepts candidate solutions that are as good as the
+    # recent best solution.
+    assert_(not mat(1, 1, 5))
+
+    # This candidate is worse than recent best (1), so reject.
+    assert_(not mat(1, 1, 2))
+
+
+def test_threshold_converges_with_zero_max_iterations():
+    """
+    Tests that MAT correctly converges the threshold based on iterations.
+    """
+    mat = MovingAverageThreshold(weight=1, history_length=10, max_iterations=0)
+
+    # First solution is always accepted.
+    assert_(mat(1, 1, 1))
+
+    # The dynamic weight is set to 0 because we have reached the maximum
+    # runtime. MAT now only accepts candidate solutions that are as good as the
+    # recent best solution.
+    assert_(not mat(1, 1, 3))
+
+    # This candidate is worse than recent best (1), so reject.
     assert_(not mat(1, 1, 2))
 
 
@@ -149,7 +187,7 @@ def test_threshold_converges_with_max_iterations():
     """
     mat = MovingAverageThreshold(weight=1, history_length=10, max_iterations=2)
 
-    # Threshold is set at 2 + 1 * (2 - 2) = 2, so accept.
+    # First solution is always accepted.
     assert_(mat(1, 1, 2))
 
     # Threshold is set at 1 + 0.5 * (1.5 - 1) = 1.25, so accept.
@@ -157,7 +195,7 @@ def test_threshold_converges_with_max_iterations():
 
     # We reached max iterations, so only candidates that are as good as recent
     # best solutions will be accepted.
-    assert_(not mat(1, 1, 1.5))
+    assert_(not mat(1, 1, 1.01))
 
 
 def test_threshold_converges_with_most_restricting_limit():
@@ -169,9 +207,10 @@ def test_threshold_converges_with_most_restricting_limit():
         weight=1, history_length=10, max_runtime=100, max_iterations=2
     )
 
-    mat(1, 1, 2)
+    mat(1, 1, 10)
     mat(1, 1, 1)
 
-    # Maximum iterations has been reached, so the factor is set to 0,
-    # even though the maximum runtime hasn't elapsed yet.
-    assert_(not mat(1, 1, 1.5))
+    # Maximum iterations has been reached, so the weight is set to 0,
+    # even though the maximum runtime hasn't elapsed yet. MAT now only
+    # accepts candidates that are as good as the recent best solution.
+    assert_(not mat(1, 1, 2))
