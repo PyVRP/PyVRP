@@ -16,6 +16,30 @@ namespace pyvrp::search
 {
 class LocalSearch
 {
+public:
+    /**
+     * Simple data structure that tracks statistics about the number of local
+     * search moves applied to the currently loaded solution.
+     */
+    struct Statistics
+    {
+        // Number of evaluated moves. Each "move" is the application of all
+        // node operators for a (U, V) node pair, or all route operators for a
+        // (U, V) route pair.
+        size_t numMoves = 0;
+
+        // Number of improving moves. Equivalent to the number of times
+        // ``update()`` was called.
+        size_t numImproving = 0;
+
+        // Number of times ``search()`` was called.
+        size_t numSearchCalls = 0;
+
+        // Number of times ``intensify`` was called.
+        size_t numIntensifyCalls = 0;
+    };
+
+private:
     using NodeOp = LocalSearchOperator<Route::Node>;
     using RouteOp = LocalSearchOperator<Route>;
     using Neighbours = std::vector<std::vector<size_t>>;
@@ -39,6 +63,7 @@ class LocalSearch
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
 
+    Statistics stats_;
     int numMoves = 0;              // Operator counter
     bool searchCompleted = false;  // No further improving move found?
 
@@ -104,9 +129,14 @@ public:
     void setNeighbours(Neighbours neighbours);
 
     /**
-     * @return The neighbourhood structure currently in use.
+     * Returns the current neighbourhood structure.
      */
     Neighbours const &neighbours() const;
+
+    /**
+     * Returns search statistics for the currently loaded solution.
+     */
+    Statistics const &statistics() const;
 
     /**
      * Iteratively calls ``search()`` and ``intensify()`` until no further

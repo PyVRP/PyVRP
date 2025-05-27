@@ -42,6 +42,8 @@ Solution LocalSearch::intensify(Solution const &solution,
 
 void LocalSearch::search(CostEvaluator const &costEvaluator)
 {
+    stats_.numSearchCalls++;
+
     if (nodeOps.empty())
         return;
 
@@ -111,6 +113,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
 void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 {
+    stats_.numIntensifyCalls++;
+
     if (routeOps.empty())
         return;
 
@@ -169,6 +173,8 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
                                Route::Node *V,
                                CostEvaluator const &costEvaluator)
 {
+    stats_.numMoves++;
+
     for (auto *nodeOp : nodeOps)
     {
         auto const deltaCost = nodeOp->evaluate(U, V, costEvaluator);
@@ -204,6 +210,8 @@ bool LocalSearch::applyRouteOps(Route *U,
                                 Route *V,
                                 CostEvaluator const &costEvaluator)
 {
+    stats_.numMoves++;
+
     for (auto *routeOp : routeOps)
     {
         auto const deltaCost = routeOp->evaluate(U, V, costEvaluator);
@@ -378,6 +386,7 @@ void LocalSearch::insert(Route::Node *U,
 
 void LocalSearch::update(Route *U, Route *V)
 {
+    stats_.numImproving++;
     numMoves++;
     searchCompleted = false;
 
@@ -399,6 +408,8 @@ void LocalSearch::update(Route *U, Route *V)
 
 void LocalSearch::loadSolution(Solution const &solution)
 {
+    stats_ = {};
+
     // First empty all routes.
     for (auto &route : routes)
         route.clear();
@@ -525,6 +536,11 @@ void LocalSearch::setNeighbours(Neighbours neighbours)
 LocalSearch::Neighbours const &LocalSearch::neighbours() const
 {
     return neighbours_;
+}
+
+LocalSearch::Statistics const &LocalSearch::statistics() const
+{
+    return stats_;
 }
 
 LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)

@@ -17,6 +17,10 @@ All search methods implement the :class:`SearchMethod` protocol.
       :members:
       :special-members: __call___
 
+.. automodule:: pyvrp.search._search
+
+   .. autoclass:: LocalSearchStatistics
+
 .. automodule:: pyvrp.search.LocalSearch
 
    .. autoclass:: LocalSearch
