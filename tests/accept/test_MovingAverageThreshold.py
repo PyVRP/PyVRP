@@ -99,7 +99,7 @@ def test_threshold_updates_with_history():
     Tests that MAT correctly updates the threshold based on the history of
     candidate solutions and also forgets older solutions.
     """
-    mat = MovingAverageThreshold(eta=1, gamma=2)
+    mat = MovingAverageThreshold(eta=0.5, gamma=2)
 
     # First candidate is always accepted.
     assert_(mat(1, 1, 2))
@@ -135,16 +135,17 @@ def test_threshold_converges_with_max_runtime():
     mat = MovingAverageThreshold(eta=1, gamma=10, max_runtime=0)
 
     mat(1, 1, 10)
-    mat(1, 1, 0)
+    mat(1, 1, 1)
 
-    # Even though the candidate solutions are (10, 0, 2), the threshold
-    # is set to 0 because the maximum runtime has been reached.
+    # Even though the candidate solutions are (10, 1, 2), the factor is set
+    # to 0 because we have reached the maximum runtime. MAT will then only
+    # accept candidate solutions that are as good as the recent best solution.
     assert_(not mat(1, 1, 2))
 
 
 def test_threshold_converges_with_max_iterations():
     """
-    Tests that MAT correctly converges the threshold based on the runtime.
+    Tests that MAT correctly converges the threshold based on iterations.
     """
     mat = MovingAverageThreshold(eta=1, gamma=10, max_iterations=2)
 
@@ -154,7 +155,8 @@ def test_threshold_converges_with_max_iterations():
     # Threshold is set at 1 + 0.5 * (1.5 - 1) = 1.25, so accept.
     assert_(mat(1, 1, 1))
 
-    # The threshold is set at 1 + 0.0 * (1.5 - 1) = 1, so reject.
+    # We reached max iterations, so only candidates that are as good as recent
+    # best solutions will be accepted.
     assert_(not mat(1, 1, 1.5))
 
 
