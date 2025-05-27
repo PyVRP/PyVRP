@@ -5,10 +5,10 @@ from pyvrp.accept import MovingBestAverageThreshold
 
 
 @mark.parametrize(
-    "weight, history_length, max_runtime, max_iterations",
+    "initial_weight, history_length, max_runtime, max_iterations",
     [
-        (-1, 1, 0, 0),  # weight cannot be < 0
-        (2, 1, 0, 0),  # weight cannot be > 1
+        (-1, 1, 0, 0),  # initial_weight cannot be < 0
+        (2, 1, 0, 0),  # initial_weight cannot be > 1
         (1, -2, 0, 0),  # history_length cannot be < 0
         (1, 0, 0, 0),  # history_length cannot be 0
         (1, 1, -1, 0),  # max_runtime cannot be < 0
@@ -16,14 +16,17 @@ from pyvrp.accept import MovingBestAverageThreshold
     ],
 )
 def test_raise_invalid_parameters(
-    weight: float, history_length: int, max_runtime: float, max_iterations: int
+    initial_weight: float,
+    history_length: int,
+    max_runtime: float,
+    max_iterations: int,
 ):
     """
     Tests that a ValueError is raised when invalid parameters are passed.
     """
     with assert_raises(ValueError):
         MovingBestAverageThreshold(
-            weight=weight,
+            initial_weight=initial_weight,
             history_length=history_length,
             max_runtime=max_runtime,
             max_iterations=max_iterations,
@@ -31,14 +34,14 @@ def test_raise_invalid_parameters(
 
 
 @mark.parametrize(
-    "weight, history_length, max_runtime, max_iterations",
+    "initial_weight, history_length, max_runtime, max_iterations",
     [
         (1, 2, 3, 4),
         (0.4, 4, 10.1, 100),
     ],
 )
 def test_attributes_are_correctly_set(
-    weight: float,
+    initial_weight: float,
     history_length: int,
     max_runtime: float,
     max_iterations: int,
@@ -47,13 +50,13 @@ def test_attributes_are_correctly_set(
     Tests that valid parameters are correctly set.
     """
     mbat = MovingBestAverageThreshold(
-        weight=weight,
+        initial_weight=initial_weight,
         history_length=history_length,
         max_runtime=max_runtime,
         max_iterations=max_iterations,
     )
 
-    assert_equal(mbat.weight, weight)
+    assert_equal(mbat.initial_weight, initial_weight)
     assert_equal(mbat.history_length, history_length)
     assert_equal(mbat.max_runtime, max_runtime)
     assert_equal(mbat.max_iterations, max_iterations)
@@ -63,7 +66,7 @@ def test_accepts_below_threshold():
     """
     Tests that MBAT accepts a candidate solution below the threshold.
     """
-    mbat = MovingBestAverageThreshold(weight=0.5, history_length=4)
+    mbat = MovingBestAverageThreshold(initial_weight=0.5, history_length=4)
     mbat(1, 1, 1)
     mbat(1, 1, 2)
 
@@ -75,7 +78,7 @@ def test_rejects_above_threshold():
     """
     Tests that MBAT rejects a candidate solution above the threshold.
     """
-    mbat = MovingBestAverageThreshold(weight=0.5, history_length=4)
+    mbat = MovingBestAverageThreshold(initial_weight=0.5, history_length=4)
     mbat(1, 1, 2)
     mbat(1, 1, 0)
 
@@ -87,7 +90,7 @@ def test_accepts_equal_threshold():
     """
     Tests that MBAT accepts a candidate solution equal to the threshold.
     """
-    mbat = MovingBestAverageThreshold(weight=0.5, history_length=4)
+    mbat = MovingBestAverageThreshold(initial_weight=0.5, history_length=4)
     mbat(1, 1, 1)
     mbat(1, 1, 1)
 
@@ -99,7 +102,7 @@ def test_threshold_updates_with_history():
     """
     Tests that MBAT correctly updates its history by replacing older solutions.
     """
-    mbat = MovingBestAverageThreshold(weight=0.5, history_length=10)
+    mbat = MovingBestAverageThreshold(initial_weight=0.5, history_length=10)
 
     # Populate the history with solutions of cost 1.
     for _ in range(10):
@@ -118,7 +121,7 @@ def test_always_accept_candidate_with_history_length_one():
     """
     Tests that MBAT always accepts the candidate if history length is 1.
     """
-    mbat = MovingBestAverageThreshold(weight=0.5, history_length=1)
+    mbat = MovingBestAverageThreshold(initial_weight=0.5, history_length=1)
 
     # With a history length of one, the history is just the candidate solution,
     # so the threshold is always equal to the candidate.
@@ -133,7 +136,7 @@ def test_only_accept_better_than_recent_best_with_weight_zero():
     Tests that MBAT only accepts candidates that are as good as the recent best
     solution when the weight is zero.
     """
-    mbat = MovingBestAverageThreshold(weight=0, history_length=100)
+    mbat = MovingBestAverageThreshold(initial_weight=0, history_length=100)
 
     assert_(mbat(1, 1, 1))
 
@@ -151,7 +154,7 @@ def test_threshold_converges_with_zero_max_runtime():
     Tests that MBAT correctly converges the threshold based on the runtime.
     """
     mbat = MovingBestAverageThreshold(
-        weight=1, history_length=10, max_runtime=0
+        initial_weight=1, history_length=10, max_runtime=0
     )
 
     # First solution is always accepted.
@@ -170,7 +173,7 @@ def test_threshold_converges_with_zero_max_iterations():
     Tests that MBAT correctly converges the threshold based on iterations.
     """
     mbat = MovingBestAverageThreshold(
-        weight=1, history_length=10, max_iterations=0
+        initial_weight=1, history_length=10, max_iterations=0
     )
 
     # First solution is always accepted.
@@ -188,7 +191,7 @@ def test_threshold_converges_with_max_iterations():
     Tests that MBAT correctly converges the threshold based on iterations.
     """
     mbat = MovingBestAverageThreshold(
-        weight=1, history_length=10, max_iterations=2
+        initial_weight=1, history_length=10, max_iterations=2
     )
 
     # First solution is always accepted.
@@ -208,7 +211,7 @@ def test_threshold_converges_with_most_restricting_limit():
     restrictive condition.
     """
     mbat = MovingBestAverageThreshold(
-        weight=1, history_length=10, max_runtime=100, max_iterations=2
+        initial_weight=1, history_length=10, max_runtime=100, max_iterations=2
     )
 
     mbat(1, 1, 10)

@@ -38,7 +38,7 @@ class MovingBestAverageThreshold:
 
     Parameters
     ----------
-    weight
+    initial_weight
         Initial weight parameter :math:`w_0` used to determine the threshold
         value. Larger values result in more accepted candidate solutions. Must
         be in [0, 1].
@@ -64,13 +64,13 @@ class MovingBestAverageThreshold:
 
     def __init__(
         self,
-        weight: float,
+        initial_weight: float,
         history_length: int,
         max_runtime: float | None = None,
         max_iterations: int | None = None,
     ):
-        if not (0 <= weight <= 1):
-            raise ValueError("weight must be in [0, 1].")
+        if not (0 <= initial_weight <= 1):
+            raise ValueError("initial_weight must be in [0, 1].")
 
         if history_length <= 0:
             raise ValueError("history_length must be positive.")
@@ -81,7 +81,7 @@ class MovingBestAverageThreshold:
         if max_iterations is not None and max_iterations < 0:
             raise ValueError("max_iterations must be non-negative.")
 
-        self._weight = weight
+        self._initial_weight = initial_weight
         self._history_length = history_length
         self._max_runtime = max_runtime
         self._max_iterations = max_iterations
@@ -91,8 +91,8 @@ class MovingBestAverageThreshold:
         self._iters = 0
 
     @property
-    def weight(self) -> float:
-        return self._weight
+    def initial_weight(self) -> float:
+        return self._initial_weight
 
     @property
     def history_length(self) -> int:
@@ -144,7 +144,7 @@ class MovingBestAverageThreshold:
         recent_best = history.min()
         recent_avg = history.mean()
         budget = min(self._runtime_budget(), self._iteration_budget())
-        weight = self._weight * budget
+        weight = self._initial_weight * budget
 
         self._iters += 1
 
