@@ -90,10 +90,12 @@ public:
      * ----------
      * x
      *     Horizontal coordinate of this client, that is, the 'x' part of the
-     *     client's (x, y) location tuple.
+     *     client's (x, y) location tuple. This can for example be a scaled
+     *     longitude value.
      * y
      *     Vertical coordinate of this client, that is, the 'y' part of the
-     *     client's (x, y) location tuple.
+     *     client's (x, y) location tuple. This can for example be a scaled
+     *     latitude value.
      * delivery
      *     The amounts this client demands from the depot.
      * pickup
@@ -276,10 +278,12 @@ public:
      * ----------
      * x
      *     Horizontal coordinate of this depot, that is, the 'x' part of the
-     *     depot's (x, y) location tuple.
+     *     depot's (x, y) location tuple. This can for example be a scaled
+     *     longitude value.
      * y
      *     Vertical coordinate of this depot, that is, the 'y' part of the
-     *     depot's (x, y) location tuple.
+     *     depot's (x, y) location tuple. This can for example be a scaled
+     *     latitude value.
      * tw_early
      *     Opening time of this depot. Default 0.
      * tw_late
