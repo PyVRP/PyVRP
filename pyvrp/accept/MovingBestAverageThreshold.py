@@ -48,11 +48,11 @@ class MovingBestAverageThreshold:
     max_runtime
         Maximum runtime in seconds. As the search approaches this time limit,
         :math:`w \to 0`. Must be non-negative. Default is ``None``, meaning
-        that :math:`w` stays equal to :math:`w_0`.
+        that the runtime limit is ignored when calculating the weight.
     max_iterations
         Maximum number of iterations. As the search approaches this limit,
-        :math:`w \to 0`. Must be non-negative. Default is ``None``, meaning
-        that :math:`w` stays equal to :math:`w_0`.
+        :math:`w \to 0`. Default is ``None``, meaning that the iterations limit
+        is ignored when calculating the weight.
 
     References
     ----------
