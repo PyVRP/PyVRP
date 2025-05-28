@@ -176,6 +176,8 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
         auto const deltaCost = nodeOp->evaluate(U, V, costEvaluator);
         if (deltaCost < 0)
         {
+            stats_.numImproving++;
+
             auto *rU = U->route();  // copy these because the operator can
             auto *rV = V->route();  // modify the nodes' route membership
 
@@ -213,6 +215,8 @@ bool LocalSearch::applyRouteOps(Route *U,
         auto const deltaCost = routeOp->evaluate(U, V, costEvaluator);
         if (deltaCost < 0)
         {
+            stats_.numImproving++;
+
             [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(*U)
                   + Cost(U != V) * costEvaluator.penalisedCost(*V);
@@ -382,7 +386,6 @@ void LocalSearch::insert(Route::Node *U,
 
 void LocalSearch::update(Route *U, Route *V)
 {
-    stats_.numImproving++;
     numMoves++;
     searchCompleted = false;
 

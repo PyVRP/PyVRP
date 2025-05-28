@@ -26,7 +26,7 @@ public:
      * num_moves
      *     Number of evaluated node and route operator moves.
      * num_improving
-     *     Number of applied (improving) moves.
+     *     Number of evaluated moves that led to an objective improvement.
      */
     struct Statistics
     {
@@ -34,8 +34,7 @@ public:
         // or route operator.
         size_t numMoves = 0;
 
-        // Number of improving moves. Equivalent to the number of times
-        // ``update()`` was called.
+        // Number of evaluated moves that led to an objective improvement.
         size_t numImproving = 0;
     };
 
