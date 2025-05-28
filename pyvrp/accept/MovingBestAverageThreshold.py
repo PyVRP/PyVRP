@@ -25,12 +25,14 @@ class MovingBestAverageThreshold:
     of iterations. In each iteration, the weight is calculated as:
 
     .. math::
+
        w = w_0 \times \min\left(1 - \frac{t}{T}, 1 - \frac{i}{I} \right)
 
     where :math:`T \ge 0` and :math:`I \ge 0` are the maximum runtime and
     iterations parameters, and :math:`t` and :math:`i` are the elapsed runtime
     and number of iterations. The weight uses whichever limit (runtime or
-    iterations) is most restrictive.
+    iterations) is most restrictive, and when either limit is exceeded,
+    the weight is set to $w = 0$ instead of letting it become negative.
 
     .. note::
        The parameters :math:`w_0` and :math:`N` correspond to :math:`\eta`
@@ -51,8 +53,8 @@ class MovingBestAverageThreshold:
         that the runtime limit is ignored when calculating the weight.
     max_iterations
         Maximum number of iterations. As the search approaches this limit,
-        :math:`w \to 0`. Default is ``None``, meaning that the iterations limit
-        is ignored when calculating the weight.
+        :math:`w \to 0`. Must be non-negative. Default is ``None``, meaning
+        that the iterations limit is ignored when calculating the weight.
 
     References
     ----------
@@ -116,10 +118,10 @@ class MovingBestAverageThreshold:
 
         runtime = perf_counter() - self._start_time
 
-        if self._max_runtime == 0 or runtime > self._max_runtime:
+        if self._max_runtime == 0:
             return 0
 
-        return 1 - runtime / self._max_runtime
+        return max(1 - runtime / self._max_runtime, 0)
 
     def _iteration_budget(self) -> float:
         """
@@ -129,10 +131,10 @@ class MovingBestAverageThreshold:
         if self._max_iterations is None:
             return 1
 
-        if self._max_iterations == 0 or self._iters > self._max_iterations:
+        if self._max_iterations == 0:
             return 0
 
-        return 1 - self._iters / self._max_iterations
+        return max(1 - self._iters / self._max_iterations, 0)
 
     def __call__(self, best: float, current: float, candidate: float) -> bool:
         idx = self._iters % self._history_length
