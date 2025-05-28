@@ -65,7 +65,7 @@ private:
     std::vector<RouteOp *> routeOps;
 
     Statistics stats_;
-    int numMoves = 0;              // Operator counter
+    int numUpdates = 0;            // Operator counter
     bool searchCompleted = false;  // No further improving move found?
 
     // Load an initial solution that we will attempt to improve.

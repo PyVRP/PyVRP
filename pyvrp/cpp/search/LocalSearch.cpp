@@ -59,7 +59,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             auto *U = &nodes[uClient];
 
             auto const lastTested = lastTestedNodes[uClient];
-            lastTestedNodes[uClient] = numMoves;
+            lastTestedNodes[uClient] = numUpdates;
 
             // First test removing or inserting U. Particularly relevant if not
             // all clients are required (e.g., when prize collecting).
@@ -123,7 +123,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
                 continue;
 
             auto const lastTested = lastTestedRoutes[U.idx()];
-            lastTestedRoutes[U.idx()] = numMoves;
+            lastTestedRoutes[U.idx()] = numUpdates;
 
             for (size_t rV = U.idx() + 1; rV != routes.size(); ++rV)
             {
@@ -373,11 +373,11 @@ void LocalSearch::insert(Route::Node *U,
 
 void LocalSearch::update(Route *U, Route *V)
 {
-    numMoves++;
+    numUpdates++;
     searchCompleted = false;
 
     U->update();
-    lastModified[U->idx()] = numMoves;
+    lastModified[U->idx()] = numUpdates;
 
     for (auto *op : routeOps)  // this is used by some route operators
         op->update(U);         // to keep caches in sync.
@@ -385,7 +385,7 @@ void LocalSearch::update(Route *U, Route *V)
     if (U != V)
     {
         V->update();
-        lastModified[V->idx()] = numMoves;
+        lastModified[V->idx()] = numUpdates;
 
         for (auto *op : routeOps)  // this is used by some route operators
             op->update(V);         // to keep caches in sync.
