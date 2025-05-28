@@ -496,44 +496,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                  t[5].cast<Groups>());
 
                 return data;
-            }))
-        .def_static(
-            "from_json",
-            [](py::object obj)
-            {
-                nlohmann::json j;
-                j = nlohmann::json::parse(obj.cast<std::string>());
-                return ProblemData::from_json(j);
-            },
-            py::arg("json_obj"),
-            DOC(pyvrp, ProblemData, from_json))
-        .def_static(
-            "from_dict",
-            [](py::dict dict_obj)
-            {
-                auto json_mod = py::module_::import("json");
-                auto dumped = json_mod.attr("dumps")(dict_obj);
-                nlohmann::json j
-                    = nlohmann::json::parse(dumped.cast<std::string>());
-                return ProblemData::from_json(j);
-            },
-            py::arg("dict_obj"),
-            R"doc(
-                Creates a ProblemData instance from a Python dict.
-
-                Parameters
-                ----------
-                dict_obj
-                    Dictionary containing all fields required to instantiate a
-                    ProblemData object. The structure must match the ProblemData
-                    constructor signature (clients, depots, vehicle_types,
-                    distance_matrices, duration_matrices, groups).
-
-                Returns
-                -------
-                ProblemData
-                    Instance constructed from the dictionary.
-            )doc");
+            }));
 
     py::class_<Trip>(m, "Trip", DOC(pyvrp, Trip))
         .def(py::init<ProblemData const &,

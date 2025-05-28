@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cstring>
-#include <nlohmann/json.hpp>
 #include <numeric>
 #include <stdexcept>
 
@@ -40,18 +39,6 @@ bool hasTimeOverlap(auto const &a, auto const &b)
 {
     // See https://stackoverflow.com/a/325964/4316405.
     return a.twEarly <= b.twLate && a.twLate >= b.twEarly;
-}
-
-template <typename T>
-static Matrix<T> matrix_from_json(const nlohmann::json &arr)
-{
-    size_t rows = arr.size();
-    size_t cols = arr[0].size();
-    Matrix<T> mat(rows, cols);
-    for (size_t i = 0; i < rows; ++i)
-        for (size_t j = 0; j < cols; ++j)
-            mat(i, j) = T(arr[i][j].get<pyvrp::Value>());
-    return mat;
 }
 }  // namespace
 
@@ -235,7 +222,7 @@ ProblemData::Depot::~Depot() { delete[] name; }
 bool ProblemData::Depot::operator==(Depot const &other) const
 {
     // clang-format off
-    return x == other.x
+    return x == other.x 
         && y == other.y
         && twEarly == other.twEarly
         && twLate == other.twLate
@@ -682,146 +669,4 @@ ProblemData::ProblemData(std::vector<Client> clients,
     }
 
     validate();
-}
-
-ProblemData ProblemData::from_json(const nlohmann::json &j)
-{
-    // --- Clients ---
-    std::vector<Client> clients;
-    for (const auto &c : j.at("clients"))
-    {
-        int x = c.at("x");
-        int y = c.at("y");
-        std::vector<pyvrp::Value> delivery_vals
-            = c.at("delivery").get<std::vector<pyvrp::Value>>();
-        std::vector<Load> delivery;
-        delivery.reserve(delivery_vals.size());
-        for (auto v : delivery_vals)
-            delivery.emplace_back(Load(v));
-
-        std::vector<pyvrp::Value> pickup_vals
-            = c.at("pickup").get<std::vector<pyvrp::Value>>();
-        std::vector<Load> pickup;
-        pickup.reserve(pickup_vals.size());
-        for (auto v : pickup_vals)
-            pickup.emplace_back(Load(v));
-        int service_duration = c.at("service_duration");
-        int tw_early = c.at("tw_early");
-        int tw_late = c.at("tw_late");
-        int release_time = c.at("release_time");
-        int prize = c.at("prize");
-        bool required = c.at("required");
-        std::optional<size_t> group;
-        if (c.contains("group") && !c.at("group").is_null())
-            group = c.at("group").get<size_t>();
-        std::string name = c.at("name");
-        clients.emplace_back(x,
-                             y,
-                             delivery,
-                             pickup,
-                             service_duration,
-                             tw_early,
-                             tw_late,
-                             release_time,
-                             prize,
-                             required,
-                             group,
-                             name);
-    }
-
-    // --- Depots ---
-    std::vector<Depot> depots;
-    for (const auto &d : j.at("depots"))
-    {
-        int x = d.at("x");
-        int y = d.at("y");
-        int tw_early = d.at("tw_early");
-        int tw_late = d.at("tw_late");
-        std::string name = d.at("name");
-        depots.emplace_back(x, y, tw_early, tw_late, name);
-    }
-
-    // --- VehicleTypes ---
-    std::vector<VehicleType> vehicle_types;
-    for (const auto &v : j.at("vehicle_types"))
-    {
-        size_t num_available = v.at("num_available");
-        std::vector<pyvrp::Value> capacity_vals
-            = v.at("capacity").get<std::vector<pyvrp::Value>>();
-        std::vector<Load> capacity;
-        capacity.reserve(capacity_vals.size());
-        for (auto val : capacity_vals)
-            capacity.emplace_back(Load(val));
-        size_t start_depot = v.at("start_depot");
-        size_t end_depot = v.at("end_depot");
-        int fixed_cost = v.at("fixed_cost");
-        int tw_early = v.at("tw_early");
-        int tw_late = v.at("tw_late");
-        int max_duration = v.at("max_duration");
-        int max_distance = v.at("max_distance");
-        int unit_distance_cost = v.at("unit_distance_cost");
-        int unit_duration_cost = v.at("unit_duration_cost");
-        size_t profile = v.at("profile");
-        std::optional<int> start_late;
-        if (v.contains("start_late") && !v.at("start_late").is_null())
-            start_late = v.at("start_late").get<int>();
-        std::vector<pyvrp::Value> initial_load_vals
-            = v.at("initial_load").get<std::vector<pyvrp::Value>>();
-        std::vector<Load> initial_load;
-        initial_load.reserve(initial_load_vals.size());
-        for (auto val : initial_load_vals)
-            initial_load.emplace_back(Load(val));
-        std::vector<size_t> reload_depots
-            = v.at("reload_depots").get<std::vector<size_t>>();
-        size_t max_reloads = v.at("max_reloads");
-        std::string name = v.at("name");
-
-        vehicle_types.emplace_back(num_available,
-                                   capacity,
-                                   start_depot,
-                                   end_depot,
-                                   fixed_cost,
-                                   tw_early,
-                                   tw_late,
-                                   max_duration,
-                                   max_distance,
-                                   unit_distance_cost,
-                                   unit_duration_cost,
-                                   profile,
-                                   start_late,
-                                   initial_load,
-                                   reload_depots,
-                                   max_reloads,
-                                   name);
-    }
-
-    // --- Matrices ---
-    std::vector<Matrix<Distance>> distance_matrices;
-    for (const auto &arr : j.at("distance_matrices"))
-        distance_matrices.push_back(matrix_from_json<Distance>(arr));
-
-    std::vector<Matrix<Duration>> duration_matrices;
-    for (const auto &arr : j.at("duration_matrices"))
-        duration_matrices.push_back(matrix_from_json<Duration>(arr));
-
-    // --- Groups ---
-    std::vector<ClientGroup> groups;
-    if (j.contains("groups"))
-    {
-        for (const auto &g : j.at("groups"))
-        {
-            std::vector<size_t> clients
-                = g.at("clients").get<std::vector<size_t>>();
-            bool required
-                = g.contains("required") ? g.at("required").get<bool>() : false;
-            groups.emplace_back(clients, required);
-        }
-    }
-
-    return ProblemData(clients,
-                       depots,
-                       vehicle_types,
-                       distance_matrices,
-                       duration_matrices,
-                       groups);
 }

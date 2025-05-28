@@ -1227,7 +1227,7 @@ def test_problem_data_from_json():
     Tests that ProblemData.from_json correctly instantiates an object from
     a minimal JSON dict.
     """
-    problem_data_dict = {
+    json_data = {
         "clients": [
             {
                 "x": 1,
@@ -1272,153 +1272,10 @@ def test_problem_data_from_json():
         "duration_matrices": [[[0, 2], [2, 0]]],
         "groups": [],
     }
-    import json
-
-    json_data = json.dumps(problem_data_dict)
     data = ProblemData.from_json(json_data)
-    assert_equal(data.num_clients, 1)
-    assert_equal(data.num_depots, 1)
-    assert_equal(data.num_vehicle_types, 1)
-    assert_equal(data.num_profiles, 1)
-    assert_equal(data.num_groups, 0)
-
-
-def test_problem_data_from_dict():
-    """
-    Tests that ProblemData.from_dict correctly instantiates an object from
-    a minimal dict.
-    """
-    problem_data_dict = {
-        "clients": [
-            {
-                "x": 1,
-                "y": 2,
-                "delivery": [3],
-                "pickup": [0],
-                "service_duration": 0,
-                "tw_early": 0,
-                "tw_late": 100,
-                "release_time": 0,
-                "prize": 0,
-                "required": True,
-                "group": None,
-                "name": "client1",
-            }
-        ],
-        "depots": [
-            {"x": 0, "y": 0, "tw_early": 0, "tw_late": 100, "name": "depot1"}
-        ],
-        "vehicle_types": [
-            {
-                "num_available": 1,
-                "capacity": [10],
-                "start_depot": 0,
-                "end_depot": 0,
-                "fixed_cost": 0,
-                "tw_early": 0,
-                "tw_late": 100,
-                "max_duration": 100,
-                "max_distance": 100,
-                "unit_distance_cost": 1,
-                "unit_duration_cost": 0,
-                "profile": 0,
-                "start_late": 0,
-                "initial_load": [0],
-                "reload_depots": [],
-                "max_reloads": 0,
-                "name": "veh1",
-            }
-        ],
-        "distance_matrices": [[[0, 1], [1, 0]]],
-        "duration_matrices": [[[0, 2], [2, 0]]],
-    }
-    data = ProblemData.from_dict(problem_data_dict)
-    assert_equal(data.num_clients, 1)
-    assert_equal(data.num_depots, 1)
-    assert_equal(data.num_vehicle_types, 1)
-    assert_equal(data.num_profiles, 1)
-    assert_equal(data.num_groups, 0)
-
-
-def test_problem_data_from_json_with_mutual_exclusive_group():
-    """
-    Tests that ProblemData.from_json correctly instantiates an object with
-    two clients in a mutual_exclusive group.
-    """
-    problem_data_dict = {
-        "clients": [
-            {
-                "x": 1,
-                "y": 2,
-                "delivery": [3],
-                "pickup": [0],
-                "service_duration": 0,
-                "tw_early": 0,
-                "tw_late": 100,
-                "release_time": 0,
-                "prize": 0,
-                "required": False,
-                "group": 0,
-                "name": "client1",
-            },
-            {
-                "x": 1,
-                "y": 2,
-                "delivery": [2],
-                "pickup": [0],
-                "service_duration": 0,
-                "tw_early": 0,
-                "tw_late": 100,
-                "release_time": 0,
-                "prize": 0,
-                "required": False,
-                "group": 0,
-                "name": "client2",
-            },
-        ],
-        "depots": [
-            {"x": 0, "y": 0, "tw_early": 0, "tw_late": 100, "name": "depot1"}
-        ],
-        "vehicle_types": [
-            {
-                "num_available": 1,
-                "capacity": [10],
-                "start_depot": 0,
-                "end_depot": 0,
-                "fixed_cost": 0,
-                "tw_early": 0,
-                "tw_late": 100,
-                "max_duration": 100,
-                "max_distance": 100,
-                "unit_distance_cost": 1,
-                "unit_duration_cost": 0,
-                "profile": 0,
-                "start_late": None,
-                "initial_load": [0],
-                "reload_depots": [],
-                "max_reloads": 0,
-                "name": "veh1",
-            }
-        ],
-        "distance_matrices": [[[0, 1, 2], [1, 0, 3], [2, 3, 0]]],
-        "duration_matrices": [[[0, 2, 4], [2, 0, 5], [4, 5, 0]]],
-        "groups": [
-            {
-                "required": True,
-                "clients": [
-                    1,
-                    2,
-                ],  # index 0 is depot, index 1 is client1, index 2 is client2
-            }
-        ],
-    }
-    import json
-
-    json_data = json.dumps(problem_data_dict)
-    data = ProblemData.from_json(json_data)
-    assert_equal(data.num_clients, 2)
-    assert_equal(data.num_groups, 1)
-    # Check that the two clients are in the mutual_exclusive group
-    group = data.group(0)
-    assert_equal(group.mutually_exclusive, True)
-    assert_equal(set(group.clients), {1, 2})
+    assert isinstance(data, ProblemData)
+    assert data.num_clients == 1
+    assert data.num_depots == 1
+    assert data.num_vehicle_types == 1
+    assert data.num_profiles == 1
+    assert data.num_groups == 0
