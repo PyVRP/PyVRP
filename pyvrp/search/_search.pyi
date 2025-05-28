@@ -46,8 +46,6 @@ class LocalSearchStatistics:
     num_moves: int
     num_improving: int
     num_updates: int
-    num_search_iterations: int
-    num_intensify_iterations: int
 
 class LocalSearch:
     def __init__(
