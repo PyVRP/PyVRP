@@ -58,7 +58,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
         {
             auto *U = &nodes[uClient];
 
-            auto const lastTestedNode = lastTestedNodes[uClient];
+            auto const lastTested = lastTestedNodes[uClient];
             lastTestedNodes[uClient] = numMoves;
 
             // First test removing or inserting U. Particularly relevant if not
@@ -84,8 +84,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 if (!V->route())
                     continue;
 
-                if (lastModified[U->route()->idx()] > lastTestedNode
-                    || lastModified[V->route()->idx()] > lastTestedNode)
+                if (lastModified[U->route()->idx()] > lastTested
+                    || lastModified[V->route()->idx()] > lastTested)
                 {
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
