@@ -15,14 +15,17 @@ Solution LocalSearch::operator()(Solution const &solution,
 {
     loadSolution(solution);
 
-    size_t numImproving = 0;
-    do
+    while (true)
     {
         search(costEvaluator);
+        auto const numImproving = stats_.numImproving;  // after node search
 
-        numImproving = stats_.numImproving;
         intensify(costEvaluator);
-    } while (stats_.numImproving != numImproving);
+        if (stats_.numImproving == numImproving)
+            // Then intensify (route search) did not find any additional
+            // improving moves, and the solution is locally optimal.
+            break;
+    }
 
     return exportSolution();
 }
