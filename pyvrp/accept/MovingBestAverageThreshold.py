@@ -116,11 +116,10 @@ class MovingBestAverageThreshold:
         if self._max_runtime is None:
             return 1
 
-        runtime = perf_counter() - self._start_time
-
         if self._max_runtime == 0:
             return 0
 
+        runtime = perf_counter() - self._start_time
         return max(1 - runtime / self._max_runtime, 0)
 
     def _iteration_budget(self) -> float:
