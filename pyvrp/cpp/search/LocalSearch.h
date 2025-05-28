@@ -82,7 +82,7 @@ private:
 
     // Tests a move removing the given reload depot.
     void applyDepotRemovalMove(Route::Node *U,
-                               CostEvaluator const &CostEvaluator);
+                               CostEvaluator const &costEvaluator);
 
     // Tests moves involving empty routes.
     void applyEmptyRouteMoves(Route::Node *U,
