@@ -31,6 +31,12 @@ public:
      *     Total number of changes to the solution. This always includes the
      *     number of evaluated improving moves, but also e.g. insertion of
      *     required but missing clients.
+     * num_search_iterations
+     *     Number of executions of the main loop of node-based
+     *     :meth:`~pyvrp.search.LocalSearch.LocalSearch.search`.
+     * num_intensify_iterations
+     *     Number of executions of the main loop of route-based
+     *     :meth:`~pyvrp.search.LocalSearch.LocalSearch.intensify`.
      */
     struct Statistics
     {
@@ -43,6 +49,12 @@ public:
 
         // Number of times the solution has been modified in some way.
         size_t numUpdates = 0;
+
+        // Number of times the main ``search()`` loop has been executed.
+        size_t numSearchIterations = 0;
+
+        // Number of times the main ``intensify()`` loop has been executed.
+        size_t numIntensifyIterations = 0;
     };
 
 private:

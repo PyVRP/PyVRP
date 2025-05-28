@@ -54,6 +54,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     searchCompleted = false;
     for (int step = 0; !searchCompleted; ++step)
     {
+        stats_.numSearchIterations++;
         searchCompleted = true;
 
         // Node operators are evaluated for neighbouring (U, V) pairs.
@@ -115,6 +116,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
     searchCompleted = false;
     while (!searchCompleted)
     {
+        stats_.numIntensifyIterations++;
         searchCompleted = true;
 
         for (auto const rU : orderRoutes)

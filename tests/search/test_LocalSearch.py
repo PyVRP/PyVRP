@@ -592,6 +592,8 @@ def test_search_statistics(ok_small):
     assert_equal(stats.num_moves, 0)
     assert_equal(stats.num_improving, 0)
     assert_equal(stats.num_updates, 0)
+    assert_equal(stats.num_search_iterations, 0)
+    assert_equal(stats.num_intensify_iterations, 0)
 
     # Load and improve a random solution. This should result in a non-zero
     # number of moves.
@@ -613,3 +615,8 @@ def test_search_statistics(ok_small):
     assert_(stats.num_moves > 0)
     assert_equal(stats.num_improving, 0)
     assert_equal(stats.num_updates, 0)
+
+    # Since we have not found any improvements, we should have only executed
+    # each search loop once.
+    assert_equal(stats.num_search_iterations, 1)
+    assert_equal(stats.num_intensify_iterations, 1)
