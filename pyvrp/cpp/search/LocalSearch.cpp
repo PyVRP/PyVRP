@@ -15,11 +15,14 @@ Solution LocalSearch::operator()(Solution const &solution,
 {
     loadSolution(solution);
 
+    size_t numImproving = 0;
     do
     {
         search(costEvaluator);
+
+        numImproving = stats_.numImproving;
         intensify(costEvaluator);
-    } while (numMoves != 0);  // repeat until solution is locally optimal.
+    } while (stats_.numImproving != numImproving);
 
     return exportSolution();
 }
@@ -45,15 +48,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     if (nodeOps.empty())
         return;
 
-    // Caches the last time nodes were tested for modification (uses numMoves to
-    // track this). The lastModified field, in contrast, track when a route was
-    // last *actually* modified.
-    std::vector<int> lastTestedNodes(data.numLocations(), -1);
-    lastModified = std::vector<int>(data.numVehicles(), 0);
-
     searchCompleted = false;
-    numMoves = 0;
-
     for (int step = 0; !searchCompleted; ++step)
     {
         searchCompleted = true;
@@ -114,12 +109,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
     if (routeOps.empty())
         return;
 
-    std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
-    lastModified = std::vector<int>(data.numVehicles(), 0);
-
     searchCompleted = false;
-    numMoves = 0;
-
     while (!searchCompleted)
     {
         searchCompleted = true;
@@ -143,12 +133,9 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
                 if (V.empty())
                     continue;
 
-                auto const lastModifiedRoute
-                    = std::max(lastModified[U.idx()], lastModified[V.idx()]);
-
-                if (lastModifiedRoute > lastTested
-                    && applyRouteOps(&U, &V, costEvaluator))
-                    continue;
+                if (lastModified[U.idx()] > lastTested
+                    || lastModified[V.idx()] > lastTested)
+                    applyRouteOps(&U, &V, costEvaluator);
             }
         }
     }
@@ -407,6 +394,9 @@ void LocalSearch::update(Route *U, Route *V)
 
 void LocalSearch::loadSolution(Solution const &solution)
 {
+    lastTestedNodes = std::vector<int>(data.numLocations(), -1);
+    lastTestedRoutes = std::vector<int>(data.numVehicles(), -1);
+    lastModified = std::vector<int>(data.numVehicles(), 0);
     stats_ = {};
 
     // First empty all routes.

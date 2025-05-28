@@ -54,7 +54,9 @@ private:
     std::vector<std::pair<size_t, size_t>>  // vehicle type order (incl. offset)
         orderVehTypes;                      // used by LS::applyEmptyRouteMoves
 
-    std::vector<int> lastModified;  // tracks when routes were last modified
+    std::vector<int> lastTestedNodes;   // tracks node operator evaluation
+    std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
+    std::vector<int> lastModified;      // tracks when routes were last modified
 
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
