@@ -65,7 +65,7 @@ def test_raises_when_neighbourhood_dimensions_do_not_match(ok_small, size):
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
 
     with assert_raises(RuntimeError):
-        ls.set_neighbours(neighbours)
+        ls.neighbours = neighbours
 
 
 def test_raises_when_neighbourhood_contains_self_or_depot(ok_small):
@@ -127,20 +127,20 @@ def test_local_search_set_get_neighbours(
     neighbours = compute_neighbours(rc208, params)
 
     # Test that before we set neighbours we don't have same
-    assert_(ls.neighbours() != neighbours)
+    assert_(ls.neighbours != neighbours)
 
     # Test after we set we have the same
-    ls.set_neighbours(neighbours)
-    ls_neighbours = ls.neighbours()
-    assert_equal(ls_neighbours, neighbours)
+    ls.neighbours = neighbours
+    assert_equal(ls.neighbours, neighbours)
 
     # Check that the bindings make a copy (in both directions)
-    assert_(ls_neighbours is not neighbours)
+    assert_(ls.neighbours is not neighbours)
+    ls_neighbours = ls.neighbours
     ls_neighbours[1] = []
-    assert_(ls.neighbours() != ls_neighbours)
-    assert_equal(ls.neighbours(), neighbours)
+    assert_(ls.neighbours != ls_neighbours)
+    assert_equal(ls.neighbours, neighbours)
     neighbours[1] = []
-    assert_(ls.neighbours() != neighbours)
+    assert_(ls.neighbours != neighbours)
 
 
 def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):
@@ -575,3 +575,38 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     routes = improved.routes()
     assert_(str(routes[0]), "1 3")
     assert_(str(routes[1]), "2 4")
+
+
+def test_search_statistics(ok_small):
+    """
+    Tests that the local search's search statistics return meaningful
+    information about the number of evaluated and improving moves.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+    ls.add_node_operator(Exchange10(ok_small))
+    ls.add_route_operator(SwapStar(ok_small))
+
+    # No solution is yet loaded/improved, so all these numbers should be zero.
+    stats = ls.statistics
+    assert_equal(stats.num_moves, 0)
+    assert_equal(stats.num_improving, 0)
+
+    # Load and improve a random solution. This should result in a non-zero
+    # number of moves.
+    rnd_sol = Solution.make_random(ok_small, rng)
+    cost_eval = CostEvaluator([1], 1, 1)
+    improved = ls(rnd_sol, cost_eval)
+
+    stats = ls.statistics
+    assert_(stats.num_moves > 0)
+    assert_(stats.num_improving > 0)
+
+    # The improved solution is already locally optimal, so it cannot be further
+    # improved by the local search. The number of improving moves should thus
+    # be zero after another attempt.
+    ls(improved, cost_eval)
+
+    stats = ls.statistics
+    assert_(stats.num_moves > 0)
+    assert_equal(stats.num_improving, 0)

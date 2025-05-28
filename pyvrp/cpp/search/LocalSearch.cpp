@@ -171,9 +171,13 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
 {
     for (auto *nodeOp : nodeOps)
     {
+        stats_.numMoves++;
+
         auto const deltaCost = nodeOp->evaluate(U, V, costEvaluator);
         if (deltaCost < 0)
         {
+            stats_.numImproving++;
+
             auto *rU = U->route();  // copy these because the operator can
             auto *rV = V->route();  // modify the nodes' route membership
 
@@ -206,9 +210,13 @@ bool LocalSearch::applyRouteOps(Route *U,
 {
     for (auto *routeOp : routeOps)
     {
+        stats_.numMoves++;
+
         auto const deltaCost = routeOp->evaluate(U, V, costEvaluator);
         if (deltaCost < 0)
         {
+            stats_.numImproving++;
+
             [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(*U)
                   + Cost(U != V) * costEvaluator.penalisedCost(*V);
@@ -233,7 +241,7 @@ bool LocalSearch::applyRouteOps(Route *U,
 }
 
 void LocalSearch::applyDepotRemovalMove(Route::Node *U,
-                                        CostEvaluator const &CostEvaluator)
+                                        CostEvaluator const &costEvaluator)
 {
     if (!U->isReloadDepot())
         return;
@@ -241,7 +249,7 @@ void LocalSearch::applyDepotRemovalMove(Route::Node *U,
     // We remove the depot when that's either better, or neutral. It can be
     // neutral if for example it's the same depot visited consecutively, but
     // that's then unnecessary.
-    if (removeCost(U, data, CostEvaluator) <= 0)
+    if (removeCost(U, data, costEvaluator) <= 0)
     {
         auto *route = U->route();
         route->remove(U->idx());
@@ -399,6 +407,8 @@ void LocalSearch::update(Route *U, Route *V)
 
 void LocalSearch::loadSolution(Solution const &solution)
 {
+    stats_ = {};
+
     // First empty all routes.
     for (auto &route : routes)
         route.clear();
@@ -525,6 +535,11 @@ void LocalSearch::setNeighbours(Neighbours neighbours)
 LocalSearch::Neighbours const &LocalSearch::neighbours() const
 {
     return neighbours_;
+}
+
+LocalSearch::Statistics const &LocalSearch::statistics() const
+{
+    return stats_;
 }
 
 LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
