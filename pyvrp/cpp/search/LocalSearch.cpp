@@ -169,10 +169,10 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
                                Route::Node *V,
                                CostEvaluator const &costEvaluator)
 {
-    stats_.numMoves++;
-
     for (auto *nodeOp : nodeOps)
     {
+        stats_.numMoves++;
+
         auto const deltaCost = nodeOp->evaluate(U, V, costEvaluator);
         if (deltaCost < 0)
         {
@@ -206,10 +206,10 @@ bool LocalSearch::applyRouteOps(Route *U,
                                 Route *V,
                                 CostEvaluator const &costEvaluator)
 {
-    stats_.numMoves++;
-
     for (auto *routeOp : routeOps)
     {
+        stats_.numMoves++;
+
         auto const deltaCost = routeOp->evaluate(U, V, costEvaluator);
         if (deltaCost < 0)
         {

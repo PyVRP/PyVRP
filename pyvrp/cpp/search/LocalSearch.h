@@ -24,15 +24,14 @@ public:
      * Attributes
      * ----------
      * num_moves
-     *     Number of evaluated node and route pair moves.
+     *     Number of evaluated node and route operator moves.
      * num_improving
      *     Number of applied (improving) moves.
      */
     struct Statistics
     {
-        // Number of evaluated moves. Each "move" is the application of all
-        // node operators for a (U, V) node pair, or all route operators for a
-        // (U, V) route pair.
+        // Number of evaluated moves, that is, number of evaluations of a node
+        // or route operator.
         size_t numMoves = 0;
 
         // Number of improving moves. Equivalent to the number of times
