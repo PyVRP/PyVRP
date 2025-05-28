@@ -27,6 +27,10 @@ public:
      *     Number of evaluated node and route operator moves.
      * num_improving
      *     Number of evaluated moves that led to an objective improvement.
+     * num_updates
+     *     Total number of changes to the solution. This always includes the
+     *     number of evaluated improving moves, but also e.g. insertion of
+     *     required but missing clients.
      */
     struct Statistics
     {
@@ -36,6 +40,9 @@ public:
 
         // Number of evaluated moves that led to an objective improvement.
         size_t numImproving = 0;
+
+        // Number of times the solution has been modified in some way.
+        size_t numUpdates = 0;
     };
 
 private:
@@ -56,7 +63,7 @@ private:
 
     std::vector<int> lastTestedNodes;   // tracks node operator evaluation
     std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
-    std::vector<int> lastModified;      // tracks when routes were last modified
+    std::vector<int> lastUpdated;       // tracks when routes were last modified
 
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
@@ -65,7 +72,6 @@ private:
     std::vector<RouteOp *> routeOps;
 
     Statistics stats_;
-    int numUpdates = 0;            // Operator counter
     bool searchCompleted = false;  // No further improving move found?
 
     // Load an initial solution that we will attempt to improve.

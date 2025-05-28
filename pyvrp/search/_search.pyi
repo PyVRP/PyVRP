@@ -45,6 +45,7 @@ class TripRelocate(NodeOperator): ...
 class LocalSearchStatistics:
     num_moves: int
     num_improving: int
+    num_updates: int
 
 class LocalSearch:
     def __init__(
