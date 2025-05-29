@@ -591,6 +591,7 @@ def test_search_statistics(ok_small):
     stats = ls.statistics
     assert_equal(stats.num_moves, 0)
     assert_equal(stats.num_improving, 0)
+    assert_equal(stats.num_updates, 0)
 
     # Load and improve a random solution. This should result in a non-zero
     # number of moves.
@@ -601,6 +602,7 @@ def test_search_statistics(ok_small):
     stats = ls.statistics
     assert_(stats.num_moves > 0)
     assert_(stats.num_improving > 0)
+    assert_(stats.num_updates >= stats.num_improving)
 
     # The improved solution is already locally optimal, so it cannot be further
     # improved by the local search. The number of improving moves should thus
@@ -610,3 +612,4 @@ def test_search_statistics(ok_small):
     stats = ls.statistics
     assert_(stats.num_moves > 0)
     assert_equal(stats.num_improving, 0)
+    assert_equal(stats.num_updates, 0)
