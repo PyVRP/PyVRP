@@ -16,7 +16,7 @@ def test_neighbour_removal_no_op_empty_solution(ok_small):
     cost_eval = CostEvaluator([1], 1, 0)
 
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_destroy_operator(NeighbourRemoval(4))
+    ls.add_destroy_operator(NeighbourRemoval(ok_small, 4))
 
     sol = Solution(ok_small, [])
     assert_equal(ls.destroy(sol, cost_eval), sol)
@@ -34,7 +34,7 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     sol = Solution.make_random(ok_small, rng)
 
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_destroy_operator(NeighbourRemoval(4))
+    ls.add_destroy_operator(NeighbourRemoval(ok_small, 4))
 
     assert_equal(ls.destroy(sol, cost_eval), sol)
 
@@ -50,7 +50,7 @@ def test_neighbour_removal_removes_at_most_number_of_neighbours(ok_small):
     sol = Solution.make_random(ok_small, rng)
 
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_destroy_operator(NeighbourRemoval(4))
+    ls.add_destroy_operator(NeighbourRemoval(ok_small, 4))
 
     # There is just one neighbour per client, so only one neighbour is removed.
     destroyed = ls.destroy(sol, cost_eval)
@@ -68,7 +68,7 @@ def test_operator_removes_correct_number_of_clients(
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(ok_small)
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_destroy_operator(NeighbourRemoval(num_destroy))
+    ls.add_destroy_operator(NeighbourRemoval(ok_small, num_destroy))
 
     sol = Solution.make_random(ok_small, rng)
     destroyed = ls.destroy(sol, cost_evaluator)
@@ -87,7 +87,7 @@ def test_neighbour_removal_selects_random_client(ok_small):
     sol = Solution.make_random(ok_small, rng)
 
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_destroy_operator(NeighbourRemoval(3))
+    ls.add_destroy_operator(NeighbourRemoval(ok_small, 3))
 
     # We run the destroy operator multiple times and store the resulting
     # solutions to deal with the randomness in the selection of the client.
