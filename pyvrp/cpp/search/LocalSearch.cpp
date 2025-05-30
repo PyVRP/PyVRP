@@ -14,7 +14,6 @@ Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    destroy(costEvaluator);
 
     while (true)
     {

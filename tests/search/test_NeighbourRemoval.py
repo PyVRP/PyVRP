@@ -7,7 +7,9 @@ from pyvrp.search.neighbourhood import compute_neighbours
 
 
 @pytest.mark.parametrize("num_destroy", range(4))
-def test_remove_correct_number_of_clients(ok_small, num_destroy: int):
+def test_operator_removes_correct_number_of_clients(
+    ok_small, num_destroy: int
+):
     """
     Tests that calling neighbour removal removes the correct number of clients.
     """
@@ -26,22 +28,21 @@ def test_remove_correct_number_of_clients(ok_small, num_destroy: int):
 def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     """
     Tests that calling the local search destroy step combined with an empty
-    neighbourhood is a no-op: since the neighbourhood removals use the
-    neighours, they cannot do anything with an empty neighbourhood.
+    neighbourhood is a no-op: since the neighbourhood removal operator uses the
+    neighours, it cannot do anything with an empty neighbourhood.
     """
     rng = RandomNumberGenerator(seed=42)
     neighbours = [[], [], [], [], []]
     cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(ok_small, rng)
+
     ls = LocalSearch(ok_small, rng, neighbours)
     ls.add_destroy_operator(NeighbourRemoval(4))
 
-    destroyed = ls.destroy(sol, cost_eval)
-
-    assert_equal(destroyed, sol)
+    assert_equal(ls.destroy(sol, cost_eval), sol)
 
 
-def test_removes_at_most_number_of_neighbours(ok_small):
+def test_neighbour_removal_removes_at_most_number_of_neighbours(ok_small):
     """
     Tests that calling neighbour removal does not remove more clients than
     there are neighbours.
@@ -50,16 +51,16 @@ def test_removes_at_most_number_of_neighbours(ok_small):
     neighbours = [[], [2], [3], [4], [1]]
     cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(ok_small, rng)
+
     ls = LocalSearch(ok_small, rng, neighbours)
     ls.add_destroy_operator(NeighbourRemoval(4))
 
+    # There is just one neighbour per client, so only one neighbour is removed.
     destroyed = ls.destroy(sol, cost_eval)
-
-    # There is just one neighbour for each client, so only one is removed.
     assert_equal(destroyed.num_clients() + 1, sol.num_clients())
 
 
-def test_selects_random_client(ok_small):
+def test_neighbour_removal_selects_random_client(ok_small):
     """
     Tests that calling neighbour removal selects a random client every time,
     of which the neighbours are used to remove clients.
@@ -76,8 +77,9 @@ def test_selects_random_client(ok_small):
     # solutions to deal with the randomness in the selection of the client.
     solutions = set(ls.destroy(sol, cost_eval) for _ in range(20))
 
-    # The neighborhood structure removes all clients except the selected one.
-    # Therefore, we expect to find all singleton solutions, each containing
-    # exactly one client.
+    # Every client has all other clients as neighbours, so the operator will
+    # remove all clients except the one that was selected. We therefore expect
+    # to find all singleton solutions, each having exactly one client.
     singletons = {Solution(ok_small, [[idx]]) for idx in range(1, 5)}
     assert_equal(solutions, singletons)
+    assert_equal(len(solutions), 4)
