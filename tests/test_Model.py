@@ -1065,3 +1065,20 @@ def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
     opt_cost = opt.distance_cost()
     assert_equal(opt_cost, 10687)
     assert_(res.cost() < 1.1 * opt_cost)
+
+
+def test_profile_name_and_str():
+    """
+    Tests that passing a name argument for a routing profile works correctly.
+    """
+    profile = Profile()  # name should be optional, and default empty
+    assert_equal(profile.name, "")
+
+    profile = Profile(name="test1")  # name should be set correctly
+    assert_equal(profile.name, "test1")
+    assert_equal(str(profile), "test1")
+
+    m = Model()  # setting the name via the model should also work
+    profile = m.add_profile(name="test2")
+    assert_equal(profile.name, "test2")
+    assert_equal(str(profile), "test2")

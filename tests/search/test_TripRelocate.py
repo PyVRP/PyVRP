@@ -236,16 +236,82 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
 
     op.apply(route1[3], route2[1])
     assert_equal(str(route1), "34 | 38 48")
-    assert_equal(str(route2), "6 | 23")
+    assert_equal(str(route2), "6 23 |")
 
     route1.update()
     assert_equal(route1.distance(), 1525)
     assert_equal(route1.time_warp(), 2865)
 
     route2.update()
-    assert_equal(route2.distance(), 1114)
+    assert_equal(route2.distance(), 797)
     assert_(not route2.has_time_warp())
 
-    delta_dist = 1525 + 1114 - 504 - 1713  # = new minus old
+    delta_dist = 1525 + 797 - 504 - 1713  # = new minus old
     delta_time_warp = 2865 - 5395  # = new minus old
     assert_equal(delta_cost, delta_dist + delta_time_warp)
+
+
+def test_can_insert_reload_after_start_depot():
+    """
+    Tests that TripRelocate can insert a reload depot directly after the start
+    depot if that is an improving move.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0, delivery=[1]),
+            Client(x=0, y=0, delivery=[1]),
+        ],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[
+            VehicleType(1, capacity=[5], initial_load=[5], reload_depots=[0]),
+        ],
+        distance_matrices=[np.zeros((3, 3), dtype=int)],
+        duration_matrices=[np.zeros((3, 3), dtype=int)],
+    )
+
+    route = make_search_route(data, [1, 2])
+    assert_equal(str(route), "1 2")
+
+    # Evaluate turning "1 2" into "| 2 1", which would immediately resolve all
+    # initial load, and thus reduce excess load by 2.
+    op = TripRelocate(data)
+    cost_eval = CostEvaluator([1], 0, 0)
+    assert_equal(op.evaluate(route[2], route[0], cost_eval), -2)
+
+    op.apply(route[2], route[0])
+    assert_equal(str(route), "| 2 1")
+
+
+def test_can_insert_reload_before_end_depot():
+    """
+    Tests that TripRelocate can insert a reload depot directly before the end
+    depot if that is an improving move.
+    """
+    # Matrix that makes it expensive to return directly to the first depot,
+    # but free if we go there via the second depot.
+    mat = np.zeros((4, 4), dtype=int)
+    mat[:, 0] = 10
+    mat[[0, 1], 0] = 0
+
+    data = ProblemData(
+        clients=[Client(x=0, y=0), Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(1, reload_depots=[0, 1])],
+        distance_matrices=[mat],
+        duration_matrices=[np.zeros_like(mat)],
+    )
+
+    route = make_search_route(data, [2, 3])
+    assert_equal(str(route), "2 3")
+
+    # Evaluate inserting client 2 after 3, with a depot. This should result in
+    # a route "2 3 |", with a reload depot visits to 1.
+    op = TripRelocate(data)
+    cost_eval = CostEvaluator([], 0, 0)
+    assert_equal(op.evaluate(route[1], route[2], cost_eval), -10)
+
+    # Test if that is indeed the case: the route should be correct, and the
+    # reload depot should be 1, not 0.
+    op.apply(route[1], route[2])
+    assert_equal(str(route), "3 2 |")
+    assert_equal(route[3].client, 1)

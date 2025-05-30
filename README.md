@@ -40,19 +40,19 @@ These include:
 - A notebook implementing a `solve` method using PyVRP's components, [here][9].
   This notebook is a great way to dive deeper into how PyVRP works internally.
 
-### Contributing
-
-We are very grateful for any contributions you are willing to make. Please have
-a look [here][2] to get started. If you aim to make a large change, it is
-helpful to discuss the change first in a new GitHub issue. Feel free to open
-one!
-
 ### Getting help
 
 Feel free to open an issue or a new discussion thread here on GitHub.
 Please do not e-mail us with questions, modelling issues, or code examples.
 Those are much easier to discuss via GitHub than over e-mail.
 When writing your issue or discussion, please follow the instructions [here][3].
+
+### Contributing
+
+While we are very grateful for any contributions you are willing to make, reviewing and maintaining third-party code takes a significant amount of our time.
+Before you start working on your contribution, please have a look [here][2] to get started.
+Make sure to discuss the change first in a GitHub issue.
+Feel free to open a new one if no appropriate issue already exists!
 
 ### How to cite PyVRP
 

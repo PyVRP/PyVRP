@@ -191,12 +191,25 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &TripRelocate::apply, py::arg("U"), py::arg("V"));
 
+    py::class_<LocalSearch::Statistics>(
+        m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))
+        .def_readonly("num_moves", &LocalSearch::Statistics::numMoves)
+        .def_readonly("num_improving", &LocalSearch::Statistics::numImproving)
+        .def_readonly("num_updates", &LocalSearch::Statistics::numUpdates);
+
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
                       std::vector<std::vector<size_t>>>(),
              py::arg("data"),
              py::arg("neighbours"),
              py::keep_alive<1, 2>())  // keep data alive until LS is freed
+        .def_property("neighbours",
+                      &LocalSearch::neighbours,
+                      &LocalSearch::setNeighbours,
+                      py::return_value_policy::reference_internal)
+        .def_property_readonly("statistics",
+                               &LocalSearch::statistics,
+                               py::return_value_policy::reference_internal)
         .def("add_node_operator",
              &LocalSearch::addNodeOperator,
              py::arg("op"),
@@ -205,12 +218,6 @@ PYBIND11_MODULE(_search, m)
              &LocalSearch::addRouteOperator,
              py::arg("op"),
              py::keep_alive<1, 2>())
-        .def("set_neighbours",
-             &LocalSearch::setNeighbours,
-             py::arg("neighbours"))
-        .def("neighbours",
-             &LocalSearch::neighbours,
-             py::return_value_policy::reference_internal)
         .def("__call__",
              &LocalSearch::operator(),
              py::arg("solution"),
