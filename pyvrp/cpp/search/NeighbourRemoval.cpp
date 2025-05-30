@@ -1,0 +1,30 @@
+#include "NeighbourRemoval.h"
+
+void pyvrp::search::NeighbourRemoval::operator()(
+    std::vector<search::Route::Node> &nodes,
+    [[maybe_unused]] std::vector<search::Route> &routes,
+    [[maybe_unused]] CostEvaluator const &costEvaluator,
+    std::vector<std::vector<size_t>> const &neighbours)
+{
+    // auto const client = rng.randint(data.numClients()) + data.numDepots();
+    auto const client = data.numClients() - 1;  // TODO
+    auto const &clientNeighbours = neighbours[client];
+    auto const maxDestroy = std::min(numDestroy, clientNeighbours.size());
+
+    for (size_t idx = 0; idx != maxDestroy; ++idx)
+    {
+        auto *U = &nodes[clientNeighbours[idx]];
+        if (!U->route())
+            continue;
+
+        auto *route = U->route();
+        route->remove(U->idx());
+        route->update();
+    }
+}
+
+pyvrp::search::NeighbourRemoval::NeighbourRemoval(ProblemData const &data,
+                                                  size_t const numDestroy)
+    : data(data), numDestroy(numDestroy)
+{
+}

@@ -51,6 +51,9 @@ class SwapStar(RouteOperator):
 class SwapTails(NodeOperator): ...
 class TripRelocate(NodeOperator): ...
 
+class NeighbourRemoval(DestroyOperator):
+    def __init__(self, data: ProblemData, num_destroy: int) -> None: ...
+
 class LocalSearchStatistics:
     num_moves: int
     num_improving: int

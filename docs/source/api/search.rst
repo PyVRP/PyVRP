@@ -121,3 +121,6 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    :noindex:
 
    .. autoclass:: DestroyOperator
+
+   .. autoclass:: NeighbourRemoval
+      :exclude-members: __call___
