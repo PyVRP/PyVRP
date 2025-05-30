@@ -66,8 +66,8 @@ class LocalSearch:
     def add_destroy_operator(self, op: DestroyOperator):
         """
         Adds a destroy operator to this local search object. The destroy
-        operator will be by :meth:`~destroy` to remove clients from a solution
-        to potentially escape local optima.
+        operator will be used by :meth:`~destroy` to remove clients from a
+        solution to potentially escape local optima.
 
         Parameters
         ----------

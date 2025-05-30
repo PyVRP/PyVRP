@@ -6,23 +6,20 @@ from pyvrp.search import LocalSearch, NeighbourRemoval
 from pyvrp.search.neighbourhood import compute_neighbours
 
 
-@pytest.mark.parametrize("num_destroy", range(4))
-def test_operator_removes_correct_number_of_clients(
-    ok_small, num_destroy: int
-):
+def test_neighbour_removal_no_op_empty_solution(ok_small):
     """
-    Tests that calling neighbour removal removes the correct number of clients.
+    Tests that calling neighbour removal on an empty solution is a no-op,
+    since there are no clients to remove.
     """
-    cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(ok_small)
+    cost_eval = CostEvaluator([1], 1, 0)
+
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_destroy_operator(NeighbourRemoval(num_destroy))
+    ls.add_destroy_operator(NeighbourRemoval(4))
 
-    sol = Solution.make_random(ok_small, rng)
-    destroyed = ls.destroy(sol, cost_evaluator)
-
-    assert_equal(destroyed.num_clients() + num_destroy, sol.num_clients())
+    sol = Solution(ok_small, [])
+    assert_equal(ls.destroy(sol, cost_eval), sol)
 
 
 def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
@@ -58,6 +55,25 @@ def test_neighbour_removal_removes_at_most_number_of_neighbours(ok_small):
     # There is just one neighbour per client, so only one neighbour is removed.
     destroyed = ls.destroy(sol, cost_eval)
     assert_equal(destroyed.num_clients() + 1, sol.num_clients())
+
+
+@pytest.mark.parametrize("num_destroy", range(4))
+def test_operator_removes_correct_number_of_clients(
+    ok_small, num_destroy: int
+):
+    """
+    Tests that calling neighbour removal removes the correct number of clients.
+    """
+    cost_evaluator = CostEvaluator([20], 6, 0)
+    rng = RandomNumberGenerator(seed=42)
+    neighbours = compute_neighbours(ok_small)
+    ls = LocalSearch(ok_small, rng, neighbours)
+    ls.add_destroy_operator(NeighbourRemoval(num_destroy))
+
+    sol = Solution.make_random(ok_small, rng)
+    destroyed = ls.destroy(sol, cost_evaluator)
+
+    assert_equal(destroyed.num_clients() + num_destroy, sol.num_clients())
 
 
 def test_neighbour_removal_selects_random_client(ok_small):

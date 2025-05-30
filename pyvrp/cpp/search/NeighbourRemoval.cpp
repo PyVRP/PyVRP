@@ -7,19 +7,24 @@ void pyvrp::search::NeighbourRemoval::operator()(
     std::vector<std::vector<size_t>> const &neighbours,
     std::vector<size_t> const &orderNodes)
 {
-    auto const client = orderNodes[0];  // random client
-    auto const &neighbourhood = neighbours[client];
-    auto const maxDestroy = std::min(numDestroy, neighbourhood.size());
+    if (numDestroy == 0)
+        return;
 
-    for (size_t idx = 0; idx != maxDestroy; ++idx)
+    auto const client = orderNodes[0];  // random client
+    size_t numDestroyed = 0;
+
+    for (auto const idx : neighbours[client])
     {
-        auto *U = &nodes[neighbourhood[idx]];
+        auto *U = &nodes[idx];
         if (!U->route())
             continue;
 
         auto *route = U->route();
         route->remove(U->idx());
         route->update();
+
+        if (++numDestroyed == numDestroy)
+            return;
     }
 }
 
