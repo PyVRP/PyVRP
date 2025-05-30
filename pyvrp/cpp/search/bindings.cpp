@@ -1,4 +1,5 @@
 #include "bindings.h"
+#include "DestroyOperator.h"
 #include "Exchange.h"
 #include "LocalSearch.h"
 #include "Route.h"
@@ -16,6 +17,7 @@
 
 namespace py = pybind11;
 
+using pyvrp::search::DestroyOperator;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
@@ -30,11 +32,14 @@ using pyvrp::search::TripRelocate;
 
 PYBIND11_MODULE(_search, m)
 {
+
     using NodeOp = LocalSearchOperator<pyvrp::search::Route::Node>;
     using RouteOp = LocalSearchOperator<pyvrp::search::Route>;
 
     py::class_<NodeOp>(m, "NodeOperator");
     py::class_<RouteOp>(m, "RouteOperator");
+    py::class_<DestroyOperator>(
+        m, "DestroyOperator", DOC(pyvrp, search, DestroyOperator));
 
     py::class_<Exchange<1, 0>, NodeOp>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))

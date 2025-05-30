@@ -500,6 +500,11 @@ void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }
 
 void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
 
+void LocalSearch::addDestroyOperator(DestroyOperator &op)
+{
+    destroyOps.emplace_back(&op);
+}
+
 void LocalSearch::setNeighbours(Neighbours neighbours)
 {
     if (neighbours.size() != data.numLocations())

@@ -104,3 +104,20 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
 
    .. autoclass:: SwapStar
       :exclude-members: evaluate, apply
+
+
+Destroy operators
+-----------------
+
+Instances of these operators can be added to the :class:`~pyvrp.search.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.search.LocalSearch.LocalSearch.add_destroy_operator` method.
+Each destroy operator inherits from :class:`~pyvrp.search._search.DestroyOperator`.
+As a convenience, the :mod:`pyvrp.search` module makes all these operators available as ``DESTROY_OPERATORS``:
+
+.. code-block:: python
+
+   from pyvrp.search import DESTROY_OPERATORS
+
+.. automodule:: pyvrp.search._search
+   :noindex:
+
+   .. autoclass:: DestroyOperator

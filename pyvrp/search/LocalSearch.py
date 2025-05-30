@@ -4,12 +4,13 @@ from pyvrp._pyvrp import (
     RandomNumberGenerator,
     Solution,
 )
-from pyvrp.search._search import LocalSearch as _LocalSearch
 from pyvrp.search._search import (
+    DestroyOperator,
     LocalSearchStatistics,
     NodeOperator,
     RouteOperator,
 )
+from pyvrp.search._search import LocalSearch as _LocalSearch
 
 
 class LocalSearch:
@@ -61,6 +62,20 @@ class LocalSearch:
             The route operator to add to this local search object.
         """
         self._ls.add_route_operator(op)
+
+    def add_destroy_operator(self, op: DestroyOperator):
+        """
+        Adds a destroy operator to this local search object. The destroy
+        operator will be used to remove nodes from the solution before
+        applying the local search. This is useful to potentially escape
+        local optima.
+
+        Parameters
+        ----------
+        op
+            The destroy operator to add to this local search object.
+        """
+        self._ls.add_destroy_operator(op)
 
     @property
     def neighbours(self) -> list[list[int]]:

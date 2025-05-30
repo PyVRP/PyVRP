@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_LOCALSEARCH_H
 
 #include "CostEvaluator.h"
+#include "DestroyOperator.h"
 #include "LocalSearchOperator.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
@@ -70,6 +71,7 @@ private:
 
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
+    std::vector<DestroyOperator *> destroyOps;
 
     Statistics stats_;
     bool searchCompleted = false;  // No further improving move found?
@@ -127,6 +129,11 @@ public:
      * Adds a local search operator that works on route pairs U and V.
      */
     void addRouteOperator(RouteOp &op);
+
+    /**
+     * Adds a destroy operator.
+     */
+    void addDestroyOperator(DestroyOperator &op);
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,
