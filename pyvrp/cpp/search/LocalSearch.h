@@ -16,6 +16,36 @@ namespace pyvrp::search
 {
 class LocalSearch
 {
+public:
+    /**
+     * Simple data structure that tracks statistics about the number of local
+     * search moves applied to the most recently improved solution.
+     *
+     * Attributes
+     * ----------
+     * num_moves
+     *     Number of evaluated node and route operator moves.
+     * num_improving
+     *     Number of evaluated moves that led to an objective improvement.
+     * num_updates
+     *     Total number of changes to the solution. This always includes the
+     *     number of evaluated improving moves, but also e.g. insertion of
+     *     required but missing clients.
+     */
+    struct Statistics
+    {
+        // Number of evaluated moves, that is, number of evaluations of a node
+        // or route operator.
+        size_t numMoves = 0;
+
+        // Number of evaluated moves that led to an objective improvement.
+        size_t numImproving = 0;
+
+        // Number of times the solution has been modified in some way.
+        size_t numUpdates = 0;
+    };
+
+private:
     using NodeOp = LocalSearchOperator<Route::Node>;
     using RouteOp = LocalSearchOperator<Route>;
     using Neighbours = std::vector<std::vector<size_t>>;
@@ -31,7 +61,9 @@ class LocalSearch
     std::vector<std::pair<size_t, size_t>>  // vehicle type order (incl. offset)
         orderVehTypes;                      // used by LS::applyEmptyRouteMoves
 
-    std::vector<int> lastModified;  // tracks when routes were last modified
+    std::vector<int> lastTestedNodes;   // tracks node operator evaluation
+    std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
+    std::vector<int> lastUpdated;       // tracks when routes were last modified
 
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
@@ -39,7 +71,7 @@ class LocalSearch
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
 
-    int numMoves = 0;              // Operator counter
+    Statistics stats_;
     bool searchCompleted = false;  // No further improving move found?
 
     // Load an initial solution that we will attempt to improve.
@@ -58,7 +90,7 @@ class LocalSearch
 
     // Tests a move removing the given reload depot.
     void applyDepotRemovalMove(Route::Node *U,
-                               CostEvaluator const &CostEvaluator);
+                               CostEvaluator const &costEvaluator);
 
     // Tests moves involving empty routes.
     void applyEmptyRouteMoves(Route::Node *U,
@@ -104,9 +136,14 @@ public:
     void setNeighbours(Neighbours neighbours);
 
     /**
-     * @return The neighbourhood structure currently in use.
+     * Returns the current neighbourhood structure.
      */
     Neighbours const &neighbours() const;
+
+    /**
+     * Returns search statistics for the currently loaded solution.
+     */
+    Statistics const &statistics() const;
 
     /**
      * Iteratively calls ``search()`` and ``intensify()`` until no further

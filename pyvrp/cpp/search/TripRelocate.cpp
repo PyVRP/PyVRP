@@ -28,6 +28,7 @@ public:
 
     size_t first() const { return depot_; }
     size_t last() const { return depot_; }
+    size_t size() const { return 1; }
 
     pyvrp::Distance distance([[maybe_unused]] size_t profile) const
     {
@@ -189,10 +190,16 @@ pyvrp::Cost TripRelocate::evaluate(Route::Node *U,
     if (uRoute != vRoute && uRoute->numClients() == 1)  // empty after move
         fixedCost -= uRoute->fixedVehicleCost();
 
-    if (!V->isDepot())
+    if (!V->isReloadDepot())
+        // If V is already a reload depot, there is no point inserting another
+        // reload depot directly after it. If V is a start depot, however, that
+        // might be OK to deal with initial vehicle load.
         evalDepotBefore(fixedCost, U, V, costEvaluator);
 
-    if (!n(V)->isDepot())
+    if (!n(V)->isReloadDepot())
+        // If n(V) is a reload depot, there is no point inserting another reload
+        // depot directly before it. If n(V) is the end depot, however, that
+        // might be OK to ensure the vehicle returns empty.
         evalDepotAfter(fixedCost, U, V, costEvaluator);
 
     return move_.cost;
