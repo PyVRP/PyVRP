@@ -1,7 +1,8 @@
-#ifndef PYVRP_PERTURB_DESTROYREPAIROPERATOR_H
-#define PYVRP_PERTURB_DESTROYREPAIROPERATOR_H
+#ifndef PYVRP_PERTURB_DESTROYOPERATOR_H
+#define PYVRP_PERTURB_DESTROYOPERATOR_H
 
 #include "CostEvaluator.h"
+#include "RandomNumberGenerator.h"
 #include "search/Route.h"
 
 #include <vector>
@@ -9,14 +10,14 @@
 namespace pyvrp::perturb
 {
 /**
- * Base class for destroy and repair operators used in the DestroyRepair
- * class. These operators modify solutions by removing or inserting clients.
+ * Base class for destroy operators used in the DestroyRepair class. These
+ * operators modify solutions by removing clients from routes.
  */
-class DestroyRepairOperator
+class DestroyOperator
 {
 public:
     /**
-     * Applies the operator to the given solution.
+     * Applies the destroy operator to the given solution.
      *
      * Parameters
      * ----------
@@ -39,8 +40,8 @@ public:
                             RandomNumberGenerator &rng)
         = 0;
 
-    virtual ~DestroyRepairOperator() = default;
+    virtual ~DestroyOperator() = default;
 };
 }  // namespace pyvrp::perturb
 
-#endif  // PYVRP_PERTURB_DESTROYREPAIROPERATOR_H
+#endif  // PYVRP_PERTURB_DESTROYOPERATOR_H

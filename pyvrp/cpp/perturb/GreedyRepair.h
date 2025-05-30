@@ -1,9 +1,9 @@
 #ifndef PYVRP_PERTURB_GREEDY_REPAIR_H
 #define PYVRP_PERTURB_GREEDY_REPAIR_H
 
-#include "DestroyRepairOperator.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
+#include "RepairOperator.h"
 
 #include <vector>
 
@@ -16,7 +16,7 @@ namespace pyvrp::perturb
  * one randomly selected empty route. The client is then inserted at the best
  * position found.
  */
-class GreedyRepair : public DestroyRepairOperator
+class GreedyRepair : public RepairOperator
 {
     ProblemData const &data_;
     size_t skipOptionalProbability;

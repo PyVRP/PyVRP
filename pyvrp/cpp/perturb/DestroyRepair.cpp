@@ -124,12 +124,12 @@ Solution DestroyRepair::exportSolution() const
     return {data, solRoutes};
 }
 
-void DestroyRepair::addDestroyOperator(DestroyRepairOperator &op)
+void DestroyRepair::addDestroyOperator(DestroyOperator &op)
 {
     destroyOps.emplace_back(&op);
 }
 
-void DestroyRepair::addRepairOperator(DestroyRepairOperator &op)
+void DestroyRepair::addRepairOperator(RepairOperator &op)
 {
     repairOps.emplace_back(&op);
 }

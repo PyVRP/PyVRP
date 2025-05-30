@@ -91,7 +91,7 @@ libperturb = static_library(
         SRC_DIR / 'perturb' / 'NeighbourRemoval.cpp',
     ],
     include_directories: INCLUDES,
-    link_with: [libpyvrp, libsearch],  # uses search to evaluate repair moves
+    link_with: [libpyvrp, libsearch],  # uses search to evaluate moves
 )
 
 librepair = static_library(

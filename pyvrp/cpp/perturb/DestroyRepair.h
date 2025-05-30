@@ -2,9 +2,10 @@
 #define PYVRP_PERTURB_DESTROYREPAIR_H
 
 #include "CostEvaluator.h"
-#include "DestroyRepairOperator.h"
+#include "DestroyOperator.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
+#include "RepairOperator.h"
 #include "Solution.h"
 #include "search/Route.h"
 
@@ -33,8 +34,8 @@ class DestroyRepair
     std::vector<search::Route::Node> nodes;
     std::vector<search::Route> routes;
 
-    std::vector<DestroyRepairOperator *> destroyOps;
-    std::vector<DestroyRepairOperator *> repairOps;
+    std::vector<DestroyOperator *> destroyOps;
+    std::vector<RepairOperator *> repairOps;
 
     // Load an initial solution that we will attempt to improve.
     void loadSolution(Solution const &solution);
@@ -54,12 +55,12 @@ public:
     /**
      * Adds a destroy operator to the list of available destroy operators.
      */
-    void addDestroyOperator(DestroyRepairOperator &op);
+    void addDestroyOperator(DestroyOperator &op);
 
     /**
      * Adds a repair operator to the list of available repair operators.
      */
-    void addRepairOperator(DestroyRepairOperator &op);
+    void addRepairOperator(RepairOperator &op);
 
     DestroyRepair(ProblemData const &data);
 };

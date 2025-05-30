@@ -1,7 +1,8 @@
+#include "DestroyOperator.h"
 #include "DestroyRepair.h"
-#include "DestroyRepairOperator.h"
 #include "GreedyRepair.h"
 #include "NeighbourRemoval.h"
+#include "RepairOperator.h"
 #include "perturb_docs.h"
 
 #include <pybind11/pybind11.h>
@@ -9,19 +10,23 @@
 
 namespace py = pybind11;
 
+using pyvrp::perturb::DestroyOperator;
 using pyvrp::perturb::DestroyRepair;
-using pyvrp::perturb::DestroyRepairOperator;
 using pyvrp::perturb::GreedyRepair;
 using pyvrp::perturb::NeighbourRemoval;
+using pyvrp::perturb::RepairOperator;
 
 #include <pybind11/functional.h>
 
 PYBIND11_MODULE(_perturb, m)
 {
-    py::class_<DestroyRepairOperator>(
-        m, "DestroyRepairOperator", DOC(pyvrp, perturb, DestroyRepairOperator));
+    py::class_<DestroyOperator>(
+        m, "DestroyOperator", DOC(pyvrp, perturb, DestroyOperator));
 
-    py::class_<NeighbourRemoval, DestroyRepairOperator>(
+    py::class_<RepairOperator>(
+        m, "RepairOperator", DOC(pyvrp, perturb, RepairOperator));
+
+    py::class_<NeighbourRemoval, DestroyOperator>(
         m, "NeighbourRemoval", DOC(pyvrp, perturb, NeighbourRemoval))
         .def(py::init<pyvrp::ProblemData const &, size_t const>(),
              py::arg("data"),
@@ -36,7 +41,7 @@ PYBIND11_MODULE(_perturb, m)
              py::arg("rng"),
              py::call_guard<py::gil_scoped_release>());
 
-    py::class_<GreedyRepair, DestroyRepairOperator>(
+    py::class_<GreedyRepair, RepairOperator>(
         m, "GreedyRepair", DOC(pyvrp, perturb, GreedyRepair))
         .def(py::init<pyvrp::ProblemData const &, size_t>(),
              py::arg("data"),

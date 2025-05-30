@@ -1,7 +1,7 @@
 #ifndef PYVRP_PERTURB_NEIGHBOUR_REMOVAL_H
 #define PYVRP_PERTURB_NEIGHBOUR_REMOVAL_H
 
-#include "DestroyRepairOperator.h"
+#include "DestroyOperator.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 
@@ -13,7 +13,7 @@ namespace pyvrp::perturb
  * Neighbour removal destroy operator. This operator removes the closest
  * neighbours around a randomly selected client.
  */
-class NeighbourRemoval : public DestroyRepairOperator
+class NeighbourRemoval : public DestroyOperator
 {
     ProblemData const &data;
     size_t const numRemovals;

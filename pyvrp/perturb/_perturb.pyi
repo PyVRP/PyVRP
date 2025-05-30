@@ -6,8 +6,17 @@ from pyvrp._pyvrp import (
 )
 from pyvrp.search._search import Node, Route
 
-class DestroyRepairOperator:
-    def __init__(self, data: ProblemData) -> None: ...
+class DestroyOperator:
+    def __call__(
+        self,
+        nodes: list[Node],
+        routes: list[Route],
+        cost_evaluator: CostEvaluator,
+        neighbours: list[list[int]],
+        rng: RandomNumberGenerator,
+    ) -> None: ...
+
+class RepairOperator:
     def __call__(
         self,
         nodes: list[Node],
@@ -19,8 +28,8 @@ class DestroyRepairOperator:
 
 class DestroyRepair:
     def __init__(self, data: ProblemData) -> None: ...
-    def add_destroy_operator(self, op: DestroyRepairOperator) -> None: ...
-    def add_repair_operator(self, op: DestroyRepairOperator) -> None: ...
+    def add_destroy_operator(self, op: DestroyOperator) -> None: ...
+    def add_repair_operator(self, op: RepairOperator) -> None: ...
     def __call__(
         self,
         solution: Solution,
@@ -29,7 +38,7 @@ class DestroyRepair:
         rng: RandomNumberGenerator,
     ) -> Solution: ...
 
-class NeighbourRemoval(DestroyRepairOperator):
+class NeighbourRemoval(DestroyOperator):
     def __init__(
         self,
         data: ProblemData,
@@ -44,7 +53,7 @@ class NeighbourRemoval(DestroyRepairOperator):
         rng: RandomNumberGenerator,
     ) -> None: ...
 
-class GreedyRepair(DestroyRepairOperator):
+class GreedyRepair(RepairOperator):
     def __init__(
         self,
         data: ProblemData,
