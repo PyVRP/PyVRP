@@ -2,7 +2,6 @@
 #define PYVRP_SEARCH_DESTROYOPERATOR_H
 
 #include "CostEvaluator.h"
-#include "RandomNumberGenerator.h"
 #include "Route.h"
 
 #include <vector>

@@ -7,7 +7,7 @@ void pyvrp::search::NeighbourRemoval::operator()(
     std::vector<std::vector<size_t>> const &neighbours,
     std::vector<size_t> const &orderNodes)
 {
-    auto const client = orderNodes.back();  // random client
+    auto const client = orderNodes[0];  // random client
     auto const &neighbourhood = neighbours[client];
     auto const maxDestroy = std::min(numDestroy, neighbourhood.size());
 

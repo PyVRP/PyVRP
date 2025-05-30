@@ -25,8 +25,6 @@ public:
      * ----------
      * data
      *     Problem data instance.
-     * rng
-     *     Random number generator.
      * num_destroy
      *     Maximum number of clients to remove from the solution.
      */

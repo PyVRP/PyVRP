@@ -72,8 +72,9 @@ def test_selects_random_client(ok_small):
     ls = LocalSearch(ok_small, rng, neighbours)
     ls.add_destroy_operator(NeighbourRemoval(ok_small, 3))
 
-    # We run the destroy operator 10 times to deal with randomness.
-    solutions = set(ls.destroy(sol, cost_eval) for _ in range(10))
+    # We run the destroy operator multiple times and store the resulting
+    # solutions to deal with the randomness in the selection of the client.
+    solutions = set(ls.destroy(sol, cost_eval) for _ in range(20))
 
     # The neighborhood structure removes all clients except the selected one.
     # Therefore, we expect to find all singleton solutions, each containing
