@@ -23,8 +23,7 @@ void pyvrp::search::NeighbourRemoval::operator()(
     }
 }
 
-pyvrp::search::NeighbourRemoval::NeighbourRemoval(ProblemData const &data,
-                                                  size_t const numDestroy)
-    : data(data), numDestroy(numDestroy)
+pyvrp::search::NeighbourRemoval::NeighbourRemoval(size_t const numDestroy)
+    : numDestroy(numDestroy)
 {
 }
