@@ -14,6 +14,7 @@ Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
+    destroy(costEvaluator);
 
     while (true)
     {
@@ -43,6 +44,14 @@ Solution LocalSearch::intensify(Solution const &solution,
 {
     loadSolution(solution);
     intensify(costEvaluator);
+    return exportSolution();
+}
+
+Solution LocalSearch::destroy(Solution const &solution,
+                              CostEvaluator const &costEvaluator)
+{
+    loadSolution(solution);
+    destroy(costEvaluator);
     return exportSolution();
 }
 
@@ -144,15 +153,23 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
     }
 }
 
+void LocalSearch::destroy(CostEvaluator const &costEvaluator)
+{
+    if (destroyOps.empty())
+        return;
+
+    (*destroyOps[0])(nodes, routes, costEvaluator, neighbours_);
+}
+
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
-    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
-
     std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
-    std::shuffle(routeOps.begin(), routeOps.end(), rng);
-
     std::shuffle(orderVehTypes.begin(), orderVehTypes.end(), rng);
+
+    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
+    std::shuffle(routeOps.begin(), routeOps.end(), rng);
+    std::shuffle(destroyOps.begin(), destroyOps.end(), rng);
 }
 
 bool LocalSearch::applyNodeOps(Route::Node *U,

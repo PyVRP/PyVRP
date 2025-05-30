@@ -30,14 +30,11 @@ public:
      * neighbours
      *    List of neighbours for each node, used to determine which nodes are
      *    close to each other.
-     * rng
-     *     Random number generator.
      */
     virtual void operator()(std::vector<search::Route::Node> &nodes,
                             std::vector<search::Route> &routes,
                             CostEvaluator const &costEvaluator,
-                            std::vector<std::vector<size_t>> const &neighbours,
-                            RandomNumberGenerator &rng)
+                            std::vector<std::vector<size_t>> const &neighbours)
         = 0;
 
     virtual ~DestroyOperator() = default;

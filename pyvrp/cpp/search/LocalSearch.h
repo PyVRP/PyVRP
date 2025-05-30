@@ -114,6 +114,9 @@ private:
     // Performs intensify on the currently loaded solution.
     void intensify(CostEvaluator const &costEvaluator);
 
+    // Performs destroy on the currently loaded solution.
+    void destroy(CostEvaluator const &costEvaluator);
+
     // Evaluate and apply inserting U after one of its neighbours if it's an
     // improving move or required for feasibility.
     void
@@ -174,8 +177,15 @@ public:
                        CostEvaluator const &costEvaluator);
 
     /**
+     * Performs a destroy step around the given solution, and returns a new,
+     * incomplete solution.
+     */
+    Solution destroy(Solution const &solution,
+                     CostEvaluator const &costEvaluator);
+
+    /**
      * Shuffles the order in which the node and route pairs are evaluated, and
-     * the order in which node and route operators are applied.
+     * the order in which all operators are applied.
      */
     void shuffle(RandomNumberGenerator &rng);
 

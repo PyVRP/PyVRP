@@ -297,9 +297,8 @@ def test_bugfix_vehicle_type_offsets(ok_small):
 
 def test_no_op_results_in_same_solution(ok_small):
     """
-    Tests that calling local search without first adding node or route
-    operators is a no-op, and returns the same solution as the one that was
-    given to it.
+    Tests that calling local search without first adding any operators is a
+    no-op, and returns the same solution as the one that was given to it.
     """
     rng = RandomNumberGenerator(seed=42)
 
@@ -312,6 +311,7 @@ def test_no_op_results_in_same_solution(ok_small):
     assert_equal(ls(sol, cost_eval), sol)
     assert_equal(ls.search(sol, cost_eval), sol)
     assert_equal(ls.intensify(sol, cost_eval), sol)
+    assert_equal(ls.destroy(sol, cost_eval), sol)
 
 
 def test_intensify_can_improve_solution_further(rc208):
@@ -613,3 +613,25 @@ def test_search_statistics(ok_small):
     assert_(stats.num_moves > 0)
     assert_equal(stats.num_improving, 0)
     assert_equal(stats.num_updates, 0)
+
+
+def test_destroy_no_op_results_in_same_solution(ok_small):
+    """
+    Tests that calling the local search when it only has node operators and
+    an empty neighbourhood is a no-op: since the node operators respect the
+    neighbourhood definition, they cannot do anything with an empty
+    neighbourhood.
+    """
+    cost_evaluator = CostEvaluator([20], 6, 0)
+    rng = RandomNumberGenerator(seed=42)
+
+    neighbours = [[] for _ in range(ok_small.num_locations)]
+    ls = LocalSearch(ok_small, rng, neighbours)
+    ls.add_node_operator(Exchange10(ok_small))
+    ls.add_node_operator(Exchange11(ok_small))
+
+    # The search is completed after one iteration due to the empty
+    # neighbourhood. This also prevents moves involving empty routes,
+    # which are not explicitly forbidden by the empty neighbourhood.
+    sol = Solution.make_random(ok_small, rng)
+    assert_equal(ls.search(sol, cost_evaluator), sol)

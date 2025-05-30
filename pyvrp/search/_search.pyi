@@ -30,7 +30,6 @@ class DestroyOperator:
         routes: list[Route],
         cost_evaluator: CostEvaluator,
         neighbours: list[list[int]],
-        rng: RandomNumberGenerator,
     ) -> None: ...
 
 class Exchange10(NodeOperator): ...
@@ -79,11 +78,12 @@ class LocalSearch:
     ) -> Solution: ...
     def shuffle(self, rng: RandomNumberGenerator) -> None: ...
     def intensify(
-        self,
-        solution: Solution,
-        cost_evaluator: CostEvaluator,
+        self, solution: Solution, cost_evaluator: CostEvaluator
     ) -> Solution: ...
     def search(
+        self, solution: Solution, cost_evaluator: CostEvaluator
+    ) -> Solution: ...
+    def destroy(
         self, solution: Solution, cost_evaluator: CostEvaluator
     ) -> Solution: ...
 
