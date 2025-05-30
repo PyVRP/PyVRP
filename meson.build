@@ -83,6 +83,17 @@ libsearch = static_library(
     link_with: libpyvrp,
 )
 
+libperturb = static_library(
+    'perturb',
+    [
+        SRC_DIR / 'perturb' / 'DestroyRepair.cpp',
+        SRC_DIR / 'perturb' / 'GreedyRepair.cpp',
+        SRC_DIR / 'perturb' / 'NeighbourRemoval.cpp',
+    ],
+    include_directories: INCLUDES,
+    link_with: [libpyvrp, libsearch],  # uses search to evaluate repair moves
+)
+
 librepair = static_library(
     'repair',
     [
@@ -102,6 +113,7 @@ extensions = [
     ['pyvrp', '', libpyvrp],
     ['crossover', 'crossover', libcrossover],
     ['diversity', 'diversity', libdiversity],
+    ['perturb', 'perturb', libperturb],
     ['repair', 'repair', librepair],
     ['search', 'search', libsearch],
 ]

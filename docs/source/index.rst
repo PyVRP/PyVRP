@@ -58,6 +58,7 @@ Contents
    api/crossover
    api/diversity
    api/repair
+   api/perturb
    api/search
    api/plotting
    api/stop
