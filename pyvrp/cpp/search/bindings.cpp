@@ -210,6 +210,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("routes"),
              py::arg("cost_evaluator"),
              py::arg("neighbours"),
+             py::arg("order_nodes"),
              py::call_guard<py::gil_scoped_release>());
 
     py::class_<LocalSearch::Statistics>(

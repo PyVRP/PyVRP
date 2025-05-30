@@ -158,7 +158,7 @@ void LocalSearch::destroy(CostEvaluator const &costEvaluator)
     if (destroyOps.empty())
         return;
 
-    (*destroyOps[0])(nodes, routes, costEvaluator, neighbours_);
+    (*destroyOps[0])(nodes, routes, costEvaluator, neighbours_, orderNodes);
 }
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)

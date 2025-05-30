@@ -57,3 +57,26 @@ def test_removes_at_most_number_of_neighbours(ok_small):
 
     # There is just one neighbour for each client, so only one is removed.
     assert_equal(destroyed.num_clients() + 1, sol.num_clients())
+
+
+def test_selects_random_client(ok_small):
+    """
+    Tests that calling neighbour removal selects a random client every time,
+    of which the neighbours are used to remove clients.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbours = [[], [2, 3, 4], [1, 3, 4], [1, 2, 4], [1, 2, 3]]
+    cost_eval = CostEvaluator([1], 1, 0)
+    sol = Solution.make_random(ok_small, rng)
+
+    ls = LocalSearch(ok_small, rng, neighbours)
+    ls.add_destroy_operator(NeighbourRemoval(ok_small, 3))
+
+    # We run the destroy operator 10 times to deal with randomness.
+    solutions = set(ls.destroy(sol, cost_eval) for _ in range(10))
+
+    # The neighborhood structure removes all clients except the selected one.
+    # Therefore, we expect to find all singleton solutions, each containing
+    # exactly one client.
+    singletons = {Solution(ok_small, [[idx]]) for idx in range(1, 5)}
+    assert_equal(solutions, singletons)

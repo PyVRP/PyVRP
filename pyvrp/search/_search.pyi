@@ -30,6 +30,7 @@ class DestroyOperator:
         routes: list[Route],
         cost_evaluator: CostEvaluator,
         neighbours: list[list[int]],
+        order_nodes: list[int],
     ) -> None: ...
 
 class Exchange10(NodeOperator): ...

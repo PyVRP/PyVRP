@@ -14,7 +14,7 @@ namespace pyvrp::search
  */
 class NeighbourRemoval : public DestroyOperator
 {
-    ProblemData const &data;
+    [[maybe_unused]] ProblemData const &data;
     size_t const numDestroy;
 
 public:
@@ -28,15 +28,15 @@ public:
      * rng
      *     Random number generator.
      * num_destroy
-     *     Number of clients to remove from the solution.
+     *     Maximum number of clients to remove from the solution.
      */
     NeighbourRemoval(ProblemData const &data, size_t const numDestroy);
 
-    void
-    operator()(std::vector<search::Route::Node> &nodes,
-               std::vector<search::Route> &routes,
-               CostEvaluator const &costEvaluator,
-               std::vector<std::vector<size_t>> const &neighbours) override;
+    void operator()(std::vector<search::Route::Node> &nodes,
+                    std::vector<search::Route> &routes,
+                    CostEvaluator const &costEvaluator,
+                    std::vector<std::vector<size_t>> const &neighbours,
+                    std::vector<size_t> const &orderNodes) override;
 };
 
 }  // namespace pyvrp::search

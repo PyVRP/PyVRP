@@ -10,7 +10,7 @@
 namespace pyvrp::search
 {
 /**
- * Base class for destroy operators used in the DestroyRepair class. These
+ * Base class for destroy operators used in the LocalSearch class. These
  * operators modify solutions by removing clients from routes.
  */
 class DestroyOperator
@@ -24,17 +24,19 @@ public:
      * nodes
      *     List of search nodes used in the solution.
      * routes
-     *     List of search routes representing the solution.
+     *     List of search routes used in the solution.
      * cost_evaluator
-     *     CostEvaluator to use to compute the cost.
+     *     Cost evaluator to use.
      * neighbours
-     *    List of neighbours for each node, used to determine which nodes are
-     *    close to each other.
+     *     List of lists that defines the local search neighbourhood.
+     * order_nodes
+     *     Order of nodes to use when applying the destroy operator.
      */
     virtual void operator()(std::vector<search::Route::Node> &nodes,
                             std::vector<search::Route> &routes,
                             CostEvaluator const &costEvaluator,
-                            std::vector<std::vector<size_t>> const &neighbours)
+                            std::vector<std::vector<size_t>> const &neighbours,
+                            std::vector<size_t> const &orderNodes)
         = 0;
 
     virtual ~DestroyOperator() = default;
