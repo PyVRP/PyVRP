@@ -297,9 +297,8 @@ def test_bugfix_vehicle_type_offsets(ok_small):
 
 def test_no_op_results_in_same_solution(ok_small):
     """
-    Tests that calling local search without first adding node or route
-    operators is a no-op, and returns the same solution as the one that was
-    given to it.
+    Tests that calling local search without first adding any operators is a
+    no-op, and returns the same solution as the one that was given to it.
     """
     rng = RandomNumberGenerator(seed=42)
 
@@ -312,6 +311,7 @@ def test_no_op_results_in_same_solution(ok_small):
     assert_equal(ls(sol, cost_eval), sol)
     assert_equal(ls.search(sol, cost_eval), sol)
     assert_equal(ls.intensify(sol, cost_eval), sol)
+    assert_equal(ls.destroy(sol, cost_eval), sol)
 
 
 def test_intensify_can_improve_solution_further(rc208):

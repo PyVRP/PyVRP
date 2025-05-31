@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_LOCALSEARCH_H
 
 #include "CostEvaluator.h"
+#include "DestroyOperator.h"
 #include "LocalSearchOperator.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
@@ -70,6 +71,7 @@ private:
 
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
+    std::vector<DestroyOperator *> destroyOps;
 
     Statistics stats_;
     bool searchCompleted = false;  // No further improving move found?
@@ -112,6 +114,9 @@ private:
     // Performs intensify on the currently loaded solution.
     void intensify(CostEvaluator const &costEvaluator);
 
+    // Performs destroy on the currently loaded solution.
+    void destroy(CostEvaluator const &costEvaluator);
+
     // Evaluate and apply inserting U after one of its neighbours if it's an
     // improving move or required for feasibility.
     void
@@ -127,6 +132,11 @@ public:
      * Adds a local search operator that works on route pairs U and V.
      */
     void addRouteOperator(RouteOp &op);
+
+    /**
+     * Adds a destroy operator.
+     */
+    void addDestroyOperator(DestroyOperator &op);
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,
@@ -167,8 +177,15 @@ public:
                        CostEvaluator const &costEvaluator);
 
     /**
+     * Performs a destroy step around the given solution, and returns a new,
+     * incomplete solution.
+     */
+    Solution destroy(Solution const &solution,
+                     CostEvaluator const &costEvaluator);
+
+    /**
      * Shuffles the order in which the node and route pairs are evaluated, and
-     * the order in which node and route operators are applied.
+     * the order in which all operators are applied.
      */
     void shuffle(RandomNumberGenerator &rng);
 

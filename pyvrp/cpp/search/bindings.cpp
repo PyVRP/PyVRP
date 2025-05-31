@@ -1,6 +1,8 @@
 #include "bindings.h"
+#include "DestroyOperator.h"
 #include "Exchange.h"
 #include "LocalSearch.h"
+#include "NeighbourRemoval.h"
 #include "Route.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
@@ -16,11 +18,13 @@
 
 namespace py = pybind11;
 
+using pyvrp::search::DestroyOperator;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
+using pyvrp::search::NeighbourRemoval;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
 using pyvrp::search::SwapRoutes;
@@ -30,11 +34,14 @@ using pyvrp::search::TripRelocate;
 
 PYBIND11_MODULE(_search, m)
 {
+
     using NodeOp = LocalSearchOperator<pyvrp::search::Route::Node>;
     using RouteOp = LocalSearchOperator<pyvrp::search::Route>;
 
     py::class_<NodeOp>(m, "NodeOperator");
     py::class_<RouteOp>(m, "RouteOperator");
+    py::class_<DestroyOperator>(
+        m, "DestroyOperator", DOC(pyvrp, search, DestroyOperator));
 
     py::class_<Exchange<1, 0>, NodeOp>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))
@@ -191,6 +198,21 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &TripRelocate::apply, py::arg("U"), py::arg("V"));
 
+    py::class_<NeighbourRemoval, DestroyOperator>(
+        m, "NeighbourRemoval", DOC(pyvrp, search, NeighbourRemoval))
+        .def(py::init<pyvrp::ProblemData const &, size_t const>(),
+             py::arg("data"),
+             py::arg("num_destroy"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("__call__",
+             &NeighbourRemoval::operator(),
+             py::arg("nodes"),
+             py::arg("routes"),
+             py::arg("cost_evaluator"),
+             py::arg("neighbours"),
+             py::arg("order_nodes"),
+             py::call_guard<py::gil_scoped_release>());
+
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))
         .def_readonly("num_moves", &LocalSearch::Statistics::numMoves)
@@ -218,6 +240,10 @@ PYBIND11_MODULE(_search, m)
              &LocalSearch::addRouteOperator,
              py::arg("op"),
              py::keep_alive<1, 2>())
+        .def("add_destroy_operator",
+             &LocalSearch::addDestroyOperator,
+             py::arg("op"),
+             py::keep_alive<1, 2>())
         .def("__call__",
              &LocalSearch::operator(),
              py::arg("solution"),
@@ -237,6 +263,14 @@ PYBIND11_MODULE(_search, m)
              py::arg("solution"),
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>())
+        .def("destroy",
+             py::overload_cast<pyvrp::Solution const &,
+                               pyvrp::CostEvaluator const &>(
+                 &LocalSearch::destroy),
+             py::arg("solution"),
+             py::arg("cost_evaluator"),
+             py::call_guard<py::gil_scoped_release>())
+
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
