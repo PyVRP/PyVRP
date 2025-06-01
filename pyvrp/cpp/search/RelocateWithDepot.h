@@ -19,9 +19,9 @@ namespace pyvrp::search
  *        *Transportation Science*, 53(6): 1706 - 1730.
  *        https://doi.org/10.1287/trsc.2019.0909.
  */
-class RelocateWithDepot : public LocalSearchOperator<Route::Node>
+class RelocateWithDepot : public NodeOperator
 {
-    using LocalSearchOperator::LocalSearchOperator;
+    using NodeOperator::NodeOperator;
 
     enum class MoveType
     {

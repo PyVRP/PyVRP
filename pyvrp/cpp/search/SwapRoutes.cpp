@@ -22,7 +22,6 @@ void SwapRoutes::apply(Route *U, Route *V) const
     op.apply((*U)[0], (*V)[0]);
 }
 
-SwapRoutes::SwapRoutes(ProblemData const &data)
-    : LocalSearchOperator<Route>(data), op(data)
+SwapRoutes::SwapRoutes(ProblemData const &data) : RouteOperator(data), op(data)
 {
 }

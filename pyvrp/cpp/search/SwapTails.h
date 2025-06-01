@@ -17,9 +17,9 @@ namespace pyvrp::search
  *
  *    This operator is also known as 2-OPT* in the VRP literature.
  */
-class SwapTails : public LocalSearchOperator<Route::Node>
+class SwapTails : public NodeOperator
 {
-    using LocalSearchOperator::LocalSearchOperator;
+    using NodeOperator::NodeOperator;
 
 public:
     Cost evaluate(Route::Node *U,

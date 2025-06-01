@@ -9,6 +9,8 @@
 
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
+using pyvrp::search::NodeOperator;
+using pyvrp::search::RouteOperator;
 
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
@@ -491,16 +493,22 @@ Solution LocalSearch::exportSolution() const
     return {data, solRoutes};
 }
 
-void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }
+void LocalSearch::addNodeOperator(NodeOperator &op)
+{
+    nodeOps.emplace_back(&op);
+}
 
-void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
+void LocalSearch::addRouteOperator(RouteOperator &op)
+{
+    routeOps.emplace_back(&op);
+}
 
-std::vector<LocalSearch::NodeOp *> const &LocalSearch::nodeOperators() const
+std::vector<NodeOperator *> const &LocalSearch::nodeOperators() const
 {
     return nodeOps;
 }
 
-std::vector<LocalSearch::RouteOp *> const &LocalSearch::routeOperators() const
+std::vector<RouteOperator *> const &LocalSearch::routeOperators() const
 {
     return routeOps;
 }

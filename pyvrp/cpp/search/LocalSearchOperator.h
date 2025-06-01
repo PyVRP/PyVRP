@@ -26,7 +26,7 @@ struct OperatorStatistics
     size_t numApplications = 0;
 };
 
-template <typename Arg> class LocalSearchOperatorBase
+template <typename Arg> class LocalSearchOperator
 {
     // Can only be specialised into either a Node or Route operator; there
     // are no other types that are expected to work.
@@ -74,26 +74,21 @@ public:
      */
     OperatorStatistics const &statistics() const { return stats_; }
 
-    LocalSearchOperatorBase(ProblemData const &data) : data(data){};
-    virtual ~LocalSearchOperatorBase() = default;
+    LocalSearchOperator(ProblemData const &data) : data(data){};
+    virtual ~LocalSearchOperator() = default;
 };
 
-template <typename Arg>
-class LocalSearchOperator : public LocalSearchOperatorBase<Arg>
-{
-};
+/**
+ * Node operator base class.
+ */
+using NodeOperator = LocalSearchOperator<Route::Node>;
 
-template <>  // specialisation for node operators
-class LocalSearchOperator<Route::Node>
-    : public LocalSearchOperatorBase<Route::Node>
+/**
+ * Route operator base class.
+ */
+class RouteOperator : public LocalSearchOperator<Route>
 {
-    using LocalSearchOperatorBase::LocalSearchOperatorBase;
-};
-
-template <>  // specialisation for route operators
-class LocalSearchOperator<Route> : public LocalSearchOperatorBase<Route>
-{
-    using LocalSearchOperatorBase::LocalSearchOperatorBase;
+    using LocalSearchOperator::LocalSearchOperator;
 
 public:
     /**

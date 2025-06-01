@@ -20,29 +20,27 @@ using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
-using pyvrp::search::LocalSearchOperator;
+using pyvrp::search::NodeOperator;
 using pyvrp::search::OperatorStatistics;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
+using pyvrp::search::RouteOperator;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
 using pyvrp::search::SwapTails;
 
 PYBIND11_MODULE(_search, m)
 {
-    using NodeOp = LocalSearchOperator<pyvrp::search::Route::Node>;
-    using RouteOp = LocalSearchOperator<pyvrp::search::Route>;
-
-    py::class_<NodeOp>(m, "NodeOperator");
-    py::class_<RouteOp>(m, "RouteOperator");
+    py::class_<NodeOperator>(m, "NodeOperator");
+    py::class_<RouteOperator>(m, "RouteOperator");
 
     py::class_<OperatorStatistics>(
         m, "OperatorStatistics", DOC(pyvrp, search, OperatorStatistics))
         .def_readonly("num_evaluations", &OperatorStatistics::numEvaluations)
         .def_readonly("num_applications", &OperatorStatistics::numApplications);
 
-    py::class_<Exchange<1, 0>, NodeOp>(
+    py::class_<Exchange<1, 0>, NodeOperator>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -57,7 +55,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<1, 0>::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<Exchange<2, 0>, NodeOp>(
+    py::class_<Exchange<2, 0>, NodeOperator>(
         m, "Exchange20", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -72,7 +70,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<2, 0>::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<Exchange<3, 0>, NodeOp>(
+    py::class_<Exchange<3, 0>, NodeOperator>(
         m, "Exchange30", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -87,7 +85,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 0>::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<Exchange<1, 1>, NodeOp>(
+    py::class_<Exchange<1, 1>, NodeOperator>(
         m, "Exchange11", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -102,7 +100,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<1, 1>::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<Exchange<2, 1>, NodeOp>(
+    py::class_<Exchange<2, 1>, NodeOperator>(
         m, "Exchange21", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -117,7 +115,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<2, 1>::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<Exchange<3, 1>, NodeOp>(
+    py::class_<Exchange<3, 1>, NodeOperator>(
         m, "Exchange31", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -132,7 +130,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 1>::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<Exchange<2, 2>, NodeOp>(
+    py::class_<Exchange<2, 2>, NodeOperator>(
         m, "Exchange22", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -147,7 +145,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<2, 2>::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<Exchange<3, 2>, NodeOp>(
+    py::class_<Exchange<3, 2>, NodeOperator>(
         m, "Exchange32", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -162,7 +160,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 2>::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<Exchange<3, 3>, NodeOp>(
+    py::class_<Exchange<3, 3>, NodeOperator>(
         m, "Exchange33", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -177,7 +175,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<SwapRoutes, RouteOp>(
+    py::class_<SwapRoutes, RouteOperator>(
         m, "SwapRoutes", DOC(pyvrp, search, SwapRoutes))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -192,7 +190,8 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &SwapRoutes::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<SwapStar, RouteOp>(m, "SwapStar", DOC(pyvrp, search, SwapStar))
+    py::class_<SwapStar, RouteOperator>(
+        m, "SwapStar", DOC(pyvrp, search, SwapStar))
         .def(py::init<pyvrp::ProblemData const &, double>(),
              py::arg("data"),
              py::arg("overlap_tolerance") = 0.05,
@@ -207,7 +206,8 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &SwapStar::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<SwapTails, NodeOp>(m, "SwapTails", DOC(pyvrp, search, SwapTails))
+    py::class_<SwapTails, NodeOperator>(
+        m, "SwapTails", DOC(pyvrp, search, SwapTails))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
@@ -221,7 +221,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &SwapTails::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<RelocateWithDepot, NodeOp>(
+    py::class_<RelocateWithDepot, NodeOperator>(
         m, "RelocateWithDepot", DOC(pyvrp, search, RelocateWithDepot))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
