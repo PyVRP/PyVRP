@@ -195,6 +195,8 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
                               Route::Node *V,
                               CostEvaluator const &costEvaluator)
 {
+    stats_.numEvaluations++;
+
     if (containsDepot(U, N) || overlap(U, V))
         return 0;
 
@@ -229,6 +231,8 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
 template <size_t N, size_t M>
 void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
 {
+    stats_.numApplications++;
+
     auto &uRoute = *U->route();
     auto &vRoute = *V->route();
     auto *uToInsert = N == 1 ? U : uRoute[U->idx() + N - 1];

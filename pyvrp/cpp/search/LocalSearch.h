@@ -71,8 +71,8 @@ private:
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
 
-    Statistics stats_;
-    bool searchCompleted = false;  // No further improving move found?
+    size_t numUpdates_ = 0;         // modification counter
+    bool searchCompleted_ = false;  // No further improving move found?
 
     // Load an initial solution that we will attempt to improve.
     void loadSolution(Solution const &solution);
@@ -129,6 +129,18 @@ public:
     void addRouteOperator(RouteOp &op);
 
     /**
+     * Returns the node operators in use. Note that there is no defined
+     * ordering.
+     */
+    std::vector<NodeOp *> const &nodeOperators() const;
+
+    /**
+     * Returns the route operators in use. Note that there is no defined
+     * ordering.
+     */
+    std::vector<RouteOp *> const &routeOperators() const;
+
+    /**
      * Set neighbourhood structure to use by the local search. For each client,
      * the neighbourhood structure is a vector of nearby clients. Depots have
      * no nearby client.
@@ -143,7 +155,7 @@ public:
     /**
      * Returns search statistics for the currently loaded solution.
      */
-    Statistics const &statistics() const;
+    Statistics statistics() const;
 
     /**
      * Iteratively calls ``search()`` and ``intensify()`` until no further

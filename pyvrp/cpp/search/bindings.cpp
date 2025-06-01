@@ -21,6 +21,7 @@ using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
+using pyvrp::search::OperatorStatistics;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
@@ -36,11 +37,19 @@ PYBIND11_MODULE(_search, m)
     py::class_<NodeOp>(m, "NodeOperator");
     py::class_<RouteOp>(m, "RouteOperator");
 
+    py::class_<OperatorStatistics>(
+        m, "OperatorStatistics", DOC(pyvrp, search, OperatorStatistics))
+        .def_readonly("num_evaluations", &OperatorStatistics::numEvaluations)
+        .def_readonly("num_applications", &OperatorStatistics::numApplications);
+
     py::class_<Exchange<1, 0>, NodeOp>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &Exchange<1, 0>::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &Exchange<1, 0>::evaluate,
              py::arg("U"),
@@ -53,6 +62,9 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &Exchange<2, 0>::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &Exchange<2, 0>::evaluate,
              py::arg("U"),
@@ -65,6 +77,9 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &Exchange<3, 0>::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &Exchange<3, 0>::evaluate,
              py::arg("U"),
@@ -77,6 +92,9 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &Exchange<1, 1>::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &Exchange<1, 1>::evaluate,
              py::arg("U"),
@@ -89,6 +107,9 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &Exchange<2, 1>::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &Exchange<2, 1>::evaluate,
              py::arg("U"),
@@ -101,6 +122,9 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &Exchange<3, 1>::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &Exchange<3, 1>::evaluate,
              py::arg("U"),
@@ -113,6 +137,9 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &Exchange<2, 2>::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &Exchange<2, 2>::evaluate,
              py::arg("U"),
@@ -125,6 +152,9 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &Exchange<3, 2>::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &Exchange<3, 2>::evaluate,
              py::arg("U"),
@@ -137,6 +167,9 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &Exchange<3, 3>::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &Exchange<3, 3>::evaluate,
              py::arg("U"),
@@ -149,6 +182,9 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &SwapRoutes::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &SwapRoutes::evaluate,
              py::arg("U"),
@@ -161,6 +197,9 @@ PYBIND11_MODULE(_search, m)
              py::arg("data"),
              py::arg("overlap_tolerance") = 0.05,
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &SwapStar::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &SwapStar::evaluate,
              py::arg("U"),
@@ -172,6 +211,9 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &SwapTails::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &SwapTails::evaluate,
              py::arg("U"),
@@ -184,6 +226,9 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &RelocateWithDepot::statistics,
+                               py::return_value_policy::reference_internal)
         .def("evaluate",
              &RelocateWithDepot::evaluate,
              py::arg("U"),
@@ -207,8 +252,12 @@ PYBIND11_MODULE(_search, m)
                       &LocalSearch::neighbours,
                       &LocalSearch::setNeighbours,
                       py::return_value_policy::reference_internal)
-        .def_property_readonly("statistics",
-                               &LocalSearch::statistics,
+        .def_property_readonly("statistics", &LocalSearch::statistics)
+        .def_property_readonly("node_operators",
+                               &LocalSearch::nodeOperators,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("route_operators",
+                               &LocalSearch::routeOperators,
                                py::return_value_policy::reference_internal)
         .def("add_node_operator",
              &LocalSearch::addNodeOperator,
