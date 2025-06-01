@@ -584,8 +584,9 @@ def test_search_statistics(ok_small):
     """
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
-    ls.add_node_operator(Exchange10(ok_small))
-    ls.add_route_operator(SwapStar(ok_small))
+
+    node_op = Exchange10(ok_small)
+    ls.add_node_operator(node_op)
 
     # No solution is yet loaded/improved, so all these numbers should be zero.
     stats = ls.statistics
@@ -603,6 +604,11 @@ def test_search_statistics(ok_small):
     assert_(stats.num_moves > 0)
     assert_(stats.num_improving > 0)
     assert_(stats.num_updates >= stats.num_improving)
+
+    # Since we have only a single node operator, the number of moves and the
+    # number of improving moves should match what the node operator tracks.
+    assert_equal(stats.num_moves, node_op.statistics.num_evaluations)
+    assert_equal(stats.num_improving, node_op.statistics.num_applications)
 
     # The improved solution is already locally optimal, so it cannot be further
     # improved by the local search. The number of improving moves should thus
