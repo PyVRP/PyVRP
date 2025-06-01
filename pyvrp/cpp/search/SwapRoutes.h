@@ -12,7 +12,7 @@ namespace pyvrp::search
  * This operator evaluates exchanging the visits of two routes :math:`U` and
  * :math:`V`.
  */
-class SwapRoutes final : public RouteOperator
+class SwapRoutes : public RouteOperator
 {
     SwapTails op;
 

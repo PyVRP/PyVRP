@@ -20,7 +20,7 @@ namespace pyvrp::search
  * The :math:`(N, M)`-exchange class uses C++ templates for different :math:`N`
  * and :math:`M` to efficiently evaluate these moves.
  */
-template <size_t N, size_t M> class Exchange final : public NodeOperator
+template <size_t N, size_t M> class Exchange : public NodeOperator
 {
     using NodeOperator::NodeOperator;
 

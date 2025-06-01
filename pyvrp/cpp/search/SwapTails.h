@@ -17,7 +17,7 @@ namespace pyvrp::search
  *
  *    This operator is also known as 2-OPT* in the VRP literature.
  */
-class SwapTails final : public NodeOperator
+class SwapTails : public NodeOperator
 {
     using NodeOperator::NodeOperator;
 
