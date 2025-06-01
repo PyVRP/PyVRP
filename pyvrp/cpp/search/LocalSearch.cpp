@@ -495,6 +495,16 @@ void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }
 
 void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
 
+std::vector<LocalSearch::NodeOp *> const &LocalSearch::nodeOperators() const
+{
+    return nodeOps;
+}
+
+std::vector<LocalSearch::RouteOp *> const &LocalSearch::routeOperators() const
+{
+    return routeOps;
+}
+
 void LocalSearch::setNeighbours(Neighbours neighbours)
 {
     if (neighbours.size() != data.numLocations())

@@ -129,6 +129,18 @@ public:
     void addRouteOperator(RouteOp &op);
 
     /**
+     * Returns the node operators in use. Note that there is no defined
+     * ordering.
+     */
+    std::vector<NodeOp *> const &nodeOperators() const;
+
+    /**
+     * Returns the route operators in use. Note that there is no defined
+     * ordering.
+     */
+    std::vector<RouteOp *> const &routeOperators() const;
+
+    /**
      * Set neighbourhood structure to use by the local search. For each client,
      * the neighbourhood structure is a vector of nearby clients. Depots have
      * no nearby client.
