@@ -613,3 +613,31 @@ def test_search_statistics(ok_small):
     assert_(stats.num_moves > 0)
     assert_equal(stats.num_improving, 0)
     assert_equal(stats.num_updates, 0)
+
+
+def test_node_and_route_operators_property(ok_small):
+    """
+    Tests adding and accessing node and route operators to the LocalSearch
+    object.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+
+    # The local search has not yet been equipped with operators, so it should
+    # start empty.
+    assert_equal(len(ls.node_operators), 0)
+    assert_equal(len(ls.route_operators), 0)
+
+    # Now we add a node operator. The local search does not take ownership, so
+    # its only node operator should be the exact same object as the one we just
+    # created.
+    node_op = Exchange10(ok_small)
+    ls.add_node_operator(node_op)
+    assert_equal(len(ls.node_operators), 1)
+    assert_(ls.node_operators[0] is node_op)
+
+    # And a route operator, for which the same should hold.
+    route_op = SwapStar(ok_small)
+    ls.add_route_operator(route_op)
+    assert_equal(len(ls.route_operators), 1)
+    assert_(ls.route_operators[0] is route_op)
