@@ -1,10 +1,10 @@
-#include "TripRelocate.h"
+#include "RelocateWithDepot.h"
 
 #include "Route.h"
 
 #include <cassert>
 
-using pyvrp::search::TripRelocate;
+using pyvrp::search::RelocateWithDepot;
 
 namespace
 {
@@ -48,10 +48,10 @@ public:
 };
 }  // namespace
 
-void TripRelocate::evalDepotBefore(Cost fixedCost,
-                                   Route::Node *U,
-                                   Route::Node *V,
-                                   CostEvaluator const &costEvaluator)
+void RelocateWithDepot::evalDepotBefore(Cost fixedCost,
+                                        Route::Node *U,
+                                        Route::Node *V,
+                                        CostEvaluator const &costEvaluator)
 {
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
@@ -106,10 +106,10 @@ void TripRelocate::evalDepotBefore(Cost fixedCost,
     }
 }
 
-void TripRelocate::evalDepotAfter(Cost fixedCost,
-                                  Route::Node *U,
-                                  Route::Node *V,
-                                  CostEvaluator const &costEvaluator)
+void RelocateWithDepot::evalDepotAfter(Cost fixedCost,
+                                       Route::Node *U,
+                                       Route::Node *V,
+                                       CostEvaluator const &costEvaluator)
 {
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
@@ -164,9 +164,9 @@ void TripRelocate::evalDepotAfter(Cost fixedCost,
     }
 }
 
-pyvrp::Cost TripRelocate::evaluate(Route::Node *U,
-                                   Route::Node *V,
-                                   CostEvaluator const &costEvaluator)
+pyvrp::Cost RelocateWithDepot::evaluate(Route::Node *U,
+                                        Route::Node *V,
+                                        CostEvaluator const &costEvaluator)
 {
     assert(!U->isDepot() && !V->isEndDepot());
 
@@ -205,7 +205,7 @@ pyvrp::Cost TripRelocate::evaluate(Route::Node *U,
     return move_.cost;
 }
 
-void TripRelocate::apply(Route::Node *U, Route::Node *V) const
+void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
 {
     auto *uRoute = U->route();
     uRoute->remove(U->idx());

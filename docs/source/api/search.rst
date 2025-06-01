@@ -75,10 +75,10 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    .. autoclass:: Exchange33
       :exclude-members: evaluate, apply
 
-   .. autoclass:: SwapTails
+   .. autoclass:: RelocateWithDepot
       :exclude-members: evaluate, apply
 
-   .. autoclass:: TripRelocate
+   .. autoclass:: SwapTails
       :exclude-members: evaluate, apply
 
 
