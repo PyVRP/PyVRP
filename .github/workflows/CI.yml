@@ -106,5 +106,5 @@ jobs:
         # malloc.
         # TODO also run with --leak-check=full?
         run: |
-          VALGRIND_CMD="pyvrp tests/data/RC208.vrp --round_func dimacs --max_runtime 0.5 --seed 1"
+          VALGRIND_CMD="bench solve tests/data/RC208.vrp --round_func dimacs --max_runtime 0.5 --seed 1"
           uv run env PYTHONMALLOC=malloc valgrind --tool=memcheck --quiet $VALGRIND_CMD
