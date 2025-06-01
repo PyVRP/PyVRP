@@ -18,12 +18,12 @@ Solution LocalSearch::operator()(Solution const &solution,
     while (true)
     {
         search(costEvaluator);
-        auto const numImproving = stats_.numImproving;  // after node search
+        auto const numUpdates = numUpdates_;  // after node search
 
         intensify(costEvaluator);
-        if (stats_.numImproving == numImproving)
-            // Then intensify (route search) did not find any additional
-            // improving moves, and the solution is locally optimal.
+        if (numUpdates_ == numUpdates)
+            // Then intensify (route search) did not do any additional
+            // updates, so the solution is locally optimal.
             break;
     }
 
@@ -51,10 +51,10 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     if (nodeOps.empty())
         return;
 
-    searchCompleted = false;
-    for (int step = 0; !searchCompleted; ++step)
+    searchCompleted_ = false;
+    for (int step = 0; !searchCompleted_; ++step)
     {
-        searchCompleted = true;
+        searchCompleted_ = true;
 
         // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
@@ -62,7 +62,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             auto *U = &nodes[uClient];
 
             auto const lastTested = lastTestedNodes[uClient];
-            lastTestedNodes[uClient] = stats_.numUpdates;
+            lastTestedNodes[uClient] = numUpdates_;
 
             // First test removing or inserting U. Particularly relevant if not
             // all clients are required (e.g., when prize collecting).
@@ -112,10 +112,10 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
     if (routeOps.empty())
         return;
 
-    searchCompleted = false;
-    while (!searchCompleted)
+    searchCompleted_ = false;
+    while (!searchCompleted_)
     {
-        searchCompleted = true;
+        searchCompleted_ = true;
 
         for (auto const rU : orderRoutes)
         {
@@ -126,7 +126,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
                 continue;
 
             auto const lastTested = lastTestedRoutes[U.idx()];
-            lastTestedRoutes[U.idx()] = stats_.numUpdates;
+            lastTestedRoutes[U.idx()] = numUpdates_;
 
             for (size_t rV = U.idx() + 1; rV != routes.size(); ++rV)
             {
@@ -161,13 +161,9 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
 {
     for (auto *nodeOp : nodeOps)
     {
-        stats_.numMoves++;
-
         auto const deltaCost = nodeOp->evaluate(U, V, costEvaluator);
         if (deltaCost < 0)
         {
-            stats_.numImproving++;
-
             auto *rU = U->route();  // copy these because the operator can
             auto *rV = V->route();  // modify the nodes' route membership
 
@@ -200,13 +196,9 @@ bool LocalSearch::applyRouteOps(Route *U,
 {
     for (auto *routeOp : routeOps)
     {
-        stats_.numMoves++;
-
         auto const deltaCost = routeOp->evaluate(U, V, costEvaluator);
         if (deltaCost < 0)
         {
-            stats_.numImproving++;
-
             [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(*U)
                   + Cost(U != V) * costEvaluator.penalisedCost(*V);
@@ -376,11 +368,11 @@ void LocalSearch::insert(Route::Node *U,
 
 void LocalSearch::update(Route *U, Route *V)
 {
-    stats_.numUpdates++;
-    searchCompleted = false;
+    numUpdates_++;
+    searchCompleted_ = false;
 
     U->update();
-    lastUpdated[U->idx()] = stats_.numUpdates;
+    lastUpdated[U->idx()] = numUpdates_;
 
     for (auto *op : routeOps)  // this is used by some route operators
         op->update(U);         // to keep caches in sync.
@@ -388,7 +380,7 @@ void LocalSearch::update(Route *U, Route *V)
     if (U != V)
     {
         V->update();
-        lastUpdated[V->idx()] = stats_.numUpdates;
+        lastUpdated[V->idx()] = numUpdates_;
 
         for (auto *op : routeOps)  // this is used by some route operators
             op->update(V);         // to keep caches in sync.
@@ -400,7 +392,7 @@ void LocalSearch::loadSolution(Solution const &solution)
     std::fill(lastTestedNodes.begin(), lastTestedNodes.end(), -1);
     std::fill(lastTestedRoutes.begin(), lastTestedRoutes.end(), -1);
     std::fill(lastUpdated.begin(), lastUpdated.end(), 0);
-    stats_ = {};
+    numUpdates_ = 0;
 
     // First empty all routes.
     for (auto &route : routes)
@@ -444,6 +436,9 @@ void LocalSearch::loadSolution(Solution const &solution)
 
         route.update();
     }
+
+    for (auto *nodeOp : nodeOps)
+        nodeOp->init(solution);
 
     for (auto *routeOp : routeOps)
         routeOp->init(solution);
@@ -530,9 +525,23 @@ LocalSearch::Neighbours const &LocalSearch::neighbours() const
     return neighbours_;
 }
 
-LocalSearch::Statistics const &LocalSearch::statistics() const
+LocalSearch::Statistics LocalSearch::statistics() const
 {
-    return stats_;
+    size_t numMoves = 0;
+    size_t numImproving = 0;
+
+    auto const count = [&](auto const *op)
+    {
+        auto const &stats = op->statistics();
+        numMoves += stats.numEvaluations;
+        numImproving += stats.numApplications;
+    };
+
+    std::for_each(nodeOps.begin(), nodeOps.end(), count);
+    std::for_each(routeOps.begin(), routeOps.end(), count);
+
+    assert(numImproving <= numUpdates_);
+    return {numMoves, numImproving, numUpdates_};
 }
 
 LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)

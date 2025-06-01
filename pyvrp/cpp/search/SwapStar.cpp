@@ -172,6 +172,8 @@ Cost SwapStar::evaluate(Route *routeU,
                         Route *routeV,
                         CostEvaluator const &costEvaluator)
 {
+    stats_.numEvaluations++;
+
     if (!routeU->overlapsWith(*routeV, overlapTolerance))
         return 0;
 
@@ -234,6 +236,7 @@ Cost SwapStar::evaluate(Route *routeU,
 
 void SwapStar::apply(Route *U, Route *V) const
 {
+    stats_.numApplications++;
     assert(best.U);
     assert(best.UAfter);
     assert(best.V);

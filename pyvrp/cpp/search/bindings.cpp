@@ -21,6 +21,7 @@ using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
+using pyvrp::search::OperatorStatistics;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
@@ -36,6 +37,11 @@ PYBIND11_MODULE(_search, m)
     py::class_<NodeOp>(m, "NodeOperator");
     py::class_<RouteOp>(m, "RouteOperator");
 
+    py::class_<OperatorStatistics>(
+        m, "OperatorStatistics", DOC(pyvrp, search, OperatorStatistics))
+        .def_readonly("num_evaluations", &OperatorStatistics::numEvaluations)
+        .def_readonly("num_applications", &OperatorStatistics::numApplications);
+
     py::class_<Exchange<1, 0>, NodeOp>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
@@ -46,7 +52,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<1, 0>::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &Exchange<1, 0>::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &Exchange<1, 0>::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<Exchange<2, 0>, NodeOp>(
         m, "Exchange20", DOC(pyvrp, search, Exchange))
@@ -58,7 +67,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<2, 0>::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &Exchange<2, 0>::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &Exchange<2, 0>::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<Exchange<3, 0>, NodeOp>(
         m, "Exchange30", DOC(pyvrp, search, Exchange))
@@ -70,7 +82,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<3, 0>::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &Exchange<3, 0>::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &Exchange<3, 0>::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<Exchange<1, 1>, NodeOp>(
         m, "Exchange11", DOC(pyvrp, search, Exchange))
@@ -82,7 +97,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<1, 1>::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &Exchange<1, 1>::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &Exchange<1, 1>::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<Exchange<2, 1>, NodeOp>(
         m, "Exchange21", DOC(pyvrp, search, Exchange))
@@ -94,7 +112,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<2, 1>::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &Exchange<2, 1>::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &Exchange<2, 1>::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<Exchange<3, 1>, NodeOp>(
         m, "Exchange31", DOC(pyvrp, search, Exchange))
@@ -106,7 +127,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<3, 1>::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &Exchange<3, 1>::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &Exchange<3, 1>::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<Exchange<2, 2>, NodeOp>(
         m, "Exchange22", DOC(pyvrp, search, Exchange))
@@ -118,7 +142,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<2, 2>::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &Exchange<2, 2>::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &Exchange<2, 2>::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<Exchange<3, 2>, NodeOp>(
         m, "Exchange32", DOC(pyvrp, search, Exchange))
@@ -130,7 +157,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<3, 2>::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &Exchange<3, 2>::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &Exchange<3, 2>::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<Exchange<3, 3>, NodeOp>(
         m, "Exchange33", DOC(pyvrp, search, Exchange))
@@ -142,7 +172,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &Exchange<3, 3>::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<SwapRoutes, RouteOp>(
         m, "SwapRoutes", DOC(pyvrp, search, SwapRoutes))
@@ -154,7 +187,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &SwapRoutes::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &SwapRoutes::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &SwapRoutes::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<SwapStar, RouteOp>(m, "SwapStar", DOC(pyvrp, search, SwapStar))
         .def(py::init<pyvrp::ProblemData const &, double>(),
@@ -166,7 +202,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &SwapStar::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &SwapStar::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &SwapStar::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<SwapTails, NodeOp>(m, "SwapTails", DOC(pyvrp, search, SwapTails))
         .def(py::init<pyvrp::ProblemData const &>(),
@@ -177,7 +216,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &SwapTails::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &SwapTails::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &SwapTails::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<RelocateWithDepot, NodeOp>(
         m, "RelocateWithDepot", DOC(pyvrp, search, RelocateWithDepot))
@@ -189,7 +231,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &RelocateWithDepot::apply, py::arg("U"), py::arg("V"));
+        .def("apply", &RelocateWithDepot::apply, py::arg("U"), py::arg("V"))
+        .def("statistics",
+             &RelocateWithDepot::statistics,
+             py::return_value_policy::reference_internal);
 
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))
@@ -207,9 +252,7 @@ PYBIND11_MODULE(_search, m)
                       &LocalSearch::neighbours,
                       &LocalSearch::setNeighbours,
                       py::return_value_policy::reference_internal)
-        .def_property_readonly("statistics",
-                               &LocalSearch::statistics,
-                               py::return_value_policy::reference_internal)
+        .def_property_readonly("statistics", &LocalSearch::statistics)
         .def("add_node_operator",
              &LocalSearch::addNodeOperator,
              py::arg("op"),

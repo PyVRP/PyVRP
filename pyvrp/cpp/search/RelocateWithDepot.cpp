@@ -169,6 +169,7 @@ pyvrp::Cost RelocateWithDepot::evaluate(Route::Node *U,
                                         CostEvaluator const &costEvaluator)
 {
     assert(!U->isDepot() && !V->isEndDepot());
+    stats_.numEvaluations++;
 
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
@@ -207,6 +208,8 @@ pyvrp::Cost RelocateWithDepot::evaluate(Route::Node *U,
 
 void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
 {
+    stats_.numApplications++;
+
     auto *uRoute = U->route();
     uRoute->remove(U->idx());
 

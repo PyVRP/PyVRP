@@ -80,7 +80,7 @@ class LocalSearch:
     @property
     def statistics(self) -> LocalSearchStatistics:
         """
-        Returns search statistics of the most recently improved solution.
+        Returns search statistics about the most recently improved solution.
         """
         return self._ls.statistics
 

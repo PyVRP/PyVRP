@@ -9,6 +9,23 @@
 
 namespace pyvrp::search
 {
+/**
+ * Simple data structure that tracks statistics about the number of times
+ * an operator was evaluated and applied.
+ *
+ * Attributes
+ * ----------
+ * num_evaluations
+ *     Number of evaluated moves.
+ * num_applications
+ *     Number of applied, improving moves.
+ */
+struct OperatorStatistics
+{
+    size_t numEvaluations = 0;
+    size_t numApplications = 0;
+};
+
 template <typename Arg> class LocalSearchOperatorBase
 {
     // Can only be specialised into either a Node or Route operator; there
@@ -18,6 +35,7 @@ template <typename Arg> class LocalSearchOperatorBase
 
 protected:
     ProblemData const &data;
+    mutable OperatorStatistics stats_;
 
 public:
     /**
@@ -41,6 +59,21 @@ public:
     // TODO remove arguments - always applies to most recently evaluated pair.
     virtual void apply(Arg *U, Arg *V) const = 0;
 
+    /**
+     * Called once after loading in the solution to improve. This can be used
+     * to e.g. update local operator state.
+     */
+    virtual void init([[maybe_unused]] Solution const &solution)
+    {
+        stats_ = {};  // reset call statistics
+    };
+
+    /**
+     * Returns evaluation and application statistics collected since the last
+     * solution initialisation.
+     */
+    OperatorStatistics const &statistics() const { return stats_; }
+
     LocalSearchOperatorBase(ProblemData const &data) : data(data){};
     virtual ~LocalSearchOperatorBase() = default;
 };
@@ -63,12 +96,6 @@ class LocalSearchOperator<Route> : public LocalSearchOperatorBase<Route>
     using LocalSearchOperatorBase::LocalSearchOperatorBase;
 
 public:
-    /**
-     * Called once after loading in the solution to improve. This can be used
-     * to e.g. update local operator state.
-     */
-    virtual void init([[maybe_unused]] Solution const &solution) {};
-
     /**
      * Called when a route has been changed. Can be used to update caches, but
      * the implementation should be fast: this is called every time something

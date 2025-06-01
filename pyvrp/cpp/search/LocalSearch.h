@@ -71,8 +71,8 @@ private:
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
 
-    Statistics stats_;
-    bool searchCompleted = false;  // No further improving move found?
+    size_t numUpdates_ = 0;         // modification counter
+    bool searchCompleted_ = false;  // No further improving move found?
 
     // Load an initial solution that we will attempt to improve.
     void loadSolution(Solution const &solution);
@@ -143,7 +143,7 @@ public:
     /**
      * Returns search statistics for the currently loaded solution.
      */
-    Statistics const &statistics() const;
+    Statistics statistics() const;
 
     /**
      * Iteratively calls ``search()`` and ``intensify()`` until no further
