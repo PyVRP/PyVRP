@@ -46,8 +46,6 @@ public:
     };
 
 private:
-    using NodeOp = LocalSearchOperator<Route::Node>;
-    using RouteOp = LocalSearchOperator<Route>;
     using Neighbours = std::vector<std::vector<size_t>>;
 
     ProblemData const &data;
@@ -68,8 +66,8 @@ private:
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
 
-    std::vector<NodeOp *> nodeOps;
-    std::vector<RouteOp *> routeOps;
+    std::vector<NodeOperator *> nodeOps;
+    std::vector<RouteOperator *> routeOps;
 
     size_t numUpdates_ = 0;         // modification counter
     bool searchCompleted_ = false;  // No further improving move found?
@@ -121,24 +119,24 @@ public:
     /**
      * Adds a local search operator that works on node/client pairs U and V.
      */
-    void addNodeOperator(NodeOp &op);
+    void addNodeOperator(NodeOperator &op);
 
     /**
      * Adds a local search operator that works on route pairs U and V.
      */
-    void addRouteOperator(RouteOp &op);
+    void addRouteOperator(RouteOperator &op);
 
     /**
      * Returns the node operators in use. Note that there is no defined
      * ordering.
      */
-    std::vector<NodeOp *> const &nodeOperators() const;
+    std::vector<NodeOperator *> const &nodeOperators() const;
 
     /**
      * Returns the route operators in use. Note that there is no defined
      * ordering.
      */
-    std::vector<RouteOp *> const &routeOperators() const;
+    std::vector<RouteOperator *> const &routeOperators() const;
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,
