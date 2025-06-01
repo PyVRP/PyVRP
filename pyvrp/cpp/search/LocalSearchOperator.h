@@ -60,8 +60,8 @@ public:
     virtual void apply(Arg *U, Arg *V) const = 0;
 
     /**
-     * Called once after loading in the solution to improve. This can be used
-     * to e.g. update local operator state.
+     * Called once after loading the solution to improve. This can be used to
+     * e.g. update local operator state.
      */
     virtual void init([[maybe_unused]] Solution const &solution)
     {
