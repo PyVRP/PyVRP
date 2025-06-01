@@ -1,12 +1,12 @@
-#ifndef PYVRP_SEARCH_TRIPRELOCATE_H
-#define PYVRP_SEARCH_TRIPRELOCATE_H
+#ifndef PYVRP_SEARCH_RELOCATEWITHDEPOT_H
+#define PYVRP_SEARCH_RELOCATEWITHDEPOT_H
 
 #include "LocalSearchOperator.h"
 
 namespace pyvrp::search
 {
 /**
- * TripRelocate(data: ProblemData)
+ * RelocateWithDepot(data: ProblemData)
  *
  * Tests if inserting a reload depot while relocating :math:`U` after :math:`V`
  * results in an improving move. Concretely, this operator implements the second
@@ -19,7 +19,7 @@ namespace pyvrp::search
  *        *Transportation Science*, 53(6): 1706 - 1730.
  *        https://doi.org/10.1287/trsc.2019.0909.
  */
-class TripRelocate : public LocalSearchOperator<Route::Node>
+class RelocateWithDepot : public LocalSearchOperator<Route::Node>
 {
     using LocalSearchOperator::LocalSearchOperator;
 
@@ -61,4 +61,4 @@ public:
 };
 }  // namespace pyvrp::search
 
-#endif  // PYVRP_SEARCH_TRIPRELOCATE_H
+#endif  // PYVRP_SEARCH_RELOCATEWITHDEPOT_H

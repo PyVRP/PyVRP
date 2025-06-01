@@ -18,9 +18,9 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
+    RelocateWithDepot,
     SwapRoutes,
     SwapStar,
-    TripRelocate,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -536,7 +536,7 @@ def test_local_search_inserts_reload_depots(ok_small_multiple_trips):
     neighbours = compute_neighbours(ok_small_multiple_trips)
 
     ls = LocalSearch(ok_small_multiple_trips, rng, neighbours)
-    ls.add_node_operator(TripRelocate(ok_small_multiple_trips))
+    ls.add_node_operator(RelocateWithDepot(ok_small_multiple_trips))
 
     sol = Solution(ok_small_multiple_trips, [[1, 2, 3, 4]])
     assert_(sol.has_excess_load())
