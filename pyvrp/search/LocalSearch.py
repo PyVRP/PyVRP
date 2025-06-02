@@ -92,9 +92,23 @@ class LocalSearch:
         self._ls.neighbours = neighbours
 
     @property
+    def node_operators(self) -> list[NodeOperator]:
+        """
+        Returns the node operators in use.
+        """
+        return self._ls.node_operators
+
+    @property
+    def route_operators(self) -> list[RouteOperator]:
+        """
+        Returns the route operators in use.
+        """
+        return self._ls.route_operators
+
+    @property
     def statistics(self) -> LocalSearchStatistics:
         """
-        Returns search statistics of the most recently improved solution.
+        Returns search statistics about the most recently improved solution.
         """
         return self._ls.statistics
 

@@ -47,8 +47,6 @@ public:
     };
 
 private:
-    using NodeOp = LocalSearchOperator<Route::Node>;
-    using RouteOp = LocalSearchOperator<Route>;
     using Neighbours = std::vector<std::vector<size_t>>;
 
     ProblemData const &data;
@@ -69,12 +67,12 @@ private:
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
 
-    std::vector<NodeOp *> nodeOps;
-    std::vector<RouteOp *> routeOps;
+    std::vector<NodeOperator *> nodeOps;
+    std::vector<RouteOperator *> routeOps;
     std::vector<PerturbationOperator *> perturbOps;
 
-    Statistics stats_;
-    bool searchCompleted = false;  // No further improving move found?
+    size_t numUpdates_ = 0;         // modification counter
+    bool searchCompleted_ = false;  // No further improving move found?
 
     // Load an initial solution that we will attempt to improve.
     void loadSolution(Solution const &solution);
@@ -126,17 +124,29 @@ public:
     /**
      * Adds a local search operator that works on node/client pairs U and V.
      */
-    void addNodeOperator(NodeOp &op);
+    void addNodeOperator(NodeOperator &op);
 
     /**
      * Adds a local search operator that works on route pairs U and V.
      */
-    void addRouteOperator(RouteOp &op);
+    void addRouteOperator(RouteOperator &op);
 
     /**
      * Adds a perturbation operator.
      */
     void addPerturbationOperator(PerturbationOperator &op);
+
+    /**
+     * Returns the node operators in use. Note that there is no defined
+     * ordering.
+     */
+    std::vector<NodeOperator *> const &nodeOperators() const;
+
+    /**
+     * Returns the route operators in use. Note that there is no defined
+     * ordering.
+     */
+    std::vector<RouteOperator *> const &routeOperators() const;
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,
@@ -153,7 +163,7 @@ public:
     /**
      * Returns search statistics for the currently loaded solution.
      */
-    Statistics const &statistics() const;
+    Statistics statistics() const;
 
     /**
      * Iteratively calls ``search()`` and ``intensify()`` until no further

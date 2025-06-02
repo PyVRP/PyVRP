@@ -5,7 +5,7 @@ node_ops = [
     "Exchange21",
     "Exchange22",
     "SwapTails",
-    "TripRelocate",
+    "RelocateWithDepot",
 ]
 
 

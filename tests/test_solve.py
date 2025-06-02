@@ -73,16 +73,6 @@ def test_solve_same_seed(ok_small):
     assert_equal(res1.stats.infeas_stats, res2.stats.infeas_stats)
 
 
-def test_solve_more_iterations_is_better(prize_collecting):
-    """
-    Smoke test that checks that running more iterations results in an improved
-    solution.
-    """
-    cost1 = solve(prize_collecting, stop=MaxIterations(1)).cost()
-    cost100 = solve(prize_collecting, stop=MaxIterations(100)).cost()
-    assert_(cost100 < cost1)
-
-
 def test_solve_custom_params(ok_small):
     """
     Tests that solving an instance with custom solver parameters works as

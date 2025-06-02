@@ -163,7 +163,7 @@ Cost SwapStar::evaluateMove(Route::Node const *U,
 
 void SwapStar::init(Solution const &solution)
 {
-    LocalSearchOperator<Route>::init(solution);
+    RouteOperator::init(solution);
     for (size_t row = 0; row != isCached.numRows(); ++row)
         isCached(row, 0) = false;
 }
@@ -172,6 +172,8 @@ Cost SwapStar::evaluate(Route *routeU,
                         Route *routeV,
                         CostEvaluator const &costEvaluator)
 {
+    stats_.numEvaluations++;
+
     if (!routeU->overlapsWith(*routeV, overlapTolerance))
         return 0;
 
@@ -234,6 +236,7 @@ Cost SwapStar::evaluate(Route *routeU,
 
 void SwapStar::apply(Route *U, Route *V) const
 {
+    stats_.numApplications++;
     assert(best.U);
     assert(best.UAfter);
     assert(best.V);
@@ -249,7 +252,7 @@ void SwapStar::apply(Route *U, Route *V) const
 void SwapStar::update(Route *U) { isCached(U->idx(), 0) = false; }
 
 SwapStar::SwapStar(ProblemData const &data, double overlapTolerance)
-    : LocalSearchOperator<Route>(data),
+    : RouteOperator(data),
       overlapTolerance(overlapTolerance),
       insertCache(data.numVehicles(), data.numLocations()),
       isCached(data.numVehicles(), data.numLocations()),

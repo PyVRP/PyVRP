@@ -18,9 +18,9 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
+    RelocateWithDepot,
     SwapRoutes,
     SwapStar,
-    TripRelocate,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -536,7 +536,7 @@ def test_local_search_inserts_reload_depots(ok_small_multiple_trips):
     neighbours = compute_neighbours(ok_small_multiple_trips)
 
     ls = LocalSearch(ok_small_multiple_trips, rng, neighbours)
-    ls.add_node_operator(TripRelocate(ok_small_multiple_trips))
+    ls.add_node_operator(RelocateWithDepot(ok_small_multiple_trips))
 
     sol = Solution(ok_small_multiple_trips, [[1, 2, 3, 4]])
     assert_(sol.has_excess_load())
@@ -584,8 +584,9 @@ def test_search_statistics(ok_small):
     """
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
-    ls.add_node_operator(Exchange10(ok_small))
-    ls.add_route_operator(SwapStar(ok_small))
+
+    node_op = Exchange10(ok_small)
+    ls.add_node_operator(node_op)
 
     # No solution is yet loaded/improved, so all these numbers should be zero.
     stats = ls.statistics
@@ -604,6 +605,11 @@ def test_search_statistics(ok_small):
     assert_(stats.num_improving > 0)
     assert_(stats.num_updates >= stats.num_improving)
 
+    # Since we have only a single node operator, the number of moves and the
+    # number of improving moves should match what the node operator tracks.
+    assert_equal(stats.num_moves, node_op.statistics.num_evaluations)
+    assert_equal(stats.num_improving, node_op.statistics.num_applications)
+
     # The improved solution is already locally optimal, so it cannot be further
     # improved by the local search. The number of improving moves should thus
     # be zero after another attempt.
@@ -613,3 +619,31 @@ def test_search_statistics(ok_small):
     assert_(stats.num_moves > 0)
     assert_equal(stats.num_improving, 0)
     assert_equal(stats.num_updates, 0)
+
+
+def test_node_and_route_operators_property(ok_small):
+    """
+    Tests adding and accessing node and route operators to the LocalSearch
+    object.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+
+    # The local search has not yet been equipped with operators, so it should
+    # start empty.
+    assert_equal(len(ls.node_operators), 0)
+    assert_equal(len(ls.route_operators), 0)
+
+    # Now we add a node operator. The local search does not take ownership, so
+    # its only node operator should be the exact same object as the one we just
+    # created.
+    node_op = Exchange10(ok_small)
+    ls.add_node_operator(node_op)
+    assert_equal(len(ls.node_operators), 1)
+    assert_(ls.node_operators[0] is node_op)
+
+    # And a route operator, for which the same should hold.
+    route_op = SwapStar(ok_small)
+    ls.add_route_operator(route_op)
+    assert_equal(len(ls.route_operators), 1)
+    assert_(ls.route_operators[0] is route_op)
