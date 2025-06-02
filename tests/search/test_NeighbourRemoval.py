@@ -57,9 +57,9 @@ def test_neighbour_removal_removes_at_most_number_of_neighbours(ok_small):
     assert_equal(destroyed.num_clients() + 1, sol.num_clients())
 
 
-@pytest.mark.parametrize("num_destroy", range(4))
+@pytest.mark.parametrize("num_perturb", range(4))
 def test_operator_removes_correct_number_of_clients(
-    ok_small, num_destroy: int
+    ok_small, num_perturb: int
 ):
     """
     Tests that calling neighbour removal removes the correct number of clients.
@@ -68,12 +68,12 @@ def test_operator_removes_correct_number_of_clients(
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(ok_small)
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_perturbation_operator(NeighbourRemoval(ok_small, num_destroy))
+    ls.add_perturbation_operator(NeighbourRemoval(ok_small, num_perturb))
 
     sol = Solution.make_random(ok_small, rng)
     destroyed = ls.perturb(sol, cost_evaluator)
 
-    assert_equal(destroyed.num_clients() + num_destroy, sol.num_clients())
+    assert_equal(destroyed.num_clients() + num_perturb, sol.num_clients())
 
 
 def test_neighbour_removal_selects_random_client(ok_small):

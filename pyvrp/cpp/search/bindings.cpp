@@ -260,7 +260,7 @@ PYBIND11_MODULE(_search, m)
         m, "NeighbourRemoval", DOC(pyvrp, search, NeighbourRemoval))
         .def(py::init<pyvrp::ProblemData const &, size_t const>(),
              py::arg("data"),
-             py::arg("num_destroy"),
+             py::arg("num_perturb"),
              py::keep_alive<1, 2>())  // keep data alive
         .def("__call__",
              &NeighbourRemoval::operator(),

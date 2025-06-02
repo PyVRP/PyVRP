@@ -15,7 +15,7 @@ namespace pyvrp::search
 class NeighbourRemoval : public PerturbationOperator
 {
     ProblemData const &data;
-    size_t const numRemovals;
+    size_t const numPerturb;
 
 public:
     /**
@@ -25,10 +25,10 @@ public:
      * ----------
      * data
      *     Problem data instance.
-     * num_removals
+     * num_perturb
      *     Maximum number of clients to remove from the solution.
      */
-    NeighbourRemoval(ProblemData const &data, size_t const numRemovals);
+    NeighbourRemoval(ProblemData const &data, size_t const numPerturb);
 
     void operator()(std::vector<search::Route::Node> &nodes,
                     std::vector<search::Route> &routes,
