@@ -294,6 +294,9 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("route_operators",
                                &LocalSearch::routeOperators,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("perturbation_operators",
+                               &LocalSearch::perturbationOperators,
+                               py::return_value_policy::reference_internal)
         .def("add_node_operator",
              &LocalSearch::addNodeOperator,
              py::arg("op"),

@@ -10,6 +10,7 @@
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
+using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RouteOperator;
 
 Solution LocalSearch::operator()(Solution const &solution,
@@ -519,6 +520,11 @@ void LocalSearch::addRouteOperator(RouteOperator &op)
     routeOps.emplace_back(&op);
 }
 
+void LocalSearch::addPerturbationOperator(PerturbationOperator &op)
+{
+    perturbOps.emplace_back(&op);
+}
+
 std::vector<NodeOperator *> const &LocalSearch::nodeOperators() const
 {
     return nodeOps;
@@ -529,9 +535,10 @@ std::vector<RouteOperator *> const &LocalSearch::routeOperators() const
     return routeOps;
 }
 
-void LocalSearch::addPerturbationOperator(PerturbationOperator &op)
+std::vector<PerturbationOperator *> const &
+LocalSearch::perturbationOperators() const
 {
-    perturbOps.emplace_back(&op);
+    return perturbOps;
 }
 
 void LocalSearch::setNeighbours(Neighbours neighbours)

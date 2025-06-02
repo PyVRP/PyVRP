@@ -106,6 +106,13 @@ class LocalSearch:
         return self._ls.route_operators
 
     @property
+    def perturbation_operators(self) -> list[PerturbationOperator]:
+        """
+        Returns the perturb operators in use.
+        """
+        return self._ls.perturbation_operators
+
+    @property
     def statistics(self) -> LocalSearchStatistics:
         """
         Returns search statistics about the most recently improved solution.

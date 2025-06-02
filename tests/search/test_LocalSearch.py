@@ -17,6 +17,7 @@ from pyvrp.search import (
     Exchange10,
     Exchange11,
     LocalSearch,
+    NeighbourRemoval,
     NeighbourhoodParams,
     RelocateWithDepot,
     SwapRoutes,
@@ -647,3 +648,23 @@ def test_node_and_route_operators_property(ok_small):
     ls.add_route_operator(route_op)
     assert_equal(len(ls.route_operators), 1)
     assert_(ls.route_operators[0] is route_op)
+
+
+def test_perturbation_operators_property(ok_small):
+    """
+    Tests adding and accessing perturbation operators to the LocalSearch
+    object.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+
+    # The local search has not yet been equipped with perturbation operators,
+    # so it should start empty.
+    assert_equal(len(ls.perturbation_operators), 0)
+
+    # Now we add a perturbation operator. The local search does not take
+    # ownership, so its only perturbation operator should be the exact same
+    # object as the one we just created.
+    perturb_op = NeighbourRemoval(ok_small, 4)
+    ls.add_perturbation_operator(perturb_op)
+    assert_equal(len(ls.perturbation_operators), 1)

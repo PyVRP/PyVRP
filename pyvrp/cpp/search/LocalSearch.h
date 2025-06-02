@@ -149,6 +149,13 @@ public:
     std::vector<RouteOperator *> const &routeOperators() const;
 
     /**
+     * Returns the perturbation operators in use. Note that there is no defined
+     * ordering.
+     */
+
+    std::vector<PerturbationOperator *> const &perturbationOperators() const;
+
+    /**
      * Set neighbourhood structure to use by the local search. For each client,
      * the neighbourhood structure is a vector of nearby clients. Depots have
      * no nearby client.
