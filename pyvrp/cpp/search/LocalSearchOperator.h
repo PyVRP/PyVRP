@@ -98,6 +98,15 @@ public:
      */
     virtual void update([[maybe_unused]] Route *U) {};
 };
+
+/**
+ * Helper template function that may be specialised to determine if an operator
+ * can find improving moves for the given data instance.
+ */
+template <typename Op> bool supports([[maybe_unused]] ProblemData const &data)
+{
+    return true;
+}
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_LOCALSEARCHOPERATOR_H

@@ -582,3 +582,13 @@ def test_bug_evaluating_move_with_initial_load():
     # This move just permutes the solution, turning route1 into route2, and
     # vice versa. Thus, the delta cost of this move should be zero.
     assert_equal(op.evaluate(route1[1], route2[1], cost_eval), 0)
+
+
+@pytest.mark.parametrize("operator", [Exchange10, Exchange21, Exchange33])
+@pytest.mark.parametrize("instance", ["ok_small", "pr107", "prize_collecting"])
+def test_supports(operator, instance, request):
+    """
+    Tests that the Exchange operators support any type of data instance.
+    """
+    data = request.getfixturevalue(instance)
+    assert_(operator.supports(data))

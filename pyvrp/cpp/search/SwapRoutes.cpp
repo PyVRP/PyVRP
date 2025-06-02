@@ -25,3 +25,9 @@ void SwapRoutes::apply(Route *U, Route *V) const
 SwapRoutes::SwapRoutes(ProblemData const &data) : RouteOperator(data), op(data)
 {
 }
+
+template <> bool pyvrp::search::supports<SwapRoutes>(ProblemData const &data)
+{
+    // Swapping routes has no benefit if all vehicles are the same.
+    return data.numVehicleTypes() > 1;
+}

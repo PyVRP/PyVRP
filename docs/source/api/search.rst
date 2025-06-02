@@ -49,37 +49,37 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    .. autoclass:: NodeOperator
 
    .. autoclass:: Exchange10
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: Exchange20
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: Exchange30
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
    
    .. autoclass:: Exchange11
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: Exchange21
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: Exchange31
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
    
    .. autoclass:: Exchange22
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: Exchange32
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
    
    .. autoclass:: Exchange33
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: RelocateWithDepot
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: SwapTails
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
 
 
 Route operators
@@ -100,7 +100,7 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    .. autoclass:: RouteOperator
 
    .. autoclass:: SwapRoutes
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: SwapStar
-      :exclude-members: evaluate, apply, statistics
+      :exclude-members: evaluate, apply, statistics, supports
