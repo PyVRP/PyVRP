@@ -152,7 +152,6 @@ public:
      * Returns the perturbation operators in use. Note that there is no defined
      * ordering.
      */
-
     std::vector<PerturbationOperator *> const &perturbationOperators() const;
 
     /**
