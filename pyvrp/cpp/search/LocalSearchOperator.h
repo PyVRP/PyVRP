@@ -103,7 +103,10 @@ public:
  * Helper template function that may be specialised to determine if an operator
  * can find improving moves for the given data instance.
  */
-template <typename Op> bool supports([[maybe_unused]] ProblemData const &data)
+template <typename Op>
+bool supports([[maybe_unused]] ProblemData const &data)
+    requires(std::derived_from<Op, NodeOperator>
+             || std::derived_from<Op, RouteOperator>)
 {
     return true;
 }
