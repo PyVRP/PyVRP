@@ -74,19 +74,6 @@ public:
      */
     OperatorStatistics const &statistics() const { return stats_; }
 
-    /**
-     * Returns whether this operator supports the given data instance: it
-     * returns True if the operator can in principle find improving moves for
-     * the given instance, and False otherwise.
-     */
-    static bool supports([[maybe_unused]] ProblemData const &data)
-    {
-        // We assume that each operator by default can find improving moves.
-        // It is up to specific operator implementations to determine when
-        // this'd not be the case.
-        return true;
-    }
-
     LocalSearchOperator(ProblemData const &data) : data(data){};
     virtual ~LocalSearchOperator() = default;
 };
@@ -111,6 +98,19 @@ public:
      */
     virtual void update([[maybe_unused]] Route *U) {};
 };
+
+/**
+ * Helper template function that may be specialised to determine if an operator
+ * supports the given instance: it should return true if the operator can in
+ * principle find improving moves for the given instance, and false otherwise.
+ */
+template <typename Op> bool supports([[maybe_unused]] ProblemData const &data)
+{
+    // We assume that each operator by default can find improving moves. It is
+    // up to specific operator implementations to determine when this'd not be
+    // the case.
+    return true;
+}
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_LOCALSEARCHOPERATOR_H

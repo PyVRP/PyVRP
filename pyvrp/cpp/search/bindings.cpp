@@ -26,6 +26,7 @@ using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
 using pyvrp::search::RouteOperator;
+using pyvrp::search::supports;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
 using pyvrp::search::SwapTails;
@@ -54,7 +55,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<1, 0>::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &Exchange<1, 0>::supports, py::arg("data"));
+        .def_static("supports", &supports<Exchange<1, 0>>, py::arg("data"));
 
     py::class_<Exchange<2, 0>, NodeOperator>(
         m, "Exchange20", DOC(pyvrp, search, Exchange))
@@ -70,7 +71,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<2, 0>::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &Exchange<2, 0>::supports, py::arg("data"));
+        .def_static("supports", &supports<Exchange<2, 0>>, py::arg("data"));
 
     py::class_<Exchange<3, 0>, NodeOperator>(
         m, "Exchange30", DOC(pyvrp, search, Exchange))
@@ -86,7 +87,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 0>::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &Exchange<3, 0>::supports, py::arg("data"));
+        .def_static("supports", &supports<Exchange<3, 0>>, py::arg("data"));
 
     py::class_<Exchange<1, 1>, NodeOperator>(
         m, "Exchange11", DOC(pyvrp, search, Exchange))
@@ -102,7 +103,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<1, 1>::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &Exchange<1, 1>::supports, py::arg("data"));
+        .def_static("supports", &supports<Exchange<1, 1>>, py::arg("data"));
 
     py::class_<Exchange<2, 1>, NodeOperator>(
         m, "Exchange21", DOC(pyvrp, search, Exchange))
@@ -118,7 +119,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<2, 1>::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &Exchange<2, 1>::supports, py::arg("data"));
+        .def_static("supports", &supports<Exchange<2, 1>>, py::arg("data"));
 
     py::class_<Exchange<3, 1>, NodeOperator>(
         m, "Exchange31", DOC(pyvrp, search, Exchange))
@@ -134,7 +135,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 1>::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &Exchange<3, 1>::supports, py::arg("data"));
+        .def_static("supports", &supports<Exchange<3, 1>>, py::arg("data"));
 
     py::class_<Exchange<2, 2>, NodeOperator>(
         m, "Exchange22", DOC(pyvrp, search, Exchange))
@@ -150,7 +151,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<2, 2>::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &Exchange<2, 2>::supports, py::arg("data"));
+        .def_static("supports", &supports<Exchange<2, 2>>, py::arg("data"));
 
     py::class_<Exchange<3, 2>, NodeOperator>(
         m, "Exchange32", DOC(pyvrp, search, Exchange))
@@ -166,7 +167,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 2>::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &Exchange<3, 2>::supports, py::arg("data"));
+        .def_static("supports", &supports<Exchange<3, 2>>, py::arg("data"));
 
     py::class_<Exchange<3, 3>, NodeOperator>(
         m, "Exchange33", DOC(pyvrp, search, Exchange))
@@ -182,7 +183,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &Exchange<3, 3>::supports, py::arg("data"));
+        .def_static("supports", &supports<Exchange<3, 3>>, py::arg("data"));
 
     py::class_<SwapRoutes, RouteOperator>(
         m, "SwapRoutes", DOC(pyvrp, search, SwapRoutes))
@@ -198,7 +199,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &SwapRoutes::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &SwapRoutes::supports, py::arg("data"));
+        .def_static("supports", &supports<SwapRoutes>, py::arg("data"));
 
     py::class_<SwapStar, RouteOperator>(
         m, "SwapStar", DOC(pyvrp, search, SwapStar))
@@ -215,7 +216,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &SwapStar::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &SwapStar::supports, py::arg("data"));
+        .def_static("supports", &supports<SwapStar>, py::arg("data"));
 
     py::class_<SwapTails, NodeOperator>(
         m, "SwapTails", DOC(pyvrp, search, SwapTails))
@@ -231,7 +232,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &SwapTails::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &SwapTails::supports, py::arg("data"));
+        .def_static("supports", &supports<SwapTails>, py::arg("data"));
 
     py::class_<RelocateWithDepot, NodeOperator>(
         m, "RelocateWithDepot", DOC(pyvrp, search, RelocateWithDepot))
@@ -247,7 +248,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"),
              py::arg("cost_evaluator"))
         .def("apply", &RelocateWithDepot::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &RelocateWithDepot::supports, py::arg("data"));
+        .def_static("supports", &supports<RelocateWithDepot>, py::arg("data"));
 
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))

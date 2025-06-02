@@ -24,6 +24,8 @@ public:
 
     explicit SwapRoutes(ProblemData const &data);
 };
+
+template <> bool supports<SwapRoutes>(ProblemData const &data);
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_SWAPROUTES_H

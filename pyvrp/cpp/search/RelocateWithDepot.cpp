@@ -231,3 +231,14 @@ void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
         vRoute->insert(V->idx() + 2, &depot);
     }
 }
+
+template <>
+bool pyvrp::search::supports<RelocateWithDepot>(ProblemData const &data)
+{
+    // We need at least one vehicle type for which reloading is enabled.
+    for (auto const &vehType : data.vehicleTypes())
+        if (!vehType.reloadDepots.empty() && vehType.maxReloads != 0)
+            return true;
+
+    return false;
+}

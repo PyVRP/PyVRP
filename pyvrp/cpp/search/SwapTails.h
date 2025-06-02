@@ -28,6 +28,8 @@ public:
 
     void apply(Route::Node *U, Route::Node *V) const override;
 };
+
+template <> bool supports<SwapTails>(ProblemData const &data);
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_SWAPTAILS_H

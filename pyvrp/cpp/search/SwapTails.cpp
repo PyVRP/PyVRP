@@ -120,3 +120,9 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
         V->route()->insert(insertIdx++, node);
     }
 }
+
+template <> bool pyvrp::search::supports<SwapTails>(ProblemData const &data)
+{
+    // Does not work for TSP, since the operator needs at least two routes.
+    return data.numVehicles() > 1;
+}
