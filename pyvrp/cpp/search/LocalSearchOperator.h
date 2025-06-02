@@ -101,14 +101,10 @@ public:
 
 /**
  * Helper template function that may be specialised to determine if an operator
- * supports the given instance: it should return true if the operator can in
- * principle find improving moves for the given instance, and false otherwise.
+ * can find improving moves for the given data instance.
  */
 template <typename Op> bool supports([[maybe_unused]] ProblemData const &data)
 {
-    // We assume that each operator by default can find improving moves. It is
-    // up to specific operator implementations to determine when this'd not be
-    // the case.
     return true;
 }
 }  // namespace pyvrp::search
