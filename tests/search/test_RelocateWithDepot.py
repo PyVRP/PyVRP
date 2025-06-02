@@ -315,3 +315,13 @@ def test_can_insert_reload_before_end_depot():
     op.apply(route[1], route[2])
     assert_equal(str(route), "3 2 |")
     assert_equal(route[3].client, 1)
+
+
+def test_supports(ok_small, ok_small_multiple_trips, mtvrptw_release_times):
+    """
+    Tests that RelocateWithDepot does not support instances without reload
+    options.
+    """
+    assert_(not RelocateWithDepot.supports(ok_small))
+    assert_(RelocateWithDepot.supports(ok_small_multiple_trips))
+    assert_(RelocateWithDepot.supports(mtvrptw_release_times))

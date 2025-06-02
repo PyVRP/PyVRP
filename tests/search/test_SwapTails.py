@@ -201,3 +201,11 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     # the second becomes 0 -> 2 -> 3 -> 0.
     delta = dist2[2, 3] + dist2[3, 0] - dist2[2, 0] - route1.distance()
     assert_equal(op.evaluate(route1[0], route2[1], cost_eval), delta)
+
+
+def test_supports(ok_small, pr107):
+    """
+    Tests that SwapTails does not support TSP instances.
+    """
+    assert_(SwapTails.supports(ok_small))  # is a regular VRP
+    assert_(not SwapTails.supports(pr107))  # is a TSP
