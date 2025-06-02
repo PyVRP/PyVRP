@@ -10,7 +10,9 @@ namespace pyvrp::search
 {
 /**
  * Neighbour removal perturbation operator. This operator removes the closest
- * neighbours around a randomly selected client.
+ * neighbours around a randomly selected client. The removed clients are *not*
+ * reinserted back into the solution - this is handled by the local search's
+ * ``search()`` method.
  */
 class NeighbourRemoval : public PerturbationOperator
 {

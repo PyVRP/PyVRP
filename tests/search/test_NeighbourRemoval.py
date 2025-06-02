@@ -52,15 +52,14 @@ def test_neighbour_removal_removes_at_most_number_of_neighbours(ok_small):
     ls = LocalSearch(ok_small, rng, neighbours)
     ls.add_perturbation_operator(NeighbourRemoval(ok_small, 4))
 
-    # There is just one neighbour per client, so only one neighbour is removed.
+    # There is just one neighbour per client, so we only remove one instead
+    # of four.
     destroyed = ls.perturb(sol, cost_eval)
     assert_equal(destroyed.num_clients() + 1, sol.num_clients())
 
 
 @pytest.mark.parametrize("num_perturb", range(4))
-def test_operator_removes_correct_number_of_clients(
-    ok_small, num_perturb: int
-):
+def test_remove_correct_number_of_clients(ok_small, num_perturb: int):
     """
     Tests that calling neighbour removal removes the correct number of clients.
     """
@@ -78,8 +77,8 @@ def test_operator_removes_correct_number_of_clients(
 
 def test_neighbour_removal_selects_random_client(ok_small):
     """
-    Tests that calling neighbour removal selects a random client every time,
-    of which the neighbours are used to remove clients.
+    Tests that each call to neighbour removal randomly selects a client, whose
+    neighbours are then used to remove other clients.
     """
     rng = RandomNumberGenerator(seed=42)
     neighbours = [[], [2, 3, 4], [1, 3, 4], [1, 2, 4], [1, 2, 3]]
@@ -94,8 +93,8 @@ def test_neighbour_removal_selects_random_client(ok_small):
     solutions = set(ls.perturb(sol, cost_eval) for _ in range(20))
 
     # Every client has all other clients as neighbours, so the operator will
-    # remove all clients except the one that was selected. We therefore expect
-    # to find all singleton solutions, each having exactly one client.
+    # remove all clients except the one that was selected. We thus expect to
+    # find all singleton solutions in the end, each having exactly one client.
     singletons = {Solution(ok_small, [[idx]]) for idx in range(1, 5)}
     assert_equal(solutions, singletons)
     assert_equal(len(solutions), 4)

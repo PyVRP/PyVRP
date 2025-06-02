@@ -66,8 +66,8 @@ class LocalSearch:
     def add_perturbation_operator(self, op: PerturbationOperator):
         """
         Adds a perturbation operator to this local search object. The
-        perturbation operator will be used by :meth:`~perturb` to remove
-        clients from a solution to potentially escape local optima.
+        perturbation operator will be used by :meth:`~perturb` to modify
+        a solution to potentially escape local optima.
 
         Parameters
         ----------
@@ -108,7 +108,7 @@ class LocalSearch:
     @property
     def perturbation_operators(self) -> list[PerturbationOperator]:
         """
-        Returns the perturb operators in use.
+        Returns the perturbation operators in use.
         """
         return self._ls.perturbation_operators
 

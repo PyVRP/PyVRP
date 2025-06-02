@@ -22,7 +22,6 @@ using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
-using pyvrp::search::LocalSearchOperator;
 using pyvrp::search::NeighbourRemoval;
 using pyvrp::search::NodeOperator;
 using pyvrp::search::OperatorStatistics;

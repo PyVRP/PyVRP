@@ -195,7 +195,7 @@ public:
 
     /**
      * Performs a perturbation step around the given solution, and returns a
-     * new, incomplete solution.
+     * new, modified solution.
      */
     Solution perturb(Solution const &solution,
                      CostEvaluator const &costEvaluator);

@@ -9,8 +9,8 @@
 namespace pyvrp::search
 {
 /**
- * Base class for perturbation operators used in the LocalSearch class. These
- * operators modify solutions, typically by removing nodes and/or routes.
+ * Base class for perturbation operators. These operators modify solutions,
+ * typically by removing or moving around nodes.
  */
 class PerturbationOperator
 {
