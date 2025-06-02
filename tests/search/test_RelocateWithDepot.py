@@ -322,6 +322,6 @@ def test_supports(ok_small, ok_small_multiple_trips, mtvrptw_release_times):
     Tests that RelocateWithDepot does not support instances without reload
     options.
     """
-    assert_(not RelocateWithDepot.supports(ok_small))
-    assert_(RelocateWithDepot.supports(ok_small_multiple_trips))
-    assert_(RelocateWithDepot.supports(mtvrptw_release_times))
+    assert_(not RelocateWithDepot.supports(ok_small))  # no reloads
+    assert_(RelocateWithDepot.supports(ok_small_multiple_trips))  # has reloads
+    assert_(RelocateWithDepot.supports(mtvrptw_release_times))  # has reloads
