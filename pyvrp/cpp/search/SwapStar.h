@@ -23,7 +23,7 @@ namespace pyvrp::search
  *        implementation and SWAP* neighborhood. *Comput. Oper. Res*. 140.
  *        https://doi.org/10.1016/j.cor.2021.105643
  */
-class SwapStar : public LocalSearchOperator<Route>
+class SwapStar : public RouteOperator
 {
     using InsertPoint = std::pair<Cost, Route::Node *>;
     using ThreeBest = std::array<InsertPoint, 3>;

@@ -160,7 +160,6 @@ include = [
     { path = "tests/", format = "sdist" },
 
     { path = "meson.build", format = "sdist" },
-    { path = "meson_options.txt", format = "sdist" },
     { path = "buildtools/*.py", format = "sdist" },
     { path = "subprojects/*.wrap", format = "sdist" },
 

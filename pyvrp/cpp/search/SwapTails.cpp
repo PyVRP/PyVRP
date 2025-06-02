@@ -19,6 +19,7 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
                                 Route::Node *V,
                                 CostEvaluator const &costEvaluator)
 {
+    stats_.numEvaluations++;
     assert(!U->isEndDepot() && !U->isReloadDepot());
     assert(!V->isEndDepot() && !V->isReloadDepot());
 
@@ -97,6 +98,7 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
 
 void SwapTails::apply(Route::Node *U, Route::Node *V) const
 {
+    stats_.numApplications++;
     auto *nU = n(U);
     auto *nV = n(V);
 
@@ -117,4 +119,10 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
         U->route()->remove(node->idx());
         V->route()->insert(insertIdx++, node);
     }
+}
+
+template <> bool pyvrp::search::supports<SwapTails>(ProblemData const &data)
+{
+    // Does not work for TSP, since the operator needs at least two routes.
+    return data.numVehicles() > 1;
 }

@@ -12,7 +12,7 @@ namespace pyvrp::search
  * This operator evaluates exchanging the visits of two routes :math:`U` and
  * :math:`V`.
  */
-class SwapRoutes : public LocalSearchOperator<Route>
+class SwapRoutes : public RouteOperator
 {
     SwapTails op;
 
@@ -24,6 +24,8 @@ public:
 
     explicit SwapRoutes(ProblemData const &data);
 };
+
+template <> bool supports<SwapRoutes>(ProblemData const &data);
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_SWAPROUTES_H
