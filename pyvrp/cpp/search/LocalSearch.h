@@ -2,8 +2,8 @@
 #define PYVRP_SEARCH_LOCALSEARCH_H
 
 #include "CostEvaluator.h"
-#include "DestroyOperator.h"
 #include "LocalSearchOperator.h"
+#include "PerturbationOperator.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
@@ -71,7 +71,7 @@ private:
 
     std::vector<NodeOp *> nodeOps;
     std::vector<RouteOp *> routeOps;
-    std::vector<DestroyOperator *> destroyOps;
+    std::vector<PerturbationOperator *> perturbOps;
 
     Statistics stats_;
     bool searchCompleted = false;  // No further improving move found?
@@ -114,8 +114,8 @@ private:
     // Performs intensify on the currently loaded solution.
     void intensify(CostEvaluator const &costEvaluator);
 
-    // Performs destroy on the currently loaded solution.
-    void destroy(CostEvaluator const &costEvaluator);
+    // Performs perturb on the currently loaded solution.
+    void perturb(CostEvaluator const &costEvaluator);
 
     // Evaluate and apply inserting U after one of its neighbours if it's an
     // improving move or required for feasibility.
@@ -134,9 +134,9 @@ public:
     void addRouteOperator(RouteOp &op);
 
     /**
-     * Adds a destroy operator.
+     * Adds a perturbation operator.
      */
-    void addDestroyOperator(DestroyOperator &op);
+    void addPerturbationOperator(PerturbationOperator &op);
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,
@@ -177,10 +177,10 @@ public:
                        CostEvaluator const &costEvaluator);
 
     /**
-     * Performs a destroy step around the given solution, and returns a new,
-     * incomplete solution.
+     * Performs a perturbation step around the given solution, and returns a
+     * new, incomplete solution.
      */
-    Solution destroy(Solution const &solution,
+    Solution perturb(Solution const &solution,
                      CostEvaluator const &costEvaluator);
 
     /**

@@ -1,7 +1,7 @@
 #ifndef PYVRP_SEARCH_NEIGHBOUR_REMOVAL_H
 #define PYVRP_SEARCH_NEIGHBOUR_REMOVAL_H
 
-#include "DestroyOperator.h"
+#include "PerturbationOperator.h"
 #include "ProblemData.h"
 
 #include <vector>
@@ -9,13 +9,13 @@
 namespace pyvrp::search
 {
 /**
- * Neighbour removal destroy operator. This operator removes the closest
+ * Neighbour removal perturbation operator. This operator removes the closest
  * neighbours around a randomly selected client.
  */
-class NeighbourRemoval : public DestroyOperator
+class NeighbourRemoval : public PerturbationOperator
 {
     ProblemData const &data;
-    size_t const numDestroy;
+    size_t const numRemovals;
 
 public:
     /**
@@ -25,10 +25,10 @@ public:
      * ----------
      * data
      *     Problem data instance.
-     * num_destroy
+     * num_removals
      *     Maximum number of clients to remove from the solution.
      */
-    NeighbourRemoval(ProblemData const &data, size_t const numDestroy);
+    NeighbourRemoval(ProblemData const &data, size_t const numRemovals);
 
     void operator()(std::vector<search::Route::Node> &nodes,
                     std::vector<search::Route> &routes,

@@ -1,8 +1,8 @@
 #include "bindings.h"
-#include "DestroyOperator.h"
 #include "Exchange.h"
 #include "LocalSearch.h"
 #include "NeighbourRemoval.h"
+#include "PerturbationOperator.h"
 #include "Route.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
@@ -18,13 +18,13 @@
 
 namespace py = pybind11;
 
-using pyvrp::search::DestroyOperator;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::LocalSearchOperator;
 using pyvrp::search::NeighbourRemoval;
+using pyvrp::search::PerturbationOperator;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
 using pyvrp::search::SwapRoutes;
@@ -40,8 +40,8 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<NodeOp>(m, "NodeOperator");
     py::class_<RouteOp>(m, "RouteOperator");
-    py::class_<DestroyOperator>(
-        m, "DestroyOperator", DOC(pyvrp, search, DestroyOperator));
+    py::class_<PerturbationOperator>(
+        m, "PerturbationOperator", DOC(pyvrp, search, PerturbationOperator));
 
     py::class_<Exchange<1, 0>, NodeOp>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))
@@ -198,7 +198,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &TripRelocate::apply, py::arg("U"), py::arg("V"));
 
-    py::class_<NeighbourRemoval, DestroyOperator>(
+    py::class_<NeighbourRemoval, PerturbationOperator>(
         m, "NeighbourRemoval", DOC(pyvrp, search, NeighbourRemoval))
         .def(py::init<pyvrp::ProblemData const &, size_t const>(),
              py::arg("data"),
@@ -240,8 +240,8 @@ PYBIND11_MODULE(_search, m)
              &LocalSearch::addRouteOperator,
              py::arg("op"),
              py::keep_alive<1, 2>())
-        .def("add_destroy_operator",
-             &LocalSearch::addDestroyOperator,
+        .def("add_perturbation_operator",
+             &LocalSearch::addPerturbationOperator,
              py::arg("op"),
              py::keep_alive<1, 2>())
         .def("__call__",
@@ -263,10 +263,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("solution"),
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>())
-        .def("destroy",
+        .def("perturb",
              py::overload_cast<pyvrp::Solution const &,
                                pyvrp::CostEvaluator const &>(
-                 &LocalSearch::destroy),
+                 &LocalSearch::perturb),
              py::arg("solution"),
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>())

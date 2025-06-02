@@ -46,11 +46,11 @@ Solution LocalSearch::intensify(Solution const &solution,
     return exportSolution();
 }
 
-Solution LocalSearch::destroy(Solution const &solution,
+Solution LocalSearch::perturb(Solution const &solution,
                               CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    destroy(costEvaluator);
+    perturb(costEvaluator);
     return exportSolution();
 }
 
@@ -152,12 +152,12 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
     }
 }
 
-void LocalSearch::destroy(CostEvaluator const &costEvaluator)
+void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 {
-    if (destroyOps.empty())
+    if (perturbOps.empty())
         return;
 
-    (*destroyOps[0])(nodes, routes, costEvaluator, neighbours_, orderNodes);
+    (*perturbOps[0])(nodes, routes, costEvaluator, neighbours_, orderNodes);
 }
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
@@ -168,7 +168,7 @@ void LocalSearch::shuffle(RandomNumberGenerator &rng)
 
     std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
-    std::shuffle(destroyOps.begin(), destroyOps.end(), rng);
+    std::shuffle(perturbOps.begin(), perturbOps.end(), rng);
 }
 
 bool LocalSearch::applyNodeOps(Route::Node *U,
@@ -516,9 +516,9 @@ void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }
 
 void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
 
-void LocalSearch::addDestroyOperator(DestroyOperator &op)
+void LocalSearch::addPerturbationOperator(PerturbationOperator &op)
 {
-    destroyOps.emplace_back(&op);
+    perturbOps.emplace_back(&op);
 }
 
 void LocalSearch::setNeighbours(Neighbours neighbours)

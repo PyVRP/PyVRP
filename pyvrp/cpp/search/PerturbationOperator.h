@@ -1,5 +1,5 @@
-#ifndef PYVRP_SEARCH_DESTROYOPERATOR_H
-#define PYVRP_SEARCH_DESTROYOPERATOR_H
+#ifndef PYVRP_SEARCH_PERTURBATIONOPERATOR_H
+#define PYVRP_SEARCH_PERTURBATIONOPERATOR_H
 
 #include "CostEvaluator.h"
 #include "Route.h"
@@ -9,14 +9,14 @@
 namespace pyvrp::search
 {
 /**
- * Base class for destroy operators used in the LocalSearch class. These
- * operators modify solutions by removing clients from routes.
+ * Base class for perturbation operators used in the LocalSearch class. These
+ * operators modify solutions, typically by removing nodes and/or routes.
  */
-class DestroyOperator
+class PerturbationOperator
 {
 public:
     /**
-     * Applies the destroy operator to the given solution.
+     * Applies the perturbation operator to the given solution.
      *
      * Parameters
      * ----------
@@ -29,7 +29,7 @@ public:
      * neighbours
      *     List of lists that defines the local search neighbourhood.
      * order_nodes
-     *     Order of nodes to use when applying the destroy operator.
+     *     Order of nodes to use when applying the perturbation operator.
      */
     virtual void operator()(std::vector<search::Route::Node> &nodes,
                             std::vector<search::Route> &routes,
@@ -38,8 +38,8 @@ public:
                             std::vector<size_t> const &orderNodes)
         = 0;
 
-    virtual ~DestroyOperator() = default;
+    virtual ~PerturbationOperator() = default;
 };
 }  // namespace pyvrp::search
 
-#endif  // PYVRP_SEARCH_DESTROYOPERATOR_H
+#endif  // PYVRP_SEARCH_PERTURBATIONOPERATOR_H

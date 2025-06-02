@@ -7,11 +7,11 @@ void pyvrp::search::NeighbourRemoval::operator()(
     std::vector<std::vector<size_t>> const &neighbours,
     std::vector<size_t> const &orderNodes)
 {
-    if (numDestroy == 0 || data.numClients() == 0)
+    if (numRemovals == 0 || data.numClients() == 0)
         return;
 
     auto const client = orderNodes[0];  // random client
-    size_t numDestroyed = 0;
+    size_t numRemoved = 0;
 
     for (auto const idx : neighbours[client])
     {
@@ -23,13 +23,13 @@ void pyvrp::search::NeighbourRemoval::operator()(
         route->remove(U->idx());
         route->update();
 
-        if (++numDestroyed == numDestroy)
+        if (++numRemoved == numRemovals)
             return;
     }
 }
 
 pyvrp::search::NeighbourRemoval::NeighbourRemoval(ProblemData const &data,
-                                                  size_t const numDestroy)
-    : data(data), numDestroy(numDestroy)
+                                                  size_t const numRemovals)
+    : data(data), numRemovals(numRemovals)
 {
 }
