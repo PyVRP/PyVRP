@@ -668,3 +668,4 @@ def test_perturbation_operators_property(ok_small):
     perturb_op = NeighbourRemoval(ok_small, 4)
     ls.add_perturbation_operator(perturb_op)
     assert_equal(len(ls.perturbation_operators), 1)
+    assert_(ls.perturbation_operators[0] is perturb_op)

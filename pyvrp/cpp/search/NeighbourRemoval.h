@@ -16,8 +16,8 @@ namespace pyvrp::search
  */
 class NeighbourRemoval : public PerturbationOperator
 {
-    ProblemData const &data;
-    size_t const numPerturb;
+    ProblemData const &data_;
+    size_t const numPerturb_;
 
 public:
     /**

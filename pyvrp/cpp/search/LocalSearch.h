@@ -201,7 +201,7 @@ public:
 
     /**
      * Shuffles the order in which the node and route pairs are evaluated, and
-     * the order in which all operators are applied.
+     * the order in which operators are applied.
      */
     void shuffle(RandomNumberGenerator &rng);
 
