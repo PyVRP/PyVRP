@@ -28,7 +28,7 @@ def test_raises_negative_penalties(
     dist_penalty: float,
 ):
     """
-    Tests that passing negative penalty values to the CostEvaluator raise an
+    Tests that passing negative penalty values to the CostEvaluator raises an
     error.
     """
     with assert_raises(ValueError):
