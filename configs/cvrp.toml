@@ -1,18 +1,3 @@
-node_ops = [
-    "Exchange10",
-    "Exchange20",
-    "Exchange11",
-    "Exchange21",
-    "Exchange22",
-    "SwapTails",
-]
-
-
-route_ops = [
-    "SwapStar",
-]
-
-
 [genetic]
 repair_probability = 0.50
 nb_iter_no_improvement = 20_000
