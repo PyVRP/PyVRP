@@ -31,7 +31,7 @@ We use the following instances and configurations to benchmark PyVRP:
   These instances range in size from 360 to 960 clients.
   The instances are run with a stopping criterion of 2500 iterations without improvement, or five hours of runtime, whichever occurs first, on a reference CPU with PassMark score 1186.
   For this benchmark, the ``exact`` rounding function should be used.
-  Additionally, the configuration specified in ``configs/mdvrptw.toml`` should be used.
+  Additionally, the configuration specified in ``configs/vrptw.toml`` should be used.
 
 * For the VRPB, we use `the 90 largest VRPB instances of Queiroga et al. (2020) <https://github.com/PyVRP/Instances/tree/main/VRPB#vrpb>`_.
   These instances range in size from 523 to 1000 clients.
