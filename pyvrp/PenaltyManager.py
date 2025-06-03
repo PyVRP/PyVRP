@@ -57,7 +57,8 @@ class PenaltyParams:
         Maximum penalty term value. Must not be negative.
 
         .. warning::
-           Setting a (too) large maximum penalty value may cause overflow.
+           Setting a (too) large maximum penalty value may cause integer
+           overflow in PyVRP's native extensions.
 
     Attributes
     ----------

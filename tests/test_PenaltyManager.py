@@ -19,17 +19,24 @@ from pyvrp.exceptions import PenaltyBoundWarning
         "penalty_increase",
         "penalty_decrease",
         "target_feasible",
+        "feas_tolerance",
+        "min_penalty",
+        "max_penalty",
     ),
     [
-        (1, -1, 1, 0.5, 0.5),  # -1 solutions between updates
-        (1, 0, 1, 0.5, 0.5),  # 0 solutions between updates
-        (1, 1, -1.0, 0.5, 0.5),  # -1 penalty increase
-        (1, 1, 0.5, 0.5, 0.5),  # 0.5 penalty increase
-        (1, 1, 1.5, -1, 0.5),  # -1 penalty decrease
-        (1, 1, 1.5, 2, 0.5),  # 2 penalty decrease
-        (1, 1, 1, 1, -1),  # -1 target feasible
-        (1, 1, 1, 1, 2),  # 2 target feasible
-        (0, 1, 1, 1, 1),  # 0 repair booster
+        (0, 1, 1, 1, 1, 0, 0, 0),  # 0 repair booster
+        (1, -1, 1, 0.5, 0.5, 0, 0, 0),  # -1 solutions between updates
+        (1, 0, 1, 0.5, 0.5, 0, 0, 0),  # 0 solutions between updates
+        (1, 1, -1.0, 0.5, 0.5, 0, 0, 0),  # -1 penalty increase
+        (1, 1, 0.5, 0.5, 0.5, 0, 0, 0),  # 0.5 penalty increase
+        (1, 1, 1.5, -1, 0.5, 0, 0, 0),  # -1 penalty decrease
+        (1, 1, 1.5, 2, 0.5, 0, 0, 0),  # 2 penalty decrease
+        (1, 1, 1, 1, -1, 0, 0, 0),  # -1 target feasible
+        (1, 1, 1, 1, 2, 0, 0, 0),  # 2 target feasible
+        (1, 1, 1.5, 0.5, 0.5, -1, 0, 0),  # -1 feas tolerance
+        (1, 1, 1.5, 0.5, 0.5, 2, 0, 0),  # 2 feas tolerance
+        (1, 1, 1.5, 0.5, 0.5, 0, -1, 0),  # -1 min_penalty
+        (1, 1, 1.5, 0.5, 0.5, 0, 2, 1),  # max_penalty < min_penalty
     ],
 )
 def test_constructor_throws_when_arguments_invalid(
@@ -38,6 +45,9 @@ def test_constructor_throws_when_arguments_invalid(
     penalty_increase: float,
     penalty_decrease: float,
     target_feasible: float,
+    feas_tolerance: float,
+    min_penalty: float,
+    max_penalty: float,
 ):
     """
     Tests that invalid arguments are not accepted.
@@ -49,6 +59,9 @@ def test_constructor_throws_when_arguments_invalid(
             penalty_increase,
             penalty_decrease,
             target_feasible,
+            feas_tolerance,
+            min_penalty,
+            max_penalty,
         )
 
 
