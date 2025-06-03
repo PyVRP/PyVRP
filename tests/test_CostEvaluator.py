@@ -13,6 +13,13 @@ from pyvrp import (
 )
 
 
+def test_raises_negative_penalties():
+    """
+    TODO
+    """
+    pass
+
+
 @pytest.mark.parametrize("load_penalty", (2, 4))
 def test_load_penalty(load_penalty: float):
     """
