@@ -49,6 +49,26 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     assert_equal(ls.search(sol, cost_evaluator), sol)
 
 
+def test_local_search_call_perturbs_solution(ok_small):
+    """
+    Tests that calling local search also perturbs a solution.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbours = compute_neighbours(ok_small)
+    ls = LocalSearch(ok_small, rng, neighbours)
+    ls.add_perturbation_operator(NeighbourRemoval(ok_small, 2))
+
+    sol = Solution.make_random(ok_small, rng)
+    cost_eval = CostEvaluator([1], 1, 0)
+
+    # ``__call__()`` should perturb the solution even though no node and route
+    # operators are added. Because of the neighbourhood removal operator, the
+    # resulting solution should have less clients than the original one.
+    perturbed = ls(sol, cost_eval)
+    assert_(perturbed != sol)
+    assert_(perturbed.num_clients() < sol.num_clients())
+
+
 @pytest.mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
 def test_raises_when_neighbourhood_dimensions_do_not_match(ok_small, size):
     """
