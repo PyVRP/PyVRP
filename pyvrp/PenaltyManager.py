@@ -47,6 +47,12 @@ class PenaltyParams:
         penalty terms are decreased. This ensures a balanced population, with a
         fraction :math:`p_f` feasible and a fraction :math:`1 - p_f` infeasible
         solutions.
+    min_penalty
+        TODO
+    max_penalty
+        TODO
+    feas_tolerance
+        TODO
 
     Attributes
     ----------
@@ -66,6 +72,12 @@ class PenaltyParams:
     target_feasible
         Target percentage :math:`p_f \\in [0, 1]` of feasible registrations
         in the last ``solutions_between_updates`` registrations.
+    min_penalty
+        TODO
+    max_penalty
+        TODO
+    feas_tolerance
+        TODO
     """
 
     repair_booster: int = 12
@@ -73,6 +85,9 @@ class PenaltyParams:
     penalty_increase: float = 1.34
     penalty_decrease: float = 0.32
     target_feasible: float = 0.43
+    min_penalty: float = 0.1
+    max_penalty: float = 100_000.0
+    feas_tolerance: float = 0.05
 
     def __post_init__(self):
         if not self.repair_booster >= 1:
@@ -89,6 +104,15 @@ class PenaltyParams:
 
         if not (0.0 <= self.target_feasible <= 1.0):
             raise ValueError("Expected target_feasible in [0, 1].")
+
+        if self.min_penalty < 0:
+            raise ValueError("Expected min_penalty >= 0.")
+
+        if self.max_penalty < self.min_penalty:
+            raise ValueError("Expected max_penalty >= min_penalty.")
+
+        if not (0.0 <= self.feas_tolerance <= 1.0):
+            raise ValueError("Expected feas_tolerance in [0, 1].")
 
 
 class PenaltyManager:
@@ -110,14 +134,11 @@ class PenaltyManager:
     initial_penalties
         Initial penalty values for units of load (idx 0), duration (1), and
         distance (2) violations. These values are clipped to the range
-        ``[MIN_PENALTY, MAX_PENALTY]``.
+        [:attr:`~pyvrp.PenaltyManager.PenaltyParams.min_penalty`,
+        :attr:`~pyvrp.PenaltyManager.PenaltyParams.max_penalty`].
     params
         PenaltyManager parameters. If not provided, a default will be used.
     """
-
-    MIN_PENALTY: float = 0.1
-    MAX_PENALTY: float = 100_000.0
-    FEAS_TOL: float = 0.05
 
     def __init__(
         self,
@@ -127,8 +148,8 @@ class PenaltyManager:
         self._params = params
         self._penalties = np.clip(
             initial_penalties[0] + list(initial_penalties[1:]),
-            self.MIN_PENALTY,
-            self.MAX_PENALTY,
+            params.min_penalty,
+            params.max_penalty,
         )
 
         # Tracks recent feasibilities for each penalty dimension.
@@ -209,7 +230,7 @@ class PenaltyManager:
         # and the percentage of feasible solutions since the last update.
         diff = self._params.target_feasible - feas_percentage
 
-        if abs(diff) < self.FEAS_TOL:
+        if abs(diff) < self._params.feas_tolerance:
             return penalty
 
         if diff > 0:
@@ -217,17 +238,21 @@ class PenaltyManager:
         else:
             new_penalty = self._params.penalty_decrease * penalty
 
-        if new_penalty >= self.MAX_PENALTY:
+        if new_penalty >= self._params.max_penalty:
             msg = """
             A penalty parameter has reached its maximum value. This means PyVRP
-            struggles to find a feasible solution for the instance that's being
-            solved, either because the instance has no feasible solution, or it
-            is very hard to find one. Check the instance carefully to determine
-            if a feasible solution exists.
+            struggles to find a feasible solution for this instance, either
+            because the instance has no feasible solution, or it is hard to
+            find one - possibly due to large data scaling differences. Check
+            the instance carefully to determine if a feasible solution exists.
             """
             warn(msg, PenaltyBoundWarning)
 
-        return np.clip(new_penalty, self.MIN_PENALTY, self.MAX_PENALTY)
+        return np.clip(
+            new_penalty,
+            self._params.min_penalty,
+            self._params.max_penalty,
+        )
 
     def _register(self, feas_list: list[bool], penalty: float, is_feas: bool):
         feas_list.append(is_feas)
