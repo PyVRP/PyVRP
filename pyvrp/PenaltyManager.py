@@ -20,8 +20,7 @@ class PenaltyParams:
     repair_booster
         A repair booster value :math:`r \\ge 1`. This value is used to
         temporarily multiply the current penalty terms, to force feasibility.
-        See also
-        :meth:`~pyvrp.PenaltyManager.PenaltyManager.booster_cost_evaluator`.
+        See also :meth:`~PenaltyManager.booster_cost_evaluator`.
     solutions_between_updates
         Number of feasibility registrations between penalty value updates. The
         penalty manager updates the penalty terms every once in a while based
@@ -47,12 +46,18 @@ class PenaltyParams:
         penalty terms are decreased. This ensures a balanced population, with a
         fraction :math:`p_f` feasible and a fraction :math:`1 - p_f` infeasible
         solutions.
-    min_penalty
-        TODO
-    max_penalty
-        TODO
     feas_tolerance
-        TODO
+        Deviation tolerance (in :math:`[0, 1]`) between actual and target
+        number of feasible solutions between updates. If the deviation is
+        smaller than this tolerance, the penalty terms are not updated. See
+        also ``target_feasible`` and ``solutions_between_updates``.
+    min_penalty
+        Minimum penalty term value. Must not be negative.
+    max_penalty
+        Maximum penalty term value. Must not be negative.
+
+        .. warning::
+           Setting a (too) large maximum penalty value may cause overflow.
 
     Attributes
     ----------
@@ -72,12 +77,12 @@ class PenaltyParams:
     target_feasible
         Target percentage :math:`p_f \\in [0, 1]` of feasible registrations
         in the last ``solutions_between_updates`` registrations.
-    min_penalty
-        TODO
-    max_penalty
-        TODO
     feas_tolerance
-        TODO
+        Deviation tolerance for ``target_feasible``.
+    min_penalty
+        Minimum penalty term value.
+    max_penalty
+        Maximum penalty term value.
     """
 
     repair_booster: int = 12
@@ -85,9 +90,9 @@ class PenaltyParams:
     penalty_increase: float = 1.34
     penalty_decrease: float = 0.32
     target_feasible: float = 0.43
+    feas_tolerance: float = 0.05
     min_penalty: float = 0.1
     max_penalty: float = 100_000.0
-    feas_tolerance: float = 0.05
 
     def __post_init__(self):
         if not self.repair_booster >= 1:
