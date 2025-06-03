@@ -48,7 +48,7 @@ class PenaltyParams:
         solutions.
     feas_tolerance
         Deviation tolerance (in :math:`[0, 1]`) between actual and target
-        number of feasible solutions between updates. If the deviation is
+        percentage of feasible solutions between updates. If the deviation is
         smaller than this tolerance, the penalty terms are not updated. See
         also ``target_feasible`` and ``solutions_between_updates``.
     min_penalty
@@ -111,14 +111,14 @@ class PenaltyParams:
         if not (0.0 <= self.target_feasible <= 1.0):
             raise ValueError("Expected target_feasible in [0, 1].")
 
+        if not (0.0 <= self.feas_tolerance <= 1.0):
+            raise ValueError("Expected feas_tolerance in [0, 1].")
+
         if self.min_penalty < 0:
             raise ValueError("Expected min_penalty >= 0.")
 
         if self.max_penalty < self.min_penalty:
             raise ValueError("Expected max_penalty >= min_penalty.")
-
-        if not (0.0 <= self.feas_tolerance <= 1.0):
-            raise ValueError("Expected feas_tolerance in [0, 1].")
 
 
 class PenaltyManager:
