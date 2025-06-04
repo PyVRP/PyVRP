@@ -63,6 +63,11 @@ public:
      * A simple class that tracks a proposed route structure. This new structure
      * can be efficiently evaluated by calling appropriate member functions,
      * detailing the newly proposed route's statistics.
+     *
+     * .. note::
+     *
+     *    The member functions may shortcut if they detect that a particular
+     *    statistic has no impact on the newly proposed route's cost.
      */
     template <Segment... Segments> class Proposal
     {
