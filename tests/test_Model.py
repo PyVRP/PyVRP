@@ -11,6 +11,7 @@ from pyvrp import Client, ClientGroup, Depot, Model, Profile, VehicleType
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import MaxIterations
+from tests.helpers import read_solution
 
 
 def test_model_data():
@@ -124,9 +125,11 @@ def test_add_depot_attributes():
     in.
     """
     model = Model()
-    depot = model.add_depot(x=1, y=0)
+    depot = model.add_depot(x=1, y=0, tw_early=5, tw_late=7)
     assert_equal(depot.x, 1)
     assert_equal(depot.y, 0)
+    assert_equal(depot.tw_early, 5)
+    assert_equal(depot.tw_late, 7)
 
 
 def test_add_edge():
@@ -956,3 +959,126 @@ def test_bug_client_group_indices():
 
     assert_equal(len(group1), 1)
     assert_equal(len(group2), 1)
+
+
+def test_integer_vehicle_capacity_and_load_arguments_are_promoted_to_lists():
+    """
+    Tests that passing an integer capacity or initial load functions the same
+    way as passing a list of a single integer - the integer arguments are
+    automatically promoted to lists of integers.
+    """
+    m = Model()
+
+    veh1 = m.add_vehicle_type(capacity=10, initial_load=1)
+    assert_equal(veh1.capacity, [10])
+    assert_equal(veh1.initial_load, [1])
+
+    veh2 = m.add_vehicle_type(capacity=[10], initial_load=[1])
+    assert_(veh1 == veh2)
+    assert_equal(veh2.capacity, [10])
+    assert_equal(veh2.initial_load, [1])
+
+
+def test_adding_vehicle_reload_depots():
+    """
+    Smoke test that checks adding reload depots to the vehicle type works
+    correctly.
+    """
+    m = Model()
+    depot1 = m.add_depot(x=0, y=0)
+    depot2 = m.add_depot(x=1, y=1)
+
+    veh_type1 = m.add_vehicle_type(reload_depots=[depot1])
+    assert_equal(veh_type1.reload_depots, [0])
+
+    veh_type2 = m.add_vehicle_type(reload_depots=[depot1, depot2])
+    assert_equal(veh_type2.reload_depots, [0, 1])
+
+
+def test_adding_unknown_reload_depots_raises():
+    """
+    Tests that passing an unknown reload depot when creating a new vehicle
+    type raises.
+    """
+    m = Model()
+    depot = Depot(x=0, y=0)  # not in model
+
+    with assert_raises(ValueError):
+        m.add_vehicle_type(reload_depots=[depot])
+
+
+def test_model_solves_multi_trip_instance():
+    """
+    Smoke test to check that the model can solve an instance with multiple
+    trips / reloading.
+    """
+    m = Model()
+    depot1 = m.add_depot(0, 0)
+    depot2 = m.add_depot(0, 0)
+
+    m.add_vehicle_type(capacity=[5], reload_depots=[depot1, depot2])
+
+    for idx in range(3):  # all locations are on a horizontal line
+        m.add_client(idx, 0, delivery=[5])
+
+    for frm in m.locations:
+        for to in m.locations:
+            m.add_edge(frm, to, distance=abs(frm.x - to.x))
+
+    res = m.solve(stop=MaxIterations(10))
+    assert_(res.is_feasible())
+    assert_equal(res.cost(), 6)
+
+    routes = res.best.routes()
+    assert_equal(len(routes), 1)
+
+    # This route transports the full 15 client delivery demand using a vehicle
+    # with capacity of just 5 because it reloads twice along the route.
+    route = routes[0]
+    assert_equal(route.excess_load(), [0])
+    assert_equal(route.delivery(), [15])
+    assert_equal(route.num_trips(), 3)
+
+
+def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
+    """
+    Smoke test that tests if the model can solve a multi-trip VRP instance
+    with release times. The instance is due to [1]_.
+
+    References
+    ----------
+    .. [1] Yu Yang (2023). An Exact Price-Cut-and-Enumerate Method for the
+           Capacitated Multitrip Vehicle Routing Problem with Time Windows.
+           *Transportation Science* 57(1): 230-251.
+           https://doi.org/10.1287/trsc.2022.1161.
+    """
+    m = Model.from_data(mtvrptw_release_times)
+    res = m.solve(stop=MaxIterations(5))
+    assert_(res.is_feasible())
+
+    opt = read_solution("data/C201R0.25.sol", mtvrptw_release_times)
+    assert_(opt.is_feasible())
+
+    # A proven optimal solution to this instance has cost 10687. The following
+    # is a smoke test to verify that we are not too far (>10%) away after a few
+    # iterations.
+    opt_cost = opt.distance_cost()
+    assert_equal(opt_cost, 10687)
+    assert_(res.cost() < 1.1 * opt_cost)
+
+
+def test_profile_name_and_str():
+    """
+    Tests that passing a name argument for a routing profile works correctly.
+    """
+    profile = Profile()  # name should be optional, and default empty
+    assert_equal(profile.name, "")
+
+    profile = Profile(name="test1")  # name should be set correctly
+    assert_equal(profile.name, "test1")
+    assert_equal(str(profile), "test1")
+
+    m = Model()  # setting the name via the model should also work
+    profile = m.add_profile(name="test2")
+    assert_equal(profile.name, "test2")
+    assert_equal(str(profile), "test2")

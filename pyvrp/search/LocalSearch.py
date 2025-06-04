@@ -5,7 +5,11 @@ from pyvrp._pyvrp import (
     Solution,
 )
 from pyvrp.search._search import LocalSearch as _LocalSearch
-from pyvrp.search._search import NodeOperator, RouteOperator
+from pyvrp.search._search import (
+    LocalSearchStatistics,
+    NodeOperator,
+    RouteOperator,
+)
 
 
 class LocalSearch:
@@ -58,29 +62,46 @@ class LocalSearch:
         """
         self._ls.add_route_operator(op)
 
-    def set_neighbours(self, neighbours: list[list[int]]):
-        """
-        Convenience method to replace the current granular neighbourhood used
-        by the local search object.
-
-        Parameters
-        ----------
-        neighbours
-            A new granular neighbourhood.
-        """
-        self._ls.set_neighbours(neighbours)
-
+    @property
     def neighbours(self) -> list[list[int]]:
         """
         Returns the granular neighbourhood currently used by the local search.
         """
-        return self._ls.neighbours()
+        return self._ls.neighbours
+
+    @neighbours.setter
+    def neighbours(self, neighbours: list[list[int]]):
+        """
+        Convenience method to replace the current granular neighbourhood used
+        by the local search object.
+        """
+        self._ls.neighbours = neighbours
+
+    @property
+    def node_operators(self) -> list[NodeOperator]:
+        """
+        Returns the node operators in use.
+        """
+        return self._ls.node_operators
+
+    @property
+    def route_operators(self) -> list[RouteOperator]:
+        """
+        Returns the route operators in use.
+        """
+        return self._ls.route_operators
+
+    @property
+    def statistics(self) -> LocalSearchStatistics:
+        """
+        Returns search statistics about the most recently improved solution.
+        """
+        return self._ls.statistics
 
     def __call__(
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
-        overlap_tolerance: float = 0.05,
     ) -> Solution:
         """
         This method uses the :meth:`~search` and :meth:`~intensify` methods to
@@ -95,8 +116,6 @@ class LocalSearch:
             The solution to improve through local search.
         cost_evaluator
             Cost evaluator to use.
-        overlap_tolerance
-            See :meth:`~intensify` for details.
 
         Returns
         -------
@@ -105,19 +124,16 @@ class LocalSearch:
             solution that was passed in.
         """
         self._ls.shuffle(self._rng)
-        return self._ls(solution, cost_evaluator, overlap_tolerance)
+        return self._ls(solution, cost_evaluator)
 
     def intensify(
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
-        overlap_tolerance: float = 0.05,
     ) -> Solution:
         """
         This method uses the intensifying route operators on this local search
-        object to improve the given solution. To limit the computational
-        demands of intensification, the  ``overlap_tolerance`` argument
-        can be used to limit the number of route pairs that are evaluated.
+        object to improve the given solution.
 
         Parameters
         ----------
@@ -125,13 +141,6 @@ class LocalSearch:
             The solution to improve.
         cost_evaluator
             Cost evaluator to use.
-        overlap_tolerance
-            This method evaluates improving moves between route pairs. To limit
-            computational efforts, by default not all route pairs are
-            considered: only those route pairs that share some overlap when
-            considering their center's angle to the center of all clients.
-            This parameter controls the amount of overlap needed before two
-            routes are evaluated.
 
         Returns
         -------
@@ -140,7 +149,7 @@ class LocalSearch:
             solution that was passed in.
         """
         self._ls.shuffle(self._rng)
-        return self._ls.intensify(solution, cost_evaluator, overlap_tolerance)
+        return self._ls.intensify(solution, cost_evaluator)
 
     def search(
         self, solution: Solution, cost_evaluator: CostEvaluator

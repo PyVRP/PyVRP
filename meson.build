@@ -1,7 +1,13 @@
 project(
     'pyvrp',
     'cpp',
-    version: run_command('poetry', 'version', '--short', check: true).stdout(),
+    version: run_command(
+        'awk',
+        # Matches first line with 'version = "XXX"', and extracts "XXX".
+        '/version/ { print $3; exit }',
+        'pyproject.toml',
+        check: true,
+    ).stdout().replace('"', ''),  # turns "XXX" into just XXX
     default_options: [
         'cpp_std=c++20',
         'b_ndebug=if-release',  # disables asserts in release builds
@@ -33,6 +39,7 @@ libpyvrp = static_library(
         SRC_DIR / 'DynamicBitset.cpp',
         SRC_DIR / 'ProblemData.cpp',
         SRC_DIR / 'RandomNumberGenerator.cpp',
+        SRC_DIR / 'Trip.cpp',
         SRC_DIR / 'Route.cpp',
         SRC_DIR / 'Solution.cpp',
         SRC_DIR / 'SubPopulation.cpp',
@@ -67,6 +74,7 @@ libsearch = static_library(
         SRC_DIR / 'search' / 'LocalSearch.cpp',
         SRC_DIR / 'search' / 'Route.cpp',
         SRC_DIR / 'search' / 'primitives.cpp',
+        SRC_DIR / 'search' / 'RelocateWithDepot.cpp',
         SRC_DIR / 'search' / 'SwapRoutes.cpp',
         SRC_DIR / 'search' / 'SwapStar.cpp',
         SRC_DIR / 'search' / 'SwapTails.cpp',
@@ -118,7 +126,7 @@ foreach extension : extensions
     doc_output_header = custom_target(
         'docs for ' + name,
         output: rawname + '_docs.h',
-        input: ['extract_docstrings.py'] + doc_input_headers,
+        input: ['buildtools/extract_docstrings.py'] + doc_input_headers,
         command: ['python', '@INPUT@', '@OUTPUT@'],
         depend_files: [SRC_DIR / subdir / 'bindings.cpp'],
     )

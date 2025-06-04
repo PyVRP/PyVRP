@@ -33,6 +33,13 @@ auto &pad(auto &vec1, auto const &vec2)
 }
 
 bool isNegative(auto value) { return value < 0; }
+
+// Small helper that determines if the time windows of a and b overlap.
+bool hasTimeOverlap(auto const &a, auto const &b)
+{
+    // See https://stackoverflow.com/a/325964/4316405.
+    return a.twEarly <= b.twLate && a.twLate >= b.twEarly;
+}
 }  // namespace
 
 ProblemData::Characteristics::Characteristics(ProblemData const &data)
@@ -58,11 +65,11 @@ ProblemData::Client::Client(Coordinate x,
                             std::string name)
     : x(x),
       y(y),
-      delivery(pad(delivery, pickup)),
-      pickup(pad(pickup, delivery)),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
+      delivery(pad(delivery, pickup)),
+      pickup(pad(pickup, delivery)),
       releaseTime(releaseTime),
       prize(prize),
       required(required),
@@ -99,11 +106,11 @@ ProblemData::Client::Client(Coordinate x,
 ProblemData::Client::Client(Client const &client)
     : x(client.x),
       y(client.y),
-      delivery(client.delivery),
-      pickup(client.pickup),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
+      delivery(client.delivery),
+      pickup(client.pickup),
       releaseTime(client.releaseTime),
       prize(client.prize),
       required(client.required),
@@ -115,11 +122,11 @@ ProblemData::Client::Client(Client const &client)
 ProblemData::Client::Client(Client &&client)
     : x(client.x),
       y(client.y),
-      delivery(client.delivery),
-      pickup(client.pickup),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
+      delivery(std::move(client.delivery)),
+      pickup(std::move(client.pickup)),
       releaseTime(client.releaseTime),
       prize(client.prize),
       required(client.required),
@@ -186,18 +193,35 @@ void ProblemData::ClientGroup::addClient(size_t client)
 
 void ProblemData::ClientGroup::clear() { clients_.clear(); }
 
-ProblemData::Depot::Depot(Coordinate x, Coordinate y, std::string name)
-    : x(x), y(y), name(duplicate(name.data()))
+ProblemData::Depot::Depot(Coordinate x,
+                          Coordinate y,
+                          Duration twEarly,
+                          Duration twLate,
+                          std::string name)
+    : x(x), y(y), twEarly(twEarly), twLate(twLate), name(duplicate(name.data()))
 {
+    if (twEarly > twLate)
+        throw std::invalid_argument("tw_early must be <= tw_late.");
+
+    if (twEarly < 0)
+        throw std::invalid_argument("tw_early must be >= 0.");
 }
 
 ProblemData::Depot::Depot(Depot const &depot)
-    : x(depot.x), y(depot.y), name(duplicate(depot.name))
+    : x(depot.x),
+      y(depot.y),
+      twEarly(depot.twEarly),
+      twLate(depot.twLate),
+      name(duplicate(depot.name))
 {
 }
 
 ProblemData::Depot::Depot(Depot &&depot)
-    : x(depot.x), y(depot.y), name(depot.name)  // we can steal
+    : x(depot.x),
+      y(depot.y),
+      twEarly(depot.twEarly),
+      twLate(depot.twLate),
+      name(depot.name)  // we can steal
 {
     depot.name = nullptr;  // stolen
 }
@@ -206,7 +230,13 @@ ProblemData::Depot::~Depot() { delete[] name; }
 
 bool ProblemData::Depot::operator==(Depot const &other) const
 {
-    return x == other.x && y == other.y && std::strcmp(name, other.name) == 0;
+    // clang-format off
+    return x == other.x 
+        && y == other.y
+        && twEarly == other.twEarly
+        && twLate == other.twLate
+        && std::strcmp(name, other.name) == 0;
+    // clang-format on
 }
 
 ProblemData::VehicleType::VehicleType(size_t numAvailable,
@@ -222,11 +252,14 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Cost unitDurationCost,
                                       size_t profile,
                                       std::optional<Duration> startLate,
+                                      std::vector<Load> initialLoad,
+                                      std::vector<size_t> reloadDepots,
+                                      size_t maxReloads,
                                       std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
       endDepot(endDepot),
-      capacity(capacity),
+      capacity(pad(capacity, initialLoad)),
       twEarly(twEarly),
       twLate(twLate),
       maxDuration(maxDuration),
@@ -236,6 +269,9 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       unitDurationCost(unitDurationCost),
       profile(profile),
       startLate(startLate.value_or(twLate)),
+      initialLoad(pad(initialLoad, capacity)),
+      reloadDepots(reloadDepots),
+      maxReloads(maxReloads),
       name(duplicate(name.data()))
 {
     if (numAvailable == 0)
@@ -267,6 +303,13 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
 
     if (unitDurationCost < 0)
         throw std::invalid_argument("unit_duration_cost must be >= 0.");
+
+    if (std::any_of(initialLoad.begin(), initialLoad.end(), isNegative<Load>))
+        throw std::invalid_argument("initial load amounts must be >= 0.");
+
+    for (size_t dim = 0; dim != initialLoad.size(); ++dim)
+        if (initialLoad[dim] > capacity[dim])
+            throw std::invalid_argument("initial load exceeds capacity.");
 }
 
 ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
@@ -283,6 +326,9 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       unitDurationCost(vehicleType.unitDurationCost),
       profile(vehicleType.profile),
       startLate(vehicleType.startLate),
+      initialLoad(vehicleType.initialLoad),
+      reloadDepots(vehicleType.reloadDepots),
+      maxReloads(vehicleType.maxReloads),
       name(duplicate(vehicleType.name))
 {
 }
@@ -291,7 +337,7 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
     : numAvailable(vehicleType.numAvailable),
       startDepot(vehicleType.startDepot),
       endDepot(vehicleType.endDepot),
-      capacity(vehicleType.capacity),
+      capacity(std::move(vehicleType.capacity)),
       twEarly(vehicleType.twEarly),
       twLate(vehicleType.twLate),
       maxDuration(vehicleType.maxDuration),
@@ -301,6 +347,9 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       unitDurationCost(vehicleType.unitDurationCost),
       profile(vehicleType.profile),
       startLate(vehicleType.startLate),
+      initialLoad(std::move(vehicleType.initialLoad)),
+      reloadDepots(std::move(vehicleType.reloadDepots)),
+      maxReloads(vehicleType.maxReloads),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen
@@ -308,21 +357,24 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
 
 ProblemData::VehicleType::~VehicleType() { delete[] name; }
 
-ProblemData::VehicleType
-ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
-                                  std::optional<std::vector<Load>> capacity,
-                                  std::optional<size_t> startDepot,
-                                  std::optional<size_t> endDepot,
-                                  std::optional<Cost> fixedCost,
-                                  std::optional<Duration> twEarly,
-                                  std::optional<Duration> twLate,
-                                  std::optional<Duration> maxDuration,
-                                  std::optional<Distance> maxDistance,
-                                  std::optional<Cost> unitDistanceCost,
-                                  std::optional<Cost> unitDurationCost,
-                                  std::optional<size_t> profile,
-                                  std::optional<Duration> startLate,
-                                  std::optional<std::string> name) const
+ProblemData::VehicleType ProblemData::VehicleType::replace(
+    std::optional<size_t> numAvailable,
+    std::optional<std::vector<Load>> capacity,
+    std::optional<size_t> startDepot,
+    std::optional<size_t> endDepot,
+    std::optional<Cost> fixedCost,
+    std::optional<Duration> twEarly,
+    std::optional<Duration> twLate,
+    std::optional<Duration> maxDuration,
+    std::optional<Distance> maxDistance,
+    std::optional<Cost> unitDistanceCost,
+    std::optional<Cost> unitDurationCost,
+    std::optional<size_t> profile,
+    std::optional<Duration> startLate,
+    std::optional<std::vector<Load>> initialLoad,
+    std::optional<std::vector<size_t>> reloadDepots,
+    std::optional<size_t> maxReloads,
+    std::optional<std::string> name) const
 {
     return {numAvailable.value_or(this->numAvailable),
             capacity.value_or(this->capacity),
@@ -337,7 +389,17 @@ ProblemData::VehicleType::replace(std::optional<size_t> numAvailable,
             unitDurationCost.value_or(this->unitDurationCost),
             profile.value_or(this->profile),
             startLate.value_or(this->startLate),
+            initialLoad.value_or(this->initialLoad),
+            reloadDepots.value_or(this->reloadDepots),
+            maxReloads.value_or(this->maxReloads),
             name.value_or(this->name)};
+}
+
+size_t ProblemData::VehicleType::maxTrips() const
+{
+    // When maxReloads is at its maximum size, maxReloads + 1 wraps around to 0,
+    // and then std::max() ensures we still return a reasonable value.
+    return reloadDepots.empty() ? 1 : std::max(maxReloads, maxReloads + 1);
 }
 
 bool ProblemData::VehicleType::operator==(VehicleType const &other) const
@@ -356,6 +418,9 @@ bool ProblemData::VehicleType::operator==(VehicleType const &other) const
         && unitDurationCost == other.unitDurationCost
         && profile == other.profile
         && startLate == other.startLate
+        && initialLoad == other.initialLoad
+        && reloadDepots == other.reloadDepots
+        && maxReloads == other.maxReloads
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }
@@ -513,6 +578,18 @@ void ProblemData::validate() const
 
         if (vehicleType.profile >= dists_.size())
             throw std::out_of_range("Vehicle type has invalid profile.");
+
+        if (!hasTimeOverlap(depots_[vehicleType.startDepot], vehicleType))
+            throw std::invalid_argument("Vehicle and its start depot have no "
+                                        "overlapping time windows.");
+
+        if (!hasTimeOverlap(depots_[vehicleType.endDepot], vehicleType))
+            throw std::invalid_argument("Vehicle and its end depot have no "
+                                        "overlapping time windows.");
+
+        for (auto const depot : vehicleType.reloadDepots)
+            if (depot >= numDepots())
+                throw std::out_of_range("Vehicle has invalid reload depot.");
     }
 
     // Matrix checks.

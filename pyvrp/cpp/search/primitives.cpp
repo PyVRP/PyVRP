@@ -1,5 +1,7 @@
 #include "primitives.h"
 
+#include <cassert>
+
 namespace
 {
 /**
@@ -15,19 +17,24 @@ public:
     ClientSegment(pyvrp::ProblemData const &data, size_t client)
         : data(data), client(client)
     {
+        assert(client >= data.numDepots());  // must be an actual client
     }
+
+    pyvrp::search::Route const *route() const { return nullptr; }
 
     size_t first() const { return client; }
     size_t last() const { return client; }
+    size_t size() const { return 1; }
 
-    pyvrp::DistanceSegment distance([[maybe_unused]] size_t profile) const
+    pyvrp::Distance distance([[maybe_unused]] size_t profile) const
     {
-        return {};
+        return 0;
     }
 
     pyvrp::DurationSegment duration([[maybe_unused]] size_t profile) const
     {
-        return {data.location(client)};
+        pyvrp::ProblemData::Client const &clientData = data.location(client);
+        return {clientData};
     }
 
     pyvrp::LoadSegment load(size_t dimension) const
@@ -53,7 +60,7 @@ pyvrp::Cost pyvrp::search::insertCost(Route::Node *U,
 
     costEvaluator.deltaCost<true>(
         deltaCost,
-        route->proposal(route->before(V->idx()),
+        Route::Proposal(route->before(V->idx()),
                         ClientSegment(data, U->client()),
                         route->after(V->idx() + 1)));
 
@@ -64,17 +71,22 @@ pyvrp::Cost pyvrp::search::removeCost(Route::Node *U,
                                       ProblemData const &data,
                                       CostEvaluator const &costEvaluator)
 {
-    if (!U->route() || U->isDepot())
+    if (!U->route() || U->isStartDepot() || U->isEndDepot())
         return 0;
 
     auto *route = U->route();
-    ProblemData::Client const &client = data.location(U->client());
+    Cost deltaCost = 0;
 
-    Cost deltaCost
-        = client.prize - Cost(route->size() == 1) * route->fixedVehicleCost();
+    if (!U->isDepot())
+    {
+        ProblemData::Client const &client = data.location(U->client());
+        deltaCost
+            = client.prize
+              - Cost(route->numClients() == 1) * route->fixedVehicleCost();
+    }
 
     costEvaluator.deltaCost<true>(deltaCost,
-                                  route->proposal(route->before(U->idx() - 1),
+                                  Route::Proposal(route->before(U->idx() - 1),
                                                   route->after(U->idx() + 1)));
 
     return deltaCost;
@@ -96,7 +108,7 @@ pyvrp::Cost pyvrp::search::inplaceCost(Route::Node *U,
 
     costEvaluator.deltaCost<true>(
         deltaCost,
-        route->proposal(route->before(V->idx() - 1),
+        Route::Proposal(route->before(V->idx() - 1),
                         ClientSegment(data, U->client()),
                         route->after(V->idx() + 1)));
 

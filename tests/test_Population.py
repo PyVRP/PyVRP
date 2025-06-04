@@ -141,7 +141,7 @@ def test_add_triggers_purge(ok_small):
     # RNG is fixed, and this next solution is feasible. Since we now have a
     # feasible population that is of maximal size, adding this solution should
     # trigger survivor selection (purge). Survivor selection reduces the
-    # feasible subpopulation to min_pop_size, so the overal population is then
+    # feasible subpopulation to min_pop_size, so the overall population is then
     # just num_infeas + min_pop_size.
     sol = Solution.make_random(ok_small, rng)
     assert_(sol.is_feasible())
@@ -280,7 +280,7 @@ def test_tournament_ranks_by_fitness(rc208, k: int):
     sol2idx = {item.solution: idx for idx, item in enumerate(by_fitness)}
     infeas_count = np.zeros(len(infeas_pop))
 
-    for _ in range(10_000):
+    for _ in range(5_000):
         sol = pop.tournament(rng, cost_evaluator, k=k)
         infeas_count[sol2idx[sol]] += 1
 

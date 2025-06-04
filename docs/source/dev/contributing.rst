@@ -2,7 +2,9 @@ Contributing
 ============
 
 Conversations about development and issues take place in the `GitHub repository <https://github.com/PyVRP/PyVRP/>`_.
-Feel free to open a new issue if you have something to discuss.
+If you are looking to make a contribution, please make sure to discuss the change first in a GitHub issue.
+This helps us scope the contribution before you commit many hours of work to it.
+Feel free to open a new issue if no appropriate issue already exists!
 
 
 Setting up a local installation
@@ -17,21 +19,19 @@ Then, clone your new fork to some local environment:
 
    git clone https://github.com/<your username>/PyVRP.git
 
-Now, change into the PyVRP directory, and set-up the virtual environment using ``poetry``:
+Now, change into the PyVRP directory, and set-up the virtual environment using ``uv``:
 
 .. code-block:: shell
 
    cd PyVRP
+   uv sync
 
-   pip install --upgrade poetry
-   poetry install --with examples,docs,dev
-
-This might take a few minutes, but only needs to be done once.
+Syncing might take a little while, but only needs to be done once.
 Now make sure everything runs smoothly, by executing the test suite:
 
 .. code-block:: shell
 
-   poetry run pytest
+   uv run pytest
 
 .. note::
 
@@ -58,30 +58,30 @@ Once the setup completes, execute the test suite to verify everything runs smoot
 
 .. code-block:: shell
 
-   poetry run pytest
+   uv run pytest
 
 
 Building the extensions
 -----------------------
 
 PyVRP uses a number of native Python extensions that are written in C++ for performance.
-These extensions are built every time ``poetry install`` is used, but that command builds everything in release mode.
+These extensions are built every time ``uv sync`` is used, but that command builds everything in release mode.
 While developing, one typically wants to use debug builds.
-These (and more) can be made by using the ``build_extensions.py`` script directly, as follows:
+Now that the virtual environment has been prepared, these (and more) can be made by using the ``buildtools/build_extensions.py`` script directly, as follows:
 
 .. code-block:: shell
 
-   poetry run python build_extensions.py
+   uv run buildtools/build_extensions.py
 
 The script takes a number of command-line arguments, which you can discover using
 
 .. code-block:: shell
 
-   poetry run python build_extensions.py --help
+   uv run buildtools/build_extensions.py --help
 
 We use the Meson build system to compile the C++ extensions.
 Meson is configured using the ``meson.build`` file in the repository root. 
-You should not have to touch this file often: all compilation is handled via the ``build_extensions.py`` script.
+You should not have to touch this file often: all compilation is handled via the ``buildtools/build_extensions.py`` script.
 
 
 Debugging the extensions
@@ -94,7 +94,7 @@ First, build PyVRP in debug mode:
 
 .. code-block:: shell
 
-   poetry run python build_extensions.py --build_type debug
+   uv run buildtools/build_extensions.py --build_type debug
 
 Create a test Python file that calls some C++ code, like so:
 
@@ -138,7 +138,7 @@ First, build a debug optimised build of PyVRP, as follows:
 
 .. code-block:: shell
 
-   poetry run python build_extensions.py --build_type debugoptimized
+   uv run buildtools/build_extensions.py --build_type debugoptimized
 
 This ensures all debug symbols are retained, so the profiling output contains meaningful information.
 Next, we need to use a profiling tool, which varies based on your operating system.
@@ -152,7 +152,7 @@ Next, we need to use a profiling tool, which varies based on your operating syst
 
         .. code-block:: shell
 
-            poetry run perf record pyvrp instances/VRPTW/RC2_10_5.vrp --seed 6 --round_func dimacs --max_runtime 5
+            uv run perf record pyvrp instances/VRPTW/RC2_10_5.vrp --seed 6 --round_func dimacs --max_runtime 5
 
         The resulting ``perf.data`` file will contain all relevant profiling results.
         Such a file can be inspected using ``perf`` on the command line, or with a GUI using, for example, KDAB's `hotspot <https://github.com/KDAB/hotspot>`_ program.
@@ -165,7 +165,7 @@ Next, we need to use a profiling tool, which varies based on your operating syst
 
         .. code-block:: shell
 
-            poetry run pyvrp instances/VRPTW/RC2_10_5.vrp --seed 6 --round_func dimacs --max_runtime 60
+            uv run pyvrp instances/VRPTW/RC2_10_5.vrp --seed 6 --round_func dimacs --max_runtime 60
 
         Next, open the Instruments application.
         Select the "CPU Profiler" template, click on the search bar at the top of the window, and select the corresponding Python process as your target, which is usually the most recent one.

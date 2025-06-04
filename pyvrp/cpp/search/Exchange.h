@@ -20,10 +20,9 @@ namespace pyvrp::search
  * The :math:`(N, M)`-exchange class uses C++ templates for different :math:`N`
  * and :math:`M` to efficiently evaluate these moves.
  */
-template <size_t N, size_t M>
-class Exchange : public LocalSearchOperator<Route::Node>
+template <size_t N, size_t M> class Exchange : public NodeOperator
 {
-    using LocalSearchOperator::LocalSearchOperator;
+    using NodeOperator::NodeOperator;
 
     static_assert(N >= M && N > 0, "N < M or N == 0 does not make sense");
 
@@ -57,11 +56,13 @@ public:
 template <size_t N, size_t M>
 bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
 {
-    // size() is the position of the last client in the route. So the segment
-    // must include the depot if idx + move length - 1 (-1 since we're also
-    // moving the node *at* idx) is larger than size().
-    return node->idx() == 0
-           || (node->idx() + segLength - 1 > node->route()->size());
+    auto const first = node->idx();
+    auto const last = first + segLength - 1;
+    auto const &route = *node->route();
+
+    return first == 0                               // contains start depot
+           || last >= route.size() - 1              // contains end depot
+           || node->trip() != route[last]->trip();  // contains reload depot
 }
 
 template <size_t N, size_t M>
@@ -96,20 +97,20 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         auto const *vRoute = V->route();
 
         // We're going to incur V's fixed cost if V is currently empty.
-        if (V->idx() == 0 && vRoute->empty())
+        if (V->isStartDepot() && vRoute->empty())
             deltaCost += vRoute->fixedVehicleCost();
 
         // We lose U's fixed cost if we're moving all U's clients.
-        if (uRoute->size() == N)
+        if (uRoute->numClients() == N)
             deltaCost -= uRoute->fixedVehicleCost();
 
-        auto const uProposal = uRoute->proposal(uRoute->before(U->idx() - 1),
-                                                uRoute->after(U->idx() + N));
+        auto const uProposal = Route::Proposal(uRoute->before(U->idx() - 1),
+                                               uRoute->after(U->idx() + N));
 
         auto const vProposal
-            = vRoute->proposal(vRoute->before(V->idx()),
-                               uRoute->between(U->idx(), U->idx() + N - 1),
-                               vRoute->after(V->idx() + 1));
+            = Route::Proposal(vRoute->before(V->idx()),
+                              uRoute->between(U->idx(), U->idx() + N - 1),
+                              vRoute->after(V->idx() + 1));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
@@ -120,14 +121,14 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
         if (U->idx() < V->idx())
             costEvaluator.deltaCost(
                 deltaCost,
-                route->proposal(route->before(U->idx() - 1),
+                Route::Proposal(route->before(U->idx() - 1),
                                 route->between(U->idx() + N, V->idx()),
                                 route->between(U->idx(), U->idx() + N - 1),
                                 route->after(V->idx() + 1)));
         else
             costEvaluator.deltaCost(
                 deltaCost,
-                route->proposal(route->before(V->idx()),
+                Route::Proposal(route->before(V->idx()),
                                 route->between(U->idx(), U->idx() + N - 1),
                                 route->between(V->idx() + 1, U->idx() - 1),
                                 route->after(U->idx() + N)));
@@ -152,14 +153,14 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
         auto const *vRoute = V->route();
 
         auto const uProposal
-            = uRoute->proposal(uRoute->before(U->idx() - 1),
-                               vRoute->between(V->idx(), V->idx() + M - 1),
-                               uRoute->after(U->idx() + N));
+            = Route::Proposal(uRoute->before(U->idx() - 1),
+                              vRoute->between(V->idx(), V->idx() + M - 1),
+                              uRoute->after(U->idx() + N));
 
         auto const vProposal
-            = vRoute->proposal(vRoute->before(V->idx() - 1),
-                               uRoute->between(U->idx(), U->idx() + N - 1),
-                               vRoute->after(V->idx() + M));
+            = Route::Proposal(vRoute->before(V->idx() - 1),
+                              uRoute->between(U->idx(), U->idx() + N - 1),
+                              vRoute->after(V->idx() + M));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
@@ -170,7 +171,7 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
         if (U->idx() < V->idx())
             costEvaluator.deltaCost(
                 deltaCost,
-                route->proposal(route->before(U->idx() - 1),
+                Route::Proposal(route->before(U->idx() - 1),
                                 route->between(V->idx(), V->idx() + M - 1),
                                 route->between(U->idx() + N, V->idx() - 1),
                                 route->between(U->idx(), U->idx() + N - 1),
@@ -178,7 +179,7 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
         else
             costEvaluator.deltaCost(
                 deltaCost,
-                route->proposal(route->before(V->idx() - 1),
+                Route::Proposal(route->before(V->idx() - 1),
                                 route->between(U->idx(), U->idx() + N - 1),
                                 route->between(V->idx() + M, U->idx() - 1),
                                 route->between(V->idx(), V->idx() + M - 1),
@@ -193,12 +194,18 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
                               Route::Node *V,
                               CostEvaluator const &costEvaluator)
 {
+    stats_.numEvaluations++;
+
     if (containsDepot(U, N) || overlap(U, V))
         return 0;
 
     if constexpr (M > 0)
         if (containsDepot(V, M))
             return 0;
+
+    // We cannot easily evaluate across trips, so we cannot determine this move.
+    if (U->route() == V->route() && U->trip() != V->trip())
+        return 0;
 
     if constexpr (M == 0)  // special case where nothing in V is moved
     {
@@ -223,6 +230,8 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
 template <size_t N, size_t M>
 void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
 {
+    stats_.numApplications++;
+
     auto &uRoute = *U->route();
     auto &vRoute = *V->route();
     auto *uToInsert = N == 1 ? U : uRoute[U->idx() + N - 1];

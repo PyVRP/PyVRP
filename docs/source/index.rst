@@ -9,6 +9,7 @@ It currently supports VRPs with:
 * Vehicles of different capacities, costs, shift durations, routing profiles, and maximum distance and duration constraints (heterogeneous fleet VRP, site-dependent VRP);
 * Time windows, client service durations, and release times (VRP with time windows and release times);
 * Multiple depots (multi-depot VRP);
+* Reloading along routes at different reload depots (multi-trip VRP);
 * Optional clients with prizes for visiting (prize collecting, team orienteering problem);
 * Client groups imposing additional restrictions on multiple clients jointly (generalised VRP, VRP with multiple time windows).
 
@@ -66,6 +67,7 @@ Contents
 
    dev/benchmarking
    dev/contributing
+   dev/releasing
    dev/supported_vrplib_fields
    dev/new_vrp_variants
    dev/glossary

@@ -166,10 +166,12 @@ def solve(
     ls = LocalSearch(data, rng, neighbours)
 
     for node_op in params.node_ops:
-        ls.add_node_operator(node_op(data))
+        if node_op.supports(data):
+            ls.add_node_operator(node_op(data))
 
     for route_op in params.route_ops:
-        ls.add_route_operator(route_op(data))
+        if route_op.supports(data):
+            ls.add_route_operator(route_op(data))
 
     pm = PenaltyManager.init_from(data, params.penalty)
     pop = Population(bpd, params.population)

@@ -10,7 +10,7 @@
 namespace pyvrp::search
 {
 /**
- * SwapStar(data: ProblemData)
+ * SwapStar(data: ProblemData, overlap_tolerance: float = 0.05)
  *
  * Explores the SWAP* neighbourhood of [1]_. The SWAP* neighbourhood consists
  * of free form re-insertions of clients :math:`U` and :math:`V` in the given
@@ -23,7 +23,7 @@ namespace pyvrp::search
  *        implementation and SWAP* neighborhood. *Comput. Oper. Res*. 140.
  *        https://doi.org/10.1016/j.cor.2021.105643
  */
-class SwapStar : public LocalSearchOperator<Route>
+class SwapStar : public RouteOperator
 {
     using InsertPoint = std::pair<Cost, Route::Node *>;
     using ThreeBest = std::array<InsertPoint, 3>;
@@ -38,6 +38,12 @@ class SwapStar : public LocalSearchOperator<Route>
         Route::Node *V = nullptr;
         Route::Node *VAfter = nullptr;  // insert V after this node in U's route
     };
+
+    // To limit computational efforts, by default not all route pairs are
+    // considered: only those route pairs that share some overlap when
+    // considering their center's angle to the center of all clients. This value
+    // controls the amount of overlap needed before two routes are evaluated.
+    double const overlapTolerance;
 
     // Tracks the three best insert locations, for each route and client.
     Matrix<ThreeBest> insertCache;
@@ -87,7 +93,7 @@ public:
 
     void update(Route *U) override;
 
-    explicit SwapStar(ProblemData const &data);
+    explicit SwapStar(ProblemData const &data, double overlapTolerance = 0.05);
 };
 }  // namespace pyvrp::search
 

@@ -1,5 +1,6 @@
 #include "LocalSearch.h"
 #include "Measure.h"
+#include "Trip.h"
 #include "primitives.h"
 
 #include <algorithm>
@@ -8,19 +9,23 @@
 
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
+using pyvrp::search::NodeOperator;
+using pyvrp::search::RouteOperator;
 
 Solution LocalSearch::operator()(Solution const &solution,
-                                 CostEvaluator const &costEvaluator,
-                                 double overlapTolerance)
+                                 CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
 
     while (true)
     {
         search(costEvaluator);
-        intensify(costEvaluator, overlapTolerance);
+        auto const numUpdates = numUpdates_;  // after node search
 
-        if (numMoves == 0)  // then the current solution is locally optimal.
+        intensify(costEvaluator);
+        if (numUpdates_ == numUpdates)
+            // Then intensify (route search) did not do any additional
+            // updates, so the solution is locally optimal.
             break;
     }
 
@@ -36,11 +41,10 @@ Solution LocalSearch::search(Solution const &solution,
 }
 
 Solution LocalSearch::intensify(Solution const &solution,
-                                CostEvaluator const &costEvaluator,
-                                double overlapTolerance)
+                                CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    intensify(costEvaluator, overlapTolerance);
+    intensify(costEvaluator);
     return exportSolution();
 }
 
@@ -49,26 +53,18 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     if (nodeOps.empty())
         return;
 
-    // Caches the last time nodes were tested for modification (uses numMoves to
-    // track this). The lastModified field, in contrast, track when a route was
-    // last *actually* modified.
-    std::vector<int> lastTestedNodes(data.numLocations(), -1);
-    lastModified = std::vector<int>(data.numVehicles(), 0);
-
-    searchCompleted = false;
-    numMoves = 0;
-
-    for (int step = 0; !searchCompleted; ++step)
+    searchCompleted_ = false;
+    for (int step = 0; !searchCompleted_; ++step)
     {
-        searchCompleted = true;
+        searchCompleted_ = true;
 
         // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
         {
             auto *U = &nodes[uClient];
 
-            auto const lastTestedNode = lastTestedNodes[uClient];
-            lastTestedNodes[uClient] = numMoves;
+            auto const lastTested = lastTestedNodes[uClient];
+            lastTestedNodes[uClient] = numUpdates_;
 
             // First test removing or inserting U. Particularly relevant if not
             // all clients are required (e.g., when prize collecting).
@@ -80,6 +76,10 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!U->route())  // we already evaluated inserting U, so there is
                 continue;     // nothing left to be done for this client.
 
+            // If U borders a reload depot, try removing it.
+            applyDepotRemovalMove(p(U), costEvaluator);
+            applyDepotRemovalMove(n(U), costEvaluator);
+
             // We next apply the regular node operators. These work on pairs
             // of nodes (U, V), where both U and V are in the solution.
             for (auto const vClient : neighbours_[uClient])
@@ -89,13 +89,14 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 if (!V->route())
                     continue;
 
-                if (lastModified[U->route()->idx()] > lastTestedNode
-                    || lastModified[V->route()->idx()] > lastTestedNode)
+                if (lastUpdated[U->route()->idx()] > lastTested
+                    || lastUpdated[V->route()->idx()] > lastTested)
                 {
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    if (p(V)->isDepot() && applyNodeOps(U, p(V), costEvaluator))
+                    if (p(V)->isStartDepot()
+                        && applyNodeOps(U, p(V), costEvaluator))
                         continue;
                 }
             }
@@ -108,48 +109,38 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     }
 }
 
-void LocalSearch::intensify(CostEvaluator const &costEvaluator,
-                            double overlapTolerance)
+void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 {
-    if (overlapTolerance < 0 || overlapTolerance > 1)
-        throw std::runtime_error("overlapTolerance must be in [0, 1].");
-
     if (routeOps.empty())
         return;
 
-    std::vector<int> lastTestedRoutes(data.numVehicles(), -1);
-    lastModified = std::vector<int>(data.numVehicles(), 0);
-
-    searchCompleted = false;
-    numMoves = 0;
-
-    while (!searchCompleted)
+    searchCompleted_ = false;
+    while (!searchCompleted_)
     {
-        searchCompleted = true;
+        searchCompleted_ = true;
 
         for (auto const rU : orderRoutes)
         {
             auto &U = routes[rU];
+            assert(U.idx() == rU);
 
             if (U.empty())
                 continue;
 
             auto const lastTested = lastTestedRoutes[U.idx()];
-            lastTestedRoutes[U.idx()] = numMoves;
+            lastTestedRoutes[U.idx()] = numUpdates_;
 
-            for (size_t rV = 0; rV != U.idx(); ++rV)
+            for (size_t rV = U.idx() + 1; rV != routes.size(); ++rV)
             {
                 auto &V = routes[rV];
+                assert(V.idx() == rV);
 
-                if (V.empty() || !U.overlapsWith(V, overlapTolerance))
+                if (V.empty())
                     continue;
 
-                auto const lastModifiedRoute
-                    = std::max(lastModified[U.idx()], lastModified[V.idx()]);
-
-                if (lastModifiedRoute > lastTested
-                    && applyRouteOps(&U, &V, costEvaluator))
-                    continue;
+                if (lastUpdated[U.idx()] > lastTested
+                    || lastUpdated[V.idx()] > lastTested)
+                    applyRouteOps(&U, &V, costEvaluator);
             }
         }
     }
@@ -162,6 +153,8 @@ void LocalSearch::shuffle(RandomNumberGenerator &rng)
 
     std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
     std::shuffle(routeOps.begin(), routeOps.end(), rng);
+
+    std::shuffle(orderVehTypes.begin(), orderVehTypes.end(), rng);
 }
 
 bool LocalSearch::applyNodeOps(Route::Node *U,
@@ -231,21 +224,41 @@ bool LocalSearch::applyRouteOps(Route *U,
     return false;
 }
 
+void LocalSearch::applyDepotRemovalMove(Route::Node *U,
+                                        CostEvaluator const &costEvaluator)
+{
+    if (!U->isReloadDepot())
+        return;
+
+    // We remove the depot when that's either better, or neutral. It can be
+    // neutral if for example it's the same depot visited consecutively, but
+    // that's then unnecessary.
+    if (removeCost(U, data, costEvaluator) <= 0)
+    {
+        auto *route = U->route();
+        route->remove(U->idx());
+        update(route, route);
+    }
+}
+
 void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
                                        CostEvaluator const &costEvaluator)
 {
     assert(U->route());
 
-    auto begin = routes.begin();
-    for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
+    // We apply moves involving empty routes in the (randomised) order of
+    // orderVehTypes. This helps because empty vehicle moves incur fixed cost,
+    // and a purely greedy approach over-prioritises vehicles with low fixed
+    // costs but possibly high variable costs.
+    for (auto const &[vehType, offset] : orderVehTypes)
     {
+        auto const begin = routes.begin() + offset;
         auto const end = begin + data.vehicleType(vehType).numAvailable;
         auto const pred = [](auto const &route) { return route.empty(); };
         auto empty = std::find_if(begin, end, pred);
-        begin = end;
 
-        if (empty != end)  // try inserting U into the empty route.
-            applyNodeOps(U, (*empty)[0], costEvaluator);
+        if (empty != end && applyNodeOps(U, (*empty)[0], costEvaluator))
+            break;
     }
 }
 
@@ -357,11 +370,11 @@ void LocalSearch::insert(Route::Node *U,
 
 void LocalSearch::update(Route *U, Route *V)
 {
-    numMoves++;
-    searchCompleted = false;
+    numUpdates_++;
+    searchCompleted_ = false;
 
     U->update();
-    lastModified[U->idx()] = numMoves;
+    lastUpdated[U->idx()] = numUpdates_;
 
     for (auto *op : routeOps)  // this is used by some route operators
         op->update(U);         // to keep caches in sync.
@@ -369,7 +382,7 @@ void LocalSearch::update(Route *U, Route *V)
     if (U != V)
     {
         V->update();
-        lastModified[V->idx()] = numMoves;
+        lastUpdated[V->idx()] = numUpdates_;
 
         for (auto *op : routeOps)  // this is used by some route operators
             op->update(V);         // to keep caches in sync.
@@ -378,6 +391,11 @@ void LocalSearch::update(Route *U, Route *V)
 
 void LocalSearch::loadSolution(Solution const &solution)
 {
+    std::fill(lastTestedNodes.begin(), lastTestedNodes.end(), -1);
+    std::fill(lastTestedRoutes.begin(), lastTestedRoutes.end(), -1);
+    std::fill(lastUpdated.begin(), lastUpdated.end(), 0);
+    numUpdates_ = 0;
+
     // First empty all routes.
     for (auto &route : routes)
         route.clear();
@@ -396,15 +414,33 @@ void LocalSearch::loadSolution(Solution const &solution)
         // Determine index of next route of this type to load, where we rely
         // on solution to be valid to not exceed the number of vehicles per
         // vehicle type.
-        auto const r = vehicleOffset[solRoute.vehicleType()]++;
-        Route &route = routes[r];
+        auto const idx = vehicleOffset[solRoute.vehicleType()]++;
+        auto &route = routes[idx];
 
-        assert(route.empty());  // should have been emptied above.
-        for (auto const client : solRoute)
-            route.push_back(&nodes[client]);
+        // Routes use a representation with nodes for each client, reload depot
+        // (one per trip), and start/end depots. The start depot doubles as the
+        // reload depot for the first trip.
+        route.reserve(solRoute.size() + solRoute.numTrips() + 1);
+
+        for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
+        {
+            auto const &trip = solRoute.trip(tripIdx);
+
+            if (tripIdx != 0)  // then we first insert a trip delimiter.
+            {
+                Route::Node depot = {trip.startDepot()};
+                route.push_back(&depot);
+            }
+
+            for (auto const client : trip)
+                route.push_back(&nodes[client]);
+        }
 
         route.update();
     }
+
+    for (auto *nodeOp : nodeOps)
+        nodeOp->init(solution);
 
     for (auto *routeOp : routeOps)
         routeOp->init(solution);
@@ -415,26 +451,67 @@ Solution LocalSearch::exportSolution() const
     std::vector<pyvrp::Route> solRoutes;
     solRoutes.reserve(data.numVehicles());
 
+    std::vector<Trip> trips;
+    std::vector<size_t> visits;
+
     for (auto const &route : routes)
     {
         if (route.empty())
             continue;
 
-        std::vector<size_t> visits;
-        visits.reserve(route.size());
+        trips.clear();
+        trips.reserve(route.numTrips());
 
-        for (auto *node : route)
-            visits.push_back(node->client());
+        visits.clear();
+        visits.reserve(route.numClients());
 
-        solRoutes.emplace_back(data, visits, route.vehicleType());
+        auto const *prevDepot = route[0];
+        for (size_t idx = 1; idx != route.size(); ++idx)
+        {
+            auto const *node = route[idx];
+
+            if (!node->isDepot())
+            {
+                visits.push_back(node->client());
+                continue;
+            }
+
+            trips.emplace_back(data,
+                               visits,
+                               route.vehicleType(),
+                               prevDepot->client(),
+                               node->client());
+
+            visits.clear();
+            prevDepot = node;
+        }
+
+        assert(trips.size() == route.numTrips());
+        solRoutes.emplace_back(data, trips, route.vehicleType());
     }
 
     return {data, solRoutes};
 }
 
-void LocalSearch::addNodeOperator(NodeOp &op) { nodeOps.emplace_back(&op); }
+void LocalSearch::addNodeOperator(NodeOperator &op)
+{
+    nodeOps.emplace_back(&op);
+}
 
-void LocalSearch::addRouteOperator(RouteOp &op) { routeOps.emplace_back(&op); }
+void LocalSearch::addRouteOperator(RouteOperator &op)
+{
+    routeOps.emplace_back(&op);
+}
+
+std::vector<NodeOperator *> const &LocalSearch::nodeOperators() const
+{
+    return nodeOps;
+}
+
+std::vector<RouteOperator *> const &LocalSearch::routeOperators() const
+{
+    return routeOps;
+}
 
 void LocalSearch::setNeighbours(Neighbours neighbours)
 {
@@ -466,17 +543,45 @@ LocalSearch::Neighbours const &LocalSearch::neighbours() const
     return neighbours_;
 }
 
+LocalSearch::Statistics LocalSearch::statistics() const
+{
+    size_t numMoves = 0;
+    size_t numImproving = 0;
+
+    auto const count = [&](auto const *op)
+    {
+        auto const &stats = op->statistics();
+        numMoves += stats.numEvaluations;
+        numImproving += stats.numApplications;
+    };
+
+    std::for_each(nodeOps.begin(), nodeOps.end(), count);
+    std::for_each(routeOps.begin(), routeOps.end(), count);
+
+    assert(numImproving <= numUpdates_);
+    return {numMoves, numImproving, numUpdates_};
+}
+
 LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     : data(data),
       neighbours_(data.numLocations()),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
-      lastModified(data.numVehicles(), -1)
+      lastTestedNodes(data.numLocations()),
+      lastTestedRoutes(data.numVehicles()),
+      lastUpdated(data.numVehicles())
 {
     setNeighbours(neighbours);
 
     std::iota(orderNodes.begin(), orderNodes.end(), data.numDepots());
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
+
+    size_t offset = 0;
+    for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
+    {
+        orderVehTypes.emplace_back(vehType, offset);
+        offset += data.vehicleType(vehType).numAvailable;
+    }
 
     nodes.reserve(data.numLocations());
     for (size_t loc = 0; loc != data.numLocations(); ++loc)

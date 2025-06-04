@@ -1,5 +1,8 @@
+"""
+Builds the native extensions.
+"""
+
 import argparse
-import os
 import pathlib
 from subprocess import check_call
 
@@ -59,16 +62,16 @@ def configure(
     *additional: list[str],
 ):
     cwd = pathlib.Path.cwd()
+    # fmt: off
     args = [
-        # fmt: off
         build_dir,
         "--buildtype", build_type,
         f"-Dpython.platlibdir={cwd.absolute()}",
         f"-Dstrip={'true' if build_type == 'release' else 'false'}",
         f"-Db_coverage={'true' if build_type != 'release' else 'false'}",
         *additional,
-        # fmt: on
     ]
+    # fmt: on
 
     cmd = "configure" if build_dir.exists() else "setup"
     check_call(["meson", cmd, *args])  # type: ignore
@@ -89,11 +92,7 @@ def build(
     verbose: bool,
     *additional: list[str],
 ):
-    configure(
-        build_dir,
-        build_type,
-        *additional,
-    )
+    configure(build_dir, build_type, *additional)
     compile(build_dir, verbose)
     install(build_dir)
 
@@ -117,9 +116,7 @@ def main():
     cwd = pathlib.Path.cwd()
     build_dir = cwd / args.build_dir
 
-    if args.clean or os.environ.get("CIBUILDWHEEL", "0") == "1":
-        # Always start from an entirely clean build when building wheels in
-        # the CI. Else only do so when expressly asked.
+    if args.clean:
         install_dir = cwd / "pyvrp"
         clean(build_dir, install_dir)
 

@@ -12,6 +12,7 @@ from ._search import Exchange31 as Exchange31
 from ._search import Exchange32 as Exchange32
 from ._search import Exchange33 as Exchange33
 from ._search import NodeOperator as NodeOperator
+from ._search import RelocateWithDepot as RelocateWithDepot
 from ._search import RouteOperator as RouteOperator
 from ._search import SwapRoutes as SwapRoutes
 from ._search import SwapStar as SwapStar
@@ -22,14 +23,11 @@ from .neighbourhood import compute_neighbours as compute_neighbours
 NODE_OPERATORS: list[Type[NodeOperator]] = [
     Exchange10,
     Exchange20,
-    Exchange30,
     Exchange11,
     Exchange21,
-    Exchange31,
     Exchange22,
-    Exchange32,
-    Exchange33,
     SwapTails,
+    RelocateWithDepot,
 ]
 
 ROUTE_OPERATORS: list[Type[RouteOperator]] = [
