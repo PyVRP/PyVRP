@@ -79,11 +79,6 @@ public:
         Route const *route() const;
 
         /**
-         * TODO
-         */
-        ProblemData const &data() const;
-
-        /**
          * Returns the travel distance of the proposed route.
          */
         Distance distance() const;
@@ -905,16 +900,18 @@ Route const *Route::Proposal<Segments...>::route() const
 }
 
 template <Segment... Segments>
-ProblemData const &Route::Proposal<Segments...>::data() const
-{
-    return route()->data;
-}
-
-template <Segment... Segments>
 Distance Route::Proposal<Segments...>::distance() const
 {
+    auto const unitCost = route()->unitDistanceCost();
+    auto const maxDistance = route()->maxDistance();
+    if (unitCost == 0 && maxDistance == std::numeric_limits<Distance>::max())
+        // The distance does not factor into the (penalised) cost at all, so
+        // there is no reason to evaluate it.
+        return 0;
+
+    auto const &data = route()->data;
     auto const profile = route()->profile();
-    auto const &matrix = data().distanceMatrix(profile);
+    auto const &matrix = data.distanceMatrix(profile);
 
     auto const fn = [&matrix, profile](auto &&segment, auto &&...args)
     {
@@ -941,6 +938,10 @@ template <Segment... Segments>
 std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 {
     auto const &data = route()->data;
+
+    if (!data.characteristics().hasDuration)  // shortcut in case duration does
+        return std::make_pair(0, 0);          // not impact (penalised) cost
+
     auto const maxDuration = route()->maxDuration();
     auto const profile = route()->profile();
     auto const &matrix = data.durationMatrix(profile);
