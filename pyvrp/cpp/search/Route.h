@@ -66,7 +66,7 @@ public:
      */
     template <Segment... Segments> class Proposal
     {
-        std::tuple<Segments...> segments;
+        std::tuple<Segments...> segments_;
 
     public:
         Proposal(Segments &&...segments);
