@@ -10,4 +10,4 @@ def test_solve(instance, benchmark, request):
     Tests performance of solving various instances.
     """
     data = request.getfixturevalue(instance)
-    benchmark(solve, data, stop=MaxIterations(25), seed=0)
+    benchmark(solve, data, stop=MaxIterations(100), seed=0)
