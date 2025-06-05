@@ -1,12 +1,13 @@
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_equal
 
-from pyvrp.GeneticAlgorithm import GeneticAlgorithmParams
+from pyvrp.IteratedLocalSearch import IteratedLocalSearchParams
 from pyvrp.PenaltyManager import PenaltyParams
-from pyvrp.Population import PopulationParams
 from pyvrp.search import (
     NODE_OPERATORS,
+    PERTURBATION_OPERATORS,
     ROUTE_OPERATORS,
     Exchange10,
+    NeighbourRemoval,
     NeighbourhoodParams,
     SwapStar,
     SwapTails,
@@ -22,12 +23,12 @@ def test_default_values():
     """
     params = SolveParams()
 
-    assert_equal(params.genetic, GeneticAlgorithmParams())
+    assert_equal(params.ils, IteratedLocalSearchParams())
     assert_equal(params.penalty, PenaltyParams())
-    assert_equal(params.population, PopulationParams())
     assert_equal(params.neighbourhood, NeighbourhoodParams())
     assert_equal(params.node_ops, NODE_OPERATORS)
     assert_equal(params.route_ops, ROUTE_OPERATORS)
+    assert_equal(params.perturbation_ops, PERTURBATION_OPERATORS)
 
 
 def test_solve_params_from_file():
@@ -36,19 +37,19 @@ def test_solve_params_from_file():
     """
     params = SolveParams.from_file(DATA_DIR / "test_config.toml")
 
-    genetic = GeneticAlgorithmParams(0.1, 200)
+    ils = IteratedLocalSearchParams(10)
     penalty = PenaltyParams(12, 100, 1.25, 0.85, 0.43)
-    population = PopulationParams(10, 20, 3, 4, 0.0, 1.0)
     neighbourhood = NeighbourhoodParams(0, 0, 20, True, True)
     node_ops = [Exchange10, SwapTails]
     route_ops = [SwapStar]
+    perturbation_ops = [NeighbourRemoval]
 
-    assert_equal(params.genetic, genetic)
+    assert_equal(params.ils, ils)
     assert_equal(params.penalty, penalty)
-    assert_equal(params.population, population)
     assert_equal(params.neighbourhood, neighbourhood)
     assert_equal(params.node_ops, node_ops)
     assert_equal(params.route_ops, route_ops)
+    assert_equal(params.perturbation_ops, perturbation_ops)
 
 
 def test_solve_params_from_file_defaults():
@@ -69,37 +70,11 @@ def test_solve_same_seed(ok_small):
     res2 = solve(ok_small, stop=MaxIterations(10), seed=0)
 
     assert_equal(res1.best, res2.best)
-    assert_equal(res1.stats.feas_stats, res2.stats.feas_stats)
-    assert_equal(res1.stats.infeas_stats, res2.stats.infeas_stats)
+    assert_equal(res1.stats.data, res2.stats.data)
 
 
 def test_solve_custom_params(ok_small):
     """
     Tests that solving an instance with custom solver parameters works as
-    expected by checking that the population size is respected.
+    expected by checking that ... # TODO what to test?
     """
-    # First solve using the default solver parameters.
-    res = solve(ok_small, stop=MaxIterations(200), seed=0)
-
-    pop_params = PopulationParams()
-    max_pop_size = pop_params.min_pop_size + pop_params.generation_size
-
-    # Neither subpopulation should exceed the maximum population size;
-    # we use the statistics to check this.
-    max_feas_size = max([datum.size for datum in res.stats.feas_stats])
-    max_infeas_size = max([datum.size for datum in res.stats.infeas_stats])
-
-    assert_(max_feas_size <= max_pop_size)
-    assert_(max_infeas_size <= max_pop_size)
-
-    # Let's now use custom parameters with a maximum population size of 15.
-    pop_params = PopulationParams(min_pop_size=5, generation_size=10)
-    params = SolveParams(population=pop_params)
-    res = solve(ok_small, stop=MaxIterations(200), seed=0, params=params)
-
-    max_pop_size = pop_params.min_pop_size + pop_params.generation_size
-    max_feas_size = max([datum.size for datum in res.stats.feas_stats])
-    max_infeas_size = max([datum.size for datum in res.stats.infeas_stats])
-
-    assert_(max_feas_size <= max_pop_size)
-    assert_(max_infeas_size <= max_pop_size)

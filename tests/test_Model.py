@@ -361,8 +361,9 @@ def test_model_solve_display_argument(ok_small, capsys):
     assert_("PyVRP" in printed)
     assert_("Time" in printed)
     assert_("Iters" in printed)
-    assert_("Feasible" in printed)
-    assert_("Infeasible" in printed)
+    assert_("Curr" in printed)
+    assert_("Cand" in printed)
+    assert_("Best" in printed)
 
     # Check that we include the cost and total runtime in the output somewhere.
     assert_(str(round(res.cost())) in printed)
@@ -533,11 +534,11 @@ def test_model_solves_line_instance_with_multiple_depots():
     depot1 = m.add_depot(x=0, y=0)  # location 0
     depot2 = m.add_depot(x=5, y=0)  # location 1
 
-    m.add_vehicle_type(1, start_depot=depot1, end_depot=depot1)
-    m.add_vehicle_type(1, start_depot=depot2, end_depot=depot2)
+    m.add_vehicle_type(1, capacity=2, start_depot=depot1, end_depot=depot1)
+    m.add_vehicle_type(1, capacity=2, start_depot=depot2, end_depot=depot2)
 
     for idx in range(1, 5):  # locations 2, 3, 4, and 5
-        m.add_client(x=idx, y=0)
+        m.add_client(x=idx, delivery=1, y=0)
 
     # All locations are on a horizontal line, with the depots on each end. The
     # line is organised as follows:
@@ -550,6 +551,7 @@ def test_model_solves_line_instance_with_multiple_depots():
             m.add_edge(frm, to, distance=abs(frm.x - to.x))
 
     res = m.solve(stop=MaxIterations(100), seed=3)
+    assert_equal(res.cost(), 8)
     assert_(res.is_feasible())
 
     # Test that there are two routes, with the clients closest to depot 0
