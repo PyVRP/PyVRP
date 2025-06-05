@@ -470,6 +470,9 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("profile"),
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, durationMatrix))
+        .def("has_time_windows",
+             &ProblemData::hasTimeWindows,
+             DOC(pyvrp, ProblemData, hasTimeWindows))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData const &data) {  // __getstate__

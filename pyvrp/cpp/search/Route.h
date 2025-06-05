@@ -855,8 +855,11 @@ Cost Route::unitDurationCost() const { return vehicleType_.unitDurationCost; }
 
 bool Route::hasDurationCost() const
 {
-    // TODO
-    return true;
+    // clang-format off
+    return data.hasTimeWindows()
+        || unitDurationCost() != 0
+        || maxDuration() != std::numeric_limits<Duration>::max();
+    // clang-format on
 }
 
 Duration Route::maxDuration() const { return vehicleType_.maxDuration; }

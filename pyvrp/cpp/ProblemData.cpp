@@ -40,6 +40,17 @@ bool hasTimeOverlap(auto const &a, auto const &b)
     // See https://stackoverflow.com/a/325964/4316405.
     return a.twEarly <= b.twLate && a.twLate >= b.twEarly;
 }
+
+bool hasTimeWindow(auto const &arg)
+{
+    auto const hasTw = arg.twEarly != 0
+                       || arg.twLate != std::numeric_limits<Duration>::max();
+
+    if constexpr (requires { arg.startLate; })
+        return hasTw || arg.startLate != std::numeric_limits<Duration>::max();
+
+    return hasTw;
+}
 }  // namespace
 
 ProblemData::Client::Client(Coordinate x,
@@ -660,7 +671,13 @@ ProblemData::ProblemData(std::vector<Client> clients,
               // but the client constructor already ensures those are of equal
               // size (within a single client).
               ? (vehicleTypes_.empty() ? 0 : vehicleTypes_[0].capacity.size())
-              : clients_[0].delivery.size())
+              : clients_[0].delivery.size()),
+      hasTimeWindows_(
+          std::any_of(clients_.begin(), clients_.end(), hasTimeWindow<Client>)
+          || std::any_of(depots_.begin(), depots_.end(), hasTimeWindow<Depot>)
+          || std::any_of(vehicleTypes_.begin(),
+                         vehicleTypes_.end(),
+                         hasTimeWindow<VehicleType>))
 {
     for (auto const &client : clients_)
     {

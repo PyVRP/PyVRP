@@ -1220,3 +1220,10 @@ def test_vehicle_max_trips_is_one_if_no_reload_depots(ok_small):
     assert_equal(veh_type.reload_depots, [])
     assert_equal(veh_type.max_reloads, _MAX_SIZE)
     assert_equal(veh_type.max_trips, 1)
+
+
+def test_has_time_windows():
+    """
+    TODO
+    """
+    pass
