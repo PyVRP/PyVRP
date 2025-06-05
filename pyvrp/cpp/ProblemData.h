@@ -547,6 +547,7 @@ private:
 
     size_t const numVehicles_;
     size_t const numLoadDimensions_;
+    bool const hasTimeWindows_;
 
 public:
     bool operator==(ProblemData const &other) const = default;
@@ -667,6 +668,13 @@ public:
     durationMatrix(size_t profile) const;
 
     /**
+     * Determines whether any of the :meth:`~clients` or :meth:`~depots` in this
+     * instance have nonstandard time windows, or if any :meth:`~vehicle_types`
+     * have nonstandard shift time windows or latest start constraints.
+     */
+    [[nodiscard]] inline bool hasTimeWindows() const;
+
+    /**
      * Number of clients in this problem instance.
      */
     [[nodiscard]] size_t numClients() const;
@@ -771,6 +779,8 @@ Matrix<Duration> const &ProblemData::durationMatrix(size_t profile) const
     assert(profile < durs_.size());
     return durs_[profile];
 }
+
+bool ProblemData::hasTimeWindows() const { return hasTimeWindows_; }
 }  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H
