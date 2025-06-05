@@ -169,7 +169,8 @@ dmypy.json
 debug/
 release/
 
-# Profiler results
+# Profiler and benchmark results
+*.codspeed/
 *.prof
 perf.data*
 heaptrack.*.gz
