@@ -1117,3 +1117,10 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
 
     route = Route(data, 0, 0)
     assert_equal(route.has_distance_cost(), expected)
+
+
+def test_has_duration_cost():
+    """
+    TODO
+    """
+    pass

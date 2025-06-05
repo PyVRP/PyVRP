@@ -428,6 +428,12 @@ public:
     [[nodiscard]] inline Cost unitDurationCost() const;
 
     /**
+     * Returns true if this route has duration-related cost components, either
+     * via the objective or via penalised constraints. False otherwise.
+     */
+    [[nodiscard]] inline bool hasDurationCost() const;
+
+    /**
      * @return The maximum route duration that the vehicle servicing this route
      *         supports.
      */
@@ -847,6 +853,12 @@ Cost Route::durationCost() const
 
 Cost Route::unitDurationCost() const { return vehicleType_.unitDurationCost; }
 
+bool Route::hasDurationCost() const
+{
+    // TODO
+    return true;
+}
+
 Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 
 Distance Route::maxDistance() const { return vehicleType_.maxDistance; }
@@ -952,6 +964,11 @@ Distance Route::Proposal<Segments...>::distance() const
 template <Segment... Segments>
 std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 {
+    if (!route()->hasDurationCost())
+        // Then duration does not factor into the penalised cost of this route,
+        // and we do not have to evaluate it.
+        return std::make_pair(0, 0);
+
     auto const &data = route()->data;
     auto const maxDuration = route()->maxDuration();
     auto const profile = route()->profile();
