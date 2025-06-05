@@ -668,14 +668,9 @@ public:
     durationMatrix(size_t profile) const;
 
     /**
-     * Determines whether this instance has relevant time window constraints.
-     * In particular, it checks if:
-     *
-     * - Any client TODO
-     *
-     * - Any depot TODO
-     *
-     * - Any vehicle type TODO
+     * Determines whether any of the :meth:`~clients` or :meth:`~depots` in this
+     * instance have nonstandard time windows, or if any :meth:`~vehicle_types`
+     * have nonstandard shift time windows or latest start constraints.
      */
     [[nodiscard]] inline bool hasTimeWindows() const;
 
