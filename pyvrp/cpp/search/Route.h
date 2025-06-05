@@ -63,6 +63,11 @@ public:
      * A simple class that tracks a proposed route structure. This new structure
      * can be efficiently evaluated by calling appropriate member functions,
      * detailing the newly proposed route's statistics.
+     *
+     * .. note::
+     *
+     *    The member functions may shortcut if they detect that a particular
+     *    statistic has no impact on the newly proposed route's cost.
      */
     template <Segment... Segments> class Proposal
     {
@@ -400,6 +405,12 @@ public:
      * @return Cost per unit of distance travelled on this route.
      */
     [[nodiscard]] inline Cost unitDistanceCost() const;
+
+    /**
+     * Returns true if this route has distance-related cost components, either
+     * via the objective or via penalised constraints. False otherwise.
+     */
+    [[nodiscard]] inline bool hasDistanceCost() const;
 
     /**
      * @return The duration of this route.
@@ -816,6 +827,12 @@ Cost Route::distanceCost() const
 
 Cost Route::unitDistanceCost() const { return vehicleType_.unitDistanceCost; }
 
+bool Route::hasDistanceCost() const
+{
+    return unitDistanceCost() != 0
+           || maxDistance() != std::numeric_limits<Distance>::max();
+}
+
 Duration Route::duration() const
 {
     assert(!dirty);
@@ -902,6 +919,11 @@ Route const *Route::Proposal<Segments...>::route() const
 template <Segment... Segments>
 Distance Route::Proposal<Segments...>::distance() const
 {
+    if (!route()->hasDistanceCost())
+        // Then distance does not factor into the penalised cost of this route,
+        // and we do not have to evaluate it.
+        return 0;
+
     auto const &data = route()->data;
     auto const profile = route()->profile();
     auto const &matrix = data.distanceMatrix(profile);
