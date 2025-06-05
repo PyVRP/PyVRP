@@ -9,10 +9,8 @@ def test_attribute_max_runtime():
     """
     Tests that the ``max_runtime`` attribute is set correctly.
     """
-    max_runtime = 100
-    stop = MaxRuntime(max_runtime)
-
-    assert_equal(stop.max_runtime, max_runtime)
+    stop = MaxRuntime(1.23)
+    assert_equal(stop.max_runtime, 1.23)
 
 
 @mark.parametrize("max_runtime", [-0.001, -1, -10.1])

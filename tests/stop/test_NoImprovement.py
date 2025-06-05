@@ -8,10 +8,8 @@ def test_attribute_max_iterations():
     """
     Tests that the ``max_iterations`` attribute is set correctly.
     """
-    max_iterations = 100
-    stop = NoImprovement(max_iterations)
-
-    assert_equal(stop.max_iterations, max_iterations)
+    stop = NoImprovement(100)
+    assert_equal(stop.max_iterations, 100)
 
 
 @mark.parametrize("max_iterations", [-10, -100, -1000])
