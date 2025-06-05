@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 
 from pyvrp.Result import Result
 
@@ -23,11 +22,6 @@ def plot_diversity(result: Result, ax: plt.Axes | None = None):
     ax.set_xlabel("Iteration (#)")
     ax.set_ylabel("Avg. diversity")
 
-    x = 1 + np.arange(result.num_iterations)
-    y = [d.avg_diversity for d in result.stats.feas_stats]
-    ax.plot(x, y, label="Feas. diversity", c="tab:green")
-
-    y = [d.avg_diversity for d in result.stats.infeas_stats]
-    ax.plot(x, y, label="Infeas. diversity", c="tab:red")
+    # TODO update later
 
     ax.legend(frameon=False)
