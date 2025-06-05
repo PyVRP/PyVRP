@@ -1,8 +1,18 @@
-from numpy.testing import assert_, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp.stop import MaxRuntime
 from tests.helpers import sleep
+
+
+def test_attribute_max_runtime():
+    """
+    Tests that the ``max_runtime`` attribute is set correctly.
+    """
+    max_runtime = 100
+    stop = MaxRuntime(max_runtime)
+
+    assert_equal(stop.max_runtime, max_runtime)
 
 
 @mark.parametrize("max_runtime", [-0.001, -1, -10.1])
