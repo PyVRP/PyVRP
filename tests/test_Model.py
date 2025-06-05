@@ -361,8 +361,8 @@ def test_model_solve_display_argument(ok_small, capsys):
     assert_("PyVRP" in printed)
     assert_("Time" in printed)
     assert_("Iters" in printed)
-    assert_("Curr" in printed)
-    assert_("Cand" in printed)
+    assert_("Current" in printed)
+    assert_("Candidate" in printed)
     assert_("Best" in printed)
 
     # Check that we include the cost and total runtime in the output somewhere.

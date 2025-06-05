@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 # Templates for various different outputs.
 _ITERATION = (
-    "{special} {iters:>7} {elapsed:>6}s | {curr:>8} {cand:>8} {best:>8}"
+    "{special} {iters:>7} {elapsed:>6}s | {curr:>10} {cand:>10} {best:>10}"
 )
 
 _START = """PyVRP v{version}
@@ -20,8 +20,8 @@ Solving an instance with:
     {client_text}
     {vehicle_text} ({vehicle_type_text})
 
-                  |   Cost (Feasible)
-    Iters    Time |   Curr    Cand     Best       """
+                  |  Cost (Feasible)
+    Iters    Time |   Current    Candidate    Best    """
 
 _RESTART = "R                 |                restart"
 
