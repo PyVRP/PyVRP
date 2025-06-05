@@ -1222,8 +1222,14 @@ def test_vehicle_max_trips_is_one_if_no_reload_depots(ok_small):
     assert_equal(veh_type.max_trips, 1)
 
 
-def test_has_time_windows():
+def test_has_time_windows(small_cvrp, pr107, small_spd, ok_small, rc208):
     """
-    TODO
+    Tests that ``has_time_windows()`` correctly identifies whether instances
+    have meaningful time window restrictions.
     """
-    pass
+    assert_(ok_small.has_time_windows())  # is VRPTW
+    assert_(rc208.has_time_windows())  # is also VRPTW
+
+    assert_(not pr107.has_time_windows())  # is TSP
+    assert_(not small_cvrp.has_time_windows())  # is CVRP
+    assert_(not small_spd.has_time_windows())  # is VRPSPD

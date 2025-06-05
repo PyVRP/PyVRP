@@ -1119,8 +1119,35 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
     assert_equal(route.has_distance_cost(), expected)
 
 
-def test_has_duration_cost():
+@pytest.mark.parametrize(
+    ("veh_type", "depot", "expected"),
+    [
+        (VehicleType(), Depot(0, 0), False),  # default has no cost
+        (VehicleType(), Depot(0, 0, tw_early=1), True),  # constraint (data)
+        (VehicleType(), Depot(0, 0, tw_late=1), True),  # constraint (data)
+        (VehicleType(start_late=5), Depot(0, 0), True),  # constraint (vehicle)
+        (VehicleType(tw_early=5), Depot(0, 0), True),  # constraint (vehicle)
+        (VehicleType(tw_late=5), Depot(0, 0), True),  # constraint (vehicle)
+        (VehicleType(max_duration=0), Depot(0, 0), True),  # constraint (veh)
+        (VehicleType(unit_duration_cost=1), Depot(0, 0), True),  # cost
+    ],
+)
+def test_has_duration_cost(
+    veh_type: VehicleType,
+    depot: Depot,
+    expected: bool,
+):
     """
-    TODO
+    Tests that ``has_duration_cost()`` correctly identifies whether the vehicle
+    and/or instance has duration-related costs or (penalised) constraints.
     """
-    pass
+    data = ProblemData(
+        clients=[],
+        depots=[depot],
+        vehicle_types=[veh_type],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
+    )
+
+    route = Route(data, 0, 0)
+    assert_equal(route.has_duration_cost(), expected)
