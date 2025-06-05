@@ -12,11 +12,6 @@ repos:
     hooks:
       - id: nbstripout
 
-  - repo: https://github.com/psf/black
-    rev: 22.12.0
-    hooks:
-      - id: black-jupyter
-
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.11.10
     hooks:

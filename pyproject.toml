@@ -85,10 +85,6 @@ default-groups = ["build", "dev"]
 package = true
 
 
-[tool.black]
-line-length = 79
-
-
 [tool.ruff]
 line-length = 79
 
