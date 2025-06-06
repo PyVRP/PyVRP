@@ -65,7 +65,7 @@ class IteratedLocalSearch:
         search_method: SearchMethod,
         acceptance_criterion: AcceptanceCriterion,
         initial_solution: Solution,
-        params: IteratedLocalSearchParams,
+        params: IteratedLocalSearchParams = IteratedLocalSearchParams(),
     ):
         self._data = data
         self._pm = penalty_manager
@@ -84,9 +84,9 @@ class IteratedLocalSearch:
         return self._pm.booster_cost_evaluator()
 
     def _stats(self, solution: Solution) -> tuple[int, bool]:
-        cost = self._cost_evaluator.penalised_cost(solution)
-        is_feas = solution.is_feasible()
-        return cost, is_feas
+        penalised_cost = self._cost_evaluator.penalised_cost(solution)
+        is_feasible = solution.is_feasible()
+        return penalised_cost, is_feasible
 
     def run(
         self,
@@ -137,21 +137,16 @@ class IteratedLocalSearch:
                 )
                 self._pm.register(candidate)
 
-            # We now check if the candidate should be accepted. We only
-            # want to accept feasible solutions, so we use the regular
-            # cost instead of the penalised cost. That's also important
-            # in case the best solution was infeasible.
-            cand_feas = candidate.is_feasible()
-            cand_cost = self._cost_evaluator.cost(candidate)
-            curr_cost = self._cost_evaluator.cost(current)
-            best_cost = self._cost_evaluator.cost(best)
-
-            # But first we want to collect stats about the penalised cost.
             stats.collect(
                 *self._stats(current),
                 *self._stats(candidate),
                 *self._stats(best),
             )
+
+            cand_feas = candidate.is_feasible()
+            cand_cost = self._cost_evaluator.cost(candidate)
+            curr_cost = self._cost_evaluator.cost(current)
+            best_cost = self._cost_evaluator.cost(best)
 
             if cand_feas and cand_cost < best_cost:  # new best
                 best = candidate
