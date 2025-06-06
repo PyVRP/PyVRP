@@ -142,22 +142,23 @@ class IteratedLocalSearch:
                 *self._stats(candidate),
                 *self._stats(best),
             )
+            print_progress.iteration(stats)
 
-            cand_feas = candidate.is_feasible()
+            if not candidate.is_feasible():
+                continue  # skip infeasible candidates
+
             cand_cost = self._cost_evaluator.cost(candidate)
             curr_cost = self._cost_evaluator.cost(current)
             best_cost = self._cost_evaluator.cost(best)
 
-            if cand_feas and cand_cost < best_cost:  # new best
+            if cand_cost < best_cost:  # new best
                 best = candidate
                 iters_no_improvement = 1
             else:
                 iters_no_improvement += 1
 
-            if cand_feas and self._accept(best_cost, curr_cost, cand_cost):
+            if self._accept(best_cost, curr_cost, cand_cost):
                 current = candidate
-
-            print_progress.iteration(stats)
 
         runtime = time.perf_counter() - start
         res = Result(best, stats, iters, runtime)
