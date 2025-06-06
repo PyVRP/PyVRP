@@ -21,8 +21,8 @@ from pyvrp.diversity import broken_pairs_distance as bpd
     (
         "min_pop_size",
         "generation_size",
-        "nb_elite",
-        "nb_close",
+        "num_elite",
+        "num_close",
         "lb_diversity",
         "ub_diversity",
     ),
@@ -38,8 +38,8 @@ from pyvrp.diversity import broken_pairs_distance as bpd
 def test_params_constructor_throws_when_arguments_invalid(
     min_pop_size: int,
     generation_size: int,
-    nb_elite: int,
-    nb_close: int,
+    num_elite: int,
+    num_close: int,
     lb_diversity: float,
     ub_diversity: float,
 ):
@@ -50,8 +50,8 @@ def test_params_constructor_throws_when_arguments_invalid(
         PopulationParams(
             min_pop_size,
             generation_size,
-            nb_elite,
-            nb_close,
+            num_elite,
+            num_close,
             lb_diversity,
             ub_diversity,
         )
@@ -61,16 +61,16 @@ def test_params_constructor_throws_when_arguments_invalid(
     (
         "min_pop_size",
         "generation_size",
-        "nb_elite",
-        "nb_close",
+        "num_elite",
+        "num_close",
         "lb_diversity",
         "ub_diversity",
     ),
     [
         (1, 1, 1, 1, 0.0, 0.5),  # >0 min_pop_size
         (1, 0, 1, 1, 0.0, 0.5),  # 0 generation_size
-        (1, 1, 0, 1, 0.0, 0.5),  # 0 nb_elite
-        (1, 1, 1, 0, 0.0, 0.5),  # 0 nb_close
+        (1, 1, 0, 1, 0.0, 0.5),  # 0 num_elite
+        (1, 1, 1, 0, 0.0, 0.5),  # 0 num_close
         (1, 1, 1, 1, 0.0, 0.5),  # 0 lb_diversity
         (1, 1, 1, 1, 0.0, 1.0),  # 1 ub_diversity
     ],
@@ -78,8 +78,8 @@ def test_params_constructor_throws_when_arguments_invalid(
 def test_params_constructor_does_not_raise_when_arguments_valid(
     min_pop_size: int,
     generation_size: int,
-    nb_elite: int,
-    nb_close: int,
+    num_elite: int,
+    num_close: int,
     lb_diversity: float,
     ub_diversity: float,
 ):
@@ -89,16 +89,16 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     params = PopulationParams(
         min_pop_size,
         generation_size,
-        nb_elite,
-        nb_close,
+        num_elite,
+        num_close,
         lb_diversity,
         ub_diversity,
     )
 
     assert_equal(params.min_pop_size, min_pop_size)
     assert_equal(params.generation_size, generation_size)
-    assert_equal(params.nb_elite, nb_elite)
-    assert_equal(params.nb_close, nb_close)
+    assert_equal(params.num_elite, num_elite)
+    assert_equal(params.num_close, num_close)
     assert_allclose(params.lb_diversity, lb_diversity)
     assert_allclose(params.ub_diversity, ub_diversity)
     assert_equal(params.max_pop_size, min_pop_size + generation_size)
@@ -213,15 +213,15 @@ def test_pop_is_empty_with_zero_min_pop_size_and_generation_size(ok_small):
         assert_equal(len(pop), 0)
 
 
-@mark.parametrize("nb_elite", [5, 25])
-def test_elite_solutions_are_not_purged(rc208, nb_elite: int):
+@mark.parametrize("num_elite", [5, 25])
+def test_elite_solutions_are_not_purged(rc208, num_elite: int):
     """
     Tests that elite solutions - those considered of such high quality that
     they should be given special treatment - are not purged during survivor
     selection.
     """
     cost_evaluator = CostEvaluator([20], 6, 0)
-    params = PopulationParams(nb_elite=nb_elite)
+    params = PopulationParams(num_elite=num_elite)
     rng = RandomNumberGenerator(seed=42)
 
     pop = Population(bpd, params=params)
@@ -237,7 +237,7 @@ def test_elite_solutions_are_not_purged(rc208, nb_elite: int):
     # should never be purged.
     curr_sols = [sol for sol in pop if not sol.is_feasible()]
     best_sols = sorted(curr_sols, key=cost_evaluator.penalised_cost)
-    elite_sols = best_sols[:nb_elite]
+    elite_sols = best_sols[:num_elite]
 
     # Add a solution that is certainly not feasible, thus causing a purge.
     single_route = list(range(rc208.num_depots, rc208.num_locations))
