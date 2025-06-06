@@ -32,7 +32,7 @@ class GeneticAlgorithmParams:
         Probability (in :math:`[0, 1]`) of repairing an infeasible solution.
         If the reparation makes the solution feasible, it is also added to
         the population in the same iteration.
-    nb_iter_no_improvement
+    num_iter_no_improvement
         Number of iterations without any improvement needed before a restart
         occurs.
 
@@ -40,25 +40,25 @@ class GeneticAlgorithmParams:
     ----------
     repair_probability
         Probability of repairing an infeasible solution.
-    nb_iter_no_improvement
+    num_iter_no_improvement
         Number of iterations without improvement before a restart occurs.
 
     Raises
     ------
     ValueError
         When ``repair_probability`` is not in :math:`[0, 1]`, or
-        ``nb_iter_no_improvement`` is negative.
+        ``num_iter_no_improvement`` is negative.
     """
 
     repair_probability: float = 0.80
-    nb_iter_no_improvement: int = 20_000
+    num_iter_no_improvement: int = 20_000
 
     def __post_init__(self):
         if not 0 <= self.repair_probability <= 1:
             raise ValueError("repair_probability must be in [0, 1].")
 
-        if self.nb_iter_no_improvement < 0:
-            raise ValueError("nb_iter_no_improvement < 0 not understood.")
+        if self.num_iter_no_improvement < 0:
+            raise ValueError("num_iter_no_improvement < 0 not understood.")
 
 
 class GeneticAlgorithm:
@@ -171,7 +171,7 @@ class GeneticAlgorithm:
         while not stop(self._cost_evaluator.cost(self._best)):
             iters += 1
 
-            if iters_no_improvement == self._params.nb_iter_no_improvement:
+            if iters_no_improvement == self._params.num_iter_no_improvement:
                 print_progress.restart()
 
                 iters_no_improvement = 1

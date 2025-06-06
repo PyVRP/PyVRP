@@ -88,7 +88,7 @@ def test_raises_when_neighbourhood_contains_self_or_depot(ok_small):
     (
         "weight_wait_time",
         "weight_time_warp",
-        "nb_granular",
+        "num_neighbours",
         "symmetric_proximity",
         "symmetric_neighbours",
     ),
@@ -104,7 +104,7 @@ def test_local_search_set_get_neighbours(
     rc208,
     weight_wait_time: int,
     weight_time_warp: int,
-    nb_granular: int,
+    num_neighbours: int,
     symmetric_proximity: bool,
     symmetric_neighbours: bool,
 ):
@@ -113,14 +113,14 @@ def test_local_search_set_get_neighbours(
     """
     rng = RandomNumberGenerator(seed=42)
 
-    params = NeighbourhoodParams(nb_granular=1)
+    params = NeighbourhoodParams(num_neighbours=1)
     prev_neighbours = compute_neighbours(rc208, params)
     ls = LocalSearch(rc208, rng, prev_neighbours)
 
     params = NeighbourhoodParams(
         weight_wait_time,
         weight_time_warp,
-        nb_granular,
+        num_neighbours,
         symmetric_proximity,
         symmetric_neighbours,
     )

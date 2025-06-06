@@ -974,8 +974,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::init<size_t, size_t, size_t, size_t, double, double>(),
              py::arg("min_pop_size") = 25,
              py::arg("generation_size") = 40,
-             py::arg("nb_elite") = 4,
-             py::arg("nb_close") = 5,
+             py::arg("num_elite") = 4,
+             py::arg("num_close") = 5,
              py::arg("lb_diversity") = 0.1,
              py::arg("ub_diversity") = 0.5)
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
@@ -984,8 +984,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("max_pop_size",
                                &PopulationParams::maxPopSize,
                                DOC(pyvrp, PopulationParams, maxPopSize))
-        .def_readonly("nb_elite", &PopulationParams::nbElite)
-        .def_readonly("nb_close", &PopulationParams::nbClose)
+        .def_readonly("num_elite", &PopulationParams::numElite)
+        .def_readonly("num_close", &PopulationParams::numClose)
         .def_readonly("lb_diversity", &PopulationParams::lbDiversity)
         .def_readonly("ub_diversity", &PopulationParams::ubDiversity);
 

@@ -10,14 +10,14 @@ using iter = std::vector<SubPopulation::Item>::iterator;
 
 PopulationParams::PopulationParams(size_t minPopSize,
                                    size_t generationSize,
-                                   size_t nbElite,
-                                   size_t nbClose,
+                                   size_t numElite,
+                                   size_t numClose,
                                    double lbDiversity,
                                    double ubDiversity)
     : minPopSize(minPopSize),
       generationSize(generationSize),
-      nbElite(nbElite),
-      nbClose(nbClose),
+      numElite(numElite),
+      numClose(numClose),
       lbDiversity(lbDiversity),
       ubDiversity(ubDiversity)
 {
@@ -155,8 +155,8 @@ void SubPopulation::updateFitness(CostEvaluator const &costEvaluator)
     std::stable_sort(diversity.begin(), diversity.end());
 
     auto const popSize = static_cast<double>(size());
-    auto const nbElite = std::min(params.nbElite, size());
-    auto const divWeight = 1 - nbElite / popSize;
+    auto const numElite = std::min(params.numElite, size());
+    auto const divWeight = 1 - numElite / popSize;
 
     for (size_t divRank = 0; divRank != size(); divRank++)
     {
@@ -168,7 +168,7 @@ void SubPopulation::updateFitness(CostEvaluator const &costEvaluator)
 
 double SubPopulation::Item::avgDistanceClosest() const
 {
-    auto const maxSize = std::min(proximity.size(), params->nbClose);
+    auto const maxSize = std::min(proximity.size(), params->numClose);
     auto result = 0.0;
 
     for (size_t idx = 0; idx != maxSize; ++idx)
