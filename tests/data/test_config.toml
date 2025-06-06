@@ -11,7 +11,7 @@ route_ops = [
 
 [genetic]
 repair_probability = 0.1
-num_iter_no_improvement = 200
+num_iters_no_improvement = 200
 
 
 [population]
