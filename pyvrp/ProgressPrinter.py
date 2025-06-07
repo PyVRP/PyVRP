@@ -54,8 +54,8 @@ class ProgressPrinter:
     def iteration(self, stats: Statistics):
         """
         Outputs relevant information every five hundred iterations. The output
-        contains information about the cost and feasibility of the current,
-        candidate, and best solutions, as well as the search duration.
+        contains information about the (penalised) cost and feasibility of the
+        current, candidate, and best solutions, as well as the search duration.
         """
         should_print = (
             self._print
@@ -66,23 +66,22 @@ class ProgressPrinter:
         if not should_print:
             return
 
-        data = stats.data[-1]
-
-        def format_cost(cost: int, is_feas: bool):
+        def _format(cost: int, is_feas: bool):
             return f"{round(cost)} {'(Y)' if is_feas else '(N)'}"
 
+        datum = stats.data[-1]
         msg = _ITERATION.format(
-            special="H" if data.best_cost < self._best_cost else " ",
+            special="H" if datum.best_cost < self._best_cost else " ",
             iters=stats.num_iterations,
             elapsed=round(sum(stats.runtimes)),
-            curr=format_cost(data.current_cost, data.current_feas),
-            cand=format_cost(data.candidate_cost, data.candidate_feas),
-            best=format_cost(data.best_cost, data.best_feas),
+            curr=_format(datum.current_cost, datum.current_feas),
+            cand=_format(datum.candidate_cost, datum.candidate_feas),
+            best=_format(datum.best_cost, datum.best_feas),
         )
         print(msg)
 
-        if data.best_cost < self._best_cost:
-            self._best_cost = data.best_cost
+        if datum.best_cost < self._best_cost:
+            self._best_cost = datum.best_cost
 
     def start(self, data: ProblemData):
         """

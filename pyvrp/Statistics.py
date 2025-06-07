@@ -64,15 +64,15 @@ class Statistics:
         Parameters
         ----------
         current_cost
-            Cost of the current solution.
+            Penalised cost of the current solution.
         current_feas
             Whether the current solution is feasible.
         candidate_cost
-            Cost of the candidate solution.
+            Penalised cost of the candidate solution.
         candidate_feas
             Whether the candidate solution is feasible.
         best_cost
-            Cost of the best solution found so far.
+            Penalised cost of the best solution found so far.
         best_feas
             Whether the best solution found so far is feasible.
         """

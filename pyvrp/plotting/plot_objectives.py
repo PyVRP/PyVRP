@@ -40,10 +40,10 @@ def plot_objectives(
     x = 1 + np.arange(result.num_iterations)
 
     y = [d.current_cost for d in result.stats.data]
-    _plot(x, y, label="Current", alpha=1, lw=1)
+    _plot(x, y, label="Current")
 
     y = [d.best_cost for d in result.stats.data]
-    _plot(x, y, label="Best", alpha=1, lw=1)
+    _plot(x, y, label="Best")
 
     # Use best-found solution to set reasonable y-limits, if available.
     if result.is_feasible():

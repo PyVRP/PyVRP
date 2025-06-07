@@ -145,7 +145,7 @@ class IteratedLocalSearch:
             print_progress.iteration(stats)
 
             if not candidate.is_feasible():
-                continue  # skip infeasible candidates
+                continue  # don't accept infeasible candidates
 
             cand_cost = self._cost_evaluator.cost(candidate)
             curr_cost = self._cost_evaluator.cost(current)
