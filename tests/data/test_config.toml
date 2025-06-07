@@ -10,7 +10,7 @@ route_ops = [
 
 
 perturbation_ops = [
-    "NeighbourhoodRemoval",
+    "NeighbourRemoval",
 ]
 
 

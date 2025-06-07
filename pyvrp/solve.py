@@ -126,7 +126,7 @@ class SolveParams:
             route_ops = [getattr(pyvrp.search, op) for op in data["route_ops"]]
 
         perturbation_ops = PERTURBATION_OPERATORS
-        if "perurbation_ops" in data:
+        if "perturbation_ops" in data:
             perturbation_ops = [
                 getattr(pyvrp.search, op) for op in data["perturbation_ops"]
             ]
