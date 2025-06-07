@@ -625,3 +625,40 @@ def test_bug_evaluating_move_with_initial_load():
     # This move just permutes the solution, turning route1 into route2, and
     # vice versa. Thus, the delta cost of this move should be zero.
     assert_equal(op.evaluate(route1[1], route2[1], cost_eval), 0)
+
+
+def test_bug_release_time_shift_time_windows():
+    """
+    Tests that a bug involving release times and restricted vehicle shifts has
+    been fixed. See #852 for details.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0, tw_early=2, release_time=2),
+            Client(x=0, y=0, tw_early=2, release_time=2),
+        ],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(), VehicleType(tw_late=1)],
+        distance_matrices=[np.zeros((3, 3), dtype=int)],
+        duration_matrices=[np.zeros((3, 3), dtype=int)],
+    )
+
+    route1 = Route(data, idx=0, vehicle_type=0)
+    route1.append(Node(loc=1))
+    route1.update()
+    assert_(route1.is_feasible())
+
+    # Vehicle's time windows are constrained to [0, 1], but client 2 is not
+    # released until 2. So there's a unit of time warp when we leave the depot.
+    # Then we have to wait until 2 at the client, and have another unit of time
+    # warp when we return to the depot.
+    route2 = Route(data, idx=1, vehicle_type=1)
+    route2.append(Node(loc=2))
+    route2.update()
+    assert_equal(route2.time_warp(), 2)
+
+    # This move proposes inserting 1 before 2 in route2. That changes nothing
+    # about route2's time warp, so the move should not affect costs.
+    op = Exchange10(data)
+    cost_eval = CostEvaluator([], 1, 0)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
