@@ -614,8 +614,9 @@ def test_bug_release_time_shift_time_windows():
     assert_(route1.is_feasible())
 
     # Vehicle's time windows are constrained to [0, 1], but client 2 is not
-    # released until 2. So there's a unit of time warp when we leave the depot,
-    # and another when we return.
+    # released until 2. So there's a unit of time warp when we leave the depot.
+    # Then we have to wait until 2 at the client, and have another unit of time
+    # warp when we return to the depot.
     route2 = make_search_route(data, [2], idx=1, vehicle_type=1)
     assert_equal(route2.time_warp(), 2)
 
