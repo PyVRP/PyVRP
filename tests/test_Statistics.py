@@ -1,29 +1,18 @@
 import pytest
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import (
-    CostEvaluator,
-    Population,
-    RandomNumberGenerator,
-    Solution,
-    Statistics,
-)
-from pyvrp.diversity import broken_pairs_distance
+from pyvrp import Statistics
 
 
-def test_csv_serialises_correctly(ok_small, tmp_path):
+def test_csv_serialises_correctly(tmp_path):
     """
     Tests that writing a CSV of a ``Statistics`` object and then reading that
     CSV again returns the same object.
     """
-    cost_evaluator = CostEvaluator([20], 6, 0)
-    rng = RandomNumberGenerator(seed=42)
-    pop = Population(broken_pairs_distance)
-
     collected_stats = Statistics()
-    for _ in range(10):  # populate the statistics object
-        pop.add(Solution.make_random(ok_small, rng), cost_evaluator)
-        collected_stats.collect_from(pop, cost_evaluator)
+
+    for idx in range(10):  # populate the statistics object
+        collected_stats.collect(idx, True, idx, True, idx, False)
 
     csv_path = tmp_path / "test.csv"
     assert_(not csv_path.exists())
@@ -40,39 +29,48 @@ def test_csv_serialises_correctly(ok_small, tmp_path):
 
 
 @pytest.mark.parametrize("num_iterations", [0, 5])
-def test_collect_a_data_point_per_iteration(ok_small, num_iterations: int):
+def test_collect_a_data_point_per_iteration(num_iterations: int):
     """
-    Tests that the statistics object collects on feasible and infeasible data
-    point every time ``collect_from`` is called.
+    Tests that the statistics object collects solution statistics every time
+    ``collect`` is called.
     """
-    cost_evaluator = CostEvaluator([20], 6, 0)
-    rng = RandomNumberGenerator(seed=42)
-    pop = Population(broken_pairs_distance)
-
     stats = Statistics()
     assert_(stats.is_collecting())
 
     for _ in range(num_iterations):  # populate the statistics object
-        pop.add(Solution.make_random(ok_small, rng), cost_evaluator)
-        stats.collect_from(pop, cost_evaluator)
+        stats.collect(1, True, 2, True, 3, True)
 
-    assert_equal(len(stats.feas_stats), num_iterations)
-    assert_equal(len(stats.infeas_stats), num_iterations)
+    assert_equal(len(stats.data), num_iterations)
+
+
+def test_data_point_matches_collect():
+    """
+    Tests that the data point collected matches with the values passed to
+    ``collect()``.
+    """
+    stats = Statistics()
+    stats.collect(1, True, 2, True, 3, False)
+
+    datum = stats.data[0]
+
+    assert_equal(datum.current_cost, 1)
+    assert_(datum.current_feas)
+
+    assert_equal(datum.candidate_cost, 2)
+    assert_(datum.candidate_feas)
+
+    assert_equal(datum.best_cost, 3)
+    assert_(not datum.best_feas)
 
 
 @pytest.mark.parametrize("num_iterations", [0, 1, 10])
-def test_eq(ok_small, num_iterations: int):
+def test_eq(num_iterations: int):
     """
     Tests the equality operator.
     """
-    cost_evaluator = CostEvaluator([20], 6, 0)
-    rng = RandomNumberGenerator(seed=42)
-    pop = Population(broken_pairs_distance)
-
     stats = Statistics()
     for _ in range(num_iterations):  # populate the statistics object
-        pop.add(Solution.make_random(ok_small, rng), cost_evaluator)
-        stats.collect_from(pop, cost_evaluator)
+        stats.collect(1, True, 2, True, 3, True)
 
     assert_equal(stats, stats)
     assert_(stats != "test")
@@ -80,37 +78,24 @@ def test_eq(ok_small, num_iterations: int):
     if num_iterations > 0:
         assert_(stats != Statistics())
 
-        # Tests equality for same objects. Part of that is that the NaN values
-        # for data points of size == 0 are not compared.
-        assert_equal(stats.feas_stats[0], stats.feas_stats[0])
-        assert_equal(stats.infeas_stats[0], stats.infeas_stats[0])
-
-        assert_(stats.feas_stats[0] != "test")
-        assert_(stats.infeas_stats[0] != "test")
-
 
 def test_more_eq():
     """
     Tests the equality operator for the same population trajectory.
     """
-    cost_evaluator = CostEvaluator([20], 6, 0)
-    pop = Population(broken_pairs_distance)
-    assert_equal(len(pop), 0)
-
     stats1 = Statistics()
     stats2 = Statistics()
 
     assert_equal(stats1, stats2)
-    assert_(stats1, stats1)
     assert_(stats1 != "str")
 
-    stats1.collect_from(pop, cost_evaluator)
+    stats1.collect(1, True, 2, True, 3, False)
     assert_(stats1 != stats2)
 
     # Now do the same thing for stats2, so they have the seen the exact same
     # population trajectory. That, however, is not enough: the runtimes are
     # still slightly different.
-    stats2.collect_from(pop, cost_evaluator)
+    stats2.collect(1, True, 2, True, 3, False)
     assert_(stats1 != stats2)
 
     # But once we fix that the two should be the exact same again.
@@ -126,9 +111,7 @@ def test_not_collecting():
     stats = Statistics(collect_stats=False)
     assert_(not stats.is_collecting())
 
-    cost_eval = CostEvaluator([1], 1, 1)
-    pop = Population(broken_pairs_distance)
-    stats.collect_from(pop, cost_eval)
-    stats.collect_from(pop, cost_eval)
+    stats.collect(1, True, 2, True, 3, False)
+    stats.collect(1, True, 2, True, 3, False)
 
     assert_equal(stats, Statistics(collect_stats=False))

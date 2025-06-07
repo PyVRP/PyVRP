@@ -195,7 +195,7 @@ class GeneticAlgorithm:
             else:
                 iters_no_improvement += 1
 
-            stats.collect_from(self._pop, self._cost_evaluator)
+            stats.collect_from(self._pop, self._cost_evaluator)  # type: ignore
             print_progress.iteration(stats)
 
         end = time.perf_counter() - start

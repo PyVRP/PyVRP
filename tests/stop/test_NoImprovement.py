@@ -1,7 +1,15 @@
-from numpy.testing import assert_, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp.stop import NoImprovement
+
+
+def test_attribute_max_iterations():
+    """
+    Tests that the ``max_iterations`` attribute is set correctly.
+    """
+    stop = NoImprovement(100)
+    assert_equal(stop.max_iterations, 100)
 
 
 @mark.parametrize("max_iterations", [-10, -100, -1000])
