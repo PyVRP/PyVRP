@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 from pyvrp.Result import Result
 
@@ -10,7 +11,7 @@ def plot_objectives(
     ylim_adjust: tuple[float, float] = (0.95, 1.15),
 ):
     """
-    Plots each subpopulation's objective values.
+    Plots each iteration's current and best objective values.
 
     Parameters
     ----------
@@ -36,7 +37,13 @@ def plot_objectives(
     def _plot(x, y, *args, **kwargs):
         ax.plot(x[num_to_skip:], y[num_to_skip:], *args, **kwargs)
 
-    # TODO update later
+    x = 1 + np.arange(result.num_iterations)
+
+    y = [d.current_cost for d in result.stats.data]
+    _plot(x, y, label="Current", alpha=1, lw=1)
+
+    y = [d.best_cost for d in result.stats.data]
+    _plot(x, y, label="Best", alpha=1, lw=1)
 
     # Use best-found solution to set reasonable y-limits, if available.
     if result.is_feasible():

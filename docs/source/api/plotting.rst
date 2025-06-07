@@ -16,10 +16,6 @@ These can be used to better understand your problem, and to help investigate the
 
    .. autofunction:: plot_demands
 
-.. automodule:: pyvrp.plotting.plot_diversity
-
-   .. autofunction:: plot_diversity
-
 .. automodule:: pyvrp.plotting.plot_instance
 
    .. autofunction:: plot_instance
