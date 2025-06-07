@@ -624,5 +624,4 @@ def test_bug_release_time_shift_time_windows():
     # about route2's time warp, so the move should not affect costs.
     op = Exchange10(data)
     cost_eval = CostEvaluator([], 1, 0)
-    delta_cost = op.evaluate(route1[1], route2[0], cost_eval)
-    assert_equal(delta_cost, 0)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
