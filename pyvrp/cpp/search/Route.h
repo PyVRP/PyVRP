@@ -1022,15 +1022,15 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 
             if (other.endsAtReloadDepot())
             {
-                // We can only finalise the current segment at the depot, so we
-                // need to travel there. The depot time windows restrictions are
-                // already handled by the other segment.
-                ds = DurationSegment::merge(edgeDur, {}, ds);
+                // The other segment ends at a reload depot, so we go there and
+                // finalise the current segment. We first travel there. We need
+                // to end the segment within the depot's time windows to
+                // properly account for any release time on our segment.
+                ProblemData::Depot const &depot = data.location(other.last());
+                ds = DurationSegment::merge(edgeDur, {depot}, ds);
                 ds = ds.finaliseFront();
 
-                // We finalise by travelling to the depot, so the remaining
-                // travel duration is now zero.
-                edgeDur = 0;
+                edgeDur = 0;  // we are already there!
             }
 
             ds = DurationSegment::merge(edgeDur, other.duration(profile), ds);
