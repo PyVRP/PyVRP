@@ -597,7 +597,7 @@ def test_supports(operator, instance, request):
 def test_bug_release_time_shift_time_windows():
     """
     Tests that a bug involving release times and restricted vehicle shifts has
-    been fixed.
+    been fixed. See #852 for details.
     """
     data = ProblemData(
         clients=[
