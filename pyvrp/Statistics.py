@@ -20,7 +20,13 @@ class _Datum:
 
 class Statistics:
     """
-    Statistics about the iterated local search progress.
+    Statistics about the iterated local search (ILS) progress.
+
+    Parameters
+    ----------
+    collect_stats
+        Whether to collect statistics at all. This can be turned off to avoid
+        excessive memory use on long runs.
     """
 
     def __init__(self, collect_stats: bool = True):
@@ -54,6 +60,21 @@ class Statistics:
     ):
         """
         Collects statistics from the ILS iteration.
+
+        Parameters
+        ----------
+        current_cost
+            Cost of the current solution.
+        current_feas
+            Whether the current solution is feasible.
+        candidate_cost
+            Cost of the candidate solution.
+        candidate_feas
+            Whether the candidate solution is feasible.
+        best_cost
+            Cost of the best solution found so far.
+        best_feas
+            Whether the best solution found so far is feasible.
         """
         if not self._collect_stats:
             return
@@ -104,7 +125,6 @@ class Statistics:
             for name, value in row.items():
                 if name in field2type:
                     if field2type[name] is bool:
-                        # TODO make this more robust?
                         datum[name] = value.lower() == "true"
                     else:
                         datum[name] = field2type[name](value)
@@ -145,10 +165,6 @@ class Statistics:
             Additional keyword arguments. These are passed to
             :class:`csv.DictWriter`.
         """
-        if not self.data:
-            print("No data to export.")
-            return
-
         field_names = [f.name for f in fields(_Datum)]
         data = [
             {f: v for f, v in zip(field_names, vars(datum).values())}
