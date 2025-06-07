@@ -719,7 +719,7 @@ size_t Route::SegmentBetween::last() const { return route_.visits[end]; }
 
 bool Route::SegmentBetween::startsAtReloadDepot() const
 {
-    return route_.nodes[end]->isReloadDepot();
+    return route_.nodes[start]->isReloadDepot();
 }
 bool Route::SegmentBetween::endsAtReloadDepot() const
 {
