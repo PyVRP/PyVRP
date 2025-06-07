@@ -1,7 +1,7 @@
 import csv
-import time
 from dataclasses import dataclass, fields
 from pathlib import Path
+from time import perf_counter
 
 
 @dataclass
@@ -28,7 +28,7 @@ class Statistics:
         self.num_iterations = 0
         self.data: list[_Datum] = []
 
-        self._clock = time.perf_counter()
+        self._clock = perf_counter()
         self._collect_stats = collect_stats
 
     def __eq__(self, other: object) -> bool:
@@ -59,7 +59,7 @@ class Statistics:
             return
 
         start = self._clock
-        self._clock = time.perf_counter()
+        self._clock = perf_counter()
 
         self.runtimes.append(self._clock - start)
         self.num_iterations += 1

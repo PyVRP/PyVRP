@@ -32,7 +32,7 @@ Best-found solution has cost {best_cost}.
 {summary}
 """
 
-NUM_ITERS_PRINT = 500
+_NUM_ITERS_PRINT = 500
 
 
 class ProgressPrinter:
@@ -53,14 +53,14 @@ class ProgressPrinter:
 
     def iteration(self, stats: Statistics):
         """
-        Outputs relevant information every thousand iterations. The output
+        Outputs relevant information every five hundred iterations. The output
         contains information about the cost and feasibility of the current,
         candidate, and best solutions, as well as the search duration.
         """
         should_print = (
             self._print
             and stats.is_collecting()
-            and stats.num_iterations % NUM_ITERS_PRINT == 0
+            and stats.num_iterations % _NUM_ITERS_PRINT == 0
         )
 
         if not should_print:
