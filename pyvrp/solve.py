@@ -194,7 +194,7 @@ def solve(
     max_runtime, max_iterations = _stop_params(stop)
     accept = MovingBestAverageThreshold(1, 100, max_runtime, max_iterations)
     pm = PenaltyManager.init_from(data, params.penalty)
-    init = ls(Solution(data, []), pm.booster_cost_evaluator())  # type: ignore
+    init = Solution(data, [])
 
     ils_args = (data, pm, rng, ls, accept, init, params.ils)
     algo = IteratedLocalSearch(*ils_args)  # type: ignore
