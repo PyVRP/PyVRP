@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 # Templates for various different outputs.
 _ITERATION = (
-    "{special} {iters:>7} {elapsed:>6}s | {curr:>10} {cand:>10} {best:>10}"
+    "{special} {iters:>7} {elapsed:>6}s | {curr:>12} {cand:>12} {best:>12}"
 )
 
 _START = """PyVRP v{version}
@@ -20,8 +20,8 @@ Solving an instance with:
     {client_text}
     {vehicle_text} ({vehicle_type_text})
 
-                  |  Cost (Feasible)
-    Iters    Time |   Current    Candidate    Best    """
+                  |          Cost (Feasible)
+    Iters    Time |      Current    Candidate         Best"""
 
 _RESTART = "R                 |                restart"
 
@@ -67,7 +67,7 @@ class ProgressPrinter:
             return
 
         def _format(cost: int, is_feas: bool):
-            return f"{round(cost)} {'(Y)' if is_feas else '(N)'}"
+            return f"{cost} {'(Y)' if is_feas else '(N)'}"
 
         datum = stats.data[-1]
         msg = _ITERATION.format(
@@ -121,7 +121,7 @@ class ProgressPrinter:
             msg = _END.format(
                 iters=result.num_iterations,
                 runtime=result.runtime,
-                best_cost=round(result.cost(), 2),
+                best_cost=result.cost(),
                 summary=result.summary(),
             )
             print(msg)

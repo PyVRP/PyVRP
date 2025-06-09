@@ -81,7 +81,7 @@ def test_eq(num_iterations: int):
 
 def test_more_eq():
     """
-    Tests the equality operator for the same population trajectory.
+    Tests the equality operator for the same search trajectory.
     """
     stats1 = Statistics()
     stats2 = Statistics()
@@ -93,7 +93,7 @@ def test_more_eq():
     assert_(stats1 != stats2)
 
     # Now do the same thing for stats2, so they have the seen the exact same
-    # population trajectory. That, however, is not enough: the runtimes are
+    # search trajectory. That, however, is not enough: the runtimes are
     # still slightly different.
     stats2.collect(1, True, 2, True, 3, False)
     assert_(stats1 != stats2)
