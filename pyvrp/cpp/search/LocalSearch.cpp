@@ -53,11 +53,9 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     if (nodeOps.empty())
         return;
 
-    searchCompleted_ = false;
-    for (int step = 0; !searchCompleted_; ++step)
+    auto isPromising = [this](auto idx) { return nodes[idx].promising(); };
+    for (int step = 0; std::ranges::any_of(orderNodes, isPromising); ++step)
     {
-        searchCompleted_ = true;
-
         // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
         {
@@ -73,15 +71,26 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // Evaluate moves involving the client's group, if it is in any.
             applyGroupMoves(U, costEvaluator);
 
-            if (!U->route())  // we already evaluated inserting U, so there is
-                continue;     // nothing left to be done for this client.
+            // We already evaluated inserting U, so there is nothing left to
+            // be done for this client and we also clear its promising status.
+            if (!U->route())
+            {
+                U->clearPromising();
+                continue;
+            }
 
             // If U borders a reload depot, try removing it.
             applyDepotRemovalMove(p(U), costEvaluator);
             applyDepotRemovalMove(n(U), costEvaluator);
 
-            // We next apply the regular node operators. These work on pairs
-            // of nodes (U, V), where both U and V are in the solution.
+            // We next apply the regular operators that work on pairs of nodes
+            // of nodes (U, V), where both U and V are in the solution. We only
+            // do this if U is a promising candidate for improvement.
+            if (!U->promising())
+                continue;
+
+            U->clearPromising();
+
             for (auto const vClient : neighbours_[uClient])
             {
                 auto *V = &nodes[vClient];

@@ -14,14 +14,37 @@ void Route::Node::assign(Route *route, size_t idx, size_t trip)
     idx_ = idx;
     trip_ = trip;
     route_ = route;
+    markPromising();
 }
 
 void Route::Node::unassign()
 {
+    markPromising();
     idx_ = 0;
     trip_ = 0;
     route_ = nullptr;
 }
+
+void Route::Node::markPromising()
+{
+    if (this->isDepot())
+        return;
+
+    promising_ = true;
+
+    if (!route_)
+        return;
+
+    // If this node is/was in a route, then its direct neighbours are also
+    // affected and should be marked as promising.
+    if (!n(this)->isDepot())
+        n(this)->promising_ = true;
+
+    if (!p(this)->isDepot())
+        p(this)->promising_ = true;
+}
+
+void Route::Node::clearPromising() { promising_ = false; }
 
 Route::Iterator::Iterator(std::vector<Node *> const &nodes, size_t idx)
     : nodes_(&nodes), idx_(idx)
@@ -215,6 +238,9 @@ void Route::swap(Node *first, Node *second)
     std::swap(first->route_, second->route_);
     std::swap(first->idx_, second->idx_);
     std::swap(first->trip_, second->trip_);
+
+    first->markPromising();
+    second->markPromising();
 
 #ifndef NDEBUG
     if (first->route_)
