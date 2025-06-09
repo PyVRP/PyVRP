@@ -10,7 +10,6 @@ def test_csv_serialises_correctly(tmp_path):
     CSV again returns the same object.
     """
     collected_stats = Statistics()
-
     for idx in range(10):  # populate the statistics object
         collected_stats.collect(idx, True, idx, True, idx, False)
 

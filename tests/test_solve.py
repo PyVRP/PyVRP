@@ -88,19 +88,19 @@ def test_solve_custom_params(rc208):
     res = solve(rc208, stop=MaxIterations(20))
 
     # Skip the first datum because it's the empty initial solution with cost 0.
-    current = [datum.current_cost for datum in res.stats.data[1:]]
+    costs = [datum.current_cost for datum in res.stats.data[1:]]
 
-    def monotonically_increasing(arr) -> np.bool:
+    def monotonically_decreasing(arr) -> np.bool:
         return np.all(np.diff(arr) <= 0)
 
-    # Default parameters allow accepting worse solutions, so costs won't
-    # necessarily be monotonically increasing.
-    assert_(not monotonically_increasing(current))
+    # Default parameters allow accepting worse solutions, so the current costs
+    # won't necessarily be monotonically decreasing.
+    assert_(not monotonically_decreasing(costs))
 
     # Now configure MBAT to only accept improving solutions by setting
     # ``initial_weight`` to zero.
     params = SolveParams(mbat=MovingBestAverageThresholdParams(0))
     res = solve(rc208, stop=MaxIterations(20), params=params)
 
-    current = [datum.current_cost for datum in res.stats.data[1:]]
-    assert_(monotonically_increasing(current))
+    costs = [datum.current_cost for datum in res.stats.data[1:]]
+    assert_(monotonically_decreasing(costs))
