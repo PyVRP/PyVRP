@@ -22,3 +22,6 @@ All acceptance criteria implement the :class:`~pyvrp.accept.AcceptanceCriterion.
 
    .. autoclass:: MovingBestAverageThreshold
       :members:
+
+   .. autoclass:: MovingBestAverageThresholdParams
+      :members:

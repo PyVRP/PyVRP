@@ -1,6 +1,30 @@
+from dataclasses import dataclass
 from time import perf_counter
 
 import numpy as np
+
+
+@dataclass
+class MovingBestAverageThresholdParams:
+    """
+    Default parameters for the moving best average threshold.
+
+    Parameters
+    ----------
+    initial_weight
+        Initial weight to consider.
+    history_length
+        Length of the history to consider.
+    max_runtime
+        Maximum runtime in seconds.
+    max_iterations
+        Maximum number of iterations.
+    """
+
+    initial_weight: float = 1
+    history_length: int = 1000
+    max_runtime: float | None = None
+    max_iterations: int | None = None
 
 
 class MovingBestAverageThreshold:
