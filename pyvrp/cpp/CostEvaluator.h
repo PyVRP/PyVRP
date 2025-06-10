@@ -66,6 +66,11 @@ concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
  * dist_penalty
  *    The penalty for each unit of distance in excess of the vehicle's maximum
  *    distance constraint.
+ *
+ * Raises
+ * ------
+ * ValueError
+ *     When any of the given penalty terms are negative.
  */
 class CostEvaluator
 {

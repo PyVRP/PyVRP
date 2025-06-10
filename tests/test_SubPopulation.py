@@ -12,35 +12,35 @@ from pyvrp._pyvrp import SubPopulation
 from pyvrp.diversity import broken_pairs_distance as bpd
 
 
-@mark.parametrize("nb_close", [5, 10, 25])
-def test_avg_distance_closest_is_same_up_to_nb_close(rc208, nb_close: int):
+@mark.parametrize("num_close", [5, 10, 25])
+def test_avg_distance_closest_is_same_up_to_num_close(rc208, num_close: int):
     """
     Tests that the average distance of a solution to other solutions only looks
-    at the nearest ``nb_close`` solutions.
+    at the nearest ``num_close`` solutions.
     """
     cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=5)
 
     params = PopulationParams(
-        min_pop_size=0, generation_size=250, nb_close=nb_close
+        min_pop_size=0, generation_size=250, num_close=num_close
     )
 
     subpop = SubPopulation(bpd, params)
     assert_equal(len(subpop), 0)
 
-    for _ in range(nb_close):
+    for _ in range(num_close):
         subpop.add(Solution.make_random(rc208, rng), cost_evaluator)
 
-    # The first nb_close solutions all have each other in their "closest"
+    # The first num_close solutions all have each other in their "closest"
     # list. The averages only differ because each solution is themselves not
     # in their own list. So we would expect these values to all be pretty
     # similar.
     distances = np.array([item.avg_distance_closest() for item in subpop])
     assert_allclose(distances, distances.mean(), rtol=1 / len(subpop))
-    assert_equal(len(subpop), nb_close)
+    assert_equal(len(subpop), num_close)
 
     # Let's add a significantly larger set of solutions.
-    for _ in range(250 - nb_close):
+    for _ in range(250 - num_close):
         subpop.add(Solution.make_random(rc208, rng), cost_evaluator)
 
     # Now the "closest" lists should differ quite a bit between solutions,
@@ -56,7 +56,7 @@ def test_avg_distance_closest_for_single_route_solutions(rc208):
     route solution where it's easy to reason about what's going on.
     """
     cost_evaluator = CostEvaluator([20], 6, 0)
-    params = PopulationParams(min_pop_size=0, nb_close=10)
+    params = PopulationParams(min_pop_size=0, num_close=10)
 
     subpop = SubPopulation(bpd, params)
     assert_equal(len(subpop), 0)
@@ -95,7 +95,7 @@ def test_fitness_is_purely_based_on_cost_when_only_elites(rc208):
     """
     cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=51)
-    params = PopulationParams(nb_elite=25, min_pop_size=25)
+    params = PopulationParams(num_elite=25, min_pop_size=25)
     subpop = SubPopulation(bpd, params)
 
     for _ in range(params.min_pop_size):
@@ -130,7 +130,7 @@ def test_fitness_is_average_of_cost_and_diversity_when_no_elites(rc208):
     """
     cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=52)
-    params = PopulationParams(nb_elite=0, min_pop_size=25)
+    params = PopulationParams(num_elite=0, min_pop_size=25)
     subpop = SubPopulation(bpd, params)
 
     for _ in range(params.min_pop_size):
