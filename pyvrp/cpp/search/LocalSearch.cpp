@@ -17,6 +17,12 @@ Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
+
+    // Clear all nodes' promising status. This is necessary because inserting
+    // nodes in loadSolution() marks them as promising.
+    for (auto &node : nodes)
+        node.clearPromising();
+
     perturb(costEvaluator);
 
     while (true)
@@ -82,7 +88,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             applyGroupMoves(U, costEvaluator);
 
             // We already evaluated inserting U, so there is nothing left to
-            // be done for this client and we also clear its promising status.
+            // be done for this client and its no longer promising.
             if (!U->route())
             {
                 U->clearPromising();

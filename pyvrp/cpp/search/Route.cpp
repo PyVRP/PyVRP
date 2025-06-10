@@ -35,8 +35,7 @@ void Route::Node::markPromising()
     if (!route_)
         return;
 
-    // If this node is/was in a route, then its direct neighbours are also
-    // affected and should be marked as promising.
+    // Modifying the current node also affects neighbouring nodes.
     if (!n(this)->isDepot())
         n(this)->promising_ = true;
 
