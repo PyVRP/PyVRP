@@ -21,7 +21,7 @@ num_iters_no_improvement = 10
 [neighbourhood]
 weight_wait_time = 0
 weight_time_warp = 0
-nb_granular = 20
+num_neighbours = 20
 symmetric_proximity = true
 symmetric_neighbours = true
 
