@@ -9,7 +9,12 @@ from pyvrp import (
     Solution,
 )
 from pyvrp.accept import MovingBestAverageThreshold
-from pyvrp.search import Exchange10, LocalSearch, compute_neighbours
+from pyvrp.search import (
+    Exchange10,
+    LocalSearch,
+    NeighbourRemoval,
+    compute_neighbours,
+)
 from pyvrp.stop import MaxIterations
 from tests.helpers import read_solution
 
@@ -88,15 +93,34 @@ def test_restarts_after_no_improvement(rc208):
     improvement.
     """
     rng = RandomNumberGenerator(seed=42)
-    pm = PenaltyManager(initial_penalties=([20], 6, 6))
+    pm = PenaltyManager(initial_penalties=([1000], 1000, 1000))
+
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    accept = MovingBestAverageThreshold(0, 100)
+    ls.add_perturbation_operator(NeighbourRemoval(rc208, 20))
+    ls.add_node_operator(Exchange10(rc208))
+
+    accept = MovingBestAverageThreshold(1, 1)  # always accept
     bks = read_solution("data/RC208.sol", rc208)
-    ils_params = IteratedLocalSearchParams(num_iters_no_improvement=1)
+    ils_params = IteratedLocalSearchParams(num_iters_no_improvement=3)
     algo = IteratedLocalSearch(rc208, pm, rng, ls, accept, bks, ils_params)
 
-    algo.run(MaxIterations(10))
-    # TODO how to test this?
+    result = algo.run(MaxIterations(3))
+    data = result.stats.data
+
+    # The initial solution should match the cost of the BKS.
+    bks_cost = pm.cost_evaluator().penalised_cost(bks)
+    assert_equal(data[0].current_cost, bks_cost)
+
+    # The candidate found in the first iteration is worse than the BKS, but
+    # still accepted because of the acceptance criterion.
+    assert_(data[0].candidate_cost > bks_cost)
+    assert_equal(data[1].current_cost, data[0].candidate_cost)
+
+    # The candidate in the second iteration is also worse and accepted, but
+    # ILS restarts the search after 3 iterations without improvement and sets
+    # the current cost to the best-found solution so far.
+    assert_(data[1].candidate_cost > bks_cost)
+    assert_equal(data[2].current_cost, bks_cost)
 
 
 def test_ils_result_has_correct_info_stats(ok_small):

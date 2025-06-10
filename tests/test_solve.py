@@ -30,6 +30,7 @@ def test_default_values():
     assert_equal(params.ils, IteratedLocalSearchParams())
     assert_equal(params.penalty, PenaltyParams())
     assert_equal(params.neighbourhood, NeighbourhoodParams())
+    assert_equal(params.mbat, MovingBestAverageThresholdParams())
     assert_equal(params.node_ops, NODE_OPERATORS)
     assert_equal(params.route_ops, ROUTE_OPERATORS)
     assert_equal(params.perturbation_ops, PERTURBATION_OPERATORS)
