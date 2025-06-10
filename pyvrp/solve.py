@@ -208,8 +208,7 @@ def solve(
     for perturb_op in params.perturbation_ops:
         ls.add_perturbation_operator(perturb_op(data, 10))
 
-    # In case the convergence parameters are not set for MBAT, infer them from
-    # the stopping criterion.
+    # Infer MBAT convergence parameters from stopping criteria, if not set.
     mbat = copy(params.mbat)
     if mbat.max_runtime is None:
         mbat.max_runtime = _stop2runtime(stop)

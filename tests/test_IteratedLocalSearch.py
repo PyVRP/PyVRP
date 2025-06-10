@@ -116,9 +116,9 @@ def test_restarts_after_no_improvement(rc208):
     assert_(data[0].candidate_cost > bks_cost)
     assert_equal(data[1].current_cost, data[0].candidate_cost)
 
-    # The candidate in the second iteration is also worse and accepted, but
-    # ILS restarts the search after 3 iterations without improvement and sets
-    # the current cost to the best-found solution so far.
+    # The candidate in the second iteration is also worse and accepted.
+    # However, ILS restarts the search in the third iteration as there were
+    # not enough improving iterations, so the current cost is set to the BKS.
     assert_(data[1].candidate_cost > bks_cost)
     assert_equal(data[2].current_cost, bks_cost)
 
