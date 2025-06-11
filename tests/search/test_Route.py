@@ -1153,23 +1153,29 @@ def test_has_duration_cost(
     assert_equal(route.has_duration_cost(), expected)
 
 
-def test_empty_route_time_warp():
+def test_empty_route_non_zero_statistics():
     """
-    TODO Fixes a bug identified in #853.
+    This test checks that an empty route has no distance, load or duration
+    statistics. Fixes a bug identified in #853, where an empty search route
+    would have non-zero values as route statistics, resulting in false
+    improving local search moves.
     """
     mat = [
-        [0, 10, 10],
-        [10, 0, 10],
-        [10, 10, 0],
+        [0, 2, 1],
+        [2, 0, 1],
+        [1, 1, 0],
     ]
     data = ProblemData(
         depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
-        clients=[Client(x=0, y=0)],
+        clients=[Client(delivery=[1], x=0, y=0)],
         vehicle_types=[
             VehicleType(
                 num_available=1,
+                capacity=[1],
+                initial_load=[1],
                 start_depot=0,
                 end_depot=1,
+                max_distance=0,
                 max_duration=0,
             )
         ],
@@ -1177,10 +1183,22 @@ def test_empty_route_time_warp():
         distance_matrices=[mat],
     )
 
+    # Before the change, the empty route had non-zero statistics, because it
+    # would compute route statistics as if the route travelled from start_depot
+    # to end_depot.
     route = make_search_route(data, [])
-    assert_equal(route.time_warp(), 0)
+    assert_equal(route.distance(), 0)
+    assert_equal(route.excess_distance(), 0)
+    assert_equal(route.load(), [0])
+    assert_equal(route.excess_load(), [0])
     assert_equal(route.duration(), 0)
+    assert_equal(route.time_warp(), 0)
 
+    # Inserting a client should correctly compute the route's statistics.
     route = make_search_route(data, [2])
-    assert_equal(route.time_warp(), 20)
-    assert_equal(route.duration(), 20)
+    assert_equal(route.distance(), 2)
+    assert_equal(route.excess_distance(), 2)
+    assert_equal(route.load(), 2)
+    assert_equal(route.excess_load(), 1)
+    assert_equal(route.duration(), 2)
+    assert_equal(route.time_warp(), 2)

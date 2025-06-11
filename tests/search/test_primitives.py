@@ -262,3 +262,37 @@ def test_remove_consecutive_reload_depots(ok_small_multiple_trips):
 
     # And similarly removing the second depot should also be a no-op.
     assert_equal(remove_cost(route[4], data, CostEvaluator([1000], 0, 0)), 0)
+
+
+def test_empty_route_should_have_no_cost_bug():
+    """
+    Fixes a bug from #853 where inserting or removing a client involving an
+    empty route incorrectly accounted for the empty route's costs.
+    """
+    mat = [
+        [0, 5, 1],
+        [5, 0, 1],
+        [1, 1, 0],
+    ]
+    data = ProblemData(
+        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
+        clients=[Client(x=0, y=0)],
+        vehicle_types=[
+            VehicleType(1, start_depot=0, end_depot=1, max_duration=0),
+        ],
+        duration_matrices=[mat],
+        distance_matrices=[mat],
+    )
+
+    cost_eval = CostEvaluator([], 1, 1)
+    route = make_search_route(data, [])
+
+    # Inserting the client in this empty route results in distance (2) and
+    # time warp (2). Before fixing the bug, delta cost would take into account
+    # time warp of the empty route (-5).
+    assert_equal(insert_cost(Node(loc=2), route[0], data, cost_eval), 4)
+
+    # Removing the client and turning the route into an empty one should
+    # correctly account: the empty route costs should be zero.
+    route = make_search_route(data, [2])
+    assert_equal(remove_cost(route[1], data, cost_eval), -4)
