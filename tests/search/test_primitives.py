@@ -80,7 +80,9 @@ def test_insert_cost_between_different_depots(ok_small_multi_depot):
     cost_eval = CostEvaluator([0], 0, 0)
     dist_mat = data.distance_matrix(0)
 
-    delta = dist_mat[0, 2] + dist_mat[2, 1] - dist_mat[0, 1]
+    # The delta cost is the distance from the start depot to the new node, and
+    # back to the end depot. The original route was empty and had no cost.
+    delta = dist_mat[0, 2] + dist_mat[2, 1]
     assert_equal(insert_cost(Node(loc=2), route[0], data, cost_eval), delta)
 
 

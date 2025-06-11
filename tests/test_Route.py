@@ -363,26 +363,6 @@ def test_distance_duration_cost_calculations(ok_small):
     assert_equal(routes[1].duration_cost(), 5 * routes[1].duration())
 
 
-def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
-    """
-    Tests that empty routes correctly evaluate distance and duration travelled
-    between depots, even though there are no actual clients on the route.
-    """
-    vehicle_type = VehicleType(3, [10], start_depot=0, end_depot=1)
-    data = ok_small_multi_depot.replace(vehicle_types=[vehicle_type])
-
-    route = Route(data, [], vehicle_type=0)
-
-    assert_equal(route.start_depot(), 0)
-    assert_equal(route.end_depot(), 1)
-
-    dist_mat = data.distance_matrix(0)
-    assert_equal(route.distance(), dist_mat[0, 1])
-
-    dur_mat = data.duration_matrix(0)
-    assert_equal(route.duration(), dur_mat[0, 1])
-
-
 def test_bug_start_time_before_release_time():
     """
     Tests that the bug identified in https://github.com/PyVRP/PyVRP/issues/633
@@ -865,3 +845,8 @@ def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
     route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
     assert_equal([client for client in route], [1, 2])
     assert_equal(route.visits(), [1, 2])
+
+
+def test_empty_route_statistics():
+    # TODO
+    pass

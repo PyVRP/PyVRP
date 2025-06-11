@@ -28,6 +28,7 @@ public:
 
     size_t first() const { return depot_; }
     size_t last() const { return depot_; }
+    size_t size() const { return 1; }
 
     bool startsAtReloadDepot() const { return true; }
     bool endsAtReloadDepot() const { return true; }
