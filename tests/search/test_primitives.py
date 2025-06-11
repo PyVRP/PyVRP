@@ -285,14 +285,14 @@ def test_empty_route_should_have_no_cost_bug():
     )
 
     cost_eval = CostEvaluator([], 1, 1)
-    route = make_search_route(data, [])
 
-    # Inserting the client in this empty route results in distance (2) and
-    # time warp (2). Before fixing the bug, delta cost would take into account
-    # time warp of the empty route (-5).
+    # Inserting the client in an empty route results in distance (2) and
+    # time warp (2). Before fixing the bug, delta cost would also take into
+    # account the empty route's costs (5 distance and 5 time warp).
+    route = make_search_route(data, [])
     assert_equal(insert_cost(Node(loc=2), route[0], data, cost_eval), 4)
 
-    # Removing the client and turning the route into an empty one should
-    # correctly account: the empty route costs should be zero.
+    # Similarly, removing the client from the new route should only account
+    # for the distance and time warp of the client, and not the empty route.
     route = make_search_route(data, [2])
     assert_equal(remove_cost(route[1], data, cost_eval), -4)
