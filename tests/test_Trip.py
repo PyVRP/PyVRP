@@ -159,6 +159,7 @@ def test_empty_trip_statistics(ok_small_multi_depot):
     data = ok_small_multi_depot.replace(vehicle_types=[vehicle_type])
     trip = Trip(data, [], 0, 0, 1)
 
+    assert_equal(trip.distance(), 0)
     assert_equal(trip.delivery(), [0])
     assert_equal(trip.pickup(), [0])
     assert_equal(trip.load(), [0])

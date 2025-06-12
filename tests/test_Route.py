@@ -867,6 +867,7 @@ def test_empty_route_statistics(ok_small_multi_depot):
 
     assert_equal(route.delivery(), [0])
     assert_equal(route.pickup(), [0])
+    assert_equal(route.load(), [0])
     assert_equal(route.excess_load(), [0])
 
     assert_equal(route.duration(), 0)

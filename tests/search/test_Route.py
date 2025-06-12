@@ -1136,8 +1136,8 @@ def test_empty_route_non_zero_statistics():
     """
     This test checks that an empty route has no distance, load or duration
     statistics. Fixes a bug identified in #853, where an empty search route
-    would have non-zero values as route statistics, resulting in false
-    improving local search moves.
+    would have non-zero values data and resulted in false improving local
+    search moves.
     """
     mat = [
         [0, 2, 1],
@@ -1162,9 +1162,9 @@ def test_empty_route_non_zero_statistics():
         distance_matrices=[mat],
     )
 
-    # Before the change, the empty route had non-zero statistics, because it
-    # would compute route statistics as if the route travelled from start_depot
-    # to end_depot.
+    # Before the change, the empty route had non-zero statistics as if the
+    # route travelled from start_depot to end_depot. This led to incorrect
+    # delta cost computations.
     route = make_search_route(data, [])
     assert_equal(route.distance(), 0)
     assert_equal(route.excess_distance(), 0)
