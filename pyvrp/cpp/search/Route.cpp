@@ -335,10 +335,15 @@ void Route::update()
         }
 
         load_[dim] = 0;
-        excessLoad_[dim]
-            = loadBefore[dim][nodes.size() - 1].excessLoad(capacity);
-        for (auto it = depots_.begin() + 1; it != depots_.end(); ++it)
-            load_[dim] += loadBefore[dim][it->idx()].load();
+        if (empty())
+            excessLoad_[dim] = 0;
+        else
+        {
+            excessLoad_[dim]
+                = loadBefore[dim][nodes.size() - 1].excessLoad(capacity);
+            for (auto it = depots_.begin() + 1; it != depots_.end(); ++it)
+                load_[dim] += loadBefore[dim][it->idx()].load();
+        }
 
         loadAfter[dim].resize(nodes.size());
         loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];

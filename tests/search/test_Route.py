@@ -813,15 +813,15 @@ def test_initial_load_calculation(ok_small):
     Tests that loads are calculated correctly when there's an initial load
     present on the vehicle.
     """
-    orig_route = Route(ok_small, 0, 0)
-    assert_equal(orig_route.load(), [0])
+    orig_route = make_search_route(ok_small, [1])
+    assert_equal(orig_route.load(), [5])
 
     veh_type = ok_small.vehicle_type(0)
     new_type = veh_type.replace(initial_load=[5])
     new_data = ok_small.replace(vehicle_types=[new_type])
 
-    new_route = Route(new_data, 0, 0)
-    assert_equal(new_route.load(), [5])
+    new_route = make_search_route(new_data, [1])
+    assert_equal(new_route.load(), [10])
 
 
 def test_multi_trip_depots(ok_small_multiple_trips):
@@ -1168,8 +1168,8 @@ def test_empty_route_non_zero_statistics():
     route = make_search_route(data, [])
     assert_equal(route.distance(), 0)
     assert_equal(route.excess_distance(), 0)
-    # assert_equal(route.load(), [0])
-    # assert_equal(route.excess_load(), [0])
+    assert_equal(route.load(), [0])
+    assert_equal(route.excess_load(), [0])
     assert_equal(route.duration(), 0)
     assert_equal(route.time_warp(), 0)
 
@@ -1177,7 +1177,7 @@ def test_empty_route_non_zero_statistics():
     route = make_search_route(data, [2])
     assert_equal(route.distance(), 2)
     assert_equal(route.excess_distance(), 2)
-    # assert_equal(route.load(), [2])
-    # assert_equal(route.excess_load(), [1])
+    assert_equal(route.load(), [2])
+    assert_equal(route.excess_load(), [1])
     assert_equal(route.duration(), 2)
     assert_equal(route.time_warp(), 2)
