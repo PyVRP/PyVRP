@@ -225,6 +225,13 @@ Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance) const
 template <CostEvaluatable T>
 Cost CostEvaluator::penalisedCost(T const &arg) const
 {
+    if (arg.empty())
+    {
+        if constexpr (PrizeCostEvaluatable<T>)
+            return arg.uncollectedPrizes();
+        return 0;
+    }
+
     // Standard objective plus infeasibility-related penalty terms.
     auto const cost = arg.distanceCost() + arg.durationCost()
                       + (!arg.empty() ? arg.fixedVehicleCost() : 0)
