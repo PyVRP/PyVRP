@@ -76,8 +76,13 @@ public:
         std::tuple<Segments...> segments_;
 
         /**
-         * Returns whether the proposal is empty, i.e., it only contains the
-         * start and end depot.
+         * Returns the number of nodes in the proposed route.
+         */
+        size_t size() const;
+
+        /**
+         * Returns whether the proposed route is empty, i.e., it only contains
+         * the start and end depot.
          */
         bool empty() const;
 
@@ -90,11 +95,6 @@ public:
          * used when evaluating the proposal.
          */
         Route const *route() const;
-
-        /**
-         * Returns the number of nodes in the proposed route.
-         */
-        size_t size() const;
 
         /**
          * Returns the travel distance of the proposed route.
@@ -971,6 +971,12 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     assert(last.last() == route->endDepot());      // must end at route end
 }
 
+template <Segment... Segments> size_t Route::Proposal<Segments...>::size() const
+{
+    return std::apply([](auto &&...args) { return (args.size() + ...); },
+                      segments_);
+}
+
 template <Segment... Segments> bool Route::Proposal<Segments...>::empty() const
 {
     return size() == 2;
@@ -980,12 +986,6 @@ template <Segment... Segments>
 Route const *Route::Proposal<Segments...>::route() const
 {
     return std::get<0>(segments_).route();
-}
-
-template <Segment... Segments> size_t Route::Proposal<Segments...>::size() const
-{
-    return std::apply([](auto &&...args) { return (args.size() + ...); },
-                      segments_);
 }
 
 template <Segment... Segments>
