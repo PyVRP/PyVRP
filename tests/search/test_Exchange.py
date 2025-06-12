@@ -630,7 +630,7 @@ def test_bug_release_time_shift_time_windows():
 def test_empty_route_delta_cost_bug():
     """
     Fixes a bug identified in #853 where the empty route's costs are
-    incorrectly accounted for in delta cost evaluations.
+    incorrectly included in delta cost evaluations.
     """
     mat = [
         [0, 5, 0],
@@ -654,9 +654,10 @@ def test_empty_route_delta_cost_bug():
     route1 = make_search_route(data, [2], 0, 0)
     route2 = make_search_route(data, [], 0, 1)
 
-    # This move proposes inserting 1 in route2. Before fixing the bug, route2's
-    # cost was subtracted, claiming this to be an improving move. But an empty
-    # route should not be part of delta cost calculations.
+    # This move proposes inserting the client 2 in route2. Before fixing the
+    # bug, route2's cost was included in the delta cost computation, claiming
+    # this to be an improving move. But an empty route's cost should not be
+    # included in the delta cost.
     op = Exchange10(data)
     cost_eval = CostEvaluator([], 1, 1)
     assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
