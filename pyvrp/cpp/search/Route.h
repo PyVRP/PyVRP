@@ -968,11 +968,9 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
 
 template <Segment... Segments> bool Route::Proposal<Segments...>::empty() const
 {
-    // clang-format off
-    return std::tuple_size_v<decltype(segments_)> == 2
-           && std::get<0>(segments_).size() == 1
-           && std::get<1>(segments_).size() == 1;
-    // clang-format on
+    auto const size = std::apply(
+        [](auto &&...args) { return (args.size() + ...); }, segments_);
+    return size == 2;  // only contains start and end depot
 }
 template <Segment... Segments>
 Route const *Route::Proposal<Segments...>::route() const

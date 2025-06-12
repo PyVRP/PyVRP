@@ -256,14 +256,17 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
 {
     auto const *route = proposal.route();
 
-    out -= route->distanceCost();
-    out -= distPenalty(route->distance(), route->maxDistance());
+    if (!route->empty())
+    {
+        out -= route->distanceCost();
+        out -= distPenalty(route->distance(), route->maxDistance());
 
-    if constexpr (!skipLoad)
-        out -= excessLoadPenalties(route->excessLoad());
+        if constexpr (!skipLoad)
+            out -= excessLoadPenalties(route->excessLoad());
 
-    out -= route->durationCost();
-    out -= twPenalty(route->timeWarp());
+        out -= route->durationCost();
+        out -= twPenalty(route->timeWarp());
+    }
 
     auto const distance = proposal.distance();
     out += route->unitDistanceCost() * static_cast<Cost>(distance);
@@ -300,25 +303,30 @@ bool CostEvaluator::deltaCost(Cost &out,
                               T<vArgs...> const &vProposal) const
 {
     auto const *uRoute = uProposal.route();
-    auto const *vRoute = vProposal.route();
-
-    out -= uRoute->distanceCost();
-    out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
-
-    out -= vRoute->distanceCost();
-    out -= distPenalty(vRoute->distance(), vRoute->maxDistance());
-
-    if constexpr (!skipLoad)
+    if (!uRoute->empty())
     {
-        out -= excessLoadPenalties(uRoute->excessLoad());
-        out -= excessLoadPenalties(vRoute->excessLoad());
+        out -= uRoute->distanceCost();
+        out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
+
+        if constexpr (!skipLoad)
+            out -= excessLoadPenalties(uRoute->excessLoad());
+
+        out -= uRoute->durationCost();
+        out -= twPenalty(uRoute->timeWarp());
     }
 
-    out -= uRoute->durationCost();
-    out -= twPenalty(uRoute->timeWarp());
+    auto const *vRoute = vProposal.route();
+    if (!vRoute->empty())
+    {
+        out -= vRoute->distanceCost();
+        out -= distPenalty(vRoute->distance(), vRoute->maxDistance());
 
-    out -= vRoute->durationCost();
-    out -= twPenalty(vRoute->timeWarp());
+        if constexpr (!skipLoad)
+            out -= excessLoadPenalties(vRoute->excessLoad());
+
+        out -= vRoute->durationCost();
+        out -= twPenalty(vRoute->timeWarp());
+    }
 
     auto const uDist = uProposal.distance();
     out += uRoute->unitDistanceCost() * static_cast<Cost>(uDist);
