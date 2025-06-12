@@ -269,9 +269,9 @@ def test_remove_consecutive_reload_depots(ok_small_multiple_trips):
 
 def test_empty_route_delta_cost_bug():
     """
-    Tests that a bug identified in #853 has been fixed, where inserting or
-    removing a client involving an empty route incorrectly included the empty
-    route's costs.
+    Tests that a bug identified in #853 has been fixed. Before fixing this bug,
+    inserting or removing a client involving an empty route incorrectly
+    included the empty route's costs.
     """
     mat = [
         [0, 5, 1],
