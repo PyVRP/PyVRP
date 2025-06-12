@@ -52,9 +52,6 @@ Trip::Trip(ProblemData const &data,
     if (!canEndAt(vehData, endDepot_))
         throw std::invalid_argument("Vehicle cannot end at end_depot.");
 
-    if (visits_.empty())  // then we have nothing to do
-        return;
-
     for (auto const client : visits_)
         if (client < data.numDepots() || client >= data.numLocations())
         {

@@ -196,14 +196,14 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
       excessLoad_(data.numLoadDimensions(), 0),
       vehicleType_(vehType)
 {
+    if (trips_.empty())  // then we insert a dummy trip for ease.
+        trips_.emplace_back(data, Visits{}, vehType);
+
     auto const &vehData = data.vehicleType(vehType);
     startDepot_ = vehData.startDepot;
     endDepot_ = vehData.endDepot;
 
     validate(data);
-
-    if (empty())  // then we have nothing to do.
-        return;
 
     for (auto const &trip : trips_)  // general statistics
     {

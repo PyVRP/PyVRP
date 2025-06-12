@@ -863,7 +863,7 @@ Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
 Distance Route::distance() const
 {
     assert(!dirty);
-    return empty() ? 0 : cumDist.back();
+    return cumDist.back();
 }
 
 Cost Route::distanceCost() const
@@ -883,7 +883,7 @@ bool Route::hasDistanceCost() const
 Duration Route::duration() const
 {
     assert(!dirty);
-    return empty() ? 0 : durAfter[0].duration();
+    return durAfter[0].duration();
 }
 
 Cost Route::durationCost() const
@@ -910,7 +910,7 @@ Distance Route::maxDistance() const { return vehicleType_.maxDistance; }
 Duration Route::timeWarp() const
 {
     assert(!dirty);
-    return empty() ? 0 : durAfter[0].timeWarp(maxDuration());
+    return durAfter[0].timeWarp(maxDuration());
 }
 
 size_t Route::profile() const { return vehicleType_.profile; }
