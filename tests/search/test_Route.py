@@ -774,6 +774,27 @@ def test_duration_different_profiles(ok_small_two_profiles):
     assert_equal(depot_to_depot.duration(), 2 * route.duration() - service)
 
 
+def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
+    """
+    Tests that empty routes correctly evaluate distance and duration travelled
+    between depots, even though there are no actual clients on the route.
+    """
+    vehicle_type = VehicleType(3, [10], start_depot=0, end_depot=1)
+    data = ok_small_multi_depot.replace(vehicle_types=[vehicle_type])
+
+    route = Route(data, idx=0, vehicle_type=0)
+    route.update()
+
+    assert_equal(route.start_depot(), 0)
+    assert_equal(route.end_depot(), 1)
+
+    dist_mat = data.distance_matrix(0)
+    assert_equal(route.distance(), dist_mat[0, 1])
+
+    dur_mat = data.duration_matrix(0)
+    assert_equal(route.duration(), dur_mat[0, 1])
+
+
 @pytest.mark.parametrize(
     ("loc1", "loc2", "in_route1", "in_route2"),
     [
@@ -813,15 +834,15 @@ def test_initial_load_calculation(ok_small):
     Tests that loads are calculated correctly when there's an initial load
     present on the vehicle.
     """
-    orig_route = make_search_route(ok_small, [1])
-    assert_equal(orig_route.load(), [5])
+    orig_route = Route(ok_small, 0, 0)
+    assert_equal(orig_route.load(), [0])
 
     veh_type = ok_small.vehicle_type(0)
     new_type = veh_type.replace(initial_load=[5])
     new_data = ok_small.replace(vehicle_types=[new_type])
 
-    new_route = make_search_route(new_data, [1])
-    assert_equal(new_route.load(), [10])
+    new_route = Route(new_data, 0, 0)
+    assert_equal(new_route.load(), [5])
 
 
 def test_multi_trip_depots(ok_small_multiple_trips):
