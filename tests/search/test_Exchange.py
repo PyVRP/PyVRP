@@ -629,8 +629,8 @@ def test_bug_release_time_shift_time_windows():
 
 def test_empty_route_delta_cost_bug():
     """
-    Fixes a bug identified in #853 where the empty route's costs are
-    incorrectly included in delta cost evaluations.
+    Tests that a bug identified in #853 where the empty route's costs are
+    incorrectly included in delta cost evaluations has been fixed.
     """
     mat = [
         [0, 5, 0],
