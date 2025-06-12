@@ -266,7 +266,7 @@ def test_remove_consecutive_reload_depots(ok_small_multiple_trips):
     assert_equal(remove_cost(route[4], data, CostEvaluator([1000], 0, 0)), 0)
 
 
-def test_empty_route_should_have_no_cost_bug():
+def test_empty_route_in_delta_cost_bug():
     """
     Fixes a bug identified in #853 where inserting or removing a client
     involving an empty route incorrectly accounted for the empty route's costs.

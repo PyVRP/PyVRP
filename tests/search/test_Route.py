@@ -1132,7 +1132,7 @@ def test_has_duration_cost(
     assert_equal(route.has_duration_cost(), expected)
 
 
-def test_empty_route_non_zero_statistics():
+def test_empty_route_has_no_statistics():
     """
     This test checks that an empty route has no distance, load or duration
     statistics. Fixes a bug identified in #853, where an empty search route

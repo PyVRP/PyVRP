@@ -856,6 +856,7 @@ def test_empty_route_statistics(ok_small_multi_depot):
         [10],
         start_depot=0,
         end_depot=1,
+        initial_load=[10],
         max_duration=10,
         max_distance=10,
     )
