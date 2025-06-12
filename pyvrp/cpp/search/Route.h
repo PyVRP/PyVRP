@@ -834,13 +834,13 @@ Route::Node const *Route::operator[](size_t idx) const
 std::vector<Load> const &Route::load() const
 {
     assert(!dirty);
-    return load_;  // TODO
+    return load_;
 }
 
 std::vector<Load> const &Route::excessLoad() const
 {
     assert(!dirty);
-    return excessLoad_;  // TODO
+    return excessLoad_;
 }
 
 Distance Route::excessDistance() const
