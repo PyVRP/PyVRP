@@ -652,7 +652,7 @@ def test_empty_route_delta_cost_bug():
     )
 
     route1 = make_search_route(data, [2], 0, 0)
-    route2 = make_search_route(data, [], 0, 1)
+    route2 = make_search_route(data, [], 1, 1)
 
     # This move proposes inserting the client 2 in route2. Before fixing the
     # bug, route2's cost was included in the delta cost computation, claiming

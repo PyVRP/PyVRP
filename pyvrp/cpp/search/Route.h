@@ -76,7 +76,7 @@ public:
         std::tuple<Segments...> segments_;
 
         /**
-         * Returns the number of nodes in the proposed route.
+         * Returns the number of depots and clients in the proposed route.
          */
         size_t size() const;
 
