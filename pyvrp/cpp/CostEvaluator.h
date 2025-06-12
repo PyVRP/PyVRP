@@ -262,7 +262,6 @@ template <bool exact,
 bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
 {
     auto const *route = proposal.route();
-
     if (!route->empty())
     {
         out -= route->distanceCost();

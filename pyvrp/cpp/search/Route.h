@@ -92,6 +92,11 @@ public:
         Route const *route() const;
 
         /**
+         * Returns the number of nodes in the proposed route.
+         */
+        size_t size() const;
+
+        /**
          * Returns the travel distance of the proposed route.
          */
         Distance distance() const;
@@ -968,14 +973,19 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
 
 template <Segment... Segments> bool Route::Proposal<Segments...>::empty() const
 {
-    auto const size = std::apply(
-        [](auto &&...args) { return (args.size() + ...); }, segments_);
-    return size == 2;  // only contains start and end depot
+    return size() == 2;
 }
+
 template <Segment... Segments>
 Route const *Route::Proposal<Segments...>::route() const
 {
     return std::get<0>(segments_).route();
+}
+
+template <Segment... Segments> size_t Route::Proposal<Segments...>::size() const
+{
+    return std::apply([](auto &&...args) { return (args.size() + ...); },
+                      segments_);
 }
 
 template <Segment... Segments>
