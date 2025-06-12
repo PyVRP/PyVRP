@@ -1,7 +1,7 @@
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
-from pyvrp import Route, Trip
+from pyvrp import Route, Trip, VehicleType
 
 
 @pytest.mark.parametrize(("start_idx", "end_idx"), [(1, 0), (0, 1)])
@@ -149,3 +149,18 @@ def test_load(ok_small):
     assert_equal(trip.pickup(), [0])
     assert_equal(trip.load(), [18])
     assert_equal(trip.excess_load(), [8])
+
+
+def test_empty_trip_statistics(ok_small_multi_depot):
+    """
+    Tests that an empty trip has no meaningful statistics.
+    """
+    vehicle_type = VehicleType(1, [10], start_depot=0, end_depot=1)
+    data = ok_small_multi_depot.replace(vehicle_types=[vehicle_type])
+    trip = Trip(data, [], 0, 0, 1)
+
+    assert_equal(trip.delivery(), [0])
+    assert_equal(trip.pickup(), [0])
+    assert_equal(trip.load(), [0])
+    assert_equal(trip.service_duration(), 0)
+    assert_equal(trip.travel_duration(), 0)

@@ -847,6 +847,33 @@ def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
     assert_equal(route.visits(), [1, 2])
 
 
-def test_empty_route_statistics():
-    # TODO
-    pass
+def test_empty_route_statistics(ok_small_multi_depot):
+    """
+    Tests that an empty route has no meaningful statistics.
+    """
+    vehicle_type = VehicleType(
+        1,
+        [10],
+        start_depot=0,
+        end_depot=1,
+        max_duration=10,
+        max_distance=10,
+    )
+    data = ok_small_multi_depot.replace(vehicle_types=[vehicle_type])
+    route = Route(data, [], 0)
+
+    assert_equal(route.distance(), 0)
+    assert_equal(route.excess_distance(), 0)
+
+    assert_equal(route.delivery(), [0])
+    assert_equal(route.pickup(), [0])
+    assert_equal(route.excess_load(), [0])
+
+    assert_equal(route.duration(), 0)
+    assert_equal(route.time_warp(), 0)
+
+    assert_equal(route.slack(), 0)
+    assert_equal(route.end_time(), 0)
+    assert_equal(route.start_time(), 0)
+
+    assert_(route.is_feasible())
