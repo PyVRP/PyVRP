@@ -80,7 +80,10 @@ def test_insert_cost_between_different_depots(ok_small_multi_depot):
     cost_eval = CostEvaluator([0], 0, 0)
     dist_mat = data.distance_matrix(0)
 
-    delta = dist_mat[0, 2] + dist_mat[2, 1] - dist_mat[0, 1]
+    # The delta cost is the distance from the start depot to the new node, and
+    # back to the end depot. The route is currently empty so it does not
+    # contribute to the delta cost.
+    delta = dist_mat[0, 2] + dist_mat[2, 1]
     assert_equal(insert_cost(Node(loc=2), route[0], data, cost_eval), delta)
 
 
@@ -262,3 +265,38 @@ def test_remove_consecutive_reload_depots(ok_small_multiple_trips):
 
     # And similarly removing the second depot should also be a no-op.
     assert_equal(remove_cost(route[4], data, CostEvaluator([1000], 0, 0)), 0)
+
+
+def test_empty_route_delta_cost_bug():
+    """
+    Tests that a bug identified in #853 has been fixed. Before fixing this bug,
+    inserting or removing a client involving an empty route incorrectly
+    included the empty route's costs.
+    """
+    mat = [
+        [0, 5, 1],
+        [5, 0, 1],
+        [1, 1, 0],
+    ]
+    data = ProblemData(
+        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
+        clients=[Client(x=0, y=0)],
+        vehicle_types=[
+            VehicleType(1, start_depot=0, end_depot=1, max_duration=0),
+        ],
+        duration_matrices=[mat],
+        distance_matrices=[mat],
+    )
+
+    cost_eval = CostEvaluator([], 1, 1)
+
+    # Inserting the client in an empty route results in distance (2) and
+    # time warp (2). Before fixing the bug, delta cost also included the empty
+    # route's costs (5 distance and 5 time warp).
+    route = make_search_route(data, [])
+    assert_equal(insert_cost(Node(loc=2), route[0], data, cost_eval), 4)
+
+    # Similarly, if removing a client results in an empty route, then we should
+    # not include the empty route's costs.
+    route = make_search_route(data, [2])
+    assert_equal(remove_cost(route[1], data, cost_eval), -4)
