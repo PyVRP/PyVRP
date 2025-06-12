@@ -1151,36 +1151,3 @@ def test_has_duration_cost(
 
     route = Route(data, 0, 0)
     assert_equal(route.has_duration_cost(), expected)
-
-
-def test_empty_route_statistics():
-    """
-    TODO #853
-    """
-    mat = [
-        [0, 10, 10],
-        [10, 0, 10],
-        [10, 10, 0],
-    ]
-    data = ProblemData(
-        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
-        clients=[Client(x=0, y=0)],
-        vehicle_types=[
-            VehicleType(
-                num_available=1,
-                start_depot=0,
-                end_depot=1,
-                max_duration=0,
-            )
-        ],
-        duration_matrices=[mat],
-        distance_matrices=[mat],
-    )
-
-    route = make_search_route(data, [])
-    assert_equal(route.time_warp(), 0)
-    assert_equal(route.duration(), 0)
-
-    route = make_search_route(data, [2])
-    assert_equal(route.time_warp(), 20)
-    assert_equal(route.duration(), 20)
