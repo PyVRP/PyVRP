@@ -81,8 +81,7 @@ public:
         size_t size() const;
 
         /**
-         * Returns whether the proposed route is empty, i.e., it only contains
-         * the start and end depot.
+         * Returns whether the proposed route is empty.
          */
         bool empty() const;
 
@@ -979,7 +978,7 @@ template <Segment... Segments> size_t Route::Proposal<Segments...>::size() const
 
 template <Segment... Segments> bool Route::Proposal<Segments...>::empty() const
 {
-    return size() == 2;
+    return size() == 2;  // empty if proposal only contains start and end depot
 }
 
 template <Segment... Segments>
