@@ -1,0 +1,65 @@
+labels: [question]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your interest in PyVRP!
+        Please follow the instructions set out in this form.
+        We ask quite a few questions up front because answering user questions and solving problems on GitHub consumes a significant amount of time.
+        By asking questions in a structured way using this form, it will be much easier to help you.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        What is the problem, question, or error?
+        Please explain what you are currently doing, what you expect to happen, and what is actually happening.
+        If your problem relates to a specific data instance, please include a pickle file of your [`ProblemData`](https://pyvrp.org/api/pyvrp.html#pyvrp._pyvrp.ProblemData) instance here.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example code
+      description: |
+        If your discussion relates to a non-functional code example, please add it here.
+        Make sure it is a self-contained, [minimal, reproducible, example](https://stackoverflow.com/help/minimal-reproducible-example).
+        If we can copy and run it and replicate the issue right away, there is a much higher chance we will be able to help you.
+
+      placeholder: |
+        from pyvrp import Model
+
+        m = Model()
+        ...
+      render: python
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      description: What operating system are you on?
+      multiple: true
+      options:
+        - Linux
+        - Windows
+        - macOS
+    validations:
+      required: true
+  - type: input
+    id: pyvrp-version
+    attributes:
+      label: PyVRP Version
+      description: |
+        Which versions of PyVRP and its dependencies are you using?
+
+        You can find these versions with:
+
+        ```bash
+        python -c "import pyvrp; pyvrp.show_versions()"
+        ```
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any additional context information or screenshots you think are useful.
