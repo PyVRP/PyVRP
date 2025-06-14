@@ -7,18 +7,25 @@ import numpy as np
 @dataclass
 class MovingBestAverageThresholdParams:
     """
-    Default parameters for the moving best average threshold.
+    Default parameters for the moving best average threshold criterion.
 
     Parameters
     ----------
     initial_weight
-        Initial weight to consider.
+        Initial weight parameter :math:`w_0` used to determine the threshold
+        value. Larger values result in more accepted candidate solutions. Must
+        be in [0, 1].
     history_length
-        Length of the history to consider.
+        The number of recent candidate solutions :math:`N` to consider when
+        computing the threshold value. Must be positive.
     max_runtime
-        Maximum runtime in seconds.
+        Maximum runtime in seconds. As the search approaches this time limit,
+        :math:`w \to 0`. Must be non-negative. Default is ``None``, meaning
+        that the runtime limit is ignored when calculating the weight.
     max_iterations
-        Maximum number of iterations.
+        Maximum number of iterations. As the search approaches this limit,
+        :math:`w \to 0`. Must be non-negative. Default is ``None``, meaning
+        that the iterations limit is ignored when calculating the weight.
     """
 
     initial_weight: float = 1
