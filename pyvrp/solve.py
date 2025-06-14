@@ -27,7 +27,11 @@ from pyvrp.search import (
     RouteOperator,
     compute_neighbours,
 )
-from pyvrp.stop import MaxIterations, MaxRuntime
+from pyvrp.stop import (
+    MaxIterations,
+    MaxRuntime,
+    MultipleCriteria,
+)
 
 if TYPE_CHECKING:
     import pathlib
@@ -226,8 +230,24 @@ def solve(
 
 
 def _stop2runtime(stop) -> float | None:
-    return stop.max_runtime if isinstance(stop, MaxRuntime) else None
+    if isinstance(stop, MultipleCriteria):
+        for crit in stop.criteria:
+            if isinstance(crit, MaxRuntime):
+                return crit.max_runtime
+
+    if isinstance(stop, MaxRuntime):
+        return stop.max_runtime
+
+    return None
 
 
 def _stop2iterations(stop) -> int | None:
-    return stop.max_iterations if isinstance(stop, MaxIterations) else None
+    if isinstance(stop, MultipleCriteria):
+        for crit in stop.criteria:
+            if isinstance(crit, MaxIterations):
+                return crit.max_iterations
+
+    if isinstance(stop, MaxIterations):
+        return stop.max_iterations
+
+    return None
