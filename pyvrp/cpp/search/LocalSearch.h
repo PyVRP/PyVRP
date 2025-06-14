@@ -3,6 +3,7 @@
 
 #include "CostEvaluator.h"
 #include "LocalSearchOperator.h"
+#include "PerturbationOperator.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
@@ -68,6 +69,7 @@ private:
 
     std::vector<NodeOperator *> nodeOps;
     std::vector<RouteOperator *> routeOps;
+    std::vector<PerturbationOperator *> perturbOps;
 
     size_t numUpdates_ = 0;         // modification counter
     bool searchCompleted_ = false;  // No further improving move found?
@@ -110,6 +112,9 @@ private:
     // Performs intensify on the currently loaded solution.
     void intensify(CostEvaluator const &costEvaluator);
 
+    // Performs perturb on the currently loaded solution.
+    void perturb(CostEvaluator const &costEvaluator);
+
     // Evaluate and apply inserting U after one of its neighbours if it's an
     // improving move or required for feasibility.
     void
@@ -127,6 +132,11 @@ public:
     void addRouteOperator(RouteOperator &op);
 
     /**
+     * Adds a perturbation operator.
+     */
+    void addPerturbationOperator(PerturbationOperator &op);
+
+    /**
      * Returns the node operators in use. Note that there is no defined
      * ordering.
      */
@@ -137,6 +147,12 @@ public:
      * ordering.
      */
     std::vector<RouteOperator *> const &routeOperators() const;
+
+    /**
+     * Returns the perturbation operators in use. Note that there is no defined
+     * ordering.
+     */
+    std::vector<PerturbationOperator *> const &perturbationOperators() const;
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,
@@ -177,8 +193,15 @@ public:
                        CostEvaluator const &costEvaluator);
 
     /**
+     * Performs a perturbation step around the given solution, and returns a
+     * new, modified solution.
+     */
+    Solution perturb(Solution const &solution,
+                     CostEvaluator const &costEvaluator);
+
+    /**
      * Shuffles the order in which the node and route pairs are evaluated, and
-     * the order in which node and route operators are applied.
+     * the order in which operators are applied.
      */
     void shuffle(RandomNumberGenerator &rng);
 

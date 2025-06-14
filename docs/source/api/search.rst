@@ -104,3 +104,23 @@ As a convenience, the :mod:`pyvrp.search` module makes these operators available
 
    .. autoclass:: SwapStar
       :exclude-members: evaluate, apply, statistics, supports
+
+
+Perturbation operators
+----------------------
+
+Instances of these operators can be added to the :class:`~pyvrp.search.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.search.LocalSearch.LocalSearch.add_pertubation_operator` method.
+Each pertubation operator inherits from :class:`~pyvrp.search._search.PertubationOperator`.
+As a convenience, the :mod:`pyvrp.search` module makes all these operators available as ``PERTUBATION_OPERATORS``:
+
+.. code-block:: python
+
+   from pyvrp.search import PERTUBATION_OPERATORS
+
+.. automodule:: pyvrp.search._search
+   :noindex:
+
+   .. autoclass:: PertubationOperator
+
+   .. autoclass:: NeighbourRemoval
+      :exclude-members: __call___

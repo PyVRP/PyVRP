@@ -10,12 +10,14 @@
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
+using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RouteOperator;
 
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
+    perturb(costEvaluator);
 
     while (true)
     {
@@ -45,6 +47,14 @@ Solution LocalSearch::intensify(Solution const &solution,
 {
     loadSolution(solution);
     intensify(costEvaluator);
+    return exportSolution();
+}
+
+Solution LocalSearch::perturb(Solution const &solution,
+                              CostEvaluator const &costEvaluator)
+{
+    loadSolution(solution);
+    perturb(costEvaluator);
     return exportSolution();
 }
 
@@ -146,15 +156,23 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
     }
 }
 
+void LocalSearch::perturb(CostEvaluator const &costEvaluator)
+{
+    if (perturbOps.empty())
+        return;
+
+    (*perturbOps[0])(nodes, routes, costEvaluator, neighbours_, orderNodes);
+}
+
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
-    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
-
     std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
-    std::shuffle(routeOps.begin(), routeOps.end(), rng);
-
     std::shuffle(orderVehTypes.begin(), orderVehTypes.end(), rng);
+
+    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
+    std::shuffle(routeOps.begin(), routeOps.end(), rng);
+    std::shuffle(perturbOps.begin(), perturbOps.end(), rng);
 }
 
 bool LocalSearch::applyNodeOps(Route::Node *U,
@@ -503,6 +521,11 @@ void LocalSearch::addRouteOperator(RouteOperator &op)
     routeOps.emplace_back(&op);
 }
 
+void LocalSearch::addPerturbationOperator(PerturbationOperator &op)
+{
+    perturbOps.emplace_back(&op);
+}
+
 std::vector<NodeOperator *> const &LocalSearch::nodeOperators() const
 {
     return nodeOps;
@@ -511,6 +534,12 @@ std::vector<NodeOperator *> const &LocalSearch::nodeOperators() const
 std::vector<RouteOperator *> const &LocalSearch::routeOperators() const
 {
     return routeOps;
+}
+
+std::vector<PerturbationOperator *> const &
+LocalSearch::perturbationOperators() const
+{
+    return perturbOps;
 }
 
 void LocalSearch::setNeighbours(Neighbours neighbours)
