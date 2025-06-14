@@ -48,12 +48,12 @@ body:
     id: pyvrp-version
     attributes:
       label: PyVRP and depedency versions
-      description: >
-        Which versions of PyVRP and its dependencies are you using?
-        You can obtain these using:
+      description: |
+        Which versions of PyVRP and its dependencies are you using? You can obtain these using:
         ```bash
         python -c "import pyvrp; pyvrp.show_versions()"
         ```
+        Please add the output from that command here.
     validations:
       required: true
   - type: textarea
