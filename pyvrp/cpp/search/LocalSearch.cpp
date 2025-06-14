@@ -70,7 +70,9 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
         return;
 
     auto isPromising = [this](auto idx) { return nodes[idx].promising(); };
-    for (int step = 0; std::ranges::any_of(orderNodes, isPromising); ++step)
+    for (int step = 0;
+         step == 0 || std::ranges::any_of(orderNodes, isPromising);
+         ++step)
     {
         // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto const uClient : orderNodes)
