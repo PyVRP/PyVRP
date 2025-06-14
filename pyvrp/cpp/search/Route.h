@@ -19,6 +19,7 @@ concept Segment = requires(T arg, size_t profile, size_t dimension) {
     { arg.route() };
     { arg.first() } -> std::same_as<size_t>;
     { arg.last() } -> std::same_as<size_t>;
+    { arg.size() } -> std::same_as<size_t>;
     { arg.startsAtReloadDepot() } -> std::same_as<bool>;
     { arg.endsAtReloadDepot() } -> std::same_as<bool>;
     { arg.distance(profile) } -> std::convertible_to<Distance>;
@@ -73,6 +74,16 @@ public:
     template <Segment... Segments> class Proposal
     {
         std::tuple<Segments...> segments_;
+
+        /**
+         * Returns the number of depots and clients in the proposed route.
+         */
+        size_t size() const;
+
+        /**
+         * Returns whether the proposed route is empty.
+         */
+        bool empty() const;
 
     public:
         Proposal(Segments &&...segments);
@@ -223,6 +234,7 @@ private:
 
         inline size_t first() const;  // client at start
         inline size_t last() const;   // end depot
+        inline size_t size() const;
 
         inline bool startsAtReloadDepot() const;
         inline bool endsAtReloadDepot() const;
@@ -247,6 +259,7 @@ private:
 
         inline size_t first() const;  // start depot
         inline size_t last() const;   // client at end
+        inline size_t size() const;
 
         inline bool startsAtReloadDepot() const;
         inline bool endsAtReloadDepot() const;
@@ -273,6 +286,7 @@ private:
 
         inline size_t first() const;  // client at start
         inline size_t last() const;   // client at end
+        inline size_t size() const;
 
         inline bool startsAtReloadDepot() const;
         inline bool endsAtReloadDepot() const;
@@ -694,6 +708,7 @@ Route const *Route::SegmentBefore::route() const { return &route_; }
 
 size_t Route::SegmentBefore::first() const { return route_.visits.front(); }
 size_t Route::SegmentBefore::last() const { return route_.visits[end]; }
+size_t Route::SegmentBefore::size() const { return end + 1; }
 
 bool Route::SegmentBefore::startsAtReloadDepot() const { return false; }
 bool Route::SegmentBefore::endsAtReloadDepot() const
@@ -705,6 +720,7 @@ Route const *Route::SegmentAfter::route() const { return &route_; }
 
 size_t Route::SegmentAfter::first() const { return route_.visits[start]; }
 size_t Route::SegmentAfter::last() const { return route_.visits.back(); }
+size_t Route::SegmentAfter::size() const { return route_.size() - start; }
 
 bool Route::SegmentAfter::startsAtReloadDepot() const
 {
@@ -716,6 +732,7 @@ Route const *Route::SegmentBetween::route() const { return &route_; }
 
 size_t Route::SegmentBetween::first() const { return route_.visits[start]; }
 size_t Route::SegmentBetween::last() const { return route_.visits[end]; }
+size_t Route::SegmentBetween::size() const { return end - start + 1; }
 
 bool Route::SegmentBetween::startsAtReloadDepot() const
 {
@@ -953,6 +970,17 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     assert(last.last() == route->endDepot());      // must end at route end
 }
 
+template <Segment... Segments> size_t Route::Proposal<Segments...>::size() const
+{
+    return std::apply([](auto &&...args) { return (args.size() + ...); },
+                      segments_);
+}
+
+template <Segment... Segments> bool Route::Proposal<Segments...>::empty() const
+{
+    return size() == 2;  // empty if proposal only contains start and end depot
+}
+
 template <Segment... Segments>
 Route const *Route::Proposal<Segments...>::route() const
 {
@@ -962,7 +990,7 @@ Route const *Route::Proposal<Segments...>::route() const
 template <Segment... Segments>
 Distance Route::Proposal<Segments...>::distance() const
 {
-    if (!route()->hasDistanceCost())
+    if (empty() || !route()->hasDistanceCost())
         // Then distance does not factor into the penalised cost of this route,
         // and we do not have to evaluate it.
         return 0;
@@ -995,7 +1023,7 @@ Distance Route::Proposal<Segments...>::distance() const
 template <Segment... Segments>
 std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 {
-    if (!route()->hasDurationCost())
+    if (empty() || !route()->hasDurationCost())
         // Then duration does not factor into the penalised cost of this route,
         // and we do not have to evaluate it.
         return std::make_pair(0, 0);
@@ -1055,6 +1083,9 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 template <Segment... Segments>
 Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 {
+    if (empty())
+        return 0;
+
     auto const &capacities = route()->capacity();
     auto const capacity = capacities[dimension];
 
