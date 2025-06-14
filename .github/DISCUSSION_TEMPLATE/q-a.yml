@@ -4,8 +4,8 @@ body:
     attributes:
       value: >
         Thanks for your interest in PyVRP!
-        This form asks quite a few questions up front because answering user questions and solving problems on GitHub consumes a significant amount of our time.
-        By asking questions in a structured way using this form, it will be much easier to help you.
+        This form asks a few questions up front because answering user questions and solving problems on GitHub consumes a significant amount of our time.
+        By answering these questions in a structured way through this form, it will be much easier to help you.
   - type: textarea
     id: description
     attributes:
@@ -36,7 +36,7 @@ body:
     id: os
     attributes:
       label: Operating system
-      description: What operating system are you on?
+      description: Which operating system(s) do you use?
       multiple: true
       options:
         - Linux
@@ -47,13 +47,14 @@ body:
   - type: textarea
     id: pyvrp-version
     attributes:
-      label: PyVRP and depedency versions
+      label: PyVRP and dependency versions
       description: |
         Which versions of PyVRP and its dependencies are you using? You can obtain these using:
         ```bash
         python -c "import pyvrp; pyvrp.show_versions()"
         ```
-        Please add the output from that command here.
+        Please add the output here.
+      render: bash
     validations:
       required: true
   - type: textarea
