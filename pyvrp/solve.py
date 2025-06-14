@@ -1,25 +1,36 @@
 from __future__ import annotations
 
+from copy import copy
 from typing import TYPE_CHECKING
 
 import tomli
 
 import pyvrp.search
-from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
+from pyvrp.IteratedLocalSearch import (
+    IteratedLocalSearch,
+    IteratedLocalSearchParams,
+)
 from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
-from pyvrp.Population import Population, PopulationParams
 from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
-from pyvrp.crossover import ordered_crossover as ox
-from pyvrp.crossover import selective_route_exchange as srex
-from pyvrp.diversity import broken_pairs_distance as bpd
+from pyvrp.accept import (
+    MovingBestAverageThreshold,
+    MovingBestAverageThresholdParams,
+)
 from pyvrp.search import (
     NODE_OPERATORS,
+    PERTURBATION_OPERATORS,
     ROUTE_OPERATORS,
     LocalSearch,
     NeighbourhoodParams,
     NodeOperator,
+    PerturbationOperator,
     RouteOperator,
     compute_neighbours,
+)
+from pyvrp.stop import (
+    MaxIterations,
+    MaxRuntime,
+    MultipleCriteria,
 )
 
 if TYPE_CHECKING:
@@ -31,66 +42,75 @@ if TYPE_CHECKING:
 
 class SolveParams:
     """
-    Solver parameters for PyVRP's hybrid genetic search algorithm.
+    Solver parameters for PyVRP's iterated local search algorithm.
 
     Parameters
     ----------
-    genetic
-        Genetic algorithm parameters.
+    ils
+        Iterated local search parameters.
     penalty
         Penalty parameters.
-    population
-        Population parameters.
     neighbourhood
         Neighbourhood parameters.
+    mbat
+        Moving best average threshold parameters.
     node_ops
         Node operators to use in the search.
     route_ops
         Route operators to use in the search.
+    perturbation_ops
+        Perturbation operators to use in the search.
     """
 
     def __init__(
         self,
-        genetic: GeneticAlgorithmParams = GeneticAlgorithmParams(),
+        ils: IteratedLocalSearchParams = IteratedLocalSearchParams(),
         penalty: PenaltyParams = PenaltyParams(),
-        population: PopulationParams = PopulationParams(),
         neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
+        mbat: MovingBestAverageThresholdParams = (
+            MovingBestAverageThresholdParams()
+        ),
         node_ops: list[type[NodeOperator]] = NODE_OPERATORS,
         route_ops: list[type[RouteOperator]] = ROUTE_OPERATORS,
+        perturbation_ops: list[
+            type[PerturbationOperator]
+        ] = PERTURBATION_OPERATORS,
     ):
-        self._genetic = genetic
+        self._ils = ils
         self._penalty = penalty
-        self._population = population
         self._neighbourhood = neighbourhood
+        self._mbat = mbat
         self._node_ops = node_ops
         self._route_ops = route_ops
+        self._perturbation_ops = perturbation_ops
 
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, SolveParams)
-            and self.genetic == other.genetic
+            and self.ils == other.ils
             and self.penalty == other.penalty
-            and self.population == other.population
             and self.neighbourhood == other.neighbourhood
+            and self.mbat == other.mbat
             and self.node_ops == other.node_ops
             and self.route_ops == other.route_ops
+            and self.perturbation_ops == other.perturbation_ops
         )
 
     @property
-    def genetic(self):
-        return self._genetic
+    def ils(self):
+        return self._ils
 
     @property
     def penalty(self):
         return self._penalty
 
     @property
-    def population(self):
-        return self._population
-
-    @property
     def neighbourhood(self):
         return self._neighbourhood
+
+    @property
+    def mbat(self):
+        return self._mbat
 
     @property
     def node_ops(self):
@@ -100,6 +120,10 @@ class SolveParams:
     def route_ops(self):
         return self._route_ops
 
+    @property
+    def perturbation_ops(self):
+        return self._perturbation_ops
+
     @classmethod
     def from_file(cls, loc: str | pathlib.Path):
         """
@@ -108,10 +132,10 @@ class SolveParams:
         with open(loc, "rb") as fh:
             data = tomli.load(fh)
 
-        gen_params = GeneticAlgorithmParams(**data.get("genetic", {}))
+        ils_params = IteratedLocalSearchParams(**data.get("ils", {}))
         pen_params = PenaltyParams(**data.get("penalty", {}))
-        pop_params = PopulationParams(**data.get("population", {}))
         nb_params = NeighbourhoodParams(**data.get("neighbourhood", {}))
+        mbat_params = MovingBestAverageThresholdParams(**data.get("mbat", {}))
 
         node_ops = NODE_OPERATORS
         if "node_ops" in data:
@@ -121,8 +145,20 @@ class SolveParams:
         if "route_ops" in data:
             route_ops = [getattr(pyvrp.search, op) for op in data["route_ops"]]
 
+        perturbation_ops = PERTURBATION_OPERATORS
+        if "perturbation_ops" in data:
+            perturbation_ops = [
+                getattr(pyvrp.search, op) for op in data["perturbation_ops"]
+            ]
+
         return cls(
-            gen_params, pen_params, pop_params, nb_params, node_ops, route_ops
+            ils_params,
+            pen_params,
+            nb_params,
+            mbat_params,
+            node_ops,
+            route_ops,
+            perturbation_ops,
         )
 
 
@@ -173,16 +209,45 @@ def solve(
         if route_op.supports(data):
             ls.add_route_operator(route_op(data))
 
+    for perturb_op in params.perturbation_ops:
+        ls.add_perturbation_operator(perturb_op(data, 10))
+
+    # Infer MBAT convergence parameters from stopping criteria, if not set.
+    mbat = copy(params.mbat)
+    if mbat.max_runtime is None:
+        mbat.max_runtime = _stop2runtime(stop)
+
+    if mbat.max_iterations is None:
+        mbat.max_iterations = _stop2iterations(stop)
+
+    accept = MovingBestAverageThreshold(**vars(mbat))
     pm = PenaltyManager.init_from(data, params.penalty)
-    pop = Population(bpd, params.population)
-    init = [
-        Solution.make_random(data, rng)
-        for _ in range(params.population.min_pop_size)
-    ]
+    init = Solution(data, [])  # type: ignore
 
-    # We use SREX when the instance is a proper VRP; else OX for TSP.
-    crossover = srex if data.num_vehicles > 1 else ox
-
-    gen_args = (data, pm, rng, pop, ls, crossover, init, params.genetic)
-    algo = GeneticAlgorithm(*gen_args)  # type: ignore
+    ils_args = (data, pm, rng, ls, accept, init, params.ils)
+    algo = IteratedLocalSearch(*ils_args)  # type: ignore
     return algo.run(stop, collect_stats, display)
+
+
+def _stop2runtime(stop) -> float | None:
+    if isinstance(stop, MultipleCriteria):
+        for crit in stop.criteria:
+            if isinstance(crit, MaxRuntime):
+                return crit.max_runtime
+
+    if isinstance(stop, MaxRuntime):
+        return stop.max_runtime
+
+    return None
+
+
+def _stop2iterations(stop) -> int | None:
+    if isinstance(stop, MultipleCriteria):
+        for crit in stop.criteria:
+            if isinstance(crit, MaxIterations):
+                return crit.max_iterations
+
+    if isinstance(stop, MaxIterations):
+        return stop.max_iterations
+
+    return None

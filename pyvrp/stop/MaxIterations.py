@@ -10,6 +10,10 @@ class MaxIterations:
         self._max_iters = max_iterations
         self._curr_iter = 0
 
+    @property
+    def max_iterations(self) -> int:
+        return self._max_iters
+
     def __call__(self, best_cost: float) -> bool:
         self._curr_iter += 1
 
