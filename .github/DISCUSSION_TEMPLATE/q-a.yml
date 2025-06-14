@@ -4,8 +4,7 @@ body:
     attributes:
       value: |
         Thanks for your interest in PyVRP!
-        Please follow the instructions set out in this form.
-        We ask quite a few questions up front because answering user questions and solving problems on GitHub consumes a significant amount of time.
+        This form asks quite a few questions up front because answering user questions and solving problems on GitHub consumes a significant amount of our time.
         By asking questions in a structured way using this form, it will be much easier to help you.
   - type: textarea
     id: description
@@ -14,7 +13,8 @@ body:
       description: |
         What is the problem, question, or error?
         Please explain what you are currently doing, what you expect to happen, and what is actually happening.
-        If your problem relates to a specific data instance, please include a pickle file of your [`ProblemData`](https://pyvrp.org/api/pyvrp.html#pyvrp._pyvrp.ProblemData) instance here.
+        Is your problem related to a specific data instance?
+        Then please include a pickle file of your [`ProblemData`](https://pyvrp.org/api/pyvrp.html#pyvrp._pyvrp.ProblemData) instance here.
     validations:
       required: true
   - type: textarea
@@ -25,7 +25,6 @@ body:
         If your discussion relates to a non-functional code example, please add it here.
         Make sure it is a self-contained, [minimal, reproducible, example](https://stackoverflow.com/help/minimal-reproducible-example).
         If we can copy and run it and replicate the issue right away, there is a much higher chance we will be able to help you.
-
       placeholder: |
         from pyvrp import Model
 
@@ -47,12 +46,10 @@ body:
   - type: input
     id: pyvrp-version
     attributes:
-      label: PyVRP Version
+      label: PyVRP and depedency versions
       description: |
         Which versions of PyVRP and its dependencies are you using?
-
-        You can find these versions with:
-
+        You can obtain these using:
         ```bash
         python -c "import pyvrp; pyvrp.show_versions()"
         ```
@@ -61,5 +58,5 @@ body:
   - type: textarea
     id: context
     attributes:
-      label: Additional Context
-      description: Add any additional context information or screenshots you think are useful.
+      label: Additional context
+      description: Add any additional information that you think may be useful.
