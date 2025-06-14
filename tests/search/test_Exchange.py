@@ -625,3 +625,39 @@ def test_bug_release_time_shift_time_windows():
     op = Exchange10(data)
     cost_eval = CostEvaluator([], 1, 0)
     assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
+
+
+def test_empty_route_delta_cost_bug():
+    """
+    Tests that a bug identified in #853 has been fixed. The bug caused empty
+    routes' costs to be incorrectly included in delta cost evaluations.
+    """
+    mat = [
+        [0, 5, 0],
+        [5, 0, 0],
+        [0, 0, 0],
+    ]
+    # Empty route with vehicle type 0 has no cost, but an empty route with
+    # vehicle type 1 has cost 10 (5 distance, 5 time warp).
+    vehicle_types = [
+        VehicleType(1),
+        VehicleType(1, start_depot=0, end_depot=1, max_duration=0),
+    ]
+    data = ProblemData(
+        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
+        clients=[Client(x=0, y=0)],
+        vehicle_types=vehicle_types,
+        duration_matrices=[mat],
+        distance_matrices=[mat],
+    )
+
+    route1 = make_search_route(data, [2], 0, 0)
+    route2 = make_search_route(data, [], 1, 1)
+
+    # This move proposes inserting the client 2 in route2. Before fixing the
+    # bug, route2's cost was included in the delta cost computation, claiming
+    # this to be an improving move. But an empty route's cost should not be
+    # included in the delta cost.
+    op = Exchange10(data)
+    cost_eval = CostEvaluator([], 1, 1)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
