@@ -123,7 +123,7 @@ def test_restarts_after_no_improvement(rc208):
     assert_equal(data[2].current_cost, bks_cost)
 
 
-def test_ils_result_has_correct_info_stats(ok_small):
+def test_ils_result_has_correct_stats(ok_small):
     """
     Tests that ILS correctly collects search statistics.
     """
