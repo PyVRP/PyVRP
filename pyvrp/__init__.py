@@ -1,5 +1,3 @@
-from .GeneticAlgorithm import GeneticAlgorithm as GeneticAlgorithm
-from .GeneticAlgorithm import GeneticAlgorithmParams as GeneticAlgorithmParams
 from .IteratedLocalSearch import IteratedLocalSearch as IteratedLocalSearch
 from .IteratedLocalSearch import (
     IteratedLocalSearchParams as IteratedLocalSearchParams,
