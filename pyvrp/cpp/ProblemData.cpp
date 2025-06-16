@@ -446,6 +446,11 @@ std::vector<Matrix<Duration>> const &ProblemData::durationMatrices() const
     return durs_;
 }
 
+Distance ProblemData::avgSegmentDistance() const
+{
+    return avgSegmentDistance_;
+}
+
 ProblemData::ClientGroup const &ProblemData::group(size_t group) const
 {
     assert(group < groups_.size());
@@ -666,6 +671,17 @@ ProblemData::ProblemData(std::vector<Client> clients,
     {
         centroid_.first += static_cast<double>(client.x) / numClients();
         centroid_.second += static_cast<double>(client.y) / numClients();
+    }
+
+    if (numClients() > 1)
+    {
+        Distance totalDistance = 0;
+        for (size_t i = numDepots(); i < numLocations(); ++i)
+            for (size_t j = numDepots(); j < numLocations(); ++j)
+                if (i != j)
+                    totalDistance += dists_[0](i, j);
+        auto const numPairs = static_cast<Distance>(numClients() * (numClients() - 1));
+        avgSegmentDistance_ = totalDistance / numPairs;
     }
 
     validate();

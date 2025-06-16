@@ -544,6 +544,7 @@ private:
     std::vector<Depot> const depots_;              // Depot information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
     std::vector<ClientGroup> const groups_;        // Client groups
+    Distance avgSegmentDistance_;           // Average segment distance
 
     size_t const numVehicles_;
     size_t const numLoadDimensions_;
@@ -665,6 +666,11 @@ public:
      */
     [[nodiscard]] inline Matrix<Duration> const &
     durationMatrix(size_t profile) const;
+
+    /**
+     * Average segment distance in this problem instance.
+     */
+    [[nodiscard]] Distance avgSegmentDistance() const;
 
     /**
      * Number of clients in this problem instance.
