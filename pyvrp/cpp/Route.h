@@ -237,7 +237,7 @@ public:
     /**
      * Total distance travelled on this route, excluding the first and last segment.
      */
-    [[nodiscard]] Distance internalDistance() const { return internalDistance_; }
+    [[nodiscard]] Distance internalDistance() const;
 
     /**
      * Start time of this route. This is the earliest possible time at which

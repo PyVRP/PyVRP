@@ -49,6 +49,8 @@ class Solution
     size_t numMissingClients_ = 0;  // Number of required but missing clients
     Distance distance_ = 0;         // Total travel distance over all routes
     Cost distanceCost_ = 0;         // Total cost of all routes' travel distance
+    Distance internalDistance_ = 0; // Total distance travelled on all routes, excluding the first and last segments
+    Distance avgSegmentDistance_ = 0; // Average distance travelled on a segment between two clients
     Duration duration_ = 0;         // Total duration over all routes
     Cost durationCost_ = 0;         // Total cost of all routes' duration
     Distance excessDistance_ = 0;   // Total excess distance over all routes
@@ -176,6 +178,16 @@ public:
      * Total cost of the distance travelled on routes in this solution.
      */
     [[nodiscard]] Cost distanceCost() const;
+
+    /**
+     * Total distance travelled on all routes, excluding the first and last segments.
+     */
+    [[nodiscard]] Distance internalDistance() const;
+
+    /**
+     * Average distance travelled on a segment between two clients.
+     */
+    [[nodiscard]] Distance avgSegmentDistance() const;
 
     /**
      * Total duration of all routes in this solution.
