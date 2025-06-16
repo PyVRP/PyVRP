@@ -217,6 +217,13 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         centroid_.second += (y * trip.size()) / size();
     }
 
+    for (size_t i = 0; i < visits().size(); ++i)
+        for (size_t j = i + 1; j < visits().size(); ++j)
+        {
+            auto const &distMat = data.distanceMatrix(vehData.profile);
+            internalDistance_ += distMat(visits()[i], visits()[j]);
+        }
+
     distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehData.maxDistance, 0);
 
