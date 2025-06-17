@@ -281,9 +281,13 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     out -= route->durationCost();
     out -= twPenalty(route->timeWarp());
 
+    out -= distDevPenalty(route->internalDistance(), route->avgSegmentDistance(), route->numClients());
+
     auto const distance = proposal.distance();
     out += route->unitDistanceCost() * static_cast<Cost>(distance);
     out += distPenalty(distance, route->maxDistance());
+
+    out += distDevPenalty(proposal.route()->internalDistance(), route->avgSegmentDistance(), proposal.route()->numClients());
 
     if constexpr (!exact)
         if (out >= 0)
@@ -321,8 +325,12 @@ bool CostEvaluator::deltaCost(Cost &out,
     out -= uRoute->distanceCost();
     out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
 
+    out -= distDevPenalty(uRoute->internalDistance(), uRoute->avgSegmentDistance(), uRoute->numClients());
+
     out -= vRoute->distanceCost();
     out -= distPenalty(vRoute->distance(), vRoute->maxDistance());
+
+    out -= distDevPenalty(vRoute->internalDistance(), vRoute->avgSegmentDistance(), vRoute->numClients());
 
     if constexpr (!skipLoad)
     {
@@ -340,9 +348,13 @@ bool CostEvaluator::deltaCost(Cost &out,
     out += uRoute->unitDistanceCost() * static_cast<Cost>(uDist);
     out += distPenalty(uDist, uRoute->maxDistance());
 
+    out += distDevPenalty(uProposal.route()->internalDistance(), uRoute->avgSegmentDistance(), uProposal.route()->numClients());
+
     auto const vDist = vProposal.distance();
     out += vRoute->unitDistanceCost() * static_cast<Cost>(vDist);
     out += distPenalty(vDist, vRoute->maxDistance());
+
+    out += distDevPenalty(vProposal.route()->internalDistance(), vRoute->avgSegmentDistance(), vProposal.route()->numClients());
 
     if constexpr (!exact)
         if (out >= 0)
