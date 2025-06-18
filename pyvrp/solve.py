@@ -132,6 +132,7 @@ def solve(
     seed: int = 0,
     collect_stats: bool = True,
     display: bool = False,
+    display_interval: float = 5.0,
     params: SolveParams = SolveParams(),
 ) -> Result:
     """
@@ -152,6 +153,8 @@ def solve(
         Whether to display information about the solver progress. Default
         ``False``. Progress information is only available when
         ``collect_stats`` is also set, which it is by default.
+    display_interval
+        TODO
     params
         Solver parameters to use. If not provided, a default will be used.
 
@@ -185,4 +188,4 @@ def solve(
 
     gen_args = (data, pm, rng, pop, ls, crossover, init, params.genetic)
     algo = GeneticAlgorithm(*gen_args)  # type: ignore
-    return algo.run(stop, collect_stats, display)
+    return algo.run(stop, collect_stats, display, display_interval)
