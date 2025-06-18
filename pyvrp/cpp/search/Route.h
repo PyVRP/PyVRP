@@ -830,7 +830,9 @@ Cost Route::unitDistanceCost() const { return vehicleType_.unitDistanceCost; }
 
 Distance Route::internalDistance() const {
     assert(!dirty);
-    return cumDist[size() - 1] - cumDist[0];
+    if (size() <= 3)
+        return 0;
+    return cumDist[size() - 2] - cumDist[1];
 }
 
 Distance Route::avgSegmentDistance() const { return avgSegmentDistance_; }
