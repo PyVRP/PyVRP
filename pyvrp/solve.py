@@ -154,7 +154,7 @@ def solve(
         ``False``. Progress information is only available when
         ``collect_stats`` is also set, which it is by default.
     display_interval
-        TODO
+        Time (in seconds) between iteration logs. Default 5s.
     params
         Solver parameters to use. If not provided, a default will be used.
 
