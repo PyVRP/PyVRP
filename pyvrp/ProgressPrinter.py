@@ -47,7 +47,7 @@ class ProgressPrinter:
         Time (in seconds) between iteration logs.
     """
 
-    def __init__(self, should_print: bool, display_interval):
+    def __init__(self, should_print: bool, display_interval: float):
         self._print = should_print
         self._display_interval = display_interval
         self._last_print_time = perf_counter()
@@ -59,7 +59,8 @@ class ProgressPrinter:
         contains information about the feasible and infeasible populations,
         whether a new best solution has been found, and the search duration.
         """
-        interval = perf_counter() - self._last_print_time
+        curr_time = perf_counter()
+        interval = curr_time - self._last_print_time
         should_print = (
             self._print
             and stats.is_collecting()
@@ -85,7 +86,7 @@ class ProgressPrinter:
         )
         print(msg)
 
-        self._last_print_time += interval
+        self._last_print_time = curr_time
         if feas.best_cost < self._best_cost:
             self._best_cost = feas.best_cost
 
