@@ -21,6 +21,13 @@ class NoImprovement:
     def max_iterations(self) -> int:
         return self._max_iterations
 
+    def fraction_remaining(self) -> float:
+        if self._max_iterations == 0:
+            return 0
+
+        remaining_iters = self._max_iterations - self._counter
+        return max(remaining_iters / self._max_iterations, 0.0)
+
     def __call__(self, best_cost: float) -> bool:
         if self._target is None or best_cost < self._target:
             self._target = best_cost

@@ -52,3 +52,28 @@ def test_after_max_iterations():
 
     for _ in range(100):
         assert_(stop(1))
+
+
+def test_fraction_remaining():
+    """
+    Tests that calling ``fraction_remaining()`` returns the correct values.
+    """
+    stop = MaxIterations(100)
+    assert_equal(stop.fraction_remaining(), 1)
+
+    stop(0)
+    assert_equal(stop.fraction_remaining(), 0.99)
+
+
+def test_fraction_remaining_edge_cases():
+    """
+    Tests that ``fraction_remaining()`` works for edge cases.
+    """
+    # Zero max iterations should result in zero fraction remaining from the
+    # start.
+    stop = MaxIterations(0)
+    assert_equal(stop.fraction_remaining(), 0)
+
+    # Fraction remaining should also not go below zero.
+    stop(0)
+    assert_equal(stop.fraction_remaining(), 0)
