@@ -4,14 +4,6 @@ from pytest import mark
 from pyvrp.stop import NoImprovement
 
 
-def test_attribute_max_iterations():
-    """
-    Tests that the ``max_iterations`` attribute is set correctly.
-    """
-    stop = NoImprovement(100)
-    assert_equal(stop.max_iterations, 100)
-
-
 @mark.parametrize("max_iterations", [-10, -100, -1000])
 def test_raise_negative_parameters(max_iterations: int):
     """

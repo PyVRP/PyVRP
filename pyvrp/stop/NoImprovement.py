@@ -17,10 +17,6 @@ class NoImprovement:
         self._target: float | None = None
         self._counter = 0
 
-    @property
-    def max_iterations(self) -> int:
-        return self._max_iterations
-
     def fraction_remaining(self) -> float:
         if self._max_iterations == 0:
             return 0

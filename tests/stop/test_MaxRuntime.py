@@ -5,14 +5,6 @@ from pyvrp.stop import MaxRuntime
 from tests.helpers import sleep
 
 
-def test_attribute_max_runtime():
-    """
-    Tests that the ``max_runtime`` attribute is set correctly.
-    """
-    stop = MaxRuntime(1.23)
-    assert_equal(stop.max_runtime, 1.23)
-
-
 @mark.parametrize("max_runtime", [-0.001, -1, -10.1])
 def test_raise_negative_parameters(max_runtime: float):
     """

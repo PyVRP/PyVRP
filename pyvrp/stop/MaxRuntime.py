@@ -13,10 +13,6 @@ class MaxRuntime:
         self._max_runtime = max_runtime
         self._start_runtime: float | None = None
 
-    @property
-    def max_runtime(self) -> float:
-        return self._max_runtime
-
     def fraction_remaining(self) -> float:
         if self._max_runtime == 0:
             return 0
