@@ -14,11 +14,11 @@ class MultipleCriteria:
 
     def fraction_remaining(self) -> float | None:
         fractions = [
-            crit.fraction_remaining()
+            fraction
             for crit in self.criteria
-            if crit.fraction_remaining() is not None
+            if (fraction := crit.fraction_remaining()) is not None
         ]
-        return min(fractions) if fractions else None  # type: ignore
+        return min(fractions) if fractions else None
 
     def __call__(self, best_cost: float) -> bool:
         return any(crit(best_cost) for crit in self.criteria)

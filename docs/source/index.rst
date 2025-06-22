@@ -54,7 +54,6 @@ Contents
    :caption: API reference
 
    api/pyvrp
-   api/accept
    api/crossover
    api/diversity
    api/repair

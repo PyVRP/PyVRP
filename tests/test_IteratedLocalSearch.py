@@ -8,7 +8,6 @@ from pyvrp import (
     RandomNumberGenerator,
     Solution,
 )
-from pyvrp.accept import MovingBestAverageThreshold
 from pyvrp.search import (
     Exchange10,
     LocalSearch,
@@ -20,28 +19,52 @@ from tests.helpers import read_solution
 
 
 @mark.parametrize(
-    "num_iters_no_improvement",
-    [(-1)],  # num_iters_no_improvement < 0
+    "num_iters_no_improvement, initial_weight, history_length",
+    [
+        (-1, 1, 1),  # num_iters_no_improvement < 0
+        (0, -1, 1),  # initial_weight < 0
+        (0, 2, 1),  # initial_weight > 1
+        (0, 1, 0),  # history_length < 1
+    ],
 )
 def test_params_constructor_raises_when_arguments_invalid(
     num_iters_no_improvement: int,
+    initial_weight: float,
+    history_length: int,
 ):
     """
     Tests that invalid configurations are not accepted.
     """
     with assert_raises(ValueError):
-        IteratedLocalSearchParams(num_iters_no_improvement)
+        IteratedLocalSearchParams(
+            num_iters_no_improvement=num_iters_no_improvement,
+            initial_weight=initial_weight,
+            history_length=history_length,
+        )
 
 
-@mark.parametrize("num_iters_no_improvement", range(5))
+@mark.parametrize(
+    "num_iters_no_improvement, initial_weight, history_length",
+    [
+        (0, 1, 1),  # num_iters_no_improvement == 0
+        (0, 0, 1),  # initial_weight == 0
+        (0, 1, 1),  # initial_weight == 1
+        (0, 1, 1),  # history_length == 1
+    ],
+)
 def test_params_constructor_does_not_raise_when_arguments_valid(
     num_iters_no_improvement: int,
+    initial_weight: float,
+    history_length: int,
 ):
     """
     Tests valid boundary cases.
     """
-    params = IteratedLocalSearchParams(num_iters_no_improvement)
-    assert_equal(params.num_iters_no_improvement, num_iters_no_improvement)
+    IteratedLocalSearchParams(
+        num_iters_no_improvement=num_iters_no_improvement,
+        initial_weight=initial_weight,
+        history_length=history_length,
+    )
 
 
 def test_best_solution_improves_with_more_iterations(rc208):
@@ -54,9 +77,8 @@ def test_best_solution_improves_with_more_iterations(rc208):
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
     ls.add_node_operator(Exchange10(rc208))
-    accept = MovingBestAverageThreshold(0, 100)
     init = Solution.make_random(rc208, rng)
-    algo = IteratedLocalSearch(rc208, pm, rng, ls, accept, init)
+    algo = IteratedLocalSearch(rc208, pm, rng, ls, init)
 
     initial_best = algo.run(MaxIterations(0)).best
     new_best = algo.run(MaxIterations(25)).best
@@ -76,9 +98,8 @@ def test_best_initial_solution(rc208):
     rng = RandomNumberGenerator(seed=42)
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    accept = MovingBestAverageThreshold(0, 100)
     bks = read_solution("data/RC208.sol", rc208)
-    algo = IteratedLocalSearch(rc208, pm, rng, ls, accept, bks)
+    algo = IteratedLocalSearch(rc208, pm, rng, ls, bks)
 
     result = algo.run(MaxIterations(0))
 
@@ -99,10 +120,12 @@ def test_restarts_after_no_improvement(rc208):
     ls.add_perturbation_operator(NeighbourRemoval(rc208, 20))
     ls.add_node_operator(Exchange10(rc208))
 
-    accept = MovingBestAverageThreshold(1, 1)  # always accept
     bks = read_solution("data/RC208.sol", rc208)
-    ils_params = IteratedLocalSearchParams(num_iters_no_improvement=3)
-    algo = IteratedLocalSearch(rc208, pm, rng, ls, accept, bks, ils_params)
+    ils_params = IteratedLocalSearchParams(
+        num_iters_no_improvement=3,
+        history_length=1,  # accept all candidate solutions
+    )
+    algo = IteratedLocalSearch(rc208, pm, rng, ls, bks, ils_params)
 
     result = algo.run(MaxIterations(3))
     data = result.stats.data
@@ -130,9 +153,8 @@ def test_ils_result_has_correct_stats(ok_small):
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     rng = RandomNumberGenerator(42)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
-    accept = MovingBestAverageThreshold(0, 100)
     init = Solution.make_random(ok_small, rng)
-    ils = IteratedLocalSearch(ok_small, pm, rng, ls, accept, init)
+    ils = IteratedLocalSearch(ok_small, pm, rng, ls, init)
 
     result = ils.run(MaxIterations(10), collect_stats=True)
     assert_equal(result.best, init)

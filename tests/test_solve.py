@@ -3,9 +3,6 @@ from numpy.testing import assert_, assert_equal
 
 from pyvrp.IteratedLocalSearch import IteratedLocalSearchParams
 from pyvrp.PenaltyManager import PenaltyParams
-from pyvrp.accept.MovingBestAverageThreshold import (
-    MovingBestAverageThresholdParams,
-)
 from pyvrp.search import (
     NODE_OPERATORS,
     PERTURBATION_OPERATORS,
@@ -30,7 +27,6 @@ def test_default_values():
     assert_equal(params.ils, IteratedLocalSearchParams())
     assert_equal(params.penalty, PenaltyParams())
     assert_equal(params.neighbourhood, NeighbourhoodParams())
-    assert_equal(params.mbat, MovingBestAverageThresholdParams())
     assert_equal(params.node_ops, NODE_OPERATORS)
     assert_equal(params.route_ops, ROUTE_OPERATORS)
     assert_equal(params.perturbation_ops, PERTURBATION_OPERATORS)
@@ -45,7 +41,6 @@ def test_solve_params_from_file():
     ils = IteratedLocalSearchParams(10)
     penalty = PenaltyParams(12, 100, 1.25, 0.85, 0.43)
     neighbourhood = NeighbourhoodParams(0, 0, 20, True, True)
-    mbat = MovingBestAverageThresholdParams(1, 100, None, 10000)
     node_ops = [Exchange10, SwapTails]
     route_ops = [SwapStar]
     perturbation_ops = [NeighbourRemoval]
@@ -53,7 +48,6 @@ def test_solve_params_from_file():
     assert_equal(params.ils, ils)
     assert_equal(params.penalty, penalty)
     assert_equal(params.neighbourhood, neighbourhood)
-    assert_equal(params.mbat, mbat)
     assert_equal(params.node_ops, node_ops)
     assert_equal(params.route_ops, route_ops)
     assert_equal(params.perturbation_ops, perturbation_ops)
@@ -83,25 +77,28 @@ def test_solve_same_seed(ok_small):
 def test_solve_custom_params(rc208):
     """
     Tests that solving an instance with custom solver parameters works as
-    expected by checking that only improving solutions are accepted.
+    expected by checking how solutions are accepted.
     """
-    # First solve using default parameters.
-    res = solve(rc208, stop=MaxIterations(20))
-
-    # Skip the first datum because it's the empty initial solution with cost 0.
-    costs = [datum.current_cost for datum in res.stats.data[1:]]
 
     def monotonically_decreasing(arr) -> np.bool:
         return np.all(np.diff(arr) <= 0)
 
-    # Default parameters allow accepting worse solutions, so the current costs
-    # won't necessarily be monotonically decreasing.
-    assert_(not monotonically_decreasing(costs))
-
-    # Now configure MBAT to only accept improving solutions by setting
-    # ``initial_weight`` to zero.
-    params = SolveParams(mbat=MovingBestAverageThresholdParams(0))
+    # First solve with ``history_length=1``, which means that all candidate
+    # solutions are accepted.
+    params = SolveParams(IteratedLocalSearchParams(history_length=1))
     res = solve(rc208, stop=MaxIterations(20), params=params)
 
+    # Because we accept all candidate solutions, the current costs won't
+    # necessarily be monotonically decreasing.
+    costs = [datum.current_cost for datum in res.stats.data]
+    assert_(not monotonically_decreasing(costs))
+
+    # Now configure ILS to only accept improving solutions by setting
+    # ``initial_weight=0``.
+    params = SolveParams(IteratedLocalSearchParams(initial_weight=0))
+    res = solve(rc208, stop=MaxIterations(20), params=params)
+
+    # The current costs should now be monotonically decreasing. The first datum
+    # is skipped because it's an empty initial solution with penalised cost 0.
     costs = [datum.current_cost for datum in res.stats.data[1:]]
     assert_(monotonically_decreasing(costs))

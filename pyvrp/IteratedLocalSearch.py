@@ -4,6 +4,8 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
@@ -16,7 +18,6 @@ if TYPE_CHECKING:
         RandomNumberGenerator,
         Solution,
     )
-    from pyvrp.accept.AcceptanceCriterion import AcceptanceCriterion
     from pyvrp.search.SearchMethod import SearchMethod
     from pyvrp.stop.StoppingCriterion import StoppingCriterion
 
@@ -25,13 +26,35 @@ if TYPE_CHECKING:
 class IteratedLocalSearchParams:
     """
     Parameters for the iterated local search algorithm.
+
+    Parameters
+    ----------
+    num_iters_no_improvement
+        Number of iterations without any improvement needed before a restart
+        occurs.
+    initial_weight
+        Initial weight parameter :math:`w_0` used to determine the threshold
+        value in the acceptance criterion. Larger values result in more
+        accepted candidate solutions. Must be in [0, 1].
+    history_length
+        The number of recent candidate solutions :math:`N` to consider when
+        computing the threshold value in the acceptance criterion. Must be
+        positive.
     """
 
     num_iters_no_improvement: int = 20_000
+    initial_weight: float = 1
+    history_length: int = 500
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
-            raise ValueError("num_iter_no_improvement < 0 not understood.")
+            raise ValueError("num_iters_no_improvement < 0 not understood.")
+
+        if not (0 <= self.initial_weight <= 1):
+            raise ValueError("initial_weight must be in [0, 1].")
+
+        if self.history_length <= 0:
+            raise ValueError("history_length must be positive.")
 
 
 class IteratedLocalSearch:
@@ -48,8 +71,6 @@ class IteratedLocalSearch:
         Random number generator.
     search_method
         Search method to use.
-    acceptance_criterion
-        Acceptance criterion to use.
     initial_solution
         Initial solution to start the search with.
     params
@@ -63,7 +84,6 @@ class IteratedLocalSearch:
         penalty_manager: PenaltyManager,
         rng: RandomNumberGenerator,
         search_method: SearchMethod,
-        acceptance_criterion: AcceptanceCriterion,
         initial_solution: Solution,
         params: IteratedLocalSearchParams = IteratedLocalSearchParams(),
     ):
@@ -71,7 +91,6 @@ class IteratedLocalSearch:
         self._pm = penalty_manager
         self._rng = rng
         self._search = search_method
-        self._accept = acceptance_criterion
         self._init = initial_solution
         self._params = params
 
@@ -87,6 +106,85 @@ class IteratedLocalSearch:
         penalised_cost = self._cost_evaluator.penalised_cost(solution)
         is_feasible = solution.is_feasible()
         return penalised_cost, is_feasible
+
+    def _accept(
+        self,
+        cand_cost: float,
+        history: np.array,
+        iters: int,
+        stop: StoppingCriterion,
+    ) -> bool:
+        R"""
+        Accepts the candidate solution if it is better than a threshold value,
+        based on the objective values of recently observed candidate solutions.
+        Specifically, it is a convex combination of the recent best and average
+        values, computed as:
+
+        .. math::
+
+        (1 - w) \times f(s^*) + w \times \sum_{j = 1}^N \frac{f(s^j)}{N}
+
+        where :math:`s^*` is the best solution observed in the last :math:`N`
+        iterations, :math:`f(\cdot)` is the objective function,
+        :math:`N \in \mathbb{N}` is the history length parameter, and each
+        :math:`s^j` is a recently observed solution.
+
+        The weight :math:`w` starts at :math:`w_0 \in [0, 1]` and decreases
+        proportionally to the remaining search time:
+
+        .. math::
+
+        w = w_0 \times \text{fraction\_remaining of stopping criterion}
+
+        As the algorithm progresses, the threshold becomes more selective,
+        transitioning from exploration (accepting more diverse solutions)
+        to exploitation (accepting only improving solutions).
+
+        .. note::
+
+        This method is based on the Moving Best Average Threshold criterion of
+        [1]_. The parameters :math:`w_0` and :math:`N` correspond to
+        :math:`\eta` and :math:`\gamma` respectively in [1]_.
+
+        Parameters
+        ----------
+        cand_cost
+            The cost of the candidate solution to evaluate.
+        history
+            The history of recent candidate solutions' costs.
+        iters
+            The current number of iterations completed.
+        stop
+            The stopping criterion of this run.
+
+        Returns
+        -------
+        bool
+            True if the candidate solution should be accepted, False otherwise.
+
+        References
+        ----------
+        .. [1] Máximo, V.R. and M.C.V. Nascimento. 2021. A hybrid adaptive
+            iterated local search with diversification control to the
+            capacitated vehicle routing problem,
+            *European Journal of Operational Research* 294 (3): 1108 - 1119.
+            https://doi.org/10.1016/j.ejor.2021.02.024.
+        """
+        idx = iters % self._params.history_length
+        history[idx] = cand_cost
+
+        costs = history
+        if iters < self._params.history_length:  # not enough solutions
+            costs = costs[: iters + 1]
+
+        recent_best = costs.min()
+        recent_avg = costs.mean()
+
+        weight = self._params.initial_weight
+        if fraction := stop.fraction_remaining() is not None:
+            weight *= fraction
+
+        return cand_cost <= (1 - weight) * recent_best + weight * recent_avg
 
     def run(
         self,
@@ -116,6 +214,7 @@ class IteratedLocalSearch:
 
         start = time.perf_counter()
         stats = Statistics(collect_stats=collect_stats)
+        history = np.zeros(self._params.history_length)
         iters = 0
         iters_no_improvement = 1
         best = current = self._init
@@ -148,7 +247,6 @@ class IteratedLocalSearch:
                 continue  # don't accept infeasible candidates
 
             cand_cost = self._cost_evaluator.cost(candidate)
-            curr_cost = self._cost_evaluator.cost(current)
             best_cost = self._cost_evaluator.cost(best)
 
             if cand_cost < best_cost:  # new best
@@ -157,7 +255,7 @@ class IteratedLocalSearch:
             else:
                 iters_no_improvement += 1
 
-            if self._accept(best_cost, curr_cost, cand_cost):
+            if self._accept(cand_cost, history, iters, stop):
                 current = candidate
 
         runtime = time.perf_counter() - start

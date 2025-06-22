@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from copy import copy
 from typing import TYPE_CHECKING
 
 import tomli
@@ -12,10 +11,6 @@ from pyvrp.IteratedLocalSearch import (
 )
 from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
 from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
-from pyvrp.accept import (
-    MovingBestAverageThreshold,
-    MovingBestAverageThresholdParams,
-)
 from pyvrp.search import (
     NODE_OPERATORS,
     PERTURBATION_OPERATORS,
@@ -26,11 +21,6 @@ from pyvrp.search import (
     PerturbationOperator,
     RouteOperator,
     compute_neighbours,
-)
-from pyvrp.stop import (
-    MaxIterations,
-    MaxRuntime,
-    MultipleCriteria,
 )
 
 if TYPE_CHECKING:
@@ -52,8 +42,6 @@ class SolveParams:
         Penalty parameters.
     neighbourhood
         Neighbourhood parameters.
-    mbat
-        Moving best average threshold parameters.
     node_ops
         Node operators to use in the search.
     route_ops
@@ -67,9 +55,6 @@ class SolveParams:
         ils: IteratedLocalSearchParams = IteratedLocalSearchParams(),
         penalty: PenaltyParams = PenaltyParams(),
         neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
-        mbat: MovingBestAverageThresholdParams = (
-            MovingBestAverageThresholdParams()
-        ),
         node_ops: list[type[NodeOperator]] = NODE_OPERATORS,
         route_ops: list[type[RouteOperator]] = ROUTE_OPERATORS,
         perturbation_ops: list[
@@ -79,7 +64,6 @@ class SolveParams:
         self._ils = ils
         self._penalty = penalty
         self._neighbourhood = neighbourhood
-        self._mbat = mbat
         self._node_ops = node_ops
         self._route_ops = route_ops
         self._perturbation_ops = perturbation_ops
@@ -90,7 +74,6 @@ class SolveParams:
             and self.ils == other.ils
             and self.penalty == other.penalty
             and self.neighbourhood == other.neighbourhood
-            and self.mbat == other.mbat
             and self.node_ops == other.node_ops
             and self.route_ops == other.route_ops
             and self.perturbation_ops == other.perturbation_ops
@@ -107,10 +90,6 @@ class SolveParams:
     @property
     def neighbourhood(self):
         return self._neighbourhood
-
-    @property
-    def mbat(self):
-        return self._mbat
 
     @property
     def node_ops(self):
@@ -135,7 +114,6 @@ class SolveParams:
         ils_params = IteratedLocalSearchParams(**data.get("ils", {}))
         pen_params = PenaltyParams(**data.get("penalty", {}))
         nb_params = NeighbourhoodParams(**data.get("neighbourhood", {}))
-        mbat_params = MovingBestAverageThresholdParams(**data.get("mbat", {}))
 
         node_ops = NODE_OPERATORS
         if "node_ops" in data:
@@ -155,7 +133,6 @@ class SolveParams:
             ils_params,
             pen_params,
             nb_params,
-            mbat_params,
             node_ops,
             route_ops,
             perturbation_ops,
@@ -212,42 +189,9 @@ def solve(
     for perturb_op in params.perturbation_ops:
         ls.add_perturbation_operator(perturb_op(data, 10))
 
-    # Infer MBAT convergence parameters from stopping criteria, if not set.
-    mbat = copy(params.mbat)
-    if mbat.max_runtime is None:
-        mbat.max_runtime = _stop2runtime(stop)
-
-    if mbat.max_iterations is None:
-        mbat.max_iterations = _stop2iterations(stop)
-
-    accept = MovingBestAverageThreshold(**vars(mbat))
     pm = PenaltyManager.init_from(data, params.penalty)
     init = Solution(data, [])  # type: ignore
 
-    ils_args = (data, pm, rng, ls, accept, init, params.ils)
+    ils_args = (data, pm, rng, ls, init, params.ils)
     algo = IteratedLocalSearch(*ils_args)  # type: ignore
     return algo.run(stop, collect_stats, display)
-
-
-def _stop2runtime(stop) -> float | None:
-    if isinstance(stop, MultipleCriteria):
-        for crit in stop.criteria:
-            if isinstance(crit, MaxRuntime):
-                return crit.max_runtime
-
-    if isinstance(stop, MaxRuntime):
-        return stop.max_runtime
-
-    return None
-
-
-def _stop2iterations(stop) -> int | None:
-    if isinstance(stop, MultipleCriteria):
-        for crit in stop.criteria:
-            if isinstance(crit, MaxIterations):
-                return crit.max_iterations
-
-    if isinstance(stop, MaxIterations):
-        return stop.max_iterations
-
-    return None
