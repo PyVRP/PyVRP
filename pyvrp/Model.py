@@ -476,7 +476,6 @@ class Model:
         seed: int = 0,
         collect_stats: bool = True,
         display: bool = True,
-        display_interval: float = 5.0,
         params: SolveParams = SolveParams(),
     ) -> Result:
         """
@@ -495,8 +494,6 @@ class Model:
             Whether to display information about the solver progress. Default
             ``True``. Progress information is only available when
             ``collect_stats`` is also set, which it is by default.
-        display_interval
-            Time (in seconds) between iteration logs. Default 5s.
         params
             Solver parameters to use. If not provided, a default will be used.
 
@@ -506,15 +503,7 @@ class Model:
             A Result object, containing statistics (if collected) and the best
             found solution.
         """
-        return solve(
-            self.data(),
-            stop,
-            seed,
-            collect_stats,
-            display,
-            display_interval,
-            params,
-        )
+        return solve(self.data(), stop, seed, collect_stats, display, params)
 
 
 def _idx_by_id(item: object, container: Sequence[object]) -> int | None:

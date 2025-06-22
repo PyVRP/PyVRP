@@ -47,6 +47,8 @@ class SolveParams:
         Node operators to use in the search.
     route_ops
         Route operators to use in the search.
+    display_interval
+        Time (in seconds) between iteration logs. Default 5s.
     """
 
     def __init__(
@@ -57,6 +59,7 @@ class SolveParams:
         neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
         node_ops: list[type[NodeOperator]] = NODE_OPERATORS,
         route_ops: list[type[RouteOperator]] = ROUTE_OPERATORS,
+        display_interval: float = 5.0,
     ):
         self._genetic = genetic
         self._penalty = penalty
@@ -64,6 +67,7 @@ class SolveParams:
         self._neighbourhood = neighbourhood
         self._node_ops = node_ops
         self._route_ops = route_ops
+        self._display_interval = display_interval
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -74,6 +78,7 @@ class SolveParams:
             and self.neighbourhood == other.neighbourhood
             and self.node_ops == other.node_ops
             and self.route_ops == other.route_ops
+            and self.display_interval == other.display_interval
         )
 
     @property
@@ -100,6 +105,10 @@ class SolveParams:
     def route_ops(self):
         return self._route_ops
 
+    @property
+    def display_interval(self) -> float:
+        return self._display_interval
+
     @classmethod
     def from_file(cls, loc: str | pathlib.Path):
         """
@@ -107,11 +116,6 @@ class SolveParams:
         """
         with open(loc, "rb") as fh:
             data = tomli.load(fh)
-
-        gen_params = GeneticAlgorithmParams(**data.get("genetic", {}))
-        pen_params = PenaltyParams(**data.get("penalty", {}))
-        pop_params = PopulationParams(**data.get("population", {}))
-        nb_params = NeighbourhoodParams(**data.get("neighbourhood", {}))
 
         node_ops = NODE_OPERATORS
         if "node_ops" in data:
@@ -122,7 +126,13 @@ class SolveParams:
             route_ops = [getattr(pyvrp.search, op) for op in data["route_ops"]]
 
         return cls(
-            gen_params, pen_params, pop_params, nb_params, node_ops, route_ops
+            GeneticAlgorithmParams(**data.get("genetic", {})),
+            PenaltyParams(**data.get("penalty", {})),
+            PopulationParams(**data.get("population", {})),
+            NeighbourhoodParams(**data.get("neighbourhood", {})),
+            node_ops,
+            route_ops,
+            data.get("display_interval", 5.0),
         )
 
 
@@ -132,7 +142,6 @@ def solve(
     seed: int = 0,
     collect_stats: bool = True,
     display: bool = False,
-    display_interval: float = 5.0,
     params: SolveParams = SolveParams(),
 ) -> Result:
     """
@@ -153,8 +162,6 @@ def solve(
         Whether to display information about the solver progress. Default
         ``False``. Progress information is only available when
         ``collect_stats`` is also set, which it is by default.
-    display_interval
-        Time (in seconds) between iteration logs. Default 5s.
     params
         Solver parameters to use. If not provided, a default will be used.
 
@@ -188,4 +195,4 @@ def solve(
 
     gen_args = (data, pm, rng, pop, ls, crossover, init, params.genetic)
     algo = GeneticAlgorithm(*gen_args)  # type: ignore
-    return algo.run(stop, collect_stats, display, display_interval)
+    return algo.run(stop, collect_stats, display, params.display_interval)
