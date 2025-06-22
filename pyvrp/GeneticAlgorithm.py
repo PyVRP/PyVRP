@@ -134,6 +134,7 @@ class GeneticAlgorithm:
         stop: StoppingCriterion,
         collect_stats: bool = True,
         display: bool = False,
+        display_interval: float = 5.0,
     ):
         """
         Runs the genetic algorithm with the provided stopping criterion.
@@ -150,6 +151,8 @@ class GeneticAlgorithm:
             Whether to display information about the solver progress. Default
             ``False``. Progress information is only available when
             ``collect_stats`` is also set.
+        display_interval
+            Time (in seconds) between iteration logs. Defaults to 5s.
 
         Returns
         -------
@@ -157,7 +160,7 @@ class GeneticAlgorithm:
             A Result object, containing statistics (if collected) and the best
             found solution.
         """
-        print_progress = ProgressPrinter(should_print=display)
+        print_progress = ProgressPrinter(display, display_interval)
         print_progress.start(self._data)
 
         start = time.perf_counter()
