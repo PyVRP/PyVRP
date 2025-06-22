@@ -1,5 +1,5 @@
 import pytest
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
     CostEvaluator,
@@ -11,6 +11,15 @@ from pyvrp import (
 )
 from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.diversity import broken_pairs_distance as bpd
+
+
+def test_raises_negative_display_interval():
+    """
+    Tests that ProgressPrinter raises when provided with a negative
+    display_interval argument.
+    """
+    with assert_raises(ValueError):
+        ProgressPrinter(True, -1.0)
 
 
 def test_start(ok_small, capsys):

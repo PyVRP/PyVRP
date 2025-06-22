@@ -48,6 +48,9 @@ class ProgressPrinter:
     """
 
     def __init__(self, should_print: bool, display_interval: float):
+        if display_interval < 0:
+            raise ValueError("Expected display_interval >= 0.")
+
         self._print = should_print
         self._display_interval = display_interval
         self._last_print_time = perf_counter()
