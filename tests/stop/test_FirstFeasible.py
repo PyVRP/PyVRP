@@ -22,7 +22,7 @@ def test_stops_on_first_feasible_solution(ok_small):
 
 def test_fraction_remaining():
     """
-    Tests that calling ``FirstFeasible.fraction_remaining()`` returns None.
+    Tests that calling ``fraction_remaining()`` returns None.
     """
     stop = FirstFeasible()
     assert_(stop.fraction_remaining() is None)
