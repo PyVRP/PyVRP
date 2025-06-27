@@ -1,4 +1,5 @@
 display_interval = 10.0
+num_perturbations = 20
 
 node_ops = [
     "Exchange10",

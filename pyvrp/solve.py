@@ -48,6 +48,8 @@ class SolveParams:
         Route operators to use in the search.
     perturbation_ops
         Perturbation operators to use in the search.
+    num_perturbations
+        Number of perturbations to apply in each iteration. Default 10.
     display_interval
         Time (in seconds) between iteration logs. Default 5s.
     """
@@ -62,6 +64,7 @@ class SolveParams:
         perturbation_ops: list[
             type[PerturbationOperator]
         ] = PERTURBATION_OPERATORS,
+        num_perturbations: int = 10,
         display_interval: float = 5.0,
     ):
         self._ils = ils
@@ -70,6 +73,7 @@ class SolveParams:
         self._node_ops = node_ops
         self._route_ops = route_ops
         self._perturbation_ops = perturbation_ops
+        self._num_perturbations = num_perturbations
         self._display_interval = display_interval
 
     def __eq__(self, other: object) -> bool:
@@ -81,6 +85,7 @@ class SolveParams:
             and self.node_ops == other.node_ops
             and self.route_ops == other.route_ops
             and self.perturbation_ops == other.perturbation_ops
+            and self.num_perturbations == other.num_perturbations
             and self.display_interval == other.display_interval
         )
 
@@ -107,6 +112,10 @@ class SolveParams:
     @property
     def perturbation_ops(self):
         return self._perturbation_ops
+
+    @property
+    def num_perturbations(self):
+        return self._num_perturbations
 
     @property
     def display_interval(self) -> float:
@@ -141,6 +150,7 @@ class SolveParams:
             node_ops,
             route_ops,
             perturbation_ops,
+            data.get("num_perturbations", 10),
             data.get("display_interval", 5.0),
         )
 
@@ -193,7 +203,9 @@ def solve(
             ls.add_route_operator(route_op(data))
 
     for perturb_op in params.perturbation_ops:
-        ls.add_perturbation_operator(perturb_op(data, 10))
+        ls.add_perturbation_operator(
+            perturb_op(data, params.num_perturbations)
+        )
 
     pm = PenaltyManager.init_from(data, params.penalty)
     init = Solution(data, [])  # type: ignore

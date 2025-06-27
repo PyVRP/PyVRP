@@ -30,6 +30,7 @@ def test_default_values():
     assert_equal(params.node_ops, NODE_OPERATORS)
     assert_equal(params.route_ops, ROUTE_OPERATORS)
     assert_equal(params.perturbation_ops, PERTURBATION_OPERATORS)
+    assert_equal(params.num_perturbations, 10)
     assert_allclose(params.display_interval, 5.0)
 
 
@@ -52,6 +53,7 @@ def test_solve_params_from_file():
     assert_equal(params.node_ops, node_ops)
     assert_equal(params.route_ops, route_ops)
     assert_equal(params.perturbation_ops, perturbation_ops)
+    assert_equal(params.num_perturbations, 20)
     assert_allclose(params.display_interval, 10.0)
 
 
