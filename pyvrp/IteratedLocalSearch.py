@@ -107,11 +107,7 @@ class IteratedLocalSearch:
         return penalised_cost, is_feasible
 
     def _accept(
-        self,
-        cand_cost: float,
-        history: np.array,
-        curr_iters: int,
-        stop: StoppingCriterion,
+        self, history: np.array, curr_iters: int, stop: StoppingCriterion
     ) -> bool:
         R"""
         Returns whether the candidate solution should be accepted or not.
@@ -149,8 +145,6 @@ class IteratedLocalSearch:
 
         Parameters
         ----------
-        cand_cost
-            The cost of the candidate solution to evaluate.
         history
             The history of recent candidate solutions' costs.
         curr_iters
@@ -176,9 +170,11 @@ class IteratedLocalSearch:
         recent_avg = costs.mean()
 
         weight = self._params.initial_accept_weight
-        if fraction := stop.fraction_remaining() is not None:
+        if (fraction := stop.fraction_remaining()) is not None:
             weight *= fraction
 
+        idx = (curr_iters - 1) % self._params.history_length
+        cand_cost = history[idx]
         return cand_cost <= (1 - weight) * recent_best + weight * recent_avg
 
     def run(
@@ -255,7 +251,7 @@ class IteratedLocalSearch:
             else:
                 iters_no_improvement += 1
 
-            if self._accept(cand_cost, history, iters, stop):
+            if self._accept(history, iters, stop):
                 current = candidate
 
         runtime = time.perf_counter() - start
