@@ -175,9 +175,9 @@ def test_ils_accepts_below_threshold(ok_small):
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     rng = RandomNumberGenerator(42)
     init = Solution.make_random(ok_small, rng)
-    search = lambda sol, cost_eval: sol  # noqa
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
     params = IteratedLocalSearchParams(initial_accept_weight=0.5)
-    ils = IteratedLocalSearch(ok_small, pm, rng, search, init, params)
+    ils = IteratedLocalSearch(ok_small, pm, rng, ls, init, params)
 
     # The threshold is set at 0 + 0.5 * (1 - 0) = 0.5, candidate has cost 0.
     assert_(ils._accept(0, np.array([1, 0]), 2, FirstFeasible()))  # noqa
@@ -190,9 +190,9 @@ def test_ils_rejects_above_threshold(ok_small):
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     rng = RandomNumberGenerator(42)
     init = Solution.make_random(ok_small, rng)
-    search = lambda sol, cost_eval: sol  # noqa
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
     params = IteratedLocalSearchParams(initial_accept_weight=0.5)
-    ils = IteratedLocalSearch(ok_small, pm, rng, search, init, params)
+    ils = IteratedLocalSearch(ok_small, pm, rng, ls, init, params)
 
     # The threshold is set at 0 + 0.5 * (1 - 0) = 0.5, candidate has cost 1.
     assert_(not ils._accept(1, np.array([0, 1]), 2, FirstFeasible()))  # noqa
@@ -206,9 +206,9 @@ def test_ils_rejects_due_to_stopping_criterion(ok_small):
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     rng = RandomNumberGenerator(42)
     init = Solution.make_random(ok_small, rng)
-    search = lambda sol, cost_eval: sol  # noqa
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
     params = IteratedLocalSearchParams(initial_accept_weight=0.5)
-    ils = IteratedLocalSearch(ok_small, pm, rng, search, init, params)
+    ils = IteratedLocalSearch(ok_small, pm, rng, ls, init, params)
     stop = MaxIterations(0)
 
     # The history has an average cost of 1.5 and best of 0. The weight is set
