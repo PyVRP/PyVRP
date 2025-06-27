@@ -76,7 +76,7 @@ def test_restart(capsys):
 def test_iteration(capsys):
     """
     Tests that calling iteration prints a line about the solution costs and
-    feasibilities.
+    their feasibility.
     """
     stats = Statistics()
     stats.collect(1, True, 2, True, 3, False)
@@ -91,7 +91,7 @@ def test_iteration(capsys):
     assert_(str(stats.num_iterations) in out)
     assert_(str(round(sum(stats.runtimes))) in out)
 
-    # Statistics about solution costs and feasibility.
+    # Statistics about solution costs and their feasibility.
     assert_("1 (Y)" in out)  # current
     assert_("2 (Y)" in out)  # candidate
     assert_("3 (N)" in out)  # best

@@ -1051,7 +1051,7 @@ def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
            https://doi.org/10.1287/trsc.2022.1161.
     """
     m = Model.from_data(mtvrptw_release_times)
-    res = m.solve(seed=42, stop=MaxIterations(20))  # TODO decrease iters
+    res = m.solve(stop=MaxIterations(20))  # TODO decrease iters later
     assert_(res.is_feasible())
 
     opt = read_solution("data/C201R0.25.sol", mtvrptw_release_times)
