@@ -98,8 +98,8 @@ def test_solve_custom_params(rc208):
     assert_(not monotonically_decreasing(costs))
 
     # Now configure ILS to only accept improving solutions by setting
-    # ``intial_accept_weight=0``.
-    params = SolveParams(IteratedLocalSearchParams(intial_accept_weight=0))
+    # ``initial_accept_weight=0``.
+    params = SolveParams(IteratedLocalSearchParams(initial_accept_weight=0))
     res = solve(rc208, stop=MaxIterations(20), params=params)
 
     # The current costs should now be monotonically decreasing. The first datum

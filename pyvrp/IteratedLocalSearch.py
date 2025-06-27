@@ -32,7 +32,7 @@ class IteratedLocalSearchParams:
     num_iters_no_improvement
         Number of iterations without any improvement needed before a restart
         occurs.
-    intial_accept_weight
+    initial_accept_weight
         Initial weight parameter used to determine the threshold value in the
         acceptance criterion. Larger values result in more accepted candidate
         solutions. Must be in [0, 1].
@@ -43,15 +43,15 @@ class IteratedLocalSearchParams:
     """
 
     num_iters_no_improvement: int = 20_000
-    intial_accept_weight: float = 1
+    initial_accept_weight: float = 1
     history_length: int = 500
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
             raise ValueError("num_iters_no_improvement < 0 not understood.")
 
-        if not (0 <= self.intial_accept_weight <= 1):
-            raise ValueError("intial_accept_weight must be in [0, 1].")
+        if not (0 <= self.initial_accept_weight <= 1):
+            raise ValueError("initial_accept_weight must be in [0, 1].")
 
         if self.history_length <= 0:
             raise ValueError("history_length must be positive.")
@@ -115,10 +115,11 @@ class IteratedLocalSearch:
         stop: StoppingCriterion,
     ) -> bool:
         R"""
-        Accepts the candidate solution if it is better than a threshold value,
-        based on the objective values of recently observed candidate solutions.
-        Specifically, it is a convex combination of the recent best and average
-        values, computed as:
+        Returns True if the candidate solution should be accepted, False
+        otherwise. A candidate solution is accepted if it is better than a
+        threshold value based on the objective values of recently observed
+        candidate solutions. Specifically, the threshold value is a convex
+        combination of the recent best and average values, computed as:
 
         .. math::
 
@@ -174,7 +175,7 @@ class IteratedLocalSearch:
         recent_best = costs.min()
         recent_avg = costs.mean()
 
-        weight = self._params.intial_accept_weight
+        weight = self._params.initial_accept_weight
         if fraction := stop.fraction_remaining() is not None:
             weight *= fraction
 

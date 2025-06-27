@@ -1,3 +1,4 @@
+import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
@@ -14,22 +15,22 @@ from pyvrp.search import (
     NeighbourRemoval,
     compute_neighbours,
 )
-from pyvrp.stop import MaxIterations
+from pyvrp.stop import FirstFeasible, MaxIterations
 from tests.helpers import read_solution
 
 
 @mark.parametrize(
-    "num_iters_no_improvement, intial_accept_weight, history_length",
+    "num_iters_no_improvement, initial_accept_weight, history_length",
     [
         (-1, 1, 1),  # num_iters_no_improvement < 0
-        (0, -1, 1),  # intial_accept_weight < 0
-        (0, 2, 1),  # intial_accept_weight > 1
+        (0, -1, 1),  # initial_accept_weight < 0
+        (0, 2, 1),  # initial_accept_weight > 1
         (0, 1, 0),  # history_length < 1
     ],
 )
 def test_params_constructor_raises_when_arguments_invalid(
     num_iters_no_improvement: int,
-    intial_accept_weight: float,
+    initial_accept_weight: float,
     history_length: int,
 ):
     """
@@ -38,23 +39,23 @@ def test_params_constructor_raises_when_arguments_invalid(
     with assert_raises(ValueError):
         IteratedLocalSearchParams(
             num_iters_no_improvement=num_iters_no_improvement,
-            intial_accept_weight=intial_accept_weight,
+            initial_accept_weight=initial_accept_weight,
             history_length=history_length,
         )
 
 
 @mark.parametrize(
-    "num_iters_no_improvement, intial_accept_weight, history_length",
+    "num_iters_no_improvement, initial_accept_weight, history_length",
     [
         (0, 1, 1),  # num_iters_no_improvement == 0
-        (0, 0, 1),  # intial_accept_weight == 0
-        (0, 1, 1),  # intial_accept_weight == 1
+        (0, 0, 1),  # initial_accept_weight == 0
+        (0, 1, 1),  # initial_accept_weight == 1
         (0, 1, 1),  # history_length == 1
     ],
 )
 def test_params_constructor_does_not_raise_when_arguments_valid(
     num_iters_no_improvement: int,
-    intial_accept_weight: float,
+    initial_accept_weight: float,
     history_length: int,
 ):
     """
@@ -62,7 +63,7 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     """
     IteratedLocalSearchParams(
         num_iters_no_improvement=num_iters_no_improvement,
-        intial_accept_weight=intial_accept_weight,
+        initial_accept_weight=initial_accept_weight,
         history_length=history_length,
     )
 
@@ -164,3 +165,53 @@ def test_ils_result_has_correct_stats(ok_small):
     datum = result.stats.data[0]
     assert_equal(datum.current_cost, pm.cost_evaluator().penalised_cost(init))
     assert_equal(datum.current_feas, init.is_feasible())
+
+
+def test_ils_accepts_below_threshold(ok_small):
+    """
+    Tests that ILS accepts candidates that are below the threshold.
+    """
+
+    pm = PenaltyManager(initial_penalties=([20], 6, 6))
+    rng = RandomNumberGenerator(42)
+    init = Solution.make_random(ok_small, rng)
+    search = lambda sol, cost_eval: sol  # noqa
+    params = IteratedLocalSearchParams(initial_accept_weight=0.5)
+    ils = IteratedLocalSearch(ok_small, pm, rng, search, init, params)
+
+    # The threshold is set at 0 + 0.5 * (1 - 0) = 0.5, candidate has cost 0.
+    assert_(ils._accept(0, np.array([1, 0]), 2, FirstFeasible()))  # noqa
+
+
+def test_ils_rejects_above_threshold(ok_small):
+    """
+    Tests that ILS rejects candidates that are above the threshold.
+    """
+    pm = PenaltyManager(initial_penalties=([20], 6, 6))
+    rng = RandomNumberGenerator(42)
+    init = Solution.make_random(ok_small, rng)
+    search = lambda sol, cost_eval: sol  # noqa
+    params = IteratedLocalSearchParams(initial_accept_weight=0.5)
+    ils = IteratedLocalSearch(ok_small, pm, rng, search, init, params)
+
+    # The threshold is set at 0 + 0.5 * (1 - 0) = 0.5, candidate has cost 1.
+    assert_(not ils._accept(1, np.array([0, 1]), 2, FirstFeasible()))  # noqa
+
+
+def test_ils_rejects_due_to_stopping_criterion(ok_small):
+    """
+    Tests that ILS correctly rejects a solution because the stopping
+    criterion has been met.
+    """
+    pm = PenaltyManager(initial_penalties=([20], 6, 6))
+    rng = RandomNumberGenerator(42)
+    init = Solution.make_random(ok_small, rng)
+    search = lambda sol, cost_eval: sol  # noqa
+    params = IteratedLocalSearchParams(initial_accept_weight=0.5)
+    ils = IteratedLocalSearch(ok_small, pm, rng, search, init, params)
+    stop = MaxIterations(0)
+
+    # The history has an average cost of 1.5 and best of 0. The weight is set
+    # to 0 because the stopping criterion is met, so the threshold is now equal
+    # to the recent best solution's cost.
+    assert_(not ils._accept(1, np.array([4, 0, 0.5]), 3, stop))  # noqa
