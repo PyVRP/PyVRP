@@ -15,7 +15,7 @@ class MaxIterations:
             return 0
 
         remaining_iters = self._max_iters - self._curr_iter
-        return max(remaining_iters / self._max_iters, 0)
+        return max(remaining_iters / self._max_iters, 0.0)
 
     def __call__(self, best_cost: float) -> bool:
         self._curr_iter += 1

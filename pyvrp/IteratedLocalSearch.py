@@ -32,10 +32,10 @@ class IteratedLocalSearchParams:
     num_iters_no_improvement
         Number of iterations without any improvement needed before a restart
         occurs.
-    initial_weight
-        Initial weight parameter :math:`w_0` used to determine the threshold
-        value in the acceptance criterion. Larger values result in more
-        accepted candidate solutions. Must be in [0, 1].
+    intial_accept_weight
+        Initial weight parameter used to determine the threshold value in the
+        acceptance criterion. Larger values result in more accepted candidate
+        solutions. Must be in [0, 1].
     history_length
         The number of recent candidate solutions :math:`N` to consider when
         computing the threshold value in the acceptance criterion. Must be
@@ -43,15 +43,15 @@ class IteratedLocalSearchParams:
     """
 
     num_iters_no_improvement: int = 20_000
-    initial_weight: float = 1
+    intial_accept_weight: float = 1
     history_length: int = 500
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
             raise ValueError("num_iters_no_improvement < 0 not understood.")
 
-        if not (0 <= self.initial_weight <= 1):
-            raise ValueError("initial_weight must be in [0, 1].")
+        if not (0 <= self.intial_accept_weight <= 1):
+            raise ValueError("intial_accept_weight must be in [0, 1].")
 
         if self.history_length <= 0:
             raise ValueError("history_length must be positive.")
@@ -111,7 +111,7 @@ class IteratedLocalSearch:
         self,
         cand_cost: float,
         history: np.array,
-        iters: int,
+        curr_iters: int,
         stop: StoppingCriterion,
     ) -> bool:
         R"""
@@ -129,8 +129,8 @@ class IteratedLocalSearch:
         :math:`N \in \mathbb{N}` is the history length parameter, and each
         :math:`s^j` is a recently observed solution.
 
-        The weight :math:`w` starts at :math:`w_0 \in [0, 1]` and decreases
-        proportionally to the remaining search time:
+        The weight :math:`w` starts at initial weight :math:`w_0 \in [0, 1]`
+        and decreases proportionally to the remaining search time:
 
         .. math::
 
@@ -152,8 +152,8 @@ class IteratedLocalSearch:
             The cost of the candidate solution to evaluate.
         history
             The history of recent candidate solutions' costs.
-        iters
-            The current number of iterations completed.
+        curr_iters
+            The current number of iterations.
         stop
             The stopping criterion of this run.
 
@@ -170,17 +170,11 @@ class IteratedLocalSearch:
             *European Journal of Operational Research* 294 (3): 1108 - 1119.
             https://doi.org/10.1016/j.ejor.2021.02.024.
         """
-        idx = iters % self._params.history_length
-        history[idx] = cand_cost
-
-        costs = history
-        if iters < self._params.history_length:  # not enough solutions
-            costs = costs[: iters + 1]
-
+        costs = history[: min(curr_iters, self._params.history_length)]
         recent_best = costs.min()
         recent_avg = costs.mean()
 
-        weight = self._params.initial_weight
+        weight = self._params.intial_accept_weight
         if fraction := stop.fraction_remaining() is not None:
             weight *= fraction
 
@@ -251,6 +245,8 @@ class IteratedLocalSearch:
 
             cand_cost = self._cost_evaluator.cost(candidate)
             best_cost = self._cost_evaluator.cost(best)
+            idx = (iters - 1) % self._params.history_length
+            history[idx] = cand_cost
 
             if cand_cost < best_cost:  # new best
                 best = candidate

@@ -22,7 +22,7 @@ class MaxRuntime:
 
         elapsed_time = time.perf_counter() - self._start_runtime
         remaining_time = self._max_runtime - elapsed_time
-        return max(remaining_time / self._max_runtime, 0)
+        return max(remaining_time / self._max_runtime, 0.0)
 
     def __call__(self, best_cost: float) -> bool:
         if self._start_runtime is None:

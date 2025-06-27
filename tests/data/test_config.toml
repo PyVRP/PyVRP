@@ -19,6 +19,8 @@ perturbation_ops = [
 
 [ils]
 num_iters_no_improvement = 10
+intial_accept_weight = 0.1
+history_length = 1
 
 
 [neighbourhood]
@@ -35,9 +37,3 @@ solutions_between_updates = 100
 penalty_increase = 1.25
 penalty_decrease = 0.85
 target_feasible = 0.43
-
-
-[mbat]
-initial_weight = 1
-history_length = 100
-max_iterations = 10000

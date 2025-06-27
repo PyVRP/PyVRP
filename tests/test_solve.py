@@ -40,7 +40,7 @@ def test_solve_params_from_file():
     """
     params = SolveParams.from_file(DATA_DIR / "test_config.toml")
 
-    ils = IteratedLocalSearchParams(10)
+    ils = IteratedLocalSearchParams(10, 0.1, 1)
     penalty = PenaltyParams(12, 100, 1.25, 0.85, 0.43)
     neighbourhood = NeighbourhoodParams(0, 0, 20, True, True)
     node_ops = [Exchange10, SwapTails]
@@ -98,8 +98,8 @@ def test_solve_custom_params(rc208):
     assert_(not monotonically_decreasing(costs))
 
     # Now configure ILS to only accept improving solutions by setting
-    # ``initial_weight=0``.
-    params = SolveParams(IteratedLocalSearchParams(initial_weight=0))
+    # ``intial_accept_weight=0``.
+    params = SolveParams(IteratedLocalSearchParams(intial_accept_weight=0))
     res = solve(rc208, stop=MaxIterations(20), params=params)
 
     # The current costs should now be monotonically decreasing. The first datum

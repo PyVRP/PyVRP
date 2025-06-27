@@ -19,17 +19,17 @@ from tests.helpers import read_solution
 
 
 @mark.parametrize(
-    "num_iters_no_improvement, initial_weight, history_length",
+    "num_iters_no_improvement, intial_accept_weight, history_length",
     [
         (-1, 1, 1),  # num_iters_no_improvement < 0
-        (0, -1, 1),  # initial_weight < 0
-        (0, 2, 1),  # initial_weight > 1
+        (0, -1, 1),  # intial_accept_weight < 0
+        (0, 2, 1),  # intial_accept_weight > 1
         (0, 1, 0),  # history_length < 1
     ],
 )
 def test_params_constructor_raises_when_arguments_invalid(
     num_iters_no_improvement: int,
-    initial_weight: float,
+    intial_accept_weight: float,
     history_length: int,
 ):
     """
@@ -38,23 +38,23 @@ def test_params_constructor_raises_when_arguments_invalid(
     with assert_raises(ValueError):
         IteratedLocalSearchParams(
             num_iters_no_improvement=num_iters_no_improvement,
-            initial_weight=initial_weight,
+            intial_accept_weight=intial_accept_weight,
             history_length=history_length,
         )
 
 
 @mark.parametrize(
-    "num_iters_no_improvement, initial_weight, history_length",
+    "num_iters_no_improvement, intial_accept_weight, history_length",
     [
         (0, 1, 1),  # num_iters_no_improvement == 0
-        (0, 0, 1),  # initial_weight == 0
-        (0, 1, 1),  # initial_weight == 1
+        (0, 0, 1),  # intial_accept_weight == 0
+        (0, 1, 1),  # intial_accept_weight == 1
         (0, 1, 1),  # history_length == 1
     ],
 )
 def test_params_constructor_does_not_raise_when_arguments_valid(
     num_iters_no_improvement: int,
-    initial_weight: float,
+    intial_accept_weight: float,
     history_length: int,
 ):
     """
@@ -62,7 +62,7 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
     """
     IteratedLocalSearchParams(
         num_iters_no_improvement=num_iters_no_improvement,
-        initial_weight=initial_weight,
+        intial_accept_weight=intial_accept_weight,
         history_length=history_length,
     )
 
