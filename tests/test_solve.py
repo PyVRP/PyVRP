@@ -88,7 +88,7 @@ def test_solve_custom_params(rc208):
         return np.all(np.diff(arr) <= 0)
 
     # First solve with ``history_length=1``, which means that all candidate
-    # solutions are accepted.
+    # solutions will be accepted.
     params = SolveParams(IteratedLocalSearchParams(history_length=1))
     res = solve(rc208, stop=MaxIterations(20), params=params)
 

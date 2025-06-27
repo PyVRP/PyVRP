@@ -59,8 +59,7 @@ def test_fraction_remaining():
     Tests that calling ``MultipleCriteria.fraction_remaining()`` returns the
     minimum value among its criteria.
     """
-    # MaxIterations is the most restrictive stopping criterion, so calling
-    # ``fraction_remaining()`` should correspond to that.
+    # MaxIterations is the most restrictive stopping criterion.
     stop = MultipleCriteria(
         [MaxIterations(1), MaxRuntime(10), FirstFeasible()]
     )
