@@ -48,6 +48,8 @@ class SolveParams:
         Route operators to use in the search.
     perturbation_ops
         Perturbation operators to use in the search.
+    display_interval
+        Time (in seconds) between iteration logs. Default 5s.
     """
 
     def __init__(
@@ -60,6 +62,7 @@ class SolveParams:
         perturbation_ops: list[
             type[PerturbationOperator]
         ] = PERTURBATION_OPERATORS,
+        display_interval: float = 5.0,
     ):
         self._ils = ils
         self._penalty = penalty
@@ -67,6 +70,7 @@ class SolveParams:
         self._node_ops = node_ops
         self._route_ops = route_ops
         self._perturbation_ops = perturbation_ops
+        self._display_interval = display_interval
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -77,6 +81,7 @@ class SolveParams:
             and self.node_ops == other.node_ops
             and self.route_ops == other.route_ops
             and self.perturbation_ops == other.perturbation_ops
+            and self.display_interval == other.display_interval
         )
 
     @property
@@ -103,6 +108,10 @@ class SolveParams:
     def perturbation_ops(self):
         return self._perturbation_ops
 
+    @property
+    def display_interval(self) -> float:
+        return self._display_interval
+
     @classmethod
     def from_file(cls, loc: str | pathlib.Path):
         """
@@ -110,10 +119,6 @@ class SolveParams:
         """
         with open(loc, "rb") as fh:
             data = tomli.load(fh)
-
-        ils_params = IteratedLocalSearchParams(**data.get("ils", {}))
-        pen_params = PenaltyParams(**data.get("penalty", {}))
-        nb_params = NeighbourhoodParams(**data.get("neighbourhood", {}))
 
         node_ops = NODE_OPERATORS
         if "node_ops" in data:
@@ -130,12 +135,13 @@ class SolveParams:
             ]
 
         return cls(
-            ils_params,
-            pen_params,
-            nb_params,
+            IteratedLocalSearchParams(**data.get("ils", {})),
+            PenaltyParams(**data.get("penalty", {})),
+            NeighbourhoodParams(**data.get("neighbourhood", {})),
             node_ops,
             route_ops,
             perturbation_ops,
+            data.get("display_interval", 5.0),
         )
 
 
@@ -194,4 +200,4 @@ def solve(
 
     ils_args = (data, pm, rng, ls, init, params.ils)
     algo = IteratedLocalSearch(*ils_args)  # type: ignore
-    return algo.run(stop, collect_stats, display)
+    return algo.run(stop, collect_stats, display, params.display_interval)

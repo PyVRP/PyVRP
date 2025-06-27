@@ -191,6 +191,7 @@ class IteratedLocalSearch:
         stop: StoppingCriterion,
         collect_stats: bool = True,
         display: bool = False,
+        display_interval: float = 5.0,
     ) -> Result:
         """
         Runs the iterated local search algorithm with the provided stopping
@@ -208,8 +209,10 @@ class IteratedLocalSearch:
             Whether to display information about the solver progress. Default
             ``False``. Progress information is only available when
             ``collect_stats`` is also set.
+        display_interval
+            Time (in seconds) between iteration logs. Defaults to 5s.
         """
-        print_progress = ProgressPrinter(should_print=display)
+        print_progress = ProgressPrinter(display, display_interval)
         print_progress.start(self._data)
 
         start = time.perf_counter()

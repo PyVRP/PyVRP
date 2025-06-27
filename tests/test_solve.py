@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp.IteratedLocalSearch import IteratedLocalSearchParams
 from pyvrp.PenaltyManager import PenaltyParams
@@ -30,6 +30,7 @@ def test_default_values():
     assert_equal(params.node_ops, NODE_OPERATORS)
     assert_equal(params.route_ops, ROUTE_OPERATORS)
     assert_equal(params.perturbation_ops, PERTURBATION_OPERATORS)
+    assert_allclose(params.display_interval, 5.0)
 
 
 def test_solve_params_from_file():
@@ -51,6 +52,7 @@ def test_solve_params_from_file():
     assert_equal(params.node_ops, node_ops)
     assert_equal(params.route_ops, route_ops)
     assert_equal(params.perturbation_ops, perturbation_ops)
+    assert_allclose(params.display_interval, 10.0)
 
 
 def test_solve_params_from_file_defaults():

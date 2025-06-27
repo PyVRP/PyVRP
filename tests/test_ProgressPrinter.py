@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
     RandomNumberGenerator,
@@ -9,12 +9,21 @@ from pyvrp import (
 from pyvrp.ProgressPrinter import ProgressPrinter
 
 
+def test_raises_negative_display_interval():
+    """
+    Tests that ProgressPrinter raises when provided with a negative
+    display_interval argument.
+    """
+    with assert_raises(ValueError):
+        ProgressPrinter(True, -1.0)
+
+
 def test_start(ok_small, capsys):
     """
     Tests that the progress printer outputs some statistics about the given
     instance when calling start.
     """
-    printer = ProgressPrinter(should_print=True)
+    printer = ProgressPrinter(should_print=True, display_interval=1.0)
     printer.start(ok_small)
 
     out = capsys.readouterr().out
@@ -27,7 +36,7 @@ def test_start_multiple_depot_plural(ok_small_multi_depot, capsys):
     """
     Tests that "depots" is plural when there are multiple depots.
     """
-    printer = ProgressPrinter(should_print=True)
+    printer = ProgressPrinter(should_print=True, display_interval=1.0)
     printer.start(ok_small_multi_depot)
 
     out = capsys.readouterr().out
@@ -42,7 +51,7 @@ def test_end(ok_small, capsys):
     best = Solution(ok_small, [[1, 2], [3, 4]])
     res = Result(best, Statistics(), 25, 0.05)
 
-    printer = ProgressPrinter(should_print=True)
+    printer = ProgressPrinter(should_print=True, display_interval=1.0)
     printer.end(res)
 
     out = capsys.readouterr().out
@@ -56,7 +65,7 @@ def test_restart(capsys):
     """
     Tests that calling restart outputs a line indicating such.
     """
-    printer = ProgressPrinter(should_print=True)
+    printer = ProgressPrinter(should_print=True, display_interval=1.0)
     printer.restart()
 
     out = capsys.readouterr().out
@@ -67,26 +76,18 @@ def test_restart(capsys):
 def test_iteration(capsys):
     """
     Tests that calling iteration prints a line about the solution costs and
-    feasibility, but only every 500 iterations.
+    feasibilities.
     """
     stats = Statistics()
     stats.collect(1, True, 2, True, 3, False)
 
-    printer = ProgressPrinter(should_print=True)
+    printer = ProgressPrinter(should_print=True, display_interval=0.0)
 
-    # Output is printed only every once in a while. We do not print after a
-    # single iteration.
     printer.iteration(stats)
     out = capsys.readouterr().out
     assert_equal(stats.num_iterations, 1)
-    assert_equal(out, "")
 
-    # But only every 500 iterations. Thus, we should output results now.
-    stats.num_iterations = 500
-    printer.iteration(stats)
-    out = capsys.readouterr().out
-
-    # Statistics about solver progress.
+    # Statistics about solver progress should be printed.
     assert_(str(stats.num_iterations) in out)
     assert_(str(round(sum(stats.runtimes))) in out)
 
@@ -105,7 +106,7 @@ def test_should_print_false_no_output(ok_small, capsys):
 
     # Set up the progress printer, call all its methods, and then check that
     # the output captured on stdout is empty.
-    printer = ProgressPrinter(should_print=False)
+    printer = ProgressPrinter(should_print=False, display_interval=0.0)
     printer.start(ok_small)
     printer.iteration(stats=stats)
     printer.restart()
