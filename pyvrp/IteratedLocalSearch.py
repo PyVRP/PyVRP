@@ -37,9 +37,8 @@ class IteratedLocalSearchParams:
         acceptance criterion. Larger values result in more accepted candidate
         solutions. Must be in [0, 1].
     history_length
-        The number of recent candidate solutions :math:`N` to consider when
-        computing the threshold value in the acceptance criterion. Must be
-        positive.
+        The number of recent candidate solutions to consider when computing the
+        threshold value in the acceptance criterion. Must be positive.
     """
 
     num_iters_no_improvement: int = 20_000
@@ -115,27 +114,28 @@ class IteratedLocalSearch:
         stop: StoppingCriterion,
     ) -> bool:
         R"""
-        Returns True if the candidate solution should be accepted, False
-        otherwise. A candidate solution is accepted if it is better than a
-        threshold value based on the objective values of recently observed
-        candidate solutions. Specifically, the threshold value is a convex
-        combination of the recent best and average values, computed as:
+        Returns whether the candidate solution should be accepted or not.
+        A candidate solution is accepted if it is better than a threshold value
+        based on the objective values of recently observed candidate solutions.
+        Specifically, the threshold value is a convex combination of the recent
+        best and average values, computed as:
 
         .. math::
 
-        (1 - w) \times f(s^*) + w \times \sum_{j = 1}^N \frac{f(s^j)}{N}
+            (1 - w) \times f(s^*) + w \times \sum_{j = 1}^N \frac{f(s^j)}{N}
 
         where :math:`s^*` is the best solution observed in the last :math:`N`
         iterations, :math:`f(\cdot)` is the objective function,
         :math:`N \in \mathbb{N}` is the history length parameter, and each
         :math:`s^j` is a recently observed solution.
 
-        The weight :math:`w` starts at initial weight :math:`w_0 \in [0, 1]`
-        and decreases proportionally to the remaining search time:
+        The weight :math:`w` starts at initial accept weight parameter
+        :math:`w_0 \in [0, 1]` and decreases proportionally to the remaining
+        search time:
 
         .. math::
 
-        w = w_0 \times \text{fraction\_remaining of stopping criterion}
+            w = w_0 \times \text{fraction remaining of stopping criterion}
 
         As the algorithm progresses, the threshold becomes more selective,
         transitioning from exploration (accepting more diverse solutions)
@@ -143,9 +143,9 @@ class IteratedLocalSearch:
 
         .. note::
 
-        This method is based on the Moving Best Average Threshold criterion of
-        [1]_. The parameters :math:`w_0` and :math:`N` correspond to
-        :math:`\eta` and :math:`\gamma` respectively in [1]_.
+            This method is based on the acceptence criterion of [1]_. The
+            parameters ``initial_accept_weight`` and ``history_length``
+            correspond to :math:`\eta` and :math:`\gamma` respectively in [1]_.
 
         Parameters
         ----------
