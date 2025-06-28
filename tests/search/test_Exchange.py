@@ -282,7 +282,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
 
     # Use a huge cost for load penalties to make other aspects irrelevant
     cost_evaluator = CostEvaluator([100_000], 6, 0)
-    rng = RandomNumberGenerator(seed=1)
+    rng = RandomNumberGenerator(seed=42)
 
     # This is a non-empty neighbourhood (so LS does not complain), but the only
     # client moves allowed by it will not improve the initial solution created
