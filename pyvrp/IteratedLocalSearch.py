@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import time
+from collections import deque
 from dataclasses import dataclass
+from statistics import fmean
 from typing import TYPE_CHECKING
-
-import numpy as np
 
 from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
@@ -93,6 +93,8 @@ class IteratedLocalSearch:
         self._init = initial_solution
         self._params = params
 
+        self._history: deque[int] = deque(maxlen=self._params.history_length)
+
     @property
     def _cost_evaluator(self) -> CostEvaluator:
         return self._pm.cost_evaluator()
@@ -106,9 +108,7 @@ class IteratedLocalSearch:
         is_feasible = solution.is_feasible()
         return penalised_cost, is_feasible
 
-    def _accept(
-        self, history: np.array, curr_iters: int, stop: StoppingCriterion
-    ) -> bool:
+    def _accept(self, stop: StoppingCriterion) -> bool:
         R"""
         Returns whether the candidate solution should be accepted or not.
         A candidate solution is accepted if it is better than a threshold value
@@ -145,10 +145,6 @@ class IteratedLocalSearch:
 
         Parameters
         ----------
-        history
-            The history of recent candidate solutions' costs.
-        curr_iters
-            The current number of iterations.
         stop
             The stopping criterion of this run.
 
@@ -165,16 +161,14 @@ class IteratedLocalSearch:
             *European Journal of Operational Research* 294 (3): 1108 - 1119.
             https://doi.org/10.1016/j.ejor.2021.02.024.
         """
-        costs = history[: min(curr_iters, self._params.history_length)]
-        recent_best = costs.min()
-        recent_avg = costs.mean()
+        recent_best = min(self._history)
+        recent_avg = fmean(self._history)
 
         weight = self._params.initial_accept_weight
         if (fraction := stop.fraction_remaining()) is not None:
             weight *= fraction
 
-        idx = (curr_iters - 1) % self._params.history_length
-        cand_cost = history[idx]
+        cand_cost = self._history[-1]
         return cand_cost <= (1 - weight) * recent_best + weight * recent_avg
 
     def run(
@@ -206,9 +200,9 @@ class IteratedLocalSearch:
         print_progress = ProgressPrinter(display, display_interval)
         print_progress.start(self._data)
 
+        self._history.clear()
         start = time.perf_counter()
         stats = Statistics(collect_stats=collect_stats)
-        history = np.zeros(self._params.history_length)
         iters = 0
         iters_no_improvement = 1
         best = current = self._init
@@ -220,6 +214,7 @@ class IteratedLocalSearch:
                 print_progress.restart()
                 iters_no_improvement = 1
                 current = best
+                self._history.clear()
 
             candidate = self._search(current, self._cost_evaluator)
             self._pm.register(candidate)
@@ -242,8 +237,7 @@ class IteratedLocalSearch:
 
             cand_cost = self._cost_evaluator.cost(candidate)
             best_cost = self._cost_evaluator.cost(best)
-            idx = (iters - 1) % self._params.history_length
-            history[idx] = cand_cost
+            self._history.append(cand_cost)
 
             if cand_cost < best_cost:  # new best
                 best = candidate
@@ -251,7 +245,7 @@ class IteratedLocalSearch:
             else:
                 iters_no_improvement += 1
 
-            if self._accept(history, iters, stop):
+            if self._accept(stop):
                 current = candidate
 
         runtime = time.perf_counter() - start

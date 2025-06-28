@@ -1,4 +1,3 @@
-import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
@@ -180,7 +179,8 @@ def test_ils_accepts_below_threshold(ok_small):
     ils = IteratedLocalSearch(ok_small, pm, rng, ls, init, params)
 
     # The threshold is set at 0 + 0.5 * (1 - 0) = 0.5, candidate has cost 0.
-    assert_(ils._accept(np.array([1, 0]), 2, FirstFeasible()))  # noqa
+    ils._history.extend([1, 0])  # noqa
+    assert_(ils._accept(FirstFeasible()))  # noqa
 
 
 def test_ils_rejects_above_threshold(ok_small):
@@ -195,7 +195,8 @@ def test_ils_rejects_above_threshold(ok_small):
     ils = IteratedLocalSearch(ok_small, pm, rng, ls, init, params)
 
     # The threshold is set at 0 + 0.5 * (1 - 0) = 0.5, candidate has cost 1.
-    assert_(not ils._accept(np.array([0, 1]), 2, FirstFeasible()))  # noqa
+    ils._history.extend([0, 1])  # noqa
+    assert_(not ils._accept(FirstFeasible()))  # noqa
 
 
 def test_ils_rejects_due_to_stopping_criterion(ok_small):
@@ -214,4 +215,5 @@ def test_ils_rejects_due_to_stopping_criterion(ok_small):
     # The history has an average cost of 1.5 and best of 0. The weight is set
     # to 0 because the stopping criterion is met, so the threshold is now equal
     # to the recent best solution's cost.
-    assert_(not ils._accept(np.array([4, 0, 0.5]), 3, stop))  # noqa
+    ils._history.extend([0, 4, 0.5])  # noqa
+    assert_(not ils._accept(stop))  # noqa
