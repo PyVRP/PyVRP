@@ -155,8 +155,8 @@ public:
         [[nodiscard]] inline Route *route() const;
 
         /**
-         * Returns whether this node is considered a promising candidate for
-         * improvement when evaluated by node operators.
+         * Returns whether this node is a promising candidate for improvement
+         * when evaluated by node operators.
          */
         [[nodiscard]] inline bool promising() const;
 

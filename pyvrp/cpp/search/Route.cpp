@@ -35,7 +35,7 @@ void Route::Node::markPromising()
     if (!route_)
         return;
 
-    // Modifying the current node also affects neighbouring nodes.
+    // Modifying the current node also affects neighbouring clients.
     if (!n(this)->isDepot())
         n(this)->promising_ = true;
 
