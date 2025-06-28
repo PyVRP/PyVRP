@@ -30,10 +30,8 @@ void Route::Node::markPromising()
     if (this->isDepot())
         return;
 
+    assert(route_);
     promising_ = true;
-
-    if (!route_)
-        return;
 
     // Modifying the current node also affects neighbouring clients.
     if (!n(this)->isDepot())

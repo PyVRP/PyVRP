@@ -17,12 +17,6 @@ Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-
-    // Clear all nodes' promising status. This is necessary because inserting
-    // nodes in loadSolution() marks them as promising.
-    for (auto &node : nodes)
-        node.clearPromising();
-
     perturb(costEvaluator);
 
     while (true)
@@ -479,6 +473,11 @@ void LocalSearch::loadSolution(Solution const &solution)
 
     for (auto *routeOp : routeOps)
         routeOp->init(solution);
+
+    // Clear all nodes' promising status. This is necessary because inserting
+    // nodes at initialization marks them as promising.
+    for (auto &node : nodes)
+        node.clearPromising();
 }
 
 Solution LocalSearch::exportSolution() const
