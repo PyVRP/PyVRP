@@ -27,10 +27,9 @@ void Route::Node::unassign()
 
 void Route::Node::markPromising()
 {
-    if (this->isDepot())
+    if (this->isDepot() || !route_)
         return;
 
-    assert(route_);
     promising_ = true;
 
     // Modifying the current node also affects neighbouring clients.
