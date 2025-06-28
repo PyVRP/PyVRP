@@ -76,20 +76,15 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             auto const lastTested = lastTestedNodes[uClient];
             lastTestedNodes[uClient] = numUpdates_;
 
-            // First test removing or inserting U. Particularly relevant if
-            // not all clients are required (e.g., when prize collecting).
+            // First test removing or inserting U. Particularly relevant if not
+            // all clients are required (e.g., when prize collecting).
             applyOptionalClientMoves(U, costEvaluator);
 
             // Evaluate moves involving the client's group, if it is in any.
             applyGroupMoves(U, costEvaluator);
 
-            // We have already evaluated inserting U, so there is nothing left
-            // to be done for this client and we clear its promising status.
-            if (!U->route())
-            {
-                U->clearPromising();
-                continue;
-            }
+            if (!U->route())  // we already evaluated inserting U, so there is
+                continue;     // nothing left to be done for this client.
 
             // If U borders a reload depot, try removing it.
             applyDepotRemovalMove(p(U), costEvaluator);
