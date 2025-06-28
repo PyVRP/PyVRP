@@ -210,10 +210,15 @@ def test_ils_rejects_due_to_stopping_criterion(ok_small):
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
     params = IteratedLocalSearchParams(initial_accept_weight=0.5)
     ils = IteratedLocalSearch(ok_small, pm, rng, ls, init, params)
-    stop = MaxIterations(0)
 
-    # The history has an average cost of 1.5 and best of 0. The weight is set
-    # to 0 because the stopping criterion is met, so the threshold is now equal
-    # to the recent best solution's cost.
+    # The history has an average cost of 1.5 and best cost of 0.
     ils._history.extend([0, 4, 0.5])  # noqa
-    assert_(not ils._accept(stop))  # noqa
+
+    # The first feasible criterion does not have a meaningful fraction
+    # remaining, so the threshold is just the average of 1.5 and 0. The
+    # candidate has cost 0.5 and is thus accepted.
+    assert_(ils._accept(FirstFeasible()))  # noqa
+
+    # The max iterations criterion's fraction remaining is now zero, so the
+    # threshold is equal to the recent best and will reject the candidate.
+    assert_(not ils._accept(MaxIterations(0)))  # noqa
