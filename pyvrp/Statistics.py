@@ -3,11 +3,13 @@ from dataclasses import dataclass, fields
 from pathlib import Path
 from time import perf_counter
 
+from pyvrp._pyvrp import CostEvaluator, Solution
+
 
 @dataclass
 class _Datum:
     """
-    Single ILS iteration data point.
+    Single iteration data point.
     """
 
     current_cost: int
@@ -20,7 +22,7 @@ class _Datum:
 
 class Statistics:
     """
-    Statistics about the iterated local search (ILS) progress.
+    Statistics about the search progress.
 
     Parameters
     ----------
@@ -51,30 +53,24 @@ class Statistics:
 
     def collect(
         self,
-        current_cost: int,
-        current_feas: bool,
-        candidate_cost: int,
-        candidate_feas: bool,
-        best_cost: int,
-        best_feas: bool,
+        current: Solution,
+        candidate: Solution,
+        best: Solution,
+        cost_evaluator: CostEvaluator,
     ):
         """
-        Collects statistics from the ILS iteration.
+        Collects statistics from the iteration.
 
         Parameters
         ----------
-        current_cost
-            Penalised cost of the current solution.
-        current_feas
-            Whether the current solution is feasible.
-        candidate_cost
-            Penalised cost of the candidate solution.
-        candidate_feas
-            Whether the candidate solution is feasible.
-        best_cost
-            Penalised cost of the best solution found so far.
-        best_feas
-            Whether the best solution found so far is feasible.
+        current
+            The current solution.
+        candidate
+            The candidate solution.
+        best
+            The best solution.
+        cost_evaluator
+            Cost evaluator to use.
         """
         if not self._collect_stats:
             return
@@ -86,12 +82,12 @@ class Statistics:
         self.num_iterations += 1
 
         datum = _Datum(
-            current_cost,
-            current_feas,
-            candidate_cost,
-            candidate_feas,
-            best_cost,
-            best_feas,
+            cost_evaluator.penalised_cost(current),
+            current.is_feasible(),
+            cost_evaluator.penalised_cost(candidate),
+            candidate.is_feasible(),
+            cost_evaluator.penalised_cost(best),
+            best.is_feasible(),
         )
         self.data.append(datum)
 
@@ -178,7 +174,6 @@ class Statistics:
             )
             writer.writeheader()
 
-            for idx, datum in enumerate(data):
-                row = dict(runtime=self.runtimes[idx])
-                row.update(datum)
+            for idx, (runtime, datum) in enumerate(zip(self.runtimes, data)):
+                row = dict(runtime=runtime, **datum)
                 writer.writerow(row)

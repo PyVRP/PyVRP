@@ -1,6 +1,7 @@
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
+    CostEvaluator,
     RandomNumberGenerator,
     Result,
     Solution,
@@ -73,13 +74,18 @@ def test_restart(capsys):
     assert_("restart" in out)
 
 
-def test_iteration(capsys):
+def test_iteration(ok_small, capsys):
     """
     Tests that calling iteration prints a line about the solution costs and
     their feasibility.
     """
+    curr = Solution(ok_small, [[1, 2, 3, 4]])
+    cand = Solution(ok_small, [[2, 1], [4, 3]])
+    best = Solution(ok_small, [[1, 2], [3, 4]])
+    cost_eval = CostEvaluator([20], 6, 6)
+
     stats = Statistics()
-    stats.collect(1, True, 2, True, 3, False)
+    stats.collect(cand, curr, best, cost_eval)
 
     printer = ProgressPrinter(should_print=True, display_interval=0.0)
 
@@ -92,17 +98,20 @@ def test_iteration(capsys):
     assert_(str(round(sum(stats.runtimes))) in out)
 
     # Statistics about solution costs and their feasibility.
-    assert_("1 (Y)" in out)  # current
-    assert_("2 (Y)" in out)  # candidate
-    assert_("3 (N)" in out)  # best
+    assert_("28408 (N)" in out)  # current
+    assert_("10012 (Y)" in out)  # candidate
+    assert_("9725 (Y)" in out)  # best
 
 
 def test_should_print_false_no_output(ok_small, capsys):
     """
     Tests that disabling printing works.
     """
+    sol = Solution(ok_small, [[1, 2, 3, 4]])
+    cost_eval = CostEvaluator([20], 6, 6)
+
     stats = Statistics()
-    stats.collect(1, True, 2, True, 3, False)
+    stats.collect(sol, sol, sol, cost_eval)
 
     # Set up the progress printer, call all its methods, and then check that
     # the output captured on stdout is empty.

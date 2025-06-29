@@ -114,11 +114,12 @@ def test_result_can_be_pickled(ok_small, num_iterations: int):
     Tests that a ``Result`` object can be pickled: it can be serialised and
     unserialised. This is useful for e.g. storing results to disk.
     """
+    best = Solution(ok_small, [[1, 2], [3], [4]])
+    cost_eval = CostEvaluator([20], 6, 6)
+
     stats = Statistics()
     for _ in range(num_iterations):
-        stats.collect(1, True, 2, True, 3, False)
-
-    best = Solution(ok_small, [[1, 2], [3], [4]])
+        stats.collect(best, best, best, cost_eval)
 
     before_pickle = Result(best, stats, num_iterations, 1.2)
     bytes = pickle.dumps(before_pickle)

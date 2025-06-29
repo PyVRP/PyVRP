@@ -103,11 +103,6 @@ class IteratedLocalSearch:
     def _booster_cost_evaluator(self) -> CostEvaluator:
         return self._pm.booster_cost_evaluator()
 
-    def _stats(self, solution: Solution) -> tuple[int, bool]:
-        penalised_cost = self._cost_evaluator.penalised_cost(solution)
-        is_feasible = solution.is_feasible()
-        return penalised_cost, is_feasible
-
     def _accept(self, candidate: Solution, stop: StoppingCriterion) -> bool:
         R"""
         Returns whether the candidate solution should be accepted or not.
@@ -234,11 +229,7 @@ class IteratedLocalSearch:
                 )
                 self._pm.register(candidate)
 
-            stats.collect(
-                *self._stats(current),
-                *self._stats(candidate),
-                *self._stats(best),
-            )
+            stats.collect(current, candidate, best, self._cost_evaluator)
             print_progress.iteration(stats)
 
             cand_cost = self._cost_evaluator.cost(candidate)
