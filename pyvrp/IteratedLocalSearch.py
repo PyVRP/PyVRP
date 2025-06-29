@@ -108,13 +108,13 @@ class IteratedLocalSearch:
         is_feasible = solution.is_feasible()
         return penalised_cost, is_feasible
 
-    def _accept(self, stop: StoppingCriterion) -> bool:
+    def _accept(self, candidate: Solution, stop: StoppingCriterion) -> bool:
         R"""
         Returns whether the candidate solution should be accepted or not.
-        A candidate solution is accepted if it is better than a threshold value
-        based on the objective values of recently observed candidate solutions.
-        Specifically, the threshold value is a convex combination of the recent
-        best and average values, computed as:
+        A candidate solution is accepted if it is feasible and better than a
+        threshold value based on the objective values of recently observed
+        candidate solutions. Specifically, the threshold value is a convex
+        combination of the recent best and average values, computed as:
 
         .. math::
 
@@ -145,6 +145,8 @@ class IteratedLocalSearch:
 
         Parameters
         ----------
+        candidate
+            The candidate solution to consider.
         stop
             The stopping criterion of this run.
 
@@ -161,6 +163,14 @@ class IteratedLocalSearch:
             *European Journal of Operational Research* 294 (3): 1108 - 1119.
             https://doi.org/10.1016/j.ejor.2021.02.024.
         """
+        if not candidate.is_feasible():
+            # Don't accept infeasible solutions and don't register their
+            # cost, as it would skew the history costs.
+            return False
+
+        cand_cost = self._cost_evaluator.cost(candidate)
+        self._history.append(cand_cost)
+
         recent_best = min(self._history)
         recent_avg = fmean(self._history)
 
@@ -168,7 +178,6 @@ class IteratedLocalSearch:
         if (fraction := stop.fraction_remaining()) is not None:
             weight *= fraction
 
-        cand_cost = self._history[-1]
         return cand_cost <= (1 - weight) * recent_best + weight * recent_avg
 
     def run(
@@ -232,12 +241,8 @@ class IteratedLocalSearch:
             )
             print_progress.iteration(stats)
 
-            if not candidate.is_feasible():
-                continue  # don't accept infeasible candidates
-
             cand_cost = self._cost_evaluator.cost(candidate)
             best_cost = self._cost_evaluator.cost(best)
-            self._history.append(cand_cost)
 
             if cand_cost < best_cost:  # new best
                 best = candidate
@@ -245,7 +250,7 @@ class IteratedLocalSearch:
             else:
                 iters_no_improvement += 1
 
-            if self._accept(stop):
+            if self._accept(candidate, stop):
                 current = candidate
 
         runtime = time.perf_counter() - start
