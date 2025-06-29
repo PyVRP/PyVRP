@@ -57,9 +57,10 @@ def test_fraction_remaining():
     assert_equal(stop.fraction_remaining(), 0.99)
 
 
-def test_fraction_remaining_edge_cases():
+def test_fraction_remaining_zero_budget():
     """
-    Tests that ``fraction_remaining()`` works for edge cases.
+    Tests that ``fraction_remaining()`` works correctly when max iterations is
+    set to zero.
     """
     # Zero max iterations should result in zero fraction remaining from the
     # start.
@@ -69,3 +70,15 @@ def test_fraction_remaining_edge_cases():
     # Fraction remaining should also not go below zero.
     stop(0)
     assert_equal(stop.fraction_remaining(), 0)
+
+
+def test_fraction_remaining_infinite_budget():
+    """
+    Tests that ``fraction_remaining()`` works correctly when max iterations is
+    set to infinity, which is used in PyVRP's CLI.
+    """
+    stop = MaxIterations(float("inf"))
+    assert_equal(stop.fraction_remaining(), 1)
+
+    stop = MaxIterations(float("inf"))
+    assert_equal(stop.fraction_remaining(), 1)
