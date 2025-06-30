@@ -11,7 +11,7 @@ def plot_objectives(
     ylim_adjust: tuple[float, float] = (0.95, 1.15),
 ):
     """
-    Plots each iteration's current and best objective values.
+    Plots each iteration's objective values.
 
     Parameters
     ----------
