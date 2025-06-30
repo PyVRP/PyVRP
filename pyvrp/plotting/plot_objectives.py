@@ -43,7 +43,7 @@ def plot_objectives(
     _plot(x, y, label="Current")
 
     y = [datum.candidate_cost for datum in result.stats]
-    _plot(x, y, label="Candidate", alpha=0.3, zorder=1)
+    _plot(x, y, label="Candidate", alpha=0.2, zorder=1)
 
     y = [datum.best_cost for datum in result.stats]
     _plot(x, y, label="Best")
