@@ -119,6 +119,31 @@ def test_more_eq(ok_small):
     assert_equal(stats1, stats2)
 
 
+def test_iterating_over_statistics_returns_data(ok_small):
+    """
+    Tests that iterating over a Statistics object yields the correct data.
+    """
+    stats = Statistics()
+    assert_equal(list(stats), [])
+
+    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    cost_eval = CostEvaluator([20], 6, 6)
+    cost = cost_eval.penalised_cost(sol)
+
+    stats.collect(sol, sol, sol, cost_eval)
+    stats.collect(sol, sol, sol, cost_eval)
+
+    assert_equal(len(list(stats)), 2)
+
+    for datum in stats:
+        assert_equal(datum.current_cost, cost)
+        assert_equal(datum.candidate_cost, cost)
+        assert_equal(datum.best_cost, cost)
+        assert_(datum.current_feas)
+        assert_(datum.candidate_feas)
+        assert_(datum.best_feas)
+
+
 def test_not_collecting(ok_small):
     """
     Tests that calling collect_from() on a Statistics object that is not

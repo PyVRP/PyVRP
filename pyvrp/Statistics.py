@@ -2,6 +2,7 @@ import csv
 from dataclasses import dataclass, fields
 from pathlib import Path
 from time import perf_counter
+from typing import Generator
 
 from pyvrp._pyvrp import CostEvaluator, Solution
 
@@ -47,6 +48,13 @@ class Statistics:
             and self.num_iterations == other.num_iterations
             and self.data == other.data
         )
+
+    def __iter__(self) -> Generator[_Datum, None, None]:
+        """
+        Iterates over the collected data points.
+        """
+        for datum in self.data:
+            yield datum
 
     def is_collecting(self) -> bool:
         return self._collect_stats

@@ -39,13 +39,13 @@ def plot_objectives(
 
     x = 1 + np.arange(result.num_iterations)
 
-    y = [d.current_cost for d in result.stats.data]
+    y = [datum.current_cost for datum in result.stats]
     _plot(x, y, label="Current")
 
-    y = [d.candidate_cost for d in result.stats.data]
+    y = [datum.candidate_cost for datum in result.stats]
     _plot(x, y, label="Candidate", alpha=0.3, zorder=1)
 
-    y = [d.best_cost for d in result.stats.data]
+    y = [datum.best_cost for datum in result.stats]
     _plot(x, y, label="Best")
 
     # Use best-found solution to set reasonable y-limits, if available.

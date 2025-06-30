@@ -94,7 +94,7 @@ def test_solve_custom_params(rc208):
 
     # Because we accept all candidate solutions, the current costs won't
     # necessarily be monotonically decreasing.
-    costs = [datum.current_cost for datum in res.stats.data]
+    costs = [datum.current_cost for datum in res.stats]
     assert_(not monotonically_decreasing(costs))
 
     # Now configure ILS to only accept improving solutions by setting
