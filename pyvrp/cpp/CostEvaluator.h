@@ -90,7 +90,7 @@ public:
     CostEvaluator(std::vector<double> loadPenalties,
                   double twPenalty,
                   double distPenalty,
-                  double distDevPenalty = 1);
+                  double distDevPenalty = 10);
 
     /**
      * Computes the total excess load penalty for the given load and vehicle
@@ -233,7 +233,7 @@ Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance) const
 
 Cost CostEvaluator::distDevPenalty(Distance internalDistance, Distance avgSegmentDistance, size_t numClients) const
 {
-    auto const distDev = std::max<Distance>(static_cast<double>(internalDistance) - static_cast<double>(avgSegmentDistance) * (numClients - 1), 0);
+    auto const distDev = std::max<Distance>(static_cast<double>(internalDistance) - static_cast<double>(avgSegmentDistance) * (numClients), 0);
     return static_cast<Cost>(distDev.get() * distDevPenalty_);
 }
 
