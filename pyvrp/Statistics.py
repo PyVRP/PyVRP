@@ -129,7 +129,7 @@ class Statistics:
             for name, value in row.items():
                 if name in field2type:
                     if field2type[name] is bool:
-                        datum[name] = value.lower() == "true"
+                        datum[name] = bool(int(value))
                     else:
                         datum[name] = field2type[name](value)
 
@@ -171,7 +171,10 @@ class Statistics:
         """
         field_names = [f.name for f in fields(_Datum)]
         data = [
-            {f: v for f, v in zip(field_names, vars(datum).values())}
+            {
+                f: int(v) if isinstance(v, bool) else v  # store bool as 0/1
+                for f, v in zip(field_names, vars(datum).values())
+            }
             for datum in self.data
         ]
 

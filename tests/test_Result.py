@@ -116,8 +116,8 @@ def test_result_can_be_pickled(ok_small, num_iterations: int):
     """
     best = Solution(ok_small, [[1, 2], [3], [4]])
     cost_eval = CostEvaluator([20], 6, 6)
-
     stats = Statistics()
+
     for _ in range(num_iterations):
         stats.collect(best, best, best, cost_eval)
 
