@@ -21,7 +21,7 @@ Solving an instance with:
     {client_text}
     {vehicle_text} ({vehicle_type_text})
 
-                  |          Cost (Feasible)
+                  |               Cost (Feasible)
     Iters    Time |      Current    Candidate         Best"""
 
 _RESTART = "R                 |                restart"
@@ -59,9 +59,9 @@ class ProgressPrinter:
 
     def iteration(self, stats: Statistics):
         """
-        Outputs relevant information every five hundred iterations. The output
-        contains information about the (penalised) cost and feasibility of the
-        current, candidate, and best solutions, as well as the search duration.
+        Outputs relevant information every few seconds. The output contains
+        information about the (penalised) cost and feasibility of the current,
+        candidate, and best solutions, as well as the search duration.
         """
         curr_time = perf_counter()
         interval = curr_time - self._last_print_time
