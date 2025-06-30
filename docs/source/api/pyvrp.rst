@@ -8,7 +8,7 @@ PyVRP
 The top-level :mod:`pyvrp` module exposes several of PyVRP's core components.
 These include the :class:`~pyvrp._pyvrp.ProblemData` class for defining a VRP instance, the :class:`~pyvrp.IteratedLocalSearch.IteratedLocalSearch` class that implements the solver, and the :class:`~pyvrp._pyvrp.Solution` class for representing solutions.
 
-The typical workflow involves defining your problem through the :class:`~pyvrp.Model.Model` interface, solving it with its :meth:`~pyvrp.Model.Model.solve` method, and inspecting the resulting :class:`~pyvrp.Result.Result` object.
+A typical workflow involves defining your problem instance through the :class:`~pyvrp.Model.Model` interface, solving it with its :meth:`~pyvrp.Model.Model.solve` method, and inspecting the resulting :class:`~pyvrp.Result.Result` object.
 This object stores the best observed solution and detailed runtime statistics.
 
 .. hint::
