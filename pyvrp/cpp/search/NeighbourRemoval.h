@@ -36,7 +36,8 @@ public:
                     std::vector<search::Route> &routes,
                     CostEvaluator const &costEvaluator,
                     std::vector<std::vector<size_t>> const &neighbours,
-                    std::vector<size_t> const &orderNodes) override;
+                    std::vector<size_t> const &orderNodes,
+                    DynamicBitset &promising) override;
 };
 
 }  // namespace pyvrp::search

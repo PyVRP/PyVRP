@@ -121,12 +121,10 @@ public:
     {
         friend class Route;
 
-        size_t loc_;      // Location represented by this node
-        size_t idx_;      // Position in the route
-        size_t trip_;     // Trip index.
-        Route *route_;    // Indicates membership of a route, if any
-        bool promising_;  // Tracks whether this node is likely to yield
-                          // improvements when evaluated by node operators.
+        size_t loc_;    // Location represented by this node
+        size_t idx_;    // Position in the route
+        size_t trip_;   // Trip index.
+        Route *route_;  // Indicates membership of a route, if any
 
     public:
         Node(size_t loc);
@@ -153,12 +151,6 @@ public:
          * a route, this returns ``None`` (C++: ``nullptr``).
          */
         [[nodiscard]] inline Route *route() const;
-
-        /**
-         * Returns whether this node is a promising candidate for improvement
-         * when evaluated by node operators.
-         */
-        [[nodiscard]] inline bool promising() const;
 
         /**
          * Returns whether this node is a depot.
@@ -190,16 +182,6 @@ public:
          * Removes the node from its assigned route, if any.
          */
         void unassign();
-
-        /**
-         * Mark this node and its direct neighbours as promising.
-         */
-        void markPromising();
-
-        /**
-         * Clear this node's promising status.
-         */
-        void clearPromising();
     };
 
     /**
@@ -635,8 +617,6 @@ size_t Route::Node::idx() const { return idx_; }
 size_t Route::Node::trip() const { return trip_; }
 
 Route *Route::Node::route() const { return route_; }
-
-bool Route::Node::promising() const { return promising_; }
 
 bool Route::Node::isDepot() const
 {

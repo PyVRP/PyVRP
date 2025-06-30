@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_LOCALSEARCH_H
 
 #include "CostEvaluator.h"
+#include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
 #include "PerturbationOperator.h"
 #include "ProblemData.h"
@@ -63,6 +64,7 @@ private:
     std::vector<int> lastTestedNodes;   // tracks node operator evaluation
     std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
     std::vector<int> lastUpdated;       // tracks when routes were last modified
+    DynamicBitset promising;            // tracks promising nodes
 
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
