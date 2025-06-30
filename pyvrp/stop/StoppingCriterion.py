@@ -8,7 +8,7 @@ class StoppingCriterion(Protocol):  # pragma: no cover
 
     def fraction_remaining(self) -> float | None:
         """
-        Returns the fraction of the stopping criterion that is remaining.
+        Returns the fraction of the stopping criterion's budget that remains.
 
         Returns
         -------
