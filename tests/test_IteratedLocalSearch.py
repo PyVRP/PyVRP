@@ -177,10 +177,12 @@ def test_ils_accepts_below_threshold(ok_small):
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
     params = IteratedLocalSearchParams(initial_accept_weight=0.5)
     ils = IteratedLocalSearch(ok_small, pm, rng, ls, init, params)
+    candidate = Solution(ok_small, [[1, 2], [3, 4]])  # cost 9725
 
-    # The threshold is set at 0 + 0.5 * (1 - 0) = 0.5, candidate has cost 0.
-    ils._history.extend([1, 0])  # noqa
-    assert_(ils._accept(FirstFeasible()))  # noqa
+    # Threshold is 0.5 * 10000 + 0.5 * 0.5 * (10000 + 9725) / 2 = 9931.25,
+    # so the candidate solution is accepted.
+    ils._history.extend([10000])  # noqa
+    assert_(ils._accept(candidate, FirstFeasible()))  # noqa
 
 
 def test_ils_rejects_above_threshold(ok_small):
@@ -193,10 +195,29 @@ def test_ils_rejects_above_threshold(ok_small):
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
     params = IteratedLocalSearchParams(initial_accept_weight=0.5)
     ils = IteratedLocalSearch(ok_small, pm, rng, ls, init, params)
+    candidate = Solution(ok_small, [[1, 2], [3, 4]])  # cost 9725
 
-    # The threshold is set at 0 + 0.5 * (1 - 0) = 0.5, candidate has cost 1.
+    # Threshold is 0.5 * 9500 + 0.5 * (9500 + 9725) / 2 = 9556.25,
+    # so the candidate solution is rejected.
     ils._history.extend([0, 1])  # noqa
-    assert_(not ils._accept(FirstFeasible()))  # noqa
+    assert_(not ils._accept(candidate, FirstFeasible()))  # noqa
+
+
+def test_ils_accepts_at_threshold(ok_small):
+    """
+    Tests that ILS rejects candidates that are above the threshold.
+    """
+    pm = PenaltyManager(initial_penalties=([20], 6, 6))
+    rng = RandomNumberGenerator(42)
+    init = Solution.make_random(ok_small, rng)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+    params = IteratedLocalSearchParams(initial_accept_weight=0.5)
+    ils = IteratedLocalSearch(ok_small, pm, rng, ls, init, params)
+    candidate = Solution(ok_small, [[1, 2], [3, 4]])  # cost 9725
+
+    # Threshold is precisely equal to the candidate cost, so accept.
+    ils._history.extend([9725])  # noqa
+    assert_(ils._accept(candidate, FirstFeasible()))  # noqa
 
 
 def test_ils_rejects_due_to_stopping_criterion(ok_small):
@@ -208,17 +229,17 @@ def test_ils_rejects_due_to_stopping_criterion(ok_small):
     rng = RandomNumberGenerator(42)
     init = Solution.make_random(ok_small, rng)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
-    params = IteratedLocalSearchParams(initial_accept_weight=0.5)
+    params = IteratedLocalSearchParams(initial_accept_weight=1)
     ils = IteratedLocalSearch(ok_small, pm, rng, ls, init, params)
+    candidate = Solution(ok_small, [[1, 2], [3, 4]])  # cost 9725
 
-    # The history has an average cost of 1.5 and best cost of 0.
-    ils._history.extend([0, 4, 0.5])  # noqa
+    ils._history.extend([9725 * 2, 0])  # noqa
 
-    # The first feasible criterion does not have a meaningful fraction
-    # remaining, so the threshold is just the average of 1.5 and 0. The
-    # candidate has cost 0.5 and is thus accepted.
-    assert_(ils._accept(FirstFeasible()))  # noqa
+    # Threshold is 9725 (weight=1 with average of 9725). The first feasible
+    # criterion does not have a meaningful fraction remaining, so the candidate
+    # solution is accepted.
+    assert_(ils._accept(candidate, FirstFeasible()))  # noqa
 
     # The max iterations criterion's fraction remaining is now zero, so the
-    # threshold is equal to the recent best and will reject the candidate.
-    assert_(not ils._accept(MaxIterations(0)))  # noqa
+    # threshold is equal to the recent best (0) and the candidate is rejected.
+    assert_(not ils._accept(candidate, MaxIterations(0)))  # noqa
