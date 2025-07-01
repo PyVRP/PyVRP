@@ -198,50 +198,14 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
                 = costEvaluator.penalisedCost(*rU)
                   + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
 
-            // Mark modified nodes as promising candidates.
-            if (!U->isDepot())
-                promising[U->client()] = true;
-
-            if (!p(U)->isDepot())
-                promising[p(U)->client()] = true;
-
-            if (!n(U)->isDepot())
-                promising[n(U)->client()] = true;
-
-            if (!V->isDepot())
-            {
-                promising[V->client()] = true;
-
-                if (!p(V)->isDepot())
-                    promising[p(V)->client()] = true;
-
-                if (!n(V)->isDepot())
-                    promising[n(V)->client()] = true;
-            }
+            markPromising(U);
+            markPromising(V);
 
             nodeOp->apply(U, V);
             update(rU, rV);
 
-            // Mark modified nodes as promising candidates.
-            if (!U->isDepot())
-                promising[U->client()] = true;
-
-            if (!p(U)->isDepot())
-                promising[p(U)->client()] = true;
-
-            if (!n(U)->isDepot())
-                promising[n(U)->client()] = true;
-
-            if (!V->isDepot())
-            {
-                promising[V->client()] = true;
-
-                if (!p(V)->isDepot())
-                    promising[p(V)->client()] = true;
-
-                if (!n(V)->isDepot())
-                    promising[n(V)->client()] = true;
-            }
+            markPromising(U);
+            markPromising(V);
 
             [[maybe_unused]] auto const costAfter
                 = costEvaluator.penalisedCost(*rU)
@@ -302,12 +266,7 @@ void LocalSearch::applyDepotRemovalMove(Route::Node *U,
     // that's then unnecessary.
     if (removeCost(U, data, costEvaluator) <= 0)
     {
-        if (!p(U)->isDepot())
-            promising[p(U)->client()] = true;
-
-        if (!n(U)->isDepot())
-            promising[n(U)->client()] = true;
-
+        markPromising(U);
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
@@ -404,19 +363,15 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
     auto *V = &nodes[inSol[range.back()]];
     if (U != V && inplaceCost(U, V, data, costEvaluator) < 0)
     {
+        markPromising(V);
+
         auto *route = V->route();
         auto const idx = V->idx();
         route->remove(idx);
         route->insert(idx, U);
         update(route, route);
 
-        promising[U->client()] = true;
-
-        if (!p(U)->isDepot())
-            promising[p(U)->client()] = true;
-
-        if (!n(U)->isDepot())
-            promising[n(U)->client()] = true;
+        markPromising(U);
     }
 }
 
@@ -446,16 +401,20 @@ void LocalSearch::insert(Route::Node *U,
     {
         UAfter->route()->insert(UAfter->idx() + 1, U);
         update(UAfter->route(), UAfter->route());
-
-        if (!U->isDepot())
-            promising[U->client()] = true;
-
-        if (!p(U)->isDepot())
-            promising[p(U)->client()] = true;
-
-        if (!n(U)->isDepot())
-            promising[n(U)->client()] = true;
+        markPromising(U);
     }
+}
+
+void LocalSearch::markPromising(Route::Node *U)
+{
+    if (!U->isDepot())
+        promising[U->client()] = true;
+
+    if (!p(U)->isDepot())
+        promising[p(U)->client()] = true;
+
+    if (!n(U)->isDepot())
+        promising[n(U)->client()] = true;
 }
 
 void LocalSearch::update(Route *U, Route *V)
