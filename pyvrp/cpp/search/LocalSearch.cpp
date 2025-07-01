@@ -302,6 +302,12 @@ void LocalSearch::applyDepotRemovalMove(Route::Node *U,
     // that's then unnecessary.
     if (removeCost(U, data, costEvaluator) <= 0)
     {
+        if (!p(U)->isDepot())
+            promising[p(U)->client()] = true;
+
+        if (!n(U)->isDepot())
+            promising[n(U)->client()] = true;
+
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
@@ -403,6 +409,14 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
         route->remove(idx);
         route->insert(idx, U);
         update(route, route);
+
+        promising[U->client()] = true;
+
+        if (!p(U)->isDepot())
+            promising[p(U)->client()] = true;
+
+        if (!n(U)->isDepot())
+            promising[n(U)->client()] = true;
     }
 }
 
@@ -432,6 +446,15 @@ void LocalSearch::insert(Route::Node *U,
     {
         UAfter->route()->insert(UAfter->idx() + 1, U);
         update(UAfter->route(), UAfter->route());
+
+        if (!U->isDepot())
+            promising[U->client()] = true;
+
+        if (!p(U)->isDepot())
+            promising[p(U)->client()] = true;
+
+        if (!n(U)->isDepot())
+            promising[n(U)->client()] = true;
     }
 }
 
