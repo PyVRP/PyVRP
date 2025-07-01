@@ -103,7 +103,9 @@ class IteratedLocalSearch:
     def _booster_cost_evaluator(self) -> CostEvaluator:
         return self._pm.booster_cost_evaluator()
 
-    def _accept(self, candidate: Solution, stop: StoppingCriterion) -> bool:
+    def _accept(
+        self, candidate: Solution, best: Solution, stop: StoppingCriterion
+    ) -> bool:
         R"""
         Returns whether the candidate solution should be accepted or not.
         A candidate solution is accepted if it is feasible and better than a
@@ -142,6 +144,8 @@ class IteratedLocalSearch:
         ----------
         candidate
             The candidate solution to consider.
+        best
+            The best solution found so far.
         stop
             The stopping criterion of this run.
 
@@ -158,6 +162,10 @@ class IteratedLocalSearch:
             *European Journal of Operational Research* 294 (3): 1108 - 1119.
             https://doi.org/10.1016/j.ejor.2021.02.024.
         """
+        if not best.is_feasible():
+            # Always accept candidates if we don't yet have a feasible best.
+            return True
+
         if not candidate.is_feasible():
             # Don't accept infeasible solutions and don't register their
             # cost, as it would skew the history costs.
@@ -241,7 +249,7 @@ class IteratedLocalSearch:
             else:
                 iters_no_improvement += 1
 
-            if self._accept(candidate, stop):
+            if self._accept(candidate, best, stop):
                 current = candidate
 
         runtime = time.perf_counter() - start
