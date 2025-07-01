@@ -198,11 +198,31 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
                 = costEvaluator.penalisedCost(*rU)
                   + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
 
+            // Mark modified nodes as promising candidates.
+            if (!U->isDepot())
+                promising[U->client()] = true;
+
+            if (!p(U)->isDepot())
+                promising[p(U)->client()] = true;
+
+            if (!n(U)->isDepot())
+                promising[n(U)->client()] = true;
+
+            if (!V->isDepot())
+            {
+                promising[V->client()] = true;
+
+                if (!p(V)->isDepot())
+                    promising[p(V)->client()] = true;
+
+                if (!n(V)->isDepot())
+                    promising[n(V)->client()] = true;
+            }
+
             nodeOp->apply(U, V);
             update(rU, rV);
 
             // Mark modified nodes as promising candidates.
-            // TODO is there a better way to do this?
             if (!U->isDepot())
                 promising[U->client()] = true;
 
