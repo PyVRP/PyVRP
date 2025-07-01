@@ -78,8 +78,9 @@ class ProgressPrinter:
             return f"{cost} {'(Y)' if is_feas else '(N)'}"
 
         datum = stats.data[-1]
+        new_best = datum.best_feas and datum.best_cost < self._best_cost
         msg = _ITERATION.format(
-            special="H" if datum.best_cost < self._best_cost else " ",
+            special="H" if new_best else " ",
             iters=stats.num_iterations,
             elapsed=round(sum(stats.runtimes)),
             curr=_format(datum.current_cost, datum.current_feas),
@@ -89,7 +90,7 @@ class ProgressPrinter:
         print(msg)
 
         self._last_print_time = curr_time
-        if datum.best_cost < self._best_cost:
+        if new_best:
             self._best_cost = datum.best_cost
 
     def start(self, data: ProblemData):
