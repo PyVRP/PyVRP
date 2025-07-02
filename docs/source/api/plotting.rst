@@ -6,7 +6,7 @@ Plotting tools
 ==============
 
 The :mod:`pyvrp.plotting` module contains various functions for plotting problem instances and solutions to those problem instances.
-These can be used to better understand your problem, and to help investigate the solutions returned by the genetic algorithm.
+These can be used to better understand your problem, and to help investigate the solutions returned by the iterated local search algorithm.
 
 .. automodule:: pyvrp.plotting.plot_coordinates
 
@@ -15,10 +15,6 @@ These can be used to better understand your problem, and to help investigate the
 .. automodule:: pyvrp.plotting.plot_demands
 
    .. autofunction:: plot_demands
-
-.. automodule:: pyvrp.plotting.plot_diversity
-
-   .. autofunction:: plot_diversity
 
 .. automodule:: pyvrp.plotting.plot_instance
 
