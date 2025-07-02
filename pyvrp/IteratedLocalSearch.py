@@ -162,8 +162,11 @@ class IteratedLocalSearch:
             *European Journal of Operational Research* 294 (3): 1108 - 1119.
             https://doi.org/10.1016/j.ejor.2021.02.024.
         """
-        if not best.is_feasible():
-            # Always accept candidates if we don't yet have a feasible best.
+        if not best.is_feasible():  # then always accept candidates
+            if candidate.is_feasible():
+                cand_cost = self._cost_evaluator.cost(candidate)
+                self._history.append(cand_cost)
+
             return True
 
         if not candidate.is_feasible():
