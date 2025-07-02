@@ -24,7 +24,7 @@ Solving an instance with:
                   |               Cost (Feasible)
     Iters    Time |      Current    Candidate         Best"""
 
-_RESTART = "R                 |                restart"
+_RESTART = "R                 |                 restart"
 
 _END = """
 Search terminated in {runtime:.2f}s after {iters} iterations.
