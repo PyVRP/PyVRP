@@ -50,7 +50,7 @@ class Solution
     Distance distance_ = 0;         // Total travel distance over all routes
     Cost distanceCost_ = 0;         // Total cost of all routes' travel distance
     Distance internalDistance_ = 0; // Total distance travelled on all routes, excluding the first and last segments
-    Distance avgSegmentDistance_ = 2; // Average distance travelled on a segment between two clients on actual routes
+    Distance avgSegmentDistance_ = 1.9; // Average distance travelled on a segment between two clients on actual routes
     Duration duration_ = 0;         // Total duration over all routes
     Cost durationCost_ = 0;         // Total cost of all routes' duration
     Distance excessDistance_ = 0;   // Total excess distance over all routes
