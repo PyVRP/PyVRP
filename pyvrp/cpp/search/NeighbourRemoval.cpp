@@ -1,21 +1,17 @@
 #include "NeighbourRemoval.h"
 
 void pyvrp::search::NeighbourRemoval::operator()(
-    std::vector<search::Route::Node> &nodes,
-    [[maybe_unused]] std::vector<search::Route> &routes,
-    [[maybe_unused]] CostEvaluator const &costEvaluator,
-    std::vector<std::vector<size_t>> const &neighbours,
-    std::vector<size_t> const &orderNodes)
+    PerturbationContext const &context)
 {
     if (numPerturb_ == 0 || data_.numClients() == 0)
         return;
 
-    auto const client = orderNodes[0];  // random client
+    auto const client = context.orderNodes[0];  // random client
     size_t numRemoved = 0;
 
-    for (auto const idx : neighbours[client])
+    for (auto const idx : context.neighbours[client])
     {
-        auto *U = &nodes[idx];
+        auto *U = &context.nodes[idx];
         if (!U->route())
             continue;
 

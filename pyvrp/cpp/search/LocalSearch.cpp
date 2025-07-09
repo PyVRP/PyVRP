@@ -10,6 +10,7 @@
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
+using pyvrp::search::PerturbationContext;
 using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RouteOperator;
 
@@ -161,7 +162,9 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     if (perturbOps.empty())
         return;
 
-    (*perturbOps[0])(nodes, routes, costEvaluator, neighbours_, orderNodes);
+    PerturbationContext context{
+        nodes, routes, costEvaluator, neighbours_, orderNodes};
+    (*perturbOps[0])(context);
 }
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)

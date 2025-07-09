@@ -25,6 +25,7 @@ using pyvrp::search::LocalSearch;
 using pyvrp::search::NeighbourRemoval;
 using pyvrp::search::NodeOperator;
 using pyvrp::search::OperatorStatistics;
+using pyvrp::search::PerturbationContext;
 using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
@@ -40,6 +41,46 @@ PYBIND11_MODULE(_search, m)
     py::class_<NodeOperator>(m, "NodeOperator");
     py::class_<RouteOperator>(m, "RouteOperator");
     py::class_<PerturbationOperator>(m, "PerturbationOperator");
+
+    py::class_<PerturbationContext>(m, "PerturbationContext")
+        .def(py::init<std::vector<pyvrp::search::Route::Node> &,
+                      std::vector<pyvrp::search::Route> &,
+                      pyvrp::CostEvaluator const &,
+                      std::vector<std::vector<size_t>> const &,
+                      std::vector<size_t> const &>(),
+             py::arg("nodes"),
+             py::arg("routes"),
+             py::arg("cost_evaluator"),
+             py::arg("neighbours"),
+             py::arg("order_nodes"))
+        .def_property_readonly(
+            "nodes",
+            [](PerturbationContext const &ctx)
+                -> std::vector<pyvrp::search::Route::Node> const &
+            { return ctx.nodes; },
+            py::return_value_policy::reference_internal)
+        .def_property_readonly(
+            "routes",
+            [](PerturbationContext const &ctx)
+                -> std::vector<pyvrp::search::Route> const &
+            { return ctx.routes; },
+            py::return_value_policy::reference_internal)
+        .def_property_readonly(
+            "cost_evaluator",
+            [](PerturbationContext const &ctx) -> pyvrp::CostEvaluator const &
+            { return ctx.costEvaluator; },
+            py::return_value_policy::reference_internal)
+        .def_property_readonly(
+            "neighbours",
+            [](PerturbationContext const &ctx)
+                -> std::vector<std::vector<size_t>> const &
+            { return ctx.neighbours; },
+            py::return_value_policy::reference_internal)
+        .def_property_readonly(
+            "order_nodes",
+            [](PerturbationContext const &ctx) -> std::vector<size_t> const &
+            { return ctx.orderNodes; },
+            py::return_value_policy::reference_internal);
 
     py::class_<OperatorStatistics>(
         m, "OperatorStatistics", DOC(pyvrp, search, OperatorStatistics))
@@ -263,11 +304,7 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>())  // keep data alive
         .def("__call__",
              &NeighbourRemoval::operator(),
-             py::arg("nodes"),
-             py::arg("routes"),
-             py::arg("cost_evaluator"),
-             py::arg("neighbours"),
-             py::arg("order_nodes"),
+             py::arg("context"),
              py::call_guard<py::gil_scoped_release>());
 
     py::class_<LocalSearch::Statistics>(

@@ -32,11 +32,7 @@ public:
      */
     NeighbourRemoval(ProblemData const &data, size_t const numPerturb);
 
-    void operator()(std::vector<search::Route::Node> &nodes,
-                    std::vector<search::Route> &routes,
-                    CostEvaluator const &costEvaluator,
-                    std::vector<std::vector<size_t>> const &neighbours,
-                    std::vector<size_t> const &orderNodes) override;
+    void operator()(PerturbationContext const &context) override;
 };
 
 }  // namespace pyvrp::search
