@@ -668,9 +668,14 @@ public:
     durationMatrix(size_t profile) const;
 
     /**
-     * Average segment distance between two clients in this problem instance.
+     * Average segment distance between two clients on actual routes.
      */
     [[nodiscard]] Distance avgSegmentDistance() const;
+
+    /**
+     * Sets the average segment distance between two clients.
+     */
+    void setAvgSegmentDistance(Distance avgSegmentDistance);
 
     /**
      * Number of clients in this problem instance.

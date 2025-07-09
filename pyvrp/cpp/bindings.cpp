@@ -446,6 +446,12 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::durationMatrices,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, durationMatrices))
+        .def("avg_segment_distance",
+             &ProblemData::avgSegmentDistance,
+             DOC(pyvrp, ProblemData, avgSegmentDistance))
+        .def("set_avg_segment_distance",
+             &ProblemData::setAvgSegmentDistance,
+             py::arg("avg_segment_distance"))
         .def("centroid",
              &ProblemData::centroid,
              py::return_value_policy::reference_internal,

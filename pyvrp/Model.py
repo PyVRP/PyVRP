@@ -108,6 +108,10 @@ class Model:
         self._groups: list[ClientGroup] = []
         self._profiles: list[Profile] = []
         self._vehicle_types: list[VehicleType] = []
+        # Average distance travelled on a segment between two clients. If
+        # provided by the user, this value will be stored in the generated
+        # ProblemData instance.
+        self._avg_segment_distance: int | None = None
 
     @property
     def locations(self) -> list[Client | Depot]:
@@ -323,6 +327,24 @@ class Model:
         self._profiles.append(profile)
         return profile
 
+    # ------------------------------------------------------------------
+    # Average-segment-distance helpers
+    # ------------------------------------------------------------------
+
+    def set_avg_segment_distance(self, distance: int | None) -> None:
+        """Sets the average distance travelled on a segment between clients.
+
+        Parameters
+        ----------
+        distance
+            The distance value to set. Provide ``None`` to unset.
+        """
+
+        if distance is not None and distance < 0:
+            raise ValueError("Average segment distance must be non-negative.")
+
+        self._avg_segment_distance = int(distance) if distance is not None else None
+
     def add_vehicle_type(
         self,
         num_available: int = 1,
@@ -461,7 +483,7 @@ class Model:
             distances = [base_distance]
             durations = [base_duration]
 
-        return ProblemData(
+        pdata = ProblemData(
             self._clients,
             self._depots,
             self.vehicle_types,
@@ -469,6 +491,19 @@ class Model:
             durations,
             self._groups,
         )
+
+        # Propagate user-defined average-segment-distance to ProblemData.
+        if self._avg_segment_distance is not None:
+            try:
+                pdata.set_avg_segment_distance(self._avg_segment_distance)
+            except AttributeError:
+                # Linked _pyvrp version does not expose the setter.
+                warn(
+                    "avg_segment_distance could not be set – _pyvrp is out of date.",
+                    RuntimeWarning,
+                )
+
+        return pdata
 
     def solve(
         self,
