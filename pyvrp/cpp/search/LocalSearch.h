@@ -64,7 +64,8 @@ private:
     std::vector<int> lastTestedNodes;   // tracks node operator evaluation
     std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
     std::vector<int> lastUpdated;       // tracks when routes were last modified
-    DynamicBitset promising;            // tracks promising nodes
+    DynamicBitset promising;            // tracks which nodes are likely to be
+                                        // improved by node ops
 
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
