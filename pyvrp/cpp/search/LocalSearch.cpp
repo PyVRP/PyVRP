@@ -162,6 +162,8 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 
 void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 {
+    promising.reset();
+
     if (perturbOps.empty())
         return;
 
@@ -437,7 +439,6 @@ void LocalSearch::loadSolution(Solution const &solution)
     std::fill(lastTestedNodes.begin(), lastTestedNodes.end(), -1);
     std::fill(lastTestedRoutes.begin(), lastTestedRoutes.end(), -1);
     std::fill(lastUpdated.begin(), lastUpdated.end(), 0);
-    promising.reset();
     numUpdates_ = 0;
 
     // First empty all routes.

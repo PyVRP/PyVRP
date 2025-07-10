@@ -118,6 +118,12 @@ DynamicBitset DynamicBitset::operator^(DynamicBitset const &other) const
     return DynamicBitset(copy) ^= other;
 }
 
+DynamicBitset &DynamicBitset::set()
+{
+    for (auto &block : data_)
+        block.set();
+    return *this;
+}
 DynamicBitset &DynamicBitset::reset()
 {
     for (auto &block : data_)
