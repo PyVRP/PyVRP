@@ -16,6 +16,7 @@ using pyvrp::search::RouteOperator;
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
+    promising.reset();
     loadSolution(solution);
     perturb(costEvaluator);
 
@@ -37,6 +38,7 @@ Solution LocalSearch::operator()(Solution const &solution,
 Solution LocalSearch::search(Solution const &solution,
                              CostEvaluator const &costEvaluator)
 {
+    promising.set();
     loadSolution(solution);
     search(costEvaluator);
     return exportSolution();
@@ -53,6 +55,7 @@ Solution LocalSearch::intensify(Solution const &solution,
 Solution LocalSearch::perturb(Solution const &solution,
                               CostEvaluator const &costEvaluator)
 {
+    promising.reset();
     loadSolution(solution);
     perturb(costEvaluator);
     return exportSolution();
@@ -162,8 +165,6 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 
 void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 {
-    promising.reset();
-
     if (perturbOps.empty())
         return;
 
