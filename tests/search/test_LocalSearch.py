@@ -337,9 +337,7 @@ def test_no_op_results_in_same_solution(ok_small):
 
 def test_perturbation_no_op_makes_search_no_op(ok_small):
     """
-    Tests that ``__call__()`` is a no-op if the perturbation operator is a
-    no-op. Perturbation restricts the local search to only consider nodes that
-    were modified, but since no nodes are modified, the search is also a no-op.
+    Tests that ``__call__()`` is a no-op if the perturbation step is a no-op.
     """
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
@@ -352,13 +350,13 @@ def test_perturbation_no_op_makes_search_no_op(ok_small):
     def cost(solution):
         return cost_evaluator.penalised_cost(solution)
 
-    # ``ls.__call__()`` perturbs and then searches, but only around nodes
-    # affected by the perturbation step. Since the perturbation is a no-op,
+    # ``__call__()`` first perturbs and then searches, but only around nodes
+    # modified by the perturbation step. Since the perturbation is a no-op,
     # the resulting search will also be a no-op.
     improved = ls(sol, cost_evaluator)
     assert_(cost(improved) == cost(sol))
 
-    # Instead, calling ``ls.search()`` searches around all nodes in the
+    # Instead, directly calling ``search()`` searches around all nodes in the
     # solution, so this will find improving moves.
     further_improved = ls.search(improved, cost_evaluator)
     assert_(cost(further_improved) < cost(improved))
