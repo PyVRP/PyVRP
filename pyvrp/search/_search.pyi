@@ -76,6 +76,9 @@ class SwapStar(RouteOperator):
         self, data: ProblemData, overlap_tolerance: float = 0.05
     ) -> None: ...
 
+class ChangeVehicleType(PerturbationOperator):
+    def __init__(self, data: ProblemData, num_perturb: int) -> None: ...
+
 class NeighbourRemoval(PerturbationOperator):
     def __init__(self, data: ProblemData, num_perturb: int) -> None: ...
 

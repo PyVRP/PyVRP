@@ -162,8 +162,13 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     if (perturbOps.empty())
         return;
 
-    PerturbationContext context{
-        nodes, routes, costEvaluator, neighbours_, orderNodes};
+    PerturbationContext context{nodes,
+                                routes,
+                                costEvaluator,
+                                neighbours_,
+                                orderNodes,
+                                orderRoutes,
+                                orderVehTypes};
     (*perturbOps[0])(context);
 }
 

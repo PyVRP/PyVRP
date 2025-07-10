@@ -1,4 +1,5 @@
 #include "bindings.h"
+#include "ChangeVehicleType.h"
 #include "Exchange.h"
 #include "LocalSearch.h"
 #include "NeighbourRemoval.h"
@@ -18,6 +19,7 @@
 
 namespace py = pybind11;
 
+using pyvrp::search::ChangeVehicleType;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
@@ -47,12 +49,16 @@ PYBIND11_MODULE(_search, m)
                       std::vector<pyvrp::search::Route> &,
                       pyvrp::CostEvaluator const &,
                       std::vector<std::vector<size_t>> const &,
-                      std::vector<size_t> const &>(),
+                      std::vector<size_t> const &,
+                      std::vector<size_t> const &,
+                      std::vector<std::pair<size_t, size_t>> const &>(),
              py::arg("nodes"),
              py::arg("routes"),
              py::arg("cost_evaluator"),
              py::arg("neighbours"),
-             py::arg("order_nodes"))
+             py::arg("order_nodes"),
+             py::arg("order_routes"),
+             py::arg("order_veh_types"))
         .def_property_readonly(
             "nodes",
             [](PerturbationContext const &ctx)
@@ -80,6 +86,17 @@ PYBIND11_MODULE(_search, m)
             "order_nodes",
             [](PerturbationContext const &ctx) -> std::vector<size_t> const &
             { return ctx.orderNodes; },
+            py::return_value_policy::reference_internal)
+        .def_property_readonly(
+            "order_routes",
+            [](PerturbationContext const &ctx) -> std::vector<size_t> const &
+            { return ctx.orderRoutes; },
+            py::return_value_policy::reference_internal)
+        .def_property_readonly(
+            "order_veh_types",
+            [](PerturbationContext const &ctx)
+                -> std::vector<std::pair<size_t, size_t>> const &
+            { return ctx.orderVehTypes; },
             py::return_value_policy::reference_internal);
 
     py::class_<OperatorStatistics>(
@@ -304,6 +321,17 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>())  // keep data alive
         .def("__call__",
              &NeighbourRemoval::operator(),
+             py::arg("context"),
+             py::call_guard<py::gil_scoped_release>());
+
+    py::class_<ChangeVehicleType, PerturbationOperator>(
+        m, "ChangeVehicleType", DOC(pyvrp, search, ChangeVehicleType))
+        .def(py::init<pyvrp::ProblemData const &, size_t const>(),
+             py::arg("data"),
+             py::arg("num_perturb"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("__call__",
+             &ChangeVehicleType::operator(),
              py::arg("context"),
              py::call_guard<py::gil_scoped_release>());
 

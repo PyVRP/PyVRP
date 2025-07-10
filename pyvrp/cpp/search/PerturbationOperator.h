@@ -18,6 +18,8 @@ struct PerturbationContext
     CostEvaluator const &costEvaluator;
     std::vector<std::vector<size_t>> const &neighbours;
     std::vector<size_t> const &orderNodes;
+    std::vector<size_t> const &orderRoutes;
+    std::vector<std::pair<size_t, size_t>> const &orderVehTypes;
 };
 
 /**
