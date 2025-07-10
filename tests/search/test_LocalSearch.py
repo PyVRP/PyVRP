@@ -297,7 +297,7 @@ def test_local_search_perturb_restricts_promising_moves(rc208):
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
     ls.add_node_operator(Exchange10(rc208))
-    ls.add_perturbation_operator(NeighbourRemoval(rc208, 20))
+    ls.add_perturbation_operator(NeighbourRemoval(rc208, 10))
 
     sol = Solution.make_random(rc208, rng)
     cost_evaluator = CostEvaluator([20], 6, 6)
