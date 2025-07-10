@@ -247,7 +247,6 @@ def test_cpp_shuffle_results_in_different_solution(rc208):
     assert_(improved3 != improved1)
 
 
-@pytest.mark.skip(reason="Local optimality no longer true for ``ls.search``.")
 def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     """
     Tests that a solution that is already locally optimal returns the same
@@ -336,7 +335,6 @@ def test_no_op_results_in_same_solution(ok_small):
     assert_equal(ls.perturb(sol, cost_eval), sol)
 
 
-@pytest.mark.skip(reason="Local optimality no longer true for ``ls.search``.")
 def test_intensify_can_improve_solution_further(rc208):
     """
     Tests that ``intensify()`` improves a solution further once ``search()`` is
