@@ -17,7 +17,6 @@ Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    promising.reset();  // perturb determines initial promising nodes
     perturb(costEvaluator);
 
     while (true)
@@ -39,7 +38,6 @@ Solution LocalSearch::search(Solution const &solution,
                              CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    promising.set();  // all nodes are promising in pure search
     search(costEvaluator);
     return exportSolution();
 }
@@ -56,7 +54,6 @@ Solution LocalSearch::perturb(Solution const &solution,
                               CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    promising.reset();  // perturb determines initial promising nodes
     perturb(costEvaluator);
     return exportSolution();
 }
@@ -167,6 +164,10 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 {
     if (perturbOps.empty())
         return;
+
+    // Clear the set of promising nodes as perturbation will determine
+    // the initial set of promising nodes for local search.
+    promising.reset();
 
     (*perturbOps[0])(
         nodes, routes, costEvaluator, neighbours_, orderNodes, promising);
@@ -440,6 +441,7 @@ void LocalSearch::loadSolution(Solution const &solution)
     std::fill(lastTestedNodes.begin(), lastTestedNodes.end(), -1);
     std::fill(lastTestedRoutes.begin(), lastTestedRoutes.end(), -1);
     std::fill(lastUpdated.begin(), lastUpdated.end(), 0);
+    promising.set();
     numUpdates_ = 0;
 
     // First empty all routes.
