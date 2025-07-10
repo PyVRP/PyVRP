@@ -17,7 +17,7 @@ Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    promising.reset();  // perturb will mark initial promising nodes
+    promising.reset();  // perturb determines initial promising nodes
     perturb(costEvaluator);
 
     while (true)
@@ -56,7 +56,7 @@ Solution LocalSearch::perturb(Solution const &solution,
                               CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    promising.reset();  // perturb will mark initial promising nodes
+    promising.reset();  // perturb determines initial promising nodes
     perturb(costEvaluator);
     return exportSolution();
 }
