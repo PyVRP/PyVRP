@@ -168,7 +168,7 @@ def test_bit_not():
 
 def test_set():
     """
-    Tests that set returns the bitset to an all-ones state.
+    Tests that ``set()`` turns the bitset to an all-ones state.
     """
     bitset = DynamicBitset(128)
     assert_equal(bitset.count(), 0)
@@ -183,7 +183,7 @@ def test_set():
 
 def test_reset():
     """
-    Tests that reset returns the bitset to an all-zero state.
+    Tests that ``reset()`` returns the bitset to an all-zero state.
     """
     bitset = DynamicBitset(128)
     assert_equal(bitset.count(), 0)
