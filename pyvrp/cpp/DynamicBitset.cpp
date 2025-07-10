@@ -124,6 +124,7 @@ DynamicBitset &DynamicBitset::set()
         block.set();
     return *this;
 }
+
 DynamicBitset &DynamicBitset::reset()
 {
     for (auto &block : data_)
