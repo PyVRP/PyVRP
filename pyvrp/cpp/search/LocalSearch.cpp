@@ -191,7 +191,6 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
         {
             auto *rU = U->route();  // copy these because the operator can
             auto *rV = V->route();  // modify the nodes' route membership
-            auto const isDepotV = V->isDepot();  // or invalidate this node
 
             [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(*rU)
@@ -202,12 +201,6 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
 
             nodeOp->apply(U, V);
             update(rU, rV);
-
-            markPromising(U);
-            if (!isDepotV)
-                // Reallocations of depots_ size can invalidate this node (which
-                // is a start depot from applyNodeOps(U, p(V), ...)).
-                markPromising(V);
 
             [[maybe_unused]] auto const costAfter
                 = costEvaluator.penalisedCost(*rU)
