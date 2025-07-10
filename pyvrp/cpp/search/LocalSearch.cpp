@@ -16,8 +16,8 @@ using pyvrp::search::RouteOperator;
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
-    promising.reset();
     loadSolution(solution);
+    promising.reset();  // perturb will mark initial promising nodes
     perturb(costEvaluator);
 
     while (true)
@@ -38,8 +38,8 @@ Solution LocalSearch::operator()(Solution const &solution,
 Solution LocalSearch::search(Solution const &solution,
                              CostEvaluator const &costEvaluator)
 {
-    promising.set();
     loadSolution(solution);
+    promising.set();  // all nodes are promising in pure search
     search(costEvaluator);
     return exportSolution();
 }
@@ -55,8 +55,8 @@ Solution LocalSearch::intensify(Solution const &solution,
 Solution LocalSearch::perturb(Solution const &solution,
                               CostEvaluator const &costEvaluator)
 {
-    promising.reset();
     loadSolution(solution);
+    promising.reset();  // perturb will mark initial promising nodes
     perturb(costEvaluator);
     return exportSolution();
 }

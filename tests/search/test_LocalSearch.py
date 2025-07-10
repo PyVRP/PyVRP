@@ -477,7 +477,7 @@ def test_mutually_exclusive_group(gtsp):
 
     sol = Solution.make_random(gtsp, rng)
     cost_eval = CostEvaluator([20], 6, 0)
-    improved = ls(sol, cost_eval)
+    improved = ls.search(sol, cost_eval)
 
     assert_(not sol.is_group_feasible())
     assert_(improved.is_group_feasible())
@@ -503,7 +503,7 @@ def test_mutually_exclusive_group_not_in_solution(
     sol = Solution(ok_small_mutually_exclusive_groups, [[4]])
     assert_(not sol.is_group_feasible())
 
-    improved = ls(sol, CostEvaluator([20], 6, 0))
+    improved = ls.search(sol, CostEvaluator([20], 6, 0))
     assert_(improved.is_group_feasible())
 
 
@@ -522,7 +522,7 @@ def test_swap_if_improving_mutually_exclusive_group(
 
     cost_eval = CostEvaluator([20], 6, 0)
     sol = Solution(ok_small_mutually_exclusive_groups, [[1, 4]])
-    improved = ls(sol, cost_eval)
+    improved = ls.search(sol, cost_eval)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
     routes = improved.routes()
@@ -545,7 +545,7 @@ def test_no_op_multi_trip_instance(ok_small_multiple_trips):
 
     sol = Solution(ok_small_multiple_trips, [route])
     cost_eval = CostEvaluator([20], 6, 0)
-    assert_equal(ls(sol, cost_eval), sol)
+    assert_equal(ls.search(sol, cost_eval), sol)
 
 
 def test_local_search_inserts_reload_depots(ok_small_multiple_trips):
@@ -563,7 +563,7 @@ def test_local_search_inserts_reload_depots(ok_small_multiple_trips):
     assert_(sol.has_excess_load())
 
     cost_eval = CostEvaluator([1_000], 0, 0)
-    improved = ls(sol, cost_eval)
+    improved = ls.search(sol, cost_eval)
 
     assert_(not improved.has_excess_load())
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
@@ -588,7 +588,7 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     sol = Solution(data, [route1, route2])
 
     cost_eval = CostEvaluator([1_000], 0, 0)
-    improved = ls(sol, cost_eval)
+    improved = ls.search(sol, cost_eval)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
     # The local search should have removed the reload depot from the first
@@ -619,7 +619,7 @@ def test_search_statistics(ok_small):
     # number of moves.
     rnd_sol = Solution.make_random(ok_small, rng)
     cost_eval = CostEvaluator([1], 1, 1)
-    improved = ls(rnd_sol, cost_eval)
+    improved = ls.search(rnd_sol, cost_eval)
 
     stats = ls.statistics
     assert_(stats.num_moves > 0)
@@ -634,7 +634,7 @@ def test_search_statistics(ok_small):
     # The improved solution is already locally optimal, so it cannot be further
     # improved by the local search. The number of improving moves should thus
     # be zero after another attempt.
-    ls(improved, cost_eval)
+    ls.search(improved, cost_eval)
 
     stats = ls.statistics
     assert_(stats.num_moves > 0)
