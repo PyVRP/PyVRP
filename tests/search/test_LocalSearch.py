@@ -288,39 +288,6 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     assert_equal(further_improved, improved)
 
 
-def test_local_search_perturb_restricts_promising_moves(rc208):
-    """
-    Tests that including perturbation in local search results in subsequent
-    search being restricted to nodes that are affected by the perturbation
-    step.
-    """
-    rng = RandomNumberGenerator(seed=42)
-    ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    ls.add_node_operator(Exchange10(rc208))
-    ls.add_perturbation_operator(NeighbourRemoval(rc208, 10))
-
-    sol = Solution.make_random(rc208, rng)
-    cost_evaluator = CostEvaluator([20], 6, 6)
-
-    def cost(solution):
-        return cost_evaluator.penalised_cost(solution)
-
-    # ``ls.__call__()`` perturbs and then searches around the solution, but
-    # only around nodes affected by the perturbation step.
-    improved = ls(sol, cost_evaluator)
-    assert_(cost(improved) < cost(sol))
-
-    # Next, we apply ``ls.search()`` to search around all nodes in the
-    # solution. This is a bigger search space, so this will find improving
-    # moves that were not considered in the previous step.
-    further_improved = ls.search(sol, cost_evaluator)
-    assert_(cost(further_improved) < cost(improved))
-
-    # Check that the solution is now locally optimal.
-    locally_optimal = ls.search(further_improved, cost_evaluator)
-    assert_equal(cost(locally_optimal), cost(further_improved))
-
-
 def test_bugfix_vehicle_type_offsets(ok_small):
     """
     See https://github.com/PyVRP/PyVRP/pull/292 for details. This exercises a
@@ -366,6 +333,35 @@ def test_no_op_results_in_same_solution(ok_small):
     assert_equal(ls.search(sol, cost_eval), sol)
     assert_equal(ls.intensify(sol, cost_eval), sol)
     assert_equal(ls.perturb(sol, cost_eval), sol)
+
+
+def test_perturbation_no_op_makes_search_no_op(ok_small):
+    """
+    Tests that ``__call__()`` is a no-op if the perturbation operator is a
+    no-op. Perturbation restricts the local search to only consider nodes that
+    were modified, but since no nodes are modified, the search is also a no-op.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+    ls.add_node_operator(Exchange10(ok_small))
+    ls.add_perturbation_operator(NeighbourRemoval(ok_small, 0))  # no-op
+
+    sol = Solution.make_random(ok_small, rng)
+    cost_evaluator = CostEvaluator([20], 6, 6)
+
+    def cost(solution):
+        return cost_evaluator.penalised_cost(solution)
+
+    # ``ls.__call__()`` perturbs and then searches, but only around nodes
+    # affected by the perturbation step. Since the perturbation is a no-op,
+    # the resulting search will also be a no-op.
+    improved = ls(sol, cost_evaluator)
+    assert_(cost(improved) == cost(sol))
+
+    # Instead, calling ``ls.search()`` searches around all nodes in the
+    # solution, so this will find improving moves.
+    further_improved = ls.search(improved, cost_evaluator)
+    assert_(cost(further_improved) < cost(improved))
 
 
 def test_intensify_can_improve_solution_further(rc208):
