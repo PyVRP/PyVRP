@@ -190,9 +190,6 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
                 = costEvaluator.penalisedCost(*rU)
                   + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
 
-            nodeOp->apply(U, V);
-            update(rU, rV);
-
             if (!U->isDepot())
                 candidates[U->client()] = true;
 
@@ -212,6 +209,9 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
                 if (!n(V)->isDepot())
                     candidates[n(V)->client()] = true;
             }
+
+            nodeOp->apply(U, V);
+            update(rU, rV);
 
             [[maybe_unused]] auto const costAfter
                 = costEvaluator.penalisedCost(*rU)
