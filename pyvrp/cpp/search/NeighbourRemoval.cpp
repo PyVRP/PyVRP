@@ -21,12 +21,8 @@ void pyvrp::search::NeighbourRemoval::operator()(
             continue;
 
         promising[U->client()] = true;
-
-        if (!p(U)->isDepot())
-            promising[p(U)->client()] = true;
-
-        if (!n(U)->isDepot())
-            promising[n(U)->client()] = true;
+        promising[p(U)->client()] = true;
+        promising[n(U)->client()] = true;
 
         auto *route = U->route();
         route->remove(U->idx());
