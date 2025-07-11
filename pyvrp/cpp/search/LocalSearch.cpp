@@ -303,6 +303,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 
     if (!uData.required && removeCost(U, data, costEvaluator) < 0)
     {
+        markPromising(U);
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
@@ -351,9 +352,10 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
     for (auto idx = range.begin(); idx != range.end() - 1; ++idx)
     {
         auto const client = inSol[*idx];
-        auto const &node = nodes[client];
+        auto &node = nodes[client];
         auto *route = node.route();
 
+        markPromising(&node);
         route->remove(node.idx());
         update(route, route);
     }
