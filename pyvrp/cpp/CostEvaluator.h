@@ -277,15 +277,17 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     out += route->unitDistanceCost() * static_cast<Cost>(distance);
     out += distPenalty(distance, route->maxDistance());
 
-    if constexpr (!exact)
-        if (out >= 0)
-            return false;
-
     if constexpr (!skipLoad)
     {
         auto const &capacity = route->capacity();
         for (size_t dim = 0; dim != capacity.size(); ++dim)
+        {
+            if constexpr (!exact)
+                if (out >= 0)
+                    return false;
+
             out += loadPenalty(proposal.excessLoad(dim), 0, dim);
+        }
     }
 
     auto const [duration, timeWarp] = proposal.duration();
@@ -341,19 +343,27 @@ bool CostEvaluator::deltaCost(Cost &out,
     out += vRoute->unitDistanceCost() * static_cast<Cost>(vDist);
     out += distPenalty(vDist, vRoute->maxDistance());
 
-    if constexpr (!exact)
-        if (out >= 0)
-            return false;
-
     if constexpr (!skipLoad)
     {
         auto const &uCapacity = uRoute->capacity();
         for (size_t dim = 0; dim != uCapacity.size(); ++dim)
+        {
+            if constexpr (!exact)
+                if (out >= 0)
+                    return false;
+
             out += loadPenalty(uProposal.excessLoad(dim), 0, dim);
+        }
 
         auto const &vCapacity = vRoute->capacity();
         for (size_t dim = 0; dim != vCapacity.size(); ++dim)
+        {
+            if constexpr (!exact)
+                if (out >= 0)
+                    return false;
+
             out += loadPenalty(vProposal.excessLoad(dim), 0, dim);
+        }
     }
 
     if constexpr (!exact)
