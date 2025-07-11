@@ -33,8 +33,8 @@ NODE_OPERATORS: list[Type[NodeOperator]] = [
 ]
 
 ROUTE_OPERATORS: list[Type[RouteOperator]] = [
-    SwapRoutes,
-    SwapStar,
+    # SwapRoutes,
+    # SwapStar,
 ]
 
 PERTURBATION_OPERATORS: list[Type[PerturbationOperator]] = [
