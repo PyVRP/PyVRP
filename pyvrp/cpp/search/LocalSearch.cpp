@@ -10,6 +10,7 @@
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
+using pyvrp::search::PerturbationContext;
 using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RouteOperator;
 
@@ -169,8 +170,15 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     // the initial set of promising nodes for local search.
     promising.reset();
 
-    (*perturbOps[0])(
-        nodes, routes, costEvaluator, neighbours_, orderNodes, promising);
+    PerturbationContext context{nodes,
+                                routes,
+                                costEvaluator,
+                                neighbours_,
+                                orderNodes,
+                                orderRoutes,
+                                orderVehTypes,
+                                promising};
+    (*perturbOps[0])(context);
 }
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)

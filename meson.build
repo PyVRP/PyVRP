@@ -71,8 +71,10 @@ libdiversity = static_library(
 libsearch = static_library(
     'search',
     [
+        SRC_DIR / 'search' / 'ChangeVehicleType.cpp',
         SRC_DIR / 'search' / 'LocalSearch.cpp',
         SRC_DIR / 'search' / 'NeighbourRemoval.cpp',
+        SRC_DIR / 'search' / 'OptionalInsert.cpp',
         SRC_DIR / 'search' / 'Route.cpp',
         SRC_DIR / 'search' / 'primitives.cpp',
         SRC_DIR / 'search' / 'RelocateWithDepot.cpp',
