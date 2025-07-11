@@ -354,7 +354,7 @@ def test_perturbation_no_op_makes_search_no_op(ok_small):
     # modified by the perturbation step. Since the perturbation is a no-op,
     # the resulting search will also be a no-op.
     improved = ls(sol, cost_evaluator)
-    assert_(cost(improved) == cost(sol))
+    assert_equal(cost(improved), cost(sol))
 
     # Instead, directly calling ``search()`` searches around all nodes in the
     # solution, so this will find improving moves.
