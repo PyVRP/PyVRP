@@ -19,17 +19,24 @@ from pyvrp.exceptions import PenaltyBoundWarning
         "penalty_increase",
         "penalty_decrease",
         "target_feasible",
+        "feas_tolerance",
+        "min_penalty",
+        "max_penalty",
     ),
     [
-        (1, -1, 1, 0.5, 0.5),  # -1 solutions between updates
-        (1, 0, 1, 0.5, 0.5),  # 0 solutions between updates
-        (1, 1, -1.0, 0.5, 0.5),  # -1 penalty increase
-        (1, 1, 0.5, 0.5, 0.5),  # 0.5 penalty increase
-        (1, 1, 1.5, -1, 0.5),  # -1 penalty decrease
-        (1, 1, 1.5, 2, 0.5),  # 2 penalty decrease
-        (1, 1, 1, 1, -1),  # -1 target feasible
-        (1, 1, 1, 1, 2),  # 2 target feasible
-        (0, 1, 1, 1, 1),  # 0 repair booster
+        (0, 1, 1, 1, 1, 0, 0, 0),  # 0 repair booster
+        (1, -1, 1, 0.5, 0.5, 0, 0, 0),  # -1 solutions between updates
+        (1, 0, 1, 0.5, 0.5, 0, 0, 0),  # 0 solutions between updates
+        (1, 1, -1.0, 0.5, 0.5, 0, 0, 0),  # -1 penalty increase
+        (1, 1, 0.5, 0.5, 0.5, 0, 0, 0),  # 0.5 penalty increase
+        (1, 1, 1.5, -1, 0.5, 0, 0, 0),  # -1 penalty decrease
+        (1, 1, 1.5, 2, 0.5, 0, 0, 0),  # 2 penalty decrease
+        (1, 1, 1, 1, -1, 0, 0, 0),  # -1 target feasible
+        (1, 1, 1, 1, 2, 0, 0, 0),  # 2 target feasible
+        (1, 1, 1.5, 0.5, 0.5, -1, 0, 0),  # -1 feas tolerance
+        (1, 1, 1.5, 0.5, 0.5, 2, 0, 0),  # 2 feas tolerance
+        (1, 1, 1.5, 0.5, 0.5, 0, -1, 0),  # -1 min_penalty
+        (1, 1, 1.5, 0.5, 0.5, 0, 2, 1),  # max_penalty < min_penalty
     ],
 )
 def test_constructor_throws_when_arguments_invalid(
@@ -38,6 +45,9 @@ def test_constructor_throws_when_arguments_invalid(
     penalty_increase: float,
     penalty_decrease: float,
     target_feasible: float,
+    feas_tolerance: float,
+    min_penalty: float,
+    max_penalty: float,
 ):
     """
     Tests that invalid arguments are not accepted.
@@ -49,6 +59,9 @@ def test_constructor_throws_when_arguments_invalid(
             penalty_increase,
             penalty_decrease,
             target_feasible,
+            feas_tolerance,
+            min_penalty,
+            max_penalty,
         )
 
 
@@ -156,7 +169,7 @@ def test_load_penalty_update_decrease(ok_small):
         pm.register(sol)
     assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 90)
 
-    # Test that the penalty cannot decrease beyond MIN_PENALTY.
+    # Test that the penalty cannot decrease beyond min_penalty.
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(([0.1], 1, 1), params)
 
@@ -244,7 +257,7 @@ def test_time_warp_penalty_update_decrease(ok_small):
         pm.register(sol)
     assert_equal(pm.cost_evaluator().tw_penalty(1), 90)
 
-    # Test that the penalty cannot decrease beyond MIN_PENALTY.
+    # Test that the penalty cannot decrease beyond min_penalty.
     params = PenaltyParams(1, num_registrations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(([1], 0.1, 1), params)
 
@@ -296,7 +309,7 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
 @pytest.mark.filterwarnings("ignore::pyvrp.exceptions.PenaltyBoundWarning")
 def test_max_min_penalty(ok_small):
     """
-    Tests that penalty parameters are clipped to [MIN_PENALTY, MAX_PENALTY]
+    Tests that penalty parameters are clipped to [min_penalty, max_penalty]
     when updating their values.
     """
     params = PenaltyParams(
@@ -304,11 +317,11 @@ def test_max_min_penalty(ok_small):
         penalty_decrease=0,
         penalty_increase=2,
     )
-    pm = PenaltyManager(([20], PenaltyManager.MAX_PENALTY, 6), params)
+    pm = PenaltyManager(([20], params.max_penalty, 6), params)
 
-    # Initial penalty is MAX_PENALTY, so one unit of time warp should be
+    # Initial penalty is max_penalty, so one unit of time warp should be
     # penalised by that value.
-    assert_equal(pm.cost_evaluator().tw_penalty(1), PenaltyManager.MAX_PENALTY)
+    assert_equal(pm.cost_evaluator().tw_penalty(1), params.max_penalty)
 
     infeas = Solution(ok_small, [[1, 2, 3, 4]])
     assert_(infeas.has_time_warp())
@@ -317,27 +330,27 @@ def test_max_min_penalty(ok_small):
     # up by two times due to the penalty_increase parameter. But it's already
     # at the upper limit, and can thus not increase further.
     pm.register(infeas)
-    assert_equal(pm.cost_evaluator().tw_penalty(1), PenaltyManager.MAX_PENALTY)
+    assert_equal(pm.cost_evaluator().tw_penalty(1), params.max_penalty)
 
     feas = Solution(ok_small, [[1, 2], [3, 4]])
     assert_(not feas.has_time_warp())
 
     # But when we register a feasible solution, the time warp penalty parameter
     # should drop to zero due to the penalty_decrease parameter. But penalty
-    # parameters cannot drop below MIN_PENALTY.
+    # parameters cannot drop below min_penalty.
     pm.register(feas)
     assert_allclose(
-        pm.cost_evaluator().tw_penalty(10), 10 * PenaltyManager.MIN_PENALTY
+        pm.cost_evaluator().tw_penalty(10), 10 * params.min_penalty
     )
 
 
 def test_warns_max_penalty_value(ok_small):
     """
-    Tests that a penalty parameter clipped to MAX_PENALTY raises a warning.
+    Tests that a penalty parameter clipped to max_penalty raises a warning.
     This typically indicates a data issue that PyVRP is struggling with.
     """
     params = PenaltyParams(solutions_between_updates=1)
-    initial = ([1], PenaltyManager.MAX_PENALTY, 1)
+    initial = ([1], params.max_penalty, 1)
     pm = PenaltyManager(initial, params)
     assert_equal(pm.penalties(), initial)
 
@@ -400,18 +413,19 @@ def test_init_from_different_unit_costs(ok_small):
 
 def test_init_clips_penalties():
     """
-    Tests that the initial penalty values are clipped to the [MIN_PENALTY,
-    MAX_PENALTY] range.
+    Tests that the initial penalty values are clipped to the [min_penalty,
+    max_penalty] range.
     """
-    penalties = ([0], PenaltyManager.MAX_PENALTY + 1, 2)
-    pm = PenaltyManager(initial_penalties=penalties)
+    params = PenaltyParams()
+    penalties = ([0], params.max_penalty + 1, 2)
+    pm = PenaltyManager(initial_penalties=penalties, params=params)
 
     cost_eval = pm.cost_evaluator()
     assert_allclose(  # MIN
         cost_eval.load_penalty(10, 0, 0),
-        10 * PenaltyManager.MIN_PENALTY,
+        10 * params.min_penalty,
     )
-    assert_equal(cost_eval.tw_penalty(1), PenaltyManager.MAX_PENALTY)  # MAX
+    assert_equal(cost_eval.tw_penalty(1), params.max_penalty)  # MAX
     assert_equal(cost_eval.dist_penalty(1, 0), 2)  # already OK, so unchanged
 
 

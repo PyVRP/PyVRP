@@ -17,8 +17,36 @@ namespace pyvrp::search
 {
 class LocalSearch
 {
-    using NodeOp = LocalSearchOperator<Route::Node>;
-    using RouteOp = LocalSearchOperator<Route>;
+public:
+    /**
+     * Simple data structure that tracks statistics about the number of local
+     * search moves applied to the most recently improved solution.
+     *
+     * Attributes
+     * ----------
+     * num_moves
+     *     Number of evaluated node and route operator moves.
+     * num_improving
+     *     Number of evaluated moves that led to an objective improvement.
+     * num_updates
+     *     Total number of changes to the solution. This always includes the
+     *     number of evaluated improving moves, but also e.g. insertion of
+     *     required but missing clients.
+     */
+    struct Statistics
+    {
+        // Number of evaluated moves, that is, number of evaluations of a node
+        // or route operator.
+        size_t numMoves = 0;
+
+        // Number of evaluated moves that led to an objective improvement.
+        size_t numImproving = 0;
+
+        // Number of times the solution has been modified in some way.
+        size_t numUpdates = 0;
+    };
+
+private:
     using Neighbours = std::vector<std::vector<size_t>>;
 
     ProblemData const &data;
@@ -33,17 +61,19 @@ class LocalSearch
         orderVehTypes;                      // used by LS::applyEmptyRouteMoves
 
     DynamicBitset candidates;       // candidates nodes to consider for moves
-    std::vector<int> lastModified;  // tracks when routes were last modified
+    std::vector<int> lastTestedNodes;   // tracks node operator evaluation
+    std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
+    std::vector<int> lastUpdated;       // tracks when routes were last modified
 
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
 
-    std::vector<NodeOp *> nodeOps;
-    std::vector<RouteOp *> routeOps;
+    std::vector<NodeOperator *> nodeOps;
+    std::vector<RouteOperator *> routeOps;
 
     int numEvaluations = 0;        // Number of delta cost evaluations
-    int numMoves = 0;              // Operator counter
-    bool searchCompleted = false;  // No further improving move found?
+    size_t numUpdates_ = 0;         // modification counter
+    bool searchCompleted_ = false;  // No further improving move found?
 
     // Tests the node pair (U, V).
     bool applyNodeOps(Route::Node *U,
@@ -55,7 +85,7 @@ class LocalSearch
 
     // Tests a move removing the given reload depot.
     void applyDepotRemovalMove(Route::Node *U,
-                               CostEvaluator const &CostEvaluator);
+                               CostEvaluator const &costEvaluator);
 
     // Tests moves involving empty routes.
     void applyEmptyRouteMoves(Route::Node *U,
@@ -86,12 +116,24 @@ public:
     /**
      * Adds a local search operator that works on node/client pairs U and V.
      */
-    void addNodeOperator(NodeOp &op);
+    void addNodeOperator(NodeOperator &op);
 
     /**
      * Adds a local search operator that works on route pairs U and V.
      */
-    void addRouteOperator(RouteOp &op);
+    void addRouteOperator(RouteOperator &op);
+
+    /**
+     * Returns the node operators in use. Note that there is no defined
+     * ordering.
+     */
+    std::vector<NodeOperator *> const &nodeOperators() const;
+
+    /**
+     * Returns the route operators in use. Note that there is no defined
+     * ordering.
+     */
+    std::vector<RouteOperator *> const &routeOperators() const;
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,
@@ -101,9 +143,14 @@ public:
     void setNeighbours(Neighbours neighbours);
 
     /**
-     * @return The neighbourhood structure currently in use.
+     * Returns the current neighbourhood structure.
      */
     Neighbours const &neighbours() const;
+
+    /**
+     * Returns search statistics for the currently loaded solution.
+     */
+    Statistics statistics() const;
 
     /**
      * Iteratively calls ``search()`` and ``intensify()`` until no further

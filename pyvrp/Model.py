@@ -32,7 +32,7 @@ class Edge:
         loops have nonzero distance or duration values.
     """
 
-    __slots__ = ["frm", "to", "distance", "duration"]
+    __slots__ = ["distance", "duration", "frm", "to"]
 
     def __init__(
         self,
@@ -72,9 +72,11 @@ class Profile:
     """
 
     edges: list[Edge]
+    name: str
 
-    def __init__(self):
+    def __init__(self, *, name: str = ""):
         self.edges = []
+        self.name = name
 
     def add_edge(
         self,
@@ -89,6 +91,9 @@ class Profile:
         edge = Edge(frm, to, distance, duration)
         self.edges.append(edge)
         return edge
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class Model:
@@ -310,11 +315,11 @@ class Model:
         self._edges.append(edge)
         return edge
 
-    def add_profile(self) -> Profile:
+    def add_profile(self, *, name: str = "") -> Profile:
         """
         Adds a new routing profile to the model.
         """
-        profile = Profile()
+        profile = Profile(name=name)
         self._profiles.append(profile)
         return profile
 

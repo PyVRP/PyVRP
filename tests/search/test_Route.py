@@ -6,6 +6,8 @@ from pyvrp import Client, Depot, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
 
+_INT_MAX = np.iinfo(np.int64).max
+
 
 @pytest.mark.parametrize("loc", [0, 1, 10])
 def test_node_init(loc: int):
@@ -1088,3 +1090,64 @@ def test_multi_trip_duration_caches(ok_small_multiple_trips):
     # The trip durations should together sum to the route duration.
     trips_duration = first_trip.duration() + second_trip.duration()
     assert_equal(route.duration(), trips_duration)
+
+
+@pytest.mark.parametrize(
+    ("veh_type", "expected"),
+    [
+        (VehicleType(), True),  # default has cost
+        (VehicleType(unit_distance_cost=0), False),  # no cost or constraint
+        (VehicleType(unit_distance_cost=0, max_distance=_INT_MAX), False),
+        (VehicleType(unit_distance_cost=0, max_distance=0), True),  # constr
+        (VehicleType(max_distance=0), True),  # both cost and constraint
+    ],
+)
+def test_has_distance_cost(veh_type: VehicleType, expected: bool):
+    """
+    Tests that ``has_distance_cost()`` correctly identifies whether the vehicle
+    has distance-related costs or (penalised) constraints.
+    """
+    data = ProblemData(
+        clients=[],
+        depots=[Depot(0, 0)],
+        vehicle_types=[veh_type],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
+    )
+
+    route = Route(data, 0, 0)
+    assert_equal(route.has_distance_cost(), expected)
+
+
+@pytest.mark.parametrize(
+    ("veh_type", "depot", "expected"),
+    [
+        (VehicleType(), Depot(0, 0), False),  # default has no cost
+        (VehicleType(), Depot(0, 0, tw_early=1), True),  # constraint (data)
+        (VehicleType(), Depot(0, 0, tw_late=1), True),  # constraint (data)
+        (VehicleType(start_late=5), Depot(0, 0), True),  # constraint (vehicle)
+        (VehicleType(tw_early=5), Depot(0, 0), True),  # constraint (vehicle)
+        (VehicleType(tw_late=5), Depot(0, 0), True),  # constraint (vehicle)
+        (VehicleType(max_duration=0), Depot(0, 0), True),  # constraint (veh)
+        (VehicleType(unit_duration_cost=1), Depot(0, 0), True),  # cost
+    ],
+)
+def test_has_duration_cost(
+    veh_type: VehicleType,
+    depot: Depot,
+    expected: bool,
+):
+    """
+    Tests that ``has_duration_cost()`` correctly identifies whether the vehicle
+    and/or instance has duration-related costs or (penalised) constraints.
+    """
+    data = ProblemData(
+        clients=[],
+        depots=[depot],
+        vehicle_types=[veh_type],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
+    )
+
+    route = Route(data, 0, 0)
+    assert_equal(route.has_duration_cost(), expected)

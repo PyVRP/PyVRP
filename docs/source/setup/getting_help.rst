@@ -18,6 +18,7 @@ Open a new issue in the repository, using the "Bug report" template.
 To limit the amount of time needed to triage your problem, please do the following:
 
 - Include a short, self-contained code snippet that reproduces the problem.
+  If the problem relates to a particular VRP instance, include how to create it in your snippet - do not provide just raw data.
 - Specify the version information of the ``pyvrp`` installation you use.
   You can do this by including the output of :meth:`~pyvrp.show_versions.show_versions`:
 

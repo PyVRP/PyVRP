@@ -94,6 +94,7 @@ class IteratedLocalSearch:
         initial_solution: Solution,
         collect_stats: bool = True,
         display: bool = False,
+        display_interval: float = 5.0,
     ) -> Result:
         """
         Runs the iterated local search algorithm.
@@ -108,8 +109,22 @@ class IteratedLocalSearch:
         collect_stats
             Whether to collect statistics about the solver's progress. Default
             ``True``.
+        display
+            Whether to display information about the solver progress. Default
+            ``False``. Progress information is only available when
+            ``collect_stats`` is also set, which it is by default.
+        display_interval
+            The interval (in seconds) at which to display progress information.
+
+        Returns
+        -------
+        Result
+            A Result object, containing statistics (if collected) and the best
+            found solution.
         """
-        print_progress = ProgressPrinter(should_print=display)
+        print_progress = ProgressPrinter(
+            should_print=display, display_interval=display_interval
+        )
         print_progress.start(self._data)
 
         start = time.perf_counter()

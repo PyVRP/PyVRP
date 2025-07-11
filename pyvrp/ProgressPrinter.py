@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from importlib.metadata import version
+from time import perf_counter
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -32,8 +33,6 @@ Best-found solution has cost {best_cost}.
 {summary}
 """
 
-NUM_ITERS_PRINT = 500
-
 
 class ProgressPrinter:
     """
@@ -45,10 +44,17 @@ class ProgressPrinter:
     should_print
         Whether to print information to the console. When ``False``, nothing is
         printed.
+    display_interval
+        Time (in seconds) between iteration logs.
     """
 
-    def __init__(self, should_print: bool):
+    def __init__(self, should_print: bool, display_interval: float):
+        if display_interval < 0:
+            raise ValueError("Expected display_interval >= 0.")
+
         self._print = should_print
+        self._display_interval = display_interval
+        self._last_print_time = perf_counter()
         self._best_cost = float("inf")
 
     def iteration(self, stats: Statistics):
@@ -57,10 +63,12 @@ class ProgressPrinter:
         contains information about the feasible and infeasible populations,
         whether a new best solution has been found, and the search duration.
         """
+        curr_time = perf_counter()
+        interval = curr_time - self._last_print_time
         should_print = (
             self._print
             and stats.is_collecting()
-            and stats.num_iterations % NUM_ITERS_PRINT == 0
+            and interval >= self._display_interval
         )
 
         if not should_print:
@@ -84,6 +92,7 @@ class ProgressPrinter:
         )
         print(msg)
 
+        self._last_print_time = curr_time
         if data.best_cost < self._best_cost:
             self._best_cost = data.best_cost
 

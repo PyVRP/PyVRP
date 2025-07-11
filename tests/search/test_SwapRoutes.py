@@ -314,3 +314,12 @@ def test_different_objectives(ok_small_multi_depot):
     # again a cost contribution of 3_280.
     delta_cost = op.evaluate(route1, route2, cost_eval)
     assert_equal(delta_cost, 3_909 + 3_280 - 3_994 - 4_327)
+
+
+def test_supports(ok_small, ok_small_two_profiles):
+    """
+    Tests that SwapRoutes does not support instances with just a single vehicle
+    type.
+    """
+    assert_(not SwapRoutes.supports(ok_small))  # only one vehicle type
+    assert_(SwapRoutes.supports(ok_small_two_profiles))  # more than one

@@ -6,49 +6,24 @@ from pyvrp import VehicleType
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 
 
-@mark.parametrize(
-    (
-        "weight_wait_time",
-        "weight_time_warp",
-        "nb_granular",
-        "symmetric_proximity",
-        "symmetric_neighbours",
-    ),
-    [
-        # empty neighbourhood structure (nb_granular == 0)
-        (20, 20, 0, True, False),
-    ],
-)
-def test_neighbourhood_params_raises_for_invalid_arguments(
-    weight_wait_time: int,
-    weight_time_warp: int,
-    nb_granular: int,
-    symmetric_proximity: bool,
-    symmetric_neighbours: bool,
-):
+def test_neighbourhood_params_raises_for_empty_neighbourhoods():
     """
-    Test that ``NeighbourhoodParams`` raises for invalid configurations.
+    Test that ``NeighbourhoodParams`` raises for empty neighbourhoods.
     """
     with assert_raises(ValueError):
-        NeighbourhoodParams(
-            weight_wait_time,
-            weight_time_warp,
-            nb_granular,
-            symmetric_proximity,
-            symmetric_neighbours,
-        )
+        NeighbourhoodParams(num_neighbours=0)
 
 
 @mark.parametrize(
     (
         "weight_wait_time",
         "weight_time_warp",
-        "nb_granular",
+        "num_neighbours",
         "symmetric_proximity",
         "symmetric_neighbours",
     ),
     [
-        # non-empty neighbourhood structure (nb_granular > 0)
+        # non-empty neighbourhood structure (num_neighbours > 0)
         (20, 20, 1, True, False),
         # no weights for wait time or time warp should be OK
         (0, 0, 1, True, False),
@@ -57,7 +32,7 @@ def test_neighbourhood_params_raises_for_invalid_arguments(
 def test_neighbourhood_params_does_not_raise_for_valid_arguments(
     weight_wait_time: int,
     weight_time_warp: int,
-    nb_granular: int,
+    num_neighbours: int,
     symmetric_proximity: bool,
     symmetric_neighbours: bool,
 ):
@@ -67,24 +42,24 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
     NeighbourhoodParams(
         weight_wait_time,
         weight_time_warp,
-        nb_granular,
+        num_neighbours,
         symmetric_proximity,
         symmetric_neighbours,
     )
 
 
+# fmt: off
 @mark.parametrize(
     (
         "weight_wait_time",
         "weight_time_warp",
-        "nb_granular",
+        "num_neighbours",
         "symmetric_proximity",
         "symmetric_neighbours",
         "idx_check",
         "expected_neighbours_check",
     ),
     [
-        # fmt: off
         (20, 20, 10, True, False, 2,
          {1, 3, 4, 5, 6, 7, 8, 45, 46, 100}),
         (20, 20, 10, True, True, 2,
@@ -96,14 +71,14 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
         (18, 20, 34, True, False, 99,
          {9, 10, 11, 12, 13, 14, 15, 16, 20, 22, 24, 47, 52, 53, 55, 56, 57,
           58, 59, 60, 64, 65, 66, 69, 74, 80, 82, 83, 86, 87, 88, 90, 91, 98}),
-        # fmt: on
     ],
 )
+# fmt: on
 def test_compute_neighbours(
     rc208,
     weight_wait_time: int,
     weight_time_warp: int,
-    nb_granular: int,
+    num_neighbours: int,
     symmetric_proximity: bool,
     symmetric_neighbours: bool,
     idx_check: int,
@@ -115,7 +90,7 @@ def test_compute_neighbours(
     params = NeighbourhoodParams(
         weight_wait_time,
         weight_time_warp,
-        nb_granular,
+        num_neighbours,
         symmetric_proximity,
         symmetric_neighbours,
     )
@@ -130,9 +105,9 @@ def test_compute_neighbours(
 
     for neighb in neighbours[1:]:
         if symmetric_neighbours:
-            assert_(len(neighb) >= nb_granular)
+            assert_(len(neighb) >= num_neighbours)
         else:
-            assert_equal(len(neighb), nb_granular)
+            assert_equal(len(neighb), num_neighbours)
 
 
 def test_neighbours_are_sorted_by_proximity(small_cvrp):
@@ -175,10 +150,10 @@ def test_symmetric_neighbours(rc208):
 
 def test_more_neighbours_than_instance_size(rc208):
     """
-    Tests that a value for ``nb_granular`` larger than the problem instance's
-    number of clients results in neighbourhoods of maximum size.
+    Tests that a value for ``num_neighbours`` larger than the number of clients
+    in the instance results in neighbourhoods of maximum size.
     """
-    params = NeighbourhoodParams(nb_granular=rc208.num_clients)
+    params = NeighbourhoodParams(num_neighbours=rc208.num_clients)
     neighbours = compute_neighbours(rc208, params)
 
     for neighb in neighbours[1:]:
@@ -190,7 +165,7 @@ def test_proximity_with_prizes(prize_collecting):
     Tests that prizes factor into the neighbourhood structure, and offset
     travel costs somewhat.
     """
-    params = NeighbourhoodParams(0, 0, nb_granular=10)
+    params = NeighbourhoodParams(0, 0, num_neighbours=10)
     neighbours = compute_neighbours(prize_collecting, params)
 
     # We compare the number of times clients 20 and 36 are in other clients'
@@ -211,7 +186,7 @@ def test_proximity_with_mutually_exclusive_groups(
     Tests that clients that are a member of a mutually exclusive client group
     are not in each other's neighbourhood.
     """
-    params = NeighbourhoodParams(0, 0, nb_granular=1)
+    params = NeighbourhoodParams(0, 0, num_neighbours=1)
     neighbours = compute_neighbours(ok_small_mutually_exclusive_groups, params)
 
     group = ok_small_mutually_exclusive_groups.group(0)

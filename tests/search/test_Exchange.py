@@ -50,7 +50,7 @@ def test_swap_single_route_stays_single_route(rc208, operator):
     cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=rc208.num_clients)
+    nb_params = NeighbourhoodParams(num_neighbours=rc208.num_clients)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
     ls.add_node_operator(operator(rc208))
 
@@ -74,7 +74,7 @@ def test_relocate_uses_empty_routes(rc208, operator):
     cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=rc208.num_clients)
+    nb_params = NeighbourhoodParams(num_neighbours=rc208.num_clients)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
     ls.add_node_operator(operator(rc208))
 
@@ -110,7 +110,7 @@ def test_cannot_exchange_when_parts_overlap_with_depot(ok_small, operator):
     cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=ok_small.num_clients)
+    nb_params = NeighbourhoodParams(num_neighbours=ok_small.num_clients)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
     ls.add_node_operator(operator(ok_small))
 
@@ -129,7 +129,7 @@ def test_cannot_exchange_when_segments_overlap(ok_small, operator):
     cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=ok_small.num_clients)
+    nb_params = NeighbourhoodParams(num_neighbours=ok_small.num_clients)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
     ls.add_node_operator(operator(ok_small))
 
@@ -147,7 +147,7 @@ def test_cannot_swap_adjacent_segments(ok_small):
     cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=ok_small.num_clients)
+    nb_params = NeighbourhoodParams(num_neighbours=ok_small.num_clients)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
     ls.add_node_operator(Exchange22(ok_small))
 
@@ -168,7 +168,7 @@ def test_swap_between_routes_OkSmall(ok_small):
     cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
-    nb_params = NeighbourhoodParams(nb_granular=ok_small.num_clients)
+    nb_params = NeighbourhoodParams(num_neighbours=ok_small.num_clients)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
     ls.add_node_operator(Exchange21(ok_small))
 
@@ -554,3 +554,110 @@ def test_swap_does_not_swap_depots(ok_small_multiple_trips):
 
     # This move overlaps with reload depot at index 3, so cannot be evaluated.
     assert_equal(op.evaluate(route[2], route[4], cost_eval), 0)
+
+
+def test_bug_evaluating_move_with_initial_load():
+    """
+    Tests a bug where previously the move evaluated below would claim to result
+    in an improvement. See #813 for details.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0, delivery=[1]),
+            Client(x=0, y=0, delivery=[1]),
+            Client(x=0, y=0, delivery=[0]),
+        ],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(2, capacity=[5], initial_load=[5])],
+        distance_matrices=[np.zeros((4, 4), dtype=int)],
+        duration_matrices=[np.zeros((4, 4), dtype=int)],
+    )
+
+    op = Exchange21(data)
+    cost_eval = CostEvaluator([1], 0, 0)
+
+    route1 = make_search_route(data, [2, 3], idx=0, vehicle_type=0)
+    route2 = make_search_route(data, [1], idx=1, vehicle_type=0)
+
+    # This move just permutes the solution, turning route1 into route2, and
+    # vice versa. Thus, the delta cost of this move should be zero.
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), 0)
+
+
+@pytest.mark.parametrize("operator", [Exchange10, Exchange21, Exchange33])
+@pytest.mark.parametrize("instance", ["ok_small", "pr107", "prize_collecting"])
+def test_supports(operator, instance, request):
+    """
+    Tests that the Exchange operators support any type of data instance.
+    """
+    data = request.getfixturevalue(instance)
+    assert_(operator.supports(data))
+
+
+def test_bug_release_time_shift_time_windows():
+    """
+    Tests that a bug involving release times and restricted vehicle shifts has
+    been fixed. See #852 for details.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0, tw_early=2, release_time=2),
+            Client(x=0, y=0, tw_early=2, release_time=2),
+        ],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(), VehicleType(tw_late=1)],
+        distance_matrices=[np.zeros((3, 3), dtype=int)],
+        duration_matrices=[np.zeros((3, 3), dtype=int)],
+    )
+
+    route1 = make_search_route(data, [1], idx=0, vehicle_type=0)
+    assert_(route1.is_feasible())
+
+    # Vehicle's time windows are constrained to [0, 1], but client 2 is not
+    # released until 2. So there's a unit of time warp when we leave the depot.
+    # Then we have to wait until 2 at the client, and have another unit of time
+    # warp when we return to the depot.
+    route2 = make_search_route(data, [2], idx=1, vehicle_type=1)
+    assert_equal(route2.time_warp(), 2)
+
+    # This move proposes inserting 1 before 2 in route2. That changes nothing
+    # about route2's time warp, so the move should not affect costs.
+    op = Exchange10(data)
+    cost_eval = CostEvaluator([], 1, 0)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
+
+
+def test_empty_route_delta_cost_bug():
+    """
+    Tests that a bug identified in #853 has been fixed. The bug caused empty
+    routes' costs to be incorrectly included in delta cost evaluations.
+    """
+    mat = [
+        [0, 5, 0],
+        [5, 0, 0],
+        [0, 0, 0],
+    ]
+    # Empty route with vehicle type 0 has no cost, but an empty route with
+    # vehicle type 1 has cost 10 (5 distance, 5 time warp).
+    vehicle_types = [
+        VehicleType(1),
+        VehicleType(1, start_depot=0, end_depot=1, max_duration=0),
+    ]
+    data = ProblemData(
+        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
+        clients=[Client(x=0, y=0)],
+        vehicle_types=vehicle_types,
+        duration_matrices=[mat],
+        distance_matrices=[mat],
+    )
+
+    route1 = make_search_route(data, [2], 0, 0)
+    route2 = make_search_route(data, [], 1, 1)
+
+    # This move proposes inserting the client 2 in route2. Before fixing the
+    # bug, route2's cost was included in the delta cost computation, claiming
+    # this to be an improving move. But an empty route's cost should not be
+    # included in the delta cost.
+    op = Exchange10(data)
+    cost_eval = CostEvaluator([], 1, 1)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)

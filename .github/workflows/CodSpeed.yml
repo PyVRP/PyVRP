@@ -2,7 +2,7 @@ name: CodSpeed
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
 concurrency:
@@ -13,5 +13,5 @@ jobs:
   noop:
     runs-on: ubuntu-latest
     steps:
-    - name: No-op
-      run: echo "No-op"
+      - name: No-op
+        run: echo "No-op"

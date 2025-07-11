@@ -852,3 +852,16 @@ def test_multi_trip_release_time_routes(mtvrptw_release_times, trips):
 
     for trip1, trip2 in pairwise(trips):
         assert_(trip1.release_time() <= trip2.release_time())
+
+
+def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
+    """
+    Ensures that the bug identified in #812 stays fixed. Before the fix, this
+    would trigger an assert because an empty trip would be indexed.
+    """
+    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
+    trip2 = Trip(ok_small_multiple_trips, [], 0)
+
+    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+    assert_equal([client for client in route], [1, 2])
+    assert_equal(route.visits(), [1, 2])

@@ -470,6 +470,9 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("profile"),
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, durationMatrix))
+        .def("has_time_windows",
+             &ProblemData::hasTimeWindows,
+             DOC(pyvrp, ProblemData, hasTimeWindows))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData const &data) {  // __getstate__
@@ -956,7 +959,7 @@ PYBIND11_MODULE(_pyvrp, m)
              &CostEvaluator::distPenalty,
              py::arg("distance"),
              py::arg("max_distance"),
-             DOC(pyvrp, CostEvaluator, twPenalty))
+             DOC(pyvrp, CostEvaluator, distPenalty))
         .def("penalised_cost",
              &CostEvaluator::penalisedCost<Solution>,
              py::arg("solution"),
@@ -971,8 +974,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::init<size_t, size_t, size_t, size_t, double, double>(),
              py::arg("min_pop_size") = 25,
              py::arg("generation_size") = 40,
-             py::arg("nb_elite") = 4,
-             py::arg("nb_close") = 5,
+             py::arg("num_elite") = 4,
+             py::arg("num_close") = 5,
              py::arg("lb_diversity") = 0.1,
              py::arg("ub_diversity") = 0.5)
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
@@ -981,8 +984,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("max_pop_size",
                                &PopulationParams::maxPopSize,
                                DOC(pyvrp, PopulationParams, maxPopSize))
-        .def_readonly("nb_elite", &PopulationParams::nbElite)
-        .def_readonly("nb_close", &PopulationParams::nbClose)
+        .def_readonly("num_elite", &PopulationParams::numElite)
+        .def_readonly("num_close", &PopulationParams::numClose)
         .def_readonly("lb_diversity", &PopulationParams::lbDiversity)
         .def_readonly("ub_diversity", &PopulationParams::ubDiversity);
 

@@ -1,3 +1,9 @@
+"""
+This script extracts the docstrings from various C++ header files, and writes
+them into a documentation header file. This is used to generate documentation
+on the fly as Meson compiles the extensions.
+"""
+
 import argparse
 import pathlib
 

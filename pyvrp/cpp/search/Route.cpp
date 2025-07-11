@@ -250,7 +250,6 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size(); ++idx)
         cumDist[idx] = cumDist[idx - 1] + distMat(visits[idx - 1], visits[idx]);
 
-#ifndef PYVRP_NO_TIME_WINDOWS
     // Duration.
     durAt.resize(nodes.size());
 
@@ -307,7 +306,6 @@ void Route::update()
         auto const edgeDur = durations(visits[idx], visits[next]);
         durAfter[idx] = DurationSegment::merge(edgeDur, durAt[idx], after);
     }
-#endif
 
     // Load.
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)

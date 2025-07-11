@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp.PenaltyManager import PenaltyParams
 from pyvrp.Population import PopulationParams
@@ -26,6 +26,7 @@ def test_default_values():
     assert_equal(params.neighbourhood, NeighbourhoodParams())
     assert_equal(params.node_ops, NODE_OPERATORS)
     assert_equal(params.route_ops, ROUTE_OPERATORS)
+    assert_allclose(params.display_interval, 5.0)
 
 
 def test_solve_params_from_file():
@@ -45,6 +46,7 @@ def test_solve_params_from_file():
     assert_equal(params.neighbourhood, neighbourhood)
     assert_equal(params.node_ops, node_ops)
     assert_equal(params.route_ops, route_ops)
+    assert_allclose(params.display_interval, 10.0)
 
 
 def test_solve_params_from_file_defaults():
@@ -67,16 +69,6 @@ def test_solve_same_seed(ok_small):
     assert_equal(res1.best, res2.best)
     assert_equal(res1.stats.feas_stats, res2.stats.feas_stats)
     assert_equal(res1.stats.infeas_stats, res2.stats.infeas_stats)
-
-
-def test_solve_more_iterations_is_better(prize_collecting):
-    """
-    Smoke test that checks that running more iterations results in an improved
-    solution.
-    """
-    cost1 = solve(prize_collecting, stop=MaxIterations(1)).cost()
-    cost100 = solve(prize_collecting, stop=MaxIterations(100)).cost()
-    assert_(cost100 < cost1)
 
 
 def test_solve_custom_params(ok_small):

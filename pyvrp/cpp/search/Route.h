@@ -19,6 +19,9 @@ concept Segment = requires(T arg, size_t profile, size_t dimension) {
     { arg.route() };
     { arg.first() } -> std::same_as<size_t>;
     { arg.last() } -> std::same_as<size_t>;
+    { arg.size() } -> std::same_as<size_t>;
+    { arg.startsAtReloadDepot() } -> std::same_as<bool>;
+    { arg.endsAtReloadDepot() } -> std::same_as<bool>;
     { arg.distance(profile) } -> std::convertible_to<Distance>;
     { arg.duration(profile) } -> std::convertible_to<DurationSegment>;
     { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
@@ -62,10 +65,25 @@ public:
      * A simple class that tracks a proposed route structure. This new structure
      * can be efficiently evaluated by calling appropriate member functions,
      * detailing the newly proposed route's statistics.
+     *
+     * .. note::
+     *
+     *    The member functions may shortcut if they detect that a particular
+     *    statistic has no impact on the newly proposed route's cost.
      */
     template <Segment... Segments> class Proposal
     {
         std::tuple<Segments...> segments_;
+
+        /**
+         * Returns the number of depots and clients in the proposed route.
+         */
+        size_t size() const;
+
+        /**
+         * Returns whether the proposed route is empty.
+         */
+        bool empty() const;
 
     public:
         Proposal(Segments &&...segments);
@@ -216,6 +234,10 @@ private:
 
         inline size_t first() const;  // client at start
         inline size_t last() const;   // end depot
+        inline size_t size() const;
+
+        inline bool startsAtReloadDepot() const;
+        inline bool endsAtReloadDepot() const;
 
         inline SegmentAfter(Route const &route, size_t start);
         inline Distance distance(size_t profile) const;
@@ -237,6 +259,10 @@ private:
 
         inline size_t first() const;  // start depot
         inline size_t last() const;   // client at end
+        inline size_t size() const;
+
+        inline bool startsAtReloadDepot() const;
+        inline bool endsAtReloadDepot() const;
 
         inline SegmentBefore(Route const &route, size_t end);
         inline Distance distance(size_t profile) const;
@@ -260,6 +286,10 @@ private:
 
         inline size_t first() const;  // client at start
         inline size_t last() const;   // client at end
+        inline size_t size() const;
+
+        inline bool startsAtReloadDepot() const;
+        inline bool endsAtReloadDepot() const;
 
         inline SegmentBetween(Route const &route, size_t start, size_t end);
         inline Distance distance(size_t profile) const;
@@ -398,6 +428,12 @@ public:
     [[nodiscard]] inline Cost unitDistanceCost() const;
 
     /**
+     * Returns true if this route has distance-related cost components, either
+     * via the objective or via penalised constraints. False otherwise.
+     */
+    [[nodiscard]] inline bool hasDistanceCost() const;
+
+    /**
      * @return The duration of this route.
      */
     [[nodiscard]] inline Duration duration() const;
@@ -411,6 +447,12 @@ public:
      * @return Cost per unit of duration travelled on this route.
      */
     [[nodiscard]] inline Cost unitDurationCost() const;
+
+    /**
+     * Returns true if this route has duration-related cost components, either
+     * via the objective or via penalised constraints. False otherwise.
+     */
+    [[nodiscard]] inline bool hasDurationCost() const;
 
     /**
      * @return The maximum route duration that the vehicle servicing this route
@@ -636,11 +678,7 @@ DurationSegment
 Route::SegmentAfter::duration([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return {};
-#else
     return route_.durAfter[start];
-#endif
 }
 
 LoadSegment const &Route::SegmentAfter::load(size_t dimension) const
@@ -658,11 +696,7 @@ DurationSegment
 Route::SegmentBefore::duration([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return {};
-#else
     return route_.durBefore[end];
-#endif
 }
 
 LoadSegment const &Route::SegmentBefore::load(size_t dimension) const
@@ -671,16 +705,43 @@ LoadSegment const &Route::SegmentBefore::load(size_t dimension) const
 }
 
 Route const *Route::SegmentBefore::route() const { return &route_; }
+
 size_t Route::SegmentBefore::first() const { return route_.visits.front(); }
 size_t Route::SegmentBefore::last() const { return route_.visits[end]; }
+size_t Route::SegmentBefore::size() const { return end + 1; }
+
+bool Route::SegmentBefore::startsAtReloadDepot() const { return false; }
+bool Route::SegmentBefore::endsAtReloadDepot() const
+{
+    return route_.nodes[end]->isReloadDepot();
+}
 
 Route const *Route::SegmentAfter::route() const { return &route_; }
+
 size_t Route::SegmentAfter::first() const { return route_.visits[start]; }
 size_t Route::SegmentAfter::last() const { return route_.visits.back(); }
+size_t Route::SegmentAfter::size() const { return route_.size() - start; }
+
+bool Route::SegmentAfter::startsAtReloadDepot() const
+{
+    return route_.nodes[start]->isReloadDepot();
+}
+bool Route::SegmentAfter::endsAtReloadDepot() const { return false; }
 
 Route const *Route::SegmentBetween::route() const { return &route_; }
+
 size_t Route::SegmentBetween::first() const { return route_.visits[start]; }
 size_t Route::SegmentBetween::last() const { return route_.visits[end]; }
+size_t Route::SegmentBetween::size() const { return end - start + 1; }
+
+bool Route::SegmentBetween::startsAtReloadDepot() const
+{
+    return route_.nodes[start]->isReloadDepot();
+}
+bool Route::SegmentBetween::endsAtReloadDepot() const
+{
+    return route_.nodes[end]->isReloadDepot();
+}
 
 Distance Route::SegmentBetween::distance(size_t profile) const
 {
@@ -709,9 +770,6 @@ Distance Route::SegmentBetween::distance(size_t profile) const
 DurationSegment
 Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return {};
-#else
     auto const &mat = route_.data.durationMatrix(profile);
     auto durSegment = route_.durAt[start];
 
@@ -724,7 +782,6 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
     }
 
     return durSegment;
-#endif
 }
 
 LoadSegment Route::SegmentBetween::load(size_t dimension) const
@@ -760,12 +817,8 @@ bool Route::hasExcessDistance() const
 
 bool Route::hasTimeWarp() const
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return false;
-#else
     assert(!dirty);
     return timeWarp() > 0;
-#endif
 }
 
 size_t Route::idx() const { return idx_; }
@@ -825,14 +878,16 @@ Cost Route::distanceCost() const
 
 Cost Route::unitDistanceCost() const { return vehicleType_.unitDistanceCost; }
 
+bool Route::hasDistanceCost() const
+{
+    return unitDistanceCost() != 0
+           || maxDistance() != std::numeric_limits<Distance>::max();
+}
+
 Duration Route::duration() const
 {
     assert(!dirty);
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return 0;
-#else
     return durAfter[0].duration();
-#endif
 }
 
 Cost Route::durationCost() const
@@ -843,6 +898,15 @@ Cost Route::durationCost() const
 
 Cost Route::unitDurationCost() const { return vehicleType_.unitDurationCost; }
 
+bool Route::hasDurationCost() const
+{
+    // clang-format off
+    return data.hasTimeWindows()
+        || unitDurationCost() != 0
+        || maxDuration() != std::numeric_limits<Duration>::max();
+    // clang-format on
+}
+
 Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 
 Distance Route::maxDistance() const { return vehicleType_.maxDistance; }
@@ -850,11 +914,7 @@ Distance Route::maxDistance() const { return vehicleType_.maxDistance; }
 Duration Route::timeWarp() const
 {
     assert(!dirty);
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return 0;
-#else
     return durAfter[0].timeWarp(maxDuration());
-#endif
 }
 
 size_t Route::profile() const { return vehicleType_.profile; }
@@ -904,6 +964,21 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     [[maybe_unused]] auto &&first = std::get<0>(segments_);
     [[maybe_unused]] auto &&last = std::get<sizeof...(Segments) - 1>(segments_);
     assert(first.route() == last.route());  // must start and end at same route
+
+    [[maybe_unused]] auto const *route = this->route();
+    assert(first.first() == route->startDepot());  // must start at route start
+    assert(last.last() == route->endDepot());      // must end at route end
+}
+
+template <Segment... Segments> size_t Route::Proposal<Segments...>::size() const
+{
+    return std::apply([](auto &&...args) { return (args.size() + ...); },
+                      segments_);
+}
+
+template <Segment... Segments> bool Route::Proposal<Segments...>::empty() const
+{
+    return size() == 2;  // empty if proposal only contains start and end depot
 }
 
 template <Segment... Segments>
@@ -915,6 +990,11 @@ Route const *Route::Proposal<Segments...>::route() const
 template <Segment... Segments>
 Distance Route::Proposal<Segments...>::distance() const
 {
+    if (empty() || !route()->hasDistanceCost())
+        // Then distance does not factor into the penalised cost of this route,
+        // and we do not have to evaluate it.
+        return 0;
+
     auto const &data = route()->data;
     auto const profile = route()->profile();
     auto const &matrix = data.distanceMatrix(profile);
@@ -943,9 +1023,11 @@ Distance Route::Proposal<Segments...>::distance() const
 template <Segment... Segments>
 std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 {
-#ifdef PYVRP_NO_TIME_WINDOWS
-    return std::make_pair(0, 0);
-#else
+    if (empty() || !route()->hasDurationCost())
+        // Then duration does not factor into the penalised cost of this route,
+        // and we do not have to evaluate it.
+        return std::make_pair(0, 0);
+
     auto const &data = route()->data;
     auto const maxDuration = route()->maxDuration();
     auto const profile = route()->profile();
@@ -959,24 +1041,24 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
         auto ds = segment.duration(profile);
         auto first = segment.first();
 
-        if (first < data.numDepots())  // segment starts at depot
+        if (segment.startsAtReloadDepot())
             ds = ds.finaliseFront();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
             auto edgeDur = matrix(other.last(), first);
 
-            if (other.last() < data.numDepots())  // other ends at a depot
+            if (other.endsAtReloadDepot())
             {
-                // We can only finalise the current segment at the depot, so we
-                // need to travel there. The depot time windows restrictions are
-                // already handled by the other segment.
-                ds = DurationSegment::merge(edgeDur, {}, ds);
+                // The other segment ends at a reload depot, so we go there and
+                // finalise the current segment. We first travel there. We need
+                // to end the segment within the depot's time windows to
+                // properly account for any release time on our segment.
+                ProblemData::Depot const &depot = data.location(other.last());
+                ds = DurationSegment::merge(edgeDur, {depot}, ds);
                 ds = ds.finaliseFront();
 
-                // We finalise by travelling to the depot, so the remaining
-                // travel duration is now zero.
-                edgeDur = 0;
+                edgeDur = 0;  // we are already there!
             }
 
             ds = DurationSegment::merge(edgeDur, other.duration(profile), ds);
@@ -984,7 +1066,7 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 
             if constexpr (sizeof...(args) != 0)
             {
-                if (first < data.numDepots())  // segment starts at a depot
+                if (other.startsAtReloadDepot())
                     ds = ds.finaliseFront();
 
                 self(self, std::forward<decltype(args)>(args)...);
@@ -996,32 +1078,33 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
     };
 
     return std::apply(fn, detail::reverse(segments_));
-#endif  // PYVRP_NO_TIME_WINDOWS
 }
 
 template <Segment... Segments>
 Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 {
-    auto const &data = route()->data;
+    if (empty())
+        return 0;
+
     auto const &capacities = route()->capacity();
     auto const capacity = capacities[dimension];
 
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto ls = segment.load(dimension);
-        if (segment.last() < data.numDepots())  // ends at depot
+        if (segment.endsAtReloadDepot())
             ls = ls.finalise(capacity);
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            if (other.first() < data.numDepots())  // other starts at a depot
+            if (other.startsAtReloadDepot())
                 ls = ls.finalise(capacity);
 
             ls = LoadSegment::merge(ls, other.load(dimension));
 
             if constexpr (sizeof...(args) != 0)
             {
-                if (other.last() < data.numDepots())  // other ends at a depot
+                if (other.endsAtReloadDepot())
                     ls = ls.finalise(capacity);
 
                 self(self, std::forward<decltype(args)>(args)...);

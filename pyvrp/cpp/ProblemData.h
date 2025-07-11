@@ -90,10 +90,12 @@ public:
      * ----------
      * x
      *     Horizontal coordinate of this client, that is, the 'x' part of the
-     *     client's (x, y) location tuple.
+     *     client's (x, y) location tuple. This can for example be a scaled
+     *     longitude value.
      * y
      *     Vertical coordinate of this client, that is, the 'y' part of the
-     *     client's (x, y) location tuple.
+     *     client's (x, y) location tuple. This can for example be a scaled
+     *     latitude value.
      * delivery
      *     The amounts this client demands from the depot.
      * pickup
@@ -276,10 +278,12 @@ public:
      * ----------
      * x
      *     Horizontal coordinate of this depot, that is, the 'x' part of the
-     *     depot's (x, y) location tuple.
+     *     depot's (x, y) location tuple. This can for example be a scaled
+     *     longitude value.
      * y
      *     Vertical coordinate of this depot, that is, the 'y' part of the
-     *     depot's (x, y) location tuple.
+     *     depot's (x, y) location tuple. This can for example be a scaled
+     *     latitude value.
      * tw_early
      *     Opening time of this depot. Default 0.
      * tw_late
@@ -543,6 +547,7 @@ private:
 
     size_t const numVehicles_;
     size_t const numLoadDimensions_;
+    bool const hasTimeWindows_;
 
 public:
     bool operator==(ProblemData const &other) const = default;
@@ -663,6 +668,13 @@ public:
     durationMatrix(size_t profile) const;
 
     /**
+     * Determines whether any of the :meth:`~clients` or :meth:`~depots` in this
+     * instance have nonstandard time windows, or if any :meth:`~vehicle_types`
+     * have nonstandard shift time windows or latest start constraints.
+     */
+    [[nodiscard]] inline bool hasTimeWindows() const;
+
+    /**
      * Number of clients in this problem instance.
      */
     [[nodiscard]] size_t numClients() const;
@@ -767,6 +779,8 @@ Matrix<Duration> const &ProblemData::durationMatrix(size_t profile) const
     assert(profile < durs_.size());
     return durs_[profile];
 }
+
+bool ProblemData::hasTimeWindows() const { return hasTimeWindows_; }
 }  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H

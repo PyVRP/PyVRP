@@ -24,6 +24,10 @@ public:
 
     size_t first() const { return client; }
     size_t last() const { return client; }
+    size_t size() const { return 1; }
+
+    bool startsAtReloadDepot() const { return false; }
+    bool endsAtReloadDepot() const { return false; }
 
     pyvrp::Distance distance([[maybe_unused]] size_t profile) const
     {

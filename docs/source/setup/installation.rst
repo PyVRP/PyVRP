@@ -31,11 +31,12 @@ To run the example notebooks locally, first clone the repository:
 
    git clone https://github.com/PyVRP/PyVRP.git
 
-Then, make sure your Python version has ``poetry``:
+Then, make sure to have `uv <https://docs.astral.sh/uv/getting-started/installation/>`_ installed.
+One way to do so is via ``pip``:
 
 .. code-block:: shell
 
-   pip install --upgrade poetry
+   pip install --upgrade uv
 
 Now, go into the PyVRP repository and set-up a virtual environment.
 We want a virtual environment that also contains all dependencies needed to run the example notebooks, so we also need to install the optional ``examples`` dependency group.
@@ -44,13 +45,13 @@ This goes like so:
 .. code-block:: shell
 
    cd PyVRP
-   poetry install --with examples
+   uv sync --group examples
 
-This might take a few minutes to resolve, but only needs to be done once.
+This might take a minute to resolve, but only needs to be done once.
 After setting everything up, simply open the jupyter notebooks:
 
 .. code-block:: shell
 
-   poetry run jupyter notebook
+   uv run jupyter notebook
 
 This will open up a page in your browser, where you can navigate to the example notebooks in the ``examples/`` folder!

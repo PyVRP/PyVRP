@@ -9,7 +9,24 @@
 
 namespace pyvrp::search
 {
-template <typename Arg> class LocalSearchOperatorBase
+/**
+ * Simple data structure that tracks statistics about the number of times
+ * an operator was evaluated and applied.
+ *
+ * Attributes
+ * ----------
+ * num_evaluations
+ *     Number of evaluated moves.
+ * num_applications
+ *     Number of applied, improving moves.
+ */
+struct OperatorStatistics
+{
+    size_t numEvaluations = 0;
+    size_t numApplications = 0;
+};
+
+template <typename Arg> class LocalSearchOperator
 {
     // Can only be specialised into either a Node or Route operator; there
     // are no other types that are expected to work.
@@ -18,6 +35,7 @@ template <typename Arg> class LocalSearchOperatorBase
 
 protected:
     ProblemData const &data;
+    mutable OperatorStatistics stats_;
 
 public:
     /**
@@ -41,34 +59,38 @@ public:
     // TODO remove arguments - always applies to most recently evaluated pair.
     virtual void apply(Arg *U, Arg *V) const = 0;
 
-    LocalSearchOperatorBase(ProblemData const &data) : data(data){};
-    virtual ~LocalSearchOperatorBase() = default;
+    /**
+     * Called once after loading the solution to improve. This can be used to
+     * e.g. update local operator state.
+     */
+    virtual void init([[maybe_unused]] Solution const &solution)
+    {
+        stats_ = {};  // reset call statistics
+    };
+
+    /**
+     * Returns evaluation and application statistics collected since the last
+     * solution initialisation.
+     */
+    OperatorStatistics const &statistics() const { return stats_; }
+
+    LocalSearchOperator(ProblemData const &data) : data(data){};
+    virtual ~LocalSearchOperator() = default;
 };
 
-template <typename Arg>
-class LocalSearchOperator : public LocalSearchOperatorBase<Arg>
-{
-};
+/**
+ * Node operator base class.
+ */
+using NodeOperator = LocalSearchOperator<Route::Node>;
 
-template <>  // specialisation for node operators
-class LocalSearchOperator<Route::Node>
-    : public LocalSearchOperatorBase<Route::Node>
+/**
+ * Route operator base class.
+ */
+class RouteOperator : public LocalSearchOperator<Route>
 {
-    using LocalSearchOperatorBase::LocalSearchOperatorBase;
-};
-
-template <>  // specialisation for route operators
-class LocalSearchOperator<Route> : public LocalSearchOperatorBase<Route>
-{
-    using LocalSearchOperatorBase::LocalSearchOperatorBase;
+    using LocalSearchOperator::LocalSearchOperator;
 
 public:
-    /**
-     * Called once after loading in the solution to improve. This can be used
-     * to e.g. update local operator state.
-     */
-    virtual void init([[maybe_unused]] Solution const &solution) {};
-
     /**
      * Called when a route has been changed. Can be used to update caches, but
      * the implementation should be fast: this is called every time something
@@ -76,6 +98,15 @@ public:
      */
     virtual void update([[maybe_unused]] Route *U) {};
 };
+
+/**
+ * Helper template function that may be specialised to determine if an operator
+ * can find improving moves for the given data instance.
+ */
+template <typename Op> bool supports([[maybe_unused]] ProblemData const &data)
+{
+    return true;
+}
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_LOCALSEARCHOPERATOR_H

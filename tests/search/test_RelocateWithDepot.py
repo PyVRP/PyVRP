@@ -3,13 +3,13 @@ import pytest
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
-from pyvrp.search import TripRelocate
+from pyvrp.search import RelocateWithDepot
 from tests.helpers import make_search_route
 
 
 def test_inserts_depot_single_route(ok_small_multiple_trips):
     """
-    Tests that TripRelocate inserts a reload depot along with the node
+    Tests that RelocateWithDepot inserts a reload depot along with the node
     relocation in the same route.
     """
     route = make_search_route(ok_small_multiple_trips, [1, 2, 3, 4])
@@ -19,7 +19,7 @@ def test_inserts_depot_single_route(ok_small_multiple_trips):
     assert_equal(route.num_trips(), 1)
     assert_equal(route.excess_load(), [8])
 
-    op = TripRelocate(ok_small_multiple_trips)
+    op = RelocateWithDepot(ok_small_multiple_trips)
     cost_eval = CostEvaluator([500], 0, 0)
 
     # The route now is 1 2 3 4, proposal evaluates 1 3 | 2 4 and 1 3 2 | 4. Of
@@ -42,7 +42,7 @@ def test_inserts_depot_single_route(ok_small_multiple_trips):
 
 def test_inserts_depot_across_routes(ok_small_multiple_trips):
     """
-    Tests that TripRelocate inserts a reload depot along with the node
+    Tests that RelocateWithDepot inserts a reload depot along with the node
     relocation across routes.
     """
     route1 = make_search_route(ok_small_multiple_trips, [3], idx=0)
@@ -51,7 +51,7 @@ def test_inserts_depot_across_routes(ok_small_multiple_trips):
     assert_equal(str(route1), "3")
     assert_equal(str(route2), "1 2 4")
 
-    op = TripRelocate(ok_small_multiple_trips)
+    op = RelocateWithDepot(ok_small_multiple_trips)
     cost_eval = CostEvaluator([500], 0, 0)
 
     # The proposal evaluates 1 | 3 2 4 and 1 3 | 2 4. Of these, the second is
@@ -86,12 +86,12 @@ def test_reload_depot_before_or_after_relocate(
     exp_route_str: str,
 ):
     """
-    TripRelocate evaluates placing a reload depot either before or after the
-    relocated node. This test checks if it picks the best option.
+    RelocateWithDepot evaluates placing a reload depot either before or after
+    the relocated node. This test checks if it picks the best option.
     """
     route = make_search_route(ok_small_multiple_trips, [1, 2, 3, 4])
 
-    op = TripRelocate(ok_small_multiple_trips)
+    op = RelocateWithDepot(ok_small_multiple_trips)
     cost_eval = CostEvaluator([load_penalty], 1, 0)
     assert_equal(op.evaluate(route[1], route[2], cost_eval), exp_delta_cost)
 
@@ -103,8 +103,8 @@ def test_reload_depot_before_or_after_relocate(
 
 def test_inserts_best_reload_depot():
     """
-    Tests that TripRelocate inserts the best possible reload depot, not just
-    the first improving one.
+    Tests that RelocateWithDepot inserts the best possible reload depot, not
+    just the first improving one.
     """
     # Only non-zero in and out of the first depot, so we do not want to use
     # that one - we instead prefer the second one, which is free.
@@ -126,7 +126,7 @@ def test_inserts_best_reload_depot():
     assert_(route.has_excess_load())
     assert_equal(route.excess_load(), [5])
 
-    op = TripRelocate(data)
+    op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([500], 0, 0)
 
     # We evaluate two moves, 3 | 2 and 3 2 |, for each depot (0 and 1). Only
@@ -145,8 +145,8 @@ def test_inserts_best_reload_depot():
 
 def test_fixed_vehicle_cost():
     """
-    Tests that TripRelocate correctly accounts for fixed vehicle costs due to
-    non-empty routes becoming empty.
+    Tests that RelocateWithDepot correctly accounts for fixed vehicle costs due
+    to non-empty routes becoming empty.
     """
     data = ProblemData(
         clients=[Client(0, 0, delivery=[5]), Client(0, 0, delivery=[4])],
@@ -167,7 +167,7 @@ def test_fixed_vehicle_cost():
     route1 = make_search_route(data, [1], idx=0)
     route2 = make_search_route(data, [2], idx=1)
 
-    op = TripRelocate(data)
+    op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([0], 0, 0)
 
     # After this move, route1 is empty, which results in a cost delta of -2000
@@ -177,15 +177,15 @@ def test_fixed_vehicle_cost():
 
 def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
     """
-    Tests that TripRelocate does not evaluate moves that would result in more
-    trips than the vehicle on the route can execute.
+    Tests that RelocateWithDepot does not evaluate moves that would result in
+    more trips than the vehicle on the route can execute.
     """
     route = make_search_route(ok_small_multiple_trips, [3, 0, 1, 2, 4])
 
     assert_equal(str(route), "3 | 1 2 4")
     assert_equal(route.excess_load(), [5])
 
-    op = TripRelocate(ok_small_multiple_trips)
+    op = RelocateWithDepot(ok_small_multiple_trips)
     cost_eval = CostEvaluator([10_000], 0, 0)
 
     # This move would result in either 3 | 2 | 1 4, or 3 | 2 1 | 4, both of
@@ -195,7 +195,7 @@ def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
     assert_equal(route.num_trips(), route.max_trips())
 
 
-def test_trip_relocate_bug_release_times(mtvrptw_release_times):
+def test_bug_release_times(mtvrptw_release_times):
     """
     This test exercises a bug that previously resulted in an incorrect time
     warp calculation caused by DurationSegment.finalise_front() not working
@@ -229,23 +229,99 @@ def test_trip_relocate_bug_release_times(mtvrptw_release_times):
     assert_equal(str(route1), "34 | 23 38 48")
     assert_equal(str(route2), "6")
 
-    op = TripRelocate(mtvrptw_release_times)
+    op = RelocateWithDepot(mtvrptw_release_times)
     cost_eval = CostEvaluator([0], 1, 0)
     delta_cost = op.evaluate(route1[3], route2[1], cost_eval)
     assert_(delta_cost < 0)
 
     op.apply(route1[3], route2[1])
     assert_equal(str(route1), "34 | 38 48")
-    assert_equal(str(route2), "6 | 23")
+    assert_equal(str(route2), "6 23 |")
 
     route1.update()
     assert_equal(route1.distance(), 1525)
     assert_equal(route1.time_warp(), 2865)
 
     route2.update()
-    assert_equal(route2.distance(), 1114)
+    assert_equal(route2.distance(), 797)
     assert_(not route2.has_time_warp())
 
-    delta_dist = 1525 + 1114 - 504 - 1713  # = new minus old
+    delta_dist = 1525 + 797 - 504 - 1713  # = new minus old
     delta_time_warp = 2865 - 5395  # = new minus old
     assert_equal(delta_cost, delta_dist + delta_time_warp)
+
+
+def test_can_insert_reload_after_start_depot():
+    """
+    Tests that RelocateWithDepot can insert a reload depot directly after the
+    start depot if that is an improving move.
+    """
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0, delivery=[1]),
+            Client(x=0, y=0, delivery=[1]),
+        ],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[
+            VehicleType(1, capacity=[5], initial_load=[5], reload_depots=[0]),
+        ],
+        distance_matrices=[np.zeros((3, 3), dtype=int)],
+        duration_matrices=[np.zeros((3, 3), dtype=int)],
+    )
+
+    route = make_search_route(data, [1, 2])
+    assert_equal(str(route), "1 2")
+
+    # Evaluate turning "1 2" into "| 2 1", which would immediately resolve all
+    # initial load, and thus reduce excess load by 2.
+    op = RelocateWithDepot(data)
+    cost_eval = CostEvaluator([1], 0, 0)
+    assert_equal(op.evaluate(route[2], route[0], cost_eval), -2)
+
+    op.apply(route[2], route[0])
+    assert_equal(str(route), "| 2 1")
+
+
+def test_can_insert_reload_before_end_depot():
+    """
+    Tests that RelocateWithDepot can insert a reload depot directly before
+    end depot if that is an improving move.
+    """
+    # Matrix that makes it expensive to return directly to the first depot,
+    # but free if we go there via the second depot.
+    mat = np.zeros((4, 4), dtype=int)
+    mat[:, 0] = 10
+    mat[[0, 1], 0] = 0
+
+    data = ProblemData(
+        clients=[Client(x=0, y=0), Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(1, reload_depots=[0, 1])],
+        distance_matrices=[mat],
+        duration_matrices=[np.zeros_like(mat)],
+    )
+
+    route = make_search_route(data, [2, 3])
+    assert_equal(str(route), "2 3")
+
+    # Evaluate inserting client 2 after 3, with a depot. This should result in
+    # a route "2 3 |", with a reload depot visits to 1.
+    op = RelocateWithDepot(data)
+    cost_eval = CostEvaluator([], 0, 0)
+    assert_equal(op.evaluate(route[1], route[2], cost_eval), -10)
+
+    # Test if that is indeed the case: the route should be correct, and the
+    # reload depot should be 1, not 0.
+    op.apply(route[1], route[2])
+    assert_equal(str(route), "3 2 |")
+    assert_equal(route[3].client, 1)
+
+
+def test_supports(ok_small, ok_small_multiple_trips, mtvrptw_release_times):
+    """
+    Tests that RelocateWithDepot does not support instances without reload
+    options.
+    """
+    assert_(not RelocateWithDepot.supports(ok_small))  # no reloads
+    assert_(RelocateWithDepot.supports(ok_small_multiple_trips))  # has reloads
+    assert_(RelocateWithDepot.supports(mtvrptw_release_times))  # has reloads

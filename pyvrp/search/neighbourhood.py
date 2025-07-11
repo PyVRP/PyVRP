@@ -24,7 +24,7 @@ class NeighbourhoodParams:
         Penalty weight given to the minimum time warp aspect of the proximity
         calculation. A large time warp indicates the clients are far apart in
         duration/time.
-    nb_granular
+    num_neighbours
         Number of other clients that are in each client's granular
         neighbourhood. This parameter determines the size of the overall
         neighbourhood.
@@ -39,18 +39,18 @@ class NeighbourhoodParams:
     Raises
     ------
     ValueError
-        When ``nb_granular`` is non-positive.
+        When ``num_neighbours`` is non-positive.
     """
 
     weight_wait_time: float = 0.2
     weight_time_warp: float = 1.0
-    nb_granular: int = 60
+    num_neighbours: int = 60
     symmetric_proximity: bool = True
     symmetric_neighbours: bool = False
 
     def __post_init__(self):
-        if self.nb_granular <= 0:
-            raise ValueError("nb_granular <= 0 not understood.")
+        if self.num_neighbours <= 0:
+            raise ValueError("num_neighbours <= 0 not understood.")
 
 
 def compute_neighbours(
@@ -96,7 +96,7 @@ def compute_neighbours(
     proximity[: data.num_depots, :] = np.inf  # depots have no neighbours
     proximity[:, : data.num_depots] = np.inf  # clients do not neighbour depots
 
-    k = min(params.nb_granular, data.num_clients - 1)  # excl. self
+    k = min(params.num_neighbours, data.num_clients - 1)  # excl. self
     top_k = np.argsort(proximity, axis=1, kind="stable")[data.num_depots :, :k]
 
     if not params.symmetric_neighbours:

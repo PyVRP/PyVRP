@@ -23,6 +23,10 @@ All search methods implement the :class:`SearchMethod` protocol.
       :members:
       :special-members: __call___
 
+.. automodule:: pyvrp.search._search
+
+   .. autoclass:: LocalSearchStatistics
+
 .. automodule:: pyvrp.search.neighbourhood
    :members:
 
@@ -32,7 +36,7 @@ Node operators
 
 Instances of these operators can be added to the :class:`~pyvrp.search.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.search.LocalSearch.LocalSearch.add_node_operator` method.
 Each node operator inherits from :class:`~pyvrp.search._search.NodeOperator`.
-As a convenience, the :mod:`pyvrp.search` module makes all these operators available as ``NODE_OPERATORS``:
+As a convenience, the :mod:`pyvrp.search` module makes most relevant operators available as ``NODE_OPERATORS``:
 
 .. code-block:: python
 
@@ -40,41 +44,42 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
 
 
 .. automodule:: pyvrp.search._search
+   :noindex:
 
    .. autoclass:: NodeOperator
 
    .. autoclass:: Exchange10
-      :exclude-members: evaluate, apply
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: Exchange20
-      :exclude-members: evaluate, apply
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: Exchange30
-      :exclude-members: evaluate, apply
+      :exclude-members: evaluate, apply, statistics, supports
    
    .. autoclass:: Exchange11
-      :exclude-members: evaluate, apply
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: Exchange21
-      :exclude-members: evaluate, apply
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: Exchange31
-      :exclude-members: evaluate, apply
+      :exclude-members: evaluate, apply, statistics, supports
    
    .. autoclass:: Exchange22
-      :exclude-members: evaluate, apply
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: Exchange32
-      :exclude-members: evaluate, apply
+      :exclude-members: evaluate, apply, statistics, supports
    
    .. autoclass:: Exchange33
-      :exclude-members: evaluate, apply
+      :exclude-members: evaluate, apply, statistics, supports
+
+   .. autoclass:: RelocateWithDepot
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: SwapTails
-      :exclude-members: evaluate, apply
-
-   .. autoclass:: TripRelocate
-      :exclude-members: evaluate, apply
+      :exclude-members: evaluate, apply, statistics, supports
 
 
 Route operators
@@ -82,7 +87,7 @@ Route operators
 
 Instances of these operators can be added to the :class:`~pyvrp.search.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.search.LocalSearch.LocalSearch.add_route_operator` method.
 Each route operator inherits from :class:`~pyvrp.search._search.RouteOperator`.
-As a convenience, the :mod:`pyvrp.search` module makes all these operators available as ``ROUTE_OPERATORS``:
+As a convenience, the :mod:`pyvrp.search` module makes these operators available as ``ROUTE_OPERATORS``:
 
 .. code-block:: python
 
@@ -95,7 +100,7 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    .. autoclass:: RouteOperator
 
    .. autoclass:: SwapRoutes
-      :exclude-members: evaluate, apply
+      :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: SwapStar
-      :exclude-members: evaluate, apply
+      :exclude-members: evaluate, apply, statistics, supports

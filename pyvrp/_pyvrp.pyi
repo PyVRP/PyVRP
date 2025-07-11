@@ -200,6 +200,7 @@ class ProblemData:
     def vehicle_type(self, vehicle_type: int) -> VehicleType: ...
     def distance_matrix(self, profile: int) -> np.ndarray[int]: ...
     def duration_matrix(self, profile: int) -> np.ndarray[int]: ...
+    def has_time_windows(self) -> bool: ...
     @property
     def num_clients(self) -> int: ...
     @property
@@ -350,15 +351,15 @@ class PopulationParams:
     generation_size: int
     lb_diversity: float
     min_pop_size: int
-    nb_close: int
-    nb_elite: int
+    num_close: int
+    num_elite: int
     ub_diversity: float
     def __init__(
         self,
         min_pop_size: int = 25,
         generation_size: int = 40,
-        nb_elite: int = 4,
-        nb_close: int = 5,
+        num_elite: int = 4,
+        num_close: int = 5,
         lb_diversity: float = 0.1,
         ub_diversity: float = 0.5,
     ) -> None: ...

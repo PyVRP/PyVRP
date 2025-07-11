@@ -15,8 +15,8 @@ namespace pyvrp
  * PopulationParams(
  *     min_pop_size: int = 25,
  *     generation_size: int = 40,
- *     nb_elite: int = 4,
- *     nb_close: int = 5,
+ *     num_elite: int = 4,
+ *     num_close: int = 5,
  *     lb_diversity: float = 0.1,
  *     ub_diversity: float = 0.5,
  * )
@@ -31,10 +31,10 @@ namespace pyvrp
  * generation_size
  *     The size of a single generation, that is, the number of new solutions
  *     inserted into a subpopulation between survivor selections.
- * nb_elite
+ * num_elite
  *     Number of elite solutions. This number of fittest solutions are always
  *     survivors.
- * nb_close
+ * num_close
  *     Number of close solutions. These are used to determine similarity
  *     between solutions, which is an important component of fitness.
  * lb_diversity
@@ -48,15 +48,15 @@ struct PopulationParams
 {
     size_t const minPopSize;
     size_t const generationSize;
-    size_t const nbElite;
-    size_t const nbClose;
+    size_t const numElite;
+    size_t const numClose;
     double const lbDiversity;
     double const ubDiversity;
 
     PopulationParams(size_t minPopSize = 25,
                      size_t generationSize = 40,
-                     size_t nbElite = 4,
-                     size_t nbClose = 5,
+                     size_t numElite = 4,
+                     size_t numClose = 5,
                      double lbDiversity = 0.1,
                      double ubDiversity = 0.5);
 

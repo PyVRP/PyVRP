@@ -18,9 +18,9 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
+    RelocateWithDepot,
     SwapRoutes,
     SwapStar,
-    TripRelocate,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -65,7 +65,7 @@ def test_raises_when_neighbourhood_dimensions_do_not_match(ok_small, size):
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
 
     with assert_raises(RuntimeError):
-        ls.set_neighbours(neighbours)
+        ls.neighbours = neighbours
 
 
 def test_raises_when_neighbourhood_contains_self_or_depot(ok_small):
@@ -88,7 +88,7 @@ def test_raises_when_neighbourhood_contains_self_or_depot(ok_small):
     (
         "weight_wait_time",
         "weight_time_warp",
-        "nb_granular",
+        "num_neighbours",
         "symmetric_proximity",
         "symmetric_neighbours",
     ),
@@ -104,7 +104,7 @@ def test_local_search_set_get_neighbours(
     rc208,
     weight_wait_time: int,
     weight_time_warp: int,
-    nb_granular: int,
+    num_neighbours: int,
     symmetric_proximity: bool,
     symmetric_neighbours: bool,
 ):
@@ -113,34 +113,34 @@ def test_local_search_set_get_neighbours(
     """
     rng = RandomNumberGenerator(seed=42)
 
-    params = NeighbourhoodParams(nb_granular=1)
+    params = NeighbourhoodParams(num_neighbours=1)
     prev_neighbours = compute_neighbours(rc208, params)
     ls = LocalSearch(rc208, rng, prev_neighbours)
 
     params = NeighbourhoodParams(
         weight_wait_time,
         weight_time_warp,
-        nb_granular,
+        num_neighbours,
         symmetric_proximity,
         symmetric_neighbours,
     )
     neighbours = compute_neighbours(rc208, params)
 
     # Test that before we set neighbours we don't have same
-    assert_(ls.neighbours() != neighbours)
+    assert_(ls.neighbours != neighbours)
 
     # Test after we set we have the same
-    ls.set_neighbours(neighbours)
-    ls_neighbours = ls.neighbours()
-    assert_equal(ls_neighbours, neighbours)
+    ls.neighbours = neighbours
+    assert_equal(ls.neighbours, neighbours)
 
     # Check that the bindings make a copy (in both directions)
-    assert_(ls_neighbours is not neighbours)
+    assert_(ls.neighbours is not neighbours)
+    ls_neighbours = ls.neighbours
     ls_neighbours[1] = []
-    assert_(ls.neighbours() != ls_neighbours)
-    assert_equal(ls.neighbours(), neighbours)
+    assert_(ls.neighbours != ls_neighbours)
+    assert_equal(ls.neighbours, neighbours)
     neighbours[1] = []
-    assert_(ls.neighbours() != neighbours)
+    assert_(ls.neighbours != neighbours)
 
 
 def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):
@@ -536,7 +536,7 @@ def test_local_search_inserts_reload_depots(ok_small_multiple_trips):
     neighbours = compute_neighbours(ok_small_multiple_trips)
 
     ls = LocalSearch(ok_small_multiple_trips, rng, neighbours)
-    ls.add_node_operator(TripRelocate(ok_small_multiple_trips))
+    ls.add_node_operator(RelocateWithDepot(ok_small_multiple_trips))
 
     sol = Solution(ok_small_multiple_trips, [[1, 2, 3, 4]])
     assert_(sol.has_excess_load())
@@ -575,3 +575,75 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     routes = improved.routes()
     assert_(str(routes[0]), "1 3")
     assert_(str(routes[1]), "2 4")
+
+
+def test_search_statistics(ok_small):
+    """
+    Tests that the local search's search statistics return meaningful
+    information about the number of evaluated and improving moves.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+
+    node_op = Exchange10(ok_small)
+    ls.add_node_operator(node_op)
+
+    # No solution is yet loaded/improved, so all these numbers should be zero.
+    stats = ls.statistics
+    assert_equal(stats.num_moves, 0)
+    assert_equal(stats.num_improving, 0)
+    assert_equal(stats.num_updates, 0)
+
+    # Load and improve a random solution. This should result in a non-zero
+    # number of moves.
+    rnd_sol = Solution.make_random(ok_small, rng)
+    cost_eval = CostEvaluator([1], 1, 1)
+    improved = ls(rnd_sol, cost_eval)
+
+    stats = ls.statistics
+    assert_(stats.num_moves > 0)
+    assert_(stats.num_improving > 0)
+    assert_(stats.num_updates >= stats.num_improving)
+
+    # Since we have only a single node operator, the number of moves and the
+    # number of improving moves should match what the node operator tracks.
+    assert_equal(stats.num_moves, node_op.statistics.num_evaluations)
+    assert_equal(stats.num_improving, node_op.statistics.num_applications)
+
+    # The improved solution is already locally optimal, so it cannot be further
+    # improved by the local search. The number of improving moves should thus
+    # be zero after another attempt.
+    ls(improved, cost_eval)
+
+    stats = ls.statistics
+    assert_(stats.num_moves > 0)
+    assert_equal(stats.num_improving, 0)
+    assert_equal(stats.num_updates, 0)
+
+
+def test_node_and_route_operators_property(ok_small):
+    """
+    Tests adding and accessing node and route operators to the LocalSearch
+    object.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+
+    # The local search has not yet been equipped with operators, so it should
+    # start empty.
+    assert_equal(len(ls.node_operators), 0)
+    assert_equal(len(ls.route_operators), 0)
+
+    # Now we add a node operator. The local search does not take ownership, so
+    # its only node operator should be the exact same object as the one we just
+    # created.
+    node_op = Exchange10(ok_small)
+    ls.add_node_operator(node_op)
+    assert_equal(len(ls.node_operators), 1)
+    assert_(ls.node_operators[0] is node_op)
+
+    # And a route operator, for which the same should hold.
+    route_op = SwapStar(ok_small)
+    ls.add_route_operator(route_op)
+    assert_equal(len(ls.route_operators), 1)
+    assert_(ls.route_operators[0] is route_op)

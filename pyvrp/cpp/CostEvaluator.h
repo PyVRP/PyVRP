@@ -66,6 +66,11 @@ concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
  * dist_penalty
  *    The penalty for each unit of distance in excess of the vehicle's maximum
  *    distance constraint.
+ *
+ * Raises
+ * ------
+ * ValueError
+ *     When any of the given penalty terms are negative.
  */
 class CostEvaluator
 {
@@ -220,12 +225,18 @@ Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance) const
 template <CostEvaluatable T>
 Cost CostEvaluator::penalisedCost(T const &arg) const
 {
+    if (arg.empty())
+    {
+        if constexpr (PrizeCostEvaluatable<T>)
+            return arg.uncollectedPrizes();
+        return 0;
+    }
+
     // Standard objective plus infeasibility-related penalty terms.
-    auto const cost = arg.distanceCost() + arg.durationCost()
-                      + (!arg.empty() ? arg.fixedVehicleCost() : 0)
-                      + excessLoadPenalties(arg.excessLoad())
-                      + twPenalty(arg.timeWarp())
-                      + distPenalty(arg.excessDistance(), 0);
+    auto const cost
+        = arg.distanceCost() + arg.durationCost() + arg.fixedVehicleCost()
+          + excessLoadPenalties(arg.excessLoad()) + twPenalty(arg.timeWarp())
+          + distPenalty(arg.excessDistance(), 0);
 
     if constexpr (PrizeCostEvaluatable<T>)
         return cost + arg.uncollectedPrizes();
@@ -250,15 +261,17 @@ template <bool exact,
 bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
 {
     auto const *route = proposal.route();
+    if (!route->empty())
+    {
+        out -= route->distanceCost();
+        out -= distPenalty(route->distance(), route->maxDistance());
 
-    out -= route->distanceCost();
-    out -= distPenalty(route->distance(), route->maxDistance());
+        if constexpr (!skipLoad)
+            out -= excessLoadPenalties(route->excessLoad());
 
-    if constexpr (!skipLoad)
-        out -= excessLoadPenalties(route->excessLoad());
-
-    out -= route->durationCost();
-    out -= twPenalty(route->timeWarp());
+        out -= route->durationCost();
+        out -= twPenalty(route->timeWarp());
+    }
 
     auto const distance = proposal.distance();
     out += route->unitDistanceCost() * static_cast<Cost>(distance);
@@ -295,25 +308,30 @@ bool CostEvaluator::deltaCost(Cost &out,
                               T<vArgs...> const &vProposal) const
 {
     auto const *uRoute = uProposal.route();
-    auto const *vRoute = vProposal.route();
-
-    out -= uRoute->distanceCost();
-    out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
-
-    out -= vRoute->distanceCost();
-    out -= distPenalty(vRoute->distance(), vRoute->maxDistance());
-
-    if constexpr (!skipLoad)
+    if (!uRoute->empty())
     {
-        out -= excessLoadPenalties(uRoute->excessLoad());
-        out -= excessLoadPenalties(vRoute->excessLoad());
+        out -= uRoute->distanceCost();
+        out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
+
+        if constexpr (!skipLoad)
+            out -= excessLoadPenalties(uRoute->excessLoad());
+
+        out -= uRoute->durationCost();
+        out -= twPenalty(uRoute->timeWarp());
     }
 
-    out -= uRoute->durationCost();
-    out -= twPenalty(uRoute->timeWarp());
+    auto const *vRoute = vProposal.route();
+    if (!vRoute->empty())
+    {
+        out -= vRoute->distanceCost();
+        out -= distPenalty(vRoute->distance(), vRoute->maxDistance());
 
-    out -= vRoute->durationCost();
-    out -= twPenalty(vRoute->timeWarp());
+        if constexpr (!skipLoad)
+            out -= excessLoadPenalties(vRoute->excessLoad());
+
+        out -= vRoute->durationCost();
+        out -= twPenalty(vRoute->timeWarp());
+    }
 
     auto const uDist = uProposal.distance();
     out += uRoute->unitDistanceCost() * static_cast<Cost>(uDist);

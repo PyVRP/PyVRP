@@ -67,6 +67,7 @@ Contents
 
    dev/benchmarking
    dev/contributing
+   dev/releasing
    dev/supported_vrplib_fields
    dev/new_vrp_variants
    dev/glossary

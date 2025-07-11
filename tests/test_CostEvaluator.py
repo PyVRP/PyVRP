@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
@@ -11,6 +11,28 @@ from pyvrp import (
     Solution,
     VehicleType,
 )
+
+
+@pytest.mark.parametrize(
+    ("load_penalties", "tw_penalty", "dist_penalty"),
+    [
+        ([], -1, 0),
+        ([], 0, -1),
+        ([-1], 0, 0),
+        ([0, -1], 0, 0),
+    ],
+)
+def test_raises_negative_penalties(
+    load_penalties: list[float],
+    tw_penalty: float,
+    dist_penalty: float,
+):
+    """
+    Tests that passing negative penalty values to the CostEvaluator raises an
+    error.
+    """
+    with assert_raises(ValueError):
+        CostEvaluator(load_penalties, tw_penalty, dist_penalty)
 
 
 @pytest.mark.parametrize("load_penalty", (2, 4))

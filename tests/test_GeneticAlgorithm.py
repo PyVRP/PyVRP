@@ -22,42 +22,46 @@ from tests.helpers import read_solution
 
 
 @mark.parametrize(
-    ("repair_probability", "nb_iter_no_improvement"),
+    ("repair_probability", "num_iters_no_improvement"),
     [
         (-0.25, 0),  # repair_probability < 0
         (1.25, 0),  # repair_probability > 1
-        (0.0, -1),  # nb_iter_no_improvement < 0
+        (0.0, -1),  # num_iters_no_improvement < 0
     ],
 )
 def test_params_constructor_raises_when_arguments_invalid(
     repair_probability: float,
-    nb_iter_no_improvement: int,
+    num_iters_no_improvement: int,
 ):
     """
     Tests that invalid configurations are not accepted.
     """
     with assert_raises(ValueError):
-        GeneticAlgorithmParams(repair_probability, nb_iter_no_improvement)
+        GeneticAlgorithmParams(repair_probability, num_iters_no_improvement)
 
 
 @mark.parametrize(
-    ("repair_probability", "nb_iter_no_improvement"),
+    ("repair_probability", "num_iters_no_improvement"),
     [
-        (0.0, 0),  # nb_iter_no_improvement == 0
+        (0.0, 0),  # num_iters_no_improvement == 0
         (0.0, 1),  # repair_probability == 0
         (1.0, 1),  # repair_probability == 1
     ],
 )
 def test_params_constructor_does_not_raise_when_arguments_valid(
     repair_probability: float,
-    nb_iter_no_improvement: int,
+    num_iters_no_improvement: int,
 ):
     """
     Tests valid boundary cases.
     """
-    params = GeneticAlgorithmParams(repair_probability, nb_iter_no_improvement)
+    params = GeneticAlgorithmParams(
+        repair_probability,
+        num_iters_no_improvement,
+    )
+
     assert_allclose(params.repair_probability, repair_probability)
-    assert_equal(params.nb_iter_no_improvement, nb_iter_no_improvement)
+    assert_equal(params.num_iters_no_improvement, num_iters_no_improvement)
 
 
 def test_raises_when_no_initial_solutions(rc208):
@@ -121,7 +125,7 @@ def test_initial_solutions_added_when_restarting(rc208):
 
     params = GeneticAlgorithmParams(
         repair_probability=0,
-        nb_iter_no_improvement=25,
+        num_iters_no_improvement=25,
     )
     algo = GeneticAlgorithm(rc208, pm, rng, pop, ls, srex, init, params=params)
 
