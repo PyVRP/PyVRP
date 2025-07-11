@@ -3,6 +3,7 @@
 #include "Exchange.h"
 #include "LocalSearch.h"
 #include "NeighbourRemoval.h"
+#include "OptionalInsert.h"
 #include "PerturbationOperator.h"
 #include "RelocateWithDepot.h"
 #include "Route.h"
@@ -27,6 +28,7 @@ using pyvrp::search::LocalSearch;
 using pyvrp::search::NeighbourRemoval;
 using pyvrp::search::NodeOperator;
 using pyvrp::search::OperatorStatistics;
+using pyvrp::search::OptionalInsert;
 using pyvrp::search::PerturbationContext;
 using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RelocateWithDepot;
@@ -332,6 +334,17 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>())  // keep data alive
         .def("__call__",
              &ChangeVehicleType::operator(),
+             py::arg("context"),
+             py::call_guard<py::gil_scoped_release>());
+
+    py::class_<OptionalInsert, PerturbationOperator>(
+        m, "OptionalInsert", DOC(pyvrp, search, OptionalInsert))
+        .def(py::init<pyvrp::ProblemData const &, size_t const>(),
+             py::arg("data"),
+             py::arg("num_perturb"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("__call__",
+             &OptionalInsert::operator(),
              py::arg("context"),
              py::call_guard<py::gil_scoped_release>());
 

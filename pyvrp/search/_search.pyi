@@ -82,6 +82,9 @@ class ChangeVehicleType(PerturbationOperator):
 class NeighbourRemoval(PerturbationOperator):
     def __init__(self, data: ProblemData, num_perturb: int) -> None: ...
 
+class OptionalInsert(PerturbationOperator):
+    def __init__(self, data: ProblemData, num_perturb: int) -> None: ...
+
 class LocalSearchStatistics:
     num_moves: int
     num_improving: int
