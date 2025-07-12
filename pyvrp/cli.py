@@ -132,7 +132,7 @@ def _solve(
         ]
     )
 
-    result = solve(data, stop, seed, bool(stats_dir), params=params)
+    result = solve(data, stop, seed, True, True, params=params)
     instance_name = data_loc.stem
 
     if stats_dir:
