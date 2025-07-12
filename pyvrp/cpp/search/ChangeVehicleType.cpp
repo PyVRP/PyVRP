@@ -26,21 +26,20 @@ void pyvrp::search::ChangeVehicleType::operator()(
 
             auto const begin = routes.begin() + offset;
             auto const end = begin + data_.vehicleType(vehType).numAvailable;
+            auto empty = std::find_if(begin, end, isEmpty);
 
-            // Find an empty route if available, otherwise the first route.
-            auto rV = std::find_if(begin, end, isEmpty);
-            if (rV == end)
-                rV = begin;
+            if (empty == end)
+                continue;
 
-            Route &routeV = *rV;
-
+            Route &routeV = *empty;
             if (routeU.numTrips() > 1 || routeV.numTrips() > 1)
                 continue;
 
             op.apply(routeU[0], routeV[0]);
             routeU.update();
             routeV.update();
-            numChanged += routeU.size() + routeV.size();
+            numChanged += routeV.size();
+            break;
         }
 
         if (numChanged >= numPerturb_)
