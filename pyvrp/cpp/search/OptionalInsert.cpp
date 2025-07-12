@@ -16,7 +16,7 @@ void pyvrp::search::OptionalInsert::operator()(
         if (clientData.required || U->route())
             continue;
 
-        Cost bestCost = INT_MAX;
+        Cost bestCost = std::numeric_limits<Cost>::max();
         Route::Node *UAfter = nullptr;
 
         for (auto const vClient : context.neighbours[client])
