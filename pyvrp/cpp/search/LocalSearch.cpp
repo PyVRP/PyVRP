@@ -179,9 +179,8 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
                                 orderVehTypes,
                                 promising};
 
-    // for (auto *op : perturbOps)
-    //     op(context)
-    (*perturbOps[0])(context);
+    for (auto *op : perturbOps)
+        (*op)(context);
 }
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
