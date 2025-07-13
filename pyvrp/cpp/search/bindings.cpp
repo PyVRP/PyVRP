@@ -8,6 +8,7 @@
 #include "PerturbationOperator.h"
 #include "RelocateWithDepot.h"
 #include "Route.h"
+#include "StringRemoval.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
 #include "SwapTails.h"
@@ -36,6 +37,7 @@ using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
 using pyvrp::search::RouteOperator;
+using pyvrp::search::StringRemoval;
 using pyvrp::search::supports;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
@@ -348,6 +350,17 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>())  // keep data alive
         .def("__call__",
              &OptionalInsert::operator(),
+             py::arg("context"),
+             py::call_guard<py::gil_scoped_release>());
+
+    py::class_<StringRemoval, PerturbationOperator>(
+        m, "StringRemoval", DOC(pyvrp, search, StringRemoval))
+        .def(py::init<pyvrp::ProblemData const &, size_t const>(),
+             py::arg("data"),
+             py::arg("num_perturb"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("__call__",
+             &StringRemoval::operator(),
              py::arg("context"),
              py::call_guard<py::gil_scoped_release>());
 
