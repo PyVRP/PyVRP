@@ -182,13 +182,13 @@ def solve(
             ls.add_route_operator(route_op(data))
 
     accept = MovingAverageThreshold(
-        eta=0.5,
-        history_size=100,
+        eta=1.0,
+        history_size=500,
         max_runtime=max_runtime,
     )
 
     cm = ConvergenceManager(initial_num_destroy=50, max_runtime=max_runtime)
     ils_args = (data, pm, rng, perturb, ls, accept, cm, params.ils)
     algo = IteratedLocalSearch(*ils_args)  # type: ignore
-    init = Solution.make_random(data, rng)
+    init = Solution(data, [])
     return algo.run(stop, init, collect_stats, display)

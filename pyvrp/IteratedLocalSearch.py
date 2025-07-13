@@ -167,11 +167,17 @@ class IteratedLocalSearch:
             diff = len(different_neighbours(current, candidate))
             self._conv_manager.register(diff)
 
-            if cand_feas and cand_cost < best_cost:  # new best
+            cand_cost = self._cost_evaluator.cost(candidate)
+            best_cost = self._cost_evaluator.cost(best)
+
+            if cand_cost < best_cost:  # new best
                 best = candidate
                 iters_no_improvement = 1
             else:
                 iters_no_improvement += 1
+
+            if not best_feas:
+                current = candidate
 
             if cand_feas and self._accept(best_cost, curr_cost, cand_cost):
                 current = candidate
