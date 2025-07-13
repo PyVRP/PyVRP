@@ -41,6 +41,6 @@ ROUTE_OPERATORS: list[Type[RouteOperator]] = [
 
 PERTURBATION_OPERATORS: list[Type[PerturbationOperator]] = [
     NeighbourRemoval,
-    # ChangeVehicleType,
+    ChangeVehicleType,
     OptionalInsert,
 ]

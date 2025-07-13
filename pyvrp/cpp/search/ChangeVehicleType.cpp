@@ -1,8 +1,22 @@
 #include "ChangeVehicleType.h"
+#include <random>
 
 void pyvrp::search::ChangeVehicleType::operator()(
     PerturbationContext const &context)
 {
+    auto const hasHeterogeneous = [](ProblemData::VehicleType const &vehType)
+    {
+        return vehType.fixedCost > 0 || vehType.unitDistanceCost != 1
+               || vehType.unitDurationCost != 0;
+    };
+    if (!std ::any_of(data_.vehicleTypes().begin(),
+                      data_.vehicleTypes().end(),
+                      hasHeterogeneous))
+        return;  // don't apply if vehicles same costs
+
+    if (std::rand() % 2 == 0)
+        return;  // skip 50% of the time
+
     if (numPerturb_ == 0)
         return;
 
