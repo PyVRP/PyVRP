@@ -43,7 +43,7 @@ def plot_solution(
     colors = plt.get_cmap("tab10")
     in_solution = np.zeros(data.num_locations, dtype=bool)
     for idx, route in enumerate(solution.routes()):
-        color = colors(idx)
+        color = colors(idx % colors.N)
         in_solution[route] = True
 
         if len(route) == 1 or plot_clients:  # explicit client coordinate plot
