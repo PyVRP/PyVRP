@@ -107,7 +107,7 @@ private:
     void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
     // Marks the given node and its direct neighbours as promising.
-    void markPromising(Route::Node *U);
+    void markPromising(Route::Node const *U);
 
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);

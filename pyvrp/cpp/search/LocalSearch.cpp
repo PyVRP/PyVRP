@@ -352,7 +352,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
     for (auto idx = range.begin(); idx != range.end() - 1; ++idx)
     {
         auto const client = inSol[*idx];
-        auto &node = nodes[client];
+        auto const &node = nodes[client];
         auto *route = node.route();
 
         markPromising(&node);
@@ -403,7 +403,7 @@ void LocalSearch::insert(Route::Node *U,
     }
 }
 
-void LocalSearch::markPromising(Route::Node *U)
+void LocalSearch::markPromising(Route::Node const *U)
 {
     assert(U->route());
 
