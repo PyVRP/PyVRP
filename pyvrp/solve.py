@@ -64,7 +64,7 @@ class SolveParams:
         perturbation_ops: list[
             type[PerturbationOperator]
         ] = PERTURBATION_OPERATORS,
-        num_perturbations: int = 12,
+        num_perturbations: int = 20,
         display_interval: float = 1.0,
     ):
         self._ils = ils
@@ -150,7 +150,7 @@ class SolveParams:
             node_ops,
             route_ops,
             perturbation_ops,
-            data.get("num_perturbations", 10),
+            data.get("num_perturbations", 20),
             data.get("display_interval", 5.0),
         )
 
