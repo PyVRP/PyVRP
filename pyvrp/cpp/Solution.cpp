@@ -168,7 +168,7 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     clients.reserve(data.numClients());
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
     {
-        pyvrp::ProblemData::Client const &clientData = data.location(idx);
+        ProblemData::Client const &clientData = data.location(idx);
         if (clientData.required || rng.rand() < 0.5)
             clients.push_back(idx);
     }

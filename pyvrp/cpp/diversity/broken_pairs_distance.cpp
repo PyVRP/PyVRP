@@ -2,8 +2,8 @@
 
 #include <limits>
 
-double pyvrp::diversity::brokenPairsDistance(pyvrp::Solution const &first,
-                                             pyvrp::Solution const &second)
+double pyvrp::diversity::brokenPairsDistance(Solution const &first,
+                                             Solution const &second)
 {
     auto const &fNeighbours = first.neighbours();
     auto const &sNeighbours = second.neighbours();

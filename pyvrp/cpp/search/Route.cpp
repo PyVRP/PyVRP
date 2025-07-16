@@ -360,7 +360,7 @@ void Route::update()
 #endif
 }
 
-std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
+std::ostream &operator<<(std::ostream &out, Route const &route)
 {
     for (size_t idx = 1; idx != route.size() - 1; ++idx)
     {
@@ -376,8 +376,7 @@ std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
     return out;
 }
 
-std::ostream &operator<<(std::ostream &out,
-                         pyvrp::search::Route::Node const &node)
+std::ostream &operator<<(std::ostream &out, Route::Node const &node)
 {
     return out << node.client();
 }
