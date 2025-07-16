@@ -31,7 +31,7 @@ pyvrp::repair::greedyRepair(std::vector<SolRoute> const &solRoutes,
         assert(!U->route());
 
         SearchRoute::Node *UAfter = nullptr;
-        pyvrp::Cost deltaCost = std::numeric_limits<pyvrp::Cost>::max();
+        auto deltaCost = std::numeric_limits<Cost>::max();
 
         for (auto &route : routes)
         {
