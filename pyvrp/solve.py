@@ -5,19 +5,20 @@ from typing import TYPE_CHECKING
 import tomli
 
 import pyvrp.search
-from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
+from pyvrp.IteratedLocalSearch import (
+    IteratedLocalSearch,
+    IteratedLocalSearchParams,
+)
 from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
-from pyvrp.Population import Population, PopulationParams
 from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
-from pyvrp.crossover import ordered_crossover as ox
-from pyvrp.crossover import selective_route_exchange as srex
-from pyvrp.diversity import broken_pairs_distance as bpd
 from pyvrp.search import (
     NODE_OPERATORS,
+    PERTURBATION_OPERATORS,
     ROUTE_OPERATORS,
     LocalSearch,
     NeighbourhoodParams,
     NodeOperator,
+    PerturbationOperator,
     RouteOperator,
     compute_neighbours,
 )
@@ -31,67 +32,70 @@ if TYPE_CHECKING:
 
 class SolveParams:
     """
-    Solver parameters for PyVRP's hybrid genetic search algorithm.
+    Solver parameters for PyVRP's iterated local search algorithm.
 
     Parameters
     ----------
-    genetic
-        Genetic algorithm parameters.
+    ils
+        Iterated local search parameters.
     penalty
         Penalty parameters.
-    population
-        Population parameters.
     neighbourhood
         Neighbourhood parameters.
     node_ops
         Node operators to use in the search.
     route_ops
         Route operators to use in the search.
+    perturbation_ops
+        Perturbation operators to use in the search.
+    num_perturbations
+        Number of perturbations to apply in each iteration. Default 10.
     display_interval
         Time (in seconds) between iteration logs. Default 5s.
     """
 
     def __init__(
         self,
-        genetic: GeneticAlgorithmParams = GeneticAlgorithmParams(),
+        ils: IteratedLocalSearchParams = IteratedLocalSearchParams(),
         penalty: PenaltyParams = PenaltyParams(),
-        population: PopulationParams = PopulationParams(),
         neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
         node_ops: list[type[NodeOperator]] = NODE_OPERATORS,
         route_ops: list[type[RouteOperator]] = ROUTE_OPERATORS,
+        perturbation_ops: list[
+            type[PerturbationOperator]
+        ] = PERTURBATION_OPERATORS,
+        num_perturbations: int = 10,
         display_interval: float = 5.0,
     ):
-        self._genetic = genetic
+        self._ils = ils
         self._penalty = penalty
-        self._population = population
         self._neighbourhood = neighbourhood
         self._node_ops = node_ops
         self._route_ops = route_ops
+        self._perturbation_ops = perturbation_ops
+        self._num_perturbations = num_perturbations
         self._display_interval = display_interval
 
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, SolveParams)
-            and self.genetic == other.genetic
+            and self.ils == other.ils
             and self.penalty == other.penalty
-            and self.population == other.population
             and self.neighbourhood == other.neighbourhood
             and self.node_ops == other.node_ops
             and self.route_ops == other.route_ops
+            and self.perturbation_ops == other.perturbation_ops
+            and self.num_perturbations == other.num_perturbations
             and self.display_interval == other.display_interval
         )
 
     @property
-    def genetic(self):
-        return self._genetic
+    def ils(self):
+        return self._ils
 
     @property
     def penalty(self):
         return self._penalty
-
-    @property
-    def population(self):
-        return self._population
 
     @property
     def neighbourhood(self):
@@ -104,6 +108,14 @@ class SolveParams:
     @property
     def route_ops(self):
         return self._route_ops
+
+    @property
+    def perturbation_ops(self):
+        return self._perturbation_ops
+
+    @property
+    def num_perturbations(self):
+        return self._num_perturbations
 
     @property
     def display_interval(self) -> float:
@@ -125,13 +137,20 @@ class SolveParams:
         if "route_ops" in data:
             route_ops = [getattr(pyvrp.search, op) for op in data["route_ops"]]
 
+        perturbation_ops = PERTURBATION_OPERATORS
+        if "perturbation_ops" in data:
+            perturbation_ops = [
+                getattr(pyvrp.search, op) for op in data["perturbation_ops"]
+            ]
+
         return cls(
-            GeneticAlgorithmParams(**data.get("genetic", {})),
+            IteratedLocalSearchParams(**data.get("ils", {})),
             PenaltyParams(**data.get("penalty", {})),
-            PopulationParams(**data.get("population", {})),
             NeighbourhoodParams(**data.get("neighbourhood", {})),
             node_ops,
             route_ops,
+            perturbation_ops,
+            data.get("num_perturbations", 10),
             data.get("display_interval", 5.0),
         )
 
@@ -183,16 +202,14 @@ def solve(
         if route_op.supports(data):
             ls.add_route_operator(route_op(data))
 
+    for perturb_op in params.perturbation_ops:
+        ls.add_perturbation_operator(
+            perturb_op(data, params.num_perturbations)
+        )
+
     pm = PenaltyManager.init_from(data, params.penalty)
-    pop = Population(bpd, params.population)
-    init = [
-        Solution.make_random(data, rng)
-        for _ in range(params.population.min_pop_size)
-    ]
+    init = Solution(data, [])  # type: ignore
 
-    # We use SREX when the instance is a proper VRP; else OX for TSP.
-    crossover = srex if data.num_vehicles > 1 else ox
-
-    gen_args = (data, pm, rng, pop, ls, crossover, init, params.genetic)
-    algo = GeneticAlgorithm(*gen_args)  # type: ignore
+    ils_args = (data, pm, rng, ls, init, params.ils)
+    algo = IteratedLocalSearch(*ils_args)  # type: ignore
     return algo.run(stop, collect_stats, display, params.display_interval)

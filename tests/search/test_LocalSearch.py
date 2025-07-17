@@ -17,6 +17,7 @@ from pyvrp.search import (
     Exchange10,
     Exchange11,
     LocalSearch,
+    NeighbourRemoval,
     NeighbourhoodParams,
     RelocateWithDepot,
     SwapRoutes,
@@ -46,6 +47,26 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     # which are not explicitly forbidden by the empty neighbourhood.
     sol = Solution.make_random(ok_small, rng)
     assert_equal(ls.search(sol, cost_evaluator), sol)
+
+
+def test_local_search_call_perturbs_solution(ok_small):
+    """
+    Tests that calling local search also perturbs a solution.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbours = compute_neighbours(ok_small)
+    ls = LocalSearch(ok_small, rng, neighbours)
+    ls.add_perturbation_operator(NeighbourRemoval(ok_small, 2))
+
+    sol = Solution.make_random(ok_small, rng)
+    cost_eval = CostEvaluator([1], 1, 0)
+
+    # ``__call__()`` should perturb the solution even though no node and route
+    # operators are added. Because of the neighbourhood removal operator, the
+    # resulting solution should have less clients than the original one.
+    perturbed = ls(sol, cost_eval)
+    assert_(perturbed != sol)
+    assert_(perturbed.num_clients() < sol.num_clients())
 
 
 @pytest.mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
@@ -297,9 +318,8 @@ def test_bugfix_vehicle_type_offsets(ok_small):
 
 def test_no_op_results_in_same_solution(ok_small):
     """
-    Tests that calling local search without first adding node or route
-    operators is a no-op, and returns the same solution as the one that was
-    given to it.
+    Tests that calling local search without first adding any operators is a
+    no-op, and returns the same solution as the one that was given to it.
     """
     rng = RandomNumberGenerator(seed=42)
 
@@ -312,6 +332,34 @@ def test_no_op_results_in_same_solution(ok_small):
     assert_equal(ls(sol, cost_eval), sol)
     assert_equal(ls.search(sol, cost_eval), sol)
     assert_equal(ls.intensify(sol, cost_eval), sol)
+    assert_equal(ls.perturb(sol, cost_eval), sol)
+
+
+def test_perturbation_no_op_makes_search_no_op(ok_small):
+    """
+    Tests that ``__call__()`` is a no-op if the perturbation step is a no-op.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+    ls.add_node_operator(Exchange10(ok_small))
+    ls.add_perturbation_operator(NeighbourRemoval(ok_small, 0))  # no-op
+
+    sol = Solution.make_random(ok_small, rng)
+    cost_evaluator = CostEvaluator([20], 6, 6)
+
+    def cost(solution):
+        return cost_evaluator.penalised_cost(solution)
+
+    # ``__call__()`` first perturbs and then searches, but only around nodes
+    # modified by the perturbation step. Since the perturbation is a no-op,
+    # the resulting search will also be a no-op.
+    improved = ls(sol, cost_evaluator)
+    assert_equal(cost(improved), cost(sol))
+
+    # Instead, directly calling ``search()`` searches around all nodes in the
+    # solution, so this will find improving moves.
+    further_improved = ls.search(improved, cost_evaluator)
+    assert_(cost(further_improved) < cost(improved))
 
 
 def test_intensify_can_improve_solution_further(rc208):
@@ -647,3 +695,24 @@ def test_node_and_route_operators_property(ok_small):
     ls.add_route_operator(route_op)
     assert_equal(len(ls.route_operators), 1)
     assert_(ls.route_operators[0] is route_op)
+
+
+def test_perturbation_operators_property(ok_small):
+    """
+    Tests adding and accessing perturbation operators to the LocalSearch
+    object.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+
+    # The local search has not yet been equipped with perturbation operators,
+    # so it should start empty.
+    assert_equal(len(ls.perturbation_operators), 0)
+
+    # Now we add a perturbation operator. The local search does not take
+    # ownership, so its only perturbation operator should be the exact same
+    # object as the one we just created.
+    perturb_op = NeighbourRemoval(ok_small, 4)
+    ls.add_perturbation_operator(perturb_op)
+    assert_equal(len(ls.perturbation_operators), 1)
+    assert_(ls.perturbation_operators[0] is perturb_op)
