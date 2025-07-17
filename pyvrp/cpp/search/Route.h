@@ -603,7 +603,7 @@ inline Route::Node *p(Route::Node *node)
 
 inline Route::Node const *p(Route::Node const *node)
 {
-    auto &route = *node->route();
+    auto const &route = *node->route();
     return route[node->idx() - 1];
 }
 
