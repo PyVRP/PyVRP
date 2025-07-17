@@ -5,7 +5,8 @@ void pyvrp::search::NeighbourRemoval::operator()(
     [[maybe_unused]] std::vector<search::Route> &routes,
     [[maybe_unused]] CostEvaluator const &costEvaluator,
     std::vector<std::vector<size_t>> const &neighbours,
-    std::vector<size_t> const &orderNodes)
+    std::vector<size_t> const &orderNodes,
+    DynamicBitset &promising)
 {
     if (numPerturb_ == 0 || data_.numClients() == 0)
         return;
@@ -18,6 +19,10 @@ void pyvrp::search::NeighbourRemoval::operator()(
         auto *U = &nodes[idx];
         if (!U->route())
             continue;
+
+        promising[U->client()] = true;
+        promising[p(U)->client()] = true;
+        promising[n(U)->client()] = true;
 
         auto *route = U->route();
         route->remove(U->idx());

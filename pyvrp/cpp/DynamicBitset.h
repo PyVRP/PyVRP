@@ -53,6 +53,7 @@ public:
     [[nodiscard]] DynamicBitset operator^(DynamicBitset const &other) const;
     [[nodiscard]] DynamicBitset operator~() const;
 
+    DynamicBitset &set();
     DynamicBitset &reset();
 };
 }  // namespace pyvrp

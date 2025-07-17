@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_PERTURBATIONOPERATOR_H
 
 #include "CostEvaluator.h"
+#include "DynamicBitset.h"
 #include "Route.h"
 
 #include <vector>
@@ -30,12 +31,15 @@ public:
      *     List of lists that defines the local search neighbourhood.
      * order_nodes
      *     Order of nodes to use when applying the perturbation operator.
+     * promising
+     *     Bitset that marks promising nodes for further evaluation.
      */
     virtual void operator()(std::vector<search::Route::Node> &nodes,
                             std::vector<search::Route> &routes,
                             CostEvaluator const &costEvaluator,
                             std::vector<std::vector<size_t>> const &neighbours,
-                            std::vector<size_t> const &orderNodes)
+                            std::vector<size_t> const &orderNodes,
+                            DynamicBitset &promising)
         = 0;
 
     virtual ~PerturbationOperator() = default;

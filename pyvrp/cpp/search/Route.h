@@ -601,10 +601,22 @@ inline Route::Node *p(Route::Node *node)
     return route[node->idx() - 1];
 }
 
+inline Route::Node const *p(Route::Node const *node)
+{
+    auto const &route = *node->route();
+    return route[node->idx() - 1];
+}
+
 /**
  * Convenience method accessing the node directly after the argument.
  */
 inline Route::Node *n(Route::Node *node)
+{
+    auto &route = *node->route();
+    return route[node->idx() + 1];
+}
+
+inline Route::Node const *n(Route::Node const *node)
 {
     auto &route = *node->route();
     return route[node->idx() + 1];
