@@ -90,8 +90,12 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             applyDepotRemovalMove(p(U), costEvaluator);
             applyDepotRemovalMove(n(U), costEvaluator);
 
-            // We next apply the regular node operators. These work on pairs
-            // of nodes (U, V), where both U and V are in the solution.
+            // We next apply the regular operators that work on pairs of nodes
+            // (U, V), where both U and V are in the solution. We only do this
+            // if U is a promising candidate for improvement.
+            if (!promising[uClient])
+                continue;
+
             for (auto const vClient : neighbours_[uClient])
             {
                 auto *V = &nodes[vClient];
@@ -161,7 +165,12 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     if (perturbOps.empty())
         return;
 
-    (*perturbOps[0])(nodes, routes, costEvaluator, neighbours_, orderNodes);
+    // Clear the set of promising nodes as perturbation will determine
+    // the initial set of promising nodes for local search.
+    promising.reset();
+
+    (*perturbOps[0])(
+        nodes, routes, costEvaluator, neighbours_, orderNodes, promising);
 }
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
@@ -190,6 +199,9 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
             [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(*rU)
                   + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
+
+            markPromising(U);
+            markPromising(V);
 
             nodeOp->apply(U, V);
             update(rU, rV);
@@ -253,6 +265,7 @@ void LocalSearch::applyDepotRemovalMove(Route::Node *U,
     // that's then unnecessary.
     if (removeCost(U, data, costEvaluator) <= 0)
     {
+        markPromising(U);
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
@@ -290,6 +303,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 
     if (!uData.required && removeCost(U, data, costEvaluator) < 0)
     {
+        markPromising(U);
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
@@ -341,6 +355,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
         auto const &node = nodes[client];
         auto *route = node.route();
 
+        markPromising(&node);
         route->remove(node.idx());
         update(route, route);
     }
@@ -354,6 +369,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
         route->remove(idx);
         route->insert(idx, U);
         update(route, route);
+        markPromising(U);
     }
 }
 
@@ -383,7 +399,21 @@ void LocalSearch::insert(Route::Node *U,
     {
         UAfter->route()->insert(UAfter->idx() + 1, U);
         update(UAfter->route(), UAfter->route());
+        markPromising(U);
     }
+}
+
+void LocalSearch::markPromising(Route::Node const *U)
+{
+    assert(U->route());
+
+    promising[U->client()] = true;
+
+    if (!U->isStartDepot())
+        promising[p(U)->client()] = true;
+
+    if (!U->isEndDepot())
+        promising[n(U)->client()] = true;
 }
 
 void LocalSearch::update(Route *U, Route *V)
@@ -412,6 +442,7 @@ void LocalSearch::loadSolution(Solution const &solution)
     std::fill(lastTestedNodes.begin(), lastTestedNodes.end(), -1);
     std::fill(lastTestedRoutes.begin(), lastTestedRoutes.end(), -1);
     std::fill(lastUpdated.begin(), lastUpdated.end(), 0);
+    promising.set();
     numUpdates_ = 0;
 
     // First empty all routes.
@@ -598,7 +629,8 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
       orderRoutes(data.numVehicles()),
       lastTestedNodes(data.numLocations()),
       lastTestedRoutes(data.numVehicles()),
-      lastUpdated(data.numVehicles())
+      lastUpdated(data.numVehicles()),
+      promising(data.numLocations())
 {
     setNeighbours(neighbours);
 
