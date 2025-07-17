@@ -4,6 +4,7 @@
 #include "CostEvaluator.h"
 #include "Measure.h"
 #include "Route.h"
+#include "Solution.h"
 
 // This file stores a few basic functions for (precisely) evaluating really
 // common moves. Those primitives may be useful implementing higher order
@@ -80,6 +81,21 @@ Cost inplaceCost(Route::Node *U,
 Cost removeCost(Route::Node *U,
                 ProblemData const &data,
                 CostEvaluator const &costEvaluator);
+
+/**
+ * Loads a Solution into search routes.
+ */
+void loadSolution(Solution const &solution,
+                  ProblemData const &data,
+                  std::vector<Route> &routes,
+                  std::vector<Route::Node> &nodes);
+
+/**
+ * Exports search routes to a Solution.
+ */
+Solution exportSolution(std::vector<Route> const &routes,
+                        ProblemData const &data);
+
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_PRIMITIVES_H

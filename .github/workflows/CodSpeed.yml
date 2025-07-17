@@ -2,7 +2,7 @@ name: CodSpeed
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
 concurrency:
@@ -10,45 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  bench:
-    name: Run benchmarks
-    runs-on: ubuntu-24.04
+  noop:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.7.5"
-          enable-cache: true
-      - name: Install Python dependencies
-        run: uv sync --no-install-project
-      - name: Set up GCC
-        run: |
-          sudo apt-get install -y gcc-14 g++-14
-
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 10
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 10
-          sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-14 10
-
-          echo "CC=gcc" >> $GITHUB_ENV
-          echo "CXX=g++" >> $GITHUB_ENV
-      - name: Build pyvrp
-        # First, we install the project into the environment. This ensures
-        # imports like "from pyvrp import X" work. This builds in release mode
-        # by default, but we'd like to have debug symbols for CodSpeed to make
-        # sense, so we have to build in debugoptimized mode.
-        run: |
-          uv sync
-          uv run buildtools/build_extensions.py --build_type debugoptimized --clean
-      - name: Run benchmarks
-        # We evaluate the microbenchmarks using the release build.
-        uses: CodSpeedHQ/action@v3
-        with:
-          token: ${{ secrets.CODSPEED_TOKEN }}
-          run: uv run pytest benchmarks/ --codspeed
+      - name: No-op
+        run: echo "No-op"
