@@ -327,11 +327,12 @@ void Route::update()
         for (size_t idx = 1; idx != nodes.size(); ++idx)
         {
             auto const prev = idx - 1;
-            auto const before = nodes[prev]->isReloadDepot()
-                                    ? loadBefore[dim][prev].finalise(capacity)
-                                    : loadBefore[dim][prev];
-
-            loadBefore[dim][idx] = LoadSegment::merge(before, loadAt[dim][idx]);
+            if (nodes[prev]->isReloadDepot())
+                loadBefore[dim][idx] = LoadSegment::merge(
+                    loadBefore[dim][prev].finalise(capacity), loadAt[dim][idx]);
+            else
+                loadBefore[dim][idx] = LoadSegment::merge(loadBefore[dim][prev],
+                                                          loadAt[dim][idx]);
         }
 
         load_[dim] = 0;
@@ -345,11 +346,12 @@ void Route::update()
         for (size_t idx = nodes.size() - 1; idx != 0; --idx)
         {
             auto const prev = idx - 1;
-            auto const after = nodes[idx]->isReloadDepot()
-                                   ? loadAfter[dim][idx].finalise(capacity)
-                                   : loadAfter[dim][idx];
-
-            loadAfter[dim][prev] = LoadSegment::merge(loadAt[dim][prev], after);
+            if (nodes[idx]->isReloadDepot())
+                loadAfter[dim][prev] = LoadSegment::merge(
+                    loadAt[dim][prev], loadAfter[dim][idx].finalise(capacity));
+            else
+                loadAfter[dim][prev] = LoadSegment::merge(loadAt[dim][prev],
+                                                          loadAfter[dim][idx]);
         }
     }
 
@@ -358,7 +360,7 @@ void Route::update()
 #endif
 }
 
-std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
+std::ostream &operator<<(std::ostream &out, Route const &route)
 {
     for (size_t idx = 1; idx != route.size() - 1; ++idx)
     {
@@ -374,8 +376,7 @@ std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route)
     return out;
 }
 
-std::ostream &operator<<(std::ostream &out,
-                         pyvrp::search::Route::Node const &node)
+std::ostream &operator<<(std::ostream &out, Route::Node const &node)
 {
     return out << node.client();
 }

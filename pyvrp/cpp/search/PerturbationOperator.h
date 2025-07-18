@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_PERTURBATIONOPERATOR_H
 
 #include "CostEvaluator.h"
+#include "DynamicBitset.h"
 #include "Route.h"
 
 #include <vector>
@@ -20,6 +21,7 @@ struct PerturbationContext
     std::vector<size_t> const &orderNodes;
     std::vector<size_t> const &orderRoutes;
     std::vector<std::pair<size_t, size_t>> const &orderVehTypes;
+    DynamicBitset &promising;
 };
 
 /**

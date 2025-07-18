@@ -601,10 +601,22 @@ inline Route::Node *p(Route::Node *node)
     return route[node->idx() - 1];
 }
 
+inline Route::Node const *p(Route::Node const *node)
+{
+    auto const &route = *node->route();
+    return route[node->idx() - 1];
+}
+
 /**
  * Convenience method accessing the node directly after the argument.
  */
 inline Route::Node *n(Route::Node *node)
+{
+    auto &route = *node->route();
+    return route[node->idx() + 1];
+}
+
+inline Route::Node const *n(Route::Node const *node)
 {
     auto &route = *node->route();
     return route[node->idx() + 1];
@@ -1066,7 +1078,10 @@ std::pair<Duration, Duration> Route::Proposal<Segments...>::duration() const
 
             if constexpr (sizeof...(args) != 0)
             {
-                if (other.startsAtReloadDepot())
+                if (other.startsAtReloadDepot() && other.size() > 1)
+                    // Only when the segment contains more than just the depot.
+                    // Checking for size speeds up the common case of a reload
+                    // depot insertion.
                     ds = ds.finaliseFront();
 
                 self(self, std::forward<decltype(args)>(args)...);
@@ -1104,7 +1119,10 @@ Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 
             if constexpr (sizeof...(args) != 0)
             {
-                if (other.endsAtReloadDepot())
+                if (other.endsAtReloadDepot() && other.size() > 1)
+                    // Only when the segment contains more than just the depot.
+                    // Checking for size speeds up the common case of a reload
+                    // depot insertion.
                     ls = ls.finalise(capacity);
 
                 self(self, std::forward<decltype(args)>(args)...);

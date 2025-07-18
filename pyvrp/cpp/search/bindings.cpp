@@ -20,6 +20,7 @@
 
 namespace py = pybind11;
 
+using pyvrp::DynamicBitset;
 using pyvrp::search::ChangeVehicleType;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
@@ -53,14 +54,16 @@ PYBIND11_MODULE(_search, m)
                       std::vector<std::vector<size_t>> const &,
                       std::vector<size_t> const &,
                       std::vector<size_t> const &,
-                      std::vector<std::pair<size_t, size_t>> const &>(),
+                      std::vector<std::pair<size_t, size_t>> const &,
+                      DynamicBitset &>(),
              py::arg("nodes"),
              py::arg("routes"),
              py::arg("cost_evaluator"),
              py::arg("neighbours"),
              py::arg("order_nodes"),
              py::arg("order_routes"),
-             py::arg("order_veh_types"))
+             py::arg("order_veh_types"),
+             py::arg("context"))
         .def_property_readonly(
             "nodes",
             [](PerturbationContext const &ctx)

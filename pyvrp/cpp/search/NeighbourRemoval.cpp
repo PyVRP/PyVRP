@@ -15,6 +15,10 @@ void pyvrp::search::NeighbourRemoval::operator()(
         if (!U->route())
             continue;
 
+        context.promising[U->client()] = true;
+        context.promising[p(U)->client()] = true;
+        context.promising[n(U)->client()] = true;
+
         auto *route = U->route();
         route->remove(U->idx());
         route->update();

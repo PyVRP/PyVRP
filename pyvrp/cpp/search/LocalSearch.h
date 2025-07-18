@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_LOCALSEARCH_H
 
 #include "CostEvaluator.h"
+#include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
 #include "PerturbationOperator.h"
 #include "ProblemData.h"
@@ -63,6 +64,8 @@ private:
     std::vector<int> lastTestedNodes;   // tracks node operator evaluation
     std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
     std::vector<int> lastUpdated;       // tracks when routes were last modified
+    DynamicBitset promising;            // tracks which nodes are likely to be
+                                        // improved by node ops
 
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
@@ -102,6 +105,9 @@ private:
 
     // Tests moves involving clients in client groups.
     void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
+
+    // Marks the given node and its direct neighbours as promising.
+    void markPromising(Route::Node const *U);
 
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);

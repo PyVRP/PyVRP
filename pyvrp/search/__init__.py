@@ -34,10 +34,7 @@ NODE_OPERATORS: list[Type[NodeOperator]] = [
     RelocateWithDepot,
 ]
 
-ROUTE_OPERATORS: list[Type[RouteOperator]] = [
-    SwapRoutes,
-    SwapStar,
-]
+ROUTE_OPERATORS: list[Type[RouteOperator]] = []
 
 PERTURBATION_OPERATORS: list[Type[PerturbationOperator]] = [
     NeighbourRemoval,
