@@ -108,10 +108,10 @@ class IteratedLocalSearch:
     ) -> bool:
         R"""
         Returns whether the candidate solution should be accepted or not.
-        A candidate solution is accepted if it is feasible and better than a
-        threshold value based on the objective values of recently observed
-        candidate solutions. Specifically, the threshold value is a convex
-        combination of the recent best and average values, computed as:
+        A candidate solution is accepted if it is better than a threshold value
+        based on the objective values of recently observed candidate solutions.
+        Specifically, the threshold value is a convex combination of the recent
+        best and average values, computed as:
 
         .. math::
 
@@ -162,20 +162,11 @@ class IteratedLocalSearch:
             *European Journal of Operational Research* 294 (3): 1108 - 1119.
             https://doi.org/10.1016/j.ejor.2021.02.024.
         """
-        if not best.is_feasible():  # then always accept candidates
-            if candidate.is_feasible():
-                cand_cost = self._cost_evaluator.cost(candidate)
-                self._history.append(cand_cost)
-
-            return True
-
-        if not candidate.is_feasible():
-            # Don't accept infeasible solutions and don't register their
-            # cost, as it would skew the history costs.
-            return False
-
-        cand_cost = self._cost_evaluator.cost(candidate)
+        cand_cost = self._cost_evaluator.penalised_cost(candidate)
         self._history.append(cand_cost)
+
+        if not best.is_feasible():  # then always accept candidates
+            return True
 
         recent_best = min(self._history)
         recent_avg = fmean(self._history)
