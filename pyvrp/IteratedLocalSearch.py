@@ -225,12 +225,6 @@ class IteratedLocalSearch:
             candidate = self._search(current, self._cost_evaluator)
             self._pm.register(candidate)
 
-            if not candidate.is_feasible():
-                candidate = self._search(
-                    candidate, self._booster_cost_evaluator
-                )
-                self._pm.register(candidate)
-
             stats.collect(current, candidate, best, self._cost_evaluator)
             print_progress.iteration(stats)
 
