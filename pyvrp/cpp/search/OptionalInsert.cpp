@@ -61,6 +61,10 @@ void pyvrp::search::OptionalInsert::operator()(
         UAfter->route()->insert(UAfter->idx() + 1, U);
         UAfter->route()->update();
 
+        context.promising[U->client()] = true;
+        context.promising[p(U)->client()] = true;
+        context.promising[n(U)->client()] = true;
+
         if (++numInserts >= numPerturb_)
             break;
     }
