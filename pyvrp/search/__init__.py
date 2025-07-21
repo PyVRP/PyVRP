@@ -37,7 +37,7 @@ NODE_OPERATORS: list[Type[NodeOperator]] = [
 ROUTE_OPERATORS: list[Type[RouteOperator]] = []
 
 PERTURBATION_OPERATORS: list[Type[PerturbationOperator]] = [
-    # NeighbourRemoval,
+    NeighbourRemoval,
     OptionalInsert,
-    StringRemoval,
+    # StringRemoval,
 ]
