@@ -64,8 +64,8 @@ class SolveParams:
         perturbation_ops: list[
             type[PerturbationOperator]
         ] = PERTURBATION_OPERATORS,
-        display_interval: float = 5.0,
         num_perturbations: int = 20,
+        display_interval: float = 5.0,
     ):
         self._ils = ils
         self._penalty = penalty

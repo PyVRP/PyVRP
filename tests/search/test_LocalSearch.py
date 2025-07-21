@@ -616,7 +616,7 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     sol = Solution(data, [route1, route2])
 
     cost_eval = CostEvaluator([1_000], 0, 0)
-    improved = ls(sol, cost_eval)
+    improved = ls.search(sol, cost_eval)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
     # The local search should have removed the reload depot from the first
