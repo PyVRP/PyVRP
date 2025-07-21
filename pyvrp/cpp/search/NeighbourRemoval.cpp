@@ -1,7 +1,8 @@
 #include "NeighbourRemoval.h"
 
-void pyvrp::search::NeighbourRemoval::operator()(
-    PerturbationContext const &context)
+using pyvrp::search::NeighbourRemoval;
+
+void NeighbourRemoval::operator()(PerturbationContext const &context)
 {
     if (numPerturb_ == 0 || data_.numClients() == 0)
         return;
@@ -28,8 +29,8 @@ void pyvrp::search::NeighbourRemoval::operator()(
     }
 }
 
-pyvrp::search::NeighbourRemoval::NeighbourRemoval(ProblemData const &data,
-                                                  size_t const numPerturb)
+NeighbourRemoval::NeighbourRemoval(ProblemData const &data,
+                                   size_t const numPerturb)
     : data_(data), numPerturb_(numPerturb)
 {
 }

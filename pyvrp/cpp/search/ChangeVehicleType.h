@@ -33,6 +33,7 @@ public:
     void operator()(PerturbationContext const &context) override;
 };
 
+template <> bool supports<ChangeVehicleType>(ProblemData const &data);
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_CHANGEVEHICLETYPE_H_

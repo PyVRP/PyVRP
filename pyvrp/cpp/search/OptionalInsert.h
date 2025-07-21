@@ -31,6 +31,7 @@ public:
     void operator()(PerturbationContext const &context) override;
 };
 
+template <> bool supports<OptionalInsert>(ProblemData const &data);
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_OPTIONAL_INSERT_H

@@ -203,9 +203,10 @@ def solve(
             ls.add_route_operator(route_op(data))
 
     for perturb_op in params.perturbation_ops:
-        ls.add_perturbation_operator(
-            perturb_op(data, params.num_perturbations)
-        )
+        if perturb_op.supports(data):
+            ls.add_perturbation_operator(
+                perturb_op(data, params.num_perturbations)
+            )
 
     pm = PenaltyManager.init_from(data, params.penalty)
     init = Solution(data, [])  # type: ignore

@@ -3,6 +3,7 @@
 
 #include "CostEvaluator.h"
 #include "DynamicBitset.h"
+#include "LocalSearchOperator.h"
 #include "Route.h"
 
 #include <vector>
@@ -38,6 +39,7 @@ public:
 
     virtual ~PerturbationOperator() = default;
 };
+
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_PERTURBATIONOPERATOR_H

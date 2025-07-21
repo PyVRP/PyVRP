@@ -1,5 +1,5 @@
 import pytest
-from numpy.testing import assert_equal
+from numpy.testing import assert_, assert_equal
 
 from pyvrp import CostEvaluator, RandomNumberGenerator, Solution
 from pyvrp.search import LocalSearch, OptionalInsert
@@ -52,3 +52,12 @@ def test_insert_correct_number_of_clients(ok_small_prizes, num_perturb: int):
 
     perturbed = ls.perturb(sol, cost_eval)
     assert_equal(perturbed.num_clients(), sol.num_clients() + num_perturb)
+
+
+def test_supports(ok_small, ok_small_prizes):
+    """
+    Tests that OptionalInsert does not support instances without optional
+    clients.
+    """
+    assert_(not OptionalInsert.supports(ok_small))  # no optional clients
+    assert_(OptionalInsert.supports(ok_small_prizes))  # has optional clients

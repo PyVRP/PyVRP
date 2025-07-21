@@ -1,8 +1,9 @@
 #include "OptionalInsert.h"
 #include "primitives.h"
 
-void pyvrp::search::OptionalInsert::operator()(
-    PerturbationContext const &context)
+using pyvrp::search::OptionalInsert;
+
+void OptionalInsert::operator()(PerturbationContext const &context)
 {
     if (numPerturb_ == 0 || data_.numClients() == 0)
         return;
@@ -70,8 +71,15 @@ void pyvrp::search::OptionalInsert::operator()(
     }
 }
 
-pyvrp::search::OptionalInsert::OptionalInsert(ProblemData const &data,
-                                              size_t const numPerturb)
+OptionalInsert::OptionalInsert(ProblemData const &data, size_t const numPerturb)
     : data_(data), numPerturb_(numPerturb)
 {
+}
+
+template <>
+bool pyvrp::search::supports<OptionalInsert>(ProblemData const &data)
+{
+    // Only support OptionalInsert if the problem has optional clients.
+    auto const pred = [](auto const &client) { return !client.required; };
+    return std::any_of(data.clients().begin(), data.clients().end(), pred);
 }

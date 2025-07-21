@@ -268,7 +268,8 @@ PYBIND11_MODULE(_search, m)
         .def("__call__",
              &NeighbourRemoval::operator(),
              py::arg("context"),
-             py::call_guard<py::gil_scoped_release>());
+             py::call_guard<py::gil_scoped_release>())
+        .def_static("supports", &supports<NeighbourRemoval>, py::arg("data"));
 
     py::class_<ChangeVehicleType, PerturbationOperator>(
         m, "ChangeVehicleType", DOC(pyvrp, search, ChangeVehicleType))
@@ -279,7 +280,8 @@ PYBIND11_MODULE(_search, m)
         .def("__call__",
              &ChangeVehicleType::operator(),
              py::arg("context"),
-             py::call_guard<py::gil_scoped_release>());
+             py::call_guard<py::gil_scoped_release>())
+        .def_static("supports", &supports<ChangeVehicleType>, py::arg("data"));
 
     py::class_<OptionalInsert, PerturbationOperator>(
         m, "OptionalInsert", DOC(pyvrp, search, OptionalInsert))
@@ -290,7 +292,8 @@ PYBIND11_MODULE(_search, m)
         .def("__call__",
              &OptionalInsert::operator(),
              py::arg("context"),
-             py::call_guard<py::gil_scoped_release>());
+             py::call_guard<py::gil_scoped_release>())
+        .def_static("supports", &supports<OptionalInsert>, py::arg("data"));
 
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))

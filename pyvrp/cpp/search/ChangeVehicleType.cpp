@@ -1,7 +1,8 @@
 #include "ChangeVehicleType.h"
 
-void pyvrp::search::ChangeVehicleType::operator()(
-    PerturbationContext const &context)
+using pyvrp::search::ChangeVehicleType;
+
+void ChangeVehicleType::operator()(PerturbationContext const &context)
 {
     if (numPerturb_ == 0)
         return;
@@ -44,8 +45,25 @@ void pyvrp::search::ChangeVehicleType::operator()(
     }
 }
 
-pyvrp::search::ChangeVehicleType::ChangeVehicleType(ProblemData const &data,
-                                                    size_t const numPerturb)
+ChangeVehicleType::ChangeVehicleType(ProblemData const &data,
+                                     size_t const numPerturb)
     : data_(data), numPerturb_(numPerturb), op(data)
 {
+}
+
+template <>
+bool pyvrp::search::supports<ChangeVehicleType>(ProblemData const &data)
+{
+    // Only support ChangingVehicleType if there are multiple vehicle types
+    // with different fixed costs.
+    if (data.numVehicleTypes() == 1)
+        return false;
+
+    Cost fixedCost = data.vehicleType(0).fixedCost;
+
+    for (size_t idx = 1; idx < data.numVehicleTypes(); ++idx)
+        if (data.vehicleType(idx).fixedCost != fixedCost)
+            return true;
+
+    return false;
 }

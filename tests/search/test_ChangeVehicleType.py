@@ -1,6 +1,13 @@
-from numpy.testing import assert_equal
+from numpy.testing import assert_, assert_equal
 
-from pyvrp import CostEvaluator, RandomNumberGenerator, Route, Solution, Trip
+from pyvrp import (
+    CostEvaluator,
+    Model,
+    RandomNumberGenerator,
+    Route,
+    Solution,
+    Trip,
+)
 from pyvrp.search import ChangeVehicleType, LocalSearch
 from pyvrp.search.neighbourhood import compute_neighbours
 
@@ -125,3 +132,17 @@ def test_change_vehicle_type_multiple_trips_no_op(ok_small_multiple_trips):
 
     # No swap occurs because the route has multiple trips.
     assert_equal(perturbed, sol)
+
+
+def test_supports(ok_small):
+    """
+    Tests that ChangeVehicleType does not support instances with uniform fixed
+    costs.
+    """
+    model = Model()
+    model.add_depot(0, 0)
+    model.add_vehicle_type(1, 1, fixed_cost=1)
+    assert_(not ChangeVehicleType.supports(model.data()))
+
+    model.add_vehicle_type(2, 1, fixed_cost=2)
+    assert_(ChangeVehicleType.supports(model.data()))
