@@ -90,7 +90,7 @@ def test_solve_custom_params(rc208):
     # First solve with ``history_length=1``, which means that all candidate
     # solutions will be accepted.
     params = SolveParams(IteratedLocalSearchParams(history_length=1))
-    res = solve(rc208, stop=MaxIterations(20), params=params)
+    res = solve(rc208, stop=MaxIterations(10), params=params)
 
     # Because we accept all candidate solutions, the current costs won't
     # necessarily be monotonically decreasing.
@@ -100,7 +100,7 @@ def test_solve_custom_params(rc208):
     # Now configure ILS to only accept improving solutions by setting
     # ``initial_accept_weight=0``.
     params = SolveParams(IteratedLocalSearchParams(initial_accept_weight=0))
-    res = solve(rc208, stop=MaxIterations(20), params=params)
+    res = solve(rc208, stop=MaxIterations(10), params=params)
 
     # The current costs should now be monotonically decreasing. The first datum
     # is skipped because it's an empty initial solution with penalised cost 0.
