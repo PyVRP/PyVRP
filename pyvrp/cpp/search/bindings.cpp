@@ -20,7 +20,6 @@
 
 namespace py = pybind11;
 
-using pyvrp::DynamicBitset;
 using pyvrp::search::ChangeVehicleType;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
@@ -30,7 +29,6 @@ using pyvrp::search::NeighbourRemoval;
 using pyvrp::search::NodeOperator;
 using pyvrp::search::OperatorStatistics;
 using pyvrp::search::OptionalInsert;
-using pyvrp::search::PerturbationContext;
 using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
@@ -46,63 +44,6 @@ PYBIND11_MODULE(_search, m)
     py::class_<NodeOperator>(m, "NodeOperator");
     py::class_<RouteOperator>(m, "RouteOperator");
     py::class_<PerturbationOperator>(m, "PerturbationOperator");
-
-    py::class_<PerturbationContext>(m, "PerturbationContext")
-        .def(py::init<std::vector<pyvrp::search::Route::Node> &,
-                      std::vector<pyvrp::search::Route> &,
-                      pyvrp::CostEvaluator const &,
-                      std::vector<std::vector<size_t>> const &,
-                      std::vector<size_t> const &,
-                      std::vector<size_t> const &,
-                      std::vector<std::pair<size_t, size_t>> const &,
-                      DynamicBitset &>(),
-             py::arg("nodes"),
-             py::arg("routes"),
-             py::arg("cost_evaluator"),
-             py::arg("neighbours"),
-             py::arg("order_nodes"),
-             py::arg("order_routes"),
-             py::arg("order_veh_types"),
-             py::arg("context"))
-        .def_property_readonly(
-            "nodes",
-            [](PerturbationContext const &ctx)
-                -> std::vector<pyvrp::search::Route::Node> const &
-            { return ctx.nodes; },
-            py::return_value_policy::reference_internal)
-        .def_property_readonly(
-            "routes",
-            [](PerturbationContext const &ctx)
-                -> std::vector<pyvrp::search::Route> const &
-            { return ctx.routes; },
-            py::return_value_policy::reference_internal)
-        .def_property_readonly(
-            "cost_evaluator",
-            [](PerturbationContext const &ctx) -> pyvrp::CostEvaluator const &
-            { return ctx.costEvaluator; },
-            py::return_value_policy::reference_internal)
-        .def_property_readonly(
-            "neighbours",
-            [](PerturbationContext const &ctx)
-                -> std::vector<std::vector<size_t>> const &
-            { return ctx.neighbours; },
-            py::return_value_policy::reference_internal)
-        .def_property_readonly(
-            "order_nodes",
-            [](PerturbationContext const &ctx) -> std::vector<size_t> const &
-            { return ctx.orderNodes; },
-            py::return_value_policy::reference_internal)
-        .def_property_readonly(
-            "order_routes",
-            [](PerturbationContext const &ctx) -> std::vector<size_t> const &
-            { return ctx.orderRoutes; },
-            py::return_value_policy::reference_internal)
-        .def_property_readonly(
-            "order_veh_types",
-            [](PerturbationContext const &ctx)
-                -> std::vector<std::pair<size_t, size_t>> const &
-            { return ctx.orderVehTypes; },
-            py::return_value_policy::reference_internal);
 
     py::class_<OperatorStatistics>(
         m, "OperatorStatistics", DOC(pyvrp, search, OperatorStatistics))
