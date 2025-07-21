@@ -6,25 +6,21 @@ void pyvrp::search::ChangeVehicleType::operator()(
     if (numPerturb_ == 0)
         return;
 
-    auto const &orderVehTypes = context.orderVehTypes;
-    auto const &orderRoutes = context.orderRoutes;
-    auto &routes = context.routes;
-
     auto const isEmpty = [](auto const &route) { return route.empty(); };
     size_t numChanged = 0;
 
-    for (auto const idx : orderRoutes)
+    for (auto const idx : context.orderRoutes)
     {
-        auto &routeU = routes[idx];
-        if (routeU.empty())
+        auto &routeU = context.routes[idx];
+        if (routeU.empty() || routeU.numTrips() > 1)
             continue;
 
-        for (auto const &[vehType, offset] : orderVehTypes)
+        for (auto const &[vehType, offset] : context.orderVehTypes)
         {
             if (routeU.vehicleType() == vehType)
                 continue;  // skip routes of the same type
 
-            auto const begin = routes.begin() + offset;
+            auto const begin = context.routes.begin() + offset;
             auto const end = begin + data_.vehicleType(vehType).numAvailable;
             auto empty = std::find_if(begin, end, isEmpty);
 
@@ -32,13 +28,14 @@ void pyvrp::search::ChangeVehicleType::operator()(
                 continue;
 
             Route &routeV = *empty;
-            if (routeU.numTrips() > 1 || routeV.numTrips() > 1)
-                continue;
-
             op.apply(routeU[0], routeV[0]);
             routeU.update();
             routeV.update();
+
             numChanged += routeV.size();
+            for (auto const *node : routeV)
+                context.promising[node->client()] = true;
+
             break;
         }
 

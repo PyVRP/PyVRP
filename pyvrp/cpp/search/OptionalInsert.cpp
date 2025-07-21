@@ -7,25 +7,30 @@ void pyvrp::search::OptionalInsert::operator()(
     if (numPerturb_ == 0 || data_.numClients() == 0)
         return;
 
+    auto const &costEvaluator = context.costEvaluator;
     size_t numInserts = 0;
 
-    for (auto const client : context.orderNodes)
+    for (auto const uClient : context.orderNodes)
     {
-        auto *U = &context.nodes[client];
-        ProblemData::Client clientData = data_.location(client);
-        if (clientData.required || U->route())
+        ProblemData::Client clientData = data_.location(uClient);
+        if (clientData.required)
             continue;
 
-        Cost bestCost = std::numeric_limits<Cost>::max();
-        Route::Node *UAfter = nullptr;
+        auto *U = &context.nodes[uClient];
+        if (U->route())
+            continue;
 
-        for (auto const vClient : context.neighbours[client])
+        Route::Node *UAfter = nullptr;
+        Cost bestCost = std::numeric_limits<Cost>::max();
+
+        for (auto const vClient : context.neighbours[uClient])
         {
             auto *V = &context.nodes[vClient];
+
             if (!V->route())
                 continue;
 
-            auto const cost = insertCost(U, V, data_, context.costEvaluator);
+            auto const cost = insertCost(U, V, data_, costEvaluator);
             if (cost < bestCost)
             {
                 bestCost = cost;
@@ -39,10 +44,10 @@ void pyvrp::search::OptionalInsert::operator()(
         auto const end = begin + data_.vehicleType(vehType).numAvailable;
         auto const isEmpty = [](auto const &route) { return route.empty(); };
         auto empty = std::find_if(begin, end, isEmpty);
+
         if (empty != end)
         {
-            auto const cost
-                = insertCost(U, (*empty)[0], data_, context.costEvaluator);
+            auto const cost = insertCost(U, (*empty)[0], data_, costEvaluator);
             if (cost < bestCost)
             {
                 bestCost = cost;

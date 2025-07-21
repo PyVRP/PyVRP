@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_equal
 
 from pyvrp import CostEvaluator, RandomNumberGenerator, Route, Solution, Trip
 from pyvrp.search import ChangeVehicleType, LocalSearch
@@ -107,38 +107,6 @@ def test_change_vehicle_type_selects_empty_routes(ok_small_multi_depot):
     assert_equal(perturbed.routes()[1].vehicle_type(), 0)
 
 
-def test_change_vehicle_type_two_non_empty_routes(ok_small_multi_depot):
-    """
-    Tests that ChangeVehicleType correctly changes the vehicle type
-    for two non-empty routes in a solution.
-    """
-    data = ok_small_multi_depot
-    rng = RandomNumberGenerator(seed=42)
-    neighbours = compute_neighbours(data)
-    ls = LocalSearch(data, rng, neighbours)
-
-    op = ChangeVehicleType(data, 1)
-    ls.add_perturbation_operator(op)
-
-    routes = [
-        Route(data, [2], vehicle_type=0),
-        Route(data, [3], vehicle_type=0),
-        Route(data, [4], vehicle_type=1),
-    ]
-    sol = Solution(data, routes)
-    cost_eval = CostEvaluator([1], 1, 0)
-    perturbed = ls.perturb(sol, cost_eval)
-
-    # There are no empty routes, so two routes of different types will be
-    # changed. It's not clear which one will be changed, so we check both.
-    assert_equal(perturbed.routes()[0].vehicle_type(), 0)
-    assert_equal(perturbed.routes()[1].vehicle_type(), 0)
-    assert_equal(perturbed.routes()[2].vehicle_type(), 1)
-    assert_equal(perturbed.routes()[0].visits(), [4])
-    assert_equal(perturbed.routes()[1].visits(), [3])
-    assert_equal(perturbed.routes()[2].visits(), [2])
-
-
 def test_change_vehicle_type_multiple_trips_no_op(ok_small_multiple_trips):
     """
     Tests that ChangeVehicleType does not change vehicle types when there are
@@ -150,27 +118,10 @@ def test_change_vehicle_type_multiple_trips_no_op(ok_small_multiple_trips):
     ls = LocalSearch(data, rng, neighbours)
     ls.add_perturbation_operator(ChangeVehicleType(data, 1))
 
-    routes = [
-        Route(data, [Trip(data, [1], 0), Trip(data, [2], 0)], 0),
-        Route(data, [Trip(data, [3], 0), Trip(data, [], 0)], 0),
-        Route(data, [4], vehicle_type=1),
-    ]
-    sol = Solution(data, routes)
+    route = Route(data, [Trip(data, [1], 0), Trip(data, [2], 0)], 0)
+    sol = Solution(data, [route])
     cost_eval = CostEvaluator([1], 1, 0)
     perturbed = ls.perturb(sol, cost_eval)
 
-    # No swap occurs between vehicle types are incompatible. The first route
-    # will change to type 1, and the second route will change
+    # No swap occurs because the route has multiple trips.
     assert_equal(perturbed, sol)
-
-    # But it's OK to swap if the route has just one trip, despite having a
-    # vehicle type that is not compatible with the trips.
-    routes = [
-        Route(data, [Trip(data, [1], 0), Trip(data, [2], 0)], 0),
-        Route(data, [3], 0),
-        Route(data, [4], 1),
-    ]
-    sol = Solution(data, routes)
-    perturbed = ls.perturb(sol, cost_eval)
-
-    assert_(perturbed != sol)

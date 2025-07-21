@@ -9,7 +9,7 @@ namespace pyvrp::search
 {
 /**
  * Change vehicle type perturbation operator. This operator selects a random
- * non-empty route and changes its vehicle type to a different one.
+ * non-empty route and changes its vehicle type.
  */
 class ChangeVehicleType : public PerturbationOperator
 {

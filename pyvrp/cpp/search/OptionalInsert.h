@@ -4,15 +4,11 @@
 #include "PerturbationOperator.h"
 #include "ProblemData.h"
 
-#include <vector>
-
 namespace pyvrp::search
 {
 /**
- * Optional insert perturbation operator. This operator removes a random
- * subset of clients from the solution and then attempts to reinsert them
- * using a probabilistic acceptance criterion. Clients that are not
- * reinserted are left unassigned in the solution.
+ * Optional insert perturbation operator. This operator inserts optional clients
+ * into the solution, if they are not already present.
  */
 class OptionalInsert : public PerturbationOperator
 {
