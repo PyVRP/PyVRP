@@ -20,7 +20,7 @@ def test_change_vehicle_type_no_op_single_vehicle_type(ok_small):
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(ok_small)
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_perturbation_operator(ChangeVehicleType(ok_small, 1))
+    ls.add_perturbation_operator(ChangeVehicleType(ok_small))
 
     sol = Solution.make_random(ok_small, rng)
     cost_eval = CostEvaluator([1], 1, 0)
@@ -38,7 +38,7 @@ def test_change_vehicle_type_no_op_empty_solution(ok_small_multi_depot):
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(ok_small_multi_depot)
     ls = LocalSearch(ok_small_multi_depot, rng, neighbours)
-    ls.add_perturbation_operator(ChangeVehicleType(ok_small_multi_depot, 1))
+    ls.add_perturbation_operator(ChangeVehicleType(ok_small_multi_depot))
 
     sol = Solution(ok_small_multi_depot, [])
     cost_eval = CostEvaluator([1], 1, 0)
@@ -55,7 +55,7 @@ def test_change_vehicle_type_no_op_zero_perturbations(ok_small_multi_depot):
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(ok_small_multi_depot)
     ls = LocalSearch(ok_small_multi_depot, rng, neighbours)
-    ls.add_perturbation_operator(ChangeVehicleType(ok_small_multi_depot, 0))
+    ls.add_perturbation_operator(ChangeVehicleType(ok_small_multi_depot))
 
     sol = Solution.make_random(ok_small_multi_depot, rng)
     cost_eval = CostEvaluator([1], 1, 0)
@@ -74,44 +74,11 @@ def test_change_vehicle_type_can_be_instantiated(ok_small_multi_depot):
     neighbours = compute_neighbours(ok_small_multi_depot)
     ls = LocalSearch(ok_small_multi_depot, rng, neighbours)
 
-    op = ChangeVehicleType(ok_small_multi_depot, 1)
+    op = ChangeVehicleType(ok_small_multi_depot)
     ls.add_perturbation_operator(op)
 
     assert_equal(len(ls.perturbation_operators), 1)
     assert_equal(ls.perturbation_operators[0], op)
-
-
-def test_change_vehicle_type_selects_empty_routes(ok_small_multi_depot):
-    """
-    Tests that ChangeVehicleType selects empty routes to schange, if available.
-    """
-    data = ok_small_multi_depot
-    rng = RandomNumberGenerator(seed=42)
-    neighbours = compute_neighbours(data)
-    ls = LocalSearch(data, rng, neighbours)
-
-    op = ChangeVehicleType(data, 1)
-    ls.add_perturbation_operator(op)
-
-    routes = [
-        Route(data, [2], vehicle_type=0),
-        Route(data, [3], vehicle_type=1),
-    ]
-    sol = Solution(data, routes)
-    cost_eval = CostEvaluator([1], 1, 0)
-    perturbed = ls.perturb(sol, cost_eval)
-
-    # TODO this is an annoying test because I dont know the route order.
-    # There is one more vehicle type.
-    # Check that one of the routes remain intact.
-    # There are two vehicles of type 1. The second route will change to type 1,
-    # while the route 1 also stays type 1. It will be selected over the
-    # existing route.
-    # The first route will not be swapped because there are no other vehicle
-    # types.
-    # If we increase num perturb, we will end up with only 0 vehicle types.
-    assert_equal(perturbed.routes()[0].vehicle_type(), 0)
-    assert_equal(perturbed.routes()[1].vehicle_type(), 0)
 
 
 def test_change_vehicle_type_multiple_trips_no_op(ok_small_multiple_trips):
@@ -123,7 +90,7 @@ def test_change_vehicle_type_multiple_trips_no_op(ok_small_multiple_trips):
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(data)
     ls = LocalSearch(data, rng, neighbours)
-    ls.add_perturbation_operator(ChangeVehicleType(data, 1))
+    ls.add_perturbation_operator(ChangeVehicleType(data))
 
     route = Route(data, [Trip(data, [1], 0), Trip(data, [2], 0)], 0)
     sol = Solution(data, [route])
@@ -134,7 +101,7 @@ def test_change_vehicle_type_multiple_trips_no_op(ok_small_multiple_trips):
     assert_equal(perturbed, sol)
 
 
-def test_supports(ok_small):
+def test_supports():
     """
     Tests that ChangeVehicleType does not support instances with uniform fixed
     costs.

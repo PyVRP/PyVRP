@@ -58,7 +58,7 @@ def test_rc208(rc208):
     """
     assert_equal(rc208.num_vehicles, 25)
 
-    vehicle_type = minimise_fleet(rc208, MaxIterations(5))
+    vehicle_type = minimise_fleet(rc208, MaxIterations(10))
     data = rc208.replace(vehicle_types=[vehicle_type])
     assert_(data.num_vehicles < rc208.num_vehicles)
 

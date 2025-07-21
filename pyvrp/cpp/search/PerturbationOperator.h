@@ -23,6 +23,7 @@ struct PerturbationContext
     std::vector<size_t> const &orderRoutes;
     std::vector<std::pair<size_t, size_t>> const &orderVehTypes;
     DynamicBitset &promising;
+    size_t const numPerturb;
 };
 
 /**

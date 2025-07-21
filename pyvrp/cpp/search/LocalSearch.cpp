@@ -177,7 +177,8 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
                                 orderNodes,
                                 orderRoutes,
                                 orderVehTypes,
-                                promising};
+                                promising,
+                                numPerturb_};
     (*perturbOps[0])(context);
 }
 
@@ -610,6 +611,13 @@ LocalSearch::Neighbours const &LocalSearch::neighbours() const
 {
     return neighbours_;
 }
+
+void LocalSearch::setNumPerturbations(size_t numPerturb)
+{
+    numPerturb_ = numPerturb;
+}
+
+size_t LocalSearch::numPerturbations() const { return numPerturb_; }
 
 LocalSearch::Statistics LocalSearch::statistics() const
 {

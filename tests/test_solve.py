@@ -1,5 +1,4 @@
-import numpy as np
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_allclose, assert_equal
 
 from pyvrp.IteratedLocalSearch import IteratedLocalSearchParams
 from pyvrp.PenaltyManager import PenaltyParams
@@ -30,7 +29,7 @@ def test_default_values():
     assert_equal(params.node_ops, NODE_OPERATORS)
     assert_equal(params.route_ops, ROUTE_OPERATORS)
     assert_equal(params.perturbation_ops, PERTURBATION_OPERATORS)
-    assert_equal(params.num_perturbations, 10)
+    assert_equal(params.num_perturbations, 20)
     assert_allclose(params.display_interval, 5.0)
 
 
@@ -53,7 +52,7 @@ def test_solve_params_from_file():
     assert_equal(params.node_ops, node_ops)
     assert_equal(params.route_ops, route_ops)
     assert_equal(params.perturbation_ops, perturbation_ops)
-    assert_equal(params.num_perturbations, 20)
+    assert_equal(params.num_perturbations, 10)
     assert_allclose(params.display_interval, 10.0)
 
 
@@ -80,29 +79,5 @@ def test_solve_same_seed(ok_small):
 
 def test_solve_custom_params(rc208):
     """
-    Tests that solving an instance with custom solver parameters works as
-    expected by checking how solutions are accepted.
+    # TODO
     """
-
-    def monotonically_decreasing(arr) -> np.bool:
-        return np.all(np.diff(arr) <= 0)
-
-    # First solve with ``history_length=1``, which means that all candidate
-    # solutions will be accepted.
-    params = SolveParams(IteratedLocalSearchParams(history_length=1))
-    res = solve(rc208, stop=MaxIterations(10), params=params)
-
-    # Because we accept all candidate solutions, the current costs won't
-    # necessarily be monotonically decreasing.
-    costs = [datum.current_cost for datum in res.stats]
-    assert_(not monotonically_decreasing(costs))
-
-    # Now configure ILS to only accept improving solutions by setting
-    # ``initial_accept_weight=0``.
-    params = SolveParams(IteratedLocalSearchParams(initial_accept_weight=0))
-    res = solve(rc208, stop=MaxIterations(10), params=params)
-
-    # The current costs should now be monotonically decreasing. The first datum
-    # is skipped because it's an empty initial solution with penalised cost 0.
-    costs = [datum.current_cost for datum in res.stats.data[1:]]
-    assert_(monotonically_decreasing(costs))

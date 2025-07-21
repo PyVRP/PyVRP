@@ -4,7 +4,7 @@ using pyvrp::search::ChangeVehicleType;
 
 void ChangeVehicleType::operator()(PerturbationContext const &context)
 {
-    if (numPerturb_ == 0)
+    if (context.numPerturb == 0)
         return;
 
     auto const isEmpty = [](auto const &route) { return route.empty(); };
@@ -40,14 +40,13 @@ void ChangeVehicleType::operator()(PerturbationContext const &context)
             break;
         }
 
-        if (numChanged >= numPerturb_)
+        if (numChanged >= context.numPerturb)
             break;
     }
 }
 
-ChangeVehicleType::ChangeVehicleType(ProblemData const &data,
-                                     size_t const numPerturb)
-    : data_(data), numPerturb_(numPerturb), op(data)
+ChangeVehicleType::ChangeVehicleType(ProblemData const &data)
+    : data_(data), op(data)
 {
 }
 

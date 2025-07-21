@@ -14,7 +14,6 @@ namespace pyvrp::search
 class ChangeVehicleType : public PerturbationOperator
 {
     ProblemData const &data_;
-    size_t const numPerturb_;
     SwapTails op;
 
 public:
@@ -25,10 +24,8 @@ public:
      * ----------
      * data
      *     Problem data instance.
-     * num_perturb
-     *     Maximum number of clients to change the vehicle type for.
      */
-    ChangeVehicleType(ProblemData const &data, size_t const numPerturb);
+    ChangeVehicleType(ProblemData const &data);
 
     void operator()(PerturbationContext const &context) override;
 };

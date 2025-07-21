@@ -64,8 +64,8 @@ class SolveParams:
         perturbation_ops: list[
             type[PerturbationOperator]
         ] = PERTURBATION_OPERATORS,
-        num_perturbations: int = 10,
         display_interval: float = 5.0,
+        num_perturbations: int = 20,
     ):
         self._ils = ils
         self._penalty = penalty
@@ -150,7 +150,7 @@ class SolveParams:
             node_ops,
             route_ops,
             perturbation_ops,
-            data.get("num_perturbations", 10),
+            data.get("num_perturbations", 20),
             data.get("display_interval", 5.0),
         )
 
@@ -192,7 +192,12 @@ def solve(
     """
     rng = RandomNumberGenerator(seed=seed)
     neighbours = compute_neighbours(data, params.neighbourhood)
-    ls = LocalSearch(data, rng, neighbours)
+    ls = LocalSearch(
+        data,
+        rng,
+        neighbours,
+        max_perturbations=params.num_perturbations,
+    )
 
     for node_op in params.node_ops:
         if node_op.supports(data):
@@ -204,9 +209,7 @@ def solve(
 
     for perturb_op in params.perturbation_ops:
         if perturb_op.supports(data):
-            ls.add_perturbation_operator(
-                perturb_op(data, params.num_perturbations)
-            )
+            ls.add_perturbation_operator(perturb_op(data))
 
     pm = PenaltyManager.init_from(data, params.penalty)
     init = Solution(data, [])  # type: ignore

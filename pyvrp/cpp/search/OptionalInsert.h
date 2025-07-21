@@ -13,7 +13,6 @@ namespace pyvrp::search
 class OptionalInsert : public PerturbationOperator
 {
     ProblemData const &data_;
-    size_t const numPerturb_;
 
 public:
     /**
@@ -23,10 +22,8 @@ public:
      * ----------
      * data
      *     Problem data instance.
-     * num_perturb
-     *     Maximum number of clients to remove from the solution.
      */
-    OptionalInsert(ProblemData const &data, size_t const numPerturb);
+    OptionalInsert(ProblemData const &data);
 
     void operator()(PerturbationContext const &context) override;
 };

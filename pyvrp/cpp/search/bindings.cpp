@@ -261,9 +261,8 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<NeighbourRemoval, PerturbationOperator>(
         m, "NeighbourRemoval", DOC(pyvrp, search, NeighbourRemoval))
-        .def(py::init<pyvrp::ProblemData const &, size_t const>(),
+        .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::arg("num_perturb"),
              py::keep_alive<1, 2>())  // keep data alive
         .def("__call__",
              &NeighbourRemoval::operator(),
@@ -273,9 +272,8 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<ChangeVehicleType, PerturbationOperator>(
         m, "ChangeVehicleType", DOC(pyvrp, search, ChangeVehicleType))
-        .def(py::init<pyvrp::ProblemData const &, size_t const>(),
+        .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::arg("num_perturb"),
              py::keep_alive<1, 2>())  // keep data alive
         .def("__call__",
              &ChangeVehicleType::operator(),
@@ -285,9 +283,8 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<OptionalInsert, PerturbationOperator>(
         m, "OptionalInsert", DOC(pyvrp, search, OptionalInsert))
-        .def(py::init<pyvrp::ProblemData const &, size_t const>(),
+        .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::arg("num_perturb"),
              py::keep_alive<1, 2>())  // keep data alive
         .def("__call__",
              &OptionalInsert::operator(),
@@ -311,6 +308,9 @@ PYBIND11_MODULE(_search, m)
                       &LocalSearch::neighbours,
                       &LocalSearch::setNeighbours,
                       py::return_value_policy::reference_internal)
+        .def_property("num_perturbations",
+                      &LocalSearch::numPerturbations,
+                      &LocalSearch::setNumPerturbations)
         .def_property_readonly("statistics", &LocalSearch::statistics)
         .def_property_readonly("node_operators",
                                &LocalSearch::nodeOperators,
@@ -360,7 +360,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>())
 
-        .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
+        .def("shuffle", &LocalSearch::shuffle, py::arg("rng"))
+        .def("set_num_perturbations",
+             &LocalSearch::setNumPerturbations,
+             py::arg("num_perturb"));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
         .def(py::init<pyvrp::ProblemData const &, size_t, size_t>(),

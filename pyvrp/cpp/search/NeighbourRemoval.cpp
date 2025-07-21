@@ -4,7 +4,7 @@ using pyvrp::search::NeighbourRemoval;
 
 void NeighbourRemoval::operator()(PerturbationContext const &context)
 {
-    if (numPerturb_ == 0 || data_.numClients() == 0)
+    if (context.numPerturb == 0 || data_.numClients() == 0)
         return;
 
     auto const client = context.orderNodes[0];  // random client
@@ -24,13 +24,9 @@ void NeighbourRemoval::operator()(PerturbationContext const &context)
         route->remove(U->idx());
         route->update();
 
-        if (++numRemoved == numPerturb_)
+        if (++numRemoved == context.numPerturb)
             return;
     }
 }
 
-NeighbourRemoval::NeighbourRemoval(ProblemData const &data,
-                                   size_t const numPerturb)
-    : data_(data), numPerturb_(numPerturb)
-{
-}
+NeighbourRemoval::NeighbourRemoval(ProblemData const &data) : data_(data) {}
