@@ -180,8 +180,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
                                 promising,
                                 numPerturb_};
 
-    for (auto *op : perturbOps)
-        (*op)(context);
+    (*perturbOps[0])(context);
 }
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)

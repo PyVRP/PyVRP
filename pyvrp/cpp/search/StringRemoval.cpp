@@ -10,13 +10,10 @@ void pyvrp::search::StringRemoval::operator()(
     if (data_.numClients() == 0)
         return;
 
-    auto const center = context.orderNodes[0];
-    auto const &neighbours = context.neighbours[center];
     auto const maxPerRoute = 10;
 
-    std::vector<size_t> nodes;
-    nodes.push_back(center);
-    for (auto const neighbour : neighbours)
+    std::vector<size_t> nodes = {context.orderNodes.front()};
+    for (auto const neighbour : context.neighbours[nodes.front()])
         nodes.push_back(neighbour);
 
     std::vector<size_t> removed;

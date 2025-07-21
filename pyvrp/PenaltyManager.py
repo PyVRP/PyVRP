@@ -87,10 +87,10 @@ class PenaltyParams:
     """
 
     repair_booster: int = 10
-    solutions_between_updates: int = 100
+    solutions_between_updates: int = 500
     penalty_increase: float = 1.25
     penalty_decrease: float = 0.85
-    target_feasible: float = 0.90
+    target_feasible: float = 0.85
     feas_tolerance: float = 0.05
     min_penalty: float = 0.1
     max_penalty: float = 100_000.0
