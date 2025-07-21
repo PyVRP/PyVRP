@@ -45,8 +45,11 @@ void pyvrp::search::StringRemoval::operator()(
 
             routeDestroyed++;
             if (++numDestroyed == context.numPerturb)
-                return;
+                break;
         }
+
+        if (numDestroyed == context.numPerturb)
+            break;
     }
 
     // Insert removed clients back.
