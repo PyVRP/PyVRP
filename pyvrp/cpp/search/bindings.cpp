@@ -1,5 +1,4 @@
 #include "bindings.h"
-#include "ChangeVehicleType.h"
 #include "Exchange.h"
 #include "LocalSearch.h"
 #include "NeighbourRemoval.h"
@@ -21,7 +20,6 @@
 
 namespace py = pybind11;
 
-using pyvrp::search::ChangeVehicleType;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
@@ -282,17 +280,6 @@ PYBIND11_MODULE(_search, m)
              py::arg("context"),
              py::call_guard<py::gil_scoped_release>())
         .def_static("supports", &supports<StringRemoval>, py::arg("data"));
-
-    py::class_<ChangeVehicleType, PerturbationOperator>(
-        m, "ChangeVehicleType", DOC(pyvrp, search, ChangeVehicleType))
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>())  // keep data alive
-        .def("__call__",
-             &ChangeVehicleType::operator(),
-             py::arg("context"),
-             py::call_guard<py::gil_scoped_release>())
-        .def_static("supports", &supports<ChangeVehicleType>, py::arg("data"));
 
     py::class_<OptionalInsert, PerturbationOperator>(
         m, "OptionalInsert", DOC(pyvrp, search, OptionalInsert))

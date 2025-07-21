@@ -2,7 +2,6 @@ from typing import Type
 
 from .LocalSearch import LocalSearch as LocalSearch
 from .SearchMethod import SearchMethod as SearchMethod
-from ._search import ChangeVehicleType as ChangeVehicleType
 from ._search import Exchange10 as Exchange10
 from ._search import Exchange11 as Exchange11
 from ._search import Exchange20 as Exchange20
@@ -39,7 +38,6 @@ ROUTE_OPERATORS: list[Type[RouteOperator]] = []
 
 PERTURBATION_OPERATORS: list[Type[PerturbationOperator]] = [
     # NeighbourRemoval,
-    # ChangeVehicleType,
     OptionalInsert,
     StringRemoval,
 ]
