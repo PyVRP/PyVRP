@@ -21,11 +21,11 @@ def test_neighbour_removal_no_op_empty_solution(ok_small):
     assert_equal(ls.perturb(sol, cost_eval), sol)
 
 
-def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
+def test_returns_same_solution_with_empty_neighbourhood(ok_small):
     """
-    Tests that calling the local search destroy step combined with an empty
-    neighbourhood is a no-op: since the neighbourhood removal operator uses the
-    neighours, it cannot do anything with an empty neighbourhood.
+    Tests that calling the neighbour removal combined with an empty
+    neighbourhood is a no-op: since the neighbourhood removal operator uses
+    neighbours, it cannot do anything with an empty neighbourhood.
     """
     rng = RandomNumberGenerator(seed=42)
     neighbours = [[], [], [], [], []]
