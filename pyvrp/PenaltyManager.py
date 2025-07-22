@@ -274,11 +274,17 @@ class PenaltyManager:
         """
         Registers the feasibility dimensions of the given solution.
         """
-        is_feasible = [
-            *[excess == 0 for excess in sol.excess_load()],
-            not sol.has_time_warp(),
-            not sol.has_excess_distance(),
-        ]
+        if sol.const_distance_penalty() >= 0:
+            is_feasible = [
+                *[excess == 0 for excess in sol.excess_load()],
+                not sol.has_time_warp(),
+            ]
+        else:
+            is_feasible = [
+                *[excess == 0 for excess in sol.excess_load()],
+                not sol.has_time_warp(),
+                not sol.has_excess_distance(),
+            ]
 
         for idx, is_feas in enumerate(is_feasible):
             feas_list = self._feas_lists[idx]

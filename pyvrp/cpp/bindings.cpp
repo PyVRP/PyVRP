@@ -872,6 +872,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("distance_cost",
              &Solution::distanceCost,
              DOC(pyvrp, Solution, distanceCost))
+        .def("const_distance_penalty",
+             &Solution::constDistancePenalty,
+             DOC(pyvrp, Solution, constDistancePenalty))
         .def("duration", &Solution::duration, DOC(pyvrp, Solution, duration))
         .def("duration_cost",
              &Solution::durationCost,
