@@ -4,8 +4,6 @@
 #include "PerturbationOperator.h"
 #include "ProblemData.h"
 
-#include <vector>
-
 namespace pyvrp::search
 {
 /**

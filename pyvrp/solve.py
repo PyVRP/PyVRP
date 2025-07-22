@@ -49,7 +49,7 @@ class SolveParams:
     perturbation_ops
         Perturbation operators to use in the search.
     num_perturbations
-        Number of perturbations to apply in each iteration. Default 10.
+        Maximum number of perturbations to apply in each iteration. Default 25.
     display_interval
         Time (in seconds) between iteration logs. Default 5s.
     """
@@ -150,7 +150,7 @@ class SolveParams:
             node_ops,
             route_ops,
             perturbation_ops,
-            data.get("num_perturbations", 20),
+            data.get("num_perturbations", 25),
             data.get("display_interval", 5.0),
         )
 
@@ -196,7 +196,7 @@ def solve(
         data,
         rng,
         neighbours,
-        max_perturbations=params.num_perturbations,
+        num_perturbations=params.num_perturbations,
     )
 
     for node_op in params.node_ops:
@@ -212,7 +212,7 @@ def solve(
             ls.add_perturbation_operator(perturb_op(data))
 
     pm = PenaltyManager.init_from(data, params.penalty)
-    init = Solution(data, [])  # type: ignore
+    init = ls(Solution(data, []), pm.booster_cost_evaluator())  # type: ignore
 
     ils_args = (data, pm, rng, ls, init, params.ils)
     algo = IteratedLocalSearch(*ils_args)  # type: ignore

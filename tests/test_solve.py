@@ -29,7 +29,7 @@ def test_default_values():
     assert_equal(params.node_ops, NODE_OPERATORS)
     assert_equal(params.route_ops, ROUTE_OPERATORS)
     assert_equal(params.perturbation_ops, PERTURBATION_OPERATORS)
-    assert_equal(params.num_perturbations, 20)
+    assert_equal(params.num_perturbations, 25)
     assert_allclose(params.display_interval, 5.0)
 
 
