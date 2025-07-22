@@ -297,6 +297,8 @@ private:
     std::vector<DurationSegment> durAfter;   // Dur of node -> end (incl.)
     std::vector<DurationSegment> durBefore;  // Dur of start -> node (incl.)
 
+    Distance avgSegmentDistance_ = 0; // Average distance travelled on a segment between two clients
+
 #ifndef NDEBUG
     // When debug assertions are enabled, we use this flag to check whether
     // the statistics are still in sync with the route's nodes list. Statistics
@@ -400,6 +402,16 @@ public:
      * @return Cost per unit of distance travelled on this route.
      */
     [[nodiscard]] inline Cost unitDistanceCost() const;
+
+    /**
+     * @return Total distance travelled on this route, excluding the first and last segments.
+     */
+    [[nodiscard]] inline Distance internalDistance() const;
+
+    /**
+     * @return Average distance travelled on a segment between two clients.
+     */
+    [[nodiscard]] inline Distance avgSegmentDistance() const;
 
     /**
      * @return The duration of this route.
@@ -815,6 +827,15 @@ Cost Route::distanceCost() const
 }
 
 Cost Route::unitDistanceCost() const { return vehicleType_.unitDistanceCost; }
+
+Distance Route::internalDistance() const {
+    assert(!dirty);
+    if (size() <= 3)
+        return 0;
+    return cumDist[size() - 2] - cumDist[1];
+}
+
+Distance Route::avgSegmentDistance() const { return avgSegmentDistance_; }
 
 Duration Route::duration() const
 {

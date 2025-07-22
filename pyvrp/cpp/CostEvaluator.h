@@ -77,6 +77,7 @@ class CostEvaluator
     std::vector<double> loadPenalties_;  // per load dimension
     double twPenalty_;
     double distPenalty_;
+    double distDevPenalty_;
 
     /**
      * Computes the cost penalty incurred from the given excess loads. This is
@@ -88,7 +89,8 @@ class CostEvaluator
 public:
     CostEvaluator(std::vector<double> loadPenalties,
                   double twPenalty,
-                  double distPenalty);
+                  double distPenalty,
+                  double distDevPenalty = 10);
 
     /**
      * Computes the total excess load penalty for the given load and vehicle
@@ -107,6 +109,13 @@ public:
      */
     [[nodiscard]] inline Cost distPenalty(Distance distance,
                                           Distance maxDistance) const;
+
+    /**
+     * Computes the total distance deviation penalty for the given distance.
+     */
+    [[nodiscard]] inline Cost distDevPenalty(Distance internalDistance,
+                                            Distance avgSegmentDistance,
+                                            size_t numClients) const;
 
     /**
      * Computes a smoothed objective (penalised cost) for a given solution.
@@ -222,6 +231,12 @@ Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance) const
     return static_cast<Cost>(excessDistance.get() * distPenalty_);
 }
 
+Cost CostEvaluator::distDevPenalty(Distance internalDistance, Distance avgSegmentDistance, size_t numClients) const
+{
+    auto const distDev = std::max<Distance>(static_cast<double>(internalDistance) - static_cast<double>(avgSegmentDistance) * (numClients), 0);
+    return static_cast<Cost>(distDev.get() * distDevPenalty_);
+}
+
 template <CostEvaluatable T>
 Cost CostEvaluator::penalisedCost(T const &arg) const
 {
@@ -230,7 +245,8 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
                       + (!arg.empty() ? arg.fixedVehicleCost() : 0)
                       + excessLoadPenalties(arg.excessLoad())
                       + twPenalty(arg.timeWarp())
-                      + distPenalty(arg.excessDistance(), 0);
+                      + distPenalty(arg.excessDistance(), 0)
+                      + distDevPenalty(arg.internalDistance(), arg.avgSegmentDistance(), arg.numClients());
 
     if constexpr (PrizeCostEvaluatable<T>)
         return cost + arg.uncollectedPrizes();
@@ -265,9 +281,13 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     out -= route->durationCost();
     out -= twPenalty(route->timeWarp());
 
+    out -= distDevPenalty(route->internalDistance(), route->avgSegmentDistance(), route->numClients());
+
     auto const distance = proposal.distance();
     out += route->unitDistanceCost() * static_cast<Cost>(distance);
     out += distPenalty(distance, route->maxDistance());
+
+    out += distDevPenalty(proposal.route()->internalDistance(), route->avgSegmentDistance(), proposal.route()->numClients());
 
     if constexpr (!exact)
         if (out >= 0)
@@ -305,8 +325,12 @@ bool CostEvaluator::deltaCost(Cost &out,
     out -= uRoute->distanceCost();
     out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
 
+    out -= distDevPenalty(uRoute->internalDistance(), uRoute->avgSegmentDistance(), uRoute->numClients());
+
     out -= vRoute->distanceCost();
     out -= distPenalty(vRoute->distance(), vRoute->maxDistance());
+
+    out -= distDevPenalty(vRoute->internalDistance(), vRoute->avgSegmentDistance(), vRoute->numClients());
 
     if constexpr (!skipLoad)
     {
@@ -324,9 +348,13 @@ bool CostEvaluator::deltaCost(Cost &out,
     out += uRoute->unitDistanceCost() * static_cast<Cost>(uDist);
     out += distPenalty(uDist, uRoute->maxDistance());
 
+    out += distDevPenalty(uProposal.route()->internalDistance(), uRoute->avgSegmentDistance(), uProposal.route()->numClients());
+
     auto const vDist = vProposal.distance();
     out += vRoute->unitDistanceCost() * static_cast<Cost>(vDist);
     out += distPenalty(vDist, vRoute->maxDistance());
+
+    out += distDevPenalty(vProposal.route()->internalDistance(), vRoute->avgSegmentDistance(), vProposal.route()->numClients());
 
     if constexpr (!exact)
         if (out >= 0)

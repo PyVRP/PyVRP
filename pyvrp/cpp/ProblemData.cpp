@@ -446,6 +446,16 @@ std::vector<Matrix<Duration>> const &ProblemData::durationMatrices() const
     return durs_;
 }
 
+Distance ProblemData::avgSegmentDistance() const
+{
+    return avgSegmentDistance_;
+}
+
+void ProblemData::setAvgSegmentDistance(Distance avgSegmentDistance)
+{
+    avgSegmentDistance_ = avgSegmentDistance;
+}
+
 ProblemData::ClientGroup const &ProblemData::group(size_t group) const
 {
     assert(group < groups_.size());

@@ -217,6 +217,18 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         centroid_.second += (y * trip.size()) / size();
     }
 
+    auto const &distances = data.distanceMatrix(vehData.profile);
+    internalDistance_ = 0;
+    for (size_t tripIdx = 0; tripIdx != trips_.size(); ++tripIdx)
+    {
+        auto const &trip = trips_[tripIdx];
+        if (trip.size() <= 3) {
+            continue;
+        }
+        internalDistance_ += trip.distance() - distances(trip.startDepot(), trip[0]) - distances(trip[trip.size() - 1], trip.endDepot())
+            + distances(trip[0], trip[trip.size() - 1]);
+    }
+
     distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehData.maxDistance, 0);
 
@@ -390,6 +402,8 @@ Duration Route::timeWarp() const { return timeWarp_; }
 Duration Route::waitDuration() const { return duration_ - travel_ - service_; }
 
 Duration Route::travelDuration() const { return travel_; }
+
+Distance Route::internalDistance() const { return internalDistance_; }
 
 Duration Route::startTime() const { return startTime_; }
 

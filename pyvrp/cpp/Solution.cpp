@@ -25,6 +25,7 @@ void Solution::evaluate(ProblemData const &data)
         allPrizes += client.prize;
 
     excessLoad_ = std::vector<Load>(data.numLoadDimensions(), 0);
+    avgSegmentDistance_ = data.avgSegmentDistance();
     for (auto const &route : routes_)
     {
         // Whole solution statistics.
@@ -32,6 +33,7 @@ void Solution::evaluate(ProblemData const &data)
         prizes_ += route.prizes();
         distance_ += route.distance();
         distanceCost_ += route.distanceCost();
+        internalDistance_ += route.internalDistance();
         duration_ += route.duration();
         durationCost_ += route.durationCost();
         excessDistance_ += route.excessDistance();
@@ -97,6 +99,10 @@ Distance Solution::distance() const { return distance_; }
 
 Cost Solution::distanceCost() const { return distanceCost_; }
 
+Distance Solution::internalDistance() const { return internalDistance_; }
+
+Distance Solution::avgSegmentDistance() const { return avgSegmentDistance_; }
+
 Duration Solution::duration() const { return duration_; }
 
 Cost Solution::durationCost() const { return durationCost_; }
@@ -134,6 +140,7 @@ bool Solution::operator==(Solution const &other) const
     bool const attributeChecks = distance_ == other.distance_
                               && duration_ == other.duration_
                               && distanceCost_ == other.distanceCost_
+                              && internalDistance_ == other.internalDistance_
                               && durationCost_ == other.durationCost_
                               && timeWarp_ == other.timeWarp_
                               && isGroupFeas_ == other.isGroupFeas_

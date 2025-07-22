@@ -123,6 +123,7 @@ private:
     Duration startTime_ = 0;        // (earliest) start time of this route
     Duration slack_ = 0;            // Total time slack on this route
     Cost prizes_ = 0;               // Total value of prizes on this route
+    Distance internalDistance_ = 0; // Total distance travelled on this route, excluding the first and last segment
 
     std::pair<double, double> centroid_;  // Route center
     VehicleType vehicleType_;             // Type of vehicle
@@ -232,6 +233,11 @@ public:
      * Total waiting duration on this route.
      */
     [[nodiscard]] Duration waitDuration() const;
+
+    /**
+     * Total distance travelled on this route, excluding the first and last segment.
+     */
+    [[nodiscard]] Distance internalDistance() const;
 
     /**
      * Start time of this route. This is the earliest possible time at which
