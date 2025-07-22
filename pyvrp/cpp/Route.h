@@ -124,6 +124,7 @@ private:
     Duration slack_ = 0;            // Total time slack on this route
     Cost prizes_ = 0;               // Total value of prizes on this route
     Distance internalDistance_ = 0; // Total distance travelled on this route, excluding the first and last segment
+    double constDistancePenalty_ = -1; // Constant distance penalty for the model (-1 means disabled)
 
     std::pair<double, double> centroid_;  // Route center
     VehicleType vehicleType_;             // Type of vehicle

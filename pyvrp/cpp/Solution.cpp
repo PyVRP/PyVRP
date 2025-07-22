@@ -26,6 +26,7 @@ void Solution::evaluate(ProblemData const &data)
 
     excessLoad_ = std::vector<Load>(data.numLoadDimensions(), 0);
     avgSegmentDistance_ = data.avgSegmentDistance();
+    constDistancePenalty_ = data.constDistancePenalty();
     for (auto const &route : routes_)
     {
         // Whole solution statistics.
@@ -71,6 +72,9 @@ Neighbours const &Solution::neighbours() const { return neighbours_; }
 
 bool Solution::isFeasible() const
 {
+    if (constDistancePenalty_ >= 0) {
+        return !hasExcessLoad() && !hasTimeWarp() && isComplete() && isGroupFeasible();
+    }
     // clang-format off
     return !hasExcessLoad()
         && !hasTimeWarp()
@@ -102,6 +106,8 @@ Cost Solution::distanceCost() const { return distanceCost_; }
 Distance Solution::internalDistance() const { return internalDistance_; }
 
 Distance Solution::avgSegmentDistance() const { return avgSegmentDistance_; }
+
+double Solution::constDistancePenalty() const { return constDistancePenalty_; }
 
 Duration Solution::duration() const { return duration_; }
 

@@ -112,6 +112,8 @@ class Model:
         # provided by the user, this value will be stored in the generated
         # ProblemData instance.
         self._avg_segment_distance: int | None = None
+        # Constant distance penalty for the model. If provided by the user, this value will be stored in the generated ProblemData instance.
+        self._const_distance_penalty: float | None = None
 
     @property
     def locations(self) -> list[Client | Depot]:
@@ -344,6 +346,21 @@ class Model:
             raise ValueError("Average segment distance must be non-negative.")
 
         self._avg_segment_distance = int(distance) if distance is not None else None
+    
+    def set_const_distance_penalty(self, penalty: float | None) -> None:
+        """Sets a constant distance penalty for the model.
+        This makes maximum distance constraints soft.
+
+        Parameters
+        ----------
+        penalty
+            The penalty value to set. Provide ``None`` to unset.
+        """
+
+        if penalty is not None and penalty < 0:
+            raise ValueError("Distance penalty must be non-negative.")
+        
+        self._const_distance_penalty = penalty
 
     def add_vehicle_type(
         self,
@@ -500,6 +517,17 @@ class Model:
                 # Linked _pyvrp version does not expose the setter.
                 warn(
                     "avg_segment_distance could not be set – _pyvrp is out of date.",
+                    RuntimeWarning,
+                )
+
+        # Propagate user-defined constant distance penalty to ProblemData.
+        if self._const_distance_penalty is not None:
+            try:
+                pdata.set_const_distance_penalty(self._const_distance_penalty)
+            except AttributeError:
+                # Linked _pyvrp version does not expose the setter.
+                warn(
+                    "const_distance_penalty could not be set – _pyvrp is out of date.",
                     RuntimeWarning,
                 )
 

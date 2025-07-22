@@ -425,6 +425,9 @@ size_t Route::endDepot() const { return endDepot_; }
 
 bool Route::isFeasible() const
 {
+    if (constDistancePenalty_ >= 0) {
+        return !hasExcessLoad() && !hasTimeWarp();
+    }
     return !hasExcessLoad() && !hasTimeWarp() && !hasExcessDistance();
 }
 

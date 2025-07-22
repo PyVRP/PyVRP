@@ -51,6 +51,7 @@ class Solution
     Cost distanceCost_ = 0;         // Total cost of all routes' travel distance
     Distance internalDistance_ = 0; // Total distance travelled on all routes, excluding the first and last segments
     Distance avgSegmentDistance_ = 0; // Average distance travelled on a segment between two clients on actual routes
+    double constDistancePenalty_ = -1; // Constant distance penalty for the model (-1 means disabled)
     Duration duration_ = 0;         // Total duration over all routes
     Cost durationCost_ = 0;         // Total cost of all routes' duration
     Distance excessDistance_ = 0;   // Total excess distance over all routes
@@ -188,6 +189,11 @@ public:
      * Average distance travelled on a segment between two clients.
      */
     [[nodiscard]] Distance avgSegmentDistance() const;
+
+    /**
+     * Constant distance penalty for the model.
+     */
+    [[nodiscard]] double constDistancePenalty() const;
 
     /**
      * Total duration of all routes in this solution.

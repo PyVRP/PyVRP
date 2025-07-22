@@ -298,6 +298,7 @@ private:
     std::vector<DurationSegment> durBefore;  // Dur of start -> node (incl.)
 
     Distance avgSegmentDistance_ = 0; // Average distance travelled on a segment between two clients
+    double constDistancePenalty_ = -1; // Constant distance penalty for the model (-1 means disabled)
 
 #ifndef NDEBUG
     // When debug assertions are enabled, we use this flag to check whether
@@ -412,6 +413,11 @@ public:
      * @return Average distance travelled on a segment between two clients.
      */
     [[nodiscard]] inline Distance avgSegmentDistance() const;
+
+    /**
+     * @return Constant distance penalty for the model.
+     */
+    [[nodiscard]] inline double constDistancePenalty() const;
 
     /**
      * @return The duration of this route.
@@ -748,6 +754,9 @@ LoadSegment Route::SegmentBetween::load(size_t dimension) const
 bool Route::isFeasible() const
 {
     assert(!dirty);
+    if (constDistancePenalty_ >= 0) {
+        return !hasExcessLoad() && !hasTimeWarp();
+    }
     return !hasExcessLoad() && !hasTimeWarp() && !hasExcessDistance();
 }
 
@@ -836,6 +845,8 @@ Distance Route::internalDistance() const {
 }
 
 Distance Route::avgSegmentDistance() const { return avgSegmentDistance_; }
+
+double Route::constDistancePenalty() const { return constDistancePenalty_; }
 
 Duration Route::duration() const
 {

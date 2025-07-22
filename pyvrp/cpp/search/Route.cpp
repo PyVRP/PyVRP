@@ -69,7 +69,8 @@ Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
       loadBefore(data.numLoadDimensions()),
       load_(data.numLoadDimensions()),
       excessLoad_(data.numLoadDimensions()),
-      avgSegmentDistance_(data.avgSegmentDistance())
+      avgSegmentDistance_(data.avgSegmentDistance()),
+      constDistancePenalty_(data.constDistancePenalty())
 {
     clear();
 }
