@@ -17,7 +17,6 @@ from ._search import OptionalInsert as OptionalInsert
 from ._search import PerturbationOperator as PerturbationOperator
 from ._search import RelocateWithDepot as RelocateWithDepot
 from ._search import RouteOperator as RouteOperator
-from ._search import StringRemoval as StringRemoval
 from ._search import SwapRoutes as SwapRoutes
 from ._search import SwapStar as SwapStar
 from ._search import SwapTails as SwapTails
@@ -39,5 +38,4 @@ ROUTE_OPERATORS: list[Type[RouteOperator]] = []
 PERTURBATION_OPERATORS: list[Type[PerturbationOperator]] = [
     NeighbourRemoval,
     OptionalInsert,
-    # StringRemoval,
 ]
