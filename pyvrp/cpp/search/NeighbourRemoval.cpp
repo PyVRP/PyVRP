@@ -7,16 +7,12 @@ void NeighbourRemoval::operator()(PerturbationContext const &context)
     if (context.numPerturb == 0 || data_.numClients() == 0)
         return;
 
-    auto const center = context.orderNodes.front();  // random
-    std::vector<size_t> nodes{center};
-    for (auto const neighbour : context.neighbours[center])
-        nodes.push_back(neighbour);
-
+    auto const center = context.orderNodes.front();  // random client
     size_t numRemoved = 0;
 
-    for (auto const idx : nodes)
+    for (auto const neighbour : context.neighbours[center])
     {
-        auto *U = &context.nodes[idx];
+        auto *U = &context.nodes[neighbour];
 
         if (!U->route())
             continue;
