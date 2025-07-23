@@ -175,7 +175,6 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
                                 costEvaluator,
                                 neighbours_,
                                 orderNodes,
-                                orderRoutes,
                                 orderVehTypes,
                                 promising,
                                 numPerturb_};
