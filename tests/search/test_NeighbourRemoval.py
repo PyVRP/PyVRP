@@ -7,7 +7,7 @@ from pyvrp.search.neighbourhood import compute_neighbours
 
 def test_neighbour_removal_no_op_empty_solution(ok_small):
     """
-    Tests that calling neighbour removal on an empty solution is a no-op,
+    Tests that calling NeighbourRemoval on an empty solution is a no-op,
     since there are no clients to remove.
     """
     rng = RandomNumberGenerator(seed=42)
@@ -22,9 +22,9 @@ def test_neighbour_removal_no_op_empty_solution(ok_small):
 
 def test_returns_same_solution_with_empty_neighbourhood(ok_small):
     """
-    Tests that calling the neighbour removal combined with an empty
-    neighbourhood is a no-op: since the neighbourhood removal operator uses
-    neighbours, it cannot do anything with an empty neighbourhood.
+    Tests that calling NeighbourRemoval with an empty neighbourhood is a no-op:
+    since the neighbourhood removal operator uses neighbours, it cannot do
+    anything with an empty neighbourhood.
     """
     rng = RandomNumberGenerator(seed=42)
     neighbours = [[], [], [], [], []]
@@ -38,7 +38,7 @@ def test_returns_same_solution_with_empty_neighbourhood(ok_small):
 
 def test_removes_clients(ok_small):
     """
-    Tests that calling neighbour removal removes clients.
+    Tests that calling NeighbourRemoval removes clients.
     """
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(ok_small)
