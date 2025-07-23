@@ -90,7 +90,7 @@ public:
     CostEvaluator(std::vector<double> loadPenalties,
                   double twPenalty,
                   double distPenalty,
-                  double distDevPenalty = 10);
+                  double distDevPenalty = 0);
 
     /**
      * Computes the total excess load penalty for the given load and vehicle
