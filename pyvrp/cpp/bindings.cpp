@@ -963,7 +963,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("load_penalties"),
              py::arg("tw_penalty"),
              py::arg("dist_penalty"),
-             py::arg("dist_dev_penalty"))
+             py::arg("dist_dev_penalty") = 0)
         .def("load_penalty",
              &CostEvaluator::loadPenalty,
              py::arg("load"),
