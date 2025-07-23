@@ -452,6 +452,12 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("set_avg_segment_distance",
              &ProblemData::setAvgSegmentDistance,
              py::arg("avg_segment_distance"))
+        .def("dist_dev_penalty",
+             &ProblemData::distDevPenalty,
+             DOC(pyvrp, ProblemData, distDevPenalty))
+        .def("set_dist_dev_penalty",
+             &ProblemData::setDistDevPenalty,
+             py::arg("dist_dev_penalty"))
         .def("const_distance_penalty",
              &ProblemData::constDistancePenalty,
              DOC(pyvrp, ProblemData, constDistancePenalty))
@@ -953,10 +959,11 @@ PYBIND11_MODULE(_pyvrp, m)
              });
 
     py::class_<CostEvaluator>(m, "CostEvaluator", DOC(pyvrp, CostEvaluator))
-        .def(py::init<std::vector<double>, double, double>(),
+        .def(py::init<std::vector<double>, double, double, double>(),
              py::arg("load_penalties"),
              py::arg("tw_penalty"),
-             py::arg("dist_penalty"))
+             py::arg("dist_penalty"),
+             py::arg("dist_dev_penalty"))
         .def("load_penalty",
              &CostEvaluator::loadPenalty,
              py::arg("load"),
@@ -973,6 +980,12 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_distance"),
              py::arg("const_distance_penalty"),
              DOC(pyvrp, CostEvaluator, distPenalty))
+        .def("dist_dev_penalty",
+             &CostEvaluator::distDevPenalty,
+             py::arg("internal_distance"),
+             py::arg("avg_segment_distance"),
+             py::arg("num_clients"),
+             DOC(pyvrp, CostEvaluator, distDevPenalty))
         .def("penalised_cost",
              &CostEvaluator::penalisedCost<Solution>,
              py::arg("solution"),

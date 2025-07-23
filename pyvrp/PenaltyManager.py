@@ -55,6 +55,8 @@ class PenaltyParams:
         Minimum penalty term value. Must not be negative.
     max_penalty
         Maximum penalty term value. Must not be negative.
+    dist_dev_penalty
+        Distance deviation penalty. Must not be negative.
 
         .. warning::
            Setting a (too) large maximum penalty value may cause integer
@@ -84,6 +86,8 @@ class PenaltyParams:
         Minimum penalty term value.
     max_penalty
         Maximum penalty term value.
+    dist_dev_penalty
+        Distance deviation penalty.
     """
 
     repair_booster: int = 12
@@ -94,6 +98,7 @@ class PenaltyParams:
     feas_tolerance: float = 0.05
     min_penalty: float = 0.1
     max_penalty: float = 100_000.0
+    dist_dev_penalty: float = 0.0
 
     def __post_init__(self):
         if not self.repair_booster >= 1:
@@ -119,6 +124,9 @@ class PenaltyParams:
 
         if self.max_penalty < self.min_penalty:
             raise ValueError("Expected max_penalty >= min_penalty.")
+
+        if self.dist_dev_penalty < -1e-6:
+            raise ValueError("Expected dist_dev_penalty >= 0.")
 
 
 class PenaltyManager:
@@ -229,6 +237,7 @@ class PenaltyManager:
         init_load = avg_cost / np.maximum(avg_load, 1)
         init_tw = avg_cost / max(avg_duration, 1)
         init_dist = avg_cost / max(avg_distance, 1)
+        params.dist_dev_penalty = data.dist_dev_penalty()
         return cls((init_load.tolist(), init_tw, init_dist), params)
 
     def _compute(self, penalty: float, feas_percentage: float) -> float:
@@ -296,11 +305,11 @@ class PenaltyManager:
         Get a cost evaluator using the current penalty values.
         """
         *loads, tw, dist = self._penalties
-        return CostEvaluator(loads, tw, dist)
+        return CostEvaluator(loads, tw, dist, self._params.dist_dev_penalty)
 
     def booster_cost_evaluator(self) -> CostEvaluator:
         """
         Get a cost evaluator using the boosted current penalty values.
         """
         *loads, tw, dist = self._penalties * self._params.repair_booster
-        return CostEvaluator(loads, tw, dist)
+        return CostEvaluator(loads, tw, dist, self._params.dist_dev_penalty)

@@ -545,6 +545,7 @@ private:
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
     std::vector<ClientGroup> const groups_;        // Client groups
     Distance avgSegmentDistance_;                  // Average segment distance between two clients
+    double distDevPenalty_;                         // Distance deviation penalty for the model
     double constDistancePenalty_;                  // Constant distance penalty for the model
 
     size_t const numVehicles_;
@@ -677,6 +678,16 @@ public:
      * Sets the average segment distance between two clients.
      */
     void setAvgSegmentDistance(Distance avgSegmentDistance);
+
+    /**
+     * Distance deviation penalty for the model.
+     */
+    [[nodiscard]] double distDevPenalty() const;
+
+    /**
+     * Sets the distance deviation penalty for the model.
+     */
+    void setDistDevPenalty(double distDevPenalty);
 
     /**
      * Constant distance penalty for the model.

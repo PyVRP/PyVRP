@@ -347,6 +347,23 @@ class Model:
 
         self._avg_segment_distance = int(distance) if distance is not None else None
     
+    def set_dist_dev_penalty(self, penalty: float | None) -> None:
+        """Sets the distance deviation penalty for the model.
+        The distance deviation is calculated as the difference between:
+
+        - the product of the average segment distance and the number of clients in the route, and
+
+        - the total internal distance of the route (excluding depot trips), which includes the distances between consecutive clients and the segment from the first to the last client.
+
+        Parameters
+        ----------
+        penalty
+            The penalty value to set. Provide ``None`` to unset.
+        """
+        if penalty is not None and penalty < 0:
+            raise ValueError("Distance deviation penalty must be non-negative.")
+        self._dist_dev_penalty = penalty
+
     def set_const_distance_penalty(self, penalty: float | None) -> None:
         """Sets a constant distance penalty for the model.
         This makes maximum distance constraints soft.
@@ -517,6 +534,17 @@ class Model:
                 # Linked _pyvrp version does not expose the setter.
                 warn(
                     "avg_segment_distance could not be set – _pyvrp is out of date.",
+                    RuntimeWarning,
+                )
+
+        # Propagate user-defined distance deviation penalty to ProblemData.
+        if self._dist_dev_penalty is not None:
+            try:
+                pdata.set_dist_dev_penalty(self._dist_dev_penalty)
+            except AttributeError:
+                # Linked _pyvrp version does not expose the setter.
+                warn(
+                    "dist_dev_penalty could not be set – _pyvrp is out of date.",
                     RuntimeWarning,
                 )
 

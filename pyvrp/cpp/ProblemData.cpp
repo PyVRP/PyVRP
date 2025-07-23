@@ -456,6 +456,15 @@ void ProblemData::setAvgSegmentDistance(Distance avgSegmentDistance)
     avgSegmentDistance_ = avgSegmentDistance;
 }
 
+double ProblemData::distDevPenalty() const
+{
+    return distDevPenalty_;
+}
+void ProblemData::setDistDevPenalty(double distDevPenalty)
+{
+    distDevPenalty_ = distDevPenalty;
+}
+
 double ProblemData::constDistancePenalty() const
 {
     return constDistancePenalty_;
