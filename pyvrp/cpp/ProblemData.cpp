@@ -456,6 +456,15 @@ void ProblemData::setAvgSegmentDistance(Distance avgSegmentDistance)
     avgSegmentDistance_ = avgSegmentDistance;
 }
 
+double ProblemData::distDevPenalty() const
+{
+    return distDevPenalty_;
+}
+void ProblemData::setDistDevPenalty(double distDevPenalty)
+{
+    distDevPenalty_ = distDevPenalty;
+}
+
 ProblemData::ClientGroup const &ProblemData::group(size_t group) const
 {
     assert(group < groups_.size());
