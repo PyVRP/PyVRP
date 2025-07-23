@@ -19,7 +19,7 @@ void NeighbourRemoval::operator()(PerturbationContext const &context)
 
         for (auto *node : {U, n(U), p(U)})
         {
-            if (node->isStartDepot() || node->isEndDepot())
+            if (node->isDepot())
                 continue;
 
             context.promising[node->client()] = true;
