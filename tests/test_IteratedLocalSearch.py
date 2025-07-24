@@ -115,11 +115,9 @@ def test_restarts_after_no_improvement(rc208):
     improvement.
     """
     rng = RandomNumberGenerator(seed=42)
-    pm = PenaltyManager(initial_penalties=([20], 6, 6))
+    pm = PenaltyManager(initial_penalties=([1000], 1000, 1000))
 
-    ls = LocalSearch(
-        rc208, rng, compute_neighbours(rc208), num_perturbations=50
-    )
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208), 50)
     ls.add_perturbation_operator(NeighbourRemoval(rc208))
     ls.add_node_operator(Exchange10(rc208))
 
