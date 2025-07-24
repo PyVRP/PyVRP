@@ -45,15 +45,15 @@ def test_inserts_in_empty_routes(ok_small_prizes):
     Tests that OptionalInsert also inserts clients into empty routes.
     """
     rng = RandomNumberGenerator(seed=42)
-    neighbours = [[], [], [], [], []]  # no neighbors
+    neighbours = [[], [], [], [], []]  # no neighbours
     ls = LocalSearch(ok_small_prizes, rng, neighbours)
     ls.add_perturbation_operator(OptionalInsert(ok_small_prizes))
 
     sol = Solution(ok_small_prizes, [])  # type: ignore
     cost_eval = CostEvaluator([20], 6, 0)
 
-    # This should still insert clients even when there are no neighboring
-    # clients because empty routes will be used.
+    # This should still insert clients even when there are no neighbours
+    # because empty routes can be used.
     perturbed = ls.perturb(sol, cost_eval)
     assert_(perturbed.num_clients() > 0)
 

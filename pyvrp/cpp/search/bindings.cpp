@@ -262,10 +262,7 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
-        .def("__call__",
-             &NeighbourRemoval::operator(),
-             py::arg("context"),
-             py::call_guard<py::gil_scoped_release>())
+        .def("__call__", &NeighbourRemoval::operator(), py::arg("context"))
         .def_static("supports", &supports<NeighbourRemoval>, py::arg("data"));
 
     py::class_<OptionalInsert, PerturbationOperator>(
@@ -273,10 +270,7 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
-        .def("__call__",
-             &OptionalInsert::operator(),
-             py::arg("context"),
-             py::call_guard<py::gil_scoped_release>())
+        .def("__call__", &OptionalInsert::operator(), py::arg("context"))
         .def_static("supports", &supports<OptionalInsert>, py::arg("data"));
 
     py::class_<LocalSearch::Statistics>(
