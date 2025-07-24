@@ -5,7 +5,7 @@ using pyvrp::search::OptionalInsert;
 
 void OptionalInsert::operator()(PerturbationContext const &context)
 {
-    if (context.numPerturb == 0 || data_.numClients() == 0)
+    if (context.numPerturbations == 0 || data_.numClients() == 0)
         return;
 
     auto const &costEvaluator = context.costEvaluator;
@@ -66,7 +66,7 @@ void OptionalInsert::operator()(PerturbationContext const &context)
         context.promising[p(U)->client()] = true;
         context.promising[n(U)->client()] = true;
 
-        if (++numInserts >= context.numPerturb)
+        if (++numInserts >= context.numPerturbations)
             break;
     }
 }
