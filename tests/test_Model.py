@@ -7,7 +7,16 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Client, ClientGroup, Depot, Model, Profile, VehicleType
+from pyvrp import (
+    Client,
+    ClientGroup,
+    Depot,
+    Model,
+    PenaltyParams,
+    Profile,
+    SolveParams,
+    VehicleType,
+)
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import MaxIterations
@@ -449,7 +458,6 @@ def test_model_solves_instance_with_zero_or_one_clients():
     assert_equal(solution, [[1]])
 
 
-@pytest.mark.skip("Initial penalties are too low for this instance.")
 def test_model_solves_small_instance_with_fixed_costs():
     """
     High-level test that creates and solves a small instance with vehicle fixed
@@ -477,7 +485,10 @@ def test_model_solves_small_instance_with_fixed_costs():
             if frm != to:
                 m.add_edge(frm, to, distance=0, duration=5)
 
-    res = m.solve(stop=MaxIterations(10))
+    # The initial penalties (0.1) are too low for this instance.
+    params = SolveParams(penalty=PenaltyParams(min_penalty=1))
+
+    res = m.solve(stop=MaxIterations(10), params=params)
     assert_(res.is_feasible())
 
 
