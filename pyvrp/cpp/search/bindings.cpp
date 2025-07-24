@@ -346,11 +346,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("solution"),
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>())
-
-        .def("shuffle", &LocalSearch::shuffle, py::arg("rng"))
-        .def("set_num_perturbations",
-             &LocalSearch::setNumPerturbations,
-             py::arg("num_perturb"));
+        .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
         .def(py::init<pyvrp::ProblemData const &, size_t, size_t>(),
