@@ -4,8 +4,6 @@
 #include "PerturbationOperator.h"
 #include "ProblemData.h"
 
-#include <vector>
-
 namespace pyvrp::search
 {
 /**
@@ -17,7 +15,6 @@ namespace pyvrp::search
 class NeighbourRemoval : public PerturbationOperator
 {
     ProblemData const &data_;
-    size_t const numPerturb_;
 
 public:
     /**
@@ -27,17 +24,10 @@ public:
      * ----------
      * data
      *     Problem data instance.
-     * num_perturb
-     *     Maximum number of clients to remove from the solution.
      */
-    NeighbourRemoval(ProblemData const &data, size_t const numPerturb);
+    NeighbourRemoval(ProblemData const &data);
 
-    void operator()(std::vector<search::Route::Node> &nodes,
-                    std::vector<search::Route> &routes,
-                    CostEvaluator const &costEvaluator,
-                    std::vector<std::vector<size_t>> const &neighbours,
-                    std::vector<size_t> const &orderNodes,
-                    DynamicBitset &promising) override;
+    void operator()(PerturbationContext const &context) override;
 };
 
 }  // namespace pyvrp::search

@@ -2,6 +2,7 @@
 #include "Exchange.h"
 #include "LocalSearch.h"
 #include "NeighbourRemoval.h"
+#include "OptionalInsert.h"
 #include "PerturbationOperator.h"
 #include "RelocateWithDepot.h"
 #include "Route.h"
@@ -25,6 +26,7 @@ using pyvrp::search::LocalSearch;
 using pyvrp::search::NeighbourRemoval;
 using pyvrp::search::NodeOperator;
 using pyvrp::search::OperatorStatistics;
+using pyvrp::search::OptionalInsert;
 using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
@@ -257,19 +259,19 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<NeighbourRemoval, PerturbationOperator>(
         m, "NeighbourRemoval", DOC(pyvrp, search, NeighbourRemoval))
-        .def(py::init<pyvrp::ProblemData const &, size_t const>(),
+        .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
-             py::arg("num_perturb"),
              py::keep_alive<1, 2>())  // keep data alive
-        .def("__call__",
-             &NeighbourRemoval::operator(),
-             py::arg("nodes"),
-             py::arg("routes"),
-             py::arg("cost_evaluator"),
-             py::arg("neighbours"),
-             py::arg("order_nodes"),
-             py::arg("promising"),
-             py::call_guard<py::gil_scoped_release>());
+        .def("__call__", &NeighbourRemoval::operator(), py::arg("context"))
+        .def_static("supports", &supports<NeighbourRemoval>, py::arg("data"));
+
+    py::class_<OptionalInsert, PerturbationOperator>(
+        m, "OptionalInsert", DOC(pyvrp, search, OptionalInsert))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def("__call__", &OptionalInsert::operator(), py::arg("context"))
+        .def_static("supports", &supports<OptionalInsert>, py::arg("data"));
 
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))
@@ -287,6 +289,9 @@ PYBIND11_MODULE(_search, m)
                       &LocalSearch::neighbours,
                       &LocalSearch::setNeighbours,
                       py::return_value_policy::reference_internal)
+        .def_property("num_perturbations",
+                      &LocalSearch::numPerturbations,
+                      &LocalSearch::setNumPerturbations)
         .def_property_readonly("statistics", &LocalSearch::statistics)
         .def_property_readonly("node_operators",
                                &LocalSearch::nodeOperators,
@@ -335,7 +340,6 @@ PYBIND11_MODULE(_search, m)
              py::arg("solution"),
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>())
-
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))

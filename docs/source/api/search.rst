@@ -123,3 +123,6 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
 
    .. autoclass:: NeighbourRemoval
       :exclude-members: __call___
+
+   .. autoclass:: OptionalInsert
+      :exclude-members: __call___

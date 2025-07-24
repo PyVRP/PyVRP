@@ -1,40 +1,39 @@
 #include "NeighbourRemoval.h"
 
-void pyvrp::search::NeighbourRemoval::operator()(
-    std::vector<search::Route::Node> &nodes,
-    [[maybe_unused]] std::vector<search::Route> &routes,
-    [[maybe_unused]] CostEvaluator const &costEvaluator,
-    std::vector<std::vector<size_t>> const &neighbours,
-    std::vector<size_t> const &orderNodes,
-    DynamicBitset &promising)
+using pyvrp::search::NeighbourRemoval;
+
+void NeighbourRemoval::operator()(PerturbationContext const &context)
 {
-    if (numPerturb_ == 0 || data_.numClients() == 0)
+    if (context.numPerturbations == 0 || data_.numClients() == 0)
         return;
 
-    auto const client = orderNodes[0];  // random client
+    auto const center = context.orderNodes.front();  // random client
     size_t numRemoved = 0;
 
-    for (auto const idx : neighbours[client])
+    for (auto const neighbour : context.neighbours[center])
     {
-        auto *U = &nodes[idx];
+        auto *U = &context.nodes[neighbour];
+
         if (!U->route())
             continue;
 
-        promising[U->client()] = true;
-        promising[p(U)->client()] = true;
-        promising[n(U)->client()] = true;
+        for (auto *node : {U, n(U), p(U)})
+        {
+            if (node->isDepot())
+                continue;
 
-        auto *route = U->route();
-        route->remove(U->idx());
-        route->update();
+            context.promising[node->client()] = true;
+            context.promising[p(node)->client()] = true;
+            context.promising[n(node)->client()] = true;
 
-        if (++numRemoved == numPerturb_)
-            return;
+            auto *route = node->route();
+            route->remove(node->idx());
+            route->update();
+
+            if (++numRemoved == context.numPerturbations)
+                return;
+        }
     }
 }
 
-pyvrp::search::NeighbourRemoval::NeighbourRemoval(ProblemData const &data,
-                                                  size_t const numPerturb)
-    : data_(data), numPerturb_(numPerturb)
-{
-}
+NeighbourRemoval::NeighbourRemoval(ProblemData const &data) : data_(data) {}
