@@ -87,7 +87,7 @@ class PenaltyParams:
     """
 
     repair_booster: int = 10
-    solutions_between_updates: int = 500
+    solutions_between_updates: int = 50
     penalty_increase: float = 1.25
     penalty_decrease: float = 0.85
     target_feasible: float = 0.90
