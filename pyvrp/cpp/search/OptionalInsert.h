@@ -7,8 +7,8 @@
 namespace pyvrp::search
 {
 /**
- * Optional insert perturbation operator. This operator inserts optional clients
- * into the solution, if they are not already present.
+ * Optional insert perturbation operator. This operator forcefully inserts
+ * optional clients into the solution.
  */
 class OptionalInsert : public PerturbationOperator
 {
