@@ -235,6 +235,15 @@ Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance, double 
     return static_cast<Cost>(excessDistance.get() * distPenalty_);
 }
 
+/**
+ * Implements variable payment for routes with more than maxClients clients.
+ */
+// Cost CostEvaluator::clientPenalty(int nbClients, int maxClients) const
+// {
+//     auto const excessClients = std::max<int>(nbClients - maxClients, 0);
+//     return static_cast<Cost>(excessClients * clientPenalty_);
+// }
+
 Cost CostEvaluator::distDevPenalty(Distance internalDistance, Distance avgSegmentDistance, size_t numClients) const
 {
     auto const distDev = std::max<Distance>(static_cast<double>(internalDistance) - static_cast<double>(avgSegmentDistance) * (numClients), 0);
@@ -251,6 +260,7 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
                       + twPenalty(arg.timeWarp())
                       + distPenalty(arg.excessDistance(), 0, arg.constDistancePenalty())
                       + distDevPenalty(arg.internalDistance(), arg.avgSegmentDistance(), arg.numClients());
+                    //   + clientPenalty(arg.numClients(), arg.maxClients());
 
     if constexpr (PrizeCostEvaluatable<T>)
         return cost + arg.uncollectedPrizes();
