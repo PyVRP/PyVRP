@@ -3,6 +3,7 @@
 #include "LocalSearch.h"
 #include "RelocateWithDepot.h"
 #include "Route.h"
+#include "SwapInPlace.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
 #include "SwapTails.h"
@@ -27,6 +28,7 @@ using pyvrp::search::removeCost;
 using pyvrp::search::Route;
 using pyvrp::search::RouteOperator;
 using pyvrp::search::supports;
+using pyvrp::search::SwapInPlace;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
 using pyvrp::search::SwapTails;
@@ -184,6 +186,54 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<Exchange<3, 3>>, py::arg("data"));
+
+    py::class_<SwapInPlace<0>, NodeOperator>(
+        m, "SwapInPlace0", DOC(pyvrp, search, SwapInPlace))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &SwapInPlace<0>::statistics,
+                               py::return_value_policy::reference_internal)
+        .def("evaluate",
+             &SwapInPlace<0>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &SwapInPlace<0>::apply, py::arg("U"), py::arg("V"))
+        .def_static("supports", &supports<SwapInPlace<0>>, py::arg("data"));
+
+    py::class_<SwapInPlace<1>, NodeOperator>(
+        m, "SwapInPlace1", DOC(pyvrp, search, SwapInPlace))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &SwapInPlace<1>::statistics,
+                               py::return_value_policy::reference_internal)
+        .def("evaluate",
+             &SwapInPlace<1>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &SwapInPlace<1>::apply, py::arg("U"), py::arg("V"))
+        .def_static("supports", &supports<SwapInPlace<1>>, py::arg("data"));
+
+    py::class_<SwapInPlace<2>, NodeOperator>(
+        m, "SwapInPlace2", DOC(pyvrp, search, SwapInPlace))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &SwapInPlace<2>::statistics,
+                               py::return_value_policy::reference_internal)
+        .def("evaluate",
+             &SwapInPlace<2>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &SwapInPlace<2>::apply, py::arg("U"), py::arg("V"))
+        .def_static("supports", &supports<SwapInPlace<2>>, py::arg("data"));
 
     py::class_<SwapRoutes, RouteOperator>(
         m, "SwapRoutes", DOC(pyvrp, search, SwapRoutes))

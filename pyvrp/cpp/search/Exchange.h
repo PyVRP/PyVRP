@@ -196,6 +196,9 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
 {
     stats_.numEvaluations++;
 
+    if (!U->route() || !V->route())
+        return 0;
+
     if (containsDepot(U, N) || overlap(U, V))
         return 0;
 

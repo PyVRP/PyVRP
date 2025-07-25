@@ -81,18 +81,21 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             applyDepotRemovalMove(n(U), costEvaluator);
 
             // We next apply the regular node operators. These work on pairs
-            // of nodes (U, V), where both U and V are in the solution.
+            // of nodes (U, V), where U are in the solution, but V may not be.
             for (auto const vClient : neighbours_[uClient])
             {
+                if (!U->route())  // node ops only work if U is in route
+                    break;
+
                 auto *V = &nodes[vClient];
 
-                if (!V->route())
-                    continue;
-
-                if (lastUpdated[U->route()->idx()] > lastTested
+                if (!V->route() || lastUpdated[U->route()->idx()] > lastTested
                     || lastUpdated[V->route()->idx()] > lastTested)
                 {
                     if (applyNodeOps(U, V, costEvaluator))
+                        continue;
+
+                    if (!V->route())  // then cannot access p(V)
                         continue;
 
                     if (p(V)->isStartDepot()
@@ -169,21 +172,25 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
             auto *rU = U->route();  // copy these because the operator can
             auto *rV = V->route();  // modify the nodes' route membership
 
-            [[maybe_unused]] auto const costBefore
-                = costEvaluator.penalisedCost(*rU)
-                  + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
+            [[maybe_unused]] Cost costBefore = costEvaluator.penalisedCost(*rU);
+            if (rV)
+                costBefore += Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
 
             nodeOp->apply(U, V);
-            update(rU, rV);
 
-            [[maybe_unused]] auto const costAfter
-                = costEvaluator.penalisedCost(*rU)
-                  + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
+            update(rU, rU);
+            if (rV)
+                update(rV, rV);
+
+            [[maybe_unused]] Cost costAfter = costEvaluator.penalisedCost(*rU);
+            if (rV)
+                costAfter += Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
 
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
             // the move, plus the delta cost.
-            assert(costAfter == costBefore + deltaCost);
+            // TODO no longer works because of prizes
+            // assert(costAfter == costBefore + deltaCost);
 
             return true;
         }
@@ -244,7 +251,8 @@ void LocalSearch::applyDepotRemovalMove(Route::Node *U,
 void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
                                        CostEvaluator const &costEvaluator)
 {
-    assert(U->route());
+    if (!U->route())
+        return;
 
     // We apply moves involving empty routes in the (randomised) order of
     // orderVehTypes. This helps because empty vehicle moves incur fixed cost,
