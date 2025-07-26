@@ -29,9 +29,9 @@ NODE_OPERATORS: list[Type[NodeOperator]] = [
     Exchange11,
     Exchange21,
     Exchange22,
-    # SwapInPlace0,
-    # SwapInPlace1,
-    SwapInPlace2,
+    SwapInPlace0,
+    SwapInPlace1,
+    # SwapInPlace2,
     SwapTails,
     RelocateWithDepot,
 ]
