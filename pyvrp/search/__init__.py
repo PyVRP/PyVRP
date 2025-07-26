@@ -17,7 +17,6 @@ from ._search import RouteOperator as RouteOperator
 from ._search import SwapInPlace0 as SwapInPlace0
 from ._search import SwapInPlace1 as SwapInPlace1
 from ._search import SwapInPlace2 as SwapInPlace2
-from ._search import SwapInPlace3 as SwapInPlace3
 from ._search import SwapRoutes as SwapRoutes
 from ._search import SwapStar as SwapStar
 from ._search import SwapTails as SwapTails
@@ -31,9 +30,8 @@ NODE_OPERATORS: list[Type[NodeOperator]] = [
     Exchange21,
     Exchange22,
     SwapInPlace0,
-    SwapInPlace1,
-    SwapInPlace2,
-    SwapInPlace3,
+    # SwapInPlace1,
+    # SwapInPlace2,
     SwapTails,
     RelocateWithDepot,
 ]
