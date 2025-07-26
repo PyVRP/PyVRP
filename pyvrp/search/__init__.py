@@ -31,7 +31,7 @@ NODE_OPERATORS: list[Type[NodeOperator]] = [
     Exchange22,
     # SwapInPlace0,
     SwapInPlace1,
-    # SwapInPlace2,
+    SwapInPlace2,
     SwapTails,
     RelocateWithDepot,
 ]
