@@ -235,6 +235,22 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &SwapInPlace<2>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<SwapInPlace<2>>, py::arg("data"));
 
+    py::class_<SwapInPlace<3>, NodeOperator>(
+        m, "SwapInPlace3", DOC(pyvrp, search, SwapInPlace))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &SwapInPlace<3>::statistics,
+                               py::return_value_policy::reference_internal)
+        .def("evaluate",
+             &SwapInPlace<3>::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &SwapInPlace<3>::apply, py::arg("U"), py::arg("V"))
+        .def_static("supports", &supports<SwapInPlace<3>>, py::arg("data"));
+
     py::class_<SwapRoutes, RouteOperator>(
         m, "SwapRoutes", DOC(pyvrp, search, SwapRoutes))
         .def(py::init<pyvrp::ProblemData const &>(),
