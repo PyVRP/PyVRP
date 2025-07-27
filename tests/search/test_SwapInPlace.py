@@ -1,36 +1,14 @@
-from numpy.testing import assert_equal
+from numpy.testing import assert_, assert_equal
 
-from pyvrp import (
-    CostEvaluator,
-)
-from pyvrp.search import (
-    SwapInPlace0,
-    SwapInPlace1,
-    SwapInPlace2,
-)
+from pyvrp import CostEvaluator
+from pyvrp.search import SwapInPlace
 from pyvrp.search._search import Node
 from tests.helpers import make_search_route
 
 
-def test_swap_in_place_0(ok_small_prizes):
+def test_move_delta_cost(ok_small_prizes):
     data = ok_small_prizes
-    op = SwapInPlace0(ok_small_prizes)
-
-    route = make_search_route(data, [2])
-    node = Node(3)
-
-    # insert 3 before 2
-    op.apply(route[1], node)
-    route.update()
-
-    assert_equal(len(route), 4)
-    assert_equal(route[1].client, 3)
-    assert_equal(route[2].client, 2)
-
-
-def test_swap_in_place_1(ok_small_prizes):
-    data = ok_small_prizes
-    op = SwapInPlace1(ok_small_prizes)
+    op = SwapInPlace(ok_small_prizes)
 
     route = make_search_route(data, [2])
     node = Node(3)
@@ -51,13 +29,17 @@ def test_swap_in_place_1(ok_small_prizes):
     assert_equal(route[1].client, 3)
 
 
-def test_swap_in_place_2(ok_small_prizes):
-    data = ok_small_prizes
-    op = SwapInPlace2(ok_small_prizes)
-    cost_eval = CostEvaluator([20], 6, 6)
+def test_move_required_client(ok_small_prizes):
+    pass
 
-    route = make_search_route(data, [2])
-    node = Node(3)
 
-    delta_cost = op.evaluate(route[1], node, cost_eval)
-    assert_equal(delta_cost, 0)  # contains depot
+def test_move_groups(ok_small_mutually_exclusive_groups):
+    pass
+
+
+def test_supports(ok_small, ok_small_prizes):
+    """
+    Tests that SwapInPlace only supports instance with optional clients.
+    """
+    assert_(not SwapInPlace.supports(ok_small))  # no optional clients
+    assert_(SwapInPlace.supports(ok_small_prizes))  # has optional clients

@@ -78,9 +78,11 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
    .. autoclass:: RelocateWithDepot
       :exclude-members: evaluate, apply, statistics, supports
 
-   .. autoclass:: SwapTails
+   .. autoclass:: SwapInPlace
       :exclude-members: evaluate, apply, statistics, supports
 
+   .. autoclass:: SwapTails
+      :exclude-members: evaluate, apply, statistics, supports
 
 Route operators
 ---------------

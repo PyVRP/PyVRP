@@ -77,6 +77,7 @@ libsearch = static_library(
         SRC_DIR / 'search' / 'RelocateWithDepot.cpp',
         SRC_DIR / 'search' / 'SwapRoutes.cpp',
         SRC_DIR / 'search' / 'SwapStar.cpp',
+        SRC_DIR / 'search' / 'SwapInPlace.cpp',
         SRC_DIR / 'search' / 'SwapTails.cpp',
     ],
     include_directories: INCLUDES,
