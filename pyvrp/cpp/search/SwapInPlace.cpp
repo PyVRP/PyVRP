@@ -67,7 +67,7 @@ Cost SwapInPlace::evaluate(Route::Node *U,
     {
         auto const uGroup = data.group(uClient.group.value());
         if (uGroup.required && uClient.group != vClient.group)
-            return 0;  // cannot swap required group client with non-required
+            return 0;
     }
 
     auto const *route = U->route();
