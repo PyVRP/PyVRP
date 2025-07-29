@@ -97,10 +97,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    if (!V->route())  // then cannot access p(V)
-                        continue;
-
-                    if (p(V)->isStartDepot()
+                    if (V->route() && p(V)->isStartDepot()
                         && applyNodeOps(U, p(V), costEvaluator))
                         continue;
                 }
