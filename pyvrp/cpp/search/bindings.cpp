@@ -1,8 +1,8 @@
 #include "bindings.h"
 #include "Exchange.h"
+#include "InsertOptional.h"
 #include "LocalSearch.h"
 #include "NeighbourRemoval.h"
-#include "OptionalInsert.h"
 #include "PerturbationOperator.h"
 #include "RelocateWithDepot.h"
 #include "Route.h"
@@ -22,11 +22,11 @@ namespace py = pybind11;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
+using pyvrp::search::InsertOptional;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NeighbourRemoval;
 using pyvrp::search::NodeOperator;
 using pyvrp::search::OperatorStatistics;
-using pyvrp::search::OptionalInsert;
 using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
@@ -265,13 +265,13 @@ PYBIND11_MODULE(_search, m)
         .def("__call__", &NeighbourRemoval::operator(), py::arg("context"))
         .def_static("supports", &supports<NeighbourRemoval>, py::arg("data"));
 
-    py::class_<OptionalInsert, PerturbationOperator>(
-        m, "OptionalInsert", DOC(pyvrp, search, OptionalInsert))
+    py::class_<InsertOptional, PerturbationOperator>(
+        m, "InsertOptional", DOC(pyvrp, search, InsertOptional))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
-        .def("__call__", &OptionalInsert::operator(), py::arg("context"))
-        .def_static("supports", &supports<OptionalInsert>, py::arg("data"));
+        .def("__call__", &InsertOptional::operator(), py::arg("context"))
+        .def_static("supports", &supports<InsertOptional>, py::arg("data"));
 
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))

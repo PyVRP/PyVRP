@@ -16,10 +16,10 @@ from pyvrp import (
 from pyvrp.search import (
     Exchange10,
     Exchange11,
+    InsertOptional,
     LocalSearch,
     NeighbourRemoval,
     NeighbourhoodParams,
-    OptionalInsert,
     RelocateWithDepot,
     SwapRoutes,
     SwapStar,
@@ -343,7 +343,7 @@ def test_perturbation_no_op_makes_search_no_op(ok_small):
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
     ls.add_node_operator(Exchange10(ok_small))
-    ls.add_perturbation_operator(OptionalInsert(ok_small))  # no-op
+    ls.add_perturbation_operator(InsertOptional(ok_small))  # no-op
 
     sol = Solution.make_random(ok_small, rng)
     cost_evaluator = CostEvaluator([20], 6, 6)
