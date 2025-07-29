@@ -12,10 +12,10 @@ from ._search import Exchange31 as Exchange31
 from ._search import Exchange32 as Exchange32
 from ._search import Exchange33 as Exchange33
 from ._search import InsertOptional as InsertOptional
-from ._search import NeighbourRemoval as NeighbourRemoval
 from ._search import NodeOperator as NodeOperator
 from ._search import PerturbationOperator as PerturbationOperator
 from ._search import RelocateWithDepot as RelocateWithDepot
+from ._search import RemoveNeighbours as RemoveNeighbours
 from ._search import RouteOperator as RouteOperator
 from ._search import SwapRoutes as SwapRoutes
 from ._search import SwapStar as SwapStar
@@ -36,6 +36,6 @@ NODE_OPERATORS: list[Type[NodeOperator]] = [
 ROUTE_OPERATORS: list[Type[RouteOperator]] = []
 
 PERTURBATION_OPERATORS: list[Type[PerturbationOperator]] = [
-    NeighbourRemoval,
+    RemoveNeighbours,
     InsertOptional,
 ]

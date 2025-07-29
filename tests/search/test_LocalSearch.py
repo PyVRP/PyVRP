@@ -18,9 +18,9 @@ from pyvrp.search import (
     Exchange11,
     InsertOptional,
     LocalSearch,
-    NeighbourRemoval,
     NeighbourhoodParams,
     RelocateWithDepot,
+    RemoveNeighbours,
     SwapRoutes,
     SwapStar,
     compute_neighbours,
@@ -57,7 +57,7 @@ def test_local_search_call_perturbs_solution(ok_small):
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(ok_small)
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_perturbation_operator(NeighbourRemoval(ok_small))
+    ls.add_perturbation_operator(RemoveNeighbours(ok_small))
 
     sol = Solution.make_random(ok_small, rng)
     cost_eval = CostEvaluator([1], 1, 0)
@@ -713,7 +713,7 @@ def test_perturbation_operators_property(ok_small):
     # Now we add a perturbation operator. The local search does not take
     # ownership, so its only perturbation operator should be the exact same
     # object as the one we just created.
-    perturb_op = NeighbourRemoval(ok_small)
+    perturb_op = RemoveNeighbours(ok_small)
     ls.add_perturbation_operator(perturb_op)
     assert_equal(len(ls.perturbation_operators), 1)
     assert_(ls.perturbation_operators[0] is perturb_op)

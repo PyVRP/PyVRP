@@ -8,8 +8,8 @@ from pyvrp.search import (
     PERTURBATION_OPERATORS,
     ROUTE_OPERATORS,
     Exchange10,
-    NeighbourRemoval,
     NeighbourhoodParams,
+    RemoveNeighbours,
     SwapStar,
     SwapTails,
 )
@@ -45,7 +45,7 @@ def test_solve_params_from_file():
     neighbourhood = NeighbourhoodParams(0, 0, 20, True, True)
     node_ops = [Exchange10, SwapTails]
     route_ops = [SwapStar]
-    perturbation_ops = [NeighbourRemoval]
+    perturbation_ops = [RemoveNeighbours]
 
     assert_equal(params.ils, ils)
     assert_equal(params.penalty, penalty)
