@@ -82,8 +82,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             applyDepotRemovalMove(p(U), costEvaluator);
             applyDepotRemovalMove(n(U), costEvaluator);
 
-            // We next apply the regular node operators. These work on pairs
-            // of nodes (U, V), where U are in the solution, but V may not be.
+            // We next apply the regular node operators. These work on pairs of
+            // nodes (U, V), where U must be in the solution, but V may not be.
             for (auto const vClient : neighbours_[uClient])
             {
                 if (!U->route())  // node ops only work if U is in route
@@ -176,19 +176,19 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
             [[maybe_unused]] ProblemData::Client const &vClient
                 = data.location(V->client());
 
-            [[maybe_unused]] Cost const costBefore
+            [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(*rU)
-                  + (rV && rV != rU ? costEvaluator.penalisedCost(*rV) : 0)
-                  + (!rU ? uClient.prize : 0) + (!rV ? vClient.prize : 0);
+                  + Cost(rV && rV != rU) * costEvaluator.penalisedCost(*rV)
+                  + Cost(!rU) * uClient.prize + Cost(!rV) * vClient.prize;
 
             nodeOp->apply(U, V);
             update(rU, rV ? rV : rU);
 
-            [[maybe_unused]] Cost const costAfter
+            [[maybe_unused]] auto const costAfter
                 = costEvaluator.penalisedCost(*rU)
-                  + (rV && rV != rU ? costEvaluator.penalisedCost(*rV) : 0)
-                  + (!U->route() ? uClient.prize : 0)
-                  + (!V->route() ? vClient.prize : 0);
+                  + Cost(rV && rV != rU) * costEvaluator.penalisedCost(*rV)
+                  + Cost(!U->route()) * uClient.prize
+                  + Cost(!V->route()) * vClient.prize;
 
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before

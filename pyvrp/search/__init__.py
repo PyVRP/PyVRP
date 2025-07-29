@@ -33,6 +33,6 @@ NODE_OPERATORS: list[Type[NodeOperator]] = [
 ]
 
 ROUTE_OPERATORS: list[Type[RouteOperator]] = [
-    # SwapRoutes,
+    SwapRoutes,
     SwapStar,
 ]
