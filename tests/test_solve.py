@@ -84,7 +84,7 @@ def test_solve_custom_params(rc208):
     expected by checking how solutions are accepted.
     """
 
-    def monotonically_decreasing(arr) -> np.bool:
+    def monotonically_decreasing(arr) -> np.bool_:
         return np.all(np.diff(arr) <= 0)
 
     # First solve with ``history_length=1``, which means that all candidate
