@@ -1,7 +1,7 @@
-#include "SwapInPlace.h"
+#include "Replace.h"
 
 using pyvrp::Cost;
-using pyvrp::search::SwapInPlace;
+using pyvrp::search::Replace;
 
 namespace
 {
@@ -48,9 +48,9 @@ public:
 };
 }  // namespace
 
-Cost SwapInPlace::evaluate(Route::Node *U,
-                           Route::Node *V,
-                           CostEvaluator const &costEvaluator)
+Cost Replace::evaluate(Route::Node *U,
+                       Route::Node *V,
+                       CostEvaluator const &costEvaluator)
 {
     stats_.numEvaluations++;
 
@@ -81,7 +81,7 @@ Cost SwapInPlace::evaluate(Route::Node *U,
     return deltaCost;
 }
 
-void SwapInPlace::apply(Route::Node *U, Route::Node *V) const
+void Replace::apply(Route::Node *U, Route::Node *V) const
 {
     stats_.numApplications++;
 
@@ -89,7 +89,7 @@ void SwapInPlace::apply(Route::Node *U, Route::Node *V) const
     route->swap(U, V);
 }
 
-template <> bool pyvrp::search::supports<SwapInPlace>(ProblemData const &data)
+template <> bool pyvrp::search::supports<Replace>(ProblemData const &data)
 {
     // This operator only works if the problem has at least one optional client.
     return std::any_of(data.clients().begin(),

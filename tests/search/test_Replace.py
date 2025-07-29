@@ -1,14 +1,14 @@
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import CostEvaluator
-from pyvrp.search import SwapInPlace
+from pyvrp.search import Replace
 from pyvrp.search._search import Node
 from tests.helpers import make_search_route
 
 
 def test_move_delta_cost(ok_small_prizes):
     data = ok_small_prizes
-    op = SwapInPlace(ok_small_prizes)
+    op = Replace(ok_small_prizes)
 
     route = make_search_route(data, [2])
     node = Node(3)
@@ -39,7 +39,7 @@ def test_move_groups(ok_small_mutually_exclusive_groups):
 
 def test_supports(ok_small, ok_small_prizes):
     """
-    Tests that SwapInPlace only supports instance with optional clients.
+    Tests that Replace only supports instance with optional clients.
     """
-    assert_(not SwapInPlace.supports(ok_small))  # no optional clients
-    assert_(SwapInPlace.supports(ok_small_prizes))  # has optional clients
+    assert_(not Replace.supports(ok_small))  # no optional clients
+    assert_(Replace.supports(ok_small_prizes))  # has optional clients

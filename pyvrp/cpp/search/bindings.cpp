@@ -2,8 +2,8 @@
 #include "Exchange.h"
 #include "LocalSearch.h"
 #include "RelocateWithDepot.h"
+#include "Replace.h"
 #include "Route.h"
-#include "SwapInPlace.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
 #include "SwapTails.h"
@@ -25,10 +25,10 @@ using pyvrp::search::NodeOperator;
 using pyvrp::search::OperatorStatistics;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
+using pyvrp::search::Replace;
 using pyvrp::search::Route;
 using pyvrp::search::RouteOperator;
 using pyvrp::search::supports;
-using pyvrp::search::SwapInPlace;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
 using pyvrp::search::SwapTails;
@@ -187,21 +187,20 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<Exchange<3, 3>>, py::arg("data"));
 
-    py::class_<SwapInPlace, NodeOperator>(
-        m, "SwapInPlace", DOC(pyvrp, search, SwapInPlace))
+    py::class_<Replace, NodeOperator>(m, "Replace", DOC(pyvrp, search, Replace))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &SwapInPlace::statistics,
+                               &Replace::statistics,
                                py::return_value_policy::reference_internal)
         .def("evaluate",
-             &SwapInPlace::evaluate,
+             &Replace::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &SwapInPlace::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &supports<SwapInPlace>, py::arg("data"));
+        .def("apply", &Replace::apply, py::arg("U"), py::arg("V"))
+        .def_static("supports", &supports<Replace>, py::arg("data"));
 
     py::class_<SwapRoutes, RouteOperator>(
         m, "SwapRoutes", DOC(pyvrp, search, SwapRoutes))
