@@ -7,22 +7,15 @@
 namespace pyvrp::search
 {
 /**
- * Optional insert perturbation operator. This operator forcefully inserts
- * optional clients into the solution.
+ * OptionalInsert(data: ProblemData)
+ *
+ * This operator forcefully inserts optional clients into the solution.
  */
 class OptionalInsert : public PerturbationOperator
 {
     ProblemData const &data_;
 
 public:
-    /**
-     * Creates an optional insert operator.
-     *
-     * Parameters
-     * ----------
-     * data
-     *     Problem data instance.
-     */
     OptionalInsert(ProblemData const &data);
 
     void operator()(PerturbationContext const &context) override;

@@ -122,7 +122,7 @@ As a convenience, the :mod:`pyvrp.search` module makes all these operators avail
    .. autoclass:: PerturbationOperator
 
    .. autoclass:: NeighbourRemoval
-      :exclude-members: __call___
+      :exclude-members: __call__, supports
 
    .. autoclass:: OptionalInsert
-      :exclude-members: __call___
+      :exclude-members: __call__, supports
