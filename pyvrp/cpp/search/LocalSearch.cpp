@@ -7,6 +7,8 @@
 #include <cassert>
 #include <numeric>
 
+using pyvrp::Cost;
+using pyvrp::ProblemData;
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
@@ -172,25 +174,29 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
             auto *rU = U->route();  // copy these because the operator can
             auto *rV = V->route();  // modify the nodes' route membership
 
-            [[maybe_unused]] Cost costBefore = costEvaluator.penalisedCost(*rU);
-            if (rV)
-                costBefore += Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
+            [[maybe_unused]] ProblemData::Client const &uClient
+                = data.location(U->client());
+            [[maybe_unused]] ProblemData::Client const &vClient
+                = data.location(V->client());
+
+            [[maybe_unused]] Cost const costBefore
+                = costEvaluator.penalisedCost(*rU)
+                  + (rV && rV != rU ? costEvaluator.penalisedCost(*rV) : 0)
+                  + (!rU ? uClient.prize : 0) + (!rV ? vClient.prize : 0);
 
             nodeOp->apply(U, V);
+            update(rU, rV ? rV : rU);
 
-            update(rU, rU);
-            if (rV)
-                update(rV, rV);
-
-            [[maybe_unused]] Cost costAfter = costEvaluator.penalisedCost(*rU);
-            if (rV)
-                costAfter += Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
+            [[maybe_unused]] Cost const costAfter
+                = costEvaluator.penalisedCost(*rU)
+                  + (rV && rV != rU ? costEvaluator.penalisedCost(*rV) : 0)
+                  + (!U->route() ? uClient.prize : 0)
+                  + (!V->route() ? vClient.prize : 0);
 
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
             // the move, plus the delta cost.
-            // TODO no longer works because of prizes
-            // assert(costAfter == costBefore + deltaCost);
+            assert(costAfter == costBefore + deltaCost);
 
             return true;
         }
