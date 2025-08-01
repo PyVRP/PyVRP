@@ -99,10 +99,6 @@ class IteratedLocalSearch:
     def _cost_evaluator(self) -> CostEvaluator:
         return self._pm.cost_evaluator()
 
-    @property
-    def _booster_cost_evaluator(self) -> CostEvaluator:
-        return self._pm.booster_cost_evaluator()
-
     def _accept(
         self, candidate: Solution, best: Solution, stop: StoppingCriterion
     ) -> bool:
