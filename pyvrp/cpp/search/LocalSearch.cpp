@@ -10,6 +10,7 @@
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
+using pyvrp::search::PerturbationContext;
 using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RouteOperator;
 
@@ -169,8 +170,15 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     // the initial set of promising nodes for local search.
     promising.reset();
 
-    (*perturbOps[0])(
-        nodes, routes, costEvaluator, neighbours_, orderNodes, promising);
+    PerturbationContext context{nodes,
+                                routes,
+                                costEvaluator,
+                                neighbours_,
+                                orderNodes,
+                                promising,
+                                numPerturbations_};
+
+    (*perturbOps[0])(context);
 }
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
@@ -377,28 +385,14 @@ void LocalSearch::insert(Route::Node *U,
                          CostEvaluator const &costEvaluator,
                          bool required)
 {
-    Route::Node *UAfter = routes[0][0];
-    Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
-
-    for (auto const vClient : neighbours_[U->client()])
-    {
-        auto *V = &nodes[vClient];
-
-        if (!V->route())
-            continue;
-
-        auto const cost = insertCost(U, V, data, costEvaluator);
-        if (cost < bestCost)
-        {
-            bestCost = cost;
-            UAfter = V;
-        }
-    }
+    auto [UAfter, bestCost]
+        = bestInsert(U, data, costEvaluator, neighbours_, nodes, routes);
 
     if (required || bestCost < 0)
     {
-        UAfter->route()->insert(UAfter->idx() + 1, U);
-        update(UAfter->route(), UAfter->route());
+        auto *route = UAfter->route();
+        route->insert(UAfter->idx() + 1, U);
+        update(route, route);
         markPromising(U);
     }
 }
@@ -602,6 +596,13 @@ LocalSearch::Neighbours const &LocalSearch::neighbours() const
 {
     return neighbours_;
 }
+
+void LocalSearch::setNumPerturbations(size_t numPerturbations)
+{
+    numPerturbations_ = numPerturbations;
+}
+
+size_t LocalSearch::numPerturbations() const { return numPerturbations_; }
 
 LocalSearch::Statistics LocalSearch::statistics() const
 {

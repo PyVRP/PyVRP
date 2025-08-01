@@ -11,7 +11,8 @@ from pyvrp import (
 from pyvrp.search import (
     Exchange10,
     LocalSearch,
-    NeighbourRemoval,
+    PerturbationParams,
+    RemoveNeighbours,
     compute_neighbours,
 )
 from pyvrp.stop import FirstFeasible, MaxIterations
@@ -76,7 +77,7 @@ def test_best_solution_improves_with_more_iterations(rc208):
     rng = RandomNumberGenerator(seed=42)
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    ls.add_perturbation_operator(NeighbourRemoval(rc208, 10))
+    ls.add_perturbation_operator(RemoveNeighbours(rc208))
     ls.add_node_operator(Exchange10(rc208))
     init = Solution.make_random(rc208, rng)
     algo = IteratedLocalSearch(rc208, pm, rng, ls, init)
@@ -117,8 +118,9 @@ def test_restarts_after_no_improvement(rc208):
     rng = RandomNumberGenerator(seed=42)
     pm = PenaltyManager(initial_penalties=([1000], 1000, 1000))
 
-    ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    ls.add_perturbation_operator(NeighbourRemoval(rc208, 30))
+    perturb_params = PerturbationParams(num_perturbations=50)
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208), perturb_params)
+    ls.add_perturbation_operator(RemoveNeighbours(rc208))
     ls.add_node_operator(Exchange10(rc208))
 
     bks = read_solution("data/RC208.sol", rc208)

@@ -7,7 +7,16 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Client, ClientGroup, Depot, Model, Profile, VehicleType
+from pyvrp import (
+    Client,
+    ClientGroup,
+    Depot,
+    Model,
+    PenaltyParams,
+    Profile,
+    SolveParams,
+    VehicleType,
+)
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import MaxIterations
@@ -476,7 +485,10 @@ def test_model_solves_small_instance_with_fixed_costs():
             if frm != to:
                 m.add_edge(frm, to, distance=0, duration=5)
 
-    res = m.solve(stop=MaxIterations(100))
+    # The initial penalties (0.1) are too low for this instance.
+    params = SolveParams(penalty=PenaltyParams(min_penalty=1))
+
+    res = m.solve(stop=MaxIterations(10), params=params)
     assert_(res.is_feasible())
 
 
@@ -1051,7 +1063,7 @@ def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
            https://doi.org/10.1287/trsc.2022.1161.
     """
     m = Model.from_data(mtvrptw_release_times)
-    res = m.solve(stop=MaxIterations(10))
+    res = m.solve(stop=MaxIterations(20))
     assert_(res.is_feasible())
 
     opt = read_solution("data/C201R0.25.sol", mtvrptw_release_times)
