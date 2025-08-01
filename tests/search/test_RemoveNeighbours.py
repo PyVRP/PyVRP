@@ -5,7 +5,7 @@ from pyvrp.search import LocalSearch, RemoveNeighbours
 from pyvrp.search.neighbourhood import compute_neighbours
 
 
-def test_neighbour_removal_no_op_empty_solution(ok_small):
+def test_no_op_empty_solution(ok_small):
     """
     Tests that calling RemoveNeighbours on an empty solution is a no-op,
     since there are no clients to remove.
