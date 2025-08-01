@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_PRIMITIVES_H
 
 #include "CostEvaluator.h"
+#include "DynamicBitset.h"
 #include "Measure.h"
 #include "Route.h"
 
@@ -80,6 +81,39 @@ Cost inplaceCost(Route::Node *U,
 Cost removeCost(Route::Node *U,
                 ProblemData const &data,
                 CostEvaluator const &costEvaluator);
+
+/**
+ * Finds the best insertion position for U among its neighbors and empty routes.
+ *
+ * Parameters
+ * ----------
+ * U
+ *     Node to insert. Must not be in a route.
+ * data
+ *     Problem data instance.
+ * costEvaluator
+ *     Cost evaluator to use.
+ * neighbours
+ *     Neighbourhood structure of each client.
+ * nodes
+ *     Nodes in the solution.
+ * routes
+ *     Routes in the solution.
+ *
+ * Returns
+ * -------
+ * std::pair<Route::Node *, Cost>
+ *     Best node to insert after and its insertion cost. If no insertion
+ *     position was found, returns the start depot of the first route and
+ *     a large cost.
+ */
+std::pair<Route::Node *, Cost>
+bestInsert(Route::Node *U,
+           ProblemData const &data,
+           CostEvaluator const &costEvaluator,
+           std::vector<std::vector<size_t>> const &neighbours,
+           std::vector<Route::Node> &nodes,
+           std::vector<Route> &routes);
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_PRIMITIVES_H

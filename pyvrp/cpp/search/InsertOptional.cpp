@@ -21,46 +21,12 @@ void InsertOptional::operator()(PerturbationContext const &context)
         if (U->route())
             continue;
 
-        Route::Node *UAfter = nullptr;
-        Cost bestCost = std::numeric_limits<Cost>::max();
-
-        for (auto const vClient : context.neighbours[uClient])
-        {
-            auto *V = &context.nodes[vClient];
-
-            if (!V->route())
-                continue;
-
-            auto const cost = insertCost(U, V, data_, costEvaluator);
-            if (cost < bestCost)
-            {
-                bestCost = cost;
-                UAfter = V;
-            }
-        }
-
-        auto begin = context.routes.begin();
-        for (size_t vehType = 0; vehType != data_.numVehicleTypes(); vehType++)
-        {
-            auto const end = begin + data_.vehicleType(vehType).numAvailable;
-            auto const pred = [](auto const &route) { return route.empty(); };
-            auto empty = std::find_if(begin, end, pred);
-            begin = end;
-
-            if (empty != end)  // try inserting U into the empty route.
-            {
-                auto const cost
-                    = insertCost(U, (*empty)[0], data_, costEvaluator);
-                if (cost < bestCost)
-                {
-                    bestCost = cost;
-                    UAfter = (*empty)[0];
-                }
-            }
-        }
-
-        if (!UAfter)
-            continue;
+        auto [UAfter, cost] = bestInsert(U,
+                                         data_,
+                                         costEvaluator,
+                                         context.neighbours,
+                                         context.nodes,
+                                         context.routes);
 
         UAfter->route()->insert(UAfter->idx() + 1, U);
         UAfter->route()->update();
