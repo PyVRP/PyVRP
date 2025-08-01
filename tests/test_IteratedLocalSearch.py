@@ -11,6 +11,7 @@ from pyvrp import (
 from pyvrp.search import (
     Exchange10,
     LocalSearch,
+    PerturbationParams,
     RemoveNeighbours,
     compute_neighbours,
 )
@@ -117,7 +118,8 @@ def test_restarts_after_no_improvement(rc208):
     rng = RandomNumberGenerator(seed=42)
     pm = PenaltyManager(initial_penalties=([1000], 1000, 1000))
 
-    ls = LocalSearch(rc208, rng, compute_neighbours(rc208), 50)
+    perturb_params = PerturbationParams(num_perturbations=50)
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208), perturb_params)
     ls.add_perturbation_operator(RemoveNeighbours(rc208))
     ls.add_node_operator(Exchange10(rc208))
 

@@ -19,6 +19,7 @@ from pyvrp.search import (
     NeighbourhoodParams,
     NodeOperator,
     PerturbationOperator,
+    PerturbationParams,
     RouteOperator,
     compute_neighbours,
 )
@@ -48,8 +49,8 @@ class SolveParams:
         Route operators to use in the search.
     perturbation_ops
         Perturbation operators to use in the search.
-    num_perturbations
-        Maximum number of perturbations to apply in each iteration. Default 25.
+    perturbation
+        Parameters for perturbation operators.
     display_interval
         Time (in seconds) between iteration logs. Default 5s.
     """
@@ -64,7 +65,7 @@ class SolveParams:
         perturbation_ops: list[
             type[PerturbationOperator]
         ] = PERTURBATION_OPERATORS,
-        num_perturbations: int = 25,
+        perturbation: PerturbationParams = PerturbationParams(),
         display_interval: float = 5.0,
     ):
         self._ils = ils
@@ -73,7 +74,7 @@ class SolveParams:
         self._node_ops = node_ops
         self._route_ops = route_ops
         self._perturbation_ops = perturbation_ops
-        self._num_perturbations = num_perturbations
+        self._perturbation = perturbation
         self._display_interval = display_interval
 
     def __eq__(self, other: object) -> bool:
@@ -85,7 +86,7 @@ class SolveParams:
             and self.node_ops == other.node_ops
             and self.route_ops == other.route_ops
             and self.perturbation_ops == other.perturbation_ops
-            and self.num_perturbations == other.num_perturbations
+            and self.perturbation == other.perturbation
             and self.display_interval == other.display_interval
         )
 
@@ -114,8 +115,8 @@ class SolveParams:
         return self._perturbation_ops
 
     @property
-    def num_perturbations(self):
-        return self._num_perturbations
+    def perturbation(self):
+        return self._perturbation
 
     @property
     def display_interval(self) -> float:
@@ -150,7 +151,7 @@ class SolveParams:
             node_ops,
             route_ops,
             perturbation_ops,
-            data.get("num_perturbations", 25),
+            PerturbationParams(**data.get("perturbation", {})),
             data.get("display_interval", 5.0),
         )
 
@@ -192,12 +193,7 @@ def solve(
     """
     rng = RandomNumberGenerator(seed=seed)
     neighbours = compute_neighbours(data, params.neighbourhood)
-    ls = LocalSearch(
-        data,
-        rng,
-        neighbours,
-        num_perturbations=params.num_perturbations,
-    )
+    ls = LocalSearch(data, rng, neighbours, params.perturbation)
 
     for node_op in params.node_ops:
         if node_op.supports(data):
@@ -207,9 +203,9 @@ def solve(
         if route_op.supports(data):
             ls.add_route_operator(route_op(data))
 
-    for perturb_op in params.perturbation_ops:
-        if perturb_op.supports(data):
-            ls.add_perturbation_operator(perturb_op(data))
+    for perturbation_op in params.perturbation_ops:
+        if perturbation_op.supports(data):
+            ls.add_perturbation_operator(perturbation_op(data))
 
     pm = PenaltyManager.init_from(data, params.penalty)
     init = ls(Solution(data, []), pm.booster_cost_evaluator())  # type: ignore

@@ -1,9 +1,8 @@
-from pyvrp._pyvrp import (
-    CostEvaluator,
-    ProblemData,
-    RandomNumberGenerator,
-    Solution,
-)
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 from pyvrp.search._search import LocalSearch as _LocalSearch
 from pyvrp.search._search import (
     LocalSearchStatistics,
@@ -11,6 +10,30 @@ from pyvrp.search._search import (
     PerturbationOperator,
     RouteOperator,
 )
+
+if TYPE_CHECKING:
+    from pyvrp._pyvrp import (
+        CostEvaluator,
+        ProblemData,
+        RandomNumberGenerator,
+        Solution,
+    )
+
+
+@dataclass
+class PerturbationParams:
+    """
+    Parameters for perturbation operators used in local search.
+
+    Parameters
+    ----------
+    num_perturbations
+        Maximum number of perturbations to apply in each iteration. The actual
+        number of perturbations used is randomly chosen between 1 and this
+        value (inclusive). Default is 25.
+    """
+
+    num_perturbations: int = 25
 
 
 class LocalSearch:
@@ -27,10 +50,8 @@ class LocalSearch:
         Random number generator.
     neighbours
         List of lists that defines the local search neighbourhood.
-    num_perturbations
-        Maximum number of perturbations to apply in each iteration. The actual
-        number of perturbations used is randomly chosen between 1 and this
-        value (inclusive). Default is 25.
+    perturbation_params
+        Parameters for perturbation operators.
     """
 
     def __init__(
@@ -38,11 +59,11 @@ class LocalSearch:
         data: ProblemData,
         rng: RandomNumberGenerator,
         neighbours: list[list[int]],
-        num_perturbations: int = 25,
+        perturbation_params: PerturbationParams = PerturbationParams(),
     ):
         self._ls = _LocalSearch(data, neighbours)
         self._rng = rng
-        self._num_perturbations = num_perturbations
+        self._perturbation_params = perturbation_params
 
     def add_node_operator(self, op: NodeOperator):
         """
@@ -119,6 +140,13 @@ class LocalSearch:
         return self._ls.perturbation_operators
 
     @property
+    def perturbation_params(self) -> PerturbationParams:
+        """
+        Returns the perturbation parameters in use.
+        """
+        return self._perturbation_params
+
+    @property
     def statistics(self) -> LocalSearchStatistics:
         """
         Returns search statistics about the most recently improved solution.
@@ -150,7 +178,9 @@ class LocalSearch:
             The improved solution. This is not the same object as the
             solution that was passed in.
         """
-        num_perturbations = self._rng.randint(self._num_perturbations) + 1
+        num_perturbations = (
+            self._rng.randint(self._perturbation_params.num_perturbations) + 1
+        )
         self._ls.num_perturbations = num_perturbations
 
         self._ls.shuffle(self._rng)
@@ -226,7 +256,9 @@ class LocalSearch:
             The perturbed solution. This is not the same object as the
             solution that was passed in.
         """
-        num_perturbations = self._rng.randint(self._num_perturbations) + 1
+        num_perturbations = (
+            self._rng.randint(self._perturbation_params.num_perturbations) + 1
+        )
         self._ls.num_perturbations = num_perturbations
 
         self._ls.shuffle(self._rng)

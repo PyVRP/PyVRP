@@ -1,6 +1,7 @@
 from typing import Type
 
 from .LocalSearch import LocalSearch as LocalSearch
+from .LocalSearch import PerturbationParams as PerturbationParams
 from .SearchMethod import SearchMethod as SearchMethod
 from ._search import Exchange10 as Exchange10
 from ._search import Exchange11 as Exchange11
