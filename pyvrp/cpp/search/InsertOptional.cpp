@@ -39,20 +39,23 @@ void InsertOptional::operator()(PerturbationContext const &context)
             }
         }
 
-        // Also consider an empty route, if available.
-        auto const &[vehType, offset] = context.orderVehTypes.front();
-        auto const begin = context.routes.begin() + offset;
-        auto const end = begin + data_.vehicleType(vehType).numAvailable;
-        auto const isEmpty = [](auto const &route) { return route.empty(); };
-        auto empty = std::find_if(begin, end, isEmpty);
-
-        if (empty != end)
+        auto begin = context.routes.begin();
+        for (size_t vehType = 0; vehType != data_.numVehicleTypes(); vehType++)
         {
-            auto const cost = insertCost(U, (*empty)[0], data_, costEvaluator);
-            if (cost < bestCost)
+            auto const end = begin + data_.vehicleType(vehType).numAvailable;
+            auto const pred = [](auto const &route) { return route.empty(); };
+            auto empty = std::find_if(begin, end, pred);
+            begin = end;
+
+            if (empty != end)  // try inserting U into the empty route.
             {
-                bestCost = cost;
-                UAfter = (*empty)[0];
+                auto const cost
+                    = insertCost(U, (*empty)[0], data_, costEvaluator);
+                if (cost < bestCost)
+                {
+                    bestCost = cost;
+                    UAfter = (*empty)[0];
+                }
             }
         }
 
