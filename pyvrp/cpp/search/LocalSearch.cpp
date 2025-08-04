@@ -385,14 +385,28 @@ void LocalSearch::insert(Route::Node *U,
                          CostEvaluator const &costEvaluator,
                          bool required)
 {
-    auto [UAfter, bestCost]
-        = bestInsert(U, data, costEvaluator, neighbours_, nodes, routes);
+    Route::Node *UAfter = routes[0][0];
+    Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
+
+    for (auto const vClient : neighbours_[U->client()])
+    {
+        auto *V = &nodes[vClient];
+
+        if (!V->route())
+            continue;
+
+        auto const cost = insertCost(U, V, data, costEvaluator);
+        if (cost < bestCost)
+        {
+            bestCost = cost;
+            UAfter = V;
+        }
+    }
 
     if (required || bestCost < 0)
     {
-        auto *route = UAfter->route();
-        route->insert(UAfter->idx() + 1, U);
-        update(route, route);
+        UAfter->route()->insert(UAfter->idx() + 1, U);
+        update(UAfter->route(), UAfter->route());
         markPromising(U);
     }
 }

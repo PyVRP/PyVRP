@@ -196,11 +196,3 @@ def inplace_cost(
 def remove_cost(
     U: Node, data: ProblemData, cost_evaluator: CostEvaluator
 ) -> int: ...
-def best_insert(
-    U: Node,
-    data: ProblemData,
-    cost_evaluator: CostEvaluator,
-    neighbours: list[list[int]],
-    nodes: list[Node],
-    routes: list[Route],
-) -> tuple[Node, int]: ...

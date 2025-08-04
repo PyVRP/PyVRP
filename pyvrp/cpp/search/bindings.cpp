@@ -19,7 +19,6 @@
 
 namespace py = pybind11;
 
-using pyvrp::search::bestInsert;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
@@ -541,15 +540,4 @@ PYBIND11_MODULE(_search, m)
           py::arg("data"),
           py::arg("cost_evaluator"),
           DOC(pyvrp, search, removeCost));
-
-    m.def("best_insert",
-          &bestInsert,
-          py::return_value_policy::copy,
-          py::arg("U"),
-          py::arg("data"),
-          py::arg("cost_evaluator"),
-          py::arg("neighbours"),
-          py::arg("nodes"),
-          py::arg("routes"),
-          DOC(pyvrp, search, bestInsert));
 }
