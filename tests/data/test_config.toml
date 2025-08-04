@@ -1,4 +1,5 @@
 display_interval = 10.0
+num_perturbations = 10
 
 node_ops = [
     "Exchange10",
@@ -36,7 +37,3 @@ solutions_between_updates = 100
 penalty_increase = 1.25
 penalty_decrease = 0.85
 target_feasible = 0.43
-
-
-[perturbation]
-num_perturbations = 10

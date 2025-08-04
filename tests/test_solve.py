@@ -9,7 +9,6 @@ from pyvrp.search import (
     ROUTE_OPERATORS,
     Exchange10,
     NeighbourhoodParams,
-    PerturbationParams,
     RemoveNeighbours,
     SwapStar,
     SwapTails,
@@ -31,7 +30,7 @@ def test_default_values():
     assert_equal(params.node_ops, NODE_OPERATORS)
     assert_equal(params.route_ops, ROUTE_OPERATORS)
     assert_equal(params.perturbation_ops, PERTURBATION_OPERATORS)
-    assert_equal(params.perturbation.num_perturbations, 25)
+    assert_equal(params.num_perturbations, 25)
     assert_allclose(params.display_interval, 5.0)
 
 
@@ -47,7 +46,6 @@ def test_solve_params_from_file():
     node_ops = [Exchange10, SwapTails]
     route_ops = [SwapStar]
     perturbation_ops = [RemoveNeighbours]
-    perturbation = PerturbationParams(10)
 
     assert_equal(params.ils, ils)
     assert_equal(params.penalty, penalty)
@@ -55,7 +53,7 @@ def test_solve_params_from_file():
     assert_equal(params.node_ops, node_ops)
     assert_equal(params.route_ops, route_ops)
     assert_equal(params.perturbation_ops, perturbation_ops)
-    assert_equal(params.perturbation, perturbation)
+    assert_equal(params.num_perturbations, 10)
     assert_allclose(params.display_interval, 10.0)
 
 
