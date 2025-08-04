@@ -17,22 +17,27 @@ void RemoveNeighbours::operator()(PerturbationContext const &context)
         if (!U->route())
             continue;
 
+        auto *route = U->route();
+
         for (auto *node : {U, n(U), p(U)})
         {
             if (node->isDepot())
                 continue;
 
-            context.promising[node->client()] = true;
             context.promising[p(node)->client()] = true;
+            context.promising[node->client()] = true;
             context.promising[n(node)->client()] = true;
 
-            auto *route = node->route();
             route->remove(node->idx());
-            route->update();
 
             if (++numRemoved == context.numPerturbations)
+            {
+                route->update();
                 return;
+            }
         }
+
+        route->update();
     }
 }
 
