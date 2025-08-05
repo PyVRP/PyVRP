@@ -425,16 +425,17 @@ class Model:
         ----------
         missing_value
             Distance and duration value to use for missing edges. Defaults to
-            ``MAX_VALUE``, a large number.
+            ``MAX_VALUE``, a large number. Note that this value cannot exceed
+            ``MAX_VALUE``.
         """
         locs = self.locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
         # First we create the base distance and duration matrices. These are
         # shared by all routing profiles.
-        shape = (len(locs), len(locs))
-        base_distance = np.full(shape, missing_value, np.int64)
-        base_duration = np.full(shape, missing_value, np.int64)
+        fill_value = min(missing_value, MAX_VALUE)
+        base_distance = np.full((len(locs), len(locs)), fill_value, np.int64)
+        base_duration = np.full((len(locs), len(locs)), fill_value, np.int64)
         np.fill_diagonal(base_distance, 0)
         np.fill_diagonal(base_duration, 0)
 
