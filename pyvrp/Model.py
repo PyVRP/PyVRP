@@ -425,8 +425,8 @@ class Model:
         ----------
         missing_value
             Distance and duration value to use for missing edges. Defaults to
-            ``MAX_VALUE``, a large number. Note that this value cannot exceed
-            ``MAX_VALUE``.
+            :const:`~pyvrp.constants.MAX_VALUE`, a large number. Note that this
+            value cannot exceed :const:`~pyvrp.constants.MAX_VALUE`.
         """
         locs = self.locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
@@ -506,7 +506,7 @@ class Model:
             Solver parameters to use. If not provided, a default will be used.
         missing_value
             Distance and duration value to use for missing edges. Defaults to
-            ``MAX_VALUE``, a large number.
+            :const:`~pyvrp.constants.MAX_VALUE`, a large number.
 
         Returns
         -------
