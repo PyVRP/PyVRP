@@ -1,7 +1,8 @@
 class ScalingWarning(UserWarning):
     """
-    Raised when the distance or duration values in the problem are very large,
-    which could cause the algorithm to suffer from numerical issues.
+    Raised when the distance or duration values in the problem exceed
+    :const:`~pyvrp.constants.MAX_VALUE`, which could cause the algorithm to
+    suffer from numerical issues.
     """
 
 
