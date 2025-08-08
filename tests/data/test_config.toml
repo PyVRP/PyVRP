@@ -1,5 +1,5 @@
 display_interval = 10.0
-num_perturbations = 20
+num_perturbations = 10
 
 node_ops = [
     "Exchange10",
@@ -13,7 +13,7 @@ route_ops = [
 
 
 perturbation_ops = [
-    "NeighbourRemoval",
+    "RemoveNeighbours",
 ]
 
 
