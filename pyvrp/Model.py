@@ -416,19 +416,26 @@ class Model:
         self._vehicle_types.append(vehicle_type)
         return vehicle_type
 
-    def data(self) -> ProblemData:
+    def data(self, missing_value: int = MAX_VALUE) -> ProblemData:
         """
         Creates and returns a :class:`~pyvrp._pyvrp.ProblemData` instance
         from this model's attributes.
+
+        Parameters
+        ----------
+        missing_value
+            Distance and duration value to use for missing edges. Defaults to
+            :const:`~pyvrp.constants.MAX_VALUE`, a large number. Note that this
+            value cannot exceed :const:`~pyvrp.constants.MAX_VALUE`.
         """
         locs = self.locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
         # First we create the base distance and duration matrices. These are
-        # shared by all routing profiles. If an edge was not specified, we use
-        # a large default value here.
-        base_distance = np.full((len(locs), len(locs)), MAX_VALUE, np.int64)
-        base_duration = np.full((len(locs), len(locs)), MAX_VALUE, np.int64)
+        # shared by all routing profiles.
+        fill_value = min(missing_value, MAX_VALUE)
+        base_distance = np.full((len(locs), len(locs)), fill_value, np.int64)
+        base_duration = np.full((len(locs), len(locs)), fill_value, np.int64)
         np.fill_diagonal(base_distance, 0)
         np.fill_diagonal(base_duration, 0)
 
@@ -477,6 +484,7 @@ class Model:
         collect_stats: bool = True,
         display: bool = True,
         params: SolveParams = SolveParams(),
+        missing_value: int = MAX_VALUE,
     ) -> Result:
         """
         Solve this model.
@@ -496,6 +504,9 @@ class Model:
             ``collect_stats`` is also set, which it is by default.
         params
             Solver parameters to use. If not provided, a default will be used.
+        missing_value
+            Distance and duration value to use for missing edges. Defaults to
+            :const:`~pyvrp.constants.MAX_VALUE`, a large number.
 
         Returns
         -------
@@ -503,7 +514,8 @@ class Model:
             A Result object, containing statistics (if collected) and the best
             found solution.
         """
-        return solve(self.data(), stop, seed, collect_stats, display, params)
+        data = self.data(missing_value)
+        return solve(data, stop, seed, collect_stats, display, params)
 
 
 def _idx_by_id(item: object, container: Sequence[object]) -> int | None:

@@ -33,3 +33,14 @@ Modelling
 
       Rather than specifying an explicit service duration for the clients or depots, add the service duration to the duration all the edges leaving the location.
       Using route profiles, you can then set up different travel duration matrices for the vehicles that include the vehicle-specific service durations.
+
+Debugging
+---------
+
+.. glossary::
+
+   Why does PyVRP sometimes get stuck when using partial travel matrices?
+
+      PyVRP internally uses a large ``missing_value`` argument to set the distance and duration attributes of missing edges.
+      This sometimes results in integer overflow, which can cause the solver to get stuck.
+      Passing a smaller ``missing_value`` to :meth:`~pyvrp.Model.Model.solve` should fix this problem.
