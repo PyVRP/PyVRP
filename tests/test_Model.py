@@ -379,12 +379,15 @@ def test_model_solve_display_argument(ok_small, capsys):
     assert_(str(round(res.runtime)) in printed)
 
 
-def test_partial_distance_duration_matrix():
+@pytest.mark.parametrize("missing_value", [5, 100, MAX_VALUE, MAX_VALUE + 1])
+def test_partial_distance_duration_matrix(missing_value):
     """
     Tests that adding a full distance or duration matrix is not required. Any
-    "missing" arcs are given large default values, ensuring they are unused.
+    "missing" arcs are given default values.
     """
     model = Model()
+    model.add_vehicle_type()
+
     depot = model.add_depot(0, 0)
     clients = [model.add_client(0, 1), model.add_client(1, 0)]
 
@@ -394,16 +397,14 @@ def test_partial_distance_duration_matrix():
     model.add_edge(clients[0], clients[1], distance=2)
     model.add_edge(clients[1], depot, distance=1)
 
-    model.add_vehicle_type(num_available=1)
-
-    # These edges were not set, so their distance values should default to the
-    # maximum value we use for such edges.
-    data = model.data()
+    # Edges that were not explicitly set should default to the missing value
+    # argument, or MAX_VALUE, whichever is smaller.
+    data = model.data(missing_value)
     distances = data.distance_matrix(profile=0)
-    assert_equal(distances[0, 2], MAX_VALUE)
-    assert_equal(distances[1, 0], MAX_VALUE)
+    assert_equal(distances[0, 2], min(missing_value, MAX_VALUE))
+    assert_equal(distances[1, 0], min(missing_value, MAX_VALUE))
 
-    res = model.solve(stop=MaxIterations(100), seed=4)
+    res = model.solve(MaxIterations(100), seed=4, missing_value=missing_value)
     assert_equal(res.best.num_routes(), 1)
     assert_equal(res.cost(), 4)  # depot -> client 1 -> client 2 -> depot
     assert_(res.is_feasible())
