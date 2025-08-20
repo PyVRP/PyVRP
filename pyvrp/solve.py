@@ -223,6 +223,7 @@ def solve(
     pm = PenaltyManager.init_from(data, params.penalty)
 
     if initial_solution is None:
+        # Using large penalties will help to find a feasible solution.
         max_penalty = params.penalty.max_penalty
         cost_eval = CostEvaluator(
             [max_penalty] * data.num_load_dimensions,
