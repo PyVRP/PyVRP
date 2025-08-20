@@ -10,6 +10,7 @@ from pyvrp._pyvrp import (
     ClientGroup,
     Depot,
     ProblemData,
+    Solution,
     VehicleType,
 )
 from pyvrp.constants import MAX_VALUE
@@ -483,6 +484,7 @@ class Model:
         seed: int = 0,
         collect_stats: bool = True,
         display: bool = True,
+        initial_solution: Solution | None = None,
         params: SolveParams = SolveParams(),
         missing_value: int = MAX_VALUE,
     ) -> Result:
@@ -502,6 +504,9 @@ class Model:
             Whether to display information about the solver progress. Default
             ``True``. Progress information is only available when
             ``collect_stats`` is also set, which it is by default.
+        initial_solution
+            Initial solution to start the search from. If not provided, a
+            default initial solution will be created.
         params
             Solver parameters to use. If not provided, a default will be used.
         missing_value
@@ -514,8 +519,15 @@ class Model:
             A Result object, containing statistics (if collected) and the best
             found solution.
         """
-        data = self.data(missing_value)
-        return solve(data, stop, seed, collect_stats, display, params)
+        return solve(
+            self.data(missing_value),
+            stop,
+            seed,
+            collect_stats,
+            display,
+            initial_solution,
+            params,
+        )
 
 
 def _idx_by_id(item: object, container: Sequence[object]) -> int | None:

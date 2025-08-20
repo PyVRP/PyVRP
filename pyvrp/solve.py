@@ -161,6 +161,7 @@ def solve(
     seed: int = 0,
     collect_stats: bool = True,
     display: bool = False,
+    initial_solution: Solution | None = None,
     params: SolveParams = SolveParams(),
 ) -> Result:
     """
@@ -181,6 +182,9 @@ def solve(
         Whether to display information about the solver progress. Default
         ``False``. Progress information is only available when
         ``collect_stats`` is also set, which it is by default.
+    initial_solution
+        Initial solution to start the search from. If not provided, a default
+        initial solution will be created.
     params
         Solver parameters to use. If not provided, a default will be used.
 
@@ -212,8 +216,11 @@ def solve(
             ls.add_perturbation_operator(perturb_op(data))
 
     pm = PenaltyManager.init_from(data, params.penalty)
-    init = ls(Solution(data, []), pm.booster_cost_evaluator())  # type: ignore
 
-    ils_args = (data, pm, rng, ls, init, params.ils)
+    if initial_solution is None:
+        cost_eval = pm.booster_cost_evaluator()
+        initial_solution = ls(Solution(data, []), cost_eval)  # type: ignore
+
+    ils_args = (data, pm, rng, ls, initial_solution, params.ils)
     algo = IteratedLocalSearch(*ils_args)  # type: ignore
     return algo.run(stop, collect_stats, display, params.display_interval)
