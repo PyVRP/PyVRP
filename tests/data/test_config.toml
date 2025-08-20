@@ -32,7 +32,6 @@ symmetric_neighbours = true
 
 
 [penalty]
-repair_booster = 12
 solutions_between_updates = 100
 penalty_increase = 1.25
 penalty_decrease = 0.85

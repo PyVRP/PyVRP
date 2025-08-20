@@ -41,7 +41,7 @@ def test_solve_params_from_file():
     params = SolveParams.from_file(DATA_DIR / "test_config.toml")
 
     ils = IteratedLocalSearchParams(10, 0.1, 1)
-    penalty = PenaltyParams(12, 100, 1.25, 0.85, 0.43)
+    penalty = PenaltyParams(100, 1.25, 0.85, 0.43)
     neighbourhood = NeighbourhoodParams(0, 0, 20, True, True)
     node_ops = [Exchange10, SwapTails]
     route_ops = [SwapStar]
