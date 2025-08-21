@@ -505,8 +505,8 @@ class Model:
             ``True``. Progress information is only available when
             ``collect_stats`` is also set, which it is by default.
         initial_solution
-            Initial solution to start the search from. If not provided, a
-            default initial solution will be created.
+            Solution to start the search from. If not provided, a default
+            solution will be created.
         params
             Solver parameters to use. If not provided, a default will be used.
         missing_value
