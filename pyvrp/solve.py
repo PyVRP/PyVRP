@@ -166,8 +166,8 @@ def solve(
     seed: int = 0,
     collect_stats: bool = True,
     display: bool = False,
-    initial_solution: Solution | None = None,
     params: SolveParams = SolveParams(),
+    initial_solution: Solution | None = None,
 ) -> Result:
     """
     Solves the given problem data instance.
@@ -187,11 +187,11 @@ def solve(
         Whether to display information about the solver progress. Default
         ``False``. Progress information is only available when
         ``collect_stats`` is also set, which it is by default.
+    params
+        Solver parameters to use. If not provided, a default will be used.
     initial_solution
         Solution to start the search from. If not provided, a default solution
         will be created.
-    params
-        Solver parameters to use. If not provided, a default will be used.
 
     Returns
     -------

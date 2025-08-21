@@ -484,9 +484,9 @@ class Model:
         seed: int = 0,
         collect_stats: bool = True,
         display: bool = True,
-        initial_solution: Solution | None = None,
         params: SolveParams = SolveParams(),
         missing_value: int = MAX_VALUE,
+        initial_solution: Solution | None = None,
     ) -> Result:
         """
         Solve this model.
@@ -504,14 +504,14 @@ class Model:
             Whether to display information about the solver progress. Default
             ``True``. Progress information is only available when
             ``collect_stats`` is also set, which it is by default.
-        initial_solution
-            Solution to start the search from. If not provided, a default
-            solution will be created.
         params
             Solver parameters to use. If not provided, a default will be used.
         missing_value
             Distance and duration value to use for missing edges. Defaults to
             :const:`~pyvrp.constants.MAX_VALUE`, a large number.
+        initial_solution
+            Solution to start the search from. If not provided, a default
+            solution will be created.
 
         Returns
         -------
@@ -525,8 +525,8 @@ class Model:
             seed,
             collect_stats,
             display,
-            initial_solution,
             params,
+            initial_solution,
         )
 
 
