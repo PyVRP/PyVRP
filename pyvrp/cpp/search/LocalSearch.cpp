@@ -427,7 +427,7 @@ void LocalSearch::insert(Route::Node *U,
         break;
     }
 
-    if (required || !UAfter)
+    if (required && !UAfter)
         UAfter = routes[0][0];  // fallback if no insertion positions were found
 
     if (required || bestCost < 0)
