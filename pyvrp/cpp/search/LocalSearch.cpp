@@ -404,6 +404,9 @@ void LocalSearch::insert(Route::Node *U,
         }
     }
 
+    // Try to inserting into an empty route. We do this only for one (random)
+    // vehicle type to avoid using over-prioritising vehicles with low fixed
+    // costs (similar to ``applyEmptyRouteMoves``).
     auto const &[vehType, offset] = orderVehTypes.front();
     auto const begin = routes.begin() + offset;
     auto const end = begin + data.vehicleType(vehType).numAvailable;
