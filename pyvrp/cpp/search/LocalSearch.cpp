@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <limits>
 #include <numeric>
 
 using pyvrp::Solution;
@@ -385,8 +386,8 @@ void LocalSearch::insert(Route::Node *U,
                          CostEvaluator const &costEvaluator,
                          bool required)
 {
-    Route::Node *UAfter = routes[0][0];
-    Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
+    Route::Node *UAfter = nullptr;
+    auto bestCost = std::numeric_limits<Cost>::max();
 
     for (auto const vClient : neighbours_[U->client()])
     {
@@ -402,6 +403,25 @@ void LocalSearch::insert(Route::Node *U,
             UAfter = V;
         }
     }
+
+    auto const &[vehType, offset] = orderVehTypes.front();
+    auto const begin = routes.begin() + offset;
+    auto const end = begin + data.vehicleType(vehType).numAvailable;
+    auto const pred = [](auto const &route) { return route.empty(); };
+    auto empty = std::find_if(begin, end, pred);
+
+    if (empty != end)
+    {
+        auto const cost = insertCost(U, (*empty)[0], data, costEvaluator);
+        if (cost < bestCost)
+        {
+            bestCost = cost;
+            UAfter = (*empty)[0];
+        }
+    }
+
+    if (required || !UAfter)
+        UAfter = routes[0][0];  // fallback
 
     if (required || bestCost < 0)
     {
