@@ -12,9 +12,7 @@ from pyvrp import (
     ClientGroup,
     Depot,
     Model,
-    PenaltyParams,
     Profile,
-    SolveParams,
     VehicleType,
 )
 from pyvrp.constants import MAX_VALUE
@@ -486,10 +484,7 @@ def test_model_solves_small_instance_with_fixed_costs():
             if frm != to:
                 m.add_edge(frm, to, distance=0, duration=5)
 
-    # The initial penalties (0.1) are too low for this instance.
-    params = SolveParams(penalty=PenaltyParams(min_penalty=1))
-
-    res = m.solve(stop=MaxIterations(10), params=params)
+    res = m.solve(stop=MaxIterations(10))
     assert_(res.is_feasible())
 
 
@@ -1064,7 +1059,7 @@ def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
            https://doi.org/10.1287/trsc.2022.1161.
     """
     m = Model.from_data(mtvrptw_release_times)
-    res = m.solve(stop=MaxIterations(50))
+    res = m.solve(stop=MaxIterations(5))
     assert_(res.is_feasible())
 
     opt = read_solution("data/C201R0.25.sol", mtvrptw_release_times)
