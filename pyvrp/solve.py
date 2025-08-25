@@ -203,7 +203,8 @@ def solve(
     display
         Whether to display information about the solver progress. Default
         ``False``. Progress information is only available when
-        ``params.collect_stats`` is also set, which it is by default.
+        :attr:`~pyvrp.solve.SolveParams.__init__.collect_stats` is also set,
+        which it is by default.
     params
         Solver parameters to use. If not provided, a default will be used.
 
