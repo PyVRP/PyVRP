@@ -9,7 +9,7 @@ def minimise_fleet(
     data: ProblemData,
     stop: StoppingCriterion,
     seed: int = 0,
-    params: SolveParams = SolveParams(),
+    params: SolveParams = SolveParams(collect_stats=False),
 ) -> VehicleType:
     """
     Attempts to reduce the number of vehicles needed to achieve a feasible
@@ -68,7 +68,6 @@ def minimise_fleet(
             data,
             stop=MultipleCriteria([FirstFeasible(), stop]),
             seed=seed,
-            collect_stats=False,
             display=False,
             params=params,
         )

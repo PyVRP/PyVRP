@@ -56,6 +56,9 @@ class SolveParams:
         Maximum number of perturbations to apply in each iteration. Default 25.
     display_interval
         Time (in seconds) between iteration logs. Default 5s.
+    collect_stats
+        Whether to collect statistics about the solver's progress. Default
+        ``True``.
     """
 
     def __init__(
@@ -70,6 +73,7 @@ class SolveParams:
         ] = PERTURBATION_OPERATORS,
         num_perturbations: int = 25,
         display_interval: float = 5.0,
+        collect_stats: bool = True,
     ):
         self._ils = ils
         self._penalty = penalty
@@ -79,6 +83,7 @@ class SolveParams:
         self._perturbation_ops = perturbation_ops
         self._num_perturbations = num_perturbations
         self._display_interval = display_interval
+        self._collect_stats = collect_stats
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -91,6 +96,7 @@ class SolveParams:
             and self.perturbation_ops == other.perturbation_ops
             and self.num_perturbations == other.num_perturbations
             and self.display_interval == other.display_interval
+            and self.collect_stats == other.collect_stats
         )
 
     @property
@@ -125,6 +131,10 @@ class SolveParams:
     def display_interval(self) -> float:
         return self._display_interval
 
+    @property
+    def collect_stats(self) -> bool:
+        return self._collect_stats
+
     @classmethod
     def from_file(cls, loc: str | pathlib.Path):
         """
@@ -156,6 +166,7 @@ class SolveParams:
             perturbation_ops,
             data.get("num_perturbations", 25),
             data.get("display_interval", 5.0),
+            data.get("collect_stats", True),
         )
 
 
@@ -163,7 +174,6 @@ def solve(
     data: ProblemData,
     stop: StoppingCriterion,
     seed: int = 0,
-    collect_stats: bool = True,
     display: bool = False,
     params: SolveParams = SolveParams(),
     initial_solution: Solution | None = None,
@@ -179,13 +189,10 @@ def solve(
         Stopping criterion to use.
     seed
         Seed value to use for the random number stream. Default 0.
-    collect_stats
-        Whether to collect statistics about the solver's progress. Default
-        ``True``.
     display
         Whether to display information about the solver progress. Default
         ``False``. Progress information is only available when
-        ``collect_stats`` is also set, which it is by default.
+        ``params.collect_stats`` is also set, which it is by default.
     params
         Solver parameters to use. If not provided, a default will be used.
     initial_solution
@@ -227,4 +234,9 @@ def solve(
 
     ils_args = (data, pm, rng, ls, initial_solution, params.ils)
     algo = IteratedLocalSearch(*ils_args)  # type: ignore
-    return algo.run(stop, collect_stats, display, params.display_interval)
+    return algo.run(
+        stop,
+        params.collect_stats,
+        display,
+        params.display_interval,
+    )
