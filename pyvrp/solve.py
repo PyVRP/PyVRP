@@ -243,7 +243,7 @@ def solve(
 
     return algo.run(
         stop,
-        params.collect_stats,
         display,
         params.display_interval,
+        params.collect_stats,
     )
