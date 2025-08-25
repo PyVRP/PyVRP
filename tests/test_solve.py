@@ -33,6 +33,7 @@ def test_default_values():
     assert_equal(params.num_perturbations, 25)
     assert_allclose(params.display_interval, 5.0)
     assert_(params.collect_stats)
+    assert_(params.initial_solution is None)
 
 
 def test_solve_params_from_file():
@@ -87,7 +88,8 @@ def test_solve_initial_solution(rc208):
     initial solution.
     """
     bks = read_solution("data/RC208.sol", rc208)
-    res = solve(rc208, stop=MaxIterations(0), initial_solution=bks)
+    params = SolveParams(initial_solution=bks)
+    res = solve(rc208, stop=MaxIterations(0), params=params)
     assert_equal(res.best, bks)
 
 

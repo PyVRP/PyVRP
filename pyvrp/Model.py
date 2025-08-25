@@ -10,7 +10,6 @@ from pyvrp._pyvrp import (
     ClientGroup,
     Depot,
     ProblemData,
-    Solution,
     VehicleType,
 )
 from pyvrp.constants import MAX_VALUE
@@ -485,7 +484,6 @@ class Model:
         display: bool = True,
         params: SolveParams = SolveParams(),
         missing_value: int = MAX_VALUE,
-        initial_solution: Solution | None = None,
     ) -> Result:
         """
         Solve this model.
@@ -505,9 +503,6 @@ class Model:
         missing_value
             Distance and duration value to use for missing edges. Defaults to
             :const:`~pyvrp.constants.MAX_VALUE`, a large number.
-        initial_solution
-            Solution to start the search from. If not provided, a default
-            solution will be created.
 
         Returns
         -------
@@ -515,14 +510,7 @@ class Model:
             A Result object, containing statistics (if collected) and the best
             found solution.
         """
-        return solve(
-            self.data(missing_value),
-            stop,
-            seed,
-            display,
-            params,
-            initial_solution,
-        )
+        return solve(self.data(missing_value), stop, seed, display, params)
 
 
 def _idx_by_id(item: object, container: Sequence[object]) -> int | None:
