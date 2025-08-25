@@ -280,3 +280,12 @@ class PenaltyManager:
         """
         *loads, tw, dist = self._penalties
         return CostEvaluator(loads, tw, dist)
+
+    def max_cost_evaluator(self) -> CostEvaluator:
+        """
+        Get a cost evaluator with the maximum penalty value for all penalty
+        dimensions.
+        """
+        penalty = self._params.max_penalty
+        load_penalties = [penalty] * len(self._penalties[:-2])
+        return CostEvaluator(load_penalties, penalty, penalty)

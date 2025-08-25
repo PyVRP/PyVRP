@@ -11,7 +11,6 @@ from pyvrp.IteratedLocalSearch import (
 )
 from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
 from pyvrp._pyvrp import (
-    CostEvaluator,
     ProblemData,
     RandomNumberGenerator,
     Solution,
@@ -223,13 +222,7 @@ def solve(
     pm = PenaltyManager.init_from(data, params.penalty)
 
     if initial_solution is None:
-        # Using large penalties will help to find a feasible solution.
-        max_penalty = params.penalty.max_penalty
-        cost_eval = CostEvaluator(
-            [max_penalty] * data.num_load_dimensions,
-            max_penalty,
-            max_penalty,
-        )
+        cost_eval = pm.max_cost_evaluator()
         initial_solution = ls(Solution(data, []), cost_eval)  # type: ignore
 
     ils_args = (data, pm, rng, ls, initial_solution, params.ils)

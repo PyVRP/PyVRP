@@ -414,3 +414,20 @@ def test_init_from_multiple_load_penalties(ok_small_multiple_load):
     # the load penalties should reflect this difference.
     load_penalty1, load_penalty2 = load_penalties
     assert_allclose(load_penalty1 / load_penalty2, 5 / 18)
+
+
+def test_max_cost_evaluator(ok_small_multiple_load):
+    """
+    Tests that ``max_cost_evaluator()`` returns a CostEvaluator with the
+    correct penalty values.
+    """
+    max_penalty = 100
+    params = PenaltyParams(max_penalty=max_penalty)
+    pm = PenaltyManager.init_from(ok_small_multiple_load, params)
+    cost_eval = pm.max_cost_evaluator()
+
+    for idx in range(ok_small_multiple_load.num_load_dimensions):
+        assert_equal(cost_eval.load_penalty(1, 0, idx), max_penalty)
+
+    assert_equal(cost_eval.tw_penalty(1), max_penalty)
+    assert_equal(cost_eval.dist_penalty(1, 0), max_penalty)
