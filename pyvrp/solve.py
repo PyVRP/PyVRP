@@ -235,11 +235,11 @@ def solve(
             ls.add_perturbation_operator(perturb_op(data))
 
     pm = PenaltyManager.init_from(data, params.penalty)
-    init = (
-        params.initial_solution
-        if params.initial_solution is not None
-        else ls(Solution(data, []), pm.max_cost_evaluator())  # type: ignore
-    )
+
+    init = params.initial_solution
+    if init is None:
+        init = ls(Solution(data, []), pm.max_cost_evaluator())  # type: ignore
+
     algo = IteratedLocalSearch(data, pm, rng, ls, init, params.ils)
 
     return algo.run(
