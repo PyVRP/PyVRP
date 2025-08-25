@@ -481,7 +481,6 @@ class Model:
         self,
         stop: StoppingCriterion,
         seed: int = 0,
-        collect_stats: bool = True,
         display: bool = True,
         params: SolveParams = SolveParams(),
         missing_value: int = MAX_VALUE,
@@ -495,13 +494,11 @@ class Model:
             Stopping criterion to use.
         seed
             Seed value to use for the random number stream. Default 0.
-        collect_stats
-            Whether to collect statistics about the solver's progress. Default
-            ``True``.
         display
             Whether to display information about the solver progress. Default
             ``True``. Progress information is only available when
-            ``collect_stats`` is also set, which it is by default.
+            :attr:`~pyvrp.solve.SolveParams.__init__.collect_stats` is also
+            set, which it is by default.
         params
             Solver parameters to use. If not provided, a default will be used.
         missing_value
@@ -514,8 +511,7 @@ class Model:
             A Result object, containing statistics (if collected) and the best
             found solution.
         """
-        data = self.data(missing_value)
-        return solve(data, stop, seed, collect_stats, display, params)
+        return solve(self.data(missing_value), stop, seed, display, params)
 
 
 def _idx_by_id(item: object, container: Sequence[object]) -> int | None:

@@ -123,8 +123,8 @@ private:
     // Performs perturb on the currently loaded solution.
     void perturb(CostEvaluator const &costEvaluator);
 
-    // Evaluate and apply inserting U after one of its neighbours if it's an
-    // improving move or required for feasibility.
+    // Evaluate inserting U after one of its neighbours or a random empty route.
+    // Applies the move if it's improving or required for feasibility.
     void
     insert(Route::Node *U, CostEvaluator const &costEvaluator, bool required);
 

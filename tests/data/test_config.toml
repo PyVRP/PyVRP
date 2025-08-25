@@ -1,5 +1,6 @@
-display_interval = 10.0
 num_perturbations = 10
+display_interval = 10.0
+collect_stats = false
 
 node_ops = [
     "Exchange10",
@@ -32,7 +33,6 @@ symmetric_neighbours = true
 
 
 [penalty]
-repair_booster = 12
 solutions_between_updates = 100
 penalty_increase = 1.25
 penalty_decrease = 0.85

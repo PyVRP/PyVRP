@@ -52,6 +52,12 @@ class SolveParams:
         Maximum number of perturbations to apply in each iteration. Default 25.
     display_interval
         Time (in seconds) between iteration logs. Default 5s.
+    collect_stats
+        Whether to collect statistics about the solver's progress. Default
+        ``True``.
+    initial_solution
+        Solution to start the search from. If not provided, a default solution
+        will be created.
     """
 
     def __init__(
@@ -66,6 +72,8 @@ class SolveParams:
         ] = PERTURBATION_OPERATORS,
         num_perturbations: int = 25,
         display_interval: float = 5.0,
+        collect_stats: bool = True,
+        initial_solution: Solution | None = None,
     ):
         self._ils = ils
         self._penalty = penalty
@@ -75,6 +83,8 @@ class SolveParams:
         self._perturbation_ops = perturbation_ops
         self._num_perturbations = num_perturbations
         self._display_interval = display_interval
+        self._collect_stats = collect_stats
+        self._initial_solution = initial_solution
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -87,6 +97,8 @@ class SolveParams:
             and self.perturbation_ops == other.perturbation_ops
             and self.num_perturbations == other.num_perturbations
             and self.display_interval == other.display_interval
+            and self.collect_stats == other.collect_stats
+            and self.initial_solution == other.initial_solution
         )
 
     @property
@@ -121,10 +133,22 @@ class SolveParams:
     def display_interval(self) -> float:
         return self._display_interval
 
+    @property
+    def collect_stats(self) -> bool:
+        return self._collect_stats
+
+    @property
+    def initial_solution(self) -> Solution | None:
+        return self._initial_solution
+
     @classmethod
     def from_file(cls, loc: str | pathlib.Path):
         """
         Loads the solver parameters from a TOML file.
+
+        .. note::
+           The initial solution cannot be loaded from file, and will always be
+           set to ``None``.
         """
         with open(loc, "rb") as fh:
             data = tomli.load(fh)
@@ -152,6 +176,8 @@ class SolveParams:
             perturbation_ops,
             data.get("num_perturbations", 25),
             data.get("display_interval", 5.0),
+            data.get("collect_stats", True),
+            None,  # initial solution cannot be loaded from file
         )
 
 
@@ -159,7 +185,6 @@ def solve(
     data: ProblemData,
     stop: StoppingCriterion,
     seed: int = 0,
-    collect_stats: bool = True,
     display: bool = False,
     params: SolveParams = SolveParams(),
 ) -> Result:
@@ -174,13 +199,11 @@ def solve(
         Stopping criterion to use.
     seed
         Seed value to use for the random number stream. Default 0.
-    collect_stats
-        Whether to collect statistics about the solver's progress. Default
-        ``True``.
     display
         Whether to display information about the solver progress. Default
         ``False``. Progress information is only available when
-        ``collect_stats`` is also set, which it is by default.
+        :attr:`~pyvrp.solve.SolveParams.__init__.collect_stats` is also set,
+        which it is by default.
     params
         Solver parameters to use. If not provided, a default will be used.
 
@@ -212,8 +235,16 @@ def solve(
             ls.add_perturbation_operator(perturb_op(data))
 
     pm = PenaltyManager.init_from(data, params.penalty)
-    init = ls(Solution(data, []), pm.booster_cost_evaluator())  # type: ignore
 
-    ils_args = (data, pm, rng, ls, init, params.ils)
-    algo = IteratedLocalSearch(*ils_args)  # type: ignore
-    return algo.run(stop, collect_stats, display, params.display_interval)
+    init = params.initial_solution
+    if init is None:
+        init = ls(Solution(data, []), pm.max_cost_evaluator())  # type: ignore
+
+    algo = IteratedLocalSearch(data, pm, rng, ls, init, params.ils)
+
+    return algo.run(
+        stop,
+        display,
+        params.display_interval,
+        params.collect_stats,
+    )

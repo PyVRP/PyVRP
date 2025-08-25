@@ -15,7 +15,7 @@ from pyvrp.search import (
 )
 from pyvrp.solve import SolveParams, solve
 from pyvrp.stop import MaxIterations
-from tests.helpers import DATA_DIR
+from tests.helpers import DATA_DIR, read_solution
 
 
 def test_default_values():
@@ -32,6 +32,8 @@ def test_default_values():
     assert_equal(params.perturbation_ops, PERTURBATION_OPERATORS)
     assert_equal(params.num_perturbations, 25)
     assert_allclose(params.display_interval, 5.0)
+    assert_(params.collect_stats)
+    assert_(params.initial_solution is None)
 
 
 def test_solve_params_from_file():
@@ -41,7 +43,7 @@ def test_solve_params_from_file():
     params = SolveParams.from_file(DATA_DIR / "test_config.toml")
 
     ils = IteratedLocalSearchParams(10, 0.1, 1)
-    penalty = PenaltyParams(12, 100, 1.25, 0.85, 0.43)
+    penalty = PenaltyParams(100, 1.25, 0.85, 0.43)
     neighbourhood = NeighbourhoodParams(0, 0, 20, True, True)
     node_ops = [Exchange10, SwapTails]
     route_ops = [SwapStar]
@@ -55,6 +57,7 @@ def test_solve_params_from_file():
     assert_equal(params.perturbation_ops, perturbation_ops)
     assert_equal(params.num_perturbations, 10)
     assert_allclose(params.display_interval, 10.0)
+    assert_(not params.collect_stats)
 
 
 def test_solve_params_from_file_defaults():
@@ -76,6 +79,18 @@ def test_solve_same_seed(ok_small):
 
     assert_equal(res1.best, res2.best)
     assert_equal(res1.stats.data, res2.stats.data)
+
+
+def test_solve_initial_solution(rc208):
+    """
+    Tests that solving an instance with an initial solution works as
+    expected by checking that the best solution found is the same as the
+    initial solution.
+    """
+    bks = read_solution("data/RC208.sol", rc208)
+    params = SolveParams(initial_solution=bks)
+    res = solve(rc208, stop=MaxIterations(0), params=params)
+    assert_equal(res.best, bks)
 
 
 def test_solve_custom_params(rc208):

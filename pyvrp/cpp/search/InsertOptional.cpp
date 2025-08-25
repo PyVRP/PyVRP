@@ -47,15 +47,14 @@ void InsertOptional::operator()(PerturbationContext const &context)
             auto empty = std::find_if(begin, end, pred);
             begin = end;
 
-            if (empty != end)  // try inserting U into the empty route.
+            if (empty == end)
+                continue;
+
+            auto const cost = insertCost(U, (*empty)[0], data_, costEvaluator);
+            if (cost < bestCost)
             {
-                auto const cost
-                    = insertCost(U, (*empty)[0], data_, costEvaluator);
-                if (cost < bestCost)
-                {
-                    bestCost = cost;
-                    UAfter = (*empty)[0];
-                }
+                bestCost = cost;
+                UAfter = (*empty)[0];
             }
         }
 
