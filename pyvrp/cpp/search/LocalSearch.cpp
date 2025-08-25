@@ -427,11 +427,11 @@ void LocalSearch::insert(Route::Node *U,
         break;
     }
 
-    if (required && !UAfter)
-        UAfter = routes[0][0];  // fallback if no insertion positions were found
-
     if (required || bestCost < 0)
     {
+        if (!UAfter)
+            UAfter = routes[0][0];
+
         UAfter->route()->insert(UAfter->idx() + 1, U);
         update(UAfter->route(), UAfter->route());
         markPromising(U);
