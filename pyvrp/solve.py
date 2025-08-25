@@ -10,11 +10,7 @@ from pyvrp.IteratedLocalSearch import (
     IteratedLocalSearchParams,
 )
 from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
-from pyvrp._pyvrp import (
-    ProblemData,
-    RandomNumberGenerator,
-    Solution,
-)
+from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
 from pyvrp.search import (
     NODE_OPERATORS,
     PERTURBATION_OPERATORS,
