@@ -147,6 +147,11 @@ class Model:
         """
         Constructs a model instance from the given data.
 
+        .. tip::
+           Only use this method if you intend to change the data using the
+           model interface. If you only want to solve the given data instance,
+           it is faster to directly call :meth:`~pyvrp.solve.solve`.
+
         Parameters
         ----------
         data
