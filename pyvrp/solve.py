@@ -149,6 +149,11 @@ class SolveParams:
     def from_file(cls, loc: str | pathlib.Path):
         """
         Loads the solver parameters from a TOML file.
+
+        Note
+        ----
+        The initial solution cannot be loaded from file, and will always be set
+        to ``None``.
         """
         with open(loc, "rb") as fh:
             data = tomli.load(fh)
