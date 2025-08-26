@@ -13,26 +13,13 @@ using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
 using pyvrp::search::PerturbationContext;
 using pyvrp::search::PerturbationOperator;
-using pyvrp::search::RouteOperator;
 
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
     perturb(costEvaluator);
-
-    while (true)
-    {
-        search(costEvaluator);
-        auto const numUpdates = numUpdates_;  // after node search
-
-        intensify(costEvaluator);
-        if (numUpdates_ == numUpdates)
-            // Then intensify (route search) did not do any additional
-            // updates, so the solution is locally optimal.
-            break;
-    }
-
+    search(costEvaluator);
     return exportSolution();
 }
 
@@ -41,14 +28,6 @@ Solution LocalSearch::search(Solution const &solution,
 {
     loadSolution(solution);
     search(costEvaluator);
-    return exportSolution();
-}
-
-Solution LocalSearch::intensify(Solution const &solution,
-                                CostEvaluator const &costEvaluator)
-{
-    loadSolution(solution);
-    intensify(costEvaluator);
     return exportSolution();
 }
 
@@ -125,43 +104,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     }
 }
 
-void LocalSearch::intensify(CostEvaluator const &costEvaluator)
-{
-    if (routeOps.empty())
-        return;
-
-    searchCompleted_ = false;
-    while (!searchCompleted_)
-    {
-        searchCompleted_ = true;
-
-        for (auto const rU : orderRoutes)
-        {
-            auto &U = routes[rU];
-            assert(U.idx() == rU);
-
-            if (U.empty())
-                continue;
-
-            auto const lastTested = lastTestedRoutes[U.idx()];
-            lastTestedRoutes[U.idx()] = numUpdates_;
-
-            for (size_t rV = U.idx() + 1; rV != routes.size(); ++rV)
-            {
-                auto &V = routes[rV];
-                assert(V.idx() == rV);
-
-                if (V.empty())
-                    continue;
-
-                if (lastUpdated[U.idx()] > lastTested
-                    || lastUpdated[V.idx()] > lastTested)
-                    applyRouteOps(&U, &V, costEvaluator);
-            }
-        }
-    }
-}
-
 void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 {
     if (perturbOps.empty())
@@ -185,11 +127,9 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
     std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
-    std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
     std::shuffle(orderVehTypes.begin(), orderVehTypes.end(), rng);
 
     std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
-    std::shuffle(routeOps.begin(), routeOps.end(), rng);
     std::shuffle(perturbOps.begin(), perturbOps.end(), rng);
 }
 
@@ -218,38 +158,6 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
             [[maybe_unused]] auto const costAfter
                 = costEvaluator.penalisedCost(*rU)
                   + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
-
-            // When there is an improving move, the delta cost evaluation must
-            // be exact. The resulting cost is then the sum of the cost before
-            // the move, plus the delta cost.
-            assert(costAfter == costBefore + deltaCost);
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool LocalSearch::applyRouteOps(Route *U,
-                                Route *V,
-                                CostEvaluator const &costEvaluator)
-{
-    for (auto *routeOp : routeOps)
-    {
-        auto const deltaCost = routeOp->evaluate(U, V, costEvaluator);
-        if (deltaCost < 0)
-        {
-            [[maybe_unused]] auto const costBefore
-                = costEvaluator.penalisedCost(*U)
-                  + Cost(U != V) * costEvaluator.penalisedCost(*V);
-
-            routeOp->apply(U, V);
-            update(U, V);
-
-            [[maybe_unused]] auto const costAfter
-                = costEvaluator.penalisedCost(*U)
-                  + Cost(U != V) * costEvaluator.penalisedCost(*V);
 
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
@@ -459,23 +367,16 @@ void LocalSearch::update(Route *U, Route *V)
     U->update();
     lastUpdated[U->idx()] = numUpdates_;
 
-    for (auto *op : routeOps)  // this is used by some route operators
-        op->update(U);         // to keep caches in sync.
-
     if (U != V)
     {
         V->update();
         lastUpdated[V->idx()] = numUpdates_;
-
-        for (auto *op : routeOps)  // this is used by some route operators
-            op->update(V);         // to keep caches in sync.
     }
 }
 
 void LocalSearch::loadSolution(Solution const &solution)
 {
     std::fill(lastTestedNodes.begin(), lastTestedNodes.end(), -1);
-    std::fill(lastTestedRoutes.begin(), lastTestedRoutes.end(), -1);
     std::fill(lastUpdated.begin(), lastUpdated.end(), 0);
     promising.set();
     numUpdates_ = 0;
@@ -525,9 +426,6 @@ void LocalSearch::loadSolution(Solution const &solution)
 
     for (auto *nodeOp : nodeOps)
         nodeOp->init(solution);
-
-    for (auto *routeOp : routeOps)
-        routeOp->init(solution);
 }
 
 Solution LocalSearch::exportSolution() const
@@ -582,11 +480,6 @@ void LocalSearch::addNodeOperator(NodeOperator &op)
     nodeOps.emplace_back(&op);
 }
 
-void LocalSearch::addRouteOperator(RouteOperator &op)
-{
-    routeOps.emplace_back(&op);
-}
-
 void LocalSearch::addPerturbationOperator(PerturbationOperator &op)
 {
     perturbOps.emplace_back(&op);
@@ -595,11 +488,6 @@ void LocalSearch::addPerturbationOperator(PerturbationOperator &op)
 std::vector<NodeOperator *> const &LocalSearch::nodeOperators() const
 {
     return nodeOps;
-}
-
-std::vector<RouteOperator *> const &LocalSearch::routeOperators() const
-{
-    return routeOps;
 }
 
 std::vector<PerturbationOperator *> const &
@@ -658,7 +546,6 @@ LocalSearch::Statistics LocalSearch::statistics() const
     };
 
     std::for_each(nodeOps.begin(), nodeOps.end(), count);
-    std::for_each(routeOps.begin(), routeOps.end(), count);
 
     assert(numImproving <= numUpdates_);
     return {numMoves, numImproving, numUpdates_};
@@ -668,16 +555,13 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
     : data(data),
       neighbours_(data.numLocations()),
       orderNodes(data.numClients()),
-      orderRoutes(data.numVehicles()),
       lastTestedNodes(data.numLocations()),
-      lastTestedRoutes(data.numVehicles()),
       lastUpdated(data.numVehicles()),
       promising(data.numLocations())
 {
     setNeighbours(neighbours);
 
     std::iota(orderNodes.begin(), orderNodes.end(), data.numDepots());
-    std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 
     size_t offset = 0;
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)

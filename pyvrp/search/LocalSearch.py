@@ -9,15 +9,13 @@ from pyvrp.search._search import (
     LocalSearchStatistics,
     NodeOperator,
     PerturbationOperator,
-    RouteOperator,
 )
 
 
 class LocalSearch:
     """
-    Local search method. This search method explores a granular neighbourhood
-    in a very efficient manner using user-provided node and route operators.
-    This quickly results in much improved solutions.
+    Local search method. This search method applies user-provided perturbation
+    and node operators, in that order, to improve a given solution.
 
     Parameters
     ----------
@@ -56,19 +54,6 @@ class LocalSearch:
         """
         self._ls.add_node_operator(op)
 
-    def add_route_operator(self, op: RouteOperator):
-        """
-        Adds a route operator to this local search object. The route operator
-        will be used by :meth:`~intensify` to improve a solution using more
-        expensive route operators.
-
-        Parameters
-        ----------
-        op
-            The route operator to add to this local search object.
-        """
-        self._ls.add_route_operator(op)
-
     def add_perturbation_operator(self, op: PerturbationOperator):
         """
         Adds a perturbation operator to this local search object. The
@@ -105,13 +90,6 @@ class LocalSearch:
         return self._ls.node_operators
 
     @property
-    def route_operators(self) -> list[RouteOperator]:
-        """
-        Returns the route operators in use.
-        """
-        return self._ls.route_operators
-
-    @property
     def perturbation_operators(self) -> list[PerturbationOperator]:
         """
         Returns the perturbation operators in use.
@@ -131,39 +109,11 @@ class LocalSearch:
         cost_evaluator: CostEvaluator,
     ) -> Solution:
         """
-        This method uses the :meth:`~search` and :meth:`~intensify` methods to
-        iteratively improve the given solution. First, :meth:`~search` is
-        applied. Thereafter, :meth:`~intensify` is applied. This repeats until
-        no further improvements are found. Finally, the improved solution is
-        returned.
-
-        Parameters
-        ----------
-        solution
-            The solution to improve through local search.
-        cost_evaluator
-            Cost evaluator to use.
-
-        Returns
-        -------
-        Solution
-            The improved solution. This is not the same object as the
-            solution that was passed in.
-        """
-        num_perturbations = self._rng.randint(self._num_perturbations) + 1
-        self._ls.num_perturbations = num_perturbations
-
-        self._ls.shuffle(self._rng)
-        return self._ls(solution, cost_evaluator)
-
-    def intensify(
-        self,
-        solution: Solution,
-        cost_evaluator: CostEvaluator,
-    ) -> Solution:
-        """
-        This method uses the intensifying route operators on this local search
-        object to improve the given solution.
+        This method attempts to improve the given solution by sequentially
+        applying the :meth:`~perturb` and :meth:`~search` methods. It first
+        uses :meth:`~perturb` to modify the solution and escape its local
+        optimum, and then applies :meth:`~search` to find an improved solution.
+        Finally, the new solution is returned.
 
         Parameters
         ----------
@@ -175,11 +125,14 @@ class LocalSearch:
         Returns
         -------
         Solution
-            The improved solution. This is not the same object as the
-            solution that was passed in.
+            The new solution. This is not the same object as the solution
+            that was passed in.
         """
+        num_perturbations = self._rng.randint(self._num_perturbations) + 1
+        self._ls.num_perturbations = num_perturbations
+
         self._ls.shuffle(self._rng)
-        return self._ls.intensify(solution, cost_evaluator)
+        return self._ls(solution, cost_evaluator)
 
     def search(
         self, solution: Solution, cost_evaluator: CostEvaluator

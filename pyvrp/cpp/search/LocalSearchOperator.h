@@ -84,22 +84,6 @@ public:
 using NodeOperator = LocalSearchOperator<Route::Node>;
 
 /**
- * Route operator base class.
- */
-class RouteOperator : public LocalSearchOperator<Route>
-{
-    using LocalSearchOperator::LocalSearchOperator;
-
-public:
-    /**
-     * Called when a route has been changed. Can be used to update caches, but
-     * the implementation should be fast: this is called every time something
-     * changes!
-     */
-    virtual void update([[maybe_unused]] Route *U) {};
-};
-
-/**
  * Helper template function that may be specialised to determine if an operator
  * can find improving moves for the given data instance.
  */

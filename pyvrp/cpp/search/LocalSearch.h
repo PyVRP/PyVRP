@@ -59,21 +59,18 @@ private:
     size_t numPerturbations_ = 0;  // number of perturbations to apply
 
     std::vector<size_t> orderNodes;         // node order used by LS::search
-    std::vector<size_t> orderRoutes;        // route order used by LS::intensify
     std::vector<std::pair<size_t, size_t>>  // vehicle type order (incl. offset)
         orderVehTypes;                      // used by LS::applyEmptyRouteMoves
 
-    std::vector<int> lastTestedNodes;   // tracks node operator evaluation
-    std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
-    std::vector<int> lastUpdated;       // tracks when routes were last modified
-    DynamicBitset promising;            // tracks which nodes are likely to be
-                                        // improved by node ops
+    std::vector<int> lastTestedNodes;  // tracks node operator evaluation
+    std::vector<int> lastUpdated;      // tracks when routes were last modified
+    DynamicBitset promising;           // tracks which nodes are likely to be
+                                       // improved by node ops
 
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
 
     std::vector<NodeOperator *> nodeOps;
-    std::vector<RouteOperator *> routeOps;
     std::vector<PerturbationOperator *> perturbOps;
 
     size_t numUpdates_ = 0;         // modification counter
@@ -89,9 +86,6 @@ private:
     bool applyNodeOps(Route::Node *U,
                       Route::Node *V,
                       CostEvaluator const &costEvaluator);
-
-    // Tests the route pair (U, V).
-    bool applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
 
     // Tests a move removing the given reload depot.
     void applyDepotRemovalMove(Route::Node *U,
@@ -117,9 +111,6 @@ private:
     // Performs search on the currently loaded solution.
     void search(CostEvaluator const &costEvaluator);
 
-    // Performs intensify on the currently loaded solution.
-    void intensify(CostEvaluator const &costEvaluator);
-
     // Performs perturb on the currently loaded solution.
     void perturb(CostEvaluator const &costEvaluator);
 
@@ -135,11 +126,6 @@ public:
     void addNodeOperator(NodeOperator &op);
 
     /**
-     * Adds a local search operator that works on route pairs U and V.
-     */
-    void addRouteOperator(RouteOperator &op);
-
-    /**
      * Adds a perturbation operator.
      */
     void addPerturbationOperator(PerturbationOperator &op);
@@ -149,12 +135,6 @@ public:
      * ordering.
      */
     std::vector<NodeOperator *> const &nodeOperators() const;
-
-    /**
-     * Returns the route operators in use. Note that there is no defined
-     * ordering.
-     */
-    std::vector<RouteOperator *> const &routeOperators() const;
 
     /**
      * Returns the perturbation operators in use. Note that there is no defined
@@ -192,8 +172,7 @@ public:
     Statistics statistics() const;
 
     /**
-     * Iteratively calls ``search()`` and ``intensify()`` until no further
-     * improvements are made.
+     * Calls ``perturb()`` followed by ``search()``.
      */
     Solution operator()(Solution const &solution,
                         CostEvaluator const &costEvaluator);
@@ -204,13 +183,6 @@ public:
      */
     Solution search(Solution const &solution,
                     CostEvaluator const &costEvaluator);
-
-    /**
-     * Performs a more intensive route-based local search around the given
-     * solution, and returns a new, hopefully improved solution.
-     */
-    Solution intensify(Solution const &solution,
-                       CostEvaluator const &costEvaluator);
 
     /**
      * Performs a perturbation step around the given solution, and returns a

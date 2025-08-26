@@ -14,12 +14,10 @@ from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
 from pyvrp.search import (
     NODE_OPERATORS,
     PERTURBATION_OPERATORS,
-    ROUTE_OPERATORS,
     LocalSearch,
     NeighbourhoodParams,
     NodeOperator,
     PerturbationOperator,
-    RouteOperator,
     compute_neighbours,
 )
 
@@ -44,8 +42,6 @@ class SolveParams:
         Neighbourhood parameters.
     node_ops
         Node operators to use in the search.
-    route_ops
-        Route operators to use in the search.
     perturbation_ops
         Perturbation operators to use in the search.
     num_perturbations
@@ -66,7 +62,6 @@ class SolveParams:
         penalty: PenaltyParams = PenaltyParams(),
         neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
         node_ops: list[type[NodeOperator]] = NODE_OPERATORS,
-        route_ops: list[type[RouteOperator]] = ROUTE_OPERATORS,
         perturbation_ops: list[
             type[PerturbationOperator]
         ] = PERTURBATION_OPERATORS,
@@ -79,7 +74,6 @@ class SolveParams:
         self._penalty = penalty
         self._neighbourhood = neighbourhood
         self._node_ops = node_ops
-        self._route_ops = route_ops
         self._perturbation_ops = perturbation_ops
         self._num_perturbations = num_perturbations
         self._display_interval = display_interval
@@ -93,7 +87,6 @@ class SolveParams:
             and self.penalty == other.penalty
             and self.neighbourhood == other.neighbourhood
             and self.node_ops == other.node_ops
-            and self.route_ops == other.route_ops
             and self.perturbation_ops == other.perturbation_ops
             and self.num_perturbations == other.num_perturbations
             and self.display_interval == other.display_interval
@@ -116,10 +109,6 @@ class SolveParams:
     @property
     def node_ops(self):
         return self._node_ops
-
-    @property
-    def route_ops(self):
-        return self._route_ops
 
     @property
     def perturbation_ops(self):
@@ -157,10 +146,6 @@ class SolveParams:
         if "node_ops" in data:
             node_ops = [getattr(pyvrp.search, op) for op in data["node_ops"]]
 
-        route_ops = ROUTE_OPERATORS
-        if "route_ops" in data:
-            route_ops = [getattr(pyvrp.search, op) for op in data["route_ops"]]
-
         perturbation_ops = PERTURBATION_OPERATORS
         if "perturbation_ops" in data:
             perturbation_ops = [
@@ -172,7 +157,6 @@ class SolveParams:
             PenaltyParams(**data.get("penalty", {})),
             NeighbourhoodParams(**data.get("neighbourhood", {})),
             node_ops,
-            route_ops,
             perturbation_ops,
             data.get("num_perturbations", 25),
             data.get("display_interval", 5.0),
@@ -225,10 +209,6 @@ def solve(
     for node_op in params.node_ops:
         if node_op.supports(data):
             ls.add_node_operator(node_op(data))
-
-    for route_op in params.route_ops:
-        if route_op.supports(data):
-            ls.add_route_operator(route_op(data))
 
     for perturb_op in params.perturbation_ops:
         if perturb_op.supports(data):
