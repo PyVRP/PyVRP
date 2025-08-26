@@ -66,6 +66,15 @@ public:
     template <typename T> result_type randint(T high);
 
     /**
+     * Randomly shuffles the elements in the given range in-place using the
+     * Fisher-Yates algorithm.
+     *
+     * @param first Iterator to the beginning of the range to shuffle.
+     * @param last Iterator to the end of the range to shuffle.
+     */
+    template <typename RandomIt> void shuffle(RandomIt first, RandomIt last);
+
+    /**
      * Returns the internal RNG state.
      */
     // Could be useful for debugging.
@@ -87,6 +96,13 @@ RandomNumberGenerator::result_type RandomNumberGenerator::randint(T high)
 {
     static_assert(std::is_integral<T>::value);
     return operator()() % high;
+}
+
+template <typename RandomIt>
+void RandomNumberGenerator::shuffle(RandomIt first, RandomIt last)
+{
+    for (auto idx = last - first - 1; idx > 0; --idx)
+        std::swap(first[idx], first[randint(idx + 1)]);
 }
 }  // namespace pyvrp
 
