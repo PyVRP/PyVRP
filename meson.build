@@ -58,15 +58,6 @@ libcrossover = static_library(
     link_with: libpyvrp,
 )
 
-libdiversity = static_library(
-    'diversity',
-    [
-        SRC_DIR / 'diversity' / 'broken_pairs_distance.cpp',
-    ],
-    include_directories: INCLUDES,
-    link_with: libpyvrp,
-)
-
 libsearch = static_library(
     'search',
     [
@@ -102,7 +93,6 @@ librepair = static_library(
 extensions = [
     ['pyvrp', '', libpyvrp],
     ['crossover', 'crossover', libcrossover],
-    ['diversity', 'diversity', libdiversity],
     ['repair', 'repair', librepair],
     ['search', 'search', libsearch],
 ]
