@@ -906,7 +906,7 @@ def test_model_solves_instances_with_multiple_profiles():
     # The best we can do is have the first vehicle visit the first client (no
     # distance), and the second vehicle the second client (also no distance).
     # The resulting cost is thus zero.
-    res = m.solve(stop=MaxIterations(10))
+    res = m.solve(stop=MaxIterations(10), seed=1)
     assert_equal(res.cost(), 0)
 
     route1, route2 = res.best.routes()
