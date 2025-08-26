@@ -42,7 +42,6 @@ libpyvrp = static_library(
         SRC_DIR / 'Trip.cpp',
         SRC_DIR / 'Route.cpp',
         SRC_DIR / 'Solution.cpp',
-        SRC_DIR / 'SubPopulation.cpp',
         SRC_DIR / 'LoadSegment.cpp',
         SRC_DIR / 'DurationSegment.cpp',
     ],
