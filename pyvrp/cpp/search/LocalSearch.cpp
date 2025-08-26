@@ -184,13 +184,13 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
-    std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
-    std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
-    std::shuffle(orderVehTypes.begin(), orderVehTypes.end(), rng);
+    rng.shuffle(orderNodes.begin(), orderNodes.end());
+    rng.shuffle(orderRoutes.begin(), orderRoutes.end());
+    rng.shuffle(orderVehTypes.begin(), orderVehTypes.end());
 
-    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
-    std::shuffle(routeOps.begin(), routeOps.end(), rng);
-    std::shuffle(perturbOps.begin(), perturbOps.end(), rng);
+    rng.shuffle(nodeOps.begin(), nodeOps.end());
+    rng.shuffle(routeOps.begin(), routeOps.end());
+    rng.shuffle(perturbOps.begin(), perturbOps.end());
 }
 
 bool LocalSearch::applyNodeOps(Route::Node *U,
