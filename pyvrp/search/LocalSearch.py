@@ -15,7 +15,7 @@ from pyvrp.search._search import (
 class LocalSearch:
     """
     Local search method. This search method applies user-provided perturbation
-    and node operators, in that order, to improve a given solution.
+    and node operators to improve a given solution.
 
     Parameters
     ----------
@@ -125,7 +125,7 @@ class LocalSearch:
         Returns
         -------
         Solution
-            The new solution. This is not the same object as the solution
+            The improved solution. This is not the same object as the solution
             that was passed in.
         """
         num_perturbations = self._rng.randint(self._num_perturbations) + 1

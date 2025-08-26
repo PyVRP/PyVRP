@@ -52,7 +52,7 @@ private:
 
     ProblemData const &data;
 
-    // Neighborhood restrictions: list of nearby clients for each client (size
+    // Neighbourhood restrictions: list of nearby clients for each client (size
     // numLocations, but nothing is stored for the depots!)
     Neighbours neighbours_;
 
@@ -108,10 +108,11 @@ private:
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
 
-    // Performs search on the currently loaded solution.
+    // Performs local search on the currently loaded solution.
     void search(CostEvaluator const &costEvaluator);
 
-    // Performs perturb on the currently loaded solution.
+    // Perturbs the currently loaded solution and marks affected nodes as
+    // promising for the subsequent local search step.
     void perturb(CostEvaluator const &costEvaluator);
 
     // Evaluate inserting U after one of its neighbours or a random empty route.
@@ -172,14 +173,14 @@ public:
     Statistics statistics() const;
 
     /**
-     * Calls ``perturb()`` followed by ``search()``.
+     * Sequentially calls ``perturb()`` followed by ``search()``.
      */
     Solution operator()(Solution const &solution,
                         CostEvaluator const &costEvaluator);
 
     /**
-     * Performs regular (node-based) local search around the given solution,
-     * and returns a new, hopefully improved solution.
+     * Performs local search around the given solution, and returns a new,
+     * hopefully improved solution.
      */
     Solution search(Solution const &solution,
                     CostEvaluator const &costEvaluator);
@@ -192,8 +193,8 @@ public:
                      CostEvaluator const &costEvaluator);
 
     /**
-     * Shuffles the order in which the node and route pairs are evaluated, and
-     * the order in which operators are applied.
+     * Shuffles the order in which the nodes and vehicle types are evaluated,
+     * and the order in which operators are applied.
      */
     void shuffle(RandomNumberGenerator &rng);
 
