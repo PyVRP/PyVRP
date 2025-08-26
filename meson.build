@@ -48,16 +48,6 @@ libpyvrp = static_library(
     include_directories: INCLUDES,
 )
 
-libcrossover = static_library(
-    'crossover',
-    [
-        SRC_DIR / 'crossover' / 'ordered_crossover.cpp',
-        SRC_DIR / 'crossover' / 'selective_route_exchange.cpp',
-    ],
-    include_directories: INCLUDES,
-    link_with: libpyvrp,
-)
-
 libsearch = static_library(
     'search',
     [
@@ -92,7 +82,6 @@ librepair = static_library(
 # C++ library is one of the static libraries we defined above.
 extensions = [
     ['pyvrp', '', libpyvrp],
-    ['crossover', 'crossover', libcrossover],
     ['repair', 'repair', librepair],
     ['search', 'search', libsearch],
 ]
