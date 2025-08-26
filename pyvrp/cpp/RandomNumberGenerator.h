@@ -101,6 +101,7 @@ RandomNumberGenerator::result_type RandomNumberGenerator::randint(T high)
 template <typename RandomIt>
 void RandomNumberGenerator::shuffle(RandomIt first, RandomIt last)
 {
+    // Taken from https://en.cppreference.com/w/cpp/algorithm/random_shuffle.
     for (auto idx = last - first - 1; idx > 0; --idx)
         std::swap(first[idx], first[randint(idx + 1)]);
 }
