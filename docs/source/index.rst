@@ -54,7 +54,6 @@ Contents
    :caption: API reference
 
    api/pyvrp
-   api/repair
    api/search
    api/plotting
    api/stop
