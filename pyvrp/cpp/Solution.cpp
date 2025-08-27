@@ -174,7 +174,7 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     }
 
     // Shuffle clients to create random routes.
-    std::shuffle(clients.begin(), clients.end(), rng);
+    rng.shuffle(clients.begin(), clients.end());
 
     // Distribute clients evenly over the routes: the total number of
     // clients per vehicle, with an adjustment in case the division is not
@@ -204,7 +204,7 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
         // some additional diversity in the initial solutions, which
         // sometimes (e.g. with heterogeneous fleet VRP) matters for
         // consistent convergence.
-        std::shuffle(vehTypes.begin(), vehTypes.end(), rng);
+        rng.shuffle(vehTypes.begin(), vehTypes.end());
 
     routes_.reserve(numRoutes);
     for (size_t idx = 0; idx != routes.size(); idx++)
