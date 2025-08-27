@@ -49,8 +49,8 @@ class Client:
     name: str
     def __init__(
         self,
-        x: int,
-        y: int,
+        x: int = 0,
+        y: int = 0,
         delivery: list[int] = [],
         pickup: list[int] = [],
         service_duration: int = 0,
@@ -93,8 +93,8 @@ class Depot:
     name: str
     def __init__(
         self,
-        x: int,
-        y: int,
+        x: int = 0,
+        y: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
         *,
