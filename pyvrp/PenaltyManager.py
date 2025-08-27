@@ -39,9 +39,9 @@ class PenaltyParams:
         percentage is used to update the penalty terms: when insufficient
         feasible solutions have been registered, the penalties are increased;
         similarly, when too many feasible solutions have been registered, the
-        penalty terms are decreased. This ensures a balanced population, with a
-        fraction :math:`p_f` feasible and a fraction :math:`1 - p_f` infeasible
-        solutions.
+        penalty terms are decreased. This ensures a balanced number of feasible
+        solutions are found, with a fraction :math:`p_f` feasible and a
+        fraction :math:`1 - p_f` infeasible solutions.
     feas_tolerance
         Deviation tolerance (in :math:`[0, 1]`) between actual and target
         percentage of feasible solutions between updates. If the deviation is
