@@ -102,20 +102,19 @@ private:
     // Tests moves involving clients in client groups.
     void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
-    // Marks the given node and its direct neighbours as promising.
+    // Marks node U and its neighbors as promising for future evaluations.
     void markPromising(Route::Node const *U);
 
-    // Removes a node from its route and marks it as promising.
+    // Removes node from its route.
     void remove(Route::Node *U);
 
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
 
-    // Performs local search on the currently loaded solution.
+    // Performs local search, evaluating node operators only on promising nodes.
     void search(CostEvaluator const &costEvaluator);
 
-    // Perturbs the currently loaded solution and marks affected nodes as
-    // promising for the subsequent local search step.
+    // Perturbs solution and resets promising nodes to modified areas.
     void perturb(CostEvaluator const &costEvaluator);
 
     // Evaluate inserting U after one of its neighbours or a random empty route.
@@ -176,21 +175,20 @@ public:
     Statistics statistics() const;
 
     /**
-     * Sequentially calls ``perturb()`` followed by ``search()``.
+     * Sequentially calls ``perturb()`` followed by ``search()``. Perturbation
+     * resets and marks promising nodes; search is restricted to these nodes.
      */
     Solution operator()(Solution const &solution,
                         CostEvaluator const &costEvaluator);
 
     /**
-     * Performs local search around the given solution, and returns a new,
-     * hopefully improved solution.
+     * Performs local search with all nodes marked as promising.
      */
     Solution search(Solution const &solution,
                     CostEvaluator const &costEvaluator);
 
     /**
-     * Performs a perturbation step around the given solution, and returns a
-     * new, modified solution.
+     * Perturbs solution with a randomly selected perturbation operator.
      */
     Solution perturb(Solution const &solution,
                      CostEvaluator const &costEvaluator);

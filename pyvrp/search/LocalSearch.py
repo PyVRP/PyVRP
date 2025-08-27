@@ -110,10 +110,10 @@ class LocalSearch:
     ) -> Solution:
         """
         This method attempts to improve the given solution by sequentially
-        applying the :meth:`~perturb` and :meth:`~search` methods. It first
-        uses :meth:`~perturb` to modify the solution and escape its local
-        optimum, and then applies :meth:`~search` to find an improved solution.
-        Finally, the new solution is returned.
+        applying the :meth:`~perturb` and :meth:`~search` methods. Perturbation
+        modifies parts of the solution to escape local optima. Search then
+        applies node operators restricted to modified areas of the solution for
+        efficiency.
 
         Parameters
         ----------
@@ -125,8 +125,8 @@ class LocalSearch:
         Returns
         -------
         Solution
-            The improved solution. This is not the same object as the solution
-            that was passed in.
+            The new solution. This is not the same object as the solution that
+            was passed in.
         """
         num_perturbations = self._rng.randint(self._num_perturbations) + 1
         self._ls.num_perturbations = num_perturbations
@@ -176,8 +176,8 @@ class LocalSearch:
         Returns
         -------
         Solution
-            The perturbed solution. This is not the same object as the
-            solution that was passed in.
+            The perturbed solution. This is not the same object as the solution
+            that was passed in.
         """
         num_perturbations = self._rng.randint(self._num_perturbations) + 1
         self._ls.num_perturbations = num_perturbations
