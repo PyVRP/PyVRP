@@ -1,7 +1,5 @@
 #include "Route.h"
 
-#include <cmath>
-#include <numbers>
 #include <ostream>
 #include <utility>
 
@@ -89,25 +87,6 @@ size_t Route::vehicleType() const
 {
     auto const &vehicleTypes = data.vehicleTypes();
     return std::distance(&vehicleTypes[0], &vehicleType_);
-}
-
-bool Route::overlapsWith(Route const &other, double tolerance) const
-{
-    assert(!dirty && !other.dirty);
-
-    auto const [dataX, dataY] = data.centroid();
-    auto const [thisX, thisY] = centroid_;
-    auto const [otherX, otherY] = other.centroid_;
-
-    // Each angle is in [-pi, pi], so the absolute difference is in [0, tau].
-    auto const thisAngle = std::atan2(thisY - dataY, thisX - dataX);
-    auto const otherAngle = std::atan2(otherY - dataY, otherX - dataX);
-    auto const absDiff = std::abs(thisAngle - otherAngle);
-
-    // First case is obvious. Second case exists because tau and 0 are also
-    // close together but separated by one period.
-    auto constexpr tau = 2 * std::numbers::pi;
-    return absDiff <= tolerance * tau || absDiff >= (1 - tolerance) * tau;
 }
 
 void Route::clear()
