@@ -52,28 +52,25 @@ private:
 
     ProblemData const &data;
 
-    // Neighborhood restrictions: list of nearby clients for each client (size
+    // Neighbourhood restrictions: list of nearby clients for each client (size
     // numLocations, but nothing is stored for the depots!)
     Neighbours neighbours_;
 
     size_t numPerturbations_ = 0;  // number of perturbations to apply
 
     std::vector<size_t> orderNodes;         // node order used by LS::search
-    std::vector<size_t> orderRoutes;        // route order used by LS::intensify
     std::vector<std::pair<size_t, size_t>>  // vehicle type order (incl. offset)
         orderVehTypes;                      // used by LS::applyEmptyRouteMoves
 
-    std::vector<int> lastTestedNodes;   // tracks node operator evaluation
-    std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
-    std::vector<int> lastUpdated;       // tracks when routes were last modified
-    DynamicBitset promising;            // tracks which nodes are likely to be
-                                        // improved by node ops
+    std::vector<int> lastTestedNodes;  // tracks node operator evaluation
+    std::vector<int> lastUpdated;      // tracks when routes were last modified
+    DynamicBitset promising;           // tracks which nodes are likely to be
+                                       // improved by node ops
 
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
 
     std::vector<NodeOperator *> nodeOps;
-    std::vector<RouteOperator *> routeOps;
     std::vector<PerturbationOperator *> perturbOps;
 
     size_t numUpdates_ = 0;         // modification counter
@@ -90,9 +87,6 @@ private:
                       Route::Node *V,
                       CostEvaluator const &costEvaluator);
 
-    // Tests the route pair (U, V).
-    bool applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
-
     // Tests a move removing the given reload depot.
     void applyDepotRemovalMove(Route::Node *U,
                                CostEvaluator const &costEvaluator);
@@ -108,19 +102,19 @@ private:
     // Tests moves involving clients in client groups.
     void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
-    // Marks the given node and its direct neighbours as promising.
+    // Marks node U and its neighbors as promising for future evaluations.
     void markPromising(Route::Node const *U);
+
+    // Removes node from its route.
+    void remove(Route::Node *U);
 
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
 
-    // Performs search on the currently loaded solution.
+    // Performs local search, evaluating node operators only on promising nodes.
     void search(CostEvaluator const &costEvaluator);
 
-    // Performs intensify on the currently loaded solution.
-    void intensify(CostEvaluator const &costEvaluator);
-
-    // Performs perturb on the currently loaded solution.
+    // Perturbs solution and resets promising nodes to modified areas.
     void perturb(CostEvaluator const &costEvaluator);
 
     // Evaluate inserting U after one of its neighbours or a random empty route.
@@ -135,11 +129,6 @@ public:
     void addNodeOperator(NodeOperator &op);
 
     /**
-     * Adds a local search operator that works on route pairs U and V.
-     */
-    void addRouteOperator(RouteOperator &op);
-
-    /**
      * Adds a perturbation operator.
      */
     void addPerturbationOperator(PerturbationOperator &op);
@@ -149,12 +138,6 @@ public:
      * ordering.
      */
     std::vector<NodeOperator *> const &nodeOperators() const;
-
-    /**
-     * Returns the route operators in use. Note that there is no defined
-     * ordering.
-     */
-    std::vector<RouteOperator *> const &routeOperators() const;
 
     /**
      * Returns the perturbation operators in use. Note that there is no defined
@@ -192,36 +175,27 @@ public:
     Statistics statistics() const;
 
     /**
-     * Iteratively calls ``search()`` and ``intensify()`` until no further
-     * improvements are made.
+     * Sequentially calls ``perturb()`` followed by ``search()``. Perturbation
+     * resets and marks promising nodes; search is restricted to these nodes.
      */
     Solution operator()(Solution const &solution,
                         CostEvaluator const &costEvaluator);
 
     /**
-     * Performs regular (node-based) local search around the given solution,
-     * and returns a new, hopefully improved solution.
+     * Performs local search with all nodes marked as promising.
      */
     Solution search(Solution const &solution,
                     CostEvaluator const &costEvaluator);
 
     /**
-     * Performs a more intensive route-based local search around the given
-     * solution, and returns a new, hopefully improved solution.
-     */
-    Solution intensify(Solution const &solution,
-                       CostEvaluator const &costEvaluator);
-
-    /**
-     * Performs a perturbation step around the given solution, and returns a
-     * new, modified solution.
+     * Perturbs solution with a randomly selected perturbation operator.
      */
     Solution perturb(Solution const &solution,
                      CostEvaluator const &costEvaluator);
 
     /**
-     * Shuffles the order in which the node and route pairs are evaluated, and
-     * the order in which operators are applied.
+     * Shuffles the order in which the nodes and vehicle types are evaluated,
+     * and the order in which operators are applied.
      */
     void shuffle(RandomNumberGenerator &rng);
 
