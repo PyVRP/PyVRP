@@ -181,12 +181,7 @@ void LocalSearch::applyDepotRemovalMove(Route::Node *U,
     // neutral if for example it's the same depot visited consecutively, but
     // that's then unnecessary.
     if (removeCost(U, data, costEvaluator) <= 0)
-    {
-        markPromising(U);
-        auto *route = U->route();
-        route->remove(U->idx());
-        update(route, route);
-    }
+        remove(U);
 }
 
 void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
@@ -219,12 +214,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         return;
 
     if (!uData.required && removeCost(U, data, costEvaluator) < 0)
-    {
-        markPromising(U);
-        auto *route = U->route();
-        route->remove(U->idx());
-        update(route, route);
-    }
+        remove(U);
 
     if (!U->route())
         insert(U, costEvaluator, uData.required);
@@ -267,15 +257,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
 
     // Remove all but the last client, whose removal is the least valuable.
     for (auto idx = range.begin(); idx != range.end() - 1; ++idx)
-    {
-        auto const client = inSol[*idx];
-        auto const &node = nodes[client];
-        auto *route = node.route();
-
-        markPromising(&node);
-        route->remove(node.idx());
-        update(route, route);
-    }
+        remove(&nodes[inSol[*idx]]);
 
     // Test swapping U and V, and do so if U is better to have than V.
     auto *V = &nodes[inSol[range.back()]];
@@ -357,6 +339,14 @@ void LocalSearch::markPromising(Route::Node const *U)
 
     if (!U->isEndDepot())
         promising[n(U)->client()] = true;
+}
+
+void LocalSearch::remove(Route::Node *U)
+{
+    markPromising(U);
+    auto *route = U->route();
+    route->remove(U->idx());
+    update(route, route);
 }
 
 void LocalSearch::update(Route *U, Route *V)

@@ -105,6 +105,9 @@ private:
     // Marks the given node and its direct neighbours as promising.
     void markPromising(Route::Node const *U);
 
+    // Removes a node from its route and marks it as promising.
+    void remove(Route::Node *U);
+
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
 
