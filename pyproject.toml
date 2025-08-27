@@ -12,7 +12,7 @@ license-files = ["LICENSE.md"]
 readme = "README.md"
 keywords = [
     "vehicle routing problem",
-    "hybrid genetic search",
+    "iterated local search",
     "metaheuristic",    
 ]
 classifiers = [
