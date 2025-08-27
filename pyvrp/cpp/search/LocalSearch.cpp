@@ -264,9 +264,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
     if (U != V && inplaceCost(U, V, data, costEvaluator) < 0)
     {
         auto *route = V->route();
-        auto const idx = V->idx();
-        route->remove(idx);
-        route->insert(idx, U);
+        route->swap(U, V);
         update(route, route);
         markPromising(U);
     }
