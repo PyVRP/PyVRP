@@ -68,8 +68,8 @@ class ProblemData
 public:
     /**
      * Client(
-     *    x: int,
-     *    y: int,
+     *    x: int = 0,
+     *    y: int = 0,
      *    delivery: list[int] = [],
      *    pickup: list[int] = [],
      *    service_duration: int = 0,
@@ -91,11 +91,11 @@ public:
      * x
      *     Horizontal coordinate of this client, that is, the 'x' part of the
      *     client's (x, y) location tuple. This can for example be a scaled
-     *     longitude value.
+     *     longitude value. Default 0.
      * y
      *     Vertical coordinate of this client, that is, the 'y' part of the
      *     client's (x, y) location tuple. This can for example be a scaled
-     *     latitude value.
+     *     latitude value. Default 0.
      * delivery
      *     The amounts this client demands from the depot.
      * pickup
@@ -173,8 +173,8 @@ public:
         std::optional<size_t> const group;  // Optional client group membership
         char const *name;                   // Client name (for reference)
 
-        Client(Coordinate x,
-               Coordinate y,
+        Client(Coordinate x = 0,
+               Coordinate y = 0,
                std::vector<Load> delivery = {},
                std::vector<Load> pickup = {},
                Duration serviceDuration = 0,
@@ -264,8 +264,8 @@ public:
 
     /**
      * Depot(
-     *    x: int,
-     *    y: int,
+     *    x: int = 0,
+     *    y: int = 0,
      *    tw_early: int = 0,
      *    tw_late: int = np.iinfo(np.int64).max,
      *    *,
@@ -279,11 +279,11 @@ public:
      * x
      *     Horizontal coordinate of this depot, that is, the 'x' part of the
      *     depot's (x, y) location tuple. This can for example be a scaled
-     *     longitude value.
+     *     longitude value. Default 0.
      * y
      *     Vertical coordinate of this depot, that is, the 'y' part of the
      *     depot's (x, y) location tuple. This can for example be a scaled
-     *     latitude value.
+     *     latitude value. Default 0.
      * tw_early
      *     Opening time of this depot. Default 0.
      * tw_late
@@ -312,8 +312,8 @@ public:
         Duration const twLate;   // Depot closing time
         char const *name;        // Depot name (for reference)
 
-        Depot(Coordinate x,
-              Coordinate y,
+        Depot(Coordinate x = 0,
+              Coordinate y = 0,
               Duration twEarly = 0,
               Duration twLate = std::numeric_limits<Duration>::max(),
               std::string name = "");
