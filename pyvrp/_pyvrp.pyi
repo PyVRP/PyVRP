@@ -1,4 +1,4 @@
-from typing import Callable, Iterator, overload
+from typing import Iterator, overload
 
 import numpy as np
 
@@ -49,8 +49,8 @@ class Client:
     name: str
     def __init__(
         self,
-        x: int,
-        y: int,
+        x: int = 0,
+        y: int = 0,
         delivery: list[int] = [],
         pickup: list[int] = [],
         service_duration: int = 0,
@@ -93,8 +93,8 @@ class Depot:
     name: str
     def __init__(
         self,
-        x: int,
-        y: int,
+        x: int = 0,
+        y: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
         *,
@@ -347,48 +347,6 @@ class Solution:
     def __eq__(self, other: object) -> bool: ...
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
-
-class PopulationParams:
-    generation_size: int
-    lb_diversity: float
-    min_pop_size: int
-    num_close: int
-    num_elite: int
-    ub_diversity: float
-    def __init__(
-        self,
-        min_pop_size: int = 25,
-        generation_size: int = 40,
-        num_elite: int = 4,
-        num_close: int = 5,
-        lb_diversity: float = 0.1,
-        ub_diversity: float = 0.5,
-    ) -> None: ...
-    def __eq__(self, other: object) -> bool: ...
-    @property
-    def max_pop_size(self) -> int: ...
-
-class SubPopulation:
-    def __init__(
-        self,
-        diversity_op: Callable[[Solution, Solution], float],
-        params: PopulationParams,
-    ) -> None: ...
-    def add(
-        self, solution: Solution, cost_evaluator: CostEvaluator
-    ) -> None: ...
-    def purge(self, cost_evaluator: CostEvaluator) -> None: ...
-    def update_fitness(self, cost_evaluator: CostEvaluator) -> None: ...
-    def __getitem__(self, idx: int) -> SubPopulationItem: ...
-    def __iter__(self) -> Iterator[SubPopulationItem]: ...
-    def __len__(self) -> int: ...
-
-class SubPopulationItem:
-    @property
-    def fitness(self) -> float: ...
-    @property
-    def solution(self) -> Solution: ...
-    def avg_distance_closest(self) -> float: ...
 
 class LoadSegment:
     def __init__(

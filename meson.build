@@ -42,30 +42,10 @@ libpyvrp = static_library(
         SRC_DIR / 'Trip.cpp',
         SRC_DIR / 'Route.cpp',
         SRC_DIR / 'Solution.cpp',
-        SRC_DIR / 'SubPopulation.cpp',
         SRC_DIR / 'LoadSegment.cpp',
         SRC_DIR / 'DurationSegment.cpp',
     ],
     include_directories: INCLUDES,
-)
-
-libcrossover = static_library(
-    'crossover',
-    [
-        SRC_DIR / 'crossover' / 'ordered_crossover.cpp',
-        SRC_DIR / 'crossover' / 'selective_route_exchange.cpp',
-    ],
-    include_directories: INCLUDES,
-    link_with: libpyvrp,
-)
-
-libdiversity = static_library(
-    'diversity',
-    [
-        SRC_DIR / 'diversity' / 'broken_pairs_distance.cpp',
-    ],
-    include_directories: INCLUDES,
-    link_with: libpyvrp,
 )
 
 libsearch = static_library(
@@ -83,26 +63,12 @@ libsearch = static_library(
     link_with: libpyvrp,
 )
 
-librepair = static_library(
-    'repair',
-    [
-        SRC_DIR / 'repair' / 'greedy_repair.cpp',
-        SRC_DIR / 'repair' / 'nearest_route_insert.cpp',
-        SRC_DIR / 'repair' / 'repair.cpp',
-    ],
-    include_directories: INCLUDES,
-    link_with: [libpyvrp, libsearch],  # uses search to evaluate repair moves
-)
-
 # Extension as [extension name, subdirectory, core C++ library]. The extension
 # name names the eventual module name, subdirectory gives the source and
 # installation directories (relative to top-level directories), and the core 
 # C++ library is one of the static libraries we defined above.
 extensions = [
     ['pyvrp', '', libpyvrp],
-    ['crossover', 'crossover', libcrossover],
-    ['diversity', 'diversity', libdiversity],
-    ['repair', 'repair', librepair],
     ['search', 'search', libsearch],
 ]
 
