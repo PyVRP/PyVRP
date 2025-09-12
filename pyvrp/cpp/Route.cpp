@@ -136,6 +136,8 @@ void Route::makeSchedule(ProblemData const &data)
     auto const &vehData = data.vehicleType(vehicleType_);
     auto const &durations = data.durationMatrix(vehData.profile);
 
+    // TODO rethink the following
+
     auto now = startTime_;
     auto const handle
         = [&](auto const &where, size_t location, size_t trip, Duration service)
@@ -248,6 +250,9 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     DurationSegment ds = {vehData, vehData.twLate};
     for (auto trip = trips_.rbegin(); trip != trips_.rend(); ++trip)
     {
+        if (trip != trips_.rbegin())  // need to finalise before next trip,
+            ds = ds.finaliseFront();  // unless this is the first one
+
         ProblemData::Depot const &end = data.location(trip->endDepot());
         ds = DurationSegment::merge(0, {end}, ds);
 
@@ -267,7 +272,6 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         DurationSegment const depotDS = {start};
 
         ds = DurationSegment::merge(edgeDuration, depotDS, ds);
-        ds = ds.finaliseFront();
     }
 
     ds = DurationSegment::merge(0, {vehData, vehData.startLate}, ds);
