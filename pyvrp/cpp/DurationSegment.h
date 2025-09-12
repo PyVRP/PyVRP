@@ -282,8 +282,8 @@ Duration DurationSegment::startEarly() const
 
 Duration DurationSegment::startLate() const
 {
-    // When startLate_ < releaseTime_, we need to wait until at least
-    // releaseTime_ before we can start. This always incurs time warp.
+    // When startLate_ < releaseTime_, we need to wait until releaseTime_ before
+    // we can start. This always incurs time warp.
     return std::max(startLate_, releaseTime_);
 }
 
