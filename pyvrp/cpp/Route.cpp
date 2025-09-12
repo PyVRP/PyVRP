@@ -158,10 +158,15 @@ void Route::makeSchedule(ProblemData const &data)
         auto const &trip = trips_[tripIdx];
         ProblemData::Depot const &start = data.location(trip.startDepot());
 
-        auto const earliestStart = std::max(
-            start.twEarly, std::min(trip.releaseTime(), start.twLate));
-        auto const wait = std::max<Duration>(earliestStart - now, 0);
-        auto const tw = std::max<Duration>(now - start.twLate, 0);
+        DurationSegment ds
+            = {0, 0, start.twEarly, start.twLate, trip.releaseTime()};
+        if (tripIdx == 0)
+            ds = DurationSegment::merge(0, {vehData, vehData.startLate}, ds);
+
+        auto const wait = std::max<Duration>(ds.startEarly() - now, 0);
+        auto const tw = tripIdx == 0
+                            ? ds.timeWarp()
+                            : std::max<Duration>(now - ds.startLate(), 0);
 
         now += wait;
         now -= tw;
