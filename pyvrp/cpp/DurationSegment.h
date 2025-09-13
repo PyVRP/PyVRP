@@ -267,6 +267,7 @@ Duration DurationSegment::timeWarp(Duration maxDuration) const
     auto const netDuration = duration() - timeWarp;
 
     return timeWarp
+           // Additional time warp from having to wait until release time.
            + std::max<Duration>(releaseTime_ - startLate_, 0)
            // Max duration constraint applies only to net route duration,
            // subtracting existing time warp. Use ternary to avoid underflow.
@@ -283,7 +284,7 @@ Duration DurationSegment::startEarly() const
 Duration DurationSegment::startLate() const
 {
     // When startLate_ < releaseTime_, we need to wait until releaseTime_ before
-    // we can start. This always incurs time warp.
+    // we can start. That wait always incurs time warp.
     return std::max(startLate_, releaseTime_);
 }
 
