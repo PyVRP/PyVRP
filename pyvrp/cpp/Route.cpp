@@ -158,14 +158,13 @@ void Route::makeSchedule(ProblemData const &data)
 
         auto const earliestStart = std::max(
             start.twEarly, std::min(trip.releaseTime(), start.twLate));
-        auto const wait = std::max<Duration>(earliestStart - now, 0);
+        auto const latestStart = tripIdx == 0  // first trip also accounts for
+                                               // the latest start constraint
+                                     ? std::min(start.twLate, vehData.startLate)
+                                     : start.twLate;
 
-        auto tw = std::max<Duration>(now - start.twLate, 0);
-        if (tripIdx == 0)  // then we also need to account for the vehicle's
-        {                  // latest start constraint, if binding.
-            auto const latestStart = std::min(start.twLate, vehData.startLate);
-            tw = std::max<Duration>(now - latestStart, 0);
-        }
+        auto const wait = std::max<Duration>(earliestStart - now, 0);
+        auto const tw = std::max<Duration>(now - latestStart, 0);
 
         now += wait;
         now -= tw;
