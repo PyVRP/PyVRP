@@ -158,8 +158,13 @@ void Route::makeSchedule(ProblemData const &data)
 
         auto const earliestStart = std::max(
             start.twEarly, std::min(trip.releaseTime(), start.twLate));
+        auto const latestStart = tripIdx == 0  // first trip also accounts for
+                                               // the latest start constraint
+                                     ? std::min(start.twLate, vehData.startLate)
+                                     : start.twLate;
+
         auto const wait = std::max<Duration>(earliestStart - now, 0);
-        auto const tw = std::max<Duration>(now - start.twLate, 0);
+        auto const tw = std::max<Duration>(now - latestStart, 0);
 
         now += wait;
         now -= tw;
@@ -248,6 +253,9 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     DurationSegment ds = {vehData, vehData.twLate};
     for (auto trip = trips_.rbegin(); trip != trips_.rend(); ++trip)
     {
+        if (trip != trips_.rbegin())  // need to finalise before next trip,
+            ds = ds.finaliseFront();  // unless this is the first one
+
         ProblemData::Depot const &end = data.location(trip->endDepot());
         ds = DurationSegment::merge(0, {end}, ds);
 
@@ -267,7 +275,6 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         DurationSegment const depotDS = {start};
 
         ds = DurationSegment::merge(edgeDuration, depotDS, ds);
-        ds = ds.finaliseFront();
     }
 
     ds = DurationSegment::merge(0, {vehData, vehData.startLate}, ds);

@@ -865,3 +865,26 @@ def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
     route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
     assert_equal([client for client in route], [1, 2])
     assert_equal(route.visits(), [1, 2])
+
+
+def test_route_release_time_after_vehicle_start_late():
+    """
+    Tests that a route time warps back to the vehicle's latest start if that
+    latest start is before the first trip's release time.
+    """
+    data = read("data/OkSmallReleaseTimes.txt")
+
+    new_type = data.vehicle_type(0).replace(start_late=10_000)
+    data = data.replace(vehicle_types=[new_type])
+    route = Route(data, [3, 1], 0)
+
+    # Route starts at 20_000 due to release time. We immediately time warp back
+    # to 10_000 for the vehicle's latest start constraint. From there, we visit
+    # 3 and 1 as regular, without accruing any additional time warp.
+    assert_equal(route.start_time(), 20_000)
+    assert_equal(route.release_time(), 20_000)
+    assert_equal(route.time_warp(), 10_000)
+    assert_equal(route.duration(), 7_686)
+
+    # Sanity check that all time warp is also accounted for in the schedule.
+    assert_equal(sum(v.time_warp for v in route.schedule()), route.time_warp())
