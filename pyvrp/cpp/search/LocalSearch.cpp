@@ -7,6 +7,8 @@
 #include <cassert>
 #include <numeric>
 
+using pyvrp::Cost;
+using pyvrp::ProblemData;
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
@@ -80,22 +82,22 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             applyDepotRemovalMove(p(U), costEvaluator);
             applyDepotRemovalMove(n(U), costEvaluator);
 
-            // We next apply the regular node operators. These work on pairs
-            // of nodes (U, V), where both U and V are in the solution.
+            // We next apply the regular node operators. These work on pairs of
+            // nodes (U, V), where U must be in the solution, but V may not be.
             for (auto const vClient : neighbours_[uClient])
             {
+                if (!U->route())  // node ops only work if U is in route
+                    break;
+
                 auto *V = &nodes[vClient];
 
-                if (!V->route())
-                    continue;
-
-                if (lastUpdated[U->route()->idx()] > lastTested
+                if (!V->route() || lastUpdated[U->route()->idx()] > lastTested
                     || lastUpdated[V->route()->idx()] > lastTested)
                 {
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
 
-                    if (p(V)->isStartDepot()
+                    if (V->route() && p(V)->isStartDepot()
                         && applyNodeOps(U, p(V), costEvaluator))
                         continue;
                 }
@@ -169,16 +171,24 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
             auto *rU = U->route();  // copy these because the operator can
             auto *rV = V->route();  // modify the nodes' route membership
 
+            [[maybe_unused]] ProblemData::Client const &uClient
+                = data.location(U->client());
+            [[maybe_unused]] ProblemData::Client const &vClient
+                = data.location(V->client());
+
             [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(*rU)
-                  + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
+                  + Cost(rV && rV != rU) * costEvaluator.penalisedCost(*rV)
+                  + Cost(!rU) * uClient.prize + Cost(!rV) * vClient.prize;
 
             nodeOp->apply(U, V);
-            update(rU, rV);
+            update(rU, rV ? rV : rU);
 
             [[maybe_unused]] auto const costAfter
                 = costEvaluator.penalisedCost(*rU)
-                  + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
+                  + Cost(rV && rV != rU) * costEvaluator.penalisedCost(*rV)
+                  + Cost(!U->route()) * uClient.prize
+                  + Cost(!V->route()) * vClient.prize;
 
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
@@ -244,7 +254,8 @@ void LocalSearch::applyDepotRemovalMove(Route::Node *U,
 void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
                                        CostEvaluator const &costEvaluator)
 {
-    assert(U->route());
+    if (!U->route())
+        return;
 
     // We apply moves involving empty routes in the (randomised) order of
     // orderVehTypes. This helps because empty vehicle moves incur fixed cost,

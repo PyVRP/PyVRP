@@ -23,6 +23,9 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
     assert(!U->isEndDepot() && !U->isReloadDepot());
     assert(!V->isEndDepot() && !V->isReloadDepot());
 
+    if (!U->route() || !V->route())
+        return 0;
+
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 
