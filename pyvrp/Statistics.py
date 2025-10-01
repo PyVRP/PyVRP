@@ -4,6 +4,7 @@ from math import nan
 from pathlib import Path
 from statistics import fmean
 from time import perf_counter
+from typing import Literal
 
 from pyvrp.Population import Population, SubPopulation
 from pyvrp._pyvrp import CostEvaluator
@@ -171,7 +172,8 @@ class Statistics:
                 if (field_name := name[len(prefix) :]) in field2type:
                     # If the prefixless name is a field name, cast the row's
                     # value to the appropriate type and add the data.
-                    datum[field_name] = field2type[field_name](value)
+                    type = field2type[field_name]
+                    datum[field_name] = type(value)  # type: ignore
 
             return _Datum(**datum)
 
@@ -192,7 +194,7 @@ class Statistics:
         self,
         where: Path | str,
         delimiter: str = ",",
-        quoting: int = csv.QUOTE_MINIMAL,
+        quoting: Literal[0, 1, 2, 3] = csv.QUOTE_MINIMAL,
         **kwargs,
     ):
         """
