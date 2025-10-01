@@ -20,7 +20,7 @@ jobs:
       matrix:
         include:
           - compiler: gcc  # minimum gcc version
-            compiler-version: '0'
+            compiler-version: '10'
             python-version: '3.11'
           - compiler: gcc  # recent gcc version
             compiler-version: '14'
