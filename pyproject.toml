@@ -25,6 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 requires-python = ">=3.11"
 dependencies = [
@@ -135,8 +136,8 @@ exclude_lines = [
 [tool.cibuildwheel]
 # We do not support old Python versions and somewhat uncommon platforms. For
 # musllinux-based builds we assume users can compile the thing themselves.
-build = "cp310-* cp311-* cp312-* cp313-*"
-skip = "pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
+build = "cp311-* cp312-* cp313-* cp314-*"
+skip = "*_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
 build-frontend = "build"
 test-requires = [
     "pytest>=6.0.0",
