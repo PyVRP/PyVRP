@@ -20,16 +20,16 @@ jobs:
       matrix:
         include:
           - compiler: gcc  # minimum gcc version
-            compiler-version: '11'
+            compiler-version: '0'
             python-version: '3.11'
           - compiler: gcc  # recent gcc version
-            compiler-version: '15'
+            compiler-version: '14'
             python-version: '3.13'
           - compiler: clang  # minimum clang version
             compiler-version: '14'
             python-version: '3.11'
           - compiler: clang  # recent clang version
-            compiler-version: '20'
+            compiler-version: '19'
             python-version: '3.13'
     steps:
       - uses: actions/checkout@v4
