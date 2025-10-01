@@ -22,19 +22,17 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Scientific/Engineering",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.15.2; python_version < '3.12'",
     "numpy>=1.26.0; python_version >= '3.12'",
     "matplotlib>=2.2.0",
     "vrplib>=1.4.0",
     "tqdm>=4.64.1",
-    "tomli>=2.0.1",
 ]
 
 [project.urls]
