@@ -11,7 +11,7 @@
       }
 
       .cls-1, .cls-2, .cls-3 {
-        stroke: #231f20;
+        stroke: #58595b;
         stroke-miterlimit: 10;
       }
 
