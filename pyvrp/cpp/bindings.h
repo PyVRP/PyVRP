@@ -6,6 +6,10 @@
 
 #include <type_traits>
 
+// Used to separate template parameters that otherwise do not work well with
+// macros.
+#define PYVRP_PARAM_SEP ,
+
 namespace pybind11::detail
 {
 // This is not a fully general type caster for Matrix. Instead, it assumes
@@ -68,9 +72,7 @@ template <typename T> struct type_caster<pyvrp::Matrix<T>>
 template <pyvrp::MeasureType T, std::integral V>
 struct type_caster<pyvrp::Measure<T, V>>
 {
-#define COMMA ,
-    PYBIND11_TYPE_CASTER(pyvrp::Measure<T COMMA V>, _("int"));
-#undef COMMA
+    PYBIND11_TYPE_CASTER(pyvrp::Measure<T PYVRP_PARAM_SEP V>, _("int"));
 
     bool load(pybind11::handle src, bool convert)  // Python -> C++
     {
@@ -107,9 +109,7 @@ struct type_caster<pyvrp::Measure<T, V>>
 template <pyvrp::MeasureType T, std::floating_point V>
 struct type_caster<pyvrp::Measure<T, V>>
 {
-#define COMMA ,
-    PYBIND11_TYPE_CASTER(pyvrp::Measure<T COMMA V>, _("float"));
-#undef COMMA
+    PYBIND11_TYPE_CASTER(pyvrp::Measure<T PYVRP_PARAM_SEP V>, _("float"));
 
     bool load(pybind11::handle src, bool convert)  // Python -> C++
     {
