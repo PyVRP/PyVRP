@@ -35,11 +35,12 @@ _MAX_SIZE = np.iinfo(np.uint64).max
         (0, 0, 1, 0, 1, 0, 1, 0, 1, True, None, ""),  # positive prize
         (0, 0, 1, 0, 1, 0, 1, 0, 1, False, None, ""),  # not required
         (0, 0, 1, 0, 1, 0, 1, 0, 1, False, 0, ""),  # group membership
+        (0.5, 8.2, 1, 1, 1, 0, 1, 0, 0, True, None, ""),  # float coordinates
     ],
 )
 def test_client_constructor_initialises_data_fields_correctly(
-    x: int,
-    y: int,
+    x: float,
+    y: float,
     delivery: int,
     pickup: int,
     service_duration: int,
@@ -109,8 +110,8 @@ def test_client_constructor_initialises_data_fields_correctly(
     ],
 )
 def test_raises_for_invalid_client_data(
-    x: int,
-    y: int,
+    x: float,
+    y: float,
     delivery: int,
     pickup: int,
     service: int,
@@ -145,8 +146,8 @@ def test_raises_for_invalid_client_data(
     ],
 )
 def test_raises_for_invalid_depot_data(
-    x: int,
-    y: int,
+    x: float,
+    y: float,
     tw_early: int,
     tw_late: int,
 ):
@@ -163,15 +164,15 @@ def test_depot_initialises_data_correctly():
     ensures the data is accessible from Python.
     """
     depot = Depot(
-        x=1,
-        y=2,
+        x=1.25,
+        y=0.5,
         tw_early=5,
         tw_late=7,
         name="test",
     )
 
-    assert_equal(depot.x, 1)
-    assert_equal(depot.y, 2)
+    assert_equal(depot.x, 1.25)
+    assert_equal(depot.y, 0.5)
     assert_equal(depot.tw_early, 5)
     assert_equal(depot.tw_late, 7)
     assert_equal(depot.name, "test")

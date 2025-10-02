@@ -68,8 +68,8 @@ class ProblemData
 public:
     /**
      * Client(
-     *    x: int,
-     *    y: int,
+     *    x: float,
+     *    y: float,
      *    delivery: list[int] = [],
      *    pickup: list[int] = [],
      *    service_duration: int = 0,
@@ -90,12 +90,12 @@ public:
      * ----------
      * x
      *     Horizontal coordinate of this client, that is, the 'x' part of the
-     *     client's (x, y) location tuple. This can for example be a scaled
-     *     longitude value.
+     *     client's (x, y) location tuple. This can for example be a longitude
+     *     value.
      * y
      *     Vertical coordinate of this client, that is, the 'y' part of the
-     *     client's (x, y) location tuple. This can for example be a scaled
-     *     latitude value.
+     *     client's (x, y) location tuple. This can for example be a latitude
+     *     value.
      * delivery
      *     The amounts this client demands from the depot.
      * pickup
@@ -264,8 +264,8 @@ public:
 
     /**
      * Depot(
-     *    x: int,
-     *    y: int,
+     *    x: float,
+     *    y: float,
      *    tw_early: int = 0,
      *    tw_late: int = np.iinfo(np.int64).max,
      *    *,
@@ -278,12 +278,12 @@ public:
      * ----------
      * x
      *     Horizontal coordinate of this depot, that is, the 'x' part of the
-     *     depot's (x, y) location tuple. This can for example be a scaled
-     *     longitude value.
+     *     depot's (x, y) location tuple. This can for example be a longitude
+     *     value.
      * y
      *     Vertical coordinate of this depot, that is, the 'y' part of the
-     *     depot's (x, y) location tuple. This can for example be a scaled
-     *     latitude value.
+     *     depot's (x, y) location tuple. This can for example be a latitude
+     *     value.
      * tw_early
      *     Opening time of this depot. Default 0.
      * tw_late
