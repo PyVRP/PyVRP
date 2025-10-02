@@ -34,8 +34,8 @@ class DynamicBitset:
     def reset(self) -> DynamicBitset: ...
 
 class Client:
-    x: int
-    y: int
+    x: float
+    y: float
     delivery: list[int]
     pickup: list[int]
     service_duration: int
@@ -48,8 +48,8 @@ class Client:
     name: str
     def __init__(
         self,
-        x: int,
-        y: int,
+        x: float,
+        y: float,
         delivery: list[int] = [],
         pickup: list[int] = [],
         service_duration: int = 0,
@@ -85,15 +85,15 @@ class ClientGroup:
     def __setstate__(self, state: tuple, /) -> None: ...
 
 class Depot:
-    x: int
-    y: int
+    x: float
+    y: float
     tw_early: int
     tw_late: int
     name: str
     def __init__(
         self,
-        x: int,
-        y: int,
+        x: float,
+        y: float,
         tw_early: int = 0,
         tw_late: int = ...,
         *,
