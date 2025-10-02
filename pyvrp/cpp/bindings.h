@@ -123,9 +123,9 @@ struct type_caster<pyvrp::Measure<T, V>>
         auto const raw = PyFloat_AsDouble(tmp);
         Py_DECREF(tmp);
 
-        // See https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong:
-        // -1 is returned on overflow, and OverflowError is set.
-        if (raw == -1 && PyErr_Occurred())
+        // See https://docs.python.org/3/c-api/float.html#c.PyFloat_AsDouble:
+        // on error, returns -1.0 and sets PyErr_Occurred.
+        if (raw == -1.0 && PyErr_Occurred())
             throw pybind11::error_already_set();
 
         value = pyvrp::Measure<T, V>(raw);
