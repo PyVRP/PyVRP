@@ -65,13 +65,16 @@ template <typename T> struct type_caster<pyvrp::Matrix<T>>
 // On the C++ side we have strong types for different measure values (for
 // example distance, duration, etc.), but on the Python side those things
 // are just ints. This type caster converts between the two.
-template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
+template <pyvrp::MeasureType T, std::integral V>
+struct type_caster<pyvrp::Measure<T, V>>
 {
-    PYBIND11_TYPE_CASTER(pyvrp::Measure<T>, _("int"));
+#define COMMA ,
+    PYBIND11_TYPE_CASTER(pyvrp::Measure<T COMMA V>, _("int"));
+#undef COMMA
 
     bool load(pybind11::handle src, bool convert)  // Python -> C++
     {
-        static_assert(sizeof(long long) >= sizeof(pyvrp::Value));
+        static_assert(sizeof(long long) >= sizeof(V));
 
         if (!convert && !PyLong_Check(src.ptr()))  // only int when conversion
             return false;                          // is not allowed.
@@ -88,16 +91,53 @@ template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
         if (raw == -1 && PyErr_Occurred())
             throw pybind11::error_already_set();
 
-        value = pyvrp::Measure<T>(raw);
+        value = pyvrp::Measure<T, V>(raw);
         return !PyErr_Occurred();
     }
 
     static pybind11::handle
-    cast(pyvrp::Measure<T> const &src,  // C++ -> Python
+    cast(pyvrp::Measure<T, V> const &src,  // C++ -> Python
          [[maybe_unused]] pybind11::return_value_policy policy,
          [[maybe_unused]] pybind11::handle parent)
     {
         return PyLong_FromLongLong(src.get());
+    }
+};
+
+template <pyvrp::MeasureType T, std::floating_point V>
+struct type_caster<pyvrp::Measure<T, V>>
+{
+#define COMMA ,
+    PYBIND11_TYPE_CASTER(pyvrp::Measure<T COMMA V>, _("float"));
+#undef COMMA
+
+    bool load(pybind11::handle src, bool convert)  // Python -> C++
+    {
+        if (!convert && !PyFloat_Check(src.ptr()))  // only int when conversion
+            return false;                           // is not allowed.
+
+        PyObject *tmp = PyNumber_Float(src.ptr());  // any argument for which
+        if (!tmp)                                   // Python's int() succeeds.
+            return false;
+
+        auto const raw = PyFloat_AsDouble(tmp);
+        Py_DECREF(tmp);
+
+        // See https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong:
+        // -1 is returned on overflow, and OverflowError is set.
+        if (raw == -1 && PyErr_Occurred())
+            throw pybind11::error_already_set();
+
+        value = pyvrp::Measure<T, V>(raw);
+        return !PyErr_Occurred();
+    }
+
+    static pybind11::handle
+    cast(pyvrp::Measure<T, V> const &src,  // C++ -> Python
+         [[maybe_unused]] pybind11::return_value_policy policy,
+         [[maybe_unused]] pybind11::handle parent)
+    {
+        return PyFloat_FromDouble(src.get());
     }
 };
 }  // namespace pybind11::detail
