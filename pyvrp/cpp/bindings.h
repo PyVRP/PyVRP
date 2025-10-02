@@ -68,7 +68,8 @@ template <typename T> struct type_caster<pyvrp::Matrix<T>>
 
 // On the C++ side we have strong types for different measure values (for
 // example distance, duration, etc.), but on the Python side those things
-// are just ints. This type caster converts between the two.
+// are just ints or floats. The following two type casters convert them.
+
 template <pyvrp::MeasureType T, std::integral V>
 struct type_caster<pyvrp::Measure<T, V>>
 {
@@ -78,11 +79,11 @@ struct type_caster<pyvrp::Measure<T, V>>
     {
         static_assert(sizeof(long long) >= sizeof(V));
 
-        if (!convert && !PyLong_Check(src.ptr()))  // only int when conversion
-            return false;                          // is not allowed.
+        if (!convert && !PyLong_Check(src.ptr()))  // accept only int if no
+            return false;                          // conversion is allowed.
 
         PyObject *tmp = PyNumber_Long(src.ptr());  // any argument for which
-        if (!tmp)                                  // Python's int() succeeds.
+        if (!tmp)                                  // int() succeeds.
             return false;
 
         auto const raw = PyLong_AsLongLong(tmp);
@@ -113,11 +114,11 @@ struct type_caster<pyvrp::Measure<T, V>>
 
     bool load(pybind11::handle src, bool convert)  // Python -> C++
     {
-        if (!convert && !PyFloat_Check(src.ptr()))  // only int when conversion
-            return false;                           // is not allowed.
+        if (!convert && !PyFloat_Check(src.ptr()))  // accept only float if no
+            return false;                           // conversion is allowed.
 
         PyObject *tmp = PyNumber_Float(src.ptr());  // any argument for which
-        if (!tmp)                                   // Python's int() succeeds.
+        if (!tmp)                                   // float() succeeds.
             return false;
 
         auto const raw = PyFloat_AsDouble(tmp);
