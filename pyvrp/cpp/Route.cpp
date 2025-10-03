@@ -219,9 +219,9 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         prizes_ += trip.prizes();
 
         auto const [x, y] = trip.centroid();
-        auto const div = std::max<size_t>(size(), 1);  // max 1 avoids zero div
-        centroid_.first += (x.get() * trip.size()) / div;
-        centroid_.second += (y.get() * trip.size()) / div;
+        auto const numClients = empty() ? 1 : size();  // avoid division by zero
+        centroid_.first += (x.get() * trip.size()) / numClients;
+        centroid_.second += (y.get() * trip.size()) / numClients;
     }
 
     distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
