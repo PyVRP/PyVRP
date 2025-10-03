@@ -888,3 +888,12 @@ def test_route_release_time_after_vehicle_start_late():
 
     # Sanity check that all time warp is also accounted for in the schedule.
     assert_equal(sum(v.time_warp for v in route.schedule()), route.time_warp())
+
+
+def test_zero_centroid_empty_routes(ok_small):
+    """
+    Tests that the centroid for empty routes is (0, 0). Previously, this
+    returned NaN due to a divide-by-zero bug. See #908 for details.
+    """
+    route = Route(ok_small, [], 0)
+    assert_equal(route.centroid(), (0.0, 0.0))

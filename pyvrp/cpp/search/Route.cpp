@@ -79,7 +79,7 @@ Route::Iterator Route::begin() const { return Iterator(nodes, 1); }
 
 Route::Iterator Route::end() const { return Iterator(nodes, nodes.size() - 1); }
 
-std::pair<double, double> const &Route::centroid() const
+std::pair<pyvrp::Coordinate, pyvrp::Coordinate> const &Route::centroid() const
 {
     assert(!dirty);
     return centroid_;
@@ -95,13 +95,13 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 {
     assert(!dirty && !other.dirty);
 
-    auto const [dataX, dataY] = data.centroid();
-    auto const [thisX, thisY] = centroid_;
-    auto const [otherX, otherY] = other.centroid_;
+    auto const [dX, dY] = data.centroid();
+    auto const [tX, tY] = this->centroid_;
+    auto const [oX, oY] = other.centroid_;
 
     // Each angle is in [-pi, pi], so the absolute difference is in [0, tau].
-    auto const thisAngle = std::atan2(thisY - dataY, thisX - dataX);
-    auto const otherAngle = std::atan2(otherY - dataY, otherX - dataX);
+    auto const thisAngle = std::atan2((tY - dY).get(), (tX - dX).get());
+    auto const otherAngle = std::atan2((oY - dY).get(), (oX - dX).get());
     auto const absDiff = std::abs(thisAngle - otherAngle);
 
     // First case is obvious. Second case exists because tau and 0 are also

@@ -46,10 +46,10 @@ private:
     Duration release_ = 0;          // Release time of this trip
     Cost prizes_ = 0;               // Total value of prizes on this trip
 
-    std::pair<double, double> centroid_ = {0, 0};  // Trip center
-    size_t vehicleType_;                           // Type of vehicle
-    size_t startDepot_;                            // assigned start location
-    size_t endDepot_;                              // assigned end location
+    std::pair<Coordinate, Coordinate> centroid_;  // Trip center
+    size_t vehicleType_;                          // Type of vehicle
+    size_t startDepot_;                           // assigned start location
+    size_t endDepot_;                             // assigned end location
 
 public:
     [[nodiscard]] bool empty() const;
@@ -121,7 +121,7 @@ public:
     /**
      * Center point of the client locations on this trip.
      */
-    [[nodiscard]] std::pair<double, double> const &centroid() const;
+    [[nodiscard]] std::pair<Coordinate, Coordinate> const &centroid() const;
 
     /**
      * Index of the type of vehicle used on this trip.
@@ -170,7 +170,7 @@ public:
          Duration service,
          Duration release,
          Cost prizes,
-         std::pair<double, double> centroid,
+         std::pair<Coordinate, Coordinate> centroid,
          size_t vehicleType,
          size_t startDepot,
          size_t endDepot);

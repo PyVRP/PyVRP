@@ -192,8 +192,8 @@ class Model:
 
     def add_client(
         self,
-        x: int,
-        y: int,
+        x: float,
+        y: float,
         delivery: int | list[int] = [],
         pickup: int | list[int] = [],
         service_duration: int = 0,
@@ -262,8 +262,8 @@ class Model:
 
     def add_depot(
         self,
-        x: int,
-        y: int,
+        x: float,
+        y: float,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
         *,

@@ -17,7 +17,7 @@ double routeAngle(pyvrp::ProblemData const &data, Route const &route)
 {
     auto const [dataX, dataY] = data.centroid();
     auto const [routeX, routeY] = route.centroid();
-    return std::atan2(routeY - dataY, routeX - dataX);
+    return std::atan2((routeY - dataY).get(), (routeX - dataX).get());
 }
 
 Routes sortByAscAngle(pyvrp::ProblemData const &data, Routes routes)

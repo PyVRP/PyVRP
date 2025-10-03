@@ -585,6 +585,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                       trip.endDepot());
             },
             [](py::tuple t) {  // __setstate__
+                using Coord = pyvrp::Coordinate;
+                using Centroid = std::pair<Coord, Coord>;
                 using Loads = std::vector<pyvrp::Load>;
 
                 Trip trip(t[0].cast<Trip::Visits>(),     // visits
@@ -597,10 +599,10 @@ PYBIND11_MODULE(_pyvrp, m)
                           t[7].cast<pyvrp::Duration>(),  // service
                           t[8].cast<pyvrp::Duration>(),  // release
                           t[9].cast<pyvrp::Cost>(),      // prizes
-                          t[10].cast<std::pair<double, double>>(),  // centroid
-                          t[11].cast<size_t>(),   // vehicle type
-                          t[12].cast<size_t>(),   // start depot
-                          t[13].cast<size_t>());  // end depot
+                          t[10].cast<Centroid>(),        // centroid
+                          t[11].cast<size_t>(),          // vehicle type
+                          t[12].cast<size_t>(),          // start depot
+                          t[13].cast<size_t>());         // end depot
 
                 return trip;
             }))
@@ -761,30 +763,32 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.schedule());
             },
             [](py::tuple t) {  // __setstate__
+                using Coord = pyvrp::Coordinate;
+                using Centroid = std::pair<Coord, Coord>;
                 using Trips = std::vector<Trip>;
                 using Schedule = std::vector<Route::ScheduledVisit>;
 
                 Route route(
-                    t[0].cast<Trips>(),                       // trips
-                    t[1].cast<pyvrp::Distance>(),             // distance
-                    t[2].cast<pyvrp::Cost>(),                 // distance cost
-                    t[3].cast<pyvrp::Distance>(),             // excess distance
-                    t[4].cast<std::vector<pyvrp::Load>>(),    // delivery
-                    t[5].cast<std::vector<pyvrp::Load>>(),    // pickup
-                    t[6].cast<std::vector<pyvrp::Load>>(),    // excess load
-                    t[7].cast<pyvrp::Duration>(),             // duration
-                    t[8].cast<pyvrp::Cost>(),                 // duration cost
-                    t[9].cast<pyvrp::Duration>(),             // time warp
-                    t[10].cast<pyvrp::Duration>(),            // travel
-                    t[11].cast<pyvrp::Duration>(),            // service
-                    t[12].cast<pyvrp::Duration>(),            // start time
-                    t[13].cast<pyvrp::Duration>(),            // slack
-                    t[14].cast<pyvrp::Cost>(),                // prizes
-                    t[15].cast<std::pair<double, double>>(),  // centroid
-                    t[16].cast<size_t>(),                     // vehicle type
-                    t[17].cast<size_t>(),                     // start depot
-                    t[18].cast<size_t>(),                     // end depot
-                    t[19].cast<Schedule>());                  // visit schedule
+                    t[0].cast<Trips>(),                     // trips
+                    t[1].cast<pyvrp::Distance>(),           // distance
+                    t[2].cast<pyvrp::Cost>(),               // distance cost
+                    t[3].cast<pyvrp::Distance>(),           // excess distance
+                    t[4].cast<std::vector<pyvrp::Load>>(),  // delivery
+                    t[5].cast<std::vector<pyvrp::Load>>(),  // pickup
+                    t[6].cast<std::vector<pyvrp::Load>>(),  // excess load
+                    t[7].cast<pyvrp::Duration>(),           // duration
+                    t[8].cast<pyvrp::Cost>(),               // duration cost
+                    t[9].cast<pyvrp::Duration>(),           // time warp
+                    t[10].cast<pyvrp::Duration>(),          // travel
+                    t[11].cast<pyvrp::Duration>(),          // service
+                    t[12].cast<pyvrp::Duration>(),          // start time
+                    t[13].cast<pyvrp::Duration>(),          // slack
+                    t[14].cast<pyvrp::Cost>(),              // prizes
+                    t[15].cast<Centroid>(),                 // centroid
+                    t[16].cast<size_t>(),                   // vehicle type
+                    t[17].cast<size_t>(),                   // start depot
+                    t[18].cast<size_t>(),                   // end depot
+                    t[19].cast<Schedule>());                // visit schedule
 
                 return route;
             }))
