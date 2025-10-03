@@ -306,7 +306,7 @@ private:
 
     std::vector<Node *> nodes;   // Nodes in this route, including depots
     std::vector<size_t> visits;  // Locations in this route, incl. depots
-    std::pair<double, double> centroid_;  // Center point of route's clients
+    std::pair<Coordinate, Coordinate> centroid_;  // Client center point
 
     std::vector<Distance> cumDist;  // Dist of start -> node (incl.)
 
@@ -533,7 +533,7 @@ public:
     /**
      * Center point of the client locations on this route.
      */
-    [[nodiscard]] std::pair<double, double> const &centroid() const;
+    [[nodiscard]] std::pair<Coordinate, Coordinate> const &centroid() const;
 
     /**
      * @return This route's vehicle type.

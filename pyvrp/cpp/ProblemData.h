@@ -537,7 +537,7 @@ private:
         inline operator Depot const &() const;
     };
 
-    std::pair<double, double> centroid_;           // Center of client locations
+    std::pair<Coordinate, Coordinate> centroid_;   // Center of client locations
     std::vector<Matrix<Distance>> const dists_;    // Distance matrices
     std::vector<Matrix<Duration>> const durs_;     // Duration matrices
     std::vector<Client> const clients_;            // Client information
@@ -609,7 +609,7 @@ public:
     /**
      * Center point of all client locations (excluding depots).
      */
-    [[nodiscard]] std::pair<double, double> const &centroid() const;
+    [[nodiscard]] std::pair<Coordinate, Coordinate> const &centroid() const;
 
     /**
      * Returns the client group at the given index.

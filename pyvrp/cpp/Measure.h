@@ -100,8 +100,11 @@ template <MeasureType Type, Number Value>
 Measure<Type, Value> &
 Measure<Type, Value>::operator+=(Measure<Type, Value> const &rhs)
 {
-    [[maybe_unused]] Value res = 0;
-    assert(!__builtin_add_overflow(this->value, rhs.value, &res));
+    if constexpr (std::is_integral_v<Value>)
+    {
+        [[maybe_unused]] Value res = 0;
+        assert(!__builtin_add_overflow(this->value, rhs.value, &res));
+    }
 
     this->value += rhs.value;
     return *this;
@@ -111,8 +114,11 @@ template <MeasureType Type, Number Value>
 Measure<Type, Value> &
 Measure<Type, Value>::operator-=(Measure<Type, Value> const &rhs)
 {
-    [[maybe_unused]] Value res = 0;
-    assert(!__builtin_sub_overflow(this->value, rhs.value, &res));
+    if constexpr (std::is_integral_v<Value>)
+    {
+        [[maybe_unused]] Value res = 0;
+        assert(!__builtin_sub_overflow(this->value, rhs.value, &res));
+    }
 
     this->value -= rhs.value;
     return *this;
@@ -122,8 +128,11 @@ template <MeasureType Type, Number Value>
 Measure<Type, Value> &
 Measure<Type, Value>::operator*=(Measure<Type, Value> const &rhs)
 {
-    [[maybe_unused]] Value res = 0;
-    assert(!__builtin_mul_overflow(this->value, rhs.value, &res));
+    if constexpr (std::is_integral_v<Value>)
+    {
+        [[maybe_unused]] Value res = 0;
+        assert(!__builtin_mul_overflow(this->value, rhs.value, &res));
+    }
 
     this->value *= rhs.value;
     return *this;
@@ -156,8 +165,11 @@ template <MeasureType Type, Number Value>
 Measure<Type, Value> operator+(Measure<Type, Value> const lhs,
                                Measure<Type, Value> const rhs)
 {
-    [[maybe_unused]] Value res = 0;
-    assert(!__builtin_add_overflow(lhs.get(), rhs.get(), &res));
+    if constexpr (std::is_integral_v<Value>)
+    {
+        [[maybe_unused]] Value res = 0;
+        assert(!__builtin_add_overflow(lhs.get(), rhs.get(), &res));
+    }
 
     return lhs.get() + rhs.get();
 }
@@ -172,8 +184,11 @@ template <MeasureType Type, Number Value>
 Measure<Type, Value> operator-(Measure<Type, Value> const lhs,
                                Measure<Type, Value> const rhs)
 {
-    [[maybe_unused]] Value res = 0;
-    assert(!__builtin_sub_overflow(lhs.get(), rhs.get(), &res));
+    if constexpr (std::is_integral_v<Value>)
+    {
+        [[maybe_unused]] Value res = 0;
+        assert(!__builtin_sub_overflow(lhs.get(), rhs.get(), &res));
+    }
 
     return lhs.get() - rhs.get();
 }
@@ -188,8 +203,11 @@ template <MeasureType Type, Number Value>
 Measure<Type, Value> operator*(Measure<Type, Value> const lhs,
                                Measure<Type, Value> const rhs)
 {
-    [[maybe_unused]] Value res = 0;
-    assert(!__builtin_mul_overflow(lhs.get(), rhs.get(), &res));
+    if constexpr (std::is_integral_v<Value>)
+    {
+        [[maybe_unused]] Value res = 0;
+        assert(!__builtin_mul_overflow(lhs.get(), rhs.get(), &res));
+    }
 
     return lhs.get() * rhs.get();
 }

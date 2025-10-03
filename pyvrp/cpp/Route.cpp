@@ -7,6 +7,7 @@
 #include <fstream>
 #include <numeric>
 
+using pyvrp::Coordinate;
 using pyvrp::Cost;
 using pyvrp::Distance;
 using pyvrp::Duration;
@@ -218,8 +219,9 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         prizes_ += trip.prizes();
 
         auto const [x, y] = trip.centroid();
-        centroid_.first += (x * trip.size()) / size();
-        centroid_.second += (y * trip.size()) / size();
+        auto const div = std::max<size_t>(size(), 1);  // max 1 avoids zero div
+        centroid_.first += (x.get() * trip.size()) / div;
+        centroid_.second += (y.get() * trip.size()) / div;
     }
 
     distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
@@ -303,7 +305,7 @@ Route::Route(Trips trips,
              Duration startTime,
              Duration slack,
              Cost prizes,
-             std::pair<double, double> centroid,
+             std::pair<Coordinate, Coordinate> centroid,
              size_t vehicleType,
              size_t startDepot,
              size_t endDepot,
@@ -408,7 +410,10 @@ Duration Route::releaseTime() const { return trips_[0].releaseTime(); }
 
 Cost Route::prizes() const { return prizes_; }
 
-std::pair<double, double> const &Route::centroid() const { return centroid_; }
+std::pair<Coordinate, Coordinate> const &Route::centroid() const
+{
+    return centroid_;
+}
 
 size_t Route::vehicleType() const { return vehicleType_; }
 
