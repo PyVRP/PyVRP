@@ -12,8 +12,6 @@
 
 namespace pyvrp
 {
-using Value = int64_t;
-
 enum class MeasureType
 {
     COORD,
@@ -24,58 +22,62 @@ enum class MeasureType
 };
 
 template <typename T>
-concept Number = std::is_arithmetic_v<T>;
+concept NumberType = std::is_arithmetic_v<T>;
 
 // Forward declaration so we can define the relevant type aliases early.
-template <MeasureType _, Number ValueType> class Measure;
+template <MeasureType Type, NumberType Value> class Measure;
 
 // Type aliases. These are used throughout the program.
 using Coordinate = Measure<MeasureType::COORD, double>;
-using Cost = Measure<MeasureType::COST, Value>;
-using Distance = Measure<MeasureType::DIST, Value>;
-using Duration = Measure<MeasureType::DURATION, Value>;
-using Load = Measure<MeasureType::LOAD, Value>;
+using Cost = Measure<MeasureType::COST, int64_t>;
+using Distance = Measure<MeasureType::DIST, int64_t>;
+using Duration = Measure<MeasureType::DURATION, int64_t>;
+using Load = Measure<MeasureType::LOAD, int64_t>;
 
 //
-//                 EVERYTHING BELOW THIS IS IMPLEMENTATION
+//                 EVERYTHING BELOW IS AN IMPLEMENTATION DETAIL
 //
 
 /**
  * The measure class is a thin wrapper around an underlying value. The measure
  * forms a strong type that is only explicitly castable to other arithmetic or
  * measure types.
+ *
+ * The measure is equipped with a ``MeasureType`` that specifies what it is
+ * intended to model, as well as a ``NumberType`` storage class for the
+ * underlying data. The latter can be used to e.g. differentiate integral and
+ * floating point measures.
  */
-template <MeasureType _, Number ValueType> class Measure
+template <MeasureType _, NumberType Value> class Measure
 {
-    ValueType value = 0;
+    Value value = 0;
 
 public:
     // Default construction initialises to 0.
     Measure() = default;
 
     // This constructor takes any arithmetic type (generally useful) and casts
-    // its value to Value.
-    template <Number T>
-    Measure(T const value) : value(static_cast<ValueType>(value))
+    // it to the underlying Value.
+    template <NumberType T>
+    Measure(T const value) : value(static_cast<Value>(value))
     {
     }
 
     // Explicit conversions of the underlying value to other arithmetic types.
-    template <Number T> explicit operator T() const
+    template <NumberType T> explicit operator T() const
     {
         return static_cast<T>(value);
     }
 
     // Explicit conversions to other measures of the same storage type (we do
     // not want there to be data loss just by casting between measures).
-    template <MeasureType Other>
-    explicit operator Measure<Other, ValueType>() const
+    template <MeasureType Other> explicit operator Measure<Other, Value>() const
     {
         return value;
     }
 
     // Retrieves the underlying value.
-    [[nodiscard]] ValueType get() const;
+    [[nodiscard]] Value get() const;
 
     // In-place unary operators.
     Measure &operator+=(Measure const &rhs);
@@ -89,14 +91,14 @@ public:
 };
 
 // Retrieves the underlying value.
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 Value Measure<Type, Value>::get() const
 {
     return value;
 }
 
 // In-place unary operators.
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 Measure<Type, Value> &
 Measure<Type, Value>::operator+=(Measure<Type, Value> const &rhs)
 {
@@ -110,7 +112,7 @@ Measure<Type, Value>::operator+=(Measure<Type, Value> const &rhs)
     return *this;
 }
 
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 Measure<Type, Value> &
 Measure<Type, Value>::operator-=(Measure<Type, Value> const &rhs)
 {
@@ -124,7 +126,7 @@ Measure<Type, Value>::operator-=(Measure<Type, Value> const &rhs)
     return *this;
 }
 
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 Measure<Type, Value> &
 Measure<Type, Value>::operator*=(Measure<Type, Value> const &rhs)
 {
@@ -138,7 +140,7 @@ Measure<Type, Value>::operator*=(Measure<Type, Value> const &rhs)
     return *this;
 }
 
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 Measure<Type, Value> &
 Measure<Type, Value>::operator/=(Measure<Type, Value> const &rhs)
 {
@@ -147,13 +149,13 @@ Measure<Type, Value>::operator/=(Measure<Type, Value> const &rhs)
 }
 
 // Comparison operators.
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 bool Measure<Type, Value>::operator==(Measure<Type, Value> const &other) const
 {
     return value == other.value;
 }
 
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 std::strong_ordering
 Measure<Type, Value>::operator<=>(Measure<Type, Value> const &other) const
 {
@@ -161,7 +163,7 @@ Measure<Type, Value>::operator<=>(Measure<Type, Value> const &other) const
 }
 
 // Free-standing binary operators.
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 Measure<Type, Value> operator+(Measure<Type, Value> const lhs,
                                Measure<Type, Value> const rhs)
 {
@@ -174,13 +176,13 @@ Measure<Type, Value> operator+(Measure<Type, Value> const lhs,
     return lhs.get() + rhs.get();
 }
 
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 Measure<Type, Value> operator+(Measure<Type, Value> const lhs)
 {
     return +lhs.get();
 }
 
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 Measure<Type, Value> operator-(Measure<Type, Value> const lhs,
                                Measure<Type, Value> const rhs)
 {
@@ -193,13 +195,13 @@ Measure<Type, Value> operator-(Measure<Type, Value> const lhs,
     return lhs.get() - rhs.get();
 }
 
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 Measure<Type, Value> operator-(Measure<Type, Value> const lhs)
 {
     return -lhs.get();
 }
 
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 Measure<Type, Value> operator*(Measure<Type, Value> const lhs,
                                Measure<Type, Value> const rhs)
 {
@@ -212,7 +214,7 @@ Measure<Type, Value> operator*(Measure<Type, Value> const lhs,
     return lhs.get() * rhs.get();
 }
 
-template <MeasureType Type, Number Value>
+template <MeasureType Type, NumberType Value>
 Measure<Type, Value> operator/(Measure<Type, Value> const lhs,
                                Measure<Type, Value> const rhs)
 {
@@ -221,7 +223,7 @@ Measure<Type, Value> operator/(Measure<Type, Value> const lhs,
 }  // namespace pyvrp
 
 // For printing.
-template <pyvrp::MeasureType Type, pyvrp::Number Value>
+template <pyvrp::MeasureType Type, pyvrp::NumberType Value>
 std::ostream &operator<<(std::ostream &out,
                          pyvrp::Measure<Type, Value> const measure)
 {
@@ -230,7 +232,7 @@ std::ostream &operator<<(std::ostream &out,
 
 // Specialisations for hashing and numerical limits.
 
-template <pyvrp::MeasureType Type, pyvrp::Number Value>
+template <pyvrp::MeasureType Type, pyvrp::NumberType Value>
 struct std::hash<pyvrp::Measure<Type, Value>>
 {
     size_t operator()(pyvrp::Measure<Type, Value> const measure) const
@@ -239,7 +241,7 @@ struct std::hash<pyvrp::Measure<Type, Value>>
     }
 };
 
-template <pyvrp::MeasureType Type, pyvrp::Number Value>
+template <pyvrp::MeasureType Type, pyvrp::NumberType Value>
 class std::numeric_limits<pyvrp::Measure<Type, Value>>
 {
 public:
