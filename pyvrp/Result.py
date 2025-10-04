@@ -9,7 +9,7 @@ from pyvrp._pyvrp import CostEvaluator, Solution
 class Result:
     """
     Stores the outcomes of a single run. An instance of this class is returned
-    once the GeneticAlgorithm completes.
+    once the IteratedLocalSearch completes.
 
     Parameters
     ----------
@@ -18,9 +18,9 @@ class Result:
     stats
         A Statistics object containing runtime statistics.
     num_iterations
-        Number of iterations performed by the genetic algorithm.
+        Number of iterations performed by the iterated local search algorithm.
     runtime
-        Total runtime of the main genetic algorithm loop.
+        Total runtime of the main iterated local search loop.
 
     Raises
     ------

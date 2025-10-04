@@ -1,4 +1,6 @@
+num_perturbations = 10
 display_interval = 10.0
+collect_stats = false
 
 node_ops = [
     "Exchange10",
@@ -11,18 +13,15 @@ route_ops = [
 ]
 
 
-[genetic]
-repair_probability = 0.1
-num_iters_no_improvement = 200
+perturbation_ops = [
+    "RemoveNeighbours",
+]
 
 
-[population]
-min_pop_size = 10
-generation_size = 20
-num_elite = 3
-num_close = 4
-lb_diversity = 0.0
-ub_diversity = 1.0
+[ils]
+num_iters_no_improvement = 10
+initial_accept_weight = 0.1
+history_length = 1
 
 
 [neighbourhood]
@@ -34,7 +33,6 @@ symmetric_neighbours = true
 
 
 [penalty]
-repair_booster = 12
 solutions_between_updates = 100
 penalty_increase = 1.25
 penalty_decrease = 0.85
