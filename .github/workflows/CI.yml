@@ -24,13 +24,13 @@ jobs:
             python-version: '3.11'
           - compiler: gcc  # recent gcc version
             compiler-version: '14'
-            python-version: '3.14.0-rc.3'
+            python-version: '3.14'
           - compiler: clang  # minimum clang version
             compiler-version: '14'
             python-version: '3.11'
           - compiler: clang  # recent clang version
             compiler-version: '19'
-            python-version: '3.14.0-rc.3'
+            python-version: '3.14'
     steps:
       - uses: actions/checkout@v4
         with:
