@@ -620,7 +620,7 @@ def test_model_solves_instances_with_pickups_and_deliveries(
     for frm in m.locations:
         for to in m.locations:
             manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
-            m.add_edge(frm, to, distance=manhattan)
+            m.add_edge(frm, to, distance=int(manhattan))
 
     res = m.solve(stop=MaxIterations(100))
     route = res.best.routes()[0]

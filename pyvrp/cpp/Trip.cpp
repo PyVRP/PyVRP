@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <fstream>
 
+using pyvrp::Coordinate;
 using pyvrp::Cost;
 using pyvrp::Distance;
 using pyvrp::Duration;
@@ -108,7 +109,7 @@ Trip::Trip(Visits visits,
            Duration service,
            Duration release,
            Cost prizes,
-           std::pair<double, double> centroid,
+           std::pair<Coordinate, Coordinate> centroid,
            size_t vehicleType,
            size_t startDepot,
            size_t endDepot)
@@ -167,7 +168,10 @@ Duration Trip::releaseTime() const { return release_; }
 
 Cost Trip::prizes() const { return prizes_; }
 
-std::pair<double, double> const &Trip::centroid() const { return centroid_; }
+std::pair<Coordinate, Coordinate> const &Trip::centroid() const
+{
+    return centroid_;
+}
 
 size_t Trip::vehicleType() const { return vehicleType_; }
 

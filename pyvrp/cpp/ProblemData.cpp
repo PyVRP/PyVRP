@@ -470,7 +470,8 @@ ProblemData::vehicleType(size_t vehicleType) const
     return vehicleTypes_[vehicleType];
 }
 
-std::pair<double, double> const &ProblemData::centroid() const
+std::pair<pyvrp::Coordinate, pyvrp::Coordinate> const &
+ProblemData::centroid() const
 {
     return centroid_;
 }
@@ -652,8 +653,7 @@ ProblemData::ProblemData(std::vector<Client> clients,
                          std::vector<Matrix<Distance>> distMats,
                          std::vector<Matrix<Duration>> durMats,
                          std::vector<ClientGroup> groups)
-    : centroid_({0, 0}),
-      dists_(std::move(distMats)),
+    : dists_(std::move(distMats)),
       durs_(std::move(durMats)),
       clients_(std::move(clients)),
       depots_(std::move(depots)),

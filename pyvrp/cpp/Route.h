@@ -124,10 +124,10 @@ private:
     Duration slack_ = 0;            // Total time slack on this route
     Cost prizes_ = 0;               // Total value of prizes on this route
 
-    std::pair<double, double> centroid_;  // Route center
-    VehicleType vehicleType_;             // Type of vehicle
-    Depot startDepot_;                    // Assigned start depot
-    Depot endDepot_;                      // Assigned end depot
+    std::pair<Coordinate, Coordinate> centroid_;  // Route center
+    VehicleType vehicleType_;                     // Type of vehicle
+    Depot startDepot_;                            // Assigned start depot
+    Depot endDepot_;                              // Assigned end depot
 
 public:
     [[nodiscard]] bool empty() const;
@@ -281,7 +281,7 @@ public:
     /**
      * Center point of the client locations on this route.
      */
-    [[nodiscard]] std::pair<double, double> const &centroid() const;
+    [[nodiscard]] std::pair<Coordinate, Coordinate> const &centroid() const;
 
     /**
      * Index of the type of vehicle used on this route.
@@ -349,7 +349,7 @@ public:
           Duration startTime,
           Duration slack,
           Cost prizes,
-          std::pair<double, double> centroid,
+          std::pair<Coordinate, Coordinate> centroid,
           VehicleType vehicleType,
           Depot startDepot,
           Depot endDepot,
