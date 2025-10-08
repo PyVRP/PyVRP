@@ -1,0 +1,4 @@
+[
+  { "version": "/",         "title": "latest",  "aliases": ["latest","stable"] },
+  { "version": "/v0.11.3/", "title": "v0.11.3", "aliases": [] }
+]
