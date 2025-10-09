@@ -170,7 +170,7 @@ def benchmark(instances: list[Path], num_procs: int, **kwargs):
     func = partial(_solve, **kwargs)
 
     if len(instances) == 1:
-        res = [func(args[0])]
+        res = [func(args[0])]  # type: ignore
     else:
         res = process_map(func, args, max_workers=num_procs, unit="instance")
 
