@@ -132,6 +132,7 @@ html_theme_options = {
     "features": [
         "navigation.expand",
         "navigation.top",
+        "content.code.copy",
     ],
     "palette": [
         {
