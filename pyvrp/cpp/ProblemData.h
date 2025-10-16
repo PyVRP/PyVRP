@@ -200,7 +200,7 @@ public:
     /**
      * ClientGroup(
      *    clients: list[int] = [],
-     *    required: bool = True
+     *    required: bool = True,
      *    *,
      *    name: str = "",
      * )
