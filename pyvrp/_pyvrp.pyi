@@ -69,10 +69,13 @@ class Client:
 class ClientGroup:
     required: bool
     mutually_exclusive: bool
+    name: str
     def __init__(
         self,
         clients: list[int] = [],
         required: bool = True,
+        *,
+        name: str = "",
     ) -> None: ...
     @property
     def clients(self) -> list[int]: ...

@@ -251,12 +251,14 @@ class Model:
         self._clients.append(client)
         return client
 
-    def add_client_group(self, required: bool = True) -> ClientGroup:
+    def add_client_group(
+        self, required: bool = True, *, name: str = ""
+    ) -> ClientGroup:
         """
         Adds a new, possibly optional, client group to the model. Returns the
         created group.
         """
-        group = ClientGroup(required=required)
+        group = ClientGroup(required=required, name=name)
         self._groups.append(group)
         return group
 

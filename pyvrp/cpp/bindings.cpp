@@ -189,9 +189,11 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<ProblemData::ClientGroup>(
         m, "ClientGroup", DOC(pyvrp, ProblemData, ClientGroup))
-        .def(py::init<std::vector<size_t>, bool>(),
+        .def(py::init<std::vector<size_t>, bool, char const *>(),
              py::arg("clients") = py::list(),
-             py::arg("required") = true)
+             py::arg("required") = true,
+             py::kw_only(),
+             py::arg("name") = "")
         .def("add_client",
              &ProblemData::ClientGroup::addClient,
              py::arg("client"))
@@ -202,15 +204,20 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("required", &ProblemData::ClientGroup::required)
         .def_readonly("mutually_exclusive",
                       &ProblemData::ClientGroup::mutuallyExclusive)
+        .def_readonly("name",
+                      &ProblemData::ClientGroup::name,
+                      py::return_value_policy::reference_internal)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::ClientGroup const &group) {  // __getstate__
-                return py::make_tuple(group.clients(), group.required);
+                return py::make_tuple(
+                    group.clients(), group.required, group.name);
             },
             [](py::tuple t) {  // __setstate__
                 ProblemData::ClientGroup group(
                     t[0].cast<std::vector<size_t>>(),  // clients
-                    t[1].cast<bool>());                // required
+                    t[1].cast<bool>(),                 // required
+                    t[2].cast<std::string>());         // name
 
                 return group;
             }))
@@ -219,6 +226,10 @@ PYBIND11_MODULE(_pyvrp, m)
             "__iter__",
             [](ProblemData::ClientGroup const &group)
             { return py::make_iterator(group.begin(), group.end()); },
+            py::return_value_policy::reference_internal)
+        .def(
+            "__str__",
+            [](ProblemData::ClientGroup const &group) { return group.name; },
             py::return_value_policy::reference_internal);
 
     py::class_<ProblemData::VehicleType>(
