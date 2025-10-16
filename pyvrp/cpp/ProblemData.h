@@ -198,7 +198,12 @@ public:
     };
 
     /**
-     * ClientGroup(clients: list[int] = [], required: bool = True)
+     * ClientGroup(
+     *    clients: list[int] = [],
+     *    required: bool = True
+     *    *,
+     *    name: str = "",
+     * )
      *
      * A client group that imposes additional restrictions on visits to clients
      * in the group.
