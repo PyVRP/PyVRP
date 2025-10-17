@@ -282,7 +282,9 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     ds = DurationSegment::merge(0, {vehData, vehData.startLate}, ds);
 
     duration_ = ds.duration();
-    durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_);
+    overtime_ = std::max<Duration>(duration_ - vehData.maxDuration, 0);
+    durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_)
+                    + vehData.unitOvertimeCost * static_cast<Cost>(overtime_);
     startTime_ = ds.startEarly();
     slack_ = ds.slack();
     timeWarp_ = ds.timeWarp(vehData.maxDuration);
@@ -389,6 +391,8 @@ std::vector<Load> const &Route::pickup() const { return pickup_; }
 std::vector<Load> const &Route::excessLoad() const { return excessLoad_; }
 
 Duration Route::duration() const { return duration_; }
+
+Duration Route::overtime() const { return overtime_; }
 
 Cost Route::durationCost() const { return durationCost_; }
 

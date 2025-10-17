@@ -116,6 +116,7 @@ private:
     std::vector<Load> pickup_;     // Total pickup amount gathered on this route
     std::vector<Load> excessLoad_;  // Excess pickup or delivery demand
     Duration duration_ = 0;         // Total duration of this route
+    Duration overtime_ = 0;         // Total overtime of this route
     Cost durationCost_ = 0;         // Total cost of route duration
     Duration timeWarp_ = 0;         // Total time warp on this route
     Duration travel_ = 0;           // Total *travel* duration on this route
@@ -204,12 +205,17 @@ public:
     [[nodiscard]] std::vector<Load> const &excessLoad() const;
 
     /**
-     * Total route duration, including travel, service and waiting time.
+     * Total route duration, including travel, service, waiting and overtime.
      */
     [[nodiscard]] Duration duration() const;
 
     /**
-     * Total cost of the duration of this route.
+     * Overtime incurred on this route.
+     */
+    [[nodiscard]] Duration overtime() const;
+
+    /**
+     * Total cost of the duration of this route, including overtime.
      */
     [[nodiscard]] Cost durationCost() const;
 
