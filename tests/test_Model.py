@@ -219,6 +219,34 @@ def test_add_vehicle_type_raises_for_unknown_depot():
         m.add_vehicle_type(end_depot=depot)
 
 
+def test_get_clients():
+    """
+    Tests the ``clients`` property.
+    """
+    model = Model()
+    client1 = model.add_client(0, 0)
+    client2 = model.add_client(0, 0)
+
+    # Test that we can get the clients by index, or as a list.
+    assert_equal(model.clients[0], client1)
+    assert_equal(model.clients[1], client2)
+    assert_equal(model.clients, [client1, client2])
+
+
+def test_get_depots():
+    """
+    Tests the ``depots`` property.
+    """
+    model = Model()
+    depot1 = model.add_depot(0, 0)
+    depot2 = model.add_depot(0, 0)
+
+    # Test that we can get the depots by index, or as a list.
+    assert_equal(model.depots[0], depot1)
+    assert_equal(model.depots[1], depot2)
+    assert_equal(model.depots, [depot1, depot2])
+
+
 def test_get_locations():
     """
     Checks that the ``locations`` property returns the depot and all clients.
@@ -657,8 +685,8 @@ def test_from_data_client_group(ok_small):
 
     # Test that the clients have been correctly registered, and that there is
     # a client group in the model.
-    assert_equal(model.locations[1].group, 0)
-    assert_equal(model.locations[2].group, 0)
+    assert_equal(model.clients[0].group, 0)
+    assert_equal(model.clients[1].group, 0)
     assert_equal(len(model.groups), 1)
 
     # Test that that group actually contains the clients.

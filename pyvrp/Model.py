@@ -110,6 +110,20 @@ class Model:
         self._vehicle_types: list[VehicleType] = []
 
     @property
+    def clients(self) -> list[Client]:
+        """
+        Returns all clients currently in the model.
+        """
+        return self._clients
+
+    @property
+    def depots(self) -> list[Depot]:
+        """
+        Returns all depots currently in the model.
+        """
+        return self._depots
+
+    @property
     def locations(self) -> list[Client | Depot]:
         """
         Returns all locations (depots and clients) in the current model. The
