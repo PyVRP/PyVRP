@@ -423,8 +423,8 @@ public:
      *     Maximum allowed overtime, on top of the :py:attr:`~shift_duration`.
      *     Default 0, that is, overtime is not allowed.
      * unit_overtime_cost
-     *     Cost of a unit of overtime. This is in addition to regular
-     *     :py:attr:`~unit_duration_cost`. Default 0.
+     *     Cost of a unit of overtime. This is in addition to the regular
+     *     :py:attr:`~unit_duration_cost` of route durations. Default 0.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
