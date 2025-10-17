@@ -123,6 +123,8 @@ class VehicleType:
     initial_load: list[int]
     reload_depots: list[int]
     max_reloads: int
+    max_overtime: int
+    unit_overtime_cost: int
     name: str
     def __init__(
         self,
@@ -142,6 +144,8 @@ class VehicleType:
         initial_load: list[int] = [],
         reload_depots: list[int] = [],
         max_reloads: int = ...,
+        max_overtime: int = 0,
+        unit_overtime_cost: int = 0,
         *,
         name: str = "",
     ) -> None: ...
@@ -165,6 +169,8 @@ class VehicleType:
         initial_load: list[int] | None = None,
         reload_depots: list[int] | None = None,
         max_reloads: int | None = None,
+        max_overtime: int | None = None,
+        unit_overtime_cost: int | None = None,
         *,
         name: str | None = None,
     ) -> VehicleType: ...
