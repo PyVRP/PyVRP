@@ -198,7 +198,12 @@ public:
     };
 
     /**
-     * ClientGroup(clients: list[int] = [], required: bool = True)
+     * ClientGroup(
+     *    clients: list[int] = [],
+     *    required: bool = True,
+     *    *,
+     *    name: str = "",
+     * )
      *
      * A client group that imposes additional restrictions on visits to clients
      * in the group.
@@ -213,6 +218,8 @@ public:
      *     The clients in the group.
      * required
      *     Whether visiting this client group is required.
+     * name
+     *    Free-form name field for this client group. Default empty.
      *
      * Attributes
      * ----------
@@ -224,6 +231,8 @@ public:
      *     When ``True``, exactly one of the clients in this group must be
      *     visited if the group is required, and at most one if the group is
      *     not required.
+     * name
+     *    Free-form name field for this client group.
      *
      * Raises
      * ------
@@ -238,17 +247,21 @@ public:
     public:
         bool const required;                  // is visiting the group required?
         bool const mutuallyExclusive = true;  // at most one visit in group?
+        char const *name;                     // Group name (for reference)
 
         explicit ClientGroup(std::vector<size_t> clients = {},
-                             bool required = true);
+                             bool required = true,
+                             std::string name = "");
 
-        bool operator==(ClientGroup const &other) const = default;
+        bool operator==(ClientGroup const &other) const;
 
-        ClientGroup(ClientGroup const &group) = default;
-        ClientGroup(ClientGroup &&group) = default;
+        ClientGroup(ClientGroup const &group);
+        ClientGroup(ClientGroup &&group);
 
         ClientGroup &operator=(ClientGroup const &group) = delete;
         ClientGroup &operator=(ClientGroup &&group) = delete;
+
+        ~ClientGroup();
 
         bool empty() const;
         size_t size() const;

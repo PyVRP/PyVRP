@@ -159,12 +159,40 @@ bool ProblemData::Client::operator==(Client const &other) const
 }
 
 ProblemData::ClientGroup::ClientGroup(std::vector<size_t> clients,
-                                      bool required)
-    : required(required)
+                                      bool required,
+                                      std::string name)
+    : required(required), name(duplicate(name.data()))
 {
     for (auto const client : clients)
         addClient(client);
 }
+
+ProblemData::ClientGroup::ClientGroup(ClientGroup const &group)
+    : clients_(group.clients_),
+      required(group.required),
+      name(duplicate(group.name))
+{
+}
+
+ProblemData::ClientGroup::ClientGroup(ClientGroup &&group)
+    : clients_(std::move(group.clients_)),
+      required(group.required),
+      name(group.name)  // we can steal
+{
+    group.name = nullptr;  // stolen
+}
+
+bool ProblemData::ClientGroup::operator==(ClientGroup const &other) const
+{
+    // clang-format off
+    return clients_ == other.clients_
+        && required == other.required
+        && mutuallyExclusive == other.mutuallyExclusive
+        && std::strcmp(name, other.name) == 0;
+    // clang-format on
+}
+
+ProblemData::ClientGroup::~ClientGroup() { delete[] name; }
 
 bool ProblemData::ClientGroup::empty() const { return clients_.empty(); }
 

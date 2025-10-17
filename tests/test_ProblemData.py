@@ -756,6 +756,19 @@ def test_raises_inconsistent_profiles(ok_small):
         ok_small.replace(distance_matrices=ok_small.distance_matrices() * 2)
 
 
+def test_client_group_attribute_access():
+    """
+    Tests that the ClientGroup's attributes are correctly set and accessible.
+    """
+    group = ClientGroup(clients=[1, 2, 3], required=False, name="test")
+
+    assert_equal(group.clients, [1, 2, 3])
+    assert_equal(group.required, False)
+    assert_equal(group.mutually_exclusive, True)
+    assert_equal(group.name, "test")
+    assert_equal(str(group), "test")
+
+
 def test_raises_empty_group():
     """
     Tests that passing an empty client group raises a ValueError.
@@ -957,6 +970,26 @@ def test_vehicle_type_eq():
     assert_(veh_type1 != 5)
 
 
+def test_client_group_eq():
+    """
+    Tests the client group's equality operator.
+    """
+    group1 = ClientGroup(clients=[1, 2], required=False)
+    group2 = ClientGroup(clients=[1, 2], required=True)
+    assert_(group1 != group2)
+
+    # This group is equivalent to group1.
+    group3 = ClientGroup(clients=[1, 2], required=False)
+    assert_(group1 == group3)
+
+    # And some things that are not client groups.
+    assert_(group1 != "text")
+    assert_(group1 != 7)
+
+    group4 = ClientGroup(clients=[1, 2], required=False, name="test")
+    assert_(group1 != group4)
+
+
 def test_eq_checks_names():
     """
     Tests that the equality operators on named objects also considers the name
@@ -966,6 +999,7 @@ def test_eq_checks_names():
     assert_(Client(x, y, name="1") != Client(x, y, name="2"))
     assert_(Depot(x, y, name="1") != Depot(x, y, name="2"))
     assert_(VehicleType(name="1") != VehicleType(name="2"))
+    assert_(ClientGroup(name="1") != ClientGroup(name="2"))
 
 
 @pytest.mark.parametrize("cls", (Client, Depot))
@@ -982,7 +1016,7 @@ def test_pickle_client_group():
     """
     Tests that client groups can be serialised and unserialised.
     """
-    before_pickle = ClientGroup(clients=[1, 2, 3], required=False)
+    before_pickle = ClientGroup(clients=[1, 2, 3], required=False, name="test")
     bytes = pickle.dumps(before_pickle)
     assert_equal(pickle.loads(bytes), before_pickle)
 
