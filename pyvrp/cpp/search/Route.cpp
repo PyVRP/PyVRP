@@ -355,13 +355,19 @@ void Route::update()
         }
     }
 
+    // Full route distance and duration costs are separately cached as well
+    // because these are requested *a lot*.
+    auto const distance = cumDist.back();
+    distanceCost_ = unitDistanceCost() * static_cast<Cost>(distance);
+
+    auto const duration = durAfter[0].duration();
+    auto const overtime = std::max<Duration>(duration - shiftDuration(), 0);
+    durationCost_ = unitDurationCost() * static_cast<Cost>(duration)
+                    + unitOvertimeCost() * static_cast<Cost>(overtime);
+
 #ifndef NDEBUG
     dirty = false;
 #endif
-
-    distanceCost_ = unitDistanceCost() * static_cast<Cost>(distance());
-    durationCost_ = unitDurationCost() * static_cast<Cost>(duration())
-                    + unitOvertimeCost() * static_cast<Cost>(overtime());
 }
 
 std::ostream &operator<<(std::ostream &out, Route const &route)

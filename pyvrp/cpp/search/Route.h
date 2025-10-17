@@ -303,8 +303,8 @@ private:
     ProblemData::VehicleType const &vehicleType_;
     size_t const idx_;
 
-    Cost distanceCost_;  // TODO
-    Cost durationCost_;  // TODO
+    Cost distanceCost_;  // Separately cached distance cost component
+    Cost durationCost_;  // Separately cached duration cost component
 
     std::vector<Node> depots_;  // start, end, and reload depots (in that order)
 
