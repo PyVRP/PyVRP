@@ -303,6 +303,9 @@ private:
     ProblemData::VehicleType const &vehicleType_;
     size_t const idx_;
 
+    Cost distanceCost_;  // TODO
+    Cost durationCost_;  // TODO
+
     std::vector<Node> depots_;  // start, end, and reload depots (in that order)
 
     std::vector<Node *> nodes;   // Nodes in this route, including depots
@@ -896,7 +899,7 @@ Distance Route::distance() const
 Cost Route::distanceCost() const
 {
     assert(!dirty);
-    return unitDistanceCost() * static_cast<Cost>(distance());
+    return distanceCost_;
 }
 
 Cost Route::unitDistanceCost() const { return vehicleType_.unitDistanceCost; }
@@ -922,8 +925,7 @@ Duration Route::overtime() const
 Cost Route::durationCost() const
 {
     assert(!dirty);
-    return unitDurationCost() * static_cast<Cost>(duration())
-           + unitOvertimeCost() * static_cast<Cost>(overtime());
+    return durationCost_;
 }
 
 Cost Route::unitDurationCost() const { return vehicleType_.unitDurationCost; }

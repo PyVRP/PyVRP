@@ -358,6 +358,10 @@ void Route::update()
 #ifndef NDEBUG
     dirty = false;
 #endif
+
+    distanceCost_ = unitDistanceCost() * static_cast<Cost>(distance());
+    durationCost_ = unitDurationCost() * static_cast<Cost>(duration())
+                    + unitOvertimeCost() * static_cast<Cost>(overtime());
 }
 
 std::ostream &operator<<(std::ostream &out, Route const &route)
