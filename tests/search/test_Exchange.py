@@ -671,7 +671,22 @@ def test_relocate_overtime(ok_small_overtime):
     route1 = make_search_route(ok_small_overtime, [1, 3], idx=0)
     route2 = make_search_route(ok_small_overtime, [], idx=1)
 
-    # TODO
+    # First route takes 5'814, of which 814 is overtime. The cost structure
+    # is 1x duration + 10x overtime.
+    assert_equal(route1.duration(), 5_814)
+    assert_equal(route1.overtime(), 814)
+    old_cost = 5_814 + 10 * 814
+
+    # The move evaluates the new routes [1] and [3]. Those have the following
+    # durations (travel to client, service, travel back to depot):
+    # - route 1: 1544 + 360 + 1726 = 3630,
+    # - route 2: 1931 + 420 + 2063 = 4414.
+    # Neither route has overtime, so these routes only have duration costs.
+    new_cost = 3630 + 4414
+
     op = Exchange10(ok_small_overtime)
-    cost_eval = CostEvaluator([0], 1, 0)
-    assert_equal(op.evaluate(route1[2], route2[0], cost_eval), -5_767)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(
+        op.evaluate(route1[2], route2[0], cost_eval),
+        new_cost - old_cost,
+    )

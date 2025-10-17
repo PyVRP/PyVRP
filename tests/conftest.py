@@ -144,6 +144,7 @@ def ok_small_overtime(ok_small):
     veh_type = ok_small.vehicle_type(0).replace(
         shift_duration=5_000,
         max_overtime=1_000,
+        unit_distance_cost=0,
         unit_duration_cost=1,
         unit_overtime_cost=10,
     )
