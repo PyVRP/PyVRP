@@ -1151,23 +1151,17 @@ def test_has_duration_cost(veh_type: VehicleType, depot: Depot, exp: bool):
     assert_equal(route.has_duration_cost(), exp)
 
 
-def test_overtime(ok_small):
+def test_overtime(ok_small_overtime):
     """
     Tests calculations for a small example with overtime.
     """
-    veh_type = ok_small.vehicle_type(0).replace(
-        max_duration=5_000,
-        max_overtime=1_000,
-        unit_duration_cost=1,
-        unit_overtime_cost=2,
-    )
-
-    # Feasible route that takes 5'229 to complete, so the route should have 229
-    # units of overtime.
-    data = ok_small.replace(vehicle_types=[veh_type])
-    route = make_search_route(data, [2, 4])
+    # The vehicle has a shift duration of 5_000, and allows another 1_000
+    # overtime, if needed. This route takes 5'229 to complete, so the route
+    # should have 229 units of overtime.
+    route = make_search_route(ok_small_overtime, [2, 4])
 
     # Route-level vehicle type attributes.
+    assert_equal(route.max_duration(), 5_000)
     assert_equal(route.max_overtime(), 1_000)
     assert_equal(route.unit_overtime_cost(), 2)
 
@@ -1175,4 +1169,4 @@ def test_overtime(ok_small):
     assert_(not route.has_time_warp())
     assert_equal(route.duration(), 5_229)
     assert_equal(route.overtime(), 229)
-    assert_equal(route.duration_cost(), 1 * 5_229 + 2 * 229)
+    assert_equal(route.duration_cost(), 1 * 5_229 + 10 * 229)

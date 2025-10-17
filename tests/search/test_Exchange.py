@@ -661,3 +661,17 @@ def test_empty_route_delta_cost_bug():
     op = Exchange10(data)
     cost_eval = CostEvaluator([], 1, 1)
     assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
+
+
+def test_relocate_overtime(ok_small_overtime):
+    """
+    Tests a relocate move involving overtime correctly evaluates the resulting
+    (duration-based) cost delta.
+    """
+    route1 = make_search_route(ok_small_overtime, [1, 3], idx=0)
+    route2 = make_search_route(ok_small_overtime, [], idx=1)
+
+    # TODO
+    op = Exchange10(ok_small_overtime)
+    cost_eval = CostEvaluator([0], 1, 0)
+    assert_equal(op.evaluate(route1[2], route2[0], cost_eval), -5_767)

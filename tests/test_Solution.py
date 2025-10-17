@@ -889,32 +889,25 @@ def test_distance_duration_cost_calculations(ok_small):
     assert_equal(sol.duration_cost(), sum(r.duration_cost() for r in routes))
 
 
-def test_overtime(ok_small):
+def test_overtime(ok_small_overtime):
     """
     Tests that solutions and routes calculate overtime correctly.
     """
-    veh_type = ok_small.vehicle_type(0).replace(
-        max_duration=5_000,
-        max_overtime=1_000,
-        unit_duration_cost=1,
-        unit_overtime_cost=2,
-    )
-
-    # This feasible route takes 5'229 to complete, so the route should have 229
-    # units of overtime.
-    data = ok_small.replace(vehicle_types=[veh_type])
-    route = Route(data, [2, 4], 0)
+    # The vehicle has a shift duration of 5_000, and allows another 1_000
+    # overtime, if needed. This route takes 5'229 to complete, so the route
+    # should have 229 units of overtime.
+    route = Route(ok_small_overtime, [2, 4], 0)
 
     assert_(not route.has_time_warp())
     assert_equal(route.duration(), 5_229)
     assert_equal(route.overtime(), 229)
 
     # Duration cost includes the cost of overtime.
-    assert_equal(route.duration_cost(), 1 * 5_229 + 2 * 229)
+    assert_equal(route.duration_cost(), 1 * 5_229 + 10 * 229)
 
     # Test that a solution consisting of this single route agrees on these
     # statistics.
-    sol = Solution(data, [route])
+    sol = Solution(ok_small_overtime, [route])
     assert_(not sol.has_time_warp())
     assert_equal(sol.overtime(), route.overtime())
     assert_equal(sol.duration(), route.duration())
