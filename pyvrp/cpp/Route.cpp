@@ -282,7 +282,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     ds = DurationSegment::merge(0, {vehData, vehData.startLate}, ds);
 
     duration_ = ds.duration();
-    overtime_ = std::max<Duration>(duration_ - vehData.maxDuration, 0);
+    overtime_ = std::max<Duration>(duration_ - vehData.shiftDuration, 0);
     durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_)
                     + vehData.unitOvertimeCost * static_cast<Cost>(overtime_);
     startTime_ = ds.startEarly();

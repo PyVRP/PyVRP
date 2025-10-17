@@ -7,6 +7,7 @@ from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
 
+_INT_MAX = np.iinfo(np.int64).max
 _MAX_SIZE = np.iinfo(np.uint64).max
 
 
@@ -492,7 +493,7 @@ def test_matrices_are_not_copies():
         "num_available",
         "tw_early",
         "tw_late",
-        "max_duration",
+        "shift_duration",
         "max_distance",
         "fixed_cost",
         "unit_distance_cost",
@@ -508,7 +509,7 @@ def test_matrices_are_not_copies():
         (0, 1, 1, 1, 0, 0, 0, 0, 0, 2, 0),  # start late > late
         (0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0),  # negative early
         (0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0),  # negative late
-        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0),  # negative max_duration
+        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0),  # negative shift_duration
         (0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0),  # negative max_distance
         (0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0),  # negative fixed_cost
         (0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 0),  # negative unit_distance_cost
@@ -523,7 +524,7 @@ def test_vehicle_type_raises_invalid_data(
     num_available: int,
     tw_early: int,
     tw_late: int,
-    max_duration: int,
+    shift_duration: int,
     max_distance: int,
     fixed_cost: int,
     unit_distance_cost: int,
@@ -542,7 +543,7 @@ def test_vehicle_type_raises_invalid_data(
             fixed_cost=fixed_cost,
             tw_early=tw_early,
             tw_late=tw_late,
-            max_duration=max_duration,
+            shift_duration=shift_duration,
             max_distance=max_distance,
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
@@ -579,7 +580,7 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
         fixed_cost=0,
         tw_early=0,
         tw_late=0,
-        max_duration=0,
+        shift_duration=0,
         max_distance=0,
         unit_distance_cost=0,
         unit_duration_cost=0,
@@ -593,7 +594,7 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.tw_late, 0)
-    assert_equal(vehicle_type.max_duration, 0)
+    assert_equal(vehicle_type.shift_duration, 0)
     assert_equal(vehicle_type.max_distance, 0)
     assert_equal(vehicle_type.unit_distance_cost, 0)
     assert_equal(vehicle_type.unit_duration_cost, 0)
@@ -619,9 +620,10 @@ def test_vehicle_type_default_values():
 
     # The default value for the following fields is the largest representable
     # integral value.
-    assert_equal(vehicle_type.tw_late, np.iinfo(np.int64).max)
-    assert_equal(vehicle_type.max_duration, np.iinfo(np.int64).max)
-    assert_equal(vehicle_type.max_distance, np.iinfo(np.int64).max)
+    assert_equal(vehicle_type.tw_late, _INT_MAX)
+    assert_equal(vehicle_type.shift_duration, _INT_MAX)
+    assert_equal(vehicle_type.max_duration, _INT_MAX)
+    assert_equal(vehicle_type.max_distance, _INT_MAX)
 
     # The default value for start_late is the value of tw_late.
     assert_equal(vehicle_type.start_late, vehicle_type.tw_late)
@@ -640,11 +642,12 @@ def test_vehicle_type_attribute_access():
         fixed_cost=3,
         tw_early=17,
         tw_late=19,
-        max_duration=23,
+        shift_duration=23,
         max_distance=31,
         unit_distance_cost=37,
         unit_duration_cost=41,
         start_late=18,
+        max_overtime=43,
         name="vehicle_type name",
     )
 
@@ -655,14 +658,45 @@ def test_vehicle_type_attribute_access():
     assert_equal(vehicle_type.fixed_cost, 3)
     assert_equal(vehicle_type.tw_early, 17)
     assert_equal(vehicle_type.tw_late, 19)
-    assert_equal(vehicle_type.max_duration, 23)
+    assert_equal(vehicle_type.shift_duration, 23)
     assert_equal(vehicle_type.max_distance, 31)
     assert_equal(vehicle_type.unit_distance_cost, 37)
     assert_equal(vehicle_type.unit_duration_cost, 41)
     assert_equal(vehicle_type.start_late, 18)
+    assert_equal(vehicle_type.max_overtime, 43)
 
     assert_equal(vehicle_type.name, "vehicle_type name")
     assert_equal(str(vehicle_type), "vehicle_type name")
+
+
+@pytest.mark.parametrize(
+    ("shift_duration", "max_overtime", "expected"),
+    [
+        (_INT_MAX, _INT_MAX, _INT_MAX),  # should not overflow
+        (_INT_MAX, 0, _INT_MAX),  # borderline
+        (0, _INT_MAX, _INT_MAX),  # borderline
+        (_INT_MAX - 1, 1, _INT_MAX),  # check for off-by-one
+        (1, _INT_MAX - 1, _INT_MAX),  # check for off-by-one
+        (10, 10, 20),  # completely OK, should sum both terms
+    ],
+)
+def test_vehicle_type_max_duration(
+    shift_duration: int,
+    max_overtime: int,
+    expected: int,
+):
+    """
+    Tests that the maximum duration property is correctly computed, and does
+    not over- or underflow.
+    """
+    veh_type = VehicleType(
+        shift_duration=shift_duration,
+        max_overtime=max_overtime,
+    )
+
+    assert_equal(veh_type.shift_duration, shift_duration)
+    assert_equal(veh_type.max_overtime, max_overtime)
+    assert_equal(veh_type.max_duration, expected)
 
 
 def test_vehicle_type_replace():

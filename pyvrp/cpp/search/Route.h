@@ -466,8 +466,14 @@ public:
     [[nodiscard]] inline bool hasDurationCost() const;
 
     /**
-     * @return The maximum route duration that the vehicle servicing this route
-     *         supports.
+     * @return The (soft) maximum shit duration that the vehicle servicing this
+     *         route supports. This may optionally be extended with overtime.
+     */
+    [[nodiscard]] inline Duration shiftDuration() const;
+
+    /**
+     * @return The (hard) maximum route duration that the vehicle servicing
+     *         this route supports.
      */
     [[nodiscard]] inline Duration maxDuration() const;
 
@@ -910,7 +916,7 @@ Duration Route::duration() const
 Duration Route::overtime() const
 {
     assert(!dirty);
-    return std::max<Duration>(duration() - maxDuration(), 0);
+    return std::max<Duration>(duration() - shiftDuration(), 0);
 }
 
 Cost Route::durationCost() const
@@ -929,10 +935,12 @@ bool Route::hasDurationCost() const
     // clang-format off
     return data.hasTimeWindows()
         || unitDurationCost() != 0
-        || unitOvertimeCost() != 0
+        || (unitOvertimeCost() != 0 && maxOvertime() != 0)
         || maxDuration() != std::numeric_limits<Duration>::max();
     // clang-format on
 }
+
+Duration Route::shiftDuration() const { return vehicleType_.shiftDuration; }
 
 Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 
@@ -1059,8 +1067,8 @@ Route::Proposal<Segments...>::duration() const
         return std::make_tuple(0, 0, 0);
 
     auto const &data = route()->data;
+    auto const shiftDuration = route()->shiftDuration();
     auto const maxDuration = route()->maxDuration();
-    auto const maxOvertime = route()->maxOvertime();
     auto const profile = route()->profile();
     auto const &matrix = data.durationMatrix(profile);
 
@@ -1110,13 +1118,8 @@ Route::Proposal<Segments...>::duration() const
         merge(merge, std::forward<decltype(args)>(args)...);
 
         auto const duration = ds.duration();
-        auto const overtime = std::max<Duration>(duration - maxDuration, 0);
-        auto const actualMax
-            = maxOvertime < std::numeric_limits<Duration>::max() - maxDuration
-                  ? maxDuration + maxOvertime
-                  : std::numeric_limits<Duration>::max();
-
-        auto const timeWarp = ds.timeWarp(actualMax);
+        auto const overtime = std::max<Duration>(duration - shiftDuration, 0);
+        auto const timeWarp = ds.timeWarp(maxDuration);
         return std::make_tuple(duration, overtime, timeWarp);
     };
 

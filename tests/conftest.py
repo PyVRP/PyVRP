@@ -142,7 +142,7 @@ def ok_small_overtime(ok_small):
     limit, and duration and overtime costs.
     """
     veh_type = ok_small.vehicle_type(0).replace(
-        max_duration=5_000,
+        shift_duration=5_000,
         max_overtime=1_000,
         unit_duration_cost=1,
         unit_overtime_cost=10,

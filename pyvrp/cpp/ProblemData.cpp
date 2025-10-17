@@ -276,7 +276,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       Cost fixedCost,
                                       Duration twEarly,
                                       Duration twLate,
-                                      Duration maxDuration,
+                                      Duration shiftDuration,
                                       Distance maxDistance,
                                       Cost unitDistanceCost,
                                       Cost unitDurationCost,
@@ -294,7 +294,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       capacity(pad(capacity, initialLoad)),
       twEarly(twEarly),
       twLate(twLate),
-      maxDuration(maxDuration),
+      shiftDuration(shiftDuration),
       maxDistance(maxDistance),
       fixedCost(fixedCost),
       unitDistanceCost(unitDistanceCost),
@@ -306,6 +306,14 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       maxReloads(maxReloads),
       maxOvertime(maxOvertime),
       unitOvertimeCost(unitOvertimeCost),
+      // We need to check >= 0 here to avoid overflow. If the arguments are
+      // negative the validation checks further below will raise, so it doesn't
+      // matter what we set as long as we get to those checks.
+      maxDuration(shiftDuration >= 0 && maxOvertime >= 0
+                          && maxOvertime < std::numeric_limits<Duration>::max()
+                                               - shiftDuration
+                      ? shiftDuration + maxOvertime
+                      : std::numeric_limits<Duration>::max()),
       name(duplicate(name.data()))
 {
     if (numAvailable == 0)
@@ -323,8 +331,8 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
     if (twEarly < 0)
         throw std::invalid_argument("tw_early must be >= 0.");
 
-    if (maxDuration < 0)
-        throw std::invalid_argument("max_duration must be >= 0.");
+    if (shiftDuration < 0)
+        throw std::invalid_argument("shift_duration must be >= 0.");
 
     if (maxDistance < 0)
         throw std::invalid_argument("max_distance must be >= 0.");
@@ -359,7 +367,7 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       capacity(vehicleType.capacity),
       twEarly(vehicleType.twEarly),
       twLate(vehicleType.twLate),
-      maxDuration(vehicleType.maxDuration),
+      shiftDuration(vehicleType.shiftDuration),
       maxDistance(vehicleType.maxDistance),
       fixedCost(vehicleType.fixedCost),
       unitDistanceCost(vehicleType.unitDistanceCost),
@@ -371,6 +379,7 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       maxReloads(vehicleType.maxReloads),
       maxOvertime(vehicleType.maxOvertime),
       unitOvertimeCost(vehicleType.unitOvertimeCost),
+      maxDuration(vehicleType.maxDuration),
       name(duplicate(vehicleType.name))
 {
 }
@@ -382,7 +391,7 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       capacity(std::move(vehicleType.capacity)),
       twEarly(vehicleType.twEarly),
       twLate(vehicleType.twLate),
-      maxDuration(vehicleType.maxDuration),
+      shiftDuration(vehicleType.shiftDuration),
       maxDistance(vehicleType.maxDistance),
       fixedCost(vehicleType.fixedCost),
       unitDistanceCost(vehicleType.unitDistanceCost),
@@ -394,6 +403,7 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       maxReloads(vehicleType.maxReloads),
       maxOvertime(vehicleType.maxOvertime),
       unitOvertimeCost(vehicleType.unitOvertimeCost),
+      maxDuration(vehicleType.maxDuration),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen
@@ -409,7 +419,7 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
     std::optional<Cost> fixedCost,
     std::optional<Duration> twEarly,
     std::optional<Duration> twLate,
-    std::optional<Duration> maxDuration,
+    std::optional<Duration> shiftDuration,
     std::optional<Distance> maxDistance,
     std::optional<Cost> unitDistanceCost,
     std::optional<Cost> unitDurationCost,
@@ -429,7 +439,7 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
             fixedCost.value_or(this->fixedCost),
             twEarly.value_or(this->twEarly),
             twLate.value_or(this->twLate),
-            maxDuration.value_or(this->maxDuration),
+            shiftDuration.value_or(this->shiftDuration),
             maxDistance.value_or(this->maxDistance),
             unitDistanceCost.value_or(this->unitDistanceCost),
             unitDurationCost.value_or(this->unitDurationCost),
@@ -460,7 +470,7 @@ bool ProblemData::VehicleType::operator==(VehicleType const &other) const
         && fixedCost == other.fixedCost
         && twEarly == other.twEarly
         && twLate == other.twLate
-        && maxDuration == other.maxDuration
+        && shiftDuration == other.shiftDuration
         && maxDistance == other.maxDistance
         && unitDistanceCost == other.unitDistanceCost
         && unitDurationCost == other.unitDurationCost

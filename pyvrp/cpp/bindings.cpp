@@ -260,7 +260,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("fixed_cost") = 0,
              py::arg("tw_early") = 0,
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
-             py::arg("max_duration")
+             py::arg("shift_duration")
              = std::numeric_limits<pyvrp::Duration>::max(),
              py::arg("max_distance")
              = std::numeric_limits<pyvrp::Distance>::max(),
@@ -284,7 +284,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("fixed_cost", &ProblemData::VehicleType::fixedCost)
         .def_readonly("tw_early", &ProblemData::VehicleType::twEarly)
         .def_readonly("tw_late", &ProblemData::VehicleType::twLate)
-        .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration)
+        .def_readonly("shift_duration",
+                      &ProblemData::VehicleType::shiftDuration)
         .def_readonly("max_distance", &ProblemData::VehicleType::maxDistance)
         .def_readonly("unit_distance_cost",
                       &ProblemData::VehicleType::unitDistanceCost)
@@ -302,6 +303,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("max_overtime", &ProblemData::VehicleType::maxOvertime)
         .def_readonly("unit_overtime_cost",
                       &ProblemData::VehicleType::unitOvertimeCost)
+        .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration)
         .def_property_readonly("max_trips", &ProblemData::VehicleType::maxTrips)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
@@ -315,7 +317,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("fixed_cost") = py::none(),
              py::arg("tw_early") = py::none(),
              py::arg("tw_late") = py::none(),
-             py::arg("max_duration") = py::none(),
+             py::arg("shift_duration") = py::none(),
              py::arg("max_distance") = py::none(),
              py::arg("unit_distance_cost") = py::none(),
              py::arg("unit_duration_cost") = py::none(),
@@ -339,7 +341,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.fixedCost,
                                       vehicleType.twEarly,
                                       vehicleType.twLate,
-                                      vehicleType.maxDuration,
+                                      vehicleType.shiftDuration,
                                       vehicleType.maxDistance,
                                       vehicleType.unitDistanceCost,
                                       vehicleType.unitDurationCost,
@@ -361,7 +363,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[4].cast<pyvrp::Cost>(),               // fixed cost
                     t[5].cast<pyvrp::Duration>(),           // tw early
                     t[6].cast<pyvrp::Duration>(),           // tw late
-                    t[7].cast<pyvrp::Duration>(),           // max duration
+                    t[7].cast<pyvrp::Duration>(),           // shift duration
                     t[8].cast<pyvrp::Distance>(),           // max distance
                     t[9].cast<pyvrp::Cost>(),       // unit distance cost
                     t[10].cast<pyvrp::Cost>(),      // unit duration cost

@@ -356,20 +356,20 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
         (Exchange21, 5_000, -596),
     ],
 )
-def test_exchange_with_max_duration_constraint(ok_small, op, max_dur, cost):
+def test_exchange_with_duration_constraint(ok_small, op, max_dur, cost):
     """
     Tests that the exchange operators correctly evaluate time warp due to
-    maximum duration violations.
+    maximum shift duration violations.
     """
-    vehicle_type = VehicleType(2, capacity=[10], max_duration=max_dur)
+    vehicle_type = VehicleType(2, capacity=[10], shift_duration=max_dur)
     data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 
     route1 = make_search_route(data, [2, 4], idx=0)
     route2 = make_search_route(data, [1, 3], idx=1)
 
-    # Without maximum duration, route1 has a duration of 5_229 and no time warp
-    # while route2 has a duration of 5_814 and timewarp 2_087, for a net
+    # Without duration constraint, route1 has a duration of 5_229 and no time
+    # warp while route2 has a duration of 5_814 and timewarp 2_087, for a net
     # duration of 5_814 - 2_087 = 3_727 so no violation.
     # Consolidation into a single route may or may not be improving as the
     # total distance decreases but the maximum duration violation increases.
@@ -641,7 +641,7 @@ def test_empty_route_delta_cost_bug():
     # vehicle type 1 has cost 10 (5 distance, 5 time warp).
     vehicle_types = [
         VehicleType(1),
-        VehicleType(1, start_depot=0, end_depot=1, max_duration=0),
+        VehicleType(1, start_depot=0, end_depot=1, shift_duration=0),
     ]
     data = ProblemData(
         depots=[Depot(x=0, y=0), Depot(x=0, y=0)],

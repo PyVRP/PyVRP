@@ -282,7 +282,7 @@ def test_empty_route_delta_cost_bug():
         depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
         clients=[Client(x=0, y=0)],
         vehicle_types=[
-            VehicleType(1, start_depot=0, end_depot=1, max_duration=0),
+            VehicleType(1, start_depot=0, end_depot=1, shift_duration=0),
         ],
         duration_matrices=[mat],
         distance_matrices=[mat],

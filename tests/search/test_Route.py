@@ -533,21 +533,21 @@ def test_route_centroid(ok_small, clients):
 
 
 @pytest.mark.parametrize(
-    ("max_duration", "expected"),
+    ("shift_duration", "expected"),
     [
         (100_000, 3_633),  # large enough; same time warp as other tests
-        (5_000, 3_633),  # no effect of max_duration due to existing time warp
-        (4_000, 3_950),  # now max_duration constraint applies
-        (3_000, 4_950),  # the max_duration constraint scales linearly
-        (0, 7_950),  # max_duration = 0, so time warp equals route duration
+        (5_000, 3_633),  # no effect of shift_duration due to time warp
+        (4_000, 3_950),  # now shift_duration constraint applies
+        (3_000, 4_950),  # the shift_duration constraint scales linearly
+        (0, 7_950),  # shift_duration = 0, so time warp equals route duration
     ],
 )
-def test_max_duration(ok_small: ProblemData, max_duration: int, expected: int):
+def test_shift_duration(ok_small, shift_duration: int, expected: int):
     """
-    Tests that the maximum duration attribute of vehicle types is reflected
+    Tests that the shift duration attribute of vehicle types is reflected
     in the route's time warp calculations.
     """
-    vehicle_type = VehicleType(3, capacity=[10], max_duration=max_duration)
+    vehicle_type = VehicleType(3, capacity=[10], shift_duration=shift_duration)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(data, 0, 0)
@@ -1128,9 +1128,12 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
         (VehicleType(start_late=5), Depot(0, 0), True),  # constraint (vehicle)
         (VehicleType(tw_early=5), Depot(0, 0), True),  # constraint (vehicle)
         (VehicleType(tw_late=5), Depot(0, 0), True),  # constraint (vehicle)
-        (VehicleType(max_duration=0), Depot(0, 0), True),  # constraint (veh)
+        (VehicleType(shift_duration=0), Depot(0, 0), True),  # constraint (veh)
         (VehicleType(unit_duration_cost=1), Depot(0, 0), True),  # unit cost
-        (VehicleType(unit_overtime_cost=1), Depot(0, 0), True),  # unit cost
+        # unit cost but no max_overtime, so never relevant
+        (VehicleType(unit_overtime_cost=1), Depot(0, 0), False),
+        # unit cost and overtime, so could be relevant
+        (VehicleType(unit_overtime_cost=1, max_overtime=1), Depot(0, 0), True),
         (VehicleType(max_overtime=5), Depot(0, 0), False),  # not constrained
     ],
 )
@@ -1161,9 +1164,10 @@ def test_overtime(ok_small_overtime):
     route = make_search_route(ok_small_overtime, [2, 4])
 
     # Route-level vehicle type attributes.
-    assert_equal(route.max_duration(), 5_000)
+    assert_equal(route.shift_duration(), 5_000)
     assert_equal(route.max_overtime(), 1_000)
-    assert_equal(route.unit_overtime_cost(), 2)
+    assert_equal(route.max_duration(), 6_000)
+    assert_equal(route.unit_overtime_cost(), 10)
 
     # Route cost and feasibility attributes.
     assert_(not route.has_time_warp())
