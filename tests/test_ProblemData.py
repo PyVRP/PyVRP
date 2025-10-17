@@ -551,6 +551,21 @@ def test_vehicle_type_raises_invalid_data(
         )
 
 
+@pytest.mark.parametrize(
+    ("max_overtime", "unit_overtime_cost"),
+    [(-1, 0), (0, -1)],
+)
+def test_vehicle_type_raises_negative_overtime_data(
+    max_overtime: int,
+    unit_overtime_cost: int,
+):
+    with assert_raises(ValueError):
+        VehicleType(
+            max_overtime=max_overtime,
+            unit_overtime_cost=unit_overtime_cost,
+        )
+
+
 def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     """
     The vehicle type constructor should allow the following edge case where all
@@ -599,6 +614,7 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.unit_distance_cost, 1)
     assert_equal(vehicle_type.unit_duration_cost, 0)
+    assert_equal(vehicle_type.unit_overtime_cost, 0)
     assert_equal(vehicle_type.name, "")
 
     # The default value for the following fields is the largest representable
