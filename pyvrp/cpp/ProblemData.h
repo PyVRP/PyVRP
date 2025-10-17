@@ -360,6 +360,8 @@ public:
      *     initial_load: list[int] = [],
      *     reload_depots: list[int] = [],
      *     max_reloads: int = np.iinfo(np.uint64).max,
+     *     max_overtime: int = 0,
+     *     unit_overtime_cost: int = 0,
      *     *,
      *     name: str = "",
      * )
@@ -415,6 +417,10 @@ public:
      * max_reloads
      *     Maximum number of reloads the vehicle may perform on a route.
      *     Unconstrained if not explicitly provided.
+     * max_overtime
+     *     TODO
+     * unit_overtime_cost
+     *     TODO
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -458,6 +464,10 @@ public:
      *     empty and reload.
      * max_reloads
      *     Maximum number of reloads the vehicle may perform on a route.
+     * max_overtime
+     *     TODO
+     * unit_overtime_cost
+     *     TODO
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -479,6 +489,8 @@ public:
         std::vector<Load> const initialLoad;     // Initially used capacity
         std::vector<size_t> const reloadDepots;  // Reload locations
         size_t const maxReloads;                 // Maximum number of reloads
+        Duration const maxOvertime;              // Maximum allowed overtime
+        Cost const unitOvertimeCost;             // Cost per unit of overtime
         char const *name;                        // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
@@ -497,6 +509,8 @@ public:
                     std::vector<Load> initialLoad = {},
                     std::vector<size_t> reloadDepots = {},
                     size_t maxReloads = std::numeric_limits<size_t>::max(),
+                    Duration maxOvertime = 0,
+                    Cost unitOvertimeCost = 0,
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -529,6 +543,8 @@ public:
                             std::optional<std::vector<Load>> initialLoad,
                             std::optional<std::vector<size_t>> reloadDepots,
                             std::optional<size_t> maxReloads,
+                            std::optional<Duration> maxOvertime,
+                            std::optional<Cost> unitOvertimeCost,
                             std::optional<std::string> name) const;
 
         /**

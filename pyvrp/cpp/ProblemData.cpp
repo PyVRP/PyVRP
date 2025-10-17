@@ -285,6 +285,8 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                       std::vector<Load> initialLoad,
                                       std::vector<size_t> reloadDepots,
                                       size_t maxReloads,
+                                      Duration maxOvertime,
+                                      Cost unitOvertimeCost,
                                       std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
@@ -302,6 +304,8 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
       initialLoad(pad(initialLoad, capacity)),
       reloadDepots(reloadDepots),
       maxReloads(maxReloads),
+      maxOvertime(maxOvertime),
+      unitOvertimeCost(unitOvertimeCost),
       name(duplicate(name.data()))
 {
     if (numAvailable == 0)
@@ -340,6 +344,12 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
     for (size_t dim = 0; dim != initialLoad.size(); ++dim)
         if (initialLoad[dim] > capacity[dim])
             throw std::invalid_argument("initial load exceeds capacity.");
+
+    if (maxOvertime < 0)
+        throw std::invalid_argument("max_overtime must be >= 0.");
+
+    if (unitOvertimeCost < 0)
+        throw std::invalid_argument("unit_overtime_cost must be >= 0.");
 }
 
 ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
@@ -359,6 +369,8 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       initialLoad(vehicleType.initialLoad),
       reloadDepots(vehicleType.reloadDepots),
       maxReloads(vehicleType.maxReloads),
+      maxOvertime(vehicleType.maxOvertime),
+      unitOvertimeCost(vehicleType.unitOvertimeCost),
       name(duplicate(vehicleType.name))
 {
 }
@@ -380,6 +392,8 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       initialLoad(std::move(vehicleType.initialLoad)),
       reloadDepots(std::move(vehicleType.reloadDepots)),
       maxReloads(vehicleType.maxReloads),
+      maxOvertime(vehicleType.maxOvertime),
+      unitOvertimeCost(vehicleType.unitOvertimeCost),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen
@@ -404,6 +418,8 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
     std::optional<std::vector<Load>> initialLoad,
     std::optional<std::vector<size_t>> reloadDepots,
     std::optional<size_t> maxReloads,
+    std::optional<Duration> maxOvertime,
+    std::optional<Cost> unitOvertimeCost,
     std::optional<std::string> name) const
 {
     return {numAvailable.value_or(this->numAvailable),
@@ -422,6 +438,8 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
             initialLoad.value_or(this->initialLoad),
             reloadDepots.value_or(this->reloadDepots),
             maxReloads.value_or(this->maxReloads),
+            maxOvertime.value_or(this->maxOvertime),
+            unitOvertimeCost.value_or(this->unitOvertimeCost),
             name.value_or(this->name)};
 }
 
@@ -451,6 +469,8 @@ bool ProblemData::VehicleType::operator==(VehicleType const &other) const
         && initialLoad == other.initialLoad
         && reloadDepots == other.reloadDepots
         && maxReloads == other.maxReloads
+        && maxOvertime == other.maxOvertime
+        && unitOvertimeCost == other.unitOvertimeCost
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }
