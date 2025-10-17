@@ -900,7 +900,7 @@ def test_overtime(ok_small):
         unit_overtime_cost=2,
     )
 
-    # Feasible route that takes 5'229 to complete, so the route should have 229
+    # This feasible route takes 5'229 to complete, so the route should have 229
     # units of overtime.
     data = ok_small.replace(vehicle_types=[veh_type])
     route = Route(data, [2, 4], 0)

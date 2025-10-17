@@ -1120,7 +1120,7 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
 
 
 @pytest.mark.parametrize(
-    ("veh_type", "depot", "expected"),
+    ("veh_type", "depot", "exp"),
     [
         (VehicleType(), Depot(0, 0), False),  # default has no cost
         (VehicleType(), Depot(0, 0, tw_early=1), True),  # constraint (data)
@@ -1129,14 +1129,12 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
         (VehicleType(tw_early=5), Depot(0, 0), True),  # constraint (vehicle)
         (VehicleType(tw_late=5), Depot(0, 0), True),  # constraint (vehicle)
         (VehicleType(max_duration=0), Depot(0, 0), True),  # constraint (veh)
-        (VehicleType(unit_duration_cost=1), Depot(0, 0), True),  # cost
+        (VehicleType(unit_duration_cost=1), Depot(0, 0), True),  # unit cost
+        (VehicleType(unit_overtime_cost=1), Depot(0, 0), True),  # unit cost
+        (VehicleType(max_overtime=5), Depot(0, 0), False),  # not constrained
     ],
 )
-def test_has_duration_cost(
-    veh_type: VehicleType,
-    depot: Depot,
-    expected: bool,
-):
+def test_has_duration_cost(veh_type: VehicleType, depot: Depot, exp: bool):
     """
     Tests that ``has_duration_cost()`` correctly identifies whether the vehicle
     and/or instance has duration-related costs or (penalised) constraints.
@@ -1150,4 +1148,31 @@ def test_has_duration_cost(
     )
 
     route = Route(data, 0, 0)
-    assert_equal(route.has_duration_cost(), expected)
+    assert_equal(route.has_duration_cost(), exp)
+
+
+def test_overtime(ok_small):
+    """
+    Tests calculations for a small example with overtime.
+    """
+    veh_type = ok_small.vehicle_type(0).replace(
+        max_duration=5_000,
+        max_overtime=1_000,
+        unit_duration_cost=1,
+        unit_overtime_cost=2,
+    )
+
+    # Feasible route that takes 5'229 to complete, so the route should have 229
+    # units of overtime.
+    data = ok_small.replace(vehicle_types=[veh_type])
+    route = make_search_route(data, [2, 4])
+
+    # Route-level vehicle type attributes.
+    assert_equal(route.max_overtime(), 1_000)
+    assert_equal(route.unit_overtime_cost(), 2)
+
+    # Route cost and feasibility attributes.
+    assert_(not route.has_time_warp())
+    assert_equal(route.duration(), 5_229)
+    assert_equal(route.overtime(), 229)
+    assert_equal(route.duration_cost(), 1 * 5_229 + 2 * 229)
