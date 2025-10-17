@@ -712,6 +712,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::return_value_policy::reference_internal,
              DOC(pyvrp, Route, excessLoad))
         .def("duration", &Route::duration, DOC(pyvrp, Route, duration))
+        .def("overtime", &Route::overtime, DOC(pyvrp, Route, overtime))
         .def("duration_cost",
              &Route::durationCost,
              DOC(pyvrp, Route, durationCost))
@@ -773,6 +774,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.pickup(),
                                       route.excessLoad(),
                                       route.duration(),
+                                      route.overtime(),
                                       route.durationCost(),
                                       route.timeWarp(),
                                       route.travelDuration(),
@@ -801,18 +803,19 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[5].cast<std::vector<pyvrp::Load>>(),  // pickup
                     t[6].cast<std::vector<pyvrp::Load>>(),  // excess load
                     t[7].cast<pyvrp::Duration>(),           // duration
-                    t[8].cast<pyvrp::Cost>(),               // duration cost
-                    t[9].cast<pyvrp::Duration>(),           // time warp
-                    t[10].cast<pyvrp::Duration>(),          // travel
-                    t[11].cast<pyvrp::Duration>(),          // service
-                    t[12].cast<pyvrp::Duration>(),          // start time
-                    t[13].cast<pyvrp::Duration>(),          // slack
-                    t[14].cast<pyvrp::Cost>(),              // prizes
-                    t[15].cast<Centroid>(),                 // centroid
-                    t[16].cast<size_t>(),                   // vehicle type
-                    t[17].cast<size_t>(),                   // start depot
-                    t[18].cast<size_t>(),                   // end depot
-                    t[19].cast<Schedule>());                // visit schedule
+                    t[8].cast<pyvrp::Duration>(),           // overtime
+                    t[9].cast<pyvrp::Cost>(),               // duration cost
+                    t[10].cast<pyvrp::Duration>(),          // time warp
+                    t[11].cast<pyvrp::Duration>(),          // travel
+                    t[12].cast<pyvrp::Duration>(),          // service
+                    t[13].cast<pyvrp::Duration>(),          // start time
+                    t[14].cast<pyvrp::Duration>(),          // slack
+                    t[15].cast<pyvrp::Cost>(),              // prizes
+                    t[16].cast<Centroid>(),                 // centroid
+                    t[17].cast<size_t>(),                   // vehicle type
+                    t[18].cast<size_t>(),                   // start depot
+                    t[19].cast<size_t>(),                   // end depot
+                    t[20].cast<Schedule>());                // visit schedule
 
                 return route;
             }))
@@ -892,6 +895,7 @@ PYBIND11_MODULE(_pyvrp, m)
              &Solution::distanceCost,
              DOC(pyvrp, Solution, distanceCost))
         .def("duration", &Solution::duration, DOC(pyvrp, Solution, duration))
+        .def("overtime", &Solution::overtime, DOC(pyvrp, Solution, overtime))
         .def("duration_cost",
              &Solution::durationCost,
              DOC(pyvrp, Solution, durationCost))
@@ -925,6 +929,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       sol.distance(),
                                       sol.distanceCost(),
                                       sol.duration(),
+                                      sol.overtime(),
                                       sol.durationCost(),
                                       sol.excessDistance(),
                                       sol.excessLoad(),
@@ -947,16 +952,17 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[2].cast<pyvrp::Distance>(),           // distance
                     t[3].cast<pyvrp::Cost>(),               // distance cost
                     t[4].cast<pyvrp::Duration>(),           // duration
-                    t[5].cast<pyvrp::Cost>(),               // duration cost
-                    t[6].cast<pyvrp::Distance>(),           // excess distance
-                    t[7].cast<std::vector<pyvrp::Load>>(),  // excess load
-                    t[8].cast<pyvrp::Cost>(),               // fixed veh cost
-                    t[9].cast<pyvrp::Cost>(),               // prizes
-                    t[10].cast<pyvrp::Cost>(),              // uncollected
-                    t[11].cast<pyvrp::Duration>(),          // time warp
-                    t[12].cast<bool>(),                     // is group feasible
-                    t[13].cast<Routes>(),                   // routes
-                    t[14].cast<Neighbours>());              // neighbours
+                    t[5].cast<pyvrp::Duration>(),           // overtime
+                    t[6].cast<pyvrp::Cost>(),               // duration cost
+                    t[7].cast<pyvrp::Distance>(),           // excess distance
+                    t[8].cast<std::vector<pyvrp::Load>>(),  // excess load
+                    t[9].cast<pyvrp::Cost>(),               // fixed veh cost
+                    t[10].cast<pyvrp::Cost>(),              // prizes
+                    t[11].cast<pyvrp::Cost>(),              // uncollected
+                    t[12].cast<pyvrp::Duration>(),          // time warp
+                    t[13].cast<bool>(),                     // is group feasible
+                    t[14].cast<Routes>(),                   // routes
+                    t[15].cast<Neighbours>());              // neighbours
 
                 return sol;
             }))

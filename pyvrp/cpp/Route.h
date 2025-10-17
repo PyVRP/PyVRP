@@ -348,6 +348,7 @@ public:
           std::vector<Load> pickup,
           std::vector<Load> excessLoad,
           Duration duration,
+          Duration overtime,
           Cost durationCost,
           Duration timeWarp,
           Duration travel,
