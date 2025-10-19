@@ -469,7 +469,7 @@ public:
     [[nodiscard]] inline bool hasDurationCost() const;
 
     /**
-     * @return The (soft) maximum shit duration that the vehicle servicing this
+     * @return The (soft) maximum shift duration that the vehicle servicing this
      *         route supports. This may optionally be extended with overtime.
      */
     [[nodiscard]] inline Duration shiftDuration() const;

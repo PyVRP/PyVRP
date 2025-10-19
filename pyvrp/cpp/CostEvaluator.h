@@ -121,27 +121,30 @@ public:
 
     /**
      * Hand-waving some details, each solution consists of a set of non-empty
-     * routes :math:`\mathcal{R}`. Each route :math:`R \in \mathcal{R}` is a
-     * sequence of edges, starting and ending at a depot. Each route :math:`R`
-     * has an assigned vehicle type, through which the route is equipped with a
-     * fixed vehicle cost :math:`f_R`, and unit distance and duration costs
-     * :math:`c^\text{distance}_R` and :math:`c^\text{duration}_R`,
-     * respectively. Let :math:`V_R = \{i : (i, j) \in R \}` be the set of
-     * locations visited by route :math:`R`, and :math:`d_R` and :math:`t_R`
-     * the total route distance and duration, respectively. The objective value
+     * routes :math:`\mathcal{R}`. Each route :math:`R \in \mathcal{R}` can be
+     * represented as a sequence of edges, starting and ending at a depot. A
+     * route :math:`R` has an assigned vehicle type that equips the route with
+     * fixed vehicle cost :math:`f_R`, and unit distance, duration and overtime
+     * costs :math:`c^\text{distance}_R`, :math:`c^\text{duration}_R`,
+     * :math:`c^\text{overtime}_R`, respectively. Let
+     * :math:`V_R = \{i : (i, j) \in R \}` be the set of locations visited by
+     * route :math:`R`, and :math:`d_R`, :math:`t_R`, and :math:`o_R` the total
+     * route distance, duration, and overtime, respectively. The objective value
      * is then given by
      *
      * .. math::
      *
      *    \sum_{R \in \mathcal{R}}
      *      \left[
-     *          f_R + c^\text{distance}_R d_R + c^\text{duration}_R t_R
+     *          f_R + c^\text{distance}_R d_R
+     *              + c^\text{duration}_R t_R
+     *              + c^\text{overtime}_R o_R
      *      \right]
      *    + \sum_{i \in V} p_i - \sum_{R \in \mathcal{R}} \sum_{i \in V_R} p_i,
      *
-     * where the first part lists each route's fixed, distance and duration
-     * costs, respectively, and the second part the uncollected prizes of
-     * unvisited clients.
+     * where the first part lists each route's fixed, distance, duration and
+     * overtime costs, respectively, and the second part the uncollected prizes
+     * of unvisited clients.
      *
      * .. note::
      *
