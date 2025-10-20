@@ -159,9 +159,10 @@ def test_add_vehicle_type():
         fixed_cost=1_001,
         tw_early=17,
         tw_late=19,
-        max_duration=93,
+        shift_duration=93,
         max_distance=97,
         start_late=18,
+        max_overtime=43,
     )
 
     assert_equal(vehicle_type.num_available, 10)
@@ -170,8 +171,9 @@ def test_add_vehicle_type():
     assert_equal(vehicle_type.tw_early, 17)
     assert_equal(vehicle_type.start_late, 18)
     assert_equal(vehicle_type.tw_late, 19)
-    assert_equal(vehicle_type.max_duration, 93)
+    assert_equal(vehicle_type.shift_duration, 93)
     assert_equal(vehicle_type.max_distance, 97)
+    assert_equal(vehicle_type.max_overtime, 43)
 
 
 def test_add_vehicle_type_default_depots():

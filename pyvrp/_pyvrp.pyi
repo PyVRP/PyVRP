@@ -113,7 +113,7 @@ class VehicleType:
     capacity: list[int]
     tw_early: int
     tw_late: int
-    max_duration: int
+    shift_duration: int
     max_distance: int
     fixed_cost: int
     unit_distance_cost: int
@@ -123,6 +123,9 @@ class VehicleType:
     initial_load: list[int]
     reload_depots: list[int]
     max_reloads: int
+    max_overtime: int
+    unit_overtime_cost: int
+    max_duration: int
     name: str
     def __init__(
         self,
@@ -133,7 +136,7 @@ class VehicleType:
         fixed_cost: int = 0,
         tw_early: int = 0,
         tw_late: int = ...,
-        max_duration: int = ...,
+        shift_duration: int = ...,
         max_distance: int = ...,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
@@ -142,6 +145,8 @@ class VehicleType:
         initial_load: list[int] = [],
         reload_depots: list[int] = [],
         max_reloads: int = ...,
+        max_overtime: int = 0,
+        unit_overtime_cost: int = 0,
         *,
         name: str = "",
     ) -> None: ...
@@ -156,7 +161,7 @@ class VehicleType:
         fixed_cost: int | None = None,
         tw_early: int | None = None,
         tw_late: int | None = None,
-        max_duration: int | None = None,
+        shift_duration: int | None = None,
         max_distance: int | None = None,
         unit_distance_cost: int | None = None,
         unit_duration_cost: int | None = None,
@@ -165,6 +170,8 @@ class VehicleType:
         initial_load: list[int] | None = None,
         reload_depots: list[int] | None = None,
         max_reloads: int | None = None,
+        max_overtime: int | None = None,
+        unit_overtime_cost: int | None = None,
         *,
         name: str | None = None,
     ) -> VehicleType: ...

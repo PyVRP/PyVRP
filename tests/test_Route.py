@@ -245,19 +245,19 @@ def test_route_release_time():
     assert_(routes[1].start_time() > routes[1].release_time())
 
 
-def test_release_time_and_max_duration():
+def test_release_time_and_shift_duration():
     """
-    Tests the interaction of release times and maximum duration constraints. In
-    particular, we verify that the maximum duration applies to the time after
-    the vehicle starts their route, and that the release time only shifts
-    that starting moment - it does not affect the overall maximum duration.
+    Tests the interaction of release times and shift duration constraints. In
+    particular, we verify that the shift duration applies to the time after the
+    vehicle starts their route, and that the release time only shifts that
+    starting moment - it does not affect the overall maximum duration.
     """
     ok_small = read("data/OkSmallReleaseTimes.txt")
-    vehicle_type = VehicleType(3, [10], max_duration=5_000)
+    vehicle_type = VehicleType(3, [10], shift_duration=5_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     # This route has a release time of 5000, but should not start until much
-    # later because of the time windows. The vehicle's maximum duration is also
+    # later because of the time windows. The vehicle's shift duration is also
     # 5000, but this is violated by 998 units of time. The route is otherwise
     # feasible, so there is exactly 998 time warp.
     route = Route(data, [2, 3, 4], 0)

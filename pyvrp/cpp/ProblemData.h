@@ -351,7 +351,7 @@ public:
      *     fixed_cost: int = 0,
      *     tw_early: int = 0,
      *     tw_late: int = np.iinfo(np.int64).max,
-     *     max_duration: int = np.iinfo(np.int64).max,
+     *     shift_duration: int = np.iinfo(np.int64).max,
      *     max_distance: int = np.iinfo(np.int64).max,
      *     unit_distance_cost: int = 1,
      *     unit_duration_cost: int = 0,
@@ -360,6 +360,8 @@ public:
      *     initial_load: list[int] = [],
      *     reload_depots: list[int] = [],
      *     max_reloads: int = np.iinfo(np.uint64).max,
+     *     max_overtime: int = 0,
+     *     unit_overtime_cost: int = 0,
      *     *,
      *     name: str = "",
      * )
@@ -388,8 +390,10 @@ public:
      *     Start of the vehicle type's shift. Default 0.
      * tw_late
      *     End of the vehicle type's shift. Unconstrained if not provided.
-     * max_duration
-     *     Maximum route duration. Unconstrained if not explicitly provided.
+     * shift_duration
+     *     Nominal maximum route duration. May be extended through overtime
+     *     (see :py:attr:`~max_overtime`) at additional cost. Unconstrained if
+     *     not explicitly provided.
      * max_distance
      *     Maximum route distance. Unconstrained if not explicitly provided.
      * unit_distance_cost
@@ -415,6 +419,12 @@ public:
      * max_reloads
      *     Maximum number of reloads the vehicle may perform on a route.
      *     Unconstrained if not explicitly provided.
+     * max_overtime
+     *     Maximum allowed overtime, on top of the :py:attr:`~shift_duration`.
+     *     Default 0, that is, overtime is not allowed.
+     * unit_overtime_cost
+     *     Cost of a unit of overtime. This is in addition to the regular
+     *     :py:attr:`~unit_duration_cost` of route durations. Default 0.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -434,9 +444,9 @@ public:
      *     Start of the vehicle type's shift, if specified.
      * tw_late
      *     End of the vehicle type's shift, if specified.
-     * max_duration
-     *     Maximum duration of the route this vehicle type is assigned to. This
-     *     is a very large number when the maximum duration is unconstrained.
+     * shift_duration
+     *     Nominal maximum shift duration of the route this vehicle type is
+     *     assigned to. Default unconstrained.
      * max_distance
      *     Maximum travel distance of the route this vehicle type is assigned
      *     to. This is a very large number when the maximum distance is
@@ -458,6 +468,14 @@ public:
      *     empty and reload.
      * max_reloads
      *     Maximum number of reloads the vehicle may perform on a route.
+     * max_overtime
+     *     Maximum amount of allowed overtime, on top of the nominal
+     *     :py:attr:`~shift_duration`.
+     * unit_overtime_cost
+     *     Additional cost of a unit of overtime.
+     * max_duration
+     *     Hard maximum route duration constraint, computed as the sum of
+     *     :py:attr:`~shift_duration` and :py:attr:`~max_overtime`.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -469,7 +487,7 @@ public:
         std::vector<Load> const capacity;  // This type's vehicle capacity
         Duration const twEarly;            // Start of shift
         Duration const twLate;             // End of shift
-        Duration const maxDuration;        // Maximum route duration
+        Duration const shiftDuration;      // Nominal shift duration
         Distance const maxDistance;        // Maximum route distance
         Cost const fixedCost;         // Fixed cost of using this vehicle type
         Cost const unitDistanceCost;  // Variable cost per unit of distance
@@ -479,7 +497,10 @@ public:
         std::vector<Load> const initialLoad;     // Initially used capacity
         std::vector<size_t> const reloadDepots;  // Reload locations
         size_t const maxReloads;                 // Maximum number of reloads
-        char const *name;                        // Type name (for reference)
+        Duration const maxOvertime;              // Maximum allowed overtime
+        Cost const unitOvertimeCost;             // Cost per unit of overtime
+        Duration const maxDuration;  // Maximum route duration, incl. overtime
+        char const *name;            // Type name (for reference)
 
         VehicleType(size_t numAvailable = 1,
                     std::vector<Load> capacity = {},
@@ -488,7 +509,8 @@ public:
                     Cost fixedCost = 0,
                     Duration twEarly = 0,
                     Duration twLate = std::numeric_limits<Duration>::max(),
-                    Duration maxDuration = std::numeric_limits<Duration>::max(),
+                    Duration shiftDuration
+                    = std::numeric_limits<Duration>::max(),
                     Distance maxDistance = std::numeric_limits<Distance>::max(),
                     Cost unitDistanceCost = 1,
                     Cost unitDurationCost = 0,
@@ -497,6 +519,8 @@ public:
                     std::vector<Load> initialLoad = {},
                     std::vector<size_t> reloadDepots = {},
                     size_t maxReloads = std::numeric_limits<size_t>::max(),
+                    Duration maxOvertime = 0,
+                    Cost unitOvertimeCost = 0,
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -520,7 +544,7 @@ public:
                             std::optional<Cost> fixedCost,
                             std::optional<Duration> twEarly,
                             std::optional<Duration> twLate,
-                            std::optional<Duration> maxDuration,
+                            std::optional<Duration> shiftDuration,
                             std::optional<Distance> maxDistance,
                             std::optional<Cost> unitDistanceCost,
                             std::optional<Cost> unitDurationCost,
@@ -529,6 +553,8 @@ public:
                             std::optional<std::vector<Load>> initialLoad,
                             std::optional<std::vector<size_t>> reloadDepots,
                             std::optional<size_t> maxReloads,
+                            std::optional<Duration> maxOvertime,
+                            std::optional<Cost> unitOvertimeCost,
                             std::optional<std::string> name) const;
 
         /**

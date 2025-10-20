@@ -353,7 +353,7 @@ class Model:
         fixed_cost: int = 0,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
-        max_duration: int = np.iinfo(np.int64).max,
+        shift_duration: int = np.iinfo(np.int64).max,
         max_distance: int = np.iinfo(np.int64).max,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
@@ -362,6 +362,8 @@ class Model:
         initial_load: int | list[int] = [],
         reload_depots: list[Depot] = [],
         max_reloads: int = np.iinfo(np.uint64).max,
+        max_overtime: int = 0,
+        unit_overtime_cost: int = 0,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -422,7 +424,7 @@ class Model:
             fixed_cost=fixed_cost,
             tw_early=tw_early,
             tw_late=tw_late,
-            max_duration=max_duration,
+            shift_duration=shift_duration,
             max_distance=max_distance,
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
@@ -431,6 +433,8 @@ class Model:
             initial_load=init_load,
             reload_depots=reloads,
             max_reloads=max_reloads,
+            max_overtime=max_overtime,
+            unit_overtime_cost=unit_overtime_cost,
             name=name,
         )
 

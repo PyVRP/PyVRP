@@ -7,6 +7,7 @@
 #include <cassert>
 #include <concepts>
 #include <limits>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -40,7 +41,9 @@ template <typename T>
 concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
     { arg.route() };
     { arg.distance() } -> std::same_as<Distance>;
-    { arg.duration() } -> std::convertible_to<std::pair<Duration, Duration>>;
+    {
+        arg.duration()
+    } -> std::convertible_to<std::tuple<Duration, Duration, Duration>>;
     { arg.excessLoad(dimension) } -> std::same_as<Load>;
 };
 
@@ -118,27 +121,30 @@ public:
 
     /**
      * Hand-waving some details, each solution consists of a set of non-empty
-     * routes :math:`\mathcal{R}`. Each route :math:`R \in \mathcal{R}` is a
-     * sequence of edges, starting and ending at a depot. Each route :math:`R`
-     * has an assigned vehicle type, through which the route is equipped with a
-     * fixed vehicle cost :math:`f_R`, and unit distance and duration costs
-     * :math:`c^\text{distance}_R` and :math:`c^\text{duration}_R`,
-     * respectively. Let :math:`V_R = \{i : (i, j) \in R \}` be the set of
-     * locations visited by route :math:`R`, and :math:`d_R` and :math:`t_R`
-     * the total route distance and duration, respectively. The objective value
+     * routes :math:`\mathcal{R}`. Each route :math:`R \in \mathcal{R}` can be
+     * represented as a sequence of edges, starting and ending at a depot. A
+     * route :math:`R` has an assigned vehicle type that equips the route with
+     * fixed vehicle cost :math:`f_R`, and unit distance, duration and overtime
+     * costs :math:`c^\text{distance}_R`, :math:`c^\text{duration}_R`,
+     * :math:`c^\text{overtime}_R`, respectively. Let
+     * :math:`V_R = \{i : (i, j) \in R \}` be the set of locations visited by
+     * route :math:`R`, and :math:`d_R`, :math:`t_R`, and :math:`o_R` the total
+     * route distance, duration, and overtime, respectively. The objective value
      * is then given by
      *
      * .. math::
      *
      *    \sum_{R \in \mathcal{R}}
      *      \left[
-     *          f_R + c^\text{distance}_R d_R + c^\text{duration}_R t_R
+     *          f_R + c^\text{distance}_R d_R
+     *              + c^\text{duration}_R t_R
+     *              + c^\text{overtime}_R o_R
      *      \right]
      *    + \sum_{i \in V} p_i - \sum_{R \in \mathcal{R}} \sum_{i \in V_R} p_i,
      *
-     * where the first part lists each route's fixed, distance and duration
-     * costs, respectively, and the second part the uncollected prizes of
-     * unvisited clients.
+     * where the first part lists each route's fixed, distance, duration and
+     * overtime costs, respectively, and the second part the uncollected prizes
+     * of unvisited clients.
      *
      * .. note::
      *
@@ -290,8 +296,9 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
         }
     }
 
-    auto const [duration, timeWarp] = proposal.duration();
+    auto const [duration, overtime, timeWarp] = proposal.duration();
     out += route->unitDurationCost() * static_cast<Cost>(duration);
+    out += route->unitOvertimeCost() * static_cast<Cost>(overtime);
     out += twPenalty(timeWarp);
 
     return true;
@@ -370,12 +377,14 @@ bool CostEvaluator::deltaCost(Cost &out,
         if (out >= 0)
             return false;
 
-    auto const [uDuration, uTimeWarp] = uProposal.duration();
+    auto const [uDuration, uOvertime, uTimeWarp] = uProposal.duration();
     out += uRoute->unitDurationCost() * static_cast<Cost>(uDuration);
+    out += uRoute->unitOvertimeCost() * static_cast<Cost>(uOvertime);
     out += twPenalty(uTimeWarp);
 
-    auto const [vDuration, vTimeWarp] = vProposal.duration();
+    auto const [vDuration, vOvertime, vTimeWarp] = vProposal.duration();
     out += vRoute->unitDurationCost() * static_cast<Cost>(vDuration);
+    out += vRoute->unitOvertimeCost() * static_cast<Cost>(vOvertime);
     out += twPenalty(vTimeWarp);
 
     return true;
