@@ -278,7 +278,7 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     if (!route->empty())
     {
         out -= route->distanceCost();
-        out -= distPenalty(route->distance(), route->maxDistance());
+        out -= excessDistPenalty(route->excessDistance());
 
         if constexpr (!skipLoad)
             out -= excessLoadPenalties(route->excessLoad());
@@ -333,7 +333,7 @@ bool CostEvaluator::deltaCost(Cost &out,
     if (!uRoute->empty())
     {
         out -= uRoute->distanceCost();
-        out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
+        out -= excessDistPenalty(uRoute->excessDistance());
 
         if constexpr (!skipLoad)
             out -= excessLoadPenalties(uRoute->excessLoad());
@@ -346,7 +346,7 @@ bool CostEvaluator::deltaCost(Cost &out,
     if (!vRoute->empty())
     {
         out -= vRoute->distanceCost();
-        out -= distPenalty(vRoute->distance(), vRoute->maxDistance());
+        out -= excessDistPenalty(vRoute->excessDistance());
 
         if constexpr (!skipLoad)
             out -= excessLoadPenalties(vRoute->excessLoad());
