@@ -9,7 +9,6 @@
 #include <cassert>
 #include <concepts>
 #include <iosfwd>
-#include <tuple>
 #include <utility>
 
 namespace pyvrp::search
@@ -97,15 +96,16 @@ public:
         Route const *route() const;
 
         /**
-         * Returns the travel distance of the proposed route.
-         */
-        Distance distance() const;
-
-        /**
-         * Returns a tuple of (duration, overtime, time warp) attributes of the
+         * Returns the (distance cost, excess distance) attributes of the
          * proposed route.
          */
-        std::tuple<Duration, Duration, Duration> duration() const;
+        std::pair<Cost, Distance> distance() const;
+
+        /**
+         * Returns the (duration cost, time warp) attributes of the proposed
+         * route.
+         */
+        std::pair<Cost, Duration> duration() const;
 
         /**
          * Returns the excess load of the proposed route.
@@ -303,8 +303,12 @@ private:
     ProblemData::VehicleType const &vehicleType_;
     size_t const idx_;
 
-    Cost distanceCost_;  // Separately cached distance cost component
-    Cost durationCost_;  // Separately cached duration cost component
+    Distance distance_;  // Separately cached cost components
+    Cost distanceCost_;
+    Distance excessDistance_;
+    Duration duration_;
+    Cost durationCost_;
+    Duration timeWarp_;
 
     std::vector<Node> depots_;  // start, end, and reload depots (in that order)
 
@@ -876,7 +880,7 @@ std::vector<Load> const &Route::excessLoad() const
 Distance Route::excessDistance() const
 {
     assert(!dirty);
-    return std::max<Distance>(distance() - maxDistance(), 0);
+    return excessDistance_;
 }
 
 std::vector<Load> const &Route::capacity() const
@@ -893,7 +897,7 @@ Cost Route::fixedVehicleCost() const { return vehicleType_.fixedCost; }
 Distance Route::distance() const
 {
     assert(!dirty);
-    return cumDist.back();
+    return distance_;
 }
 
 Cost Route::distanceCost() const
@@ -913,7 +917,7 @@ bool Route::hasDistanceCost() const
 Duration Route::duration() const
 {
     assert(!dirty);
-    return durAfter[0].duration();
+    return duration_;
 }
 
 Duration Route::overtime() const
@@ -953,7 +957,7 @@ Distance Route::maxDistance() const { return vehicleType_.maxDistance; }
 Duration Route::timeWarp() const
 {
     assert(!dirty);
-    return durAfter[0].timeWarp(maxDuration());
+    return timeWarp_;
 }
 
 size_t Route::profile() const { return vehicleType_.profile; }
@@ -1027,18 +1031,18 @@ Route const *Route::Proposal<Segments...>::route() const
 }
 
 template <Segment... Segments>
-Distance Route::Proposal<Segments...>::distance() const
+std::pair<Cost, Distance> Route::Proposal<Segments...>::distance() const
 {
-    if (empty() || !route()->hasDistanceCost())
-        // Then distance does not factor into the penalised cost of this route,
-        // and we do not have to evaluate it.
-        return 0;
+    if (empty())
+        return std::make_pair(0, 0);
 
     auto const &data = route()->data;
+    auto const unitDistanceCost = route()->unitDistanceCost();
+    auto const maxDistance = route()->maxDistance();
     auto const profile = route()->profile();
     auto const &matrix = data.distanceMatrix(profile);
 
-    auto const fn = [&matrix, profile](auto &&segment, auto &&...args)
+    auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto distance = segment.distance(profile);
         auto last = segment.last();
@@ -1053,22 +1057,24 @@ Distance Route::Proposal<Segments...>::distance() const
         };
 
         merge(merge, std::forward<decltype(args)>(args)...);
-        return distance;
+
+        auto const excess = std::max<Distance>(distance - maxDistance, 0);
+        auto const cost = unitDistanceCost * static_cast<Cost>(distance);
+        return std::make_pair(cost, excess);
     };
 
     return std::apply(fn, segments_);
 }
 
 template <Segment... Segments>
-std::tuple<Duration, Duration, Duration>
-Route::Proposal<Segments...>::duration() const
+std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
 {
-    if (empty() || !route()->hasDurationCost())
-        // Then duration does not factor into the penalised cost of this route,
-        // and we do not have to evaluate it.
-        return std::make_tuple(0, 0, 0);
+    if (empty())
+        return std::make_pair(0, 0);
 
     auto const &data = route()->data;
+    auto const unitDurationCost = route()->unitDurationCost();
+    auto const unitOvertimeCost = route()->unitOvertimeCost();
     auto const shiftDuration = route()->shiftDuration();
     auto const maxDuration = route()->maxDuration();
     auto const profile = route()->profile();
@@ -1121,8 +1127,10 @@ Route::Proposal<Segments...>::duration() const
 
         auto const duration = ds.duration();
         auto const overtime = std::max<Duration>(duration - shiftDuration, 0);
+        auto const cost = unitDurationCost * static_cast<Cost>(duration)
+                          + unitOvertimeCost * static_cast<Cost>(overtime);
         auto const timeWarp = ds.timeWarp(maxDuration);
-        return std::make_tuple(duration, overtime, timeWarp);
+        return std::make_pair(cost, timeWarp);
     };
 
     return std::apply(fn, detail::reverse(segments_));
