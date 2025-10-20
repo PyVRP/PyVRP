@@ -80,14 +80,14 @@ public:
     [[nodiscard]] Value get() const;
 
     // In-place unary operators.
-    Measure &operator+=(Measure const &rhs);
-    Measure &operator-=(Measure const &rhs);
-    Measure &operator*=(Measure const &rhs);
-    Measure &operator/=(Measure const &rhs);
+    Measure &operator+=(Measure const rhs);
+    Measure &operator-=(Measure const rhs);
+    Measure &operator*=(Measure const rhs);
+    Measure &operator/=(Measure const rhs);
 
     // Comparison operators.
-    [[nodiscard]] bool operator==(Measure const &other) const;
-    [[nodiscard]] std::strong_ordering operator<=>(Measure const &other) const;
+    [[nodiscard]] bool operator==(Measure const other) const;
+    [[nodiscard]] std::strong_ordering operator<=>(Measure const other) const;
 };
 
 // Retrieves the underlying value.
@@ -100,7 +100,7 @@ Value Measure<Type, Value>::get() const
 // In-place unary operators.
 template <MeasureType Type, NumberType Value>
 Measure<Type, Value> &
-Measure<Type, Value>::operator+=(Measure<Type, Value> const &rhs)
+Measure<Type, Value>::operator+=(Measure<Type, Value> const rhs)
 {
     if constexpr (std::is_integral_v<Value>)
     {
@@ -114,7 +114,7 @@ Measure<Type, Value>::operator+=(Measure<Type, Value> const &rhs)
 
 template <MeasureType Type, NumberType Value>
 Measure<Type, Value> &
-Measure<Type, Value>::operator-=(Measure<Type, Value> const &rhs)
+Measure<Type, Value>::operator-=(Measure<Type, Value> const rhs)
 {
     if constexpr (std::is_integral_v<Value>)
     {
@@ -128,7 +128,7 @@ Measure<Type, Value>::operator-=(Measure<Type, Value> const &rhs)
 
 template <MeasureType Type, NumberType Value>
 Measure<Type, Value> &
-Measure<Type, Value>::operator*=(Measure<Type, Value> const &rhs)
+Measure<Type, Value>::operator*=(Measure<Type, Value> const rhs)
 {
     if constexpr (std::is_integral_v<Value>)
     {
@@ -142,7 +142,7 @@ Measure<Type, Value>::operator*=(Measure<Type, Value> const &rhs)
 
 template <MeasureType Type, NumberType Value>
 Measure<Type, Value> &
-Measure<Type, Value>::operator/=(Measure<Type, Value> const &rhs)
+Measure<Type, Value>::operator/=(Measure<Type, Value> const rhs)
 {
     this->value /= rhs.value;
     return *this;
@@ -150,14 +150,14 @@ Measure<Type, Value>::operator/=(Measure<Type, Value> const &rhs)
 
 // Comparison operators.
 template <MeasureType Type, NumberType Value>
-bool Measure<Type, Value>::operator==(Measure<Type, Value> const &other) const
+bool Measure<Type, Value>::operator==(Measure<Type, Value> const other) const
 {
     return value == other.value;
 }
 
 template <MeasureType Type, NumberType Value>
 std::strong_ordering
-Measure<Type, Value>::operator<=>(Measure<Type, Value> const &other) const
+Measure<Type, Value>::operator<=>(Measure<Type, Value> const other) const
 {
     return value <=> other.value;
 }
