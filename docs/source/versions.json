@@ -1,8 +1,10 @@
 [
     {
-        "version": "",
+        "version": "https://pyvrp.org/",
         "title": "Development",
-        "aliases": []
+        "aliases": [
+            "dev"
+        ]
     },
     {
         "version": "https://pyvrp.github.io/v0.12.0",
