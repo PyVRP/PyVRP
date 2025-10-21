@@ -1,6 +1,6 @@
 [
     {
-        "version": "https://pyvrp.org/",
+        "version": "https://pyvrp.org",
         "title": "Development",
         "aliases": [
             "dev"
