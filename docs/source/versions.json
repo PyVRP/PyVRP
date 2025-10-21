@@ -2,9 +2,7 @@
     {
         "version": "",
         "title": "Development",
-        "aliases": [
-            "latest"
-        ]
+        "aliases": []
     },
     {
         "version": "https://pyvrp.github.io/v0.12.0",
