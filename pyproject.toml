@@ -136,7 +136,7 @@ exclude_lines = [
 [tool.cibuildwheel]
 # We do not support old Python versions and somewhat uncommon platforms.
 build = "cp311-* cp312-* cp313-* cp314-*"
-skip = "*_ppc64le *_i686 *_s390x *-win32 *-musllinux_i686"
+skip = "*_ppc64le *_i686 *_s390x *-win32"
 build-frontend = "build"
 test-requires = [
     "pytest>=6.0.0",
