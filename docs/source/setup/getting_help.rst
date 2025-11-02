@@ -1,6 +1,7 @@
 Getting help
 ============
 
+All conversations take place in the `GitHub repository <https://github.com/PyVRP/PyVRP/>`_.
 If you are looking for help using PyVRP, please browse our :doc:`FAQ <faq>` and `discussions <https://github.com/PyVRP/PyVRP/discussions>`_ overview first for relevant discussions, questions and answers, modelling tricks, and more.
 Feel free to open your own discussion thread if you have something new to discuss!
 

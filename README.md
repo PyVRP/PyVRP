@@ -46,9 +46,7 @@ If you are new to vehicle routing or metaheuristics, you might benefit from firs
 
 Feel free to open an issue or a new discussion thread here on GitHub.
 When writing your issue or discussion, please follow the instructions [here][3].
-
-> [!TIP]
-> Looking for professional support? [RoutingLab](https://routinglab.tech) provides consulting, custom development, and FastVRP - a production-ready route optimisation API built on PyVRP.
+For professional support, contact us at info@routinglab.tech.
 
 ### Contributing
 
