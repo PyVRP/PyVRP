@@ -6,7 +6,7 @@
 [![codecov](https://img.shields.io/codecov/c/github/PyVRP/PyVRP?style=flat-square&logo=codecov&label=Codecov)](https://codecov.io/gh/PyVRP/PyVRP)
 [![DOI:10.1287/ijoc.2023.0055](https://img.shields.io/badge/DOI-ijoc.2023.0055-green?style=flat-square&color=blue)](https://doi.org/10.1287/ijoc.2023.0055)
 
-PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
+PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver maintained by [RoutingLab](https://routinglab.tech).
 It currently supports VRPs with:
 - Pickups and deliveries between depots and clients (capacitated VRP, VRP with simultaneous pickup and delivery, VRP with backhaul);
 - Vehicles of different capacities, costs, shift durations, routing profiles, and maximum distance and duration constraints (heterogeneous fleet VRP, site-dependent VRP);

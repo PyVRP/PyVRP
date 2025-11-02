@@ -2,7 +2,7 @@
    :alt: PyVRP logo
    :figwidth: 100%
 
-PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
+PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver maintained by `RoutingLab <https://routinglab.tech>`_.
 It currently supports VRPs with:
 
 * Pickups and deliveries between depots and clients (capacitated VRP, VRP with simultaneous pickup and delivery, VRP with backhaul);
