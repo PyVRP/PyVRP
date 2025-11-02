@@ -22,7 +22,7 @@ It can be installed through *pip* via
 
 .. tip::
 
-   Looking for a hosted route optimisation API with map data integration? Check out RoutingLab's `FastVRP <https://routinglab.tech#fastvrp>`_.
+   Looking for professional support? `RoutingLab <https://routinglab.tech>`_ provides consulting, custom development, and FastVRP - a production-ready route optimisation API built on PyVRP.
 
 Contents
 --------
