@@ -20,10 +20,9 @@ It can be installed through *pip* via
 
    pip install pyvrp
 
-.. hint::
+.. tip::
 
-    If you are new to vehicle routing or metaheuristics, you might benefit from first reading the :doc:`introduction to VRP <setup/introduction_to_vrp>`, :doc:`introduction to HGS <setup/introduction_to_hgs>`, and :doc:`tutorial <../examples/quick_tutorial>` pages.
-    To set up an installation from source, or to run the examples listed below yourself, please have a look at the :doc:`installation instructions <setup/installation>`.
+   Looking for a hosted route optimisation API with map data integration? Check out RoutingLab's `FastVRP <https://routinglab.tech#fastvrp>`_.
 
 Contents
 --------

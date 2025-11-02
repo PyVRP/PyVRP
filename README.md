@@ -21,11 +21,11 @@ It may be installed in the usual way as
 ```
 pip install pyvrp
 ```
-This also resolves the few core dependencies PyVRP has.
+
 The documentation is available [here][1].
 
 > [!TIP]
-> If you are new to vehicle routing or metaheuristics, you might benefit from first reading the [introduction to VRP][6] and [introduction to HGS][7] pages.
+> Looking for a hosted route optimisation API with map data integration? Check out RoutingLab's [FastVRP](https://routinglab.tech#fastvrp).
 
 ### Examples
 
@@ -39,6 +39,8 @@ These include:
   We also demonstrate how to use the plotting tools available in PyVRP to visualise the instance and statistics collected during the search procedure. 
 - A notebook implementing a `solve` method using PyVRP's components, [here][9].
   This notebook is a great way to dive deeper into how PyVRP works internally.
+
+If you are new to vehicle routing or metaheuristics, you might benefit from first reading the [introduction to VRP][6] and [introduction to HGS][7] pages.
 
 ### Getting help
 
