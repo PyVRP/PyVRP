@@ -40,10 +40,10 @@ If it has not, please open a new issue in the repository, using the "Feature req
 Professional support
 --------------------
 
-PyVRP is maintained by `RoutingLab <https://routinglab.tech>`_, a startup focused on next-generation route optimisation software. RoutingLab provides the following services:
+PyVRP is maintained by `RoutingLab <https://routinglab.tech>`_, a startup focussed on next-generation route optimisation software. RoutingLab provides the following services:
 
-- **Implementation support:** Get help with problem modeling, solver tuning, or implementation review for your production systems.
-- **Custom features:** We develop features that align with our roadmap or are funded by you. Browse  `the list of fundable features <https://github.com/PyVRP/PyVRP/issues?q=sort%3Aupdated-desc%20is%3Aissue%20is%3Aopen%20label%3A%22waiting%20for%20funding%22>`_ or open your own feature request.
-- **FastVRP API:** For a production-ready route optimisation API without implementation overhead, try out `FastVRP <https://routinglab.tech#fastvrp>`_.
+- **Consulting:** Professional guidance to help you use PyVRP effectively, including problem modelling, solver performance tuning, and deploying to production.
+- **Feature development:** We develop features that align with RoutingLab's product roadmap or prioritise those that receive funding from users. Browse `the list of fundable features <https://github.com/PyVRP/PyVRP/issues?q=sort%3Aupdated-desc%20is%3Aissue%20is%3Aopen%20label%3A%22waiting%20for%20funding%22>`_ or submit your own feature request.
+- **FastVRP API:** For a production-ready route optimisation API, try out `FastVRP <https://routinglab.tech#fastvrp>`_.
 
-Reach us at info@routinglab.tech
+Reach us at info@routinglab.tech.
