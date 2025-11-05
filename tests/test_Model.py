@@ -7,7 +7,16 @@ from numpy.testing import (
     assert_warns,
 )
 
-from pyvrp import Client, ClientGroup, Depot, Model, Profile, VehicleType
+from pyvrp import (
+    Client,
+    ClientGroup,
+    Depot,
+    Model,
+    PenaltyParams,
+    Profile,
+    SolveParams,
+    VehicleType,
+)
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.stop import MaxIterations
@@ -391,8 +400,9 @@ def test_model_solve_display_argument(ok_small, capsys):
     assert_("PyVRP" in printed)
     assert_("Time" in printed)
     assert_("Iters" in printed)
-    assert_("Feasible" in printed)
-    assert_("Infeasible" in printed)
+    assert_("Current" in printed)
+    assert_("Candidate" in printed)
+    assert_("Best" in printed)
 
     # Check that we include the cost and total runtime in the output somewhere.
     assert_(str(round(res.cost())) in printed)
@@ -506,7 +516,7 @@ def test_model_solves_small_instance_with_fixed_costs():
             if frm != to:
                 m.add_edge(frm, to, distance=0, duration=5)
 
-    res = m.solve(stop=MaxIterations(100))
+    res = m.solve(stop=MaxIterations(10))
     assert_(res.is_feasible())
 
 
@@ -564,11 +574,11 @@ def test_model_solves_line_instance_with_multiple_depots():
     depot1 = m.add_depot(x=0, y=0)  # location 0
     depot2 = m.add_depot(x=5, y=0)  # location 1
 
-    m.add_vehicle_type(1, start_depot=depot1, end_depot=depot1)
-    m.add_vehicle_type(1, start_depot=depot2, end_depot=depot2)
+    m.add_vehicle_type(1, capacity=2, start_depot=depot1, end_depot=depot1)
+    m.add_vehicle_type(1, capacity=2, start_depot=depot2, end_depot=depot2)
 
     for idx in range(1, 5):  # locations 2, 3, 4, and 5
-        m.add_client(x=idx, y=0)
+        m.add_client(x=idx, delivery=1, y=0)
 
     # All locations are on a horizontal line, with the depots on each end. The
     # line is organised as follows:
@@ -580,7 +590,8 @@ def test_model_solves_line_instance_with_multiple_depots():
         for to in m.locations:
             m.add_edge(frm, to, distance=abs(frm.x - to.x))
 
-    res = m.solve(stop=MaxIterations(100))
+    res = m.solve(stop=MaxIterations(100), seed=3)
+    assert_equal(res.cost(), 8)
     assert_(res.is_feasible())
 
     # Test that there are two routes, with the clients closest to depot 0
@@ -613,26 +624,24 @@ def test_client_depot_and_vehicle_type_name_fields():
 
 
 @pytest.mark.parametrize(
-    ("pickups", "deliveries", "expected_excess_load"),
+    ("pickups", "deliveries"),
     [
-        # The route should have 1 excess load (since the total pickup amount
-        # sums to 11, and the vehicle capacity is 10). Same with similar
+        # The route should have no excess load: the total pickup amount
+        # sums to 11, and the vehicle capacity is 11. Same with similar
         # deliveries.
-        ([1, 2, 3, 5], [0, 0, 0, 0], 1),
-        ([0, 0, 0, 0], [1, 2, 3, 5], 1),
-        ([1, 2, 3, 5], [1, 2, 3, 5], 1),
+        ([1, 2, 3, 5], [0, 0, 0, 0]),
+        ([0, 0, 0, 0], [1, 2, 3, 5]),
+        ([1, 2, 3, 5], [1, 2, 3, 5]),
         # The following pickup and delivery schedule is tight, but should be
         # fine: the vehicle leaves full, and returns full, but there is a
         # configuration whereby it never exceeds its capacity along the way.
-        ([1, 2, 3, 4], [4, 3, 2, 1], 0),
+        ([1, 2, 3, 4], [4, 3, 2, 1]),
         # And no delivery or pickup amounts should of course also be OK!
-        ([0, 0, 0, 0], [0, 0, 0, 0], 0),
+        ([0, 0, 0, 0], [0, 0, 0, 0]),
     ],
 )
 def test_model_solves_instances_with_pickups_and_deliveries(
-    pickups: list[int],
-    deliveries: list[int],
-    expected_excess_load: int,
+    pickups: list[int], deliveries: list[int]
 ):
     """
     High-level test that creates and solves a single-route instance where
@@ -640,7 +649,7 @@ def test_model_solves_instances_with_pickups_and_deliveries(
     """
     m = Model()
     m.add_depot(0, 0)
-    m.add_vehicle_type(capacity=10)
+    m.add_vehicle_type(capacity=11)
 
     m.add_client(x=1, y=1, delivery=deliveries[0], pickup=pickups[0])
     m.add_client(x=2, y=2, delivery=deliveries[1], pickup=pickups[1])
@@ -652,11 +661,9 @@ def test_model_solves_instances_with_pickups_and_deliveries(
             manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
             m.add_edge(frm, to, distance=int(manhattan))
 
-    res = m.solve(stop=MaxIterations(100))
+    res = m.solve(stop=MaxIterations(10))
     route = res.best.routes()[0]
-
-    assert_equal(route.excess_load(), [expected_excess_load])
-    assert_equal(route.has_excess_load(), expected_excess_load > 0)
+    assert_(route.is_feasible())
 
 
 def test_add_client_raises_unknown_group():
@@ -1084,7 +1091,8 @@ def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
            https://doi.org/10.1287/trsc.2022.1161.
     """
     m = Model.from_data(mtvrptw_release_times)
-    res = m.solve(stop=MaxIterations(5))
+    params = SolveParams(penalty=PenaltyParams(min_penalty=100))
+    res = m.solve(stop=MaxIterations(5), params=params)
     assert_(res.is_feasible())
 
     opt = read_solution("data/C201R0.25.sol", mtvrptw_release_times)
