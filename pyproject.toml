@@ -1,6 +1,6 @@
 [project]
 name = "pyvrp"
-version = "0.12.0a0"
+version = "0.13.0a0"
 description = "A state-of-the-art vehicle routing problem solver."
 authors = [
     { name = "Niels Wouda", email = "nielswouda@gmail.com" },
@@ -22,19 +22,18 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Scientific/Engineering",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.15.2; python_version < '3.12'",
     "numpy>=1.26.0; python_version >= '3.12'",
     "matplotlib>=2.2.0",
     "vrplib>=1.4.0",
     "tqdm>=4.64.1",
-    "tomli>=2.0.1",
 ]
 
 [project.urls]
@@ -108,7 +107,7 @@ ignore_missing_imports = true
 addopts = [
     "--cov",
     "--cov-report=xml",
-    "--cov-report=term",
+    "--cov-report=term-missing",
     "--numprocesses=auto",
 ]
 testpaths = "tests"
@@ -135,10 +134,9 @@ exclude_lines = [
 
 
 [tool.cibuildwheel]
-# We do not support old Python versions and somewhat uncommon platforms. For
-# musllinux-based builds we assume users can compile the thing themselves.
-build = "cp310-* cp311-* cp312-* cp313-*"
-skip = "pp* *_ppc64le *_i686 *_s390x *-win32 *-musllinux*"
+# We do not support old Python versions and somewhat uncommon platforms.
+build = "cp311-* cp312-* cp313-* cp314-*"
+skip = "*_ppc64le *_i686 *_s390x *-win32"
 build-frontend = "build"
 test-requires = [
     "pytest>=6.0.0",

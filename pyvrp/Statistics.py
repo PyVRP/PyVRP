@@ -2,7 +2,7 @@ import csv
 from dataclasses import dataclass, fields
 from pathlib import Path
 from time import perf_counter
-from typing import Iterator
+from typing import Iterator, Literal
 
 from pyvrp._pyvrp import CostEvaluator, Solution
 
@@ -130,7 +130,7 @@ class Statistics:
                     if field2type[name] is bool:
                         datum[name] = bool(int(value))
                     else:
-                        datum[name] = field2type[name](value)
+                        datum[name] = field2type[name](value)  # type: ignore
 
             return _Datum(**datum)
 
@@ -150,7 +150,7 @@ class Statistics:
         self,
         where: Path | str,
         delimiter: str = ",",
-        quoting: int = csv.QUOTE_MINIMAL,
+        quoting: Literal[0, 1, 2, 3] = csv.QUOTE_MINIMAL,
         **kwargs,
     ):
         """

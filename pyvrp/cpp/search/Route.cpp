@@ -79,7 +79,7 @@ Route::Iterator Route::begin() const { return Iterator(nodes, 1); }
 
 Route::Iterator Route::end() const { return Iterator(nodes, nodes.size() - 1); }
 
-std::pair<double, double> const &Route::centroid() const
+std::pair<pyvrp::Coordinate, pyvrp::Coordinate> const &Route::centroid() const
 {
     assert(!dirty);
     return centroid_;
@@ -95,13 +95,13 @@ bool Route::overlapsWith(Route const &other, double tolerance) const
 {
     assert(!dirty && !other.dirty);
 
-    auto const [dataX, dataY] = data.centroid();
-    auto const [thisX, thisY] = centroid_;
-    auto const [otherX, otherY] = other.centroid_;
+    auto const [dX, dY] = data.centroid();
+    auto const [tX, tY] = this->centroid_;
+    auto const [oX, oY] = other.centroid_;
 
     // Each angle is in [-pi, pi], so the absolute difference is in [0, tau].
-    auto const thisAngle = std::atan2(thisY - dataY, thisX - dataX);
-    auto const otherAngle = std::atan2(otherY - dataY, otherX - dataX);
+    auto const thisAngle = std::atan2((tY - dY).get(), (tX - dX).get());
+    auto const otherAngle = std::atan2((oY - dY).get(), (oX - dX).get());
     auto const absDiff = std::abs(thisAngle - otherAngle);
 
     // First case is obvious. Second case exists because tau and 0 are also
@@ -354,6 +354,19 @@ void Route::update()
                                                           loadAfter[dim][idx]);
         }
     }
+
+    // These cost components are separately cached as well because they are
+    // requested *a lot*.
+    distance_ = cumDist.back();
+    excessDistance_ = std::max<Distance>(distance_ - maxDistance(), 0);
+    distanceCost_ = unitDistanceCost() * static_cast<Cost>(distance_);
+
+    duration_ = durAfter[0].duration();
+    timeWarp_ = durAfter[0].timeWarp(maxDuration());
+
+    auto const overtime = std::max<Duration>(duration_ - shiftDuration(), 0);
+    durationCost_ = unitDurationCost() * static_cast<Cost>(duration_)
+                    + unitOvertimeCost() * static_cast<Cost>(overtime);
 
 #ifndef NDEBUG
     dirty = false;

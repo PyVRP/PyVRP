@@ -7,6 +7,7 @@ from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
 
+_INT_MAX = np.iinfo(np.int64).max
 _MAX_SIZE = np.iinfo(np.uint64).max
 
 
@@ -35,11 +36,12 @@ _MAX_SIZE = np.iinfo(np.uint64).max
         (0, 0, 1, 0, 1, 0, 1, 0, 1, True, None, ""),  # positive prize
         (0, 0, 1, 0, 1, 0, 1, 0, 1, False, None, ""),  # not required
         (0, 0, 1, 0, 1, 0, 1, 0, 1, False, 0, ""),  # group membership
+        (0.5, 8.2, 1, 1, 1, 0, 1, 0, 0, True, None, ""),  # float coordinates
     ],
 )
 def test_client_constructor_initialises_data_fields_correctly(
-    x: int,
-    y: int,
+    x: float,
+    y: float,
     delivery: int,
     pickup: int,
     service_duration: int,
@@ -109,8 +111,8 @@ def test_client_constructor_initialises_data_fields_correctly(
     ],
 )
 def test_raises_for_invalid_client_data(
-    x: int,
-    y: int,
+    x: float,
+    y: float,
     delivery: int,
     pickup: int,
     service: int,
@@ -145,8 +147,8 @@ def test_raises_for_invalid_client_data(
     ],
 )
 def test_raises_for_invalid_depot_data(
-    x: int,
-    y: int,
+    x: float,
+    y: float,
     tw_early: int,
     tw_late: int,
 ):
@@ -163,15 +165,15 @@ def test_depot_initialises_data_correctly():
     ensures the data is accessible from Python.
     """
     depot = Depot(
-        x=1,
-        y=2,
+        x=1.25,
+        y=0.5,
         tw_early=5,
         tw_late=7,
         name="test",
     )
 
-    assert_equal(depot.x, 1)
-    assert_equal(depot.y, 2)
+    assert_equal(depot.x, 1.25)
+    assert_equal(depot.y, 0.5)
     assert_equal(depot.tw_early, 5)
     assert_equal(depot.tw_late, 7)
     assert_equal(depot.name, "test")
@@ -491,7 +493,7 @@ def test_matrices_are_not_copies():
         "num_available",
         "tw_early",
         "tw_late",
-        "max_duration",
+        "shift_duration",
         "max_distance",
         "fixed_cost",
         "unit_distance_cost",
@@ -507,7 +509,7 @@ def test_matrices_are_not_copies():
         (0, 1, 1, 1, 0, 0, 0, 0, 0, 2, 0),  # start late > late
         (0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0),  # negative early
         (0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0),  # negative late
-        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0),  # negative max_duration
+        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0),  # negative shift_duration
         (0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0),  # negative max_distance
         (0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0),  # negative fixed_cost
         (0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 0),  # negative unit_distance_cost
@@ -522,7 +524,7 @@ def test_vehicle_type_raises_invalid_data(
     num_available: int,
     tw_early: int,
     tw_late: int,
-    max_duration: int,
+    shift_duration: int,
     max_distance: int,
     fixed_cost: int,
     unit_distance_cost: int,
@@ -541,12 +543,27 @@ def test_vehicle_type_raises_invalid_data(
             fixed_cost=fixed_cost,
             tw_early=tw_early,
             tw_late=tw_late,
-            max_duration=max_duration,
+            shift_duration=shift_duration,
             max_distance=max_distance,
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
             start_late=start_late,
             initial_load=[initial_load],
+        )
+
+
+@pytest.mark.parametrize(
+    ("max_overtime", "unit_overtime_cost"),
+    [(-1, 0), (0, -1)],
+)
+def test_vehicle_type_raises_negative_overtime_data(
+    max_overtime: int,
+    unit_overtime_cost: int,
+):
+    with assert_raises(ValueError):
+        VehicleType(
+            max_overtime=max_overtime,
+            unit_overtime_cost=unit_overtime_cost,
         )
 
 
@@ -563,7 +580,7 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
         fixed_cost=0,
         tw_early=0,
         tw_late=0,
-        max_duration=0,
+        shift_duration=0,
         max_distance=0,
         unit_distance_cost=0,
         unit_duration_cost=0,
@@ -577,7 +594,7 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.tw_late, 0)
-    assert_equal(vehicle_type.max_duration, 0)
+    assert_equal(vehicle_type.shift_duration, 0)
     assert_equal(vehicle_type.max_distance, 0)
     assert_equal(vehicle_type.unit_distance_cost, 0)
     assert_equal(vehicle_type.unit_duration_cost, 0)
@@ -598,13 +615,15 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.unit_distance_cost, 1)
     assert_equal(vehicle_type.unit_duration_cost, 0)
+    assert_equal(vehicle_type.unit_overtime_cost, 0)
     assert_equal(vehicle_type.name, "")
 
     # The default value for the following fields is the largest representable
     # integral value.
-    assert_equal(vehicle_type.tw_late, np.iinfo(np.int64).max)
-    assert_equal(vehicle_type.max_duration, np.iinfo(np.int64).max)
-    assert_equal(vehicle_type.max_distance, np.iinfo(np.int64).max)
+    assert_equal(vehicle_type.tw_late, _INT_MAX)
+    assert_equal(vehicle_type.shift_duration, _INT_MAX)
+    assert_equal(vehicle_type.max_duration, _INT_MAX)
+    assert_equal(vehicle_type.max_distance, _INT_MAX)
 
     # The default value for start_late is the value of tw_late.
     assert_equal(vehicle_type.start_late, vehicle_type.tw_late)
@@ -623,11 +642,12 @@ def test_vehicle_type_attribute_access():
         fixed_cost=3,
         tw_early=17,
         tw_late=19,
-        max_duration=23,
+        shift_duration=23,
         max_distance=31,
         unit_distance_cost=37,
         unit_duration_cost=41,
         start_late=18,
+        max_overtime=43,
         name="vehicle_type name",
     )
 
@@ -638,14 +658,45 @@ def test_vehicle_type_attribute_access():
     assert_equal(vehicle_type.fixed_cost, 3)
     assert_equal(vehicle_type.tw_early, 17)
     assert_equal(vehicle_type.tw_late, 19)
-    assert_equal(vehicle_type.max_duration, 23)
+    assert_equal(vehicle_type.shift_duration, 23)
     assert_equal(vehicle_type.max_distance, 31)
     assert_equal(vehicle_type.unit_distance_cost, 37)
     assert_equal(vehicle_type.unit_duration_cost, 41)
     assert_equal(vehicle_type.start_late, 18)
+    assert_equal(vehicle_type.max_overtime, 43)
 
     assert_equal(vehicle_type.name, "vehicle_type name")
     assert_equal(str(vehicle_type), "vehicle_type name")
+
+
+@pytest.mark.parametrize(
+    ("shift_duration", "max_overtime", "expected"),
+    [
+        (_INT_MAX, _INT_MAX, _INT_MAX),  # should not overflow
+        (_INT_MAX, 0, _INT_MAX),  # borderline
+        (0, _INT_MAX, _INT_MAX),  # borderline
+        (_INT_MAX - 1, 1, _INT_MAX),  # check for off-by-one
+        (1, _INT_MAX - 1, _INT_MAX),  # check for off-by-one
+        (10, 10, 20),  # completely OK, should sum both terms
+    ],
+)
+def test_vehicle_type_max_duration(
+    shift_duration: int,
+    max_overtime: int,
+    expected: int,
+):
+    """
+    Tests that the maximum duration property is correctly computed, and does
+    not over- or underflow.
+    """
+    veh_type = VehicleType(
+        shift_duration=shift_duration,
+        max_overtime=max_overtime,
+    )
+
+    assert_equal(veh_type.shift_duration, shift_duration)
+    assert_equal(veh_type.max_overtime, max_overtime)
+    assert_equal(veh_type.max_duration, expected)
 
 
 def test_vehicle_type_replace():
@@ -753,6 +804,19 @@ def test_raises_inconsistent_profiles(ok_small):
     """
     with assert_raises(ValueError):
         ok_small.replace(distance_matrices=ok_small.distance_matrices() * 2)
+
+
+def test_client_group_attribute_access():
+    """
+    Tests that the ClientGroup's attributes are correctly set and accessible.
+    """
+    group = ClientGroup(clients=[1, 2, 3], required=False, name="test")
+
+    assert_equal(group.clients, [1, 2, 3])
+    assert_equal(group.required, False)
+    assert_equal(group.mutually_exclusive, True)
+    assert_equal(group.name, "test")
+    assert_equal(str(group), "test")
 
 
 def test_raises_empty_group():
@@ -956,6 +1020,26 @@ def test_vehicle_type_eq():
     assert_(veh_type1 != 5)
 
 
+def test_client_group_eq():
+    """
+    Tests the client group's equality operator.
+    """
+    group1 = ClientGroup(clients=[1, 2], required=False)
+    group2 = ClientGroup(clients=[1, 2], required=True)
+    assert_(group1 != group2)
+
+    # This group is equivalent to group1.
+    group3 = ClientGroup(clients=[1, 2], required=False)
+    assert_(group1 == group3)
+
+    # And some things that are not client groups.
+    assert_(group1 != "text")
+    assert_(group1 != 7)
+
+    group4 = ClientGroup(clients=[1, 2], required=False, name="test")
+    assert_(group1 != group4)
+
+
 def test_eq_checks_names():
     """
     Tests that the equality operators on named objects also considers the name
@@ -965,6 +1049,7 @@ def test_eq_checks_names():
     assert_(Client(x, y, name="1") != Client(x, y, name="2"))
     assert_(Depot(x, y, name="1") != Depot(x, y, name="2"))
     assert_(VehicleType(name="1") != VehicleType(name="2"))
+    assert_(ClientGroup(name="1") != ClientGroup(name="2"))
 
 
 @pytest.mark.parametrize("cls", (Client, Depot))
@@ -981,7 +1066,7 @@ def test_pickle_client_group():
     """
     Tests that client groups can be serialised and unserialised.
     """
-    before_pickle = ClientGroup(clients=[1, 2, 3], required=False)
+    before_pickle = ClientGroup(clients=[1, 2, 3], required=False, name="test")
     bytes = pickle.dumps(before_pickle)
     assert_equal(pickle.loads(bytes), before_pickle)
 

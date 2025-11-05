@@ -7,6 +7,7 @@
 #include <fstream>
 #include <numeric>
 
+using pyvrp::Coordinate;
 using pyvrp::Cost;
 using pyvrp::Distance;
 using pyvrp::Duration;
@@ -158,8 +159,13 @@ void Route::makeSchedule(ProblemData const &data)
 
         auto const earliestStart = std::max(
             start.twEarly, std::min(trip.releaseTime(), start.twLate));
+        auto const latestStart = tripIdx == 0  // first trip also accounts for
+                                               // the latest start constraint
+                                     ? std::min(start.twLate, vehData.startLate)
+                                     : start.twLate;
+
         auto const wait = std::max<Duration>(earliestStart - now, 0);
-        auto const tw = std::max<Duration>(now - start.twLate, 0);
+        auto const tw = std::max<Duration>(now - latestStart, 0);
 
         now += wait;
         now -= tw;
@@ -213,8 +219,9 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         prizes_ += trip.prizes();
 
         auto const [x, y] = trip.centroid();
-        centroid_.first += (x * trip.size()) / size();
-        centroid_.second += (y * trip.size()) / size();
+        auto const numClients = empty() ? 1 : size();  // avoid division by zero
+        centroid_.first += (x.get() * trip.size()) / numClients;
+        centroid_.second += (y.get() * trip.size()) / numClients;
     }
 
     distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
@@ -248,6 +255,9 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     DurationSegment ds = {vehData, vehData.twLate};
     for (auto trip = trips_.rbegin(); trip != trips_.rend(); ++trip)
     {
+        if (trip != trips_.rbegin())  // need to finalise before next trip,
+            ds = ds.finaliseFront();  // unless this is the first one
+
         ProblemData::Depot const &end = data.location(trip->endDepot());
         ds = DurationSegment::merge(0, {end}, ds);
 
@@ -267,13 +277,14 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         DurationSegment const depotDS = {start};
 
         ds = DurationSegment::merge(edgeDuration, depotDS, ds);
-        ds = ds.finaliseFront();
     }
 
     ds = DurationSegment::merge(0, {vehData, vehData.startLate}, ds);
 
     duration_ = ds.duration();
-    durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_);
+    overtime_ = std::max<Duration>(duration_ - vehData.shiftDuration, 0);
+    durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_)
+                    + vehData.unitOvertimeCost * static_cast<Cost>(overtime_);
     startTime_ = ds.startEarly();
     slack_ = ds.slack();
     timeWarp_ = ds.timeWarp(vehData.maxDuration);
@@ -289,6 +300,7 @@ Route::Route(Trips trips,
              std::vector<Load> pickup,
              std::vector<Load> excessLoad,
              Duration duration,
+             Duration overtime,
              Cost durationCost,
              Duration timeWarp,
              Duration travel,
@@ -296,7 +308,7 @@ Route::Route(Trips trips,
              Duration startTime,
              Duration slack,
              Cost prizes,
-             std::pair<double, double> centroid,
+             std::pair<Coordinate, Coordinate> centroid,
              size_t vehicleType,
              size_t startDepot,
              size_t endDepot,
@@ -310,6 +322,7 @@ Route::Route(Trips trips,
       pickup_(std::move(pickup)),
       excessLoad_(std::move(excessLoad)),
       duration_(duration),
+      overtime_(overtime),
       durationCost_(durationCost),
       timeWarp_(timeWarp),
       travel_(travel),
@@ -381,6 +394,8 @@ std::vector<Load> const &Route::excessLoad() const { return excessLoad_; }
 
 Duration Route::duration() const { return duration_; }
 
+Duration Route::overtime() const { return overtime_; }
+
 Cost Route::durationCost() const { return durationCost_; }
 
 Duration Route::serviceDuration() const { return service_; }
@@ -401,7 +416,10 @@ Duration Route::releaseTime() const { return trips_[0].releaseTime(); }
 
 Cost Route::prizes() const { return prizes_; }
 
-std::pair<double, double> const &Route::centroid() const { return centroid_; }
+std::pair<Coordinate, Coordinate> const &Route::centroid() const
+{
+    return centroid_;
+}
 
 size_t Route::vehicleType() const { return vehicleType_; }
 

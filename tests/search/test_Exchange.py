@@ -356,20 +356,20 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
         (Exchange21, 5_000, -596),
     ],
 )
-def test_exchange_with_max_duration_constraint(ok_small, op, max_dur, cost):
+def test_exchange_with_duration_constraint(ok_small, op, max_dur, cost):
     """
     Tests that the exchange operators correctly evaluate time warp due to
-    maximum duration violations.
+    maximum shift duration violations.
     """
-    vehicle_type = VehicleType(2, capacity=[10], max_duration=max_dur)
+    vehicle_type = VehicleType(2, capacity=[10], shift_duration=max_dur)
     data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 
     route1 = make_search_route(data, [2, 4], idx=0)
     route2 = make_search_route(data, [1, 3], idx=1)
 
-    # Without maximum duration, route1 has a duration of 5_229 and no time warp
-    # while route2 has a duration of 5_814 and timewarp 2_087, for a net
+    # Without duration constraint, route1 has a duration of 5_229 and no time
+    # warp while route2 has a duration of 5_814 and timewarp 2_087, for a net
     # duration of 5_814 - 2_087 = 3_727 so no violation.
     # Consolidation into a single route may or may not be improving as the
     # total distance decreases but the maximum duration violation increases.
@@ -641,7 +641,7 @@ def test_empty_route_delta_cost_bug():
     # vehicle type 1 has cost 10 (5 distance, 5 time warp).
     vehicle_types = [
         VehicleType(1),
-        VehicleType(1, start_depot=0, end_depot=1, max_duration=0),
+        VehicleType(1, start_depot=0, end_depot=1, shift_duration=0),
     ]
     data = ProblemData(
         depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
@@ -661,3 +661,32 @@ def test_empty_route_delta_cost_bug():
     op = Exchange10(data)
     cost_eval = CostEvaluator([], 1, 1)
     assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
+
+
+def test_relocate_overtime(ok_small_overtime):
+    """
+    Tests a relocate move involving overtime correctly evaluates the resulting
+    (duration-based) cost delta.
+    """
+    route1 = make_search_route(ok_small_overtime, [1, 3], idx=0)
+    route2 = make_search_route(ok_small_overtime, [], idx=1)
+
+    # First route takes 5'814, of which 814 is overtime. The cost structure
+    # is 1x duration + 10x overtime.
+    assert_equal(route1.duration(), 5_814)
+    assert_equal(route1.overtime(), 814)
+    old_cost = 5_814 + 10 * 814
+
+    # The move evaluates the new routes [1] and [3]. Those have the following
+    # durations (travel to client, service, travel back to depot):
+    # - route 1: 1544 + 360 + 1726 = 3630,
+    # - route 2: 1931 + 420 + 2063 = 4414.
+    # Neither route has overtime, so these routes only have duration costs.
+    new_cost = 3630 + 4414
+
+    op = Exchange10(ok_small_overtime)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(
+        op.evaluate(route1[2], route2[0], cost_eval),
+        new_cost - old_cost,
+    )

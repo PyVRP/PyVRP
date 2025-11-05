@@ -210,14 +210,14 @@ def test_evaluate_shift_latest_start_differences(ok_small):
     assert_equal(op.evaluate(route1, route2, cost_eval), -1_000)
 
 
-def test_evaluate_max_duration_constraints(ok_small):
+def test_evaluate_shift_duration_constraints(ok_small):
     """
     Tests that SwapRoutes correctly evaluates changes in time warp due to
-    different maximum duration constraints.
+    different shift duration constraints.
     """
     data = ok_small.replace(
         vehicle_types=[
-            VehicleType(capacity=[10], max_duration=3_000),
+            VehicleType(capacity=[10], shift_duration=3_000),
             VehicleType(capacity=[10]),
         ]
     )
@@ -225,14 +225,14 @@ def test_evaluate_max_duration_constraints(ok_small):
     route1 = make_search_route(data, [1, 4], idx=0, vehicle_type=0)
     route2 = make_search_route(data, [3, 2], idx=1, vehicle_type=1)
 
-    # First route takes 5'332, which is 2'332 more than its maximum duration
-    # allows. There is no other source of time warp, so the total route time
-    # warp must be 2'332.
+    # First route takes 5'332, which is 2'332 more than its shift duration
+    # constraint allows. There is no other source of time warp, so the total
+    # route time warp must be 2'332.
     assert_equal(route1.duration(), 5_332)
     assert_equal(route1.time_warp(), 2_332)
 
-    # Second route takes 5'323, and has no maximum duration constraint. There
-    # is no other source of time warp, so total route time warp must be zero.
+    # Second route takes 5'323, and has no duration constraint. There is no
+    # other source of time warp, so total route time warp must be zero.
     assert_equal(route2.duration(), 5_323)
     assert_equal(route2.time_warp(), 0)
 

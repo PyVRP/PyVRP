@@ -46,7 +46,8 @@
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
-      "endArrowhead": null
+      "endArrowhead": null,
+      "polygon": false
     },
     {
       "id": "DuVixtN96csOCKgVLAxFF",
@@ -91,7 +92,8 @@
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
-      "endArrowhead": null
+      "endArrowhead": null,
+      "polygon": false
     },
     {
       "id": "7QPB-aMMf_s7zQ1WKgeud",
@@ -136,7 +138,8 @@
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
-      "endArrowhead": null
+      "endArrowhead": null,
+      "polygon": false
     },
     {
       "id": "VkbWSw76I8b5saWn8jC-2",
@@ -255,7 +258,8 @@
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
-      "endArrowhead": null
+      "endArrowhead": null,
+      "polygon": false
     },
     {
       "id": "VqgzuvYpf-_PidyKzs2Ay",
@@ -442,15 +446,16 @@
       "startBinding": null,
       "endBinding": null,
       "startArrowhead": null,
-      "endArrowhead": null
+      "endArrowhead": null,
+      "polygon": false
     },
     {
       "id": "Va-L5mbCKfLiGuH7pzcLn",
       "type": "text",
-      "x": 1059.9998779296875,
-      "y": 450.3333435058594,
-      "width": 385.93975830078125,
-      "height": 25,
+      "x": 988.6666259765625,
+      "y": 425,
+      "width": 549.4663085937499,
+      "height": 50,
       "angle": 0,
       "strokeColor": "#e03131",
       "backgroundColor": "#ffc9c9",
@@ -464,21 +469,21 @@
       "index": "b3Y",
       "roundness": null,
       "seed": 1994569120,
-      "version": 487,
-      "versionNonce": 1563255190,
+      "version": 754,
+      "versionNonce": 1831137164,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1732036817540,
+      "updated": 1760717237758,
       "link": null,
       "locked": false,
-      "text": "Shift takes at most max_duration time",
+      "text": "Shift takes at most shift_duration time, which can be\nextended by at most max_overtime - at additional cost",
       "fontSize": 20,
       "fontFamily": 5,
       "textAlign": "left",
       "verticalAlign": "top",
       "containerId": null,
-      "originalText": "Shift takes at most max_duration time",
-      "autoResize": true,
+      "originalText": "Shift takes at most shift_duration time, which can be extended by at most max_overtime - at additional cost",
+      "autoResize": false,
       "lineHeight": 1.25
     },
     {
@@ -597,7 +602,8 @@
     "gridSize": 20,
     "gridStep": 5,
     "gridModeEnabled": false,
-    "viewBackgroundColor": "#ffffff"
+    "viewBackgroundColor": "#ffffff",
+    "lockedMultiSelections": {}
   },
   "files": {}
 }

@@ -250,11 +250,7 @@ DurationSegment DurationSegment::finaliseFront() const
     // merge with our release times, if they are binding.
     DurationSegment const curr
         = {duration_, timeWarp_, startEarly_, startLate_, 0};
-    DurationSegment const release = {0,
-                                     0,
-                                     std::max(startEarly_, releaseTime_),
-                                     std::max(startLate_, releaseTime_),
-                                     0};
+    DurationSegment const release = {0, 0, startEarly(), startLate(), 0};
 
     return merge(0, release, curr);
 }
@@ -271,6 +267,7 @@ Duration DurationSegment::timeWarp(Duration maxDuration) const
     auto const netDuration = duration() - timeWarp;
 
     return timeWarp
+           // Additional time warp from having to wait until release time.
            + std::max<Duration>(releaseTime_ - startLate_, 0)
            // Max duration constraint applies only to net route duration,
            // subtracting existing time warp. Use ternary to avoid underflow.
@@ -279,18 +276,17 @@ Duration DurationSegment::timeWarp(Duration maxDuration) const
 
 Duration DurationSegment::startEarly() const
 {
-    // There are two cases:
-    // 1) When startLate_ < releaseTime_ there is time warp from release times.
-    //    As startEarly_ <= startLate_, we then return startLate_ to minimise
-    //    this time warp.
-    // 2) When startLate_ >= releaseTime_, there is a feasible start time that
-    //    does not cause time warp due to release times. Then we return either
-    //    the earliest start time, or the release time, whichever is larger.
-    assert(startEarly_ <= startLate_);
-    return std::max(startEarly_, std::min(startLate_, releaseTime_));
+    // When startEarly_ < releaseTime_, we need to wait until at least
+    // releaseTime_ before we can start.
+    return std::max(startEarly_, releaseTime_);
 }
 
-Duration DurationSegment::startLate() const { return startLate_; }
+Duration DurationSegment::startLate() const
+{
+    // When startLate_ < releaseTime_, we need to wait until releaseTime_ before
+    // we can start. That wait always incurs time warp.
+    return std::max(startLate_, releaseTime_);
+}
 
 Duration DurationSegment::endEarly() const
 {

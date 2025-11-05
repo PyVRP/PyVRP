@@ -1,8 +1,7 @@
 from __future__ import annotations
 
+import tomllib
 from typing import TYPE_CHECKING
-
-import tomli
 
 import pyvrp.search
 from pyvrp.IteratedLocalSearch import (
@@ -151,7 +150,7 @@ class SolveParams:
            set to ``None``.
         """
         with open(loc, "rb") as fh:
-            data = tomli.load(fh)
+            data = tomllib.load(fh)
 
         node_ops = NODE_OPERATORS
         if "node_ops" in data:

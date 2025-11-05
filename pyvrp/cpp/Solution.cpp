@@ -33,6 +33,7 @@ void Solution::evaluate(ProblemData const &data)
         distance_ += route.distance();
         distanceCost_ += route.distanceCost();
         duration_ += route.duration();
+        overtime_ += route.overtime();
         durationCost_ += route.durationCost();
         excessDistance_ += route.excessDistance();
         timeWarp_ += route.timeWarp();
@@ -98,6 +99,8 @@ Distance Solution::distance() const { return distance_; }
 Cost Solution::distanceCost() const { return distanceCost_; }
 
 Duration Solution::duration() const { return duration_; }
+
+Duration Solution::overtime() const { return overtime_; }
 
 Cost Solution::durationCost() const { return durationCost_; }
 
@@ -292,6 +295,7 @@ Solution::Solution(size_t numClients,
                    Distance distance,
                    Cost distanceCost,
                    Duration duration,
+                   Duration overtime,
                    Cost durationCost,
                    Distance excessDistance,
                    std::vector<Load> excessLoad,
@@ -307,6 +311,7 @@ Solution::Solution(size_t numClients,
       distance_(distance),
       distanceCost_(distanceCost),
       duration_(duration),
+      overtime_(overtime),
       durationCost_(durationCost),
       excessDistance_(excessDistance),
       excessLoad_(std::move(excessLoad)),

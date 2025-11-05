@@ -297,7 +297,8 @@ class _InstanceParser:
         shape = self.num_vehicles
         return self.round_func(np.broadcast_to(max_distances, shape))
 
-    def max_durations(self) -> np.ndarray:
+    def shift_durations(self) -> np.ndarray:
+        # We call this field shift duration instead of a hard maximum duration.
         if "vehicles_max_duration" not in self.instance:
             return np.full(self.num_vehicles, _INT_MAX)
 
@@ -426,7 +427,7 @@ class _ProblemDataBuilder:
             self.parser.reload_depots(),
             self.parser.vehicles_depots(),
             self.parser.max_distances(),
-            self.parser.max_durations(),
+            self.parser.shift_durations(),
             self.parser.max_reloads(),
             self.parser.fixed_costs(),
             self.parser.unit_distance_costs(),
@@ -457,7 +458,7 @@ class _ProblemDataBuilder:
                 reloads,
                 depot,
                 max_distance,
-                max_duration,
+                shift_duration,
                 max_reloads,
                 fixed_cost,
                 unit_distance_cost,
@@ -469,11 +470,11 @@ class _ProblemDataBuilder:
                 start_depot=depot,
                 end_depot=depot,
                 fixed_cost=fixed_cost,
-                # The literature specifies depot time windows. We do not have
-                # depot time windows but instead set those on the vehicles.
+                # The literature specifies depot time windows. We instead set
+                # those on the vehicles.
                 tw_early=time_windows[depot][0],
                 tw_late=time_windows[depot][1],
-                max_duration=max_duration,
+                shift_duration=shift_duration,
                 max_distance=max_distance,
                 unit_distance_cost=unit_distance_cost,
                 profile=client2profile[clients],

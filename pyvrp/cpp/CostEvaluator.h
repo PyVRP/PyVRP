@@ -7,6 +7,7 @@
 #include <cassert>
 #include <concepts>
 #include <limits>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -39,8 +40,8 @@ concept PrizeCostEvaluatable = CostEvaluatable<T> && requires(T arg) {
 template <typename T>
 concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
     { arg.route() };
-    { arg.distance() } -> std::same_as<Distance>;
-    { arg.duration() } -> std::convertible_to<std::pair<Duration, Duration>>;
+    { arg.distance() } -> std::convertible_to<std::pair<Cost, Distance>>;
+    { arg.duration() } -> std::convertible_to<std::pair<Cost, Duration>>;
     { arg.excessLoad(dimension) } -> std::same_as<Load>;
 };
 
@@ -109,6 +110,11 @@ public:
                                           Distance maxDistance) const;
 
     /**
+     * Computes the excess distance penalty for the given excess distance.
+     */
+    [[nodiscard]] inline Cost excessDistPenalty(Distance excessDistance) const;
+
+    /**
      * Computes a smoothed objective (penalised cost) for a given solution.
      */
     // The docstring above is written for Python, where we only expose this
@@ -118,27 +124,30 @@ public:
 
     /**
      * Hand-waving some details, each solution consists of a set of non-empty
-     * routes :math:`\mathcal{R}`. Each route :math:`R \in \mathcal{R}` is a
-     * sequence of edges, starting and ending at a depot. Each route :math:`R`
-     * has an assigned vehicle type, through which the route is equipped with a
-     * fixed vehicle cost :math:`f_R`, and unit distance and duration costs
-     * :math:`c^\text{distance}_R` and :math:`c^\text{duration}_R`,
-     * respectively. Let :math:`V_R = \{i : (i, j) \in R \}` be the set of
-     * locations visited by route :math:`R`, and :math:`d_R` and :math:`t_R`
-     * the total route distance and duration, respectively. The objective value
+     * routes :math:`\mathcal{R}`. Each route :math:`R \in \mathcal{R}` can be
+     * represented as a sequence of edges, starting and ending at a depot. A
+     * route :math:`R` has an assigned vehicle type that equips the route with
+     * fixed vehicle cost :math:`f_R`, and unit distance, duration and overtime
+     * costs :math:`c^\text{distance}_R`, :math:`c^\text{duration}_R`,
+     * :math:`c^\text{overtime}_R`, respectively. Let
+     * :math:`V_R = \{i : (i, j) \in R \}` be the set of locations visited by
+     * route :math:`R`, and :math:`d_R`, :math:`t_R`, and :math:`o_R` the total
+     * route distance, duration, and overtime, respectively. The objective value
      * is then given by
      *
      * .. math::
      *
      *    \sum_{R \in \mathcal{R}}
      *      \left[
-     *          f_R + c^\text{distance}_R d_R + c^\text{duration}_R t_R
+     *          f_R + c^\text{distance}_R d_R
+     *              + c^\text{duration}_R t_R
+     *              + c^\text{overtime}_R o_R
      *      \right]
      *    + \sum_{i \in V} p_i - \sum_{R \in \mathcal{R}} \sum_{i \in V_R} p_i,
      *
-     * where the first part lists each route's fixed, distance and duration
-     * costs, respectively, and the second part the uncollected prizes of
-     * unvisited clients.
+     * where the first part lists each route's fixed, distance, duration and
+     * overtime costs, respectively, and the second part the uncollected prizes
+     * of unvisited clients.
      *
      * .. note::
      *
@@ -219,6 +228,11 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance) const
 {
     auto const excessDistance = std::max<Distance>(distance - maxDistance, 0);
+    return excessDistPenalty(excessDistance);
+}
+
+Cost CostEvaluator::excessDistPenalty(Distance excessDistance) const
+{
     return static_cast<Cost>(excessDistance.get() * distPenalty_);
 }
 
@@ -264,7 +278,7 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     if (!route->empty())
     {
         out -= route->distanceCost();
-        out -= distPenalty(route->distance(), route->maxDistance());
+        out -= excessDistPenalty(route->excessDistance());
 
         if constexpr (!skipLoad)
             out -= excessLoadPenalties(route->excessLoad());
@@ -273,9 +287,12 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
         out -= twPenalty(route->timeWarp());
     }
 
-    auto const distance = proposal.distance();
-    out += route->unitDistanceCost() * static_cast<Cost>(distance);
-    out += distPenalty(distance, route->maxDistance());
+    if (route->hasDistanceCost())
+    {
+        auto const [cost, excess] = proposal.distance();
+        out += cost;
+        out += excessDistPenalty(excess);
+    }
 
     if constexpr (!skipLoad)
     {
@@ -290,9 +307,12 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
         }
     }
 
-    auto const [duration, timeWarp] = proposal.duration();
-    out += route->unitDurationCost() * static_cast<Cost>(duration);
-    out += twPenalty(timeWarp);
+    if (route->hasDurationCost())
+    {
+        auto const [cost, timeWarp] = proposal.duration();
+        out += cost;
+        out += twPenalty(timeWarp);
+    }
 
     return true;
 }
@@ -313,7 +333,7 @@ bool CostEvaluator::deltaCost(Cost &out,
     if (!uRoute->empty())
     {
         out -= uRoute->distanceCost();
-        out -= distPenalty(uRoute->distance(), uRoute->maxDistance());
+        out -= excessDistPenalty(uRoute->excessDistance());
 
         if constexpr (!skipLoad)
             out -= excessLoadPenalties(uRoute->excessLoad());
@@ -326,7 +346,7 @@ bool CostEvaluator::deltaCost(Cost &out,
     if (!vRoute->empty())
     {
         out -= vRoute->distanceCost();
-        out -= distPenalty(vRoute->distance(), vRoute->maxDistance());
+        out -= excessDistPenalty(vRoute->excessDistance());
 
         if constexpr (!skipLoad)
             out -= excessLoadPenalties(vRoute->excessLoad());
@@ -335,13 +355,19 @@ bool CostEvaluator::deltaCost(Cost &out,
         out -= twPenalty(vRoute->timeWarp());
     }
 
-    auto const uDist = uProposal.distance();
-    out += uRoute->unitDistanceCost() * static_cast<Cost>(uDist);
-    out += distPenalty(uDist, uRoute->maxDistance());
+    if (uRoute->hasDistanceCost())
+    {
+        auto const [cost, excess] = uProposal.distance();
+        out += cost;
+        out += excessDistPenalty(excess);
+    }
 
-    auto const vDist = vProposal.distance();
-    out += vRoute->unitDistanceCost() * static_cast<Cost>(vDist);
-    out += distPenalty(vDist, vRoute->maxDistance());
+    if (vRoute->hasDistanceCost())
+    {
+        auto const [cost, excess] = vProposal.distance();
+        out += cost;
+        out += excessDistPenalty(excess);
+    }
 
     if constexpr (!skipLoad)
     {
@@ -370,13 +396,19 @@ bool CostEvaluator::deltaCost(Cost &out,
         if (out >= 0)
             return false;
 
-    auto const [uDuration, uTimeWarp] = uProposal.duration();
-    out += uRoute->unitDurationCost() * static_cast<Cost>(uDuration);
-    out += twPenalty(uTimeWarp);
+    if (uRoute->hasDurationCost())
+    {
+        auto const [cost, timeWarp] = uProposal.duration();
+        out += cost;
+        out += twPenalty(timeWarp);
+    }
 
-    auto const [vDuration, vTimeWarp] = vProposal.duration();
-    out += vRoute->unitDurationCost() * static_cast<Cost>(vDuration);
-    out += twPenalty(vTimeWarp);
+    if (vRoute->hasDurationCost())
+    {
+        auto const [cost, timeWarp] = vProposal.duration();
+        out += cost;
+        out += twPenalty(timeWarp);
+    }
 
     return true;
 }
