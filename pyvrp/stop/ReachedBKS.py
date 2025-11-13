@@ -23,7 +23,7 @@ class ReachedBKS:
         """
         if bks_value <= 0:
             raise ValueError("bks_value must be a positive number.")
-        if isinstance(bks_value, float) and not bks_value.is_integer():
+        if isinstance(bks_value, float):
             msg = (
                 "bks_value must be an integer value. This is because "
                 "PyVRP internally uses integer costs."
