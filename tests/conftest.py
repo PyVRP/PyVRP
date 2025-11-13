@@ -27,8 +27,18 @@ def rc208():
     """
     Fixture that returns the RC208 VRPTW instance when called, with 100
     clients.
+    NOTE: Use DIMACS rounding for better consistency and reproducibility.
     """
     return read("data/RC208.vrp", round_func="dimacs")
+
+
+@pytest.fixture(scope="session")
+def rc208_original():
+    """
+    Fixture that returns the RC208 VRPTW instance when called, with 100
+    clients.
+    """
+    return read("data/RC208.vrp")
 
 
 @pytest.fixture(scope="session")
