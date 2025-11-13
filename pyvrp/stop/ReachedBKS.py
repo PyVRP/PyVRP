@@ -6,15 +6,20 @@ class ReachedBKS:
     in scenarios where the optimal solution is known beforehand, allowing
     the algorithm to stop early and save computational resources.
 
-    Attributes:
-        bks_value (float): The value of the best known solution.
+    Parameters
+    ----------
+    bks_value
+        The objective value of the best known solution.
     """
 
     def __init__(self, bks_value: int):
         """Initializes the ReachedBKS stopping criterion.
 
-        Args:
-            bks_value (float): The objective value of the best known solution.
+        Parameters
+        ----------
+        bks_value
+            The objective value of the best known solution. Must be a 
+            positive integer (PyVRP uses integer costs internally).
         """
         if bks_value <= 0:
             raise ValueError("bks_value must be a positive number.")
