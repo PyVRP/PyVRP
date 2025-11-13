@@ -40,3 +40,8 @@ All stopping criteria implement the :class:`~pyvrp.stop.StoppingCriterion.Stoppi
 
    .. autoclass:: NoImprovement
       :members:
+
+.. automodule:: pyvrp.stop.ReachedBKS
+
+   .. autoclass:: ReachedBKS
+      :members:

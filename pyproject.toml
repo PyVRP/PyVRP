@@ -111,6 +111,9 @@ addopts = [
     "--numprocesses=auto",
 ]
 testpaths = "tests"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
 
 
 [tool.coverage.run]
