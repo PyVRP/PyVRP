@@ -11,12 +11,14 @@ def test_zero_bks_value_raises_error():
     with pytest.raises(ValueError):
         ReachedBKS(0)
 
+
 def test_throw_error_on_float_bks_value():
     """
     Test that a non-integer float BKS value raises ValueError.
     """
     with pytest.raises(ValueError):
-        ReachedBKS(123.45) # type: ignore
+        ReachedBKS(123.45)  # type: ignore
+
 
 def test_solve_on_trivial_instance(ok_small):
     """
@@ -26,9 +28,10 @@ def test_solve_on_trivial_instance(ok_small):
     stop_criterion = ReachedBKS(bks_value)
 
     res = solve(ok_small, stop=stop_criterion, seed=0)
-    
+
     # The best found solution is found in 0 iterations
     assert res.num_iterations == 0
+
 
 @pytest.mark.slow
 def test_solve_on_solomon_instance_dimacs(rc208):
@@ -40,8 +43,9 @@ def test_solve_on_solomon_instance_dimacs(rc208):
     stop_criterion = ReachedBKS(bks_value)
 
     res = solve(rc208, stop=stop_criterion, seed=0)
-    
+
     assert res.num_iterations == 1697
+
 
 @pytest.mark.slow
 def test_solve_on_solomon_instance_original(rc208_original):
@@ -54,5 +58,5 @@ def test_solve_on_solomon_instance_original(rc208_original):
     stop_criterion = ReachedBKS(bks_value)
 
     res = solve(rc208_original, stop=stop_criterion, seed=0)
-    
+
     assert res.num_iterations == 4705

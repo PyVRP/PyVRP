@@ -18,7 +18,7 @@ class ReachedBKS:
         Parameters
         ----------
         bks_value
-            The objective value of the best known solution. Must be a 
+            The objective value of the best known solution. Must be a
             positive integer (PyVRP uses integer costs internally).
         """
         if bks_value <= 0:
