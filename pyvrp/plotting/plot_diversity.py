@@ -1,10 +1,17 @@
-import matplotlib.pyplot as plt
+import contextlib
+
+with contextlib.suppress(ImportError):
+    import matplotlib.pyplot as plt
+
 import numpy as np
 
 from pyvrp.Result import Result
 
+from .raise_if_no_matplotlib import raise_if_no_matplotlib
 
-def plot_diversity(result: Result, ax: plt.Axes | None = None):
+
+@raise_if_no_matplotlib
+def plot_diversity(result: Result, ax: "plt.Axes | None" = None):
     """
     Plots population diversity statistics.
 

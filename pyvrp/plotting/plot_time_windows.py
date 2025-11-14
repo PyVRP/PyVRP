@@ -1,14 +1,21 @@
-import matplotlib.pyplot as plt
+import contextlib
+
 import numpy as np
-from matplotlib.collections import LineCollection
+
+with contextlib.suppress(ImportError):
+    import matplotlib.pyplot as plt
+    from matplotlib.collections import LineCollection
 
 from pyvrp import ProblemData
 
+from .raise_if_no_matplotlib import raise_if_no_matplotlib
 
+
+@raise_if_no_matplotlib
 def plot_time_windows(
     data: ProblemData,
     title: str = "Time windows",
-    ax: plt.Axes | None = None,
+    ax: "plt.Axes | None" = None,
 ):
     """
     Plots client time windows, as vertical bars sorted by time window.
