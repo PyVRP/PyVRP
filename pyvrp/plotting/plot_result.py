@@ -1,4 +1,7 @@
-import matplotlib.pyplot as plt
+import contextlib
+
+with contextlib.suppress(ImportError):
+    import matplotlib.pyplot as plt
 
 from pyvrp import ProblemData
 from pyvrp.Result import Result
@@ -7,9 +10,12 @@ from pyvrp.plotting.plot_objectives import plot_objectives
 from pyvrp.plotting.plot_runtimes import plot_runtimes
 from pyvrp.plotting.plot_solution import plot_solution
 
+from .raise_if_no_matplotlib import raise_if_no_matplotlib
 
+
+@raise_if_no_matplotlib
 def plot_result(
-    result: Result, data: ProblemData, fig: plt.Figure | None = None
+    result: Result, data: ProblemData, fig: "plt.Figure | None" = None
 ):
     """
     Plots the results of a run, including the best solution and detailed

@@ -1,12 +1,18 @@
-import matplotlib.pyplot as plt
+import contextlib
+
+with contextlib.suppress(ImportError):
+    import matplotlib.pyplot as plt
 
 from pyvrp import ProblemData
 from pyvrp.plotting.plot_coordinates import plot_coordinates
 from pyvrp.plotting.plot_demands import plot_demands
 from pyvrp.plotting.plot_time_windows import plot_time_windows
 
+from .raise_if_no_matplotlib import raise_if_no_matplotlib
 
-def plot_instance(data: ProblemData, fig: plt.Figure | None = None):
+
+@raise_if_no_matplotlib
+def plot_instance(data: ProblemData, fig: "plt.Figure | None" = None):
     """
     Plots client coordinate, time window and demand data of the given instance.
 
