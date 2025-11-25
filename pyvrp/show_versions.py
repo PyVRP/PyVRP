@@ -1,5 +1,8 @@
+import logging
 import sys
 from importlib.metadata import version
+
+logger = logging.getLogger(__name__)
 
 
 def show_versions():
@@ -25,11 +28,11 @@ def show_versions():
     """
     python_version = ".".join(map(str, sys.version_info[:3]))
 
-    print("INSTALLED VERSIONS")
-    print("------------------")
-    print(f"     pyvrp: {version('pyvrp')}")
-    print(f"     numpy: {version('numpy')}")
-    print(f"matplotlib: {version('matplotlib')}")
-    print(f"    vrplib: {version('vrplib')}")
-    print(f"      tqdm: {version('tqdm')}")
-    print(f"    Python: {python_version}")
+    logger.info("INSTALLED VERSIONS")
+    logger.info("------------------")
+    logger.info(f"     pyvrp: {version('pyvrp')}")
+    logger.info(f"     numpy: {version('numpy')}")
+    logger.info(f"matplotlib: {version('matplotlib')}")
+    logger.info(f"    vrplib: {version('vrplib')}")
+    logger.info(f"      tqdm: {version('tqdm')}")
+    logger.info(f"    Python: {python_version}")
