@@ -61,7 +61,9 @@ def test_end(ok_small, caplog):
     assert_(str(round(res.cost())) in out)
     assert_(str(res.num_iterations) in out)
     assert_(str(round(res.runtime)) in out)
-    assert_(res.summary() in out)
+
+    for line in res.summary().splitlines():
+        assert_(line in out)
 
 
 def test_restart(caplog):
