@@ -1,3 +1,6 @@
+import logging
+import sys
+
 from .GeneticAlgorithm import GeneticAlgorithm as GeneticAlgorithm
 from .GeneticAlgorithm import GeneticAlgorithmParams as GeneticAlgorithmParams
 from .Model import Edge as Edge
@@ -27,3 +30,10 @@ from .read import read_solution as read_solution
 from .show_versions import show_versions as show_versions
 from .solve import SolveParams as SolveParams
 from .solve import solve as solve
+
+# Sets up basic logging to stdout for PyVRP, of INFO and up. This replaces
+# previous print() statements, and allows easier integration into calling
+# code's own logging configuration.
+_logger = logging.getLogger("pyvrp")
+_logger.addHandler(logging.StreamHandler(stream=sys.stdout))
+_logger.setLevel(logging.INFO)
