@@ -142,7 +142,8 @@ class ProgressPrinter:
                 summary=result.summary(),
             )
 
-            logger.info(msg)
+            for line in msg.splitlines():
+                logger.info(line)
 
     def restart(self):
         """
