@@ -62,4 +62,4 @@ jobs:
         run: ls -la dist/
       - name: Deploy to PyPI
         run: |
-          uv publish --token ${{ secrets.PYPI_TOKEN }}
+          uv publish
