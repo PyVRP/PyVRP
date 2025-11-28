@@ -40,13 +40,13 @@ These include:
 - A notebook implementing a `solve` method using PyVRP's components, [here][9].
   This notebook is a great way to dive deeper into how PyVRP works internally.
 
-If you are new to vehicle routing or metaheuristics, you might benefit from first reading the [introduction to VRP][6] and [introduction to HGS][7] pages.
+If you are new to vehicle routing or metaheuristics, you might also benefit from reading the [introduction to VRP][6] and [introduction to HGS][7] pages.
 
 ### Getting help
 
 Feel free to open an issue or a new discussion thread here on GitHub.
 When writing your issue or discussion, please follow the instructions [here][3].
-For professional support, contact us at info@routinglab.tech.
+For professional support, contact us at [info@routinglab.tech](mailto:info@routinglab.tech).
 
 ### Contributing
 
