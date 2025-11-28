@@ -2,7 +2,7 @@
    :alt: PyVRP logo
    :figwidth: 100%
 
-PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
+PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver developed by `RoutingLab <https://routinglab.tech>`_.
 It currently supports VRPs with:
 
 * Pickups and deliveries between depots and clients (capacitated VRP, VRP with simultaneous pickup and delivery, VRP with backhaul);
@@ -20,10 +20,9 @@ It can be installed through *pip* via
 
    pip install pyvrp
 
-.. hint::
+.. tip::
 
-    If you are new to vehicle routing or metaheuristics, you might benefit from first reading the :doc:`introduction to VRP <setup/introduction_to_vrp>`, :doc:`introduction to HGS <setup/introduction_to_hgs>`, and :doc:`tutorial <../examples/quick_tutorial>` pages.
-    To set up an installation from source, or to run the examples listed below yourself, please have a look at the :doc:`installation instructions <setup/installation>`.
+   Looking for professional support? `RoutingLab <https://routinglab.tech>`_ provides consulting, custom development, and FastVRP - a production-ready route optimisation API built on PyVRP.
 
 Contents
 --------
