@@ -1,14 +1,21 @@
-import matplotlib.pyplot as plt
+import contextlib
+
+with contextlib.suppress(ImportError):
+    import matplotlib.pyplot as plt
+
 import numpy as np
 
 from pyvrp import ProblemData
 
+from .raise_if_no_matplotlib import raise_if_no_matplotlib
 
+
+@raise_if_no_matplotlib
 def plot_demands(
     data: ProblemData,
     dimension: int = 0,
     title: str | None = None,
-    ax: plt.Axes | None = None,
+    ax: "plt.Axes | None" = None,
 ):
     """
     Plots demands for clients, as vertical bars sorted by demand.

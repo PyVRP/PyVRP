@@ -1,14 +1,21 @@
-import matplotlib.pyplot as plt
+import contextlib
+
+with contextlib.suppress(ImportError):
+    import matplotlib.pyplot as plt
+
 import numpy as np
 
 from pyvrp import ProblemData, Solution
 
+from .raise_if_no_matplotlib import raise_if_no_matplotlib
 
+
+@raise_if_no_matplotlib
 def plot_solution(
     solution: Solution,
     data: ProblemData,
     plot_clients: bool = False,
-    ax: plt.Axes | None = None,
+    ax: "plt.Axes | None" = None,
 ):
     """
     Plots the given solution.
