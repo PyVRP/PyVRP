@@ -1,17 +1,24 @@
-import matplotlib.pyplot as plt
+import contextlib
+
+with contextlib.suppress(ImportError):
+    import matplotlib.pyplot as plt
+    from matplotlib.collections import LineCollection
+
 import numpy as np
-from matplotlib.collections import LineCollection
 
 from pyvrp import Client, ProblemData, Route
 
+from .raise_if_no_matplotlib import raise_if_no_matplotlib
 
+
+@raise_if_no_matplotlib
 def plot_route_schedule(
     data: ProblemData,
     route: Route,
     load_dimension: int = 0,
     legend: bool = True,
     title: str | None = None,
-    ax: plt.Axes | None = None,
+    ax: "plt.Axes | None" = None,
 ):
     """
     Plots a route schedule. This function plots multiple time statistics
