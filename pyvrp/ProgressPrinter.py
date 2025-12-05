@@ -1,3 +1,4 @@
+import logging
 from importlib.metadata import version
 from time import perf_counter
 
@@ -5,6 +6,9 @@ from pyvrp._pyvrp import ProblemData
 
 from .Result import Result
 from .Statistics import Statistics
+
+logger = logging.getLogger(__name__)
+
 
 # Templates for various different outputs.
 _ITERATION = (
@@ -87,7 +91,8 @@ class ProgressPrinter:
             infeas_avg=round(infeas.avg_cost) if infeas.size else "-",
             infeas_best=round(infeas.best_cost) if infeas.size else "-",
         )
-        print(msg)
+
+        logger.info(msg)
 
         self._last_print_time = curr_time
         if feas.best_cost < self._best_cost:
@@ -120,7 +125,9 @@ class ProgressPrinter:
             vehicle_text=vehicle_text,
             vehicle_type_text=vehicle_type_text,
         )
-        print(msg)
+
+        for line in msg.splitlines():
+            logger.info(line)
 
     def end(self, result: Result):
         """
@@ -134,7 +141,9 @@ class ProgressPrinter:
                 best_cost=round(result.cost(), 2),
                 summary=result.summary(),
             )
-            print(msg)
+
+            for line in msg.splitlines():
+                logger.info(line)
 
     def restart(self):
         """
@@ -142,4 +151,4 @@ class ProgressPrinter:
         the search.
         """
         if self._print:
-            print(_RESTART)
+            logger.info(_RESTART)

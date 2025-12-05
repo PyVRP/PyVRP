@@ -22,7 +22,7 @@ def test_raises_negative_display_interval():
         ProgressPrinter(True, -1.0)
 
 
-def test_start(ok_small, capsys):
+def test_start(ok_small, caplog):
     """
     Tests that the progress printer outputs some statistics about the given
     instance when calling start.
@@ -30,24 +30,23 @@ def test_start(ok_small, capsys):
     printer = ProgressPrinter(should_print=True, display_interval=1.0)
     printer.start(ok_small)
 
-    out = capsys.readouterr().out
+    out = caplog.text
     assert_(f"{ok_small.num_depots} depot" in out)
     assert_(f"{ok_small.num_clients} clients" in out)
     assert_(f"{ok_small.num_vehicles} vehicles" in out)
 
 
-def test_start_multiple_depot_plural(ok_small_multi_depot, capsys):
+def test_start_multiple_depot_plural(ok_small_multi_depot, caplog):
     """
     Tests that "depots" is plural when there are multiple depots.
     """
     printer = ProgressPrinter(should_print=True, display_interval=1.0)
     printer.start(ok_small_multi_depot)
 
-    out = capsys.readouterr().out
-    assert_(f"{ok_small_multi_depot.num_depots} depots" in out)
+    assert_(f"{ok_small_multi_depot.num_depots} depots" in caplog.text)
 
 
-def test_end(ok_small, capsys):
+def test_end(ok_small, caplog):
     """
     Tests that the progress printer outputs some summary statistics about the
     best-found solution and solver run when calling end.
@@ -58,26 +57,28 @@ def test_end(ok_small, capsys):
     printer = ProgressPrinter(should_print=True, display_interval=1.0)
     printer.end(res)
 
-    out = capsys.readouterr().out
+    out = caplog.text
     assert_(str(round(res.cost())) in out)
     assert_(str(res.num_iterations) in out)
     assert_(str(round(res.runtime)) in out)
-    assert_(res.summary() in out)
+
+    for line in res.summary().splitlines():
+        assert_(line in out)
 
 
-def test_restart(capsys):
+def test_restart(caplog):
     """
     Tests that calling restart outputs a line indicating such.
     """
     printer = ProgressPrinter(should_print=True, display_interval=1.0)
     printer.restart()
 
-    out = capsys.readouterr().out
+    out = caplog.text
     assert_("R" in out)
     assert_("restart" in out)
 
 
-def test_iteration(ok_small, capsys):
+def test_iteration(ok_small, caplog):
     """
     Tests that calling iteration prints a line about the current feasible and
     infeasible populations.
@@ -98,7 +99,7 @@ def test_iteration(ok_small, capsys):
     printer = ProgressPrinter(should_print=True, display_interval=0.0)
 
     printer.iteration(stats)
-    out = capsys.readouterr().out
+    out = caplog.text
     assert_(stats.num_iterations, 1)
 
     # Statistics about solver progress should be printed.
@@ -118,7 +119,7 @@ def test_iteration(ok_small, capsys):
     assert_(str(round(infeas.best_cost)) in out)
 
 
-def test_should_print_false_no_output(ok_small, capsys):
+def test_should_print_false_no_output(ok_small, caplog):
     """
     Tests that disabling printing works.
     """
@@ -148,8 +149,7 @@ def test_should_print_false_no_output(ok_small, capsys):
     printer.restart()
     printer.end(result=Result(best, stats, 25, 0.05))
 
-    out = capsys.readouterr().out
-    assert_equal(out, "")
+    assert_equal(caplog.text, "")
 
 
 @pytest.mark.parametrize(
@@ -159,7 +159,7 @@ def test_should_print_false_no_output(ok_small, capsys):
         [[1, 2, 3, 4]],  # infeasible
     ],
 )
-def test_print_dash_when_subpopulation_is_empty(ok_small, routes, capsys):
+def test_print_dash_when_subpopulation_is_empty(ok_small, routes, caplog):
     """
     Tests that a "-" is printed as cost if one of the subpopulations is empty.
     """
@@ -177,5 +177,4 @@ def test_print_dash_when_subpopulation_is_empty(ok_small, routes, capsys):
 
     # Population contains either one feasible or one infeasible solution, so
     # the costs of the empty subpopulation should be printed as "-".
-    out = capsys.readouterr().out
-    assert_("-" in out)
+    assert_("-" in caplog.text)

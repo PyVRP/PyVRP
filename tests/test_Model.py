@@ -370,7 +370,7 @@ def test_model_and_solve(ok_small):
     assert_equal(res.cost(), 9_155)
 
 
-def test_model_solve_display_argument(ok_small, capsys):
+def test_model_solve_display_argument(ok_small, caplog):
     """
     Tests that solving a model displays solver progress when the ``display``
     argument is ``True``.
@@ -380,12 +380,12 @@ def test_model_solve_display_argument(ok_small, capsys):
     # First solve with display turned off. We should not see any output in this
     # case.
     model.solve(stop=MaxIterations(10), seed=0, display=False)
-    printed = capsys.readouterr().out
+    printed = caplog.text
     assert_equal(printed, "")
 
     # Now solve with display turned on. We should see output now.
     res = model.solve(stop=MaxIterations(10), seed=0, display=True)
-    printed = capsys.readouterr().out
+    printed = caplog.text
 
     # Check that some of the header data is in the output.
     assert_("PyVRP" in printed)
