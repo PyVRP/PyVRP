@@ -277,8 +277,36 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         update(route, route);
     }
 
-    if (!U->route())
+    if (uData.required && !U->route())
+    {
         insert(U, costEvaluator, uData.required);
+        return;
+    }
+
+    for (auto const vClient : neighbours_[U->client()])
+    {
+        auto *V = &nodes[vClient];
+
+        if (!V->route())
+            continue;
+
+        if (insertCost(U, V, data, costEvaluator) < 0)
+        {
+            V->route()->insert(V->idx() + 1, U);
+            update(V->route(), V->route());
+            return;
+        }
+
+        if (inplaceCost(U, V, data, costEvaluator) < 0)
+        {
+            auto *route = V->route();
+            auto const idx = V->idx();
+            route->remove(idx);
+            route->insert(idx, U);
+            update(route, route);
+            return;
+        }
+    }
 }
 
 void LocalSearch::applyGroupMoves(Route::Node *U,
