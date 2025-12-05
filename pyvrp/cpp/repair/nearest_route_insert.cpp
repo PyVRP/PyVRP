@@ -42,13 +42,15 @@ pyvrp::repair::nearestRouteInsert(std::vector<SolRoute> const &solRoutes,
             if (b.empty() && !a.empty())
                 return true;
 
-            auto const x = static_cast<double>(clientData.x);
-            auto const y = static_cast<double>(clientData.y);
+            auto const x = clientData.x;
+            auto const y = clientData.y;
 
             auto const [aX, aY] = a.centroid();
             auto const [bX, bY] = b.centroid();
 
-            return std::hypot(x - aX, y - aY) < std::hypot(x - bX, y - bY);
+            auto const distA = std::hypot((x - aX).get(), (y - aY).get());
+            auto const distB = std::hypot((x - bX).get(), (y - bY).get());
+            return distA < distB;
         };
 
         auto &route = *std::min_element(routes.begin(), routes.end(), cmp);

@@ -116,6 +116,7 @@ private:
     std::vector<Load> pickup_;     // Total pickup amount gathered on this route
     std::vector<Load> excessLoad_;  // Excess pickup or delivery demand
     Duration duration_ = 0;         // Total duration of this route
+    Duration overtime_ = 0;         // Total overtime of this route
     Cost durationCost_ = 0;         // Total cost of route duration
     Duration timeWarp_ = 0;         // Total time warp on this route
     Duration travel_ = 0;           // Total *travel* duration on this route
@@ -124,10 +125,10 @@ private:
     Duration slack_ = 0;            // Total time slack on this route
     Cost prizes_ = 0;               // Total value of prizes on this route
 
-    std::pair<double, double> centroid_;  // Route center
-    VehicleType vehicleType_;             // Type of vehicle
-    Depot startDepot_;                    // Assigned start depot
-    Depot endDepot_;                      // Assigned end depot
+    std::pair<Coordinate, Coordinate> centroid_;  // Route center
+    VehicleType vehicleType_;                     // Type of vehicle
+    Depot startDepot_;                            // Assigned start depot
+    Depot endDepot_;                              // Assigned end depot
 
 public:
     [[nodiscard]] bool empty() const;
@@ -204,12 +205,17 @@ public:
     [[nodiscard]] std::vector<Load> const &excessLoad() const;
 
     /**
-     * Total route duration, including travel, service and waiting time.
+     * Total route duration, including travel, service, waiting and overtime.
      */
     [[nodiscard]] Duration duration() const;
 
     /**
-     * Total cost of the duration of this route.
+     * Overtime incurred on this route.
+     */
+    [[nodiscard]] Duration overtime() const;
+
+    /**
+     * Total cost of the duration of this route, including overtime.
      */
     [[nodiscard]] Cost durationCost() const;
 
@@ -281,7 +287,7 @@ public:
     /**
      * Center point of the client locations on this route.
      */
-    [[nodiscard]] std::pair<double, double> const &centroid() const;
+    [[nodiscard]] std::pair<Coordinate, Coordinate> const &centroid() const;
 
     /**
      * Index of the type of vehicle used on this route.
@@ -342,6 +348,7 @@ public:
           std::vector<Load> pickup,
           std::vector<Load> excessLoad,
           Duration duration,
+          Duration overtime,
           Cost durationCost,
           Duration timeWarp,
           Duration travel,
@@ -349,7 +356,7 @@ public:
           Duration startTime,
           Duration slack,
           Cost prizes,
-          std::pair<double, double> centroid,
+          std::pair<Coordinate, Coordinate> centroid,
           VehicleType vehicleType,
           Depot startDepot,
           Depot endDepot,

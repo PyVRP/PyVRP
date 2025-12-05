@@ -6,8 +6,7 @@ import os
 import shutil
 import subprocess
 import sys
-
-import tomli
+import tomllib
 
 # -- Project information
 sys.path.insert(0, os.path.abspath("../../"))
@@ -20,7 +19,7 @@ repo_url = "https://github.com/PyVRP/PyVRP/"
 copyright = f"2022 - {now.year}, {authors}"
 
 with open("../../pyproject.toml", "rb") as fh:
-    pyproj = tomli.load(fh)
+    pyproj = tomllib.load(fh)
     release = version = pyproj["project"]["version"]
 
 with open("versions.json") as fh:  # type: ignore
@@ -133,6 +132,7 @@ html_theme_options = {
     "features": [
         "navigation.expand",
         "navigation.top",
+        "content.code.copy",
     ],
     "palette": [
         {

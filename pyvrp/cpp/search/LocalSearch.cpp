@@ -150,13 +150,13 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
-    std::shuffle(orderNodes.begin(), orderNodes.end(), rng);
-    std::shuffle(nodeOps.begin(), nodeOps.end(), rng);
+    rng.shuffle(orderNodes.begin(), orderNodes.end());
+    rng.shuffle(nodeOps.begin(), nodeOps.end());
 
-    std::shuffle(orderRoutes.begin(), orderRoutes.end(), rng);
-    std::shuffle(routeOps.begin(), routeOps.end(), rng);
+    rng.shuffle(orderRoutes.begin(), orderRoutes.end());
+    rng.shuffle(routeOps.begin(), routeOps.end());
 
-    std::shuffle(orderVehTypes.begin(), orderVehTypes.end(), rng);
+    rng.shuffle(orderVehTypes.begin(), orderVehTypes.end());
 }
 
 bool LocalSearch::applyNodeOps(Route::Node *U,

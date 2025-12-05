@@ -245,19 +245,19 @@ def test_route_release_time():
     assert_(routes[1].start_time() > routes[1].release_time())
 
 
-def test_release_time_and_max_duration():
+def test_release_time_and_shift_duration():
     """
-    Tests the interaction of release times and maximum duration constraints. In
-    particular, we verify that the maximum duration applies to the time after
-    the vehicle starts their route, and that the release time only shifts
-    that starting moment - it does not affect the overall maximum duration.
+    Tests the interaction of release times and shift duration constraints. In
+    particular, we verify that the shift duration applies to the time after the
+    vehicle starts their route, and that the release time only shifts that
+    starting moment - it does not affect the overall maximum duration.
     """
     ok_small = read("data/OkSmallReleaseTimes.txt")
-    vehicle_type = VehicleType(3, [10], max_duration=5_000)
+    vehicle_type = VehicleType(3, [10], shift_duration=5_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
     # This route has a release time of 5000, but should not start until much
-    # later because of the time windows. The vehicle's maximum duration is also
+    # later because of the time windows. The vehicle's shift duration is also
     # 5000, but this is violated by 998 units of time. The route is otherwise
     # feasible, so there is exactly 998 time warp.
     route = Route(data, [2, 3, 4], 0)
@@ -865,3 +865,35 @@ def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
     route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
     assert_equal([client for client in route], [1, 2])
     assert_equal(route.visits(), [1, 2])
+
+
+def test_route_release_time_after_vehicle_start_late():
+    """
+    Tests that a route time warps back to the vehicle's latest start if that
+    latest start is before the first trip's release time.
+    """
+    data = read("data/OkSmallReleaseTimes.txt")
+
+    new_type = data.vehicle_type(0).replace(start_late=10_000)
+    data = data.replace(vehicle_types=[new_type])
+    route = Route(data, [3, 1], 0)
+
+    # Route starts at 20_000 due to release time. We immediately time warp back
+    # to 10_000 for the vehicle's latest start constraint. From there, we visit
+    # 3 and 1 as regular, without accruing any additional time warp.
+    assert_equal(route.start_time(), 20_000)
+    assert_equal(route.release_time(), 20_000)
+    assert_equal(route.time_warp(), 10_000)
+    assert_equal(route.duration(), 7_686)
+
+    # Sanity check that all time warp is also accounted for in the schedule.
+    assert_equal(sum(v.time_warp for v in route.schedule()), route.time_warp())
+
+
+def test_zero_centroid_empty_routes(ok_small):
+    """
+    Tests that the centroid for empty routes is (0, 0). Previously, this
+    returned NaN due to a divide-by-zero bug. See #908 for details.
+    """
+    route = Route(ok_small, [], 0)
+    assert_equal(route.centroid(), (0.0, 0.0))

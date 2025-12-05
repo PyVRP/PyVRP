@@ -5,6 +5,11 @@
         "aliases": []
     },
     {
+        "version": "https://pyvrp.github.io/v0.12.0",
+        "title": "v0.12.0",
+        "aliases": []
+    },
+    {
         "version": "https://pyvrp.github.io/v0.11.0",
         "title": "v0.11.0",
         "aliases": []

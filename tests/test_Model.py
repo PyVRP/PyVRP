@@ -159,9 +159,10 @@ def test_add_vehicle_type():
         fixed_cost=1_001,
         tw_early=17,
         tw_late=19,
-        max_duration=93,
+        shift_duration=93,
         max_distance=97,
         start_late=18,
+        max_overtime=43,
     )
 
     assert_equal(vehicle_type.num_available, 10)
@@ -170,8 +171,9 @@ def test_add_vehicle_type():
     assert_equal(vehicle_type.tw_early, 17)
     assert_equal(vehicle_type.start_late, 18)
     assert_equal(vehicle_type.tw_late, 19)
-    assert_equal(vehicle_type.max_duration, 93)
+    assert_equal(vehicle_type.shift_duration, 93)
     assert_equal(vehicle_type.max_distance, 97)
+    assert_equal(vehicle_type.max_overtime, 43)
 
 
 def test_add_vehicle_type_default_depots():
@@ -217,6 +219,34 @@ def test_add_vehicle_type_raises_for_unknown_depot():
 
     with assert_raises(ValueError):
         m.add_vehicle_type(end_depot=depot)
+
+
+def test_get_clients():
+    """
+    Tests the ``clients`` property.
+    """
+    model = Model()
+    client1 = model.add_client(0, 0)
+    client2 = model.add_client(0, 0)
+
+    # Test that we can get the clients by index, or as a list.
+    assert_equal(model.clients[0], client1)
+    assert_equal(model.clients[1], client2)
+    assert_equal(model.clients, [client1, client2])
+
+
+def test_get_depots():
+    """
+    Tests the ``depots`` property.
+    """
+    model = Model()
+    depot1 = model.add_depot(0, 0)
+    depot2 = model.add_depot(0, 0)
+
+    # Test that we can get the depots by index, or as a list.
+    assert_equal(model.depots[0], depot1)
+    assert_equal(model.depots[1], depot2)
+    assert_equal(model.depots, [depot1, depot2])
 
 
 def test_get_locations():
@@ -340,7 +370,7 @@ def test_model_and_solve(ok_small):
     assert_equal(res.cost(), 9_155)
 
 
-def test_model_solve_display_argument(ok_small, capsys):
+def test_model_solve_display_argument(ok_small, caplog):
     """
     Tests that solving a model displays solver progress when the ``display``
     argument is ``True``.
@@ -350,12 +380,12 @@ def test_model_solve_display_argument(ok_small, capsys):
     # First solve with display turned off. We should not see any output in this
     # case.
     model.solve(stop=MaxIterations(10), seed=0, display=False)
-    printed = capsys.readouterr().out
+    printed = caplog.text
     assert_equal(printed, "")
 
     # Now solve with display turned on. We should see output now.
     res = model.solve(stop=MaxIterations(10), seed=0, display=True)
-    printed = capsys.readouterr().out
+    printed = caplog.text
 
     # Check that some of the header data is in the output.
     assert_("PyVRP" in printed)
@@ -550,7 +580,7 @@ def test_model_solves_line_instance_with_multiple_depots():
         for to in m.locations:
             m.add_edge(frm, to, distance=abs(frm.x - to.x))
 
-    res = m.solve(stop=MaxIterations(100), seed=3)
+    res = m.solve(stop=MaxIterations(100))
     assert_(res.is_feasible())
 
     # Test that there are two routes, with the clients closest to depot 0
@@ -620,7 +650,7 @@ def test_model_solves_instances_with_pickups_and_deliveries(
     for frm in m.locations:
         for to in m.locations:
             manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
-            m.add_edge(frm, to, distance=manhattan)
+            m.add_edge(frm, to, distance=int(manhattan))
 
     res = m.solve(stop=MaxIterations(100))
     route = res.best.routes()[0]
@@ -657,8 +687,8 @@ def test_from_data_client_group(ok_small):
 
     # Test that the clients have been correctly registered, and that there is
     # a client group in the model.
-    assert_equal(model.locations[1].group, 0)
-    assert_equal(model.locations[2].group, 0)
+    assert_equal(model.clients[0].group, 0)
+    assert_equal(model.clients[1].group, 0)
     assert_equal(len(model.groups), 1)
 
     # Test that that group actually contains the clients.
@@ -899,7 +929,7 @@ def test_model_solves_instances_with_multiple_profiles():
     # The best we can do is have the first vehicle visit the first client (no
     # distance), and the second vehicle the second client (also no distance).
     # The resulting cost is thus zero.
-    res = m.solve(stop=MaxIterations(10))
+    res = m.solve(stop=MaxIterations(10), seed=1)
     assert_equal(res.cost(), 0)
 
     route1, route2 = res.best.routes()

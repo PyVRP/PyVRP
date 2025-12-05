@@ -110,6 +110,20 @@ class Model:
         self._vehicle_types: list[VehicleType] = []
 
     @property
+    def clients(self) -> list[Client]:
+        """
+        Returns all clients currently in the model.
+        """
+        return self._clients
+
+    @property
+    def depots(self) -> list[Depot]:
+        """
+        Returns all depots currently in the model.
+        """
+        return self._depots
+
+    @property
     def locations(self) -> list[Client | Depot]:
         """
         Returns all locations (depots and clients) in the current model. The
@@ -146,6 +160,11 @@ class Model:
     def from_data(cls, data: ProblemData) -> "Model":
         """
         Constructs a model instance from the given data.
+
+        .. tip::
+           Only use this method if you intend to change the data using the
+           model interface. If you only want to solve the given data instance,
+           it is faster to directly call :meth:`~pyvrp.solve.solve`.
 
         Parameters
         ----------
@@ -187,8 +206,8 @@ class Model:
 
     def add_client(
         self,
-        x: int,
-        y: int,
+        x: float,
+        y: float,
         delivery: int | list[int] = [],
         pickup: int | list[int] = [],
         service_duration: int = 0,
@@ -246,19 +265,21 @@ class Model:
         self._clients.append(client)
         return client
 
-    def add_client_group(self, required: bool = True) -> ClientGroup:
+    def add_client_group(
+        self, required: bool = True, *, name: str = ""
+    ) -> ClientGroup:
         """
         Adds a new, possibly optional, client group to the model. Returns the
         created group.
         """
-        group = ClientGroup(required=required)
+        group = ClientGroup(required=required, name=name)
         self._groups.append(group)
         return group
 
     def add_depot(
         self,
-        x: int,
-        y: int,
+        x: float,
+        y: float,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
         *,
@@ -332,7 +353,7 @@ class Model:
         fixed_cost: int = 0,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
-        max_duration: int = np.iinfo(np.int64).max,
+        shift_duration: int = np.iinfo(np.int64).max,
         max_distance: int = np.iinfo(np.int64).max,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
@@ -341,6 +362,8 @@ class Model:
         initial_load: int | list[int] = [],
         reload_depots: list[Depot] = [],
         max_reloads: int = np.iinfo(np.uint64).max,
+        max_overtime: int = 0,
+        unit_overtime_cost: int = 0,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -401,7 +424,7 @@ class Model:
             fixed_cost=fixed_cost,
             tw_early=tw_early,
             tw_late=tw_late,
-            max_duration=max_duration,
+            shift_duration=shift_duration,
             max_distance=max_distance,
             unit_distance_cost=unit_distance_cost,
             unit_duration_cost=unit_duration_cost,
@@ -410,6 +433,8 @@ class Model:
             initial_load=init_load,
             reload_depots=reloads,
             max_reloads=max_reloads,
+            max_overtime=max_overtime,
+            unit_overtime_cost=unit_overtime_cost,
             name=name,
         )
 

@@ -133,3 +133,20 @@ def ok_small_two_profiles(ok_small):
             VehicleType(3, [10], profile=1),
         ],
     )
+
+
+@pytest.fixture(scope="session")
+def ok_small_overtime(ok_small):
+    """
+    Fixture that returns the OkSmall instance with a duration and overtime
+    limit, and duration and overtime costs.
+    """
+    veh_type = ok_small.vehicle_type(0).replace(
+        shift_duration=5_000,
+        max_overtime=1_000,
+        unit_distance_cost=0,
+        unit_duration_cost=1,
+        unit_overtime_cost=10,
+    )
+
+    return ok_small.replace(vehicle_types=[veh_type])

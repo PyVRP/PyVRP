@@ -50,6 +50,7 @@ class Solution
     Distance distance_ = 0;         // Total travel distance over all routes
     Cost distanceCost_ = 0;         // Total cost of all routes' travel distance
     Duration duration_ = 0;         // Total duration over all routes
+    Duration overtime_ = 0;         // Total overtime over all routes
     Cost durationCost_ = 0;         // Total cost of all routes' duration
     Distance excessDistance_ = 0;   // Total excess distance over all routes
     std::vector<Load> excessLoad_;  // Total excess load over all routes
@@ -183,7 +184,12 @@ public:
     [[nodiscard]] Duration duration() const;
 
     /**
-     * Total cost of the duration of all routes in this solution.
+     * Total overtime of all routes in this solution.
+     */
+    [[nodiscard]] Duration overtime() const;
+
+    /**
+     * Total cost of the duration and overtime of all routes in this solution.
      */
     [[nodiscard]] Cost durationCost() const;
 
@@ -257,6 +263,7 @@ public:
              Distance distance,
              Cost distanceCost,
              Duration duration,
+             Duration overtime,
              Cost durationCost,
              Distance excessDistance,
              std::vector<Load> excessLoad,

@@ -189,11 +189,9 @@ def test_finalise_back_with_time_warp_from_release_time():
     """
     Tests finalise_back() when there's time warp due to the release time.
     """
-    # Release time is 75, which is after start_late of 70. So we have 5 time
-    # warp from this.
     segment = DurationSegment(5, 0, 50, 70, 75)
-    assert_equal(segment.start_early(), 70)
-    assert_equal(segment.start_late(), 70)
+    assert_equal(segment.start_early(), 75)  # = max(early, release_time)
+    assert_equal(segment.start_late(), 75)  # = max(late, release_time)
     assert_equal(segment.release_time(), 75)
     assert_equal(segment.duration(), 5)
     assert_equal(segment.time_warp(), 5)  # due to release time
@@ -259,7 +257,7 @@ def test_time_warp_from_release_time(release_time: int, exp_time_warp: int):
     in the expected amount of time warp.
     """
     segment = DurationSegment(0, 0, 0, 100, release_time)
-    assert_equal(segment.start_late(), 100)
+    assert_equal(segment.start_late(), max(100, release_time))
     assert_equal(segment.time_warp(), exp_time_warp)
 
 

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
+import tomllib
 from typing import TYPE_CHECKING
-
-import tomli
 
 import pyvrp.search
 from pyvrp.GeneticAlgorithm import GeneticAlgorithm, GeneticAlgorithmParams
@@ -115,7 +114,7 @@ class SolveParams:
         Loads the solver parameters from a TOML file.
         """
         with open(loc, "rb") as fh:
-            data = tomli.load(fh)
+            data = tomllib.load(fh)
 
         node_ops = NODE_OPERATORS
         if "node_ops" in data:
