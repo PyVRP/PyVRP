@@ -307,13 +307,12 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
         }
     }
 
-    if constexpr (!exact)
-        if (out >= 0)
-            return false;
-
-    auto const [duration, timeWarp] = proposal.duration();
-    out += route->unitDurationCost() * static_cast<Cost>(duration);
-    out += twPenalty(timeWarp);
+    if (route->hasDurationCost())
+    {
+        auto const [cost, timeWarp] = proposal.duration();
+        out += cost;
+        out += twPenalty(timeWarp);
+    }
 
     return true;
 }
