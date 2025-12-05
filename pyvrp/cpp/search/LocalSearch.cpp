@@ -286,20 +286,20 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
     for (auto const vClient : neighbours_[U->client()])
     {
         auto *V = &nodes[vClient];
+        auto *route = V->route();
 
-        if (!V->route())
+        if (!route)
             continue;
 
         if (insertCost(U, V, data, costEvaluator) < 0)
         {
-            V->route()->insert(V->idx() + 1, U);
-            update(V->route(), V->route());
+            route->insert(V->idx() + 1, U);
+            update(route, route);
             return;
         }
 
         if (inplaceCost(U, V, data, costEvaluator) < 0)
         {
-            auto *route = V->route();
             auto const idx = V->idx();
             route->remove(idx);
             route->insert(idx, U);
