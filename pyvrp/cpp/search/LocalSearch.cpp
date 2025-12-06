@@ -267,25 +267,26 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 {
     ProblemData::Client const &uData = data.location(U->client());
 
-    if (uData.group)  // groups have their own operator - applyGroupMoves()
+    if (uData.required && !U->route())
+        insert(U, costEvaluator, uData.required);
+
+    // Required clients are not optional, and have just been inserted above
+    // if not already in the solution. Groups have their own operator and are
+    // not processed here.
+    if (uData.required || uData.group)
         return;
 
-    if (!uData.required && removeCost(U, data, costEvaluator) < 0)
+    if (removeCost(U, data, costEvaluator) < 0)  // remove if improving
     {
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
     }
 
-    if (!U->route() && uData.required)
-    {
-        insert(U, costEvaluator, uData.required);
-        return;
-    }
-
     if (U->route())
         return;
 
+    // Attempt to re-insert U using a best-first neighbourhood search.
     for (auto const vClient : neighbours_[U->client()])
     {
         auto *V = &nodes[vClient];
@@ -301,6 +302,8 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
             return;
         }
 
+        // We prefer inserting over swapping, but if V is not required and
+        // replacing V with U is better, we also do that now.
         ProblemData::Client const &vData = data.location(V->client());
         if (!vData.required && inplaceCost(U, V, data, costEvaluator) < 0)
         {
