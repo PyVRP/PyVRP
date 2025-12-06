@@ -283,6 +283,9 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         return;
     }
 
+    if (U->route())
+        return;
+
     for (auto const vClient : neighbours_[U->client()])
     {
         auto *V = &nodes[vClient];
@@ -297,6 +300,10 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
             update(route, route);
             return;
         }
+
+        ProblemData::Client const &clientData = data.location(vClient);
+        if (clientData.required)  // then we cannot remove V.
+            continue;
 
         if (inplaceCost(U, V, data, costEvaluator) < 0)
         {
