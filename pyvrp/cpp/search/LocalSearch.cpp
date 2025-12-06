@@ -277,11 +277,14 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         update(route, route);
     }
 
-    if (uData.required && !U->route())
+    if (!U->route() && uData.required)
     {
         insert(U, costEvaluator, uData.required);
         return;
     }
+
+    if (U->route())
+        return;
 
     for (auto const vClient : neighbours_[U->client()])
     {
@@ -298,7 +301,8 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
             return;
         }
 
-        if (inplaceCost(U, V, data, costEvaluator) < 0)
+        ProblemData::Client const &vData = data.location(V->client());
+        if (!vData.required && inplaceCost(U, V, data, costEvaluator) < 0)
         {
             auto const idx = V->idx();
             route->remove(idx);
