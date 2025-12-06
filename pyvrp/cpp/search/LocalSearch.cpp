@@ -267,7 +267,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 {
     ProblemData::Client const &uData = data.location(U->client());
 
-    if (uData.required && !U->route())
+    if (uData.required && !U->route())  // then we must insert U
         insert(U, costEvaluator, uData.required);
 
     // Required clients are not optional, and have just been inserted above
