@@ -286,7 +286,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
     if (U->route())
         return;
 
-    // Attempt to re-insert U using a best-first neighbourhood search.
+    // Attempt to re-insert U using a first-improving neighbourhood search.
     for (auto const vClient : neighbours_[U->client()])
     {
         auto *V = &nodes[vClient];
@@ -295,15 +295,15 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         if (!route)
             continue;
 
-        if (insertCost(U, V, data, costEvaluator) < 0)
+        if (insertCost(U, V, data, costEvaluator) < 0)  // insert if improving
         {
             route->insert(V->idx() + 1, U);
             update(route, route);
             return;
         }
 
-        // We prefer inserting over swapping, but if V is not required and
-        // replacing V with U is better, we also do that now.
+        // We prefer inserting over replacing, but if V is not required and
+        // replacing V with U is improving, we also do that now.
         ProblemData::Client const &vData = data.location(V->client());
         if (!vData.required && inplaceCost(U, V, data, costEvaluator) < 0)
         {
