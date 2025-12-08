@@ -1,13 +1,20 @@
-import matplotlib.pyplot as plt
+import contextlib
+
+with contextlib.suppress(ImportError):
+    import matplotlib.pyplot as plt
+
 import numpy as np
 
 from pyvrp import ProblemData
 
+from .raise_if_no_matplotlib import raise_if_no_matplotlib
 
+
+@raise_if_no_matplotlib
 def plot_coordinates(
     data: ProblemData,
     title: str = "Coordinates",
-    ax: plt.Axes | None = None,
+    ax: "plt.Axes | None" = None,
 ):
     """
     Plots coordinates for clients and depot.

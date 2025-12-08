@@ -1,13 +1,20 @@
-import matplotlib.pyplot as plt
+import contextlib
+
+with contextlib.suppress(ImportError):
+    import matplotlib.pyplot as plt
+
 import numpy as np
 
 from pyvrp.Result import Result
 
+from .raise_if_no_matplotlib import raise_if_no_matplotlib
 
+
+@raise_if_no_matplotlib
 def plot_objectives(
     result: Result,
     num_to_skip: int | None = None,
-    ax: plt.Axes | None = None,
+    ax: "plt.Axes | None" = None,
     ylim_adjust: tuple[float, float] = (0.95, 1.15),
 ):
     """
