@@ -6,7 +6,7 @@
 [![codecov](https://img.shields.io/codecov/c/github/PyVRP/PyVRP?style=flat-square&logo=codecov&label=Codecov)](https://codecov.io/gh/PyVRP/PyVRP)
 [![DOI:10.1287/ijoc.2023.0055](https://img.shields.io/badge/DOI-ijoc.2023.0055-green?style=flat-square&color=blue)](https://doi.org/10.1287/ijoc.2023.0055)
 
-PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver.
+PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver developed by [RoutingLab](https://routinglab.tech).
 It currently supports VRPs with:
 - Pickups and deliveries between depots and clients (capacitated VRP, VRP with simultaneous pickup and delivery, VRP with backhaul);
 - Vehicles of different capacities, costs, shift durations, routing profiles, and maximum distance and duration constraints (heterogeneous fleet VRP, site-dependent VRP);
@@ -21,11 +21,11 @@ It may be installed in the usual way as
 ```
 pip install pyvrp
 ```
-This also resolves the few core dependencies PyVRP has.
+
 The documentation is available [here][1].
 
 > [!TIP]
-> If you are new to vehicle routing or metaheuristics, you might benefit from first reading the [introduction to VRP][6] and [introduction to ILS][7] pages.
+> Looking for professional support? [RoutingLab](https://routinglab.tech) provides consulting, custom development, and FastVRP - a production-ready route optimisation API built on PyVRP.
 
 ### Examples
 
@@ -40,12 +40,13 @@ These include:
 - A notebook implementing a `solve` method using PyVRP's components, [here][9].
   This notebook is a great way to dive deeper into how PyVRP works internally.
 
+If you are new to vehicle routing or metaheuristics, you might also benefit from reading the [introduction to VRP][6] and [introduction to ILS][7] pages.
+
 ### Getting help
 
 Feel free to open an issue or a new discussion thread here on GitHub.
-Please do not e-mail us with questions, modelling issues, or code examples.
-Those are much easier to discuss via GitHub than over e-mail.
 When writing your issue or discussion, please follow the instructions [here][3].
+For professional support, contact us at [info@routinglab.tech](mailto:info@routinglab.tech).
 
 ### Contributing
 
