@@ -140,9 +140,6 @@ class IteratedLocalSearch:
             candidate = self._search(current, cost_eval)
             self._pm.register(candidate)
 
-            stats.collect(current, candidate, best, cost_eval)
-            print_progress.iteration(stats)
-
             if cost_eval.cost(candidate) < cost_eval.cost(best):  # new best
                 best = candidate
                 iters_no_improvement = 0
@@ -164,6 +161,9 @@ class IteratedLocalSearch:
             mean_weight = weight * history.mean()
             if cand_cost <= best_weight + mean_weight:
                 current = candidate
+
+            stats.collect(current, candidate, best, cost_eval)
+            print_progress.iteration(stats)
 
         runtime = time.perf_counter() - start
         res = Result(best, stats, iters, runtime)

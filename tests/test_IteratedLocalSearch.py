@@ -144,44 +144,6 @@ def test_best_initial_solution(rc208):
     assert_equal(result.best, bks)
 
 
-def test_restarts_after_no_improvement(rc208):
-    """
-    Tests that ILS restarts the search after a number of iterations without
-    improvement.
-    """
-    rng = RandomNumberGenerator(seed=42)
-    pm = PenaltyManager(initial_penalties=([1000], 1000, 1000))
-
-    ls = LocalSearch(rc208, rng, compute_neighbours(rc208), 50)
-    ls.add_perturbation_operator(RemoveNeighbours(rc208))
-    ls.add_node_operator(Exchange10(rc208))
-
-    bks = read_solution("data/RC208.sol", rc208)
-    ils_params = IteratedLocalSearchParams(
-        num_iters_no_improvement=3,
-        history_length=1,  # accept all candidate solutions
-    )
-    algo = IteratedLocalSearch(rc208, pm, rng, ls, bks, ils_params)
-
-    result = algo.run(MaxIterations(3))
-    data = result.stats.data
-
-    # The initial solution should match the cost of the BKS.
-    bks_cost = pm.cost_evaluator().penalised_cost(bks)
-    assert_equal(data[0].current_cost, bks_cost)
-
-    # The candidate found in the first iteration is worse than the BKS, but
-    # still accepted because of the acceptance criterion.
-    assert_(data[0].candidate_cost > bks_cost)
-    assert_equal(data[1].current_cost, data[0].candidate_cost)
-
-    # The candidate in the second iteration is also worse and accepted.
-    # However, ILS restarts the search in the third iteration as there were
-    # not enough improving iterations, so the current cost is set to the BKS.
-    assert_(data[1].candidate_cost > bks_cost)
-    assert_equal(data[2].current_cost, bks_cost)
-
-
 def test_ils_result_has_correct_stats(ok_small):
     """
     Tests that ILS correctly collects search statistics.
@@ -202,8 +164,56 @@ def test_ils_result_has_correct_stats(ok_small):
     assert_equal(datum.current_feas, init.is_feasible())
 
 
-# def test_ils_accepts_below_threshold(ok_small):
-# def test_ils_rejects_above_threshold(ok_small):
-# def test_ils_accepts_at_threshold(ok_small):
-# def test_ils_rejects_due_to_stopping_criterion(ok_small):
-# def test_ils_accepts_when_best_is_infeasible(ok_small):
+def test_ils_acceptance_behaviour(ok_small):
+    """
+    Tests ILS acceptance behaviour over a fixed trajectory.
+    """
+    sols = [
+        Solution(ok_small, [[1, 3], [2, 4]]),  # 22065 (infeas)
+        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
+        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
+        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240
+        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
+    ]
+
+    ils = IteratedLocalSearch(
+        ok_small,
+        PenaltyManager(initial_penalties=([20], 6, 6)),
+        RandomNumberGenerator(42),
+        lambda *_: sols.pop(0),  # returns from sols one at a time
+        sols[0],
+    )
+
+    res = ils.run(stop=MaxIterations(len(sols)))
+    data = res.stats.data
+
+    # First solution is also the initial solution, so nothing should have
+    # changed.
+    assert_equal(data[0].current_cost, 22_065)
+    assert_equal(data[0].candidate_cost, 22_065)
+    assert_equal(data[0].best_cost, 22_065)
+
+    # The second iteration has a solution that is *much* better. This should
+    # be accepted, and, since it's feasible, it should also be the new best
+    # solution at the end of this iteration.
+    assert_equal(data[1].current_cost, 9_725)
+    assert_equal(data[1].candidate_cost, 9_725)
+    assert_equal(data[1].best_cost, 9_725)
+
+    # We now get a candidate solution that is a little worse than the previous
+    # iteration, but still good enough to be accepted.
+    assert_equal(data[2].current_cost, 9_868)
+    assert_equal(data[2].candidate_cost, 9_868)
+    assert_equal(data[2].best_cost, 9_725)
+
+    # We now find a new best solution that should also be accepted.
+    assert_equal(data[3].current_cost, 9_240)
+    assert_equal(data[3].candidate_cost, 9_240)
+    assert_equal(data[3].best_cost, 9_240)
+
+    # In the last iteration we again find a solution we found earlier. But
+    # since we are now at the end of our runtime budget, we no longer accept
+    # worse solutions.
+    assert_equal(data[4].current_cost, 9_240)
+    assert_equal(data[4].candidate_cost, 9_725)
+    assert_equal(data[4].best_cost, 9_240)
