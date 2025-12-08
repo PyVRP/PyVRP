@@ -1,13 +1,13 @@
-from __future__ import annotations
-
+import logging
 from importlib.metadata import version
 from time import perf_counter
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from pyvrp.Result import Result
-    from pyvrp.Statistics import Statistics
-    from pyvrp._pyvrp import ProblemData
+from pyvrp.Result import Result
+from pyvrp.Statistics import Statistics
+from pyvrp._pyvrp import ProblemData
+
+logger = logging.getLogger(__name__)
+
 
 # Templates for various different outputs.
 _ITERATION = (
@@ -87,7 +87,8 @@ class ProgressPrinter:
             cand=_format(datum.candidate_cost, datum.candidate_feas),
             best=_format(datum.best_cost, datum.best_feas),
         )
-        print(msg)
+
+        logger.info(msg)
 
         self._last_print_time = curr_time
         if new_best:
@@ -120,7 +121,9 @@ class ProgressPrinter:
             vehicle_text=vehicle_text,
             vehicle_type_text=vehicle_type_text,
         )
-        print(msg)
+
+        for line in msg.splitlines():
+            logger.info(line)
 
     def end(self, result: Result):
         """
@@ -134,7 +137,9 @@ class ProgressPrinter:
                 best_cost=result.cost(),
                 summary=result.summary(),
             )
-            print(msg)
+
+            for line in msg.splitlines():
+                logger.info(line)
 
     def restart(self):
         """
@@ -142,4 +147,4 @@ class ProgressPrinter:
         the search.
         """
         if self._print:
-            print(_RESTART)
+            logger.info(_RESTART)
