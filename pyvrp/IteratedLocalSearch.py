@@ -188,6 +188,9 @@ class History:
         self._array = np.full(shape=(size,), fill_value=np.nan)
         self._idx = 0
 
+    def __len__(self) -> int:
+        return np.count_nonzero(~np.isnan(self._array))
+
     def clear(self):
         self._array.fill(np.nan)
         self._idx = 0
