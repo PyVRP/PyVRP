@@ -150,12 +150,6 @@ class IteratedLocalSearch:
             cand_cost = cost_eval.penalised_cost(candidate)
             history.append(cand_cost)
 
-            if not best.is_feasible():
-                # Best could be infeasible with a low cost at the start, so
-                # first we explore until we get to a feasible reference point.
-                current = candidate
-                continue
-
             # Evaluate replacing the current solution with the candidate. A
             # candidate solution is accepted if it is better than a threshold
             # value based on the recent history of candidate objectives. This
