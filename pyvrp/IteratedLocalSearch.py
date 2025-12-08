@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import time
-from collections import deque
 from dataclasses import dataclass
-from statistics import fmean
 from typing import TYPE_CHECKING
+
+import numpy as np
 
 from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
@@ -12,12 +12,7 @@ from pyvrp.Statistics import Statistics
 
 if TYPE_CHECKING:
     from pyvrp.PenaltyManager import PenaltyManager
-    from pyvrp._pyvrp import (
-        CostEvaluator,
-        ProblemData,
-        RandomNumberGenerator,
-        Solution,
-    )
+    from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
     from pyvrp.search.SearchMethod import SearchMethod
     from pyvrp.stop.StoppingCriterion import StoppingCriterion
 
@@ -93,86 +88,6 @@ class IteratedLocalSearch:
         self._init = initial_solution
         self._params = params
 
-        self._history: deque[int] = deque(maxlen=self._params.history_length)
-
-    @property
-    def _cost_evaluator(self) -> CostEvaluator:
-        return self._pm.cost_evaluator()
-
-    def _accept(
-        self, candidate: Solution, best: Solution, stop: StoppingCriterion
-    ) -> bool:
-        R"""
-        Returns whether the candidate solution should be accepted or not.
-        A candidate solution is accepted if it is better than a threshold value
-        based on the objective values of recently observed candidate solutions.
-        Specifically, the threshold value is a convex combination of the recent
-        best and average values, computed as:
-
-        .. math::
-
-            (1 - w) \times f(s^*) + w \times \sum_{j = 1}^N \frac{f(s^j)}{N}
-
-        where :math:`s^*` is the best solution observed in the last :math:`N`
-        iterations, :math:`f(\cdot)` is the objective function,
-        :math:`N \in \mathbb{N}` is the history length parameter, and each
-        :math:`s^j` is a recently observed solution.
-
-        The weight :math:`w` starts at initial accept weight parameter
-        :math:`w_0 \in [0, 1]` and decreases proportionally to the remaining
-        search time:
-
-        .. math::
-
-            w = w_0 \times \text{fraction remaining of stopping criterion}
-
-        As the algorithm progresses, the threshold becomes more selective,
-        transitioning from exploration (accepting more diverse solutions)
-        to exploitation (accepting only improving solutions).
-
-        .. note::
-
-            This method is based on the acceptence criterion of [1]_. The
-            parameters ``initial_accept_weight`` and ``history_length``
-            correspond to :math:`\eta` and :math:`\gamma` respectively in [1]_.
-
-        Parameters
-        ----------
-        candidate
-            The candidate solution to consider.
-        best
-            The best solution found so far.
-        stop
-            The stopping criterion of this run.
-
-        Returns
-        -------
-        bool
-            True if the candidate solution should be accepted, False otherwise.
-
-        References
-        ----------
-        .. [1] Máximo, V.R. and M.C.V. Nascimento. 2021. A hybrid adaptive
-            iterated local search with diversification control to the
-            capacitated vehicle routing problem,
-            *European Journal of Operational Research* 294 (3): 1108 - 1119.
-            https://doi.org/10.1016/j.ejor.2021.02.024.
-        """
-        cand_cost = self._cost_evaluator.penalised_cost(candidate)
-        self._history.append(cand_cost)
-
-        if not best.is_feasible():  # then always accept candidates
-            return True
-
-        recent_best = min(self._history)
-        recent_avg = fmean(self._history)
-
-        weight = self._params.initial_accept_weight
-        if (fraction := stop.fraction_remaining()) is not None:
-            weight *= fraction
-
-        return cand_cost <= (1 - weight) * recent_best + weight * recent_avg
-
     def run(
         self,
         stop: StoppingCriterion,
@@ -202,39 +117,53 @@ class IteratedLocalSearch:
         print_progress = ProgressPrinter(display, display_interval)
         print_progress.start(self._data)
 
-        self._history.clear()
-        start = time.perf_counter()
+        history = History(size=self._params.history_length)
         stats = Statistics(collect_stats=collect_stats)
-        iters = 0
-        iters_no_improvement = 1
+
+        start = time.perf_counter()
+        iters = iters_no_improvement = 0
         best = current = self._init
 
-        while not stop(self._cost_evaluator.cost(best)):
+        cost_eval = self._pm.cost_evaluator()
+        while not stop(cost_eval.cost(best)):
             iters += 1
+            iters_no_improvement += 1
 
             if iters_no_improvement == self._params.num_iters_no_improvement:
                 print_progress.restart()
-                iters_no_improvement = 1
-                current = best
-                self._history.clear()
+                history.clear()
 
-            candidate = self._search(current, self._cost_evaluator)
+                current = best
+                iters_no_improvement = 0
+
+            cost_eval = self._pm.cost_evaluator()
+            candidate = self._search(current, cost_eval)
             self._pm.register(candidate)
 
-            stats.collect(current, candidate, best, self._cost_evaluator)
-            print_progress.iteration(stats)
-
-            cand_cost = self._cost_evaluator.cost(candidate)
-            best_cost = self._cost_evaluator.cost(best)
-
-            if cand_cost < best_cost:  # new best
+            if cost_eval.cost(candidate) < cost_eval.cost(best):  # new best
                 best = candidate
-                iters_no_improvement = 1
-            else:
-                iters_no_improvement += 1
+                iters_no_improvement = 0
 
-            if self._accept(candidate, best, stop):
+            cand_cost = cost_eval.penalised_cost(candidate)
+            history.append(cand_cost)
+
+            # Evaluate replacing the current solution with the candidate. A
+            # candidate solution is accepted if it is better than a threshold
+            # value based on the recent history of candidate objectives. This
+            # threshold value is a convex combination of the recent best and
+            # mean values. Based on Maximo and Nascimento (2021); see
+            # https://doi.org/10.1016/j.ejor.2021.02.024 for more details.
+            weight = self._params.initial_accept_weight
+            if (fraction := stop.fraction_remaining()) is not None:
+                weight *= fraction
+
+            best_weight = (1 - weight) * history.min()
+            mean_weight = weight * history.mean()
+            if cand_cost <= best_weight + mean_weight:
                 current = candidate
+
+            stats.collect(current, candidate, best, cost_eval)
+            print_progress.iteration(stats)
 
         runtime = time.perf_counter() - start
         res = Result(best, stats, iters, runtime)
@@ -242,3 +171,30 @@ class IteratedLocalSearch:
         print_progress.end(res)
 
         return res
+
+
+class History:
+    """
+    Small helper class to manage a history of recent candidate solution values.
+    """
+
+    def __init__(self, size: int):
+        self._array = np.full(shape=(size,), fill_value=np.nan)
+        self._idx = 0
+
+    def __len__(self) -> int:
+        return np.count_nonzero(~np.isnan(self._array))
+
+    def clear(self):
+        self._array.fill(np.nan)
+        self._idx = 0
+
+    def append(self, value: int):
+        self._array[self._idx % self._array.size] = value
+        self._idx += 1
+
+    def min(self) -> float:
+        return np.nanmin(self._array)
+
+    def mean(self) -> float:
+        return np.nanmean(self._array)

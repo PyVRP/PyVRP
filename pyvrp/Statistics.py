@@ -66,7 +66,7 @@ class Statistics:
         cost_evaluator: CostEvaluator,
     ):
         """
-        Collects statistics from the iteration.
+        Collect iteration statistics.
 
         Parameters
         ----------
