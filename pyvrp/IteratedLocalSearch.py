@@ -88,8 +88,6 @@ class IteratedLocalSearch:
         self._init = initial_solution
         self._params = params
 
-        self._history = np.full((self._params.history_length,), np.nan)
-
     def run(
         self,
         stop: StoppingCriterion,
@@ -119,9 +117,10 @@ class IteratedLocalSearch:
         print_progress = ProgressPrinter(display, display_interval)
         print_progress.start(self._data)
 
-        self._history.fill(np.nan)
-        start = time.perf_counter()
+        history = History(size=self._params.history_length)
         stats = Statistics(collect_stats=collect_stats)
+
+        start = time.perf_counter()
         iters = iters_no_improvement = 0
         best = current = self._init
 
@@ -132,7 +131,7 @@ class IteratedLocalSearch:
 
             if iters_no_improvement == self._params.num_iters_no_improvement:
                 print_progress.restart()
-                self._history.fill(np.nan)
+                history.clear()
 
                 current = best
                 iters_no_improvement = 0
@@ -149,7 +148,7 @@ class IteratedLocalSearch:
                 iters_no_improvement = 0
 
             cand_cost = cost_eval.penalised_cost(candidate)
-            self._history[iters % self._params.history_length] = cand_cost
+            history.append(cand_cost)
 
             if not best.is_feasible():
                 # Best could be infeasible with a low cost at the start, so
@@ -161,16 +160,15 @@ class IteratedLocalSearch:
             # candidate solution is accepted if it is better than a threshold
             # value based on the recent history of candidate objectives. This
             # threshold value is a convex combination of the recent best and
-            # average values. Based on Maximo and Nascimento (2021); see
+            # mean values. Based on Maximo and Nascimento (2021); see
             # https://doi.org/10.1016/j.ejor.2021.02.024 for more details.
-            recent_best = np.nanmin(self._history)
-            recent_avg = np.nanmean(self._history)
-
             weight = self._params.initial_accept_weight
             if (fraction := stop.fraction_remaining()) is not None:
                 weight *= fraction
 
-            if cand_cost <= (1 - weight) * recent_best + weight * recent_avg:
+            best_weight = (1 - weight) * history.min()
+            mean_weight = weight * history.mean()
+            if cand_cost <= best_weight + mean_weight:
                 current = candidate
 
         runtime = time.perf_counter() - start
@@ -179,3 +177,27 @@ class IteratedLocalSearch:
         print_progress.end(res)
 
         return res
+
+
+class History:
+    """
+    Small helper class to manage a history of recent candidate solution values.
+    """
+
+    def __init__(self, size: int):
+        self._array = np.full(shape=(size,), fill_value=np.nan)
+        self._idx = 0
+
+    def clear(self):
+        self._array.fill(np.nan)
+        self._idx = 0
+
+    def append(self, value: int):
+        self._array[self._idx % self._array.size] = value
+        self._idx += 1
+
+    def min(self) -> float:
+        return np.nanmin(self._array)
+
+    def mean(self) -> float:
+        return np.nanmean(self._array)
