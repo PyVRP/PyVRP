@@ -91,9 +91,9 @@ class IteratedLocalSearch:
     def run(
         self,
         stop: StoppingCriterion,
+        collect_stats: bool = True,
         display: bool = False,
         display_interval: float = 5.0,
-        collect_stats: bool = True,
     ) -> Result:
         """
         Runs the iterated local search algorithm with the provided stopping
@@ -104,15 +104,21 @@ class IteratedLocalSearch:
         stop
             Stopping criterion to use. The algorithm runs until the first time
             the stopping criterion returns ``True``.
+        collect_stats
+            Whether to collect statistics about the solver's progress. Default
+            ``True``.
         display
             Whether to display information about the solver progress. Default
             ``False``. Progress information is only available when
             ``collect_stats`` is also set.
         display_interval
             Time (in seconds) between iteration logs. Defaults to 5s.
-        collect_stats
-            Whether to collect statistics about the solver's progress. Default
-            ``True``.
+
+        Returns
+        -------
+        Result
+            A Result object, containing statistics (if collected) and the best
+            found solution.
         """
         print_progress = ProgressPrinter(display, display_interval)
         print_progress.start(self._data)

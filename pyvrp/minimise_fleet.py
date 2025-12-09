@@ -9,7 +9,7 @@ def minimise_fleet(
     data: ProblemData,
     stop: StoppingCriterion,
     seed: int = 0,
-    params: SolveParams = SolveParams(collect_stats=False),
+    params: SolveParams = SolveParams(),
 ) -> VehicleType:
     """
     Attempts to reduce the number of vehicles needed to achieve a feasible

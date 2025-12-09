@@ -1,6 +1,5 @@
 num_perturbations = 10
 display_interval = 10.0
-collect_stats = false
 
 node_ops = [
     "Exchange10",

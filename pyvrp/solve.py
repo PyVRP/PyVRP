@@ -45,15 +45,12 @@ class SolveParams:
         Node operators to use in the search.
     route_ops
         Route operators to use in the search.
+    display_interval
+        Time (in seconds) between iteration logs. Default 5s.
     perturbation_ops
         Perturbation operators to use in the search.
     num_perturbations
         Maximum number of perturbations to apply in each iteration. Default 25.
-    display_interval
-        Time (in seconds) between iteration logs. Default 5s.
-    collect_stats
-        Whether to collect statistics about the solver's progress. Default
-        ``True``.
     initial_solution
         Solution to start the search from. If not provided, a default solution
         will be created.
@@ -66,12 +63,11 @@ class SolveParams:
         neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
         node_ops: list[type[NodeOperator]] = NODE_OPERATORS,
         route_ops: list[type[RouteOperator]] = ROUTE_OPERATORS,
+        display_interval: float = 5.0,
         perturbation_ops: list[
             type[PerturbationOperator]
         ] = PERTURBATION_OPERATORS,
         num_perturbations: int = 25,
-        display_interval: float = 5.0,
-        collect_stats: bool = True,
         initial_solution: Solution | None = None,
     ):
         self._ils = ils
@@ -82,7 +78,6 @@ class SolveParams:
         self._perturbation_ops = perturbation_ops
         self._num_perturbations = num_perturbations
         self._display_interval = display_interval
-        self._collect_stats = collect_stats
         self._initial_solution = initial_solution
 
     def __eq__(self, other: object) -> bool:
@@ -93,10 +88,9 @@ class SolveParams:
             and self.neighbourhood == other.neighbourhood
             and self.node_ops == other.node_ops
             and self.route_ops == other.route_ops
+            and self.display_interval == other.display_interval
             and self.perturbation_ops == other.perturbation_ops
             and self.num_perturbations == other.num_perturbations
-            and self.display_interval == other.display_interval
-            and self.collect_stats == other.collect_stats
             and self.initial_solution == other.initial_solution
         )
 
@@ -131,10 +125,6 @@ class SolveParams:
     @property
     def display_interval(self) -> float:
         return self._display_interval
-
-    @property
-    def collect_stats(self) -> bool:
-        return self._collect_stats
 
     @property
     def initial_solution(self) -> Solution | None:
@@ -172,10 +162,9 @@ class SolveParams:
             NeighbourhoodParams(**data.get("neighbourhood", {})),
             node_ops,
             route_ops,
+            data.get("display_interval", 5.0),
             perturbation_ops,
             data.get("num_perturbations", 25),
-            data.get("display_interval", 5.0),
-            data.get("collect_stats", True),
             None,  # initial solution cannot be loaded from file
         )
 
@@ -184,6 +173,7 @@ def solve(
     data: ProblemData,
     stop: StoppingCriterion,
     seed: int = 0,
+    collect_stats: bool = True,
     display: bool = False,
     params: SolveParams = SolveParams(),
 ) -> Result:
@@ -198,11 +188,13 @@ def solve(
         Stopping criterion to use.
     seed
         Seed value to use for the random number stream. Default 0.
+    collect_stats
+        Whether to collect statistics about the solver's progress. Default
+        ``True``.
     display
         Whether to display information about the solver progress. Default
         ``False``. Progress information is only available when
-        :attr:`~pyvrp.solve.SolveParams.__init__.collect_stats` is also set,
-        which it is by default.
+        ``collect_stats`` is also set, which it is by default.
     params
         Solver parameters to use. If not provided, a default will be used.
 
@@ -240,10 +232,4 @@ def solve(
         init = ls(Solution(data, []), pm.max_cost_evaluator())  # type: ignore
 
     algo = IteratedLocalSearch(data, pm, rng, ls, init, params.ils)
-
-    return algo.run(
-        stop,
-        display,
-        params.display_interval,
-        params.collect_stats,
-    )
+    return algo.run(stop, collect_stats, display, params.display_interval)
