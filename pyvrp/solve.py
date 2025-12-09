@@ -75,9 +75,9 @@ class SolveParams:
         self._neighbourhood = neighbourhood
         self._node_ops = node_ops
         self._route_ops = route_ops
+        self._display_interval = display_interval
         self._perturbation_ops = perturbation_ops
         self._num_perturbations = num_perturbations
-        self._display_interval = display_interval
         self._initial_solution = initial_solution
 
     def __eq__(self, other: object) -> bool:
@@ -115,16 +115,16 @@ class SolveParams:
         return self._route_ops
 
     @property
+    def display_interval(self) -> float:
+        return self._display_interval
+
+    @property
     def perturbation_ops(self):
         return self._perturbation_ops
 
     @property
     def num_perturbations(self):
         return self._num_perturbations
-
-    @property
-    def display_interval(self) -> float:
-        return self._display_interval
 
     @property
     def initial_solution(self) -> Solution | None:

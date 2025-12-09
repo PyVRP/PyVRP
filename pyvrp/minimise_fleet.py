@@ -68,6 +68,7 @@ def minimise_fleet(
             data,
             stop=MultipleCriteria([FirstFeasible(), stop]),
             seed=seed,
+            collect_stats=False,
             display=False,
             params=params,
         )
