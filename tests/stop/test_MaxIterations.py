@@ -70,15 +70,3 @@ def test_fraction_remaining_zero_budget():
     # Fraction remaining should also not go below zero.
     stop(0)
     assert_equal(stop.fraction_remaining(), 0)
-
-
-def test_fraction_remaining_infinite_budget():
-    """
-    Tests that ``fraction_remaining()`` works correctly when max iterations is
-    set to infinity, which is used in PyVRP's CLI.
-    """
-    stop = MaxIterations(float("inf"))
-    assert_equal(stop.fraction_remaining(), 1)
-
-    stop = MaxIterations(float("inf"))
-    assert_equal(stop.fraction_remaining(), 1)

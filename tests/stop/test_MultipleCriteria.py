@@ -56,13 +56,11 @@ def test_after_max_runtime(max_runtime):
 
 def test_fraction_remaining():
     """
-    Tests that calling ``MultipleCriteria.fraction_remaining()`` returns the
-    minimum value among its criteria.
+    Tests that calling ``fraction_remaining()`` returns the minimum value among
+    its underlying criteria.
     """
     # MaxIterations is the most restrictive stopping criterion.
-    stop = MultipleCriteria(
-        [MaxIterations(1), MaxRuntime(10), FirstFeasible()]
-    )
+    stop = MultipleCriteria([MaxIterations(1), MaxRuntime(1), FirstFeasible()])
     assert_equal(stop.fraction_remaining(), 1)
 
     stop(0)
