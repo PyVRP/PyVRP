@@ -285,6 +285,6 @@ class PenaltyManager:
         """
         Get a cost evaluator using the maximum penalty value.
         """
-        penalty = self._params.max_penalty
-        load_penalties = [penalty] * len(self._penalties[:-2])
-        return CostEvaluator(load_penalties, penalty, penalty)
+        penalties = np.full_like(self._penalties, self._params.max_penalty)
+        *loads, tw, dist = penalties
+        return CostEvaluator(loads, tw, dist)
