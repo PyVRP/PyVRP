@@ -648,7 +648,7 @@ inline Route::Node *n(Route::Node *node)
 
 inline Route::Node const *n(Route::Node const *node)
 {
-    auto &route = *node->route();
+    auto const &route = *node->route();
     return route[node->idx() + 1];
 }
 
