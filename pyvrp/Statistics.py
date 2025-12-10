@@ -32,10 +32,14 @@ class Statistics:
         excessive memory use on long runs.
     """
 
+    runtimes: list[float]
+    num_iterations: int
+    data: list[_Datum]
+
     def __init__(self, collect_stats: bool = True):
-        self.runtimes: list[float] = []
+        self.runtimes = []
         self.num_iterations = 0
-        self.data: list[_Datum] = []
+        self.data = []
 
         self._clock = perf_counter()
         self._collect_stats = collect_stats
