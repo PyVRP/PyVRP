@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 # Templates for various different outputs.
 _ITERATION = (
-    "{special} {iters:>7} {elapsed:>6}s | {curr:>12} {cand:>12} {best:>12}"
+    "{special} {iters:>7} {elapsed:>6}s | "
+    "{curr:>12}  {curr_feas} {cand:>12}  {cand_feas} {best:>12}  {best_feas}"
 )
 
 _START = """PyVRP v{version}
@@ -22,10 +23,7 @@ Solving an instance with:
     {client_text}
     {vehicle_text} ({vehicle_type_text})
 
-                  |               Cost (Feasible)
-    Iters    Time |      Current    Candidate         Best"""
-
-_RESTART = "R                 |                 restart"
+    Iters    Time |      Current OK    Candidate OK         Best OK"""
 
 _END = """
 Search terminated in {runtime:.2f}s after {iters} iterations.
@@ -33,6 +31,8 @@ Best-found solution has cost {best_cost}.
 
 {summary}
 """
+
+_RESTART = "R                 |                      restart"
 
 
 class ProgressPrinter:
@@ -75,18 +75,18 @@ class ProgressPrinter:
         if not should_print:
             return
 
-        def _format(cost: int, is_feas: bool):
-            return f"{cost} {'(Y)' if is_feas else '(N)'}"
-
         datum = stats.data[-1]
         new_best = datum.best_feas and datum.best_cost < self._best_cost
         msg = _ITERATION.format(
             special="H" if new_best else " ",
             iters=stats.num_iterations,
             elapsed=round(sum(stats.runtimes)),
-            curr=_format(datum.current_cost, datum.current_feas),
-            cand=_format(datum.candidate_cost, datum.candidate_feas),
-            best=_format(datum.best_cost, datum.best_feas),
+            curr=datum.current_cost,
+            curr_feas="Y" if datum.current_feas else "N",
+            cand=datum.candidate_cost,
+            cand_feas="Y" if datum.candidate_feas else "N",
+            best=datum.best_cost,
+            best_feas="Y" if datum.best_feas else "N",
         )
 
         logger.info(msg)

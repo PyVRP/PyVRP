@@ -99,9 +99,9 @@ def test_iteration(ok_small, caplog):
     assert_(str(round(sum(stats.runtimes))) in out)
 
     # Statistics about solution costs and their feasibility.
-    assert_("28408 (N)" in out)  # current
-    assert_("10012 (Y)" in out)  # candidate
-    assert_("9725 (Y)" in out)  # best
+    assert_("28408  N" in out)  # current
+    assert_("10012  Y" in out)  # candidate
+    assert_("9725  Y" in out)  # best
 
 
 def test_should_print_false_no_output(ok_small, caplog):
