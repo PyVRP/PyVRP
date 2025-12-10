@@ -57,7 +57,6 @@ def test_num_iterations(ok_small, num_iterations: int):
     stats = Statistics()
     best = Solution.make_random(ok_small, rng)
     res = Result(best, stats, num_iterations, 0.0)
-
     assert_equal(res.num_iterations, num_iterations)
 
 
