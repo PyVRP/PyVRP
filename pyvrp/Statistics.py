@@ -81,7 +81,7 @@ class Statistics:
         best
             The best solution.
         cost_evaluator
-            Cost evaluator to use.
+            CostEvaluator used to compute costs for solutions.
         """
         if not self._collect_stats:
             return
