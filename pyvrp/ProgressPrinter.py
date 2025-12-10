@@ -2,9 +2,10 @@ import logging
 from importlib.metadata import version
 from time import perf_counter
 
-from pyvrp.Result import Result
-from pyvrp.Statistics import Statistics
 from pyvrp._pyvrp import ProblemData
+
+from .Result import Result
+from .Statistics import Statistics
 
 logger = logging.getLogger(__name__)
 
