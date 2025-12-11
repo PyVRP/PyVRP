@@ -99,7 +99,7 @@ private:
     void applyEmptyRouteMoves(Route::Node *U,
                               CostEvaluator const &costEvaluator);
 
-    // Tests moves inserting missing or optional clients.
+    // Tests moves involving missing or optional clients.
     void applyOptionalClientMoves(Route::Node *U,
                                   CostEvaluator const &costEvaluator);
 

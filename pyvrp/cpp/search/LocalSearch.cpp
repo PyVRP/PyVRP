@@ -362,11 +362,11 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         if (!route)
             continue;
 
+        // TODO mark promising
         if (insertCost(U, V, data, costEvaluator) < 0)  // insert if improving
         {
             route->insert(V->idx() + 1, U);
             update(route, route);
-            markPromising(U);
             return;
         }
 
@@ -375,12 +375,10 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         ProblemData::Client const &vData = data.location(V->client());
         if (!vData.required && inplaceCost(U, V, data, costEvaluator) < 0)
         {
-            markPromising(V);
             auto const idx = V->idx();
             route->remove(idx);
             route->insert(idx, U);
             update(route, route);
-            markPromising(U);
             return;
         }
     }
