@@ -180,6 +180,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
         {
             markPromising(U);
             uRoute->remove(U->idx());
+            uRoute->update();
 
             if (++numMoves == numPerturbations_)
                 return;

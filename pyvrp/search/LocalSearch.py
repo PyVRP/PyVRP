@@ -41,7 +41,7 @@ class LocalSearch:
     ):
         self._ls = _LocalSearch(data, neighbours)
         self._rng = rng
-        self._num_perturbations = num_perturbations
+        self._num_perturbations = max(num_perturbations, 1)
 
     def add_node_operator(self, op: NodeOperator):
         """
