@@ -16,7 +16,6 @@ namespace pyvrp::search
 struct PerturbationContext
 {
     std::vector<search::Route::Node> &nodes;
-    std::vector<search::Route> &routes;
     CostEvaluator const &costEvaluator;
     std::vector<std::vector<size_t>> const &neighbours;
     std::vector<size_t> const &orderNodes;

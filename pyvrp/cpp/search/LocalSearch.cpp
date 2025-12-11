@@ -172,7 +172,6 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     promising.reset();
 
     PerturbationContext context{nodes,
-                                routes,
                                 costEvaluator,
                                 neighbours_,
                                 orderNodes,
