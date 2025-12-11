@@ -5,11 +5,9 @@ from pyvrp.IteratedLocalSearch import IteratedLocalSearchParams
 from pyvrp.PenaltyManager import PenaltyParams
 from pyvrp.search import (
     NODE_OPERATORS,
-    PERTURBATION_OPERATORS,
     ROUTE_OPERATORS,
     Exchange10,
     NeighbourhoodParams,
-    RemoveNeighbours,
     SwapStar,
     SwapTails,
 )
@@ -30,7 +28,6 @@ def test_default_values():
     assert_equal(params.node_ops, NODE_OPERATORS)
     assert_equal(params.route_ops, ROUTE_OPERATORS)
     assert_allclose(params.display_interval, 5.0)
-    assert_equal(params.perturbation_ops, PERTURBATION_OPERATORS)
     assert_equal(params.num_perturbations, 25)
     assert_(params.initial_solution is None)
 
@@ -46,7 +43,6 @@ def test_solve_params_from_file():
     neighbourhood = NeighbourhoodParams(0, 0, 20, True, True)
     node_ops = [Exchange10, SwapTails]
     route_ops = [SwapStar]
-    perturbation_ops = [RemoveNeighbours]
 
     assert_equal(params.ils, ils)
     assert_equal(params.penalty, penalty)
@@ -54,7 +50,6 @@ def test_solve_params_from_file():
     assert_equal(params.node_ops, node_ops)
     assert_equal(params.route_ops, route_ops)
     assert_allclose(params.display_interval, 10.0)
-    assert_equal(params.perturbation_ops, perturbation_ops)
     assert_equal(params.num_perturbations, 10)
 
 

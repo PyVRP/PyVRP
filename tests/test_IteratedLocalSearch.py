@@ -9,12 +9,7 @@ from pyvrp import (
     Solution,
 )
 from pyvrp.IteratedLocalSearch import History
-from pyvrp.search import (
-    Exchange10,
-    LocalSearch,
-    RemoveNeighbours,
-    compute_neighbours,
-)
+from pyvrp.search import Exchange10, LocalSearch, compute_neighbours
 from pyvrp.stop import MaxIterations
 from tests.helpers import read_solution
 
@@ -111,7 +106,6 @@ def test_best_solution_improves_with_more_iterations(rc208):
     rng = RandomNumberGenerator(seed=42)
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    ls.add_perturbation_operator(RemoveNeighbours(rc208))
     ls.add_node_operator(Exchange10(rc208))
     init = Solution.make_random(rc208, rng)
     algo = IteratedLocalSearch(rc208, pm, rng, ls, init)

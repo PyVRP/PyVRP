@@ -16,11 +16,9 @@ from pyvrp import (
 from pyvrp.search import (
     Exchange10,
     Exchange11,
-    InsertOptional,
     LocalSearch,
     NeighbourhoodParams,
     RelocateWithDepot,
-    RemoveNeighbours,
     SwapRoutes,
     SwapStar,
     compute_neighbours,
@@ -57,7 +55,6 @@ def test_local_search_call_perturbs_solution(ok_small):
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(ok_small)
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_perturbation_operator(RemoveNeighbours(ok_small))
 
     sol = Solution.make_random(ok_small, rng)
     cost_eval = CostEvaluator([1], 1, 0)
@@ -338,12 +335,17 @@ def test_no_op_results_in_same_solution(ok_small):
 
 def test_perturbation_no_op_makes_search_no_op(ok_small):
     """
-    Tests that ``__call__()`` is a no-op if the perturbation step is a no-op.
+    Tests that ``__call__()`` is a no-op if the perturbation step is a no-op
+    because we set num_perturbations to 0.
     """
     rng = RandomNumberGenerator(seed=42)
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+    ls = LocalSearch(
+        ok_small,
+        rng,
+        compute_neighbours(ok_small),
+        num_perturbations=0,
+    )
     ls.add_node_operator(Exchange10(ok_small))
-    ls.add_perturbation_operator(InsertOptional(ok_small))  # no-op
 
     sol = Solution.make_random(ok_small, rng)
     cost_evaluator = CostEvaluator([20], 6, 6)
@@ -735,24 +737,3 @@ def test_node_and_route_operators_property(ok_small):
     ls.add_route_operator(route_op)
     assert_equal(len(ls.route_operators), 1)
     assert_(ls.route_operators[0] is route_op)
-
-
-def test_perturbation_operators_property(ok_small):
-    """
-    Tests adding and accessing perturbation operators to the LocalSearch
-    object.
-    """
-    rng = RandomNumberGenerator(seed=42)
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
-
-    # The local search has not yet been equipped with perturbation operators,
-    # so it should start empty.
-    assert_equal(len(ls.perturbation_operators), 0)
-
-    # Now we add a perturbation operator. The local search does not take
-    # ownership, so its only perturbation operator should be the exact same
-    # object as the one we just created.
-    perturb_op = RemoveNeighbours(ok_small)
-    ls.add_perturbation_operator(perturb_op)
-    assert_equal(len(ls.perturbation_operators), 1)
-    assert_(ls.perturbation_operators[0] is perturb_op)

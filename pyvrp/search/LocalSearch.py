@@ -8,7 +8,6 @@ from pyvrp.search._search import LocalSearch as _LocalSearch
 from pyvrp.search._search import (
     LocalSearchStatistics,
     NodeOperator,
-    PerturbationOperator,
     RouteOperator,
 )
 
@@ -69,19 +68,6 @@ class LocalSearch:
         """
         self._ls.add_route_operator(op)
 
-    def add_perturbation_operator(self, op: PerturbationOperator):
-        """
-        Adds a perturbation operator to this local search object. The
-        perturbation operator will be used by :meth:`~perturb` to modify
-        a solution to potentially escape local optima.
-
-        Parameters
-        ----------
-        op
-            The perturbation operator to add to this local search object.
-        """
-        self._ls.add_perturbation_operator(op)
-
     @property
     def neighbours(self) -> list[list[int]]:
         """
@@ -110,13 +96,6 @@ class LocalSearch:
         Returns the route operators in use.
         """
         return self._ls.route_operators
-
-    @property
-    def perturbation_operators(self) -> list[PerturbationOperator]:
-        """
-        Returns the perturbation operators in use.
-        """
-        return self._ls.perturbation_operators
 
     @property
     def statistics(self) -> LocalSearchStatistics:

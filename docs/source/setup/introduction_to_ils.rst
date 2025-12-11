@@ -2,7 +2,7 @@ A brief introduction to ILS
 ===========================
 
 PyVRP provides a high-performance implementation of the iterated local search (ILS) algorithm for vehicle routing problems (VRPs).
-ILS is a single-trajectory algorithm that improves a solution by repeated applications of small perturbation and local improvement procedures.
+ILS is a single-trajectory algorithm that improves a solution by repeated applications of small perturbations and local improvement procedures.
 This approach effectively balances between exploration and exploitation of the search space.
 
 .. note::
@@ -25,7 +25,7 @@ In pseudocode, ILS works as follows:
 | **Output:** the best-found solution :math:`s^\text{best}`
 | Initialise :math:`s^\text{curr} \leftarrow s_0` and :math:`s^\text{best} \leftarrow s_0`
 | **repeat** until stopping criterion is met:
-|     Apply perturbation operator to generate :math:`s^\text{pert} = \text{Perturbation}(s^\text{curr})`
+|     Perturb the current solution to generate :math:`s^\text{pert} = \text{Perturbation}(s^\text{curr})`
 |     Apply local search to obtain :math:`s^\text{cand} = \text{LocalSearch}(s^\text{pert})`
 |     **if** :math:`\text{AcceptanceCriterion}(s^\text{curr}, s^\text{cand})`:
 |         :math:`s^\text{curr} \leftarrow s^\text{cand}`

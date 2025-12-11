@@ -12,12 +12,10 @@ from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
 from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
 from pyvrp.search import (
     NODE_OPERATORS,
-    PERTURBATION_OPERATORS,
     ROUTE_OPERATORS,
     LocalSearch,
     NeighbourhoodParams,
     NodeOperator,
-    PerturbationOperator,
     RouteOperator,
     compute_neighbours,
 )
@@ -47,8 +45,6 @@ class SolveParams:
         Route operators to use in the search.
     display_interval
         Time (in seconds) between iteration logs. Default 5s.
-    perturbation_ops
-        Perturbation operators to use in the search.
     num_perturbations
         Maximum number of perturbations to apply in each iteration. Default 25.
     initial_solution
@@ -64,9 +60,6 @@ class SolveParams:
         node_ops: list[type[NodeOperator]] = NODE_OPERATORS,
         route_ops: list[type[RouteOperator]] = ROUTE_OPERATORS,
         display_interval: float = 5.0,
-        perturbation_ops: list[
-            type[PerturbationOperator]
-        ] = PERTURBATION_OPERATORS,
         num_perturbations: int = 25,
         initial_solution: Solution | None = None,
     ):
@@ -76,7 +69,6 @@ class SolveParams:
         self._node_ops = node_ops
         self._route_ops = route_ops
         self._display_interval = display_interval
-        self._perturbation_ops = perturbation_ops
         self._num_perturbations = num_perturbations
         self._initial_solution = initial_solution
 
@@ -89,7 +81,6 @@ class SolveParams:
             and self.node_ops == other.node_ops
             and self.route_ops == other.route_ops
             and self.display_interval == other.display_interval
-            and self.perturbation_ops == other.perturbation_ops
             and self.num_perturbations == other.num_perturbations
             and self.initial_solution == other.initial_solution
         )
@@ -119,10 +110,6 @@ class SolveParams:
         return self._display_interval
 
     @property
-    def perturbation_ops(self):
-        return self._perturbation_ops
-
-    @property
     def num_perturbations(self):
         return self._num_perturbations
 
@@ -150,12 +137,6 @@ class SolveParams:
         if "route_ops" in data:
             route_ops = [getattr(pyvrp.search, op) for op in data["route_ops"]]
 
-        perturbation_ops = PERTURBATION_OPERATORS
-        if "perturbation_ops" in data:
-            perturbation_ops = [
-                getattr(pyvrp.search, op) for op in data["perturbation_ops"]
-            ]
-
         return cls(
             IteratedLocalSearchParams(**data.get("ils", {})),
             PenaltyParams(**data.get("penalty", {})),
@@ -163,7 +144,6 @@ class SolveParams:
             node_ops,
             route_ops,
             data.get("display_interval", 5.0),
-            perturbation_ops,
             data.get("num_perturbations", 25),
             None,  # initial solution cannot be loaded from file
         )
@@ -220,10 +200,6 @@ def solve(
     for route_op in params.route_ops:
         if route_op.supports(data):
             ls.add_route_operator(route_op(data))
-
-    for perturb_op in params.perturbation_ops:
-        if perturb_op.supports(data):
-            ls.add_perturbation_operator(perturb_op(data))
 
     pm = PenaltyManager.init_from(data, params.penalty)
 

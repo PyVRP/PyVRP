@@ -1,10 +1,7 @@
 #include "bindings.h"
 #include "Exchange.h"
-#include "InsertOptional.h"
 #include "LocalSearch.h"
-#include "PerturbationOperator.h"
 #include "RelocateWithDepot.h"
-#include "RemoveNeighbours.h"
 #include "Route.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
@@ -22,14 +19,11 @@ namespace py = pybind11;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
-using pyvrp::search::InsertOptional;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
 using pyvrp::search::OperatorStatistics;
-using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
-using pyvrp::search::RemoveNeighbours;
 using pyvrp::search::Route;
 using pyvrp::search::RouteOperator;
 using pyvrp::search::supports;
@@ -41,7 +35,6 @@ PYBIND11_MODULE(_search, m)
 {
     py::class_<NodeOperator>(m, "NodeOperator");
     py::class_<RouteOperator>(m, "RouteOperator");
-    py::class_<PerturbationOperator>(m, "PerturbationOperator");
 
     py::class_<OperatorStatistics>(
         m, "OperatorStatistics", DOC(pyvrp, search, OperatorStatistics))
@@ -257,22 +250,6 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &RelocateWithDepot::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<RelocateWithDepot>, py::arg("data"));
 
-    py::class_<InsertOptional, PerturbationOperator>(
-        m, "InsertOptional", DOC(pyvrp, search, InsertOptional))
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>())  // keep data alive
-        .def("__call__", &InsertOptional::operator(), py::arg("context"))
-        .def_static("supports", &supports<InsertOptional>, py::arg("data"));
-
-    py::class_<RemoveNeighbours, PerturbationOperator>(
-        m, "RemoveNeighbours", DOC(pyvrp, search, RemoveNeighbours))
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>())  // keep data alive
-        .def("__call__", &RemoveNeighbours::operator(), py::arg("context"))
-        .def_static("supports", &supports<RemoveNeighbours>, py::arg("data"));
-
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))
         .def_readonly("num_moves", &LocalSearch::Statistics::numMoves)
@@ -299,19 +276,12 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("route_operators",
                                &LocalSearch::routeOperators,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("perturbation_operators",
-                               &LocalSearch::perturbationOperators,
-                               py::return_value_policy::reference_internal)
         .def("add_node_operator",
              &LocalSearch::addNodeOperator,
              py::arg("op"),
              py::keep_alive<1, 2>())
         .def("add_route_operator",
              &LocalSearch::addRouteOperator,
-             py::arg("op"),
-             py::keep_alive<1, 2>())
-        .def("add_perturbation_operator",
-             &LocalSearch::addPerturbationOperator,
              py::arg("op"),
              py::keep_alive<1, 2>())
         .def("__call__",

@@ -4,7 +4,6 @@
 #include "CostEvaluator.h"
 #include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
-#include "PerturbationOperator.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
@@ -74,7 +73,6 @@ private:
 
     std::vector<NodeOperator *> nodeOps;
     std::vector<RouteOperator *> routeOps;
-    std::vector<PerturbationOperator *> perturbOps;
 
     size_t numUpdates_ = 0;         // modification counter
     bool searchCompleted_ = false;  // No further improving move found?
@@ -101,7 +99,7 @@ private:
     void applyEmptyRouteMoves(Route::Node *U,
                               CostEvaluator const &costEvaluator);
 
-    // Tests moves involving missing or optional clients.
+    // Tests moves inserting missing or optional clients.
     void applyOptionalClientMoves(Route::Node *U,
                                   CostEvaluator const &costEvaluator);
 
@@ -140,11 +138,6 @@ public:
     void addRouteOperator(RouteOperator &op);
 
     /**
-     * Adds a perturbation operator.
-     */
-    void addPerturbationOperator(PerturbationOperator &op);
-
-    /**
      * Returns the node operators in use. Note that there is no defined
      * ordering.
      */
@@ -155,12 +148,6 @@ public:
      * ordering.
      */
     std::vector<RouteOperator *> const &routeOperators() const;
-
-    /**
-     * Returns the perturbation operators in use. Note that there is no defined
-     * ordering.
-     */
-    std::vector<PerturbationOperator *> const &perturbationOperators() const;
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,

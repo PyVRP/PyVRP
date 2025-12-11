@@ -11,8 +11,6 @@
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
-using pyvrp::search::PerturbationContext;
-using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RouteOperator;
 
 Solution LocalSearch::operator()(Solution const &solution,
@@ -98,6 +96,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!promising[uClient])
                 continue;
 
+            // promising[uClient] = false; TODO
             for (auto const vClient : neighbours_[uClient])
             {
                 auto *V = &nodes[vClient];
@@ -164,21 +163,50 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 
 void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 {
-    if (perturbOps.empty())
-        return;
-
-    // Clear the set of promising nodes as perturbation will determine
-    // the initial set of promising nodes for local search.
+    // Clear the set of promising nodes as perturbation determines the initial
+    // set of promising nodes for local search.
     promising.reset();
 
-    PerturbationContext context{nodes,
-                                costEvaluator,
-                                neighbours_,
-                                orderNodes,
-                                promising,
-                                numPerturbations_};
+    if (numPerturbations_ == 0)
+        return;
 
-    (*perturbOps[0])(context);
+    size_t numMoves = 0;
+    for (auto const uClient : orderNodes)
+    {
+        auto *U = &nodes[uClient];
+        auto *uRoute = U->route();
+
+        if (uRoute)  // remove U and other nodes in its neighbourhood
+        {
+            markPromising(U);
+            uRoute->remove(U->idx());
+
+            if (++numMoves == numPerturbations_)
+                return;
+
+            for (auto const vClient : neighbours_[uClient])
+            {
+                auto *V = &nodes[vClient];
+                auto *vRoute = V->route();
+
+                if (vRoute)
+                {
+                    markPromising(V);
+                    vRoute->remove(V->idx());
+                    vRoute->update();
+
+                    if (++numMoves == numPerturbations_)
+                        return;
+                }
+            }
+        }
+        else  // force insert U
+        {
+            insert(U, costEvaluator, true);
+            if (++numMoves == numPerturbations_)
+                return;
+        }
+    }
 }
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
@@ -189,7 +217,6 @@ void LocalSearch::shuffle(RandomNumberGenerator &rng)
 
     rng.shuffle(nodeOps.begin(), nodeOps.end());
     rng.shuffle(routeOps.begin(), routeOps.end());
-    rng.shuffle(perturbOps.begin(), perturbOps.end());
 }
 
 bool LocalSearch::applyNodeOps(Route::Node *U,
@@ -339,6 +366,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         {
             route->insert(V->idx() + 1, U);
             update(route, route);
+            markPromising(U);
             return;
         }
 
@@ -347,10 +375,12 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         ProblemData::Client const &vData = data.location(V->client());
         if (!vData.required && inplaceCost(U, V, data, costEvaluator) < 0)
         {
+            markPromising(V);
             auto const idx = V->idx();
             route->remove(idx);
             route->insert(idx, U);
             update(route, route);
+            markPromising(U);
             return;
         }
     }
@@ -621,11 +651,6 @@ void LocalSearch::addRouteOperator(RouteOperator &op)
     routeOps.emplace_back(&op);
 }
 
-void LocalSearch::addPerturbationOperator(PerturbationOperator &op)
-{
-    perturbOps.emplace_back(&op);
-}
-
 std::vector<NodeOperator *> const &LocalSearch::nodeOperators() const
 {
     return nodeOps;
@@ -634,12 +659,6 @@ std::vector<NodeOperator *> const &LocalSearch::nodeOperators() const
 std::vector<RouteOperator *> const &LocalSearch::routeOperators() const
 {
     return routeOps;
-}
-
-std::vector<PerturbationOperator *> const &
-LocalSearch::perturbationOperators() const
-{
-    return perturbOps;
 }
 
 void LocalSearch::setNeighbours(Neighbours neighbours)
