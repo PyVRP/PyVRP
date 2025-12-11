@@ -115,7 +115,7 @@ def _solve(
     if kwargs.get("config_loc"):
         params = SolveParams.from_file(kwargs["config_loc"])
     else:
-        params = SolveParams(display_interval=1.0)
+        params = SolveParams()
 
     data = read(data_loc, round_func)
 
@@ -132,7 +132,7 @@ def _solve(
         ]
     )
 
-    result = solve(data, stop, seed, True, display=True, params=params)
+    result = solve(data, stop, seed, bool(stats_dir), params=params)
     instance_name = data_loc.stem
 
     if stats_dir:
