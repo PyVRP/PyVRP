@@ -29,7 +29,7 @@ class LocalSearch:
     num_perturbations
         Maximum number of perturbations to apply in each iteration. The actual
         value is randomly chosen from ``[0, num_perturbations]`` in each
-        iteration. Default is 25.
+        iteration.
     """
 
     def __init__(
@@ -37,7 +37,7 @@ class LocalSearch:
         data: ProblemData,
         rng: RandomNumberGenerator,
         neighbours: list[list[int]],
-        num_perturbations: int = 25,
+        num_perturbations: int = 40,
     ):
         self._ls = _LocalSearch(data, neighbours)
         self._rng = rng

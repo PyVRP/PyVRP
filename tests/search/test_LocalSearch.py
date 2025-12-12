@@ -719,3 +719,31 @@ def test_node_and_route_operators_property(ok_small):
     ls.add_route_operator(route_op)
     assert_equal(len(ls.route_operators), 1)
     assert_(ls.route_operators[0] is route_op)
+
+
+def test_perturb_inserts_clients(ok_small):
+    """
+    Tests that perturbing an empty solution inserts all missing clients.
+    """
+    ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small))
+    ls.num_perturbations = 4
+
+    sol = Solution(ok_small, [])
+    cost_eval = CostEvaluator([20], 6, 0)
+
+    perturbed = ls.perturb(sol, cost_eval)
+    assert_equal(perturbed.num_clients(), 4)
+
+
+def test_perturb_removes_clients(ok_small):
+    """
+    Tests that perturbing a complete solution could remove all clients.
+    """
+    ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small))
+    ls.num_perturbations = 4
+
+    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    cost_eval = CostEvaluator([20], 6, 0)
+
+    destroyed = ls.perturb(sol, cost_eval)
+    assert_equal(destroyed.num_clients(), 0)
