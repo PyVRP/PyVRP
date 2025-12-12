@@ -170,6 +170,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     promising.reset();
 
     DynamicBitset perturbed = {promising.size()};
+    bool shouldRemove = orderNodes[0] % 2 == 0;
 
     size_t numMoves = 0;
     auto const perturb = [&](auto *node)
@@ -180,17 +181,22 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
             return;
 
         auto *route = node->route();
-        if (route)  // insert or remove depending on whether node is in a route
+        if (shouldRemove && route)
         {
             markPromising(node);
             route->remove(node->idx());
             route->update();
+
+            perturbed[node->client()] = true;
+            numMoves++;
         }
-        else
+        if (!shouldRemove && !route)
+        {
             insert(node, costEvaluator, true);
 
-        perturbed[node->client()] = true;
-        numMoves++;
+            perturbed[node->client()] = true;
+            numMoves++;
+        }
     };
 
     // We do numPerturbations if we can. A perturbation is an insertion or a
