@@ -189,20 +189,23 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     size_t numMoves = 0;
     for (auto const uClient : orderNodes)
     {
-        auto *U = &nodes[uClient];
-        perturb(U);
-
-        if (++numMoves == numPerturbations_)
-            return;
-
-        for (auto const vClient : neighbours_[uClient])
+        if (!promising[uClient])  // only perturb if it's not yet marked
         {
-            auto *V = &nodes[vClient];
-            perturb(V);
-
+            auto *U = &nodes[uClient];
+            perturb(U);
             if (++numMoves == numPerturbations_)
                 return;
         }
+
+        for (auto const vClient : neighbours_[uClient])
+            if (!promising[vClient])  // only perturb if it's not yet marked
+            {
+                auto *V = &nodes[vClient];
+                perturb(V);
+
+                if (++numMoves == numPerturbations_)
+                    return;
+            }
     }
 }
 
