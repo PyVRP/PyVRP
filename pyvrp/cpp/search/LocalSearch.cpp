@@ -166,43 +166,40 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     // set of promising nodes for local search.
     promising.reset();
 
-    if (numPerturbations_ == 0)
+    if (numPerturbations_ == 0)  // nothing to do
         return;
 
+    auto const perturb = [&](auto *node)
+    {
+        auto *route = node->route();
+        if (route)  // insert or remove depending on whether node is in a route
+        {
+            markPromising(node);
+            route->remove(node->idx());
+            route->update();
+        }
+        else
+            insert(node, costEvaluator, true);
+    };
+
+    // We do numPerturbations if we can. A perturbation is an insertion or a
+    // removal of a single client, depending on whether they are currently in
+    // the solution or not. We perturb in local neighbourhoods of randomly
+    // selected clients U.
     size_t numMoves = 0;
     for (auto const uClient : orderNodes)
     {
         auto *U = &nodes[uClient];
-        auto *uRoute = U->route();
+        perturb(U);
 
-        if (uRoute)  // remove U and other nodes in its neighbourhood
+        if (++numMoves == numPerturbations_)
+            return;
+
+        for (auto const vClient : neighbours_[uClient])
         {
-            markPromising(U);
-            uRoute->remove(U->idx());
-            uRoute->update();
+            auto *V = &nodes[vClient];
+            perturb(V);
 
-            if (++numMoves == numPerturbations_)
-                return;
-
-            for (auto const vClient : neighbours_[uClient])
-            {
-                auto *V = &nodes[vClient];
-                auto *vRoute = V->route();
-
-                if (vRoute)
-                {
-                    markPromising(V);
-                    vRoute->remove(V->idx());
-                    vRoute->update();
-
-                    if (++numMoves == numPerturbations_)
-                        return;
-                }
-            }
-        }
-        else  // force insert U
-        {
-            insert(U, costEvaluator, true);
             if (++numMoves == numPerturbations_)
                 return;
         }
