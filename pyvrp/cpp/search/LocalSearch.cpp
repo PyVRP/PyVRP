@@ -475,6 +475,29 @@ void LocalSearch::insert(Route::Node *U,
         }
     }
 
+    // Try inserting into the first found empty route. We do this in randomised
+    // order of vehicle types to avoid over-prioritising vehicles with low fixed
+    // costs (similar to ``applyEmptyRouteMoves``).
+    for (auto const &[vehType, offset] : orderVehTypes)
+    {
+        auto const begin = routes.begin() + offset;
+        auto const end = begin + data.vehicleType(vehType).numAvailable;
+        auto const pred = [](auto const &route) { return route.empty(); };
+        auto empty = std::find_if(begin, end, pred);
+
+        if (empty == end)
+            continue;
+
+        auto const cost = insertCost(U, (*empty)[0], data, costEvaluator);
+        if (cost < bestCost)
+        {
+            bestCost = cost;
+            UAfter = (*empty)[0];
+        }
+
+        break;
+    }
+
     if (required || bestCost < 0)
     {
         UAfter->route()->insert(UAfter->idx() + 1, U);
