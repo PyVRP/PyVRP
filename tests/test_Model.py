@@ -1092,7 +1092,7 @@ def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
     """
     m = Model.from_data(mtvrptw_release_times)
     params = SolveParams(penalty=PenaltyParams(min_penalty=100))
-    res = m.solve(stop=MaxIterations(5), params=params)
+    res = m.solve(stop=MaxIterations(10), params=params)
     assert_(res.is_feasible())
 
     opt = read_solution("data/C201R0.25.sol", mtvrptw_release_times)

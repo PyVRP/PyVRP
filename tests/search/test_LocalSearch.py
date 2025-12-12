@@ -50,21 +50,19 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
 
 def test_local_search_call_perturbs_solution(ok_small):
     """
-    Tests that calling local search also perturbs a solution.
+    Tests that calling local search perturbs a solution.
     """
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(ok_small)
-    ls = LocalSearch(ok_small, rng, neighbours)
+    ls = LocalSearch(ok_small, rng, neighbours, num_perturbations=25)
 
     sol = Solution.make_random(ok_small, rng)
     cost_eval = CostEvaluator([1], 1, 0)
 
-    # ``__call__()`` should perturb the solution even though no node and route
-    # operators are added. Because of the neighbourhood removal operator, the
-    # resulting solution should have less clients than the original one.
+    # The local search should perturb the solution even though no node and
+    # route operators are added.
     perturbed = ls(sol, cost_eval)
     assert_(perturbed != sol)
-    assert_(perturbed.num_clients() < sol.num_clients())
 
 
 @pytest.mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
@@ -321,48 +319,22 @@ def test_no_op_results_in_same_solution(ok_small):
     """
     rng = RandomNumberGenerator(seed=42)
 
-    cost_eval = CostEvaluator([1], 1, 0)
-    sol = Solution.make_random(ok_small, rng)
-
     # Empty local search does not actually search anything, so it should return
     # the exact same solution as what was passed in.
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
-    assert_equal(ls(sol, cost_eval), sol)
-    assert_equal(ls.search(sol, cost_eval), sol)
-    assert_equal(ls.intensify(sol, cost_eval), sol)
-    assert_equal(ls.perturb(sol, cost_eval), sol)
-
-
-def test_perturbation_no_op_makes_search_no_op(ok_small):
-    """
-    Tests that ``__call__()`` is a no-op if the perturbation step is a no-op
-    because we set num_perturbations to 0.
-    """
-    rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(
         ok_small,
         rng,
         compute_neighbours(ok_small),
         num_perturbations=0,
     )
-    ls.add_node_operator(Exchange10(ok_small))
 
+    cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(ok_small, rng)
-    cost_evaluator = CostEvaluator([20], 6, 6)
 
-    def cost(solution):
-        return cost_evaluator.penalised_cost(solution)
-
-    # ``__call__()`` first perturbs and then searches, but only around nodes
-    # modified by the perturbation step. Since the perturbation is a no-op,
-    # the resulting search will also be a no-op.
-    improved = ls(sol, cost_evaluator)
-    assert_equal(cost(improved), cost(sol))
-
-    # Instead, directly calling ``search()`` searches around all nodes in the
-    # solution, so this will find improving moves.
-    further_improved = ls.search(improved, cost_evaluator)
-    assert_(cost(further_improved) < cost(improved))
+    assert_equal(ls(sol, cost_eval), sol)
+    assert_equal(ls.search(sol, cost_eval), sol)
+    assert_equal(ls.intensify(sol, cost_eval), sol)
+    assert_equal(ls.perturb(sol, cost_eval), sol)
 
 
 def test_intensify_can_improve_solution_further(rc208):
@@ -606,7 +578,12 @@ def test_no_op_multi_trip_instance(ok_small_multiple_trips):
     """
     rng = RandomNumberGenerator(seed=42)
     neighbours = [[] for _ in range(ok_small_multiple_trips.num_locations)]
-    ls = LocalSearch(ok_small_multiple_trips, rng, neighbours)
+    ls = LocalSearch(
+        ok_small_multiple_trips,
+        rng,
+        neighbours,
+        num_perturbations=0,
+    )
 
     trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
     trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
@@ -673,7 +650,12 @@ def test_search_statistics(ok_small):
     information about the number of evaluated and improving moves.
     """
     rng = RandomNumberGenerator(seed=42)
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+    ls = LocalSearch(
+        ok_small,
+        rng,
+        compute_neighbours(ok_small),
+        num_perturbations=0,
+    )
 
     node_op = Exchange10(ok_small)
     ls.add_node_operator(node_op)

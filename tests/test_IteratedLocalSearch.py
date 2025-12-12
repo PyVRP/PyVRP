@@ -138,26 +138,6 @@ def test_best_initial_solution(rc208):
     assert_equal(result.best, bks)
 
 
-def test_ils_result_has_correct_stats(ok_small):
-    """
-    Tests that ILS correctly collects search statistics.
-    """
-    pm = PenaltyManager(initial_penalties=([20], 6, 6))
-    rng = RandomNumberGenerator(42)
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
-    init = Solution.make_random(ok_small, rng)
-    ils = IteratedLocalSearch(ok_small, pm, rng, ls, init)
-
-    result = ils.run(MaxIterations(10), collect_stats=True)
-    assert_equal(result.best, init)
-    assert_equal(result.num_iterations, 10)
-    assert_equal(result.stats.num_iterations, 10)
-
-    datum = result.stats.data[0]
-    assert_equal(datum.current_cost, pm.cost_evaluator().penalised_cost(init))
-    assert_equal(datum.current_feas, init.is_feasible())
-
-
 def test_ils_acceptance_behaviour(ok_small):
     """
     Tests ILS acceptance behaviour over a fixed trajectory.

@@ -162,12 +162,12 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 
 void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 {
+    if (numPerturbations_ == 0)  // nothing to do
+        return;
+
     // Clear the set of promising nodes as perturbation determines the initial
     // set of promising nodes for local search.
     promising.reset();
-
-    if (numPerturbations_ == 0)  // nothing to do
-        return;
 
     auto const perturb = [&](auto *node)
     {
@@ -447,8 +447,8 @@ void LocalSearch::insert(Route::Node *U,
                          CostEvaluator const &costEvaluator,
                          bool required)
 {
-    Route::Node *UAfter = nullptr;
-    auto bestCost = std::numeric_limits<Cost>::max();
+    Route::Node *UAfter = routes[0][0];
+    auto bestCost = insertCost(U, UAfter, data, costEvaluator);
 
     for (auto const vClient : neighbours_[U->client()])
     {
@@ -465,34 +465,8 @@ void LocalSearch::insert(Route::Node *U,
         }
     }
 
-    // Try inserting into the first found empty route. We do this in randomised
-    // order of vehicle types to avoid over-prioritising vehicles with low fixed
-    // costs (similar to ``applyEmptyRouteMoves``).
-    for (auto const &[vehType, offset] : orderVehTypes)
-    {
-        auto const begin = routes.begin() + offset;
-        auto const end = begin + data.vehicleType(vehType).numAvailable;
-        auto const pred = [](auto const &route) { return route.empty(); };
-        auto empty = std::find_if(begin, end, pred);
-
-        if (empty == end)
-            continue;
-
-        auto const cost = insertCost(U, (*empty)[0], data, costEvaluator);
-        if (cost < bestCost)
-        {
-            bestCost = cost;
-            UAfter = (*empty)[0];
-        }
-
-        break;
-    }
-
     if (required || bestCost < 0)
     {
-        if (!UAfter)
-            UAfter = routes[0][0];
-
         UAfter->route()->insert(UAfter->idx() + 1, U);
         update(UAfter->route(), UAfter->route());
         markPromising(U);
