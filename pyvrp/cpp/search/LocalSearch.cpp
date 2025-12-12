@@ -476,14 +476,7 @@ void LocalSearch::insert(Route::Node *U,
 void LocalSearch::markPromising(Route::Node const *U)
 {
     assert(U->route());
-
     promising[U->client()] = true;
-
-    if (!U->isStartDepot())
-        promising[p(U)->client()] = true;
-
-    if (!U->isEndDepot())
-        promising[n(U)->client()] = true;
 }
 
 void LocalSearch::update(Route *U, Route *V)
