@@ -37,7 +37,7 @@ class LocalSearch:
         data: ProblemData,
         rng: RandomNumberGenerator,
         neighbours: list[list[int]],
-        num_perturbations: int = 40,
+        num_perturbations: int = 25,
     ):
         self._ls = _LocalSearch(data, neighbours)
         self._rng = rng

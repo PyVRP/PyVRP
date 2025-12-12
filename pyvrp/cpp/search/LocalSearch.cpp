@@ -169,22 +169,27 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     // set of promising nodes for local search.
     promising.reset();
 
-    size_t numMoves = 0;  // perturbation tracker
+    DynamicBitset perturbed = {promising.size()};
+
+    size_t numMoves = 0;
     auto const perturb = [&](auto *node)
     {
-        if (promising[node->client()])  // then we have already perturbed this
-            return;                     // node, no reason to do so again
+        // This node has already been touched by a previous perturbation, so
+        // we skip it here.
+        if (perturbed[node->client()])
+            return;
 
         auto *route = node->route();
         if (route)  // insert or remove depending on whether node is in a route
         {
+            markPromising(node);
             route->remove(node->idx());
             route->update();
         }
         else
             insert(node, costEvaluator, true);
 
-        promising[node->client()] = true;
+        perturbed[node->client()] = true;
         numMoves++;
     };
 
@@ -237,8 +242,8 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
                 = costEvaluator.penalisedCost(*rU)
                   + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
 
-            promising[U->client()] = true;
-            promising[V->client()] = true;
+            markPromising(U);
+            markPromising(V);
 
             nodeOp->apply(U, V);
             update(rU, rV);
@@ -302,6 +307,7 @@ void LocalSearch::applyDepotRemovalMove(Route::Node *U,
     // that's then unnecessary.
     if (removeCost(U, data, costEvaluator) <= 0)
     {
+        markPromising(U);  // for U's neighbours, which might not be depots
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
@@ -345,11 +351,10 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 
     if (removeCost(U, data, costEvaluator) < 0)  // remove if improving
     {
+        markPromising(U);
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
-
-        promising[U->client()] = true;
     }
 
     if (U->route())
@@ -368,8 +373,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         {
             route->insert(V->idx() + 1, U);
             update(route, route);
-
-            promising[U->client()] = true;
+            markPromising(U);
             return;
         }
 
@@ -378,13 +382,12 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         ProblemData::Client const &vData = data.location(V->client());
         if (!vData.required && inplaceCost(U, V, data, costEvaluator) < 0)
         {
+            markPromising(V);
             auto const idx = V->idx();
             route->remove(idx);
             route->insert(idx, U);
             update(route, route);
-
-            promising[U->client()] = true;
-            promising[V->client()] = true;
+            markPromising(U);
             return;
         }
     }
@@ -432,7 +435,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
         auto const &node = nodes[client];
         auto *route = node.route();
 
-        promising[node.client()] = true;
+        markPromising(&node);
         route->remove(node.idx());
         update(route, route);
     }
@@ -446,7 +449,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
         route->remove(idx);
         route->insert(idx, U);
         update(route, route);
-        promising[U->client()] = true;
+        markPromising(U);
     }
 }
 
@@ -476,8 +479,20 @@ void LocalSearch::insert(Route::Node *U,
     {
         UAfter->route()->insert(UAfter->idx() + 1, U);
         update(UAfter->route(), UAfter->route());
-        promising[U->client()] = true;
+        markPromising(U);
     }
+}
+
+void LocalSearch::markPromising(Route::Node const *U)
+{
+    assert(U->route());
+    promising[U->client()] = true;
+
+    if (!U->isStartDepot())
+        promising[p(U)->client()] = true;
+
+    if (!U->isEndDepot())
+        promising[n(U)->client()] = true;
 }
 
 void LocalSearch::update(Route *U, Route *V)
