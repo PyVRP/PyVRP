@@ -747,3 +747,26 @@ def test_perturb_removes_clients(ok_small):
 
     destroyed = ls.perturb(sol, cost_eval)
     assert_equal(destroyed.num_clients(), 0)
+
+
+def test_perturb_switches_remove_insert(ok_small):
+    """
+    Tests that perturbing switches between inserting and removing, depending
+    on whether a random initial client is in the solution.
+    """
+    ls = cpp_LocalSearch(ok_small, [[], [2], [], [], []])
+    ls.num_perturbations = 3
+
+    # We start with [1, 2] in the solution. We want to perturb three times. We
+    # begin by perturbing 1. Since 1 is in the solution, we remove. As 2 is in
+    # 1's neigbhourhood, so we also remove 2. Then we move to perturb 2, but
+    # it's already been perturbed and has an empty neighbourhood, so there is
+    # nothing we can do. So we move to perturb 3: it's not in the solution,
+    # has not been perturbed yet, so we insert it. That's the third and final
+    # perturbation, so the perturbed solution should contain only client 3.
+    sol = Solution(ok_small, [[1, 2]])
+    cost_eval = CostEvaluator([0], 0, 0)
+    destroyed = ls.perturb(sol, cost_eval)
+
+    visits = [visit for r in destroyed.routes() for visit in r.visits()]
+    assert_equal(visits, [3])
