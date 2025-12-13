@@ -11,8 +11,6 @@
 using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
-using pyvrp::search::PerturbationContext;
-using pyvrp::search::PerturbationOperator;
 using pyvrp::search::RouteOperator;
 
 Solution LocalSearch::operator()(Solution const &solution,
@@ -164,22 +162,68 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 
 void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 {
-    if (perturbOps.empty())
+    if (numPerturbations_ == 0)  // nothing to do
         return;
 
-    // Clear the set of promising nodes as perturbation will determine
-    // the initial set of promising nodes for local search.
+    enum class PerturbType
+    {
+        REMOVE,
+        INSERT
+    };
+
+    // Clear the set of promising nodes. Perturbation determines the initial
+    // set of promising nodes for further (local search) improvement.
     promising.reset();
 
-    PerturbationContext context{nodes,
-                                routes,
-                                costEvaluator,
-                                neighbours_,
-                                orderNodes,
-                                promising,
-                                numPerturbations_};
+    DynamicBitset perturbed = {promising.size()};
+    size_t numMoves = 0;
+    auto const perturb = [&](auto *node, PerturbType action)
+    {
+        // This node has already been touched by a previous perturbation, so
+        // we skip it here.
+        if (perturbed[node->client()])
+            return;
 
-    (*perturbOps[0])(context);
+        // Remove if node is in a route and we are currently removing.
+        auto *route = node->route();
+        if (route && action == PerturbType::REMOVE)
+        {
+            markPromising(node);
+            route->remove(node->idx());
+            route->update();
+        }
+        // Insert if node is not in a route and we are currently inserting.
+        else if (!route && action == PerturbType::INSERT)
+            insert(node, costEvaluator, true);
+        else  // no-op
+            return;
+
+        perturbed[node->client()] = true;
+        numMoves++;
+    };
+
+    // We do numPerturbations if we can. We perturb the local neighbourhood of
+    // randomly selected clients U: if U is in the solution, we remove it and
+    // its neighbours, while if it is not, we try to insert instead. Each
+    // removal or insertion counts as one perturbation.
+    for (auto const uClient : orderNodes)
+    {
+        auto *U = &nodes[uClient];
+        auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
+        perturb(U, action);
+
+        if (numMoves == numPerturbations_)
+            return;
+
+        for (auto const vClient : neighbours_[uClient])
+        {
+            auto *V = &nodes[vClient];
+            perturb(V, action);
+
+            if (numMoves == numPerturbations_)
+                return;
+        }
+    }
 }
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
@@ -190,7 +234,6 @@ void LocalSearch::shuffle(RandomNumberGenerator &rng)
 
     rng.shuffle(nodeOps.begin(), nodeOps.end());
     rng.shuffle(routeOps.begin(), routeOps.end());
-    rng.shuffle(perturbOps.begin(), perturbOps.end());
 }
 
 bool LocalSearch::applyNodeOps(Route::Node *U,
@@ -274,7 +317,7 @@ void LocalSearch::applyDepotRemovalMove(Route::Node *U,
     // that's then unnecessary.
     if (removeCost(U, data, costEvaluator) <= 0)
     {
-        markPromising(U);
+        markPromising(U);  // for U's neighbours, which might not be depots
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
@@ -340,6 +383,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         {
             route->insert(V->idx() + 1, U);
             update(route, route);
+            markPromising(U);
             return;
         }
 
@@ -348,10 +392,12 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         ProblemData::Client const &vData = data.location(V->client());
         if (!vData.required && inplaceCost(U, V, data, costEvaluator) < 0)
         {
+            markPromising(V);
             auto const idx = V->idx();
             route->remove(idx);
             route->insert(idx, U);
             update(route, route);
+            markPromising(U);
             return;
         }
     }
@@ -421,8 +467,8 @@ void LocalSearch::insert(Route::Node *U,
                          CostEvaluator const &costEvaluator,
                          bool required)
 {
-    Route::Node *UAfter = nullptr;
-    auto bestCost = std::numeric_limits<Cost>::max();
+    Route::Node *UAfter = routes[0][0];
+    auto bestCost = insertCost(U, UAfter, data, costEvaluator);
 
     for (auto const vClient : neighbours_[U->client()])
     {
@@ -464,9 +510,6 @@ void LocalSearch::insert(Route::Node *U,
 
     if (required || bestCost < 0)
     {
-        if (!UAfter)
-            UAfter = routes[0][0];
-
         UAfter->route()->insert(UAfter->idx() + 1, U);
         update(UAfter->route(), UAfter->route());
         markPromising(U);
@@ -476,7 +519,6 @@ void LocalSearch::insert(Route::Node *U,
 void LocalSearch::markPromising(Route::Node const *U)
 {
     assert(U->route());
-
     promising[U->client()] = true;
 
     if (!U->isStartDepot())
@@ -622,11 +664,6 @@ void LocalSearch::addRouteOperator(RouteOperator &op)
     routeOps.emplace_back(&op);
 }
 
-void LocalSearch::addPerturbationOperator(PerturbationOperator &op)
-{
-    perturbOps.emplace_back(&op);
-}
-
 std::vector<NodeOperator *> const &LocalSearch::nodeOperators() const
 {
     return nodeOps;
@@ -635,12 +672,6 @@ std::vector<NodeOperator *> const &LocalSearch::nodeOperators() const
 std::vector<RouteOperator *> const &LocalSearch::routeOperators() const
 {
     return routeOps;
-}
-
-std::vector<PerturbationOperator *> const &
-LocalSearch::perturbationOperators() const
-{
-    return perturbOps;
 }
 
 void LocalSearch::setNeighbours(Neighbours neighbours)

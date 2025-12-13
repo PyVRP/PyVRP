@@ -103,26 +103,3 @@ As a convenience, the :mod:`pyvrp.search` module makes these operators available
 
    .. autoclass:: SwapStar
       :exclude-members: evaluate, apply, statistics, supports
-
-
-Perturbation operators
-----------------------
-
-Instances of these operators can be added to the :class:`~pyvrp.search.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.search.LocalSearch.LocalSearch.add_perturbation_operator` method.
-Each perturbation operator inherits from :class:`~pyvrp.search._search.PerturbationOperator`.
-As a convenience, the :mod:`pyvrp.search` module makes all these operators available as ``PERTURBATION_OPERATORS``:
-
-.. code-block:: python
-
-   from pyvrp.search import PERTURBATION_OPERATORS
-
-.. automodule:: pyvrp.search._search
-   :noindex:
-
-   .. autoclass:: PerturbationOperator
-
-   .. autoclass:: InsertOptional
-      :exclude-members: __call__, supports
-
-   .. autoclass:: RemoveNeighbours
-      :exclude-members: __call__, supports

@@ -12,11 +12,6 @@ route_ops = [
 ]
 
 
-perturbation_ops = [
-    "RemoveNeighbours",
-]
-
-
 [ils]
 num_iters_no_improvement = 10
 initial_accept_weight = 0.1
