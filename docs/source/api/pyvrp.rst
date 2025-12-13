@@ -5,11 +5,11 @@
 PyVRP
 =====
 
-The top-level :mod:`pyvrp` module exposes several core classes needed to run the VRP solver.
-These include the core :class:`~pyvrp.GeneticAlgorithm.GeneticAlgorithm`, and the :class:`~pyvrp.Population.Population` that manages a :class:`~pyvrp._pyvrp.Solution` pool.
-Most classes take parameter objects that allow for advanced configuration - but sensible defaults are also provided.
-Finally, after running, the :class:`~pyvrp.GeneticAlgorithm.GeneticAlgorithm` returns a :class:`~pyvrp.Result.Result` object.
-This object can be used to obtain the best observed solution, and detailed runtime statistics.
+The top-level :mod:`pyvrp` module exposes several of PyVRP's core components.
+These include the :class:`~pyvrp._pyvrp.ProblemData` class defining a VRP instance, the :class:`~pyvrp.IteratedLocalSearch.IteratedLocalSearch` class implementing the ILS algorithm, and the :class:`~pyvrp._pyvrp.Solution` class representing VRP solutions.
+
+A typical workflow involves defining your problem instance through the :class:`~pyvrp.Model.Model` interface, solving it with its :meth:`~pyvrp.Model.Model.solve` method, and inspecting the resulting :class:`~pyvrp.Result.Result` object.
+This object stores the best observed solution and detailed runtime statistics.
 
 .. hint::
 
@@ -26,12 +26,12 @@ This object can be used to obtain the best observed solution, and detailed runti
    .. autoclass:: Profile
       :members:
 
-.. automodule:: pyvrp.GeneticAlgorithm
+.. automodule:: pyvrp.IteratedLocalSearch
 
-   .. autoclass:: GeneticAlgorithmParams
+   .. autoclass:: IteratedLocalSearchParams
       :members:
 
-   .. autoclass:: GeneticAlgorithm
+   .. autoclass:: IteratedLocalSearch
       :members:
 
 .. automodule:: pyvrp.minimise_fleet

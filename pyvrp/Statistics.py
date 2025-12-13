@@ -1,51 +1,29 @@
 import csv
 from dataclasses import dataclass, fields
-from math import nan
 from pathlib import Path
-from statistics import fmean
 from time import perf_counter
-from typing import Literal
+from typing import Iterator, Literal
 
-from pyvrp.Population import Population, SubPopulation
-from pyvrp._pyvrp import CostEvaluator
-
-_FEAS_CSV_PREFIX = "feas_"
-_INFEAS_CSV_PREFIX = "infeas_"
+from pyvrp._pyvrp import CostEvaluator, Solution
 
 
 @dataclass
 class _Datum:
     """
-    Single subpopulation data point.
+    Single iteration data point.
     """
 
-    size: int
-    avg_diversity: float
-    best_cost: float
-    avg_cost: float
-    avg_num_routes: float
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, _Datum):
-            return False
-
-        if self.size == other.size == 0:  # shortcut to avoid comparing NaN
-            return True
-
-        return (
-            self.size == other.size
-            and self.avg_diversity == other.avg_diversity
-            and self.best_cost == other.best_cost
-            and self.avg_cost == other.avg_cost
-            and self.avg_num_routes == other.avg_num_routes
-        )
+    current_cost: int
+    current_feas: bool
+    candidate_cost: int
+    candidate_feas: bool
+    best_cost: int
+    best_feas: bool
 
 
 class Statistics:
     """
-    The Statistics object tracks various (population-level) statistics of
-    genetic algorithm runs. This can be helpful in analysing the algorithm's
-    performance.
+    Statistics about the search progress.
 
     Parameters
     ----------
@@ -56,14 +34,12 @@ class Statistics:
 
     runtimes: list[float]
     num_iterations: int
-    feas_stats: list[_Datum]
-    infeas_stats: list[_Datum]
+    data: list[_Datum]
 
     def __init__(self, collect_stats: bool = True):
         self.runtimes = []
         self.num_iterations = 0
-        self.feas_stats = []
-        self.infeas_stats = []
+        self.data = []
 
         self._clock = perf_counter()
         self._collect_stats = collect_stats
@@ -74,23 +50,36 @@ class Statistics:
             and self._collect_stats == other._collect_stats
             and self.runtimes == other.runtimes
             and self.num_iterations == other.num_iterations
-            and self.feas_stats == other.feas_stats
-            and self.infeas_stats == other.infeas_stats
+            and self.data == other.data
         )
+
+    def __iter__(self) -> Iterator[_Datum]:
+        """
+        Iterates over the collected data points.
+        """
+        yield from self.data
 
     def is_collecting(self) -> bool:
         return self._collect_stats
 
-    def collect_from(
-        self, population: Population, cost_evaluator: CostEvaluator
+    def collect(
+        self,
+        current: Solution,
+        candidate: Solution,
+        best: Solution,
+        cost_evaluator: CostEvaluator,
     ):
         """
-        Collects statistics from the given population object.
+        Collect iteration statistics.
 
         Parameters
         ----------
-        population
-            Population instance to collect statistics from.
+        current
+            The current solution.
+        candidate
+            The candidate solution.
+        best
+            The best solution.
         cost_evaluator
             CostEvaluator used to compute costs for solutions.
         """
@@ -103,43 +92,15 @@ class Statistics:
         self.runtimes.append(self._clock - start)
         self.num_iterations += 1
 
-        # The following lines access private members of the population, but in
-        # this case that is mostly OK: we really want to have that access to
-        # enable detailed statistics logging.
-        feas_subpop = population._feas  # noqa: SLF001
-        feas_datum = self._collect_from_subpop(feas_subpop, cost_evaluator)
-        self.feas_stats.append(feas_datum)
-
-        infeas_subpop = population._infeas  # noqa: SLF001
-        infeas_datum = self._collect_from_subpop(infeas_subpop, cost_evaluator)
-        self.infeas_stats.append(infeas_datum)
-
-    def _collect_from_subpop(
-        self, subpop: SubPopulation, cost_evaluator: CostEvaluator
-    ) -> _Datum:
-        if not subpop:  # empty, so many statistics cannot be collected
-            return _Datum(
-                size=0,
-                avg_diversity=nan,
-                best_cost=nan,
-                avg_cost=nan,
-                avg_num_routes=nan,
-            )
-
-        size = len(subpop)
-        costs = [
-            cost_evaluator.penalised_cost(item.solution) for item in subpop
-        ]
-        num_routes = [item.solution.num_routes() for item in subpop]
-        diversities = [item.avg_distance_closest() for item in subpop]
-
-        return _Datum(
-            size=size,
-            avg_diversity=fmean(diversities),
-            best_cost=min(costs),
-            avg_cost=fmean(costs),
-            avg_num_routes=fmean(num_routes),
+        datum = _Datum(
+            cost_evaluator.penalised_cost(current),
+            current.is_feasible(),
+            cost_evaluator.penalised_cost(candidate),
+            candidate.is_feasible(),
+            cost_evaluator.penalised_cost(best),
+            best.is_feasible(),
         )
+        self.data.append(datum)
 
     @classmethod
     def from_csv(cls, where: Path | str, delimiter: str = ",", **kwargs):
@@ -165,15 +126,15 @@ class Statistics:
         """
         field2type = {field.name: field.type for field in fields(_Datum)}
 
-        def make_datum(row, prefix) -> _Datum:
+        def make_datum(row) -> _Datum:
             datum = {}
 
             for name, value in row.items():
-                if (field_name := name[len(prefix) :]) in field2type:
-                    # If the prefixless name is a field name, cast the row's
-                    # value to the appropriate type and add the data.
-                    type = field2type[field_name]
-                    datum[field_name] = type(value)  # type: ignore
+                if name in field2type:
+                    if field2type[name] is bool:
+                        datum[name] = bool(int(value))
+                    else:
+                        datum[name] = field2type[name](value)  # type: ignore
 
             return _Datum(**datum)
 
@@ -185,8 +146,7 @@ class Statistics:
         for row in csv.DictReader(lines, delimiter=delimiter, **kwargs):
             stats.runtimes.append(float(row["runtime"]))
             stats.num_iterations += 1
-            stats.feas_stats.append(make_datum(row, _FEAS_CSV_PREFIX))
-            stats.infeas_stats.append(make_datum(row, _INFEAS_CSV_PREFIX))
+            stats.data.append(make_datum(row))
 
         return stats
 
@@ -213,30 +173,21 @@ class Statistics:
             :class:`csv.DictWriter`.
         """
         field_names = [f.name for f in fields(_Datum)]
-        feas_fields = [_FEAS_CSV_PREFIX + field for field in field_names]
-        infeas_fields = [_INFEAS_CSV_PREFIX + field for field in field_names]
-
-        feas_data = [
-            {f: v for f, v in zip(feas_fields, vars(datum).values())}
-            for datum in self.feas_stats
-        ]
-
-        infeas_data = [
-            {f: v for f, v in zip(infeas_fields, vars(datum).values())}
-            for datum in self.infeas_stats
+        data = [
+            {
+                f: int(v) if isinstance(v, bool) else v  # store bool as 0/1
+                for f, v in zip(field_names, vars(datum).values())
+            }
+            for datum in self.data
         ]
 
         with open(where, "w") as fh:
-            header = ["runtime", *feas_fields, *infeas_fields]
+            header = ["runtime", *field_names]
             writer = csv.DictWriter(
                 fh, header, delimiter=delimiter, quoting=quoting, **kwargs
             )
-
             writer.writeheader()
 
-            for idx in range(self.num_iterations):
-                row = dict(runtime=self.runtimes[idx])
-                row.update(feas_data[idx])
-                row.update(infeas_data[idx])
-
+            for idx, (runtime, datum) in enumerate(zip(self.runtimes, data)):
+                row = dict(runtime=runtime, **datum)
                 writer.writerow(row)

@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <limits>
 #include <numeric>
 
 using pyvrp::Solution;
@@ -16,6 +17,7 @@ Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
+    perturb(costEvaluator);
 
     while (true)
     {
@@ -45,6 +47,14 @@ Solution LocalSearch::intensify(Solution const &solution,
 {
     loadSolution(solution);
     intensify(costEvaluator);
+    return exportSolution();
+}
+
+Solution LocalSearch::perturb(Solution const &solution,
+                              CostEvaluator const &costEvaluator)
+{
+    loadSolution(solution);
+    perturb(costEvaluator);
     return exportSolution();
 }
 
@@ -80,8 +90,12 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             applyDepotRemovalMove(p(U), costEvaluator);
             applyDepotRemovalMove(n(U), costEvaluator);
 
-            // We next apply the regular node operators. These work on pairs
-            // of nodes (U, V), where both U and V are in the solution.
+            // We next apply the regular operators that work on pairs of nodes
+            // (U, V), where both U and V are in the solution. We only do this
+            // if U is a promising candidate for improvement.
+            if (!promising[uClient])
+                continue;
+
             for (auto const vClient : neighbours_[uClient])
             {
                 auto *V = &nodes[vClient];
@@ -146,15 +160,80 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
     }
 }
 
+void LocalSearch::perturb(CostEvaluator const &costEvaluator)
+{
+    if (numPerturbations_ == 0)  // nothing to do
+        return;
+
+    enum class PerturbType
+    {
+        REMOVE,
+        INSERT
+    };
+
+    // Clear the set of promising nodes. Perturbation determines the initial
+    // set of promising nodes for further (local search) improvement.
+    promising.reset();
+
+    DynamicBitset perturbed = {promising.size()};
+    size_t numMoves = 0;
+    auto const perturb = [&](auto *node, PerturbType action)
+    {
+        // This node has already been touched by a previous perturbation, so
+        // we skip it here.
+        if (perturbed[node->client()])
+            return;
+
+        // Remove if node is in a route and we are currently removing.
+        auto *route = node->route();
+        if (route && action == PerturbType::REMOVE)
+        {
+            markPromising(node);
+            route->remove(node->idx());
+            route->update();
+        }
+        // Insert if node is not in a route and we are currently inserting.
+        else if (!route && action == PerturbType::INSERT)
+            insert(node, costEvaluator, true);
+        else  // no-op
+            return;
+
+        perturbed[node->client()] = true;
+        numMoves++;
+    };
+
+    // We do numPerturbations if we can. We perturb the local neighbourhood of
+    // randomly selected clients U: if U is in the solution, we remove it and
+    // its neighbours, while if it is not, we try to insert instead. Each
+    // removal or insertion counts as one perturbation.
+    for (auto const uClient : orderNodes)
+    {
+        auto *U = &nodes[uClient];
+        auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
+        perturb(U, action);
+
+        if (numMoves == numPerturbations_)
+            return;
+
+        for (auto const vClient : neighbours_[uClient])
+        {
+            auto *V = &nodes[vClient];
+            perturb(V, action);
+
+            if (numMoves == numPerturbations_)
+                return;
+        }
+    }
+}
+
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
     rng.shuffle(orderNodes.begin(), orderNodes.end());
-    rng.shuffle(nodeOps.begin(), nodeOps.end());
-
     rng.shuffle(orderRoutes.begin(), orderRoutes.end());
-    rng.shuffle(routeOps.begin(), routeOps.end());
-
     rng.shuffle(orderVehTypes.begin(), orderVehTypes.end());
+
+    rng.shuffle(nodeOps.begin(), nodeOps.end());
+    rng.shuffle(routeOps.begin(), routeOps.end());
 }
 
 bool LocalSearch::applyNodeOps(Route::Node *U,
@@ -172,6 +251,9 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
             [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(*rU)
                   + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
+
+            markPromising(U);
+            markPromising(V);
 
             nodeOp->apply(U, V);
             update(rU, rV);
@@ -235,6 +317,7 @@ void LocalSearch::applyDepotRemovalMove(Route::Node *U,
     // that's then unnecessary.
     if (removeCost(U, data, costEvaluator) <= 0)
     {
+        markPromising(U);  // for U's neighbours, which might not be depots
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
@@ -278,6 +361,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 
     if (removeCost(U, data, costEvaluator) < 0)  // remove if improving
     {
+        markPromising(U);
         auto *route = U->route();
         route->remove(U->idx());
         update(route, route);
@@ -299,6 +383,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         {
             route->insert(V->idx() + 1, U);
             update(route, route);
+            markPromising(U);
             return;
         }
 
@@ -307,10 +392,12 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         ProblemData::Client const &vData = data.location(V->client());
         if (!vData.required && inplaceCost(U, V, data, costEvaluator) < 0)
         {
+            markPromising(V);
             auto const idx = V->idx();
             route->remove(idx);
             route->insert(idx, U);
             update(route, route);
+            markPromising(U);
             return;
         }
     }
@@ -358,6 +445,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
         auto const &node = nodes[client];
         auto *route = node.route();
 
+        markPromising(&node);
         route->remove(node.idx());
         update(route, route);
     }
@@ -371,6 +459,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
         route->remove(idx);
         route->insert(idx, U);
         update(route, route);
+        markPromising(U);
     }
 }
 
@@ -379,7 +468,7 @@ void LocalSearch::insert(Route::Node *U,
                          bool required)
 {
     Route::Node *UAfter = routes[0][0];
-    Cost bestCost = insertCost(U, UAfter, data, costEvaluator);
+    auto bestCost = insertCost(U, UAfter, data, costEvaluator);
 
     for (auto const vClient : neighbours_[U->client()])
     {
@@ -396,11 +485,47 @@ void LocalSearch::insert(Route::Node *U,
         }
     }
 
+    // Try inserting into the first found empty route. We do this in randomised
+    // order of vehicle types to avoid over-prioritising vehicles with low fixed
+    // costs (similar to ``applyEmptyRouteMoves``).
+    for (auto const &[vehType, offset] : orderVehTypes)
+    {
+        auto const begin = routes.begin() + offset;
+        auto const end = begin + data.vehicleType(vehType).numAvailable;
+        auto const pred = [](auto const &route) { return route.empty(); };
+        auto empty = std::find_if(begin, end, pred);
+
+        if (empty == end)
+            continue;
+
+        auto const cost = insertCost(U, (*empty)[0], data, costEvaluator);
+        if (cost < bestCost)
+        {
+            bestCost = cost;
+            UAfter = (*empty)[0];
+        }
+
+        break;
+    }
+
     if (required || bestCost < 0)
     {
         UAfter->route()->insert(UAfter->idx() + 1, U);
         update(UAfter->route(), UAfter->route());
+        markPromising(U);
     }
+}
+
+void LocalSearch::markPromising(Route::Node const *U)
+{
+    assert(U->route());
+    promising[U->client()] = true;
+
+    if (!U->isStartDepot())
+        promising[p(U)->client()] = true;
+
+    if (!U->isEndDepot())
+        promising[n(U)->client()] = true;
 }
 
 void LocalSearch::update(Route *U, Route *V)
@@ -429,6 +554,7 @@ void LocalSearch::loadSolution(Solution const &solution)
     std::fill(lastTestedNodes.begin(), lastTestedNodes.end(), -1);
     std::fill(lastTestedRoutes.begin(), lastTestedRoutes.end(), -1);
     std::fill(lastUpdated.begin(), lastUpdated.end(), 0);
+    promising.set();
     numUpdates_ = 0;
 
     // First empty all routes.
@@ -578,6 +704,13 @@ LocalSearch::Neighbours const &LocalSearch::neighbours() const
     return neighbours_;
 }
 
+void LocalSearch::setNumPerturbations(size_t numPerturbations)
+{
+    numPerturbations_ = numPerturbations;
+}
+
+size_t LocalSearch::numPerturbations() const { return numPerturbations_; }
+
 LocalSearch::Statistics LocalSearch::statistics() const
 {
     size_t numMoves = 0;
@@ -604,7 +737,8 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
       orderRoutes(data.numVehicles()),
       lastTestedNodes(data.numLocations()),
       lastTestedRoutes(data.numVehicles()),
-      lastUpdated(data.numVehicles())
+      lastUpdated(data.numVehicles()),
+      promising(data.numLocations())
 {
     setNeighbours(neighbours);
 

@@ -4,10 +4,9 @@ import pickle
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
-from pyvrp import CostEvaluator, Population, RandomNumberGenerator, Solution
+from pyvrp import CostEvaluator, RandomNumberGenerator, Solution
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
-from pyvrp.diversity import broken_pairs_distance
 
 
 @pytest.mark.parametrize(
@@ -54,14 +53,8 @@ def test_num_iterations(ok_small, num_iterations: int):
     """
     Tests access to the ``num_iterations`` property.
     """
-    cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
-    pop = Population(broken_pairs_distance)
     stats = Statistics()
-
-    for _ in range(num_iterations):
-        stats.collect_from(pop, cost_evaluator)
-
     best = Solution.make_random(ok_small, rng)
     res = Result(best, stats, num_iterations, 0.0)
     assert_equal(res.num_iterations, num_iterations)
@@ -120,16 +113,12 @@ def test_result_can_be_pickled(ok_small, num_iterations: int):
     Tests that a ``Result`` object can be pickled: it can be serialised and
     unserialised. This is useful for e.g. storing results to disk.
     """
-    cost_evaluator = CostEvaluator([20], 6, 0)
-    rng = RandomNumberGenerator(seed=42)
-    pop = Population(broken_pairs_distance)
+    best = Solution(ok_small, [[1, 2], [3], [4]])
+    cost_eval = CostEvaluator([20], 6, 6)
     stats = Statistics()
 
     for _ in range(num_iterations):
-        pop.add(Solution.make_random(ok_small, rng), cost_evaluator)
-        stats.collect_from(pop, cost_evaluator)
-
-    best = Solution(ok_small, [[1, 2], [3], [4]])
+        stats.collect(best, best, best, cost_eval)
 
     before_pickle = Result(best, stats, num_iterations, 1.2)
     bytes = pickle.dumps(before_pickle)

@@ -48,6 +48,23 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     assert_equal(ls.search(sol, cost_evaluator), sol)
 
 
+def test_local_search_call_perturbs_solution(ok_small):
+    """
+    Tests that calling local search perturbs a solution.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbours = compute_neighbours(ok_small)
+    ls = LocalSearch(ok_small, rng, neighbours, num_perturbations=25)
+
+    sol = Solution.make_random(ok_small, rng)
+    cost_eval = CostEvaluator([1], 1, 0)
+
+    # The local search should perturb the solution even though no node and
+    # route operators are added.
+    perturbed = ls(sol, cost_eval)
+    assert_(perturbed != sol)
+
+
 @pytest.mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
 def test_raises_when_neighbourhood_dimensions_do_not_match(ok_small, size):
     """
@@ -297,21 +314,27 @@ def test_bugfix_vehicle_type_offsets(ok_small):
 
 def test_no_op_results_in_same_solution(ok_small):
     """
-    Tests that calling local search without first adding node or route
-    operators is a no-op, and returns the same solution as the one that was
-    given to it.
+    Tests that calling local search without first adding any operators is a
+    no-op, and returns the same solution as the one that was given to it.
     """
     rng = RandomNumberGenerator(seed=42)
+
+    # Empty local search does not actually search anything, so it should return
+    # the exact same solution as what was passed in.
+    ls = LocalSearch(
+        ok_small,
+        rng,
+        compute_neighbours(ok_small),
+        num_perturbations=0,
+    )
 
     cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(ok_small, rng)
 
-    # Empty local search does not actually search anything, so it should return
-    # the exact same solution as what was passed in.
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
     assert_equal(ls(sol, cost_eval), sol)
     assert_equal(ls.search(sol, cost_eval), sol)
     assert_equal(ls.intensify(sol, cost_eval), sol)
+    assert_equal(ls.perturb(sol, cost_eval), sol)
 
 
 def test_intensify_can_improve_solution_further(rc208):
@@ -555,7 +578,12 @@ def test_no_op_multi_trip_instance(ok_small_multiple_trips):
     """
     rng = RandomNumberGenerator(seed=42)
     neighbours = [[] for _ in range(ok_small_multiple_trips.num_locations)]
-    ls = LocalSearch(ok_small_multiple_trips, rng, neighbours)
+    ls = LocalSearch(
+        ok_small_multiple_trips,
+        rng,
+        neighbours,
+        num_perturbations=0,
+    )
 
     trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
     trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
@@ -606,7 +634,7 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     sol = Solution(data, [route1, route2])
 
     cost_eval = CostEvaluator([1_000], 0, 0)
-    improved = ls(sol, cost_eval)
+    improved = ls.search(sol, cost_eval)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
     # The local search should have removed the reload depot from the first
@@ -622,7 +650,12 @@ def test_search_statistics(ok_small):
     information about the number of evaluated and improving moves.
     """
     rng = RandomNumberGenerator(seed=42)
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+    ls = LocalSearch(
+        ok_small,
+        rng,
+        compute_neighbours(ok_small),
+        num_perturbations=0,
+    )
 
     node_op = Exchange10(ok_small)
     ls.add_node_operator(node_op)
@@ -686,3 +719,54 @@ def test_node_and_route_operators_property(ok_small):
     ls.add_route_operator(route_op)
     assert_equal(len(ls.route_operators), 1)
     assert_(ls.route_operators[0] is route_op)
+
+
+def test_perturb_inserts_clients(ok_small):
+    """
+    Tests that perturbing an empty solution inserts all missing clients.
+    """
+    ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small))
+    ls.num_perturbations = 4
+
+    sol = Solution(ok_small, [])
+    cost_eval = CostEvaluator([20], 6, 0)
+
+    perturbed = ls.perturb(sol, cost_eval)
+    assert_equal(perturbed.num_clients(), 4)
+
+
+def test_perturb_removes_clients(ok_small):
+    """
+    Tests that perturbing a complete solution could remove all clients.
+    """
+    ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small))
+    ls.num_perturbations = 4
+
+    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    cost_eval = CostEvaluator([20], 6, 0)
+
+    destroyed = ls.perturb(sol, cost_eval)
+    assert_equal(destroyed.num_clients(), 0)
+
+
+def test_perturb_switches_remove_insert(ok_small):
+    """
+    Tests that perturbing switches between inserting and removing, depending
+    on whether a random initial client is in the solution.
+    """
+    ls = cpp_LocalSearch(ok_small, [[], [2], [], [], []])
+    ls.num_perturbations = 3
+
+    # We start with [1, 2] in the solution. We want to perturb three times. We
+    # begin by perturbing 1. Since 1 is in the solution, we remove. As 2 is in
+    # 1's neigbhourhood, so we also remove 2. Then we move to perturb 2, but
+    # it's already been perturbed and has an empty neighbourhood, so there is
+    # nothing we can do. So we move to perturb 3: it's not in the solution,
+    # has not been perturbed yet, so we insert it. That's the third and final
+    # perturbation, so the perturbed solution should contain only client 3.
+    sol = Solution(ok_small, [[1, 2]])
+    cost_eval = CostEvaluator([0], 0, 0)
+    destroyed = ls.perturb(sol, cost_eval)
+
+    visits = [visit for r in destroyed.routes() for visit in r.visits()]
+    assert_equal(visits, [3])

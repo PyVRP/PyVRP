@@ -32,7 +32,7 @@ Contents
    :caption: Getting started
 
    setup/introduction_to_vrp
-   setup/introduction_to_hgs
+   setup/introduction_to_ils
    setup/installation
    setup/getting_help
    setup/faq

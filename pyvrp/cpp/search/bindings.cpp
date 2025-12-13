@@ -266,6 +266,9 @@ PYBIND11_MODULE(_search, m)
                       &LocalSearch::neighbours,
                       &LocalSearch::setNeighbours,
                       py::return_value_policy::reference_internal)
+        .def_property("num_perturbations",
+                      &LocalSearch::numPerturbations,
+                      &LocalSearch::setNumPerturbations)
         .def_property_readonly("statistics", &LocalSearch::statistics)
         .def_property_readonly("node_operators",
                                &LocalSearch::nodeOperators,
@@ -297,6 +300,13 @@ PYBIND11_MODULE(_search, m)
              py::overload_cast<pyvrp::Solution const &,
                                pyvrp::CostEvaluator const &>(
                  &LocalSearch::intensify),
+             py::arg("solution"),
+             py::arg("cost_evaluator"),
+             py::call_guard<py::gil_scoped_release>())
+        .def("perturb",
+             py::overload_cast<pyvrp::Solution const &,
+                               pyvrp::CostEvaluator const &>(
+                 &LocalSearch::perturb),
              py::arg("solution"),
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>())

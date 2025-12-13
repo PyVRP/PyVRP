@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_LOCALSEARCH_H
 
 #include "CostEvaluator.h"
+#include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
@@ -54,6 +55,8 @@ private:
     // numLocations, but nothing is stored for the depots!)
     Neighbours neighbours_;
 
+    size_t numPerturbations_ = 0;  // number of perturbations to apply
+
     std::vector<size_t> orderNodes;         // node order used by LS::search
     std::vector<size_t> orderRoutes;        // route order used by LS::intensify
     std::vector<std::pair<size_t, size_t>>  // vehicle type order (incl. offset)
@@ -62,6 +65,8 @@ private:
     std::vector<int> lastTestedNodes;   // tracks node operator evaluation
     std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
     std::vector<int> lastUpdated;       // tracks when routes were last modified
+    DynamicBitset promising;            // tracks which nodes are likely to be
+                                        // improved by node ops
 
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
@@ -101,6 +106,9 @@ private:
     // Tests moves involving clients in client groups.
     void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
+    // Marks the given node and its direct neighbours as promising.
+    void markPromising(Route::Node const *U);
+
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
 
@@ -110,8 +118,11 @@ private:
     // Performs intensify on the currently loaded solution.
     void intensify(CostEvaluator const &costEvaluator);
 
-    // Evaluate and apply inserting U after one of its neighbours if it's an
-    // improving move or required for feasibility.
+    // Performs perturb on the currently loaded solution.
+    void perturb(CostEvaluator const &costEvaluator);
+
+    // Evaluate inserting U after one of its neighbours or a random empty route.
+    // Applies the move if it's improving or required for feasibility.
     void
     insert(Route::Node *U, CostEvaluator const &costEvaluator, bool required);
 
@@ -151,6 +162,18 @@ public:
     Neighbours const &neighbours() const;
 
     /**
+     * Sets the number of perturbations to apply for all perturbation
+     * operators.
+     */
+    void setNumPerturbations(size_t numPerturbations);
+
+    /**
+     * Returns the number of perturbations to apply for all perturbation
+     * operators.
+     */
+    size_t numPerturbations() const;
+
+    /**
      * Returns search statistics for the currently loaded solution.
      */
     Statistics statistics() const;
@@ -177,8 +200,15 @@ public:
                        CostEvaluator const &costEvaluator);
 
     /**
+     * Performs a perturbation step around the given solution, and returns a
+     * new, modified solution.
+     */
+    Solution perturb(Solution const &solution,
+                     CostEvaluator const &costEvaluator);
+
+    /**
      * Shuffles the order in which the node and route pairs are evaluated, and
-     * the order in which node and route operators are applied.
+     * the order in which operators are applied.
      */
     void shuffle(RandomNumberGenerator &rng);
 

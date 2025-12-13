@@ -17,10 +17,6 @@ class PenaltyParams:
 
     Parameters
     ----------
-    repair_booster
-        A repair booster value :math:`r \\ge 1`. This value is used to
-        temporarily multiply the current penalty terms, to force feasibility.
-        See also :meth:`~PenaltyManager.booster_cost_evaluator`.
     solutions_between_updates
         Number of feasibility registrations between penalty value updates. The
         penalty manager updates the penalty terms every once in a while based
@@ -62,8 +58,6 @@ class PenaltyParams:
 
     Attributes
     ----------
-    repair_booster
-        A repair booster value.
     solutions_between_updates
         Number of feasibility registrations between penalty value updates.
     penalty_increase
@@ -86,19 +80,15 @@ class PenaltyParams:
         Maximum penalty term value.
     """
 
-    repair_booster: int = 12
-    solutions_between_updates: int = 50
-    penalty_increase: float = 1.34
-    penalty_decrease: float = 0.32
-    target_feasible: float = 0.43
+    solutions_between_updates: int = 500
+    penalty_increase: float = 1.25
+    penalty_decrease: float = 0.85
+    target_feasible: float = 0.90
     feas_tolerance: float = 0.05
     min_penalty: float = 0.1
     max_penalty: float = 100_000.0
 
     def __post_init__(self):
-        if not self.repair_booster >= 1:
-            raise ValueError("Expected repair_booster >= 1.")
-
         if not self.solutions_between_updates >= 1:
             raise ValueError("Expected solutions_between_updates >= 1.")
 
@@ -127,8 +117,7 @@ class PenaltyManager:
 
     This class manages time warp and load penalties, and provides penalty terms
     for given time warp and load values. It updates these penalties based on
-    recent history, and can be used to provide a temporary penalty booster
-    object that increases the penalties for a short duration.
+    recent history.
 
     .. note::
 
@@ -292,9 +281,10 @@ class PenaltyManager:
         *loads, tw, dist = self._penalties
         return CostEvaluator(loads, tw, dist)
 
-    def booster_cost_evaluator(self) -> CostEvaluator:
+    def max_cost_evaluator(self) -> CostEvaluator:
         """
-        Get a cost evaluator using the boosted current penalty values.
+        Get a cost evaluator using the maximum penalty value.
         """
-        *loads, tw, dist = self._penalties * self._params.repair_booster
+        penalties = np.full_like(self._penalties, self._params.max_penalty)
+        *loads, tw, dist = penalties
         return CostEvaluator(loads, tw, dist)

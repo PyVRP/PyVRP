@@ -40,7 +40,7 @@ These include:
 - A notebook implementing a `solve` method using PyVRP's components, [here][9].
   This notebook is a great way to dive deeper into how PyVRP works internally.
 
-If you are new to vehicle routing or metaheuristics, you might also benefit from reading the [introduction to VRP][6] and [introduction to HGS][7] pages.
+If you are new to vehicle routing or metaheuristics, you might also benefit from reading the [introduction to VRP][6] and [introduction to ILS][7] pages.
 
 ### Getting help
 
@@ -96,7 +96,7 @@ Since PyVRP extends [HGS-CVRP][8], please also consider citing [Vidal (2022)][10
 
 [6]: https://pyvrp.org/setup/introduction_to_vrp.html
 
-[7]: https://pyvrp.org/setup/introduction_to_hgs.html
+[7]: https://pyvrp.org/setup/introduction_to_ils.html
 
 [8]: https://github.com/vidalt/HGS-CVRP/
 
