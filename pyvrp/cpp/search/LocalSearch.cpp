@@ -165,42 +165,52 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     if (numPerturbations_ == 0)  // nothing to do
         return;
 
-    // Clear the set of promising nodes as perturbation determines the initial
-    // set of promising nodes for local search.
+    enum class PerturbType
+    {
+        REMOVE,
+        INSERT
+    };
+
+    // Clear the set of promising nodes. Perturbation determines the initial
+    // set of promising nodes for further (local search) improvement.
     promising.reset();
 
     DynamicBitset perturbed = {promising.size()};
-
     size_t numMoves = 0;
-    auto const perturb = [&](auto *node)
+    auto const perturb = [&](auto *node, PerturbType action)
     {
         // This node has already been touched by a previous perturbation, so
         // we skip it here.
         if (perturbed[node->client()])
             return;
 
+        // Remove if node is in a route and we are currently removing.
         auto *route = node->route();
-        if (route)  // insert or remove depending on whether node is in a route
+        if (route && action == PerturbType::REMOVE)
         {
             markPromising(node);
             route->remove(node->idx());
             route->update();
         }
-        else
+        // Insert if node is not in a route and we are currently inserting.
+        else if (!route && action == PerturbType::INSERT)
             insert(node, costEvaluator, true);
+        else  // no-op
+            return;
 
         perturbed[node->client()] = true;
         numMoves++;
     };
 
-    // We do numPerturbations if we can. A perturbation is an insertion or a
-    // removal of a single client, depending on whether they are currently in
-    // the solution or not. We perturb in local neighbourhoods of randomly
-    // selected clients U.
+    // We do numPerturbations if we can. We perturb the local neighbourhood of
+    // randomly selected clients U: if U is in the solution, we remove it and
+    // its neighbours, while if it is not, we try to insert instead. Each
+    // removal or insertion counts as one perturbation.
     for (auto const uClient : orderNodes)
     {
         auto *U = &nodes[uClient];
-        perturb(U);
+        auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
+        perturb(U, action);
 
         if (numMoves == numPerturbations_)
             return;
@@ -208,7 +218,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
         for (auto const vClient : neighbours_[uClient])
         {
             auto *V = &nodes[vClient];
-            perturb(V);
+            perturb(V, action);
 
             if (numMoves == numPerturbations_)
                 return;
