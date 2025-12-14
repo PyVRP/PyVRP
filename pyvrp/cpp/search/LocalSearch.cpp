@@ -176,7 +176,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     promising.reset();
 
     DynamicBitset perturbed = {promising.size()};
-    size_t numMoves = 0;
+    size_t movesLeft = numPerturbations_;
     auto const perturb = [&](auto *node, PerturbType action)
     {
         // This node has already been touched by a previous perturbation, so
@@ -199,7 +199,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
             return;
 
         perturbed[node->client()] = true;
-        numMoves++;
+        movesLeft--;
     };
 
     // We do numPerturbations if we can. We perturb the local neighbourhood of
@@ -212,7 +212,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
         auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
         perturb(U, action);
 
-        if (numMoves == numPerturbations_)
+        if (!movesLeft)
             return;
 
         for (auto const vClient : neighbours_[uClient])
@@ -220,7 +220,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
             auto *V = &nodes[vClient];
             perturb(V, action);
 
-            if (numMoves == numPerturbations_)
+            if (!movesLeft)
                 return;
         }
     }
