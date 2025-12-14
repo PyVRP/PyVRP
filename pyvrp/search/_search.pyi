@@ -53,6 +53,15 @@ class SwapStar(RouteOperator):
         self, data: ProblemData, overlap_tolerance: float = 0.05
     ) -> None: ...
 
+class PerturbationManager:
+    def __init__(
+        self,
+        min_perturbations: int = 1,
+        max_perturbations: int = 25,
+    ) -> None: ...
+    def num_perturbations(self) -> int: ...
+    def shuffle(self, rng: RandomNumberGenerator) -> None: ...
+
 class LocalSearchStatistics:
     num_moves: int
     num_improving: int

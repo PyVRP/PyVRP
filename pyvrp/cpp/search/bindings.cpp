@@ -1,6 +1,7 @@
 #include "bindings.h"
 #include "Exchange.h"
 #include "LocalSearch.h"
+#include "PerturbationManager.h"
 #include "RelocateWithDepot.h"
 #include "Route.h"
 #include "SwapRoutes.h"
@@ -22,6 +23,7 @@ using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
 using pyvrp::search::OperatorStatistics;
+using pyvrp::search::PerturbationManager;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
@@ -249,6 +251,14 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &RelocateWithDepot::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<RelocateWithDepot>, py::arg("data"));
+
+    py::class_<PerturbationManager>(
+        m, "PerturbationManager", DOC(pyvrp, search, PerturbationManager))
+        .def(py::init<size_t, size_t>(),
+             py::arg("min_perturbations") = 1,
+             py::arg("max_perturbations") = 25)
+        .def("num_perturbations", &PerturbationManager::numPerturbations)
+        .def("shuffle", &PerturbationManager::shuffle, py::arg("rng"));
 
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))
