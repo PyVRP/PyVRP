@@ -29,6 +29,6 @@ public:
 
     void shuffle(RandomNumberGenerator &rng);
 };
-};  // namespace pyvrp::search
+}  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_LOCALSEARCH_H
