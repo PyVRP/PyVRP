@@ -57,7 +57,7 @@ private:
     Neighbours neighbours_;
 
     // Perturbation manager that determines the size of the perturbation during
-    // each LS invokation.
+    // each LS invocation.
     PerturbationManager &perturbationManager_;
 
     std::vector<size_t> orderNodes;         // node order used by LS::search

@@ -727,8 +727,9 @@ def test_perturb_inserts_clients(ok_small):
     """
     Tests that perturbing an empty solution inserts all missing clients.
     """
+    rng = RandomNumberGenerator(seed=42)
     perturbation = PerturbationManager(PerturbationParams(4, 4))
-    ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small), perturbation)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small), perturbation)
 
     sol = Solution(ok_small, [])
     cost_eval = CostEvaluator([20], 6, 0)
@@ -741,8 +742,9 @@ def test_perturb_removes_clients(ok_small):
     """
     Tests that perturbing a complete solution could remove all clients.
     """
+    rng = RandomNumberGenerator(seed=42)
     perturbation = PerturbationManager(PerturbationParams(4, 4))
-    ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small), perturbation)
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small), perturbation)
 
     sol = Solution(ok_small, [[1, 2], [3, 4]])
     cost_eval = CostEvaluator([20], 6, 0)
