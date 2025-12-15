@@ -162,7 +162,9 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 
 void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 {
-    if (numPerturbations_ == 0)  // nothing to do
+    size_t movesLeft = perturbationManager_.numPerturbations();
+
+    if (!movesLeft)  // nothing to do
         return;
 
     enum class PerturbType
@@ -176,7 +178,6 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     promising.reset();
 
     DynamicBitset perturbed = {promising.size()};
-    size_t numMoves = 0;
     auto const perturb = [&](auto *node, PerturbType action)
     {
         // This node has already been touched by a previous perturbation, so
@@ -199,7 +200,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
             return;
 
         perturbed[node->client()] = true;
-        numMoves++;
+        movesLeft--;
     };
 
     // We do numPerturbations if we can. We perturb the local neighbourhood of
@@ -212,7 +213,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
         auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
         perturb(U, action);
 
-        if (numMoves == numPerturbations_)
+        if (!movesLeft)
             return;
 
         for (auto const vClient : neighbours_[uClient])
@@ -220,7 +221,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
             auto *V = &nodes[vClient];
             perturb(V, action);
 
-            if (numMoves == numPerturbations_)
+            if (!movesLeft)
                 return;
         }
     }
@@ -228,6 +229,8 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
+    perturbationManager_.shuffle(rng);
+
     rng.shuffle(orderNodes.begin(), orderNodes.end());
     rng.shuffle(orderRoutes.begin(), orderRoutes.end());
     rng.shuffle(orderVehTypes.begin(), orderVehTypes.end());
@@ -704,13 +707,6 @@ LocalSearch::Neighbours const &LocalSearch::neighbours() const
     return neighbours_;
 }
 
-void LocalSearch::setNumPerturbations(size_t numPerturbations)
-{
-    numPerturbations_ = numPerturbations;
-}
-
-size_t LocalSearch::numPerturbations() const { return numPerturbations_; }
-
 LocalSearch::Statistics LocalSearch::statistics() const
 {
     size_t numMoves = 0;
@@ -730,9 +726,12 @@ LocalSearch::Statistics LocalSearch::statistics() const
     return {numMoves, numImproving, numUpdates_};
 }
 
-LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
+LocalSearch::LocalSearch(ProblemData const &data,
+                         Neighbours neighbours,
+                         PerturbationManager &perturbationManager)
     : data(data),
       neighbours_(data.numLocations()),
+      perturbationManager_(perturbationManager),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
       lastTestedNodes(data.numLocations()),

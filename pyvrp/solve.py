@@ -16,6 +16,8 @@ from pyvrp.search import (
     LocalSearch,
     NeighbourhoodParams,
     NodeOperator,
+    PerturbationManager,
+    PerturbationParams,
     RouteOperator,
     compute_neighbours,
 )
@@ -45,8 +47,8 @@ class SolveParams:
         Route operators to use in the search.
     display_interval
         Time (in seconds) between iteration logs. Default 5s.
-    num_perturbations
-        Maximum number of perturbations to apply in each iteration. Default 25.
+    perturbation
+        Perturbation parameters.
     initial_solution
         Solution to start the search from. If not provided, a default solution
         will be created.
@@ -60,7 +62,7 @@ class SolveParams:
         node_ops: list[type[NodeOperator]] = NODE_OPERATORS,
         route_ops: list[type[RouteOperator]] = ROUTE_OPERATORS,
         display_interval: float = 5.0,
-        num_perturbations: int = 25,
+        perturbation: PerturbationParams = PerturbationParams(),
         initial_solution: Solution | None = None,
     ):
         self._ils = ils
@@ -69,7 +71,7 @@ class SolveParams:
         self._node_ops = node_ops
         self._route_ops = route_ops
         self._display_interval = display_interval
-        self._num_perturbations = num_perturbations
+        self._perturbation = perturbation
         self._initial_solution = initial_solution
 
     def __eq__(self, other: object) -> bool:
@@ -81,7 +83,7 @@ class SolveParams:
             and self.node_ops == other.node_ops
             and self.route_ops == other.route_ops
             and self.display_interval == other.display_interval
-            and self.num_perturbations == other.num_perturbations
+            and self.perturbation == other.perturbation
             and self.initial_solution == other.initial_solution
         )
 
@@ -110,8 +112,8 @@ class SolveParams:
         return self._display_interval
 
     @property
-    def num_perturbations(self):
-        return self._num_perturbations
+    def perturbation(self):
+        return self._perturbation
 
     @property
     def initial_solution(self) -> Solution | None:
@@ -144,7 +146,7 @@ class SolveParams:
             node_ops,
             route_ops,
             data.get("display_interval", 5.0),
-            data.get("num_perturbations", 25),
+            PerturbationParams(**data.get("perturbation", {})),
             None,  # initial solution cannot be loaded from file
         )
 
@@ -186,12 +188,8 @@ def solve(
     """
     rng = RandomNumberGenerator(seed=seed)
     neighbours = compute_neighbours(data, params.neighbourhood)
-    ls = LocalSearch(
-        data,
-        rng,
-        neighbours,
-        num_perturbations=params.num_perturbations,
-    )
+    perturbation = PerturbationManager(params.perturbation)
+    ls = LocalSearch(data, rng, neighbours, perturbation)
 
     for node_op in params.node_ops:
         if node_op.supports(data):

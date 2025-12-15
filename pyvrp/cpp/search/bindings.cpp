@@ -1,6 +1,7 @@
 #include "bindings.h"
 #include "Exchange.h"
 #include "LocalSearch.h"
+#include "PerturbationManager.h"
 #include "RelocateWithDepot.h"
 #include "Route.h"
 #include "SwapRoutes.h"
@@ -9,6 +10,7 @@
 #include "primitives.h"
 #include "search_docs.h"
 
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -22,6 +24,8 @@ using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
 using pyvrp::search::OperatorStatistics;
+using pyvrp::search::PerturbationManager;
+using pyvrp::search::PerturbationParams;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
@@ -250,6 +254,29 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &RelocateWithDepot::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<RelocateWithDepot>, py::arg("data"));
 
+    py::class_<PerturbationParams>(
+        m, "PerturbationParams", DOC(pyvrp, search, PerturbationParams))
+        .def(py::init<size_t, size_t>(),
+             py::arg("min_perturbations") = 1,
+             py::arg("max_perturbations") = 25)
+        .def_readonly("min_perturbations",
+                      &PerturbationParams::minPerturbations)
+        .def_readonly("max_perturbations",
+                      &PerturbationParams::maxPerturbations)
+        .def(py::self == py::self, py::arg("other"));  // this is __eq__;
+
+    py::class_<PerturbationManager>(
+        m, "PerturbationManager", DOC(pyvrp, search, PerturbationManager))
+        .def(py::init<PerturbationParams>(),
+             py::arg("params") = PerturbationParams())
+        .def("num_perturbations",
+             &PerturbationManager::numPerturbations,
+             DOC(pyvrp, search, PerturbationManager, numPerturbations))
+        .def("shuffle",
+             &PerturbationManager::shuffle,
+             py::arg("rng"),
+             DOC(pyvrp, search, PerturbationManager, shuffle));
+
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))
         .def_readonly("num_moves", &LocalSearch::Statistics::numMoves)
@@ -258,17 +285,17 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
-                      std::vector<std::vector<size_t>>>(),
+                      std::vector<std::vector<size_t>>,
+                      PerturbationManager &>(),
              py::arg("data"),
              py::arg("neighbours"),
-             py::keep_alive<1, 2>())  // keep data alive until LS is freed
+             py::arg("perturbation_manager") = PerturbationManager(),
+             py::keep_alive<1, 2>(),  // keep data alive until LS is freed
+             py::keep_alive<1, 4>())  // also keep perturbation_manager alive
         .def_property("neighbours",
                       &LocalSearch::neighbours,
                       &LocalSearch::setNeighbours,
                       py::return_value_policy::reference_internal)
-        .def_property("num_perturbations",
-                      &LocalSearch::numPerturbations,
-                      &LocalSearch::setNumPerturbations)
         .def_property_readonly("statistics", &LocalSearch::statistics)
         .def_property_readonly("node_operators",
                                &LocalSearch::nodeOperators,

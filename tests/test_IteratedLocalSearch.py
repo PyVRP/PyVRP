@@ -9,7 +9,13 @@ from pyvrp import (
     Solution,
 )
 from pyvrp.IteratedLocalSearch import History
-from pyvrp.search import Exchange10, LocalSearch, compute_neighbours
+from pyvrp.search import (
+    Exchange10,
+    LocalSearch,
+    PerturbationManager,
+    PerturbationParams,
+    compute_neighbours,
+)
 from pyvrp.stop import MaxIterations
 from tests.helpers import read_solution
 
@@ -142,10 +148,13 @@ def test_ils_result_has_correct_stats(ok_small):
     """
     Tests that ILS correctly collects search statistics.
     """
+    params = PerturbationParams(0, 0)  # disable perturbation
+    perturbation = PerturbationManager(params)
+
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     rng = RandomNumberGenerator(42)
     neighbours = compute_neighbours(ok_small)
-    ls = LocalSearch(ok_small, rng, neighbours, num_perturbations=0)
+    ls = LocalSearch(ok_small, rng, neighbours, perturbation)
     init = Solution.make_random(ok_small, rng)
     ils = IteratedLocalSearch(ok_small, pm, rng, ls, init)
 
