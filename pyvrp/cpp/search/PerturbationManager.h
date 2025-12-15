@@ -15,9 +15,9 @@ namespace pyvrp::search
  * Parameters
  * ----------
  * min_perturbations
- *     Minimum number of permutations to apply. Must not be negative.
+ *     Minimum number of perturbations to apply. Must not be negative.
  * max_perturbations
- *     Maximum number of permutations to apply.
+ *     Maximum number of perturbations to apply.
  */
 struct PerturbationParams
 {

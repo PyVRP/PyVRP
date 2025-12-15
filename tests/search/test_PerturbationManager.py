@@ -29,7 +29,7 @@ def test_eq():
 
 def test_shuffle():
     """
-    Tests shuffling and drawing random number of permutations.
+    Tests shuffling and drawing random number of perturbations.
     """
     params = PerturbationParams(1, 10)
     manager = PerturbationManager(params)
@@ -61,7 +61,7 @@ def test_num_perturbations_randomness():
         sample.append(manager.num_perturbations())
 
     # We should have drawn uniformly from [min, max] perturbations. The mean
-    # number of permutations should be min + (max - min) / 2, with some
+    # number of perturbations should be min + (max - min) / 2, with some
     # allowance for randomness.
     min_perturbs = params.min_perturbations
     max_perturbs = params.max_perturbations
