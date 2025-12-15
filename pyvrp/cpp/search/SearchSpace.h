@@ -4,6 +4,8 @@
 #include "DynamicBitset.h"
 #include "ProblemData.h"
 
+#include <vector>
+
 namespace pyvrp::search
 {
 /**
@@ -13,12 +15,14 @@ class SearchSpace
 {
     using Neighbours = std::vector<std::vector<size_t>>;
 
+    ProblemData const &data_;
+
     // Neighborhood restrictions: list of nearby clients for each client (size
     // numLocations, but nothing is stored for the depots!)
     Neighbours neighbours_;
 
     // Tracks clients that can likely be improved by local search operators.
-    DynamicBitset promising;
+    DynamicBitset promising_;
 
 public:
     SearchSpace(ProblemData const &data, Neighbours neighbours);
@@ -48,7 +52,7 @@ public:
     /**
      * Marks the given client as promising.
      */
-    bool markPromising(size_t client);
+    void markPromising(size_t client);
 };
 }  // namespace pyvrp::search
 
