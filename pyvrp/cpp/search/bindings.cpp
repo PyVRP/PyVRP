@@ -4,6 +4,7 @@
 #include "PerturbationManager.h"
 #include "RelocateWithDepot.h"
 #include "Route.h"
+#include "SearchSpace.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
 #include "SwapTails.h"
@@ -30,6 +31,7 @@ using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
 using pyvrp::search::RouteOperator;
+using pyvrp::search::SearchSpace;
 using pyvrp::search::supports;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
@@ -254,6 +256,17 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &RelocateWithDepot::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<RelocateWithDepot>, py::arg("data"));
 
+    py::class_<SearchSpace>(m, "SearchSpace", DOC(pyvrp, search, SearchSpace))
+        .def(py::init<pyvrp::ProblemData const &,
+                      std::vector<std::vector<size_t>>>(),
+             py::arg("data"),
+             py::arg("neighbours"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property("neighbours",
+                      &SearchSpace::neighbours,
+                      &SearchSpace::setNeighbours,
+                      py::return_value_policy::reference_internal);
+
     py::class_<PerturbationParams>(
         m, "PerturbationParams", DOC(pyvrp, search, PerturbationParams))
         .def(py::init<size_t, size_t>(),
@@ -285,17 +298,14 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
-                      std::vector<std::vector<size_t>>,
+                      SearchSpace &,
                       PerturbationManager &>(),
              py::arg("data"),
-             py::arg("neighbours"),
+             py::arg("search_space"),
              py::arg("perturbation_manager") = PerturbationManager(),
              py::keep_alive<1, 2>(),  // keep data alive until LS is freed
+             py::keep_alive<1, 3>(),  // also keep search_space alive
              py::keep_alive<1, 4>())  // also keep perturbation_manager alive
-        .def_property("neighbours",
-                      &LocalSearch::neighbours,
-                      &LocalSearch::setNeighbours,
-                      py::return_value_policy::reference_internal)
         .def_property_readonly("statistics", &LocalSearch::statistics)
         .def_property_readonly("node_operators",
                                &LocalSearch::nodeOperators,
