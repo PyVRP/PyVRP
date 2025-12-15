@@ -229,14 +229,14 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
+    perturbationManager_.shuffle(rng);
+
     rng.shuffle(orderNodes.begin(), orderNodes.end());
     rng.shuffle(orderRoutes.begin(), orderRoutes.end());
     rng.shuffle(orderVehTypes.begin(), orderVehTypes.end());
 
     rng.shuffle(nodeOps.begin(), nodeOps.end());
     rng.shuffle(routeOps.begin(), routeOps.end());
-
-    perturbationManager_.shuffle(rng);
 }
 
 bool LocalSearch::applyNodeOps(Route::Node *U,
