@@ -58,7 +58,7 @@ private:
 
     // Perturbation manager that determines the size of the perturbation during
     // each LS invokation.
-    PerturbationManager perturbationManager_;
+    PerturbationManager &perturbationManager_;
 
     std::vector<size_t> orderNodes;         // node order used by LS::search
     std::vector<size_t> orderRoutes;        // route order used by LS::intensify
@@ -205,8 +205,7 @@ public:
 
     LocalSearch(ProblemData const &data,
                 Neighbours neighbours,
-                PerturbationManager perturbationManager
-                = PerturbationManager());
+                PerturbationManager &perturbationManager);
 };
 }  // namespace pyvrp::search
 

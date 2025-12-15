@@ -728,7 +728,7 @@ LocalSearch::Statistics LocalSearch::statistics() const
 
 LocalSearch::LocalSearch(ProblemData const &data,
                          Neighbours neighbours,
-                         PerturbationManager perturbationManager)
+                         PerturbationManager &perturbationManager)
     : data(data),
       neighbours_(data.numLocations()),
       perturbationManager_(perturbationManager),
