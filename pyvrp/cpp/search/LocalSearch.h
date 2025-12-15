@@ -57,8 +57,8 @@ private:
 
     size_t numPerturbations_ = 0;  // number of perturbations to apply
 
-    std::vector<Route::Node *> orderNodes;  // node order used by LS::search
-    std::vector<Route *> orderRoutes;       // route order used by LS::intensify
+    std::vector<size_t> orderNodes;         // node order used by LS::search
+    std::vector<size_t> orderRoutes;        // route order used by LS::intensify
     std::vector<std::pair<size_t, size_t>>  // vehicle type order (incl. offset)
         orderVehTypes;                      // used by LS::applyEmptyRouteMoves
 
