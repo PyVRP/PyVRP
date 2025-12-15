@@ -28,7 +28,8 @@ class LocalSearch:
     neighbours
         List of lists that defines the local search neighbourhood.
     perturbation_manager
-        TODO
+        Perturbation manager that handles the size of the perturbation during
+        each invokation.
     """
 
     def __init__(

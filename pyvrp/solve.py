@@ -48,7 +48,7 @@ class SolveParams:
     display_interval
         Time (in seconds) between iteration logs. Default 5s.
     perturbation
-        TODO
+        Perturbation parameters.
     initial_solution
         Solution to start the search from. If not provided, a default solution
         will be created.

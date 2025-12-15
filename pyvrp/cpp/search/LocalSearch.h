@@ -56,7 +56,8 @@ private:
     // numLocations, but nothing is stored for the depots!)
     Neighbours neighbours_;
 
-    // TODO
+    // Perturbation manager that determines the size of the perturbation during
+    // each LS invokation.
     PerturbationManager perturbationManager_;
 
     std::vector<size_t> orderNodes;         // node order used by LS::search
