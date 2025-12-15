@@ -3,16 +3,20 @@
 #include <stdexcept>
 
 using pyvrp::search::PerturbationManager;
+using pyvrp::search::PerturbationParams;
 
-PerturbationManager::PerturbationManager(size_t minPerturbations,
-                                         size_t maxPerturbations)
-    : minPerturbations_(minPerturbations),
-      maxPerturbations_(maxPerturbations),
-      numPerturbations_(minPerturbations)
+PerturbationParams::PerturbationParams(size_t minPerturbations,
+                                       size_t maxPerturbations)
+    : minPerturbations(minPerturbations), maxPerturbations(maxPerturbations)
 {
     if (minPerturbations > maxPerturbations)
         throw std::invalid_argument(
             "min_perturbations must be <= max_perturbations.");
+}
+
+PerturbationManager::PerturbationManager(PerturbationParams params)
+    : params_(params), numPerturbations_(params_.minPerturbations)
+{
 }
 
 size_t PerturbationManager::numPerturbations() const
@@ -22,6 +26,6 @@ size_t PerturbationManager::numPerturbations() const
 
 void PerturbationManager::shuffle(RandomNumberGenerator &rng)
 {
-    auto const range = maxPerturbations_ - minPerturbations_;
-    numPerturbations_ = minPerturbations_ + rng.randint(range + 1);
+    auto const range = params_.maxPerturbations - params_.minPerturbations;
+    numPerturbations_ = params_.minPerturbations + rng.randint(range + 1);
 }

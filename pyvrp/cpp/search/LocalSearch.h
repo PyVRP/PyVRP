@@ -4,6 +4,7 @@
 #include "CostEvaluator.h"
 #include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
+#include "PerturbationManager.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
@@ -55,7 +56,8 @@ private:
     // numLocations, but nothing is stored for the depots!)
     Neighbours neighbours_;
 
-    size_t numPerturbations_ = 0;  // number of perturbations to apply
+    // TODO
+    PerturbationManager perturbationManager_;
 
     std::vector<size_t> orderNodes;         // node order used by LS::search
     std::vector<size_t> orderRoutes;        // route order used by LS::intensify
@@ -162,18 +164,6 @@ public:
     Neighbours const &neighbours() const;
 
     /**
-     * Sets the number of perturbations to apply for all perturbation
-     * operators.
-     */
-    void setNumPerturbations(size_t numPerturbations);
-
-    /**
-     * Returns the number of perturbations to apply for all perturbation
-     * operators.
-     */
-    size_t numPerturbations() const;
-
-    /**
      * Returns search statistics for the currently loaded solution.
      */
     Statistics statistics() const;
@@ -212,7 +202,10 @@ public:
      */
     void shuffle(RandomNumberGenerator &rng);
 
-    LocalSearch(ProblemData const &data, Neighbours neighbours);
+    LocalSearch(ProblemData const &data,
+                Neighbours neighbours,
+                PerturbationManager perturbationManager
+                = PerturbationManager());
 };
 }  // namespace pyvrp::search
 

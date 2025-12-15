@@ -1,4 +1,3 @@
-num_perturbations = 10
 display_interval = 10.0
 
 node_ops = [
@@ -24,6 +23,11 @@ weight_time_warp = 0
 num_neighbours = 20
 symmetric_proximity = true
 symmetric_neighbours = true
+
+
+[perturbation]
+min_perturbations = 1
+max_perturbations = 10
 
 
 [penalty]

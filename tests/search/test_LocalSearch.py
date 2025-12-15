@@ -18,6 +18,8 @@ from pyvrp.search import (
     Exchange11,
     LocalSearch,
     NeighbourhoodParams,
+    PerturbationManager,
+    PerturbationParams,
     RelocateWithDepot,
     SwapRoutes,
     SwapStar,
@@ -54,7 +56,7 @@ def test_local_search_call_perturbs_solution(ok_small):
     """
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(ok_small)
-    ls = LocalSearch(ok_small, rng, neighbours, num_perturbations=25)
+    ls = LocalSearch(ok_small, rng, neighbours)
 
     sol = Solution.make_random(ok_small, rng)
     cost_eval = CostEvaluator([1], 1, 0)
@@ -325,7 +327,7 @@ def test_no_op_results_in_same_solution(ok_small):
         ok_small,
         rng,
         compute_neighbours(ok_small),
-        num_perturbations=0,
+        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
     )
 
     cost_eval = CostEvaluator([1], 1, 0)
@@ -582,7 +584,7 @@ def test_no_op_multi_trip_instance(ok_small_multiple_trips):
         ok_small_multiple_trips,
         rng,
         neighbours,
-        num_perturbations=0,
+        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
     )
 
     trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
@@ -654,7 +656,7 @@ def test_search_statistics(ok_small):
         ok_small,
         rng,
         compute_neighbours(ok_small),
-        num_perturbations=0,
+        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
     )
 
     node_op = Exchange10(ok_small)
@@ -725,8 +727,8 @@ def test_perturb_inserts_clients(ok_small):
     """
     Tests that perturbing an empty solution inserts all missing clients.
     """
-    ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small))
-    ls.num_perturbations = 4
+    perturbation = PerturbationManager(PerturbationParams(4, 4))
+    ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small), perturbation)
 
     sol = Solution(ok_small, [])
     cost_eval = CostEvaluator([20], 6, 0)
@@ -739,8 +741,8 @@ def test_perturb_removes_clients(ok_small):
     """
     Tests that perturbing a complete solution could remove all clients.
     """
-    ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small))
-    ls.num_perturbations = 4
+    perturbation = PerturbationManager(PerturbationParams(4, 4))
+    ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small), perturbation)
 
     sol = Solution(ok_small, [[1, 2], [3, 4]])
     cost_eval = CostEvaluator([20], 6, 0)
@@ -754,8 +756,8 @@ def test_perturb_switches_remove_insert(ok_small):
     Tests that perturbing switches between inserting and removing, depending
     on whether a random initial client is in the solution.
     """
-    ls = cpp_LocalSearch(ok_small, [[], [2], [], [], []])
-    ls.num_perturbations = 3
+    perturbation = PerturbationManager(PerturbationParams(3, 3))
+    ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small), perturbation)
 
     # We start with [1, 2] in the solution. We want to perturb three times. We
     # begin by perturbing 1. Since 1 is in the solution, we remove. As 2 is in
