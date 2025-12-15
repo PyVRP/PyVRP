@@ -69,12 +69,10 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
         searchCompleted_ = true;
 
         // Node operators are evaluated for neighbouring (U, V) pairs.
-        for (auto const uClient : orderNodes)
+        for (auto *U : orderNodes)
         {
-            auto *U = &nodes[uClient];
-
-            auto const lastTested = lastTestedNodes[uClient];
-            lastTestedNodes[uClient] = numUpdates_;
+            auto const lastTested = lastTestedNodes[U->client()];
+            lastTestedNodes[U->client()] = numUpdates_;
 
             // First test removing or inserting U. Particularly relevant if not
             // all clients are required (e.g., when prize collecting).
@@ -93,10 +91,10 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // We next apply the regular operators that work on pairs of nodes
             // (U, V), where both U and V are in the solution. We only do this
             // if U is a promising candidate for improvement.
-            if (!promising[uClient])
+            if (!promising[U->client()])
                 continue;
 
-            for (auto const vClient : neighbours_[uClient])
+            for (auto const vClient : neighbours_[U->client()])
             {
                 auto *V = &nodes[vClient];
 
@@ -133,18 +131,15 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
     {
         searchCompleted_ = true;
 
-        for (auto const rU : orderRoutes)
+        for (auto *U : orderRoutes)
         {
-            auto &U = routes[rU];
-            assert(U.idx() == rU);
-
-            if (U.empty())
+            if (U->empty())
                 continue;
 
-            auto const lastTested = lastTestedRoutes[U.idx()];
-            lastTestedRoutes[U.idx()] = numUpdates_;
+            auto const lastTested = lastTestedRoutes[U->idx()];
+            lastTestedRoutes[U->idx()] = numUpdates_;
 
-            for (size_t rV = U.idx() + 1; rV != routes.size(); ++rV)
+            for (size_t rV = U->idx() + 1; rV != routes.size(); ++rV)
             {
                 auto &V = routes[rV];
                 assert(V.idx() == rV);
@@ -152,9 +147,9 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
                 if (V.empty())
                     continue;
 
-                if (lastUpdated[U.idx()] > lastTested
+                if (lastUpdated[U->idx()] > lastTested
                     || lastUpdated[V.idx()] > lastTested)
-                    applyRouteOps(&U, &V, costEvaluator);
+                    applyRouteOps(U, &V, costEvaluator);
             }
         }
     }
@@ -206,16 +201,15 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
     // randomly selected clients U: if U is in the solution, we remove it and
     // its neighbours, while if it is not, we try to insert instead. Each
     // removal or insertion counts as one perturbation.
-    for (auto const uClient : orderNodes)
+    for (auto *U : orderNodes)
     {
-        auto *U = &nodes[uClient];
         auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
         perturb(U, action);
 
         if (!movesLeft)
             return;
 
-        for (auto const vClient : neighbours_[uClient])
+        for (auto const vClient : neighbours_[U->client()])
         {
             auto *V = &nodes[vClient];
             perturb(V, action);
@@ -742,9 +736,6 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
 {
     setNeighbours(neighbours);
 
-    std::iota(orderNodes.begin(), orderNodes.end(), data.numDepots());
-    std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
-
     size_t offset = 0;
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
     {
@@ -764,4 +755,10 @@ LocalSearch::LocalSearch(ProblemData const &data, Neighbours neighbours)
         for (size_t vehicle = 0; vehicle != numAvailable; ++vehicle)
             routes.emplace_back(data, rIdx++, vehType);
     }
+
+    for (size_t idx = data.numDepots(); idx != nodes.size(); ++idx)
+        orderNodes[idx - data.numDepots()] = &nodes[idx];
+
+    for (size_t idx = 0; idx != routes.size(); ++idx)
+        orderRoutes[idx] = &routes[idx];
 }
