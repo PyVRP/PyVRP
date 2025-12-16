@@ -15,6 +15,9 @@ jobs:
   build:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       matrix:
         os: [ ubuntu-22.04, windows-2022, macos-14 ]
@@ -22,6 +25,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - run: $env:PATH = "C:\msys64\ucrt64\bin;C:\msys64\usr\bin;$env:PATH"
+        if: ${{ runner.os == 'Windows' }}
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
         with:
