@@ -194,8 +194,7 @@ def _compute_proximity(
     # Minimum time warp of visiting j directly after i, equal to
     # early[i] + service[i] + min_duration[i, j] - late[j]
     min_tw = buf  # reuse buffer
-    np.add(early[:, None], late[None, :], out=min_tw)
-    np.add(min_tw, service[:, None], out=min_tw)
+    np.add(early[:, None], service[:, None], out=min_tw)
     np.add(min_tw, min_duration, out=min_tw)
     np.subtract(min_tw, late[None, :], out=min_tw)
     np.multiply(min_wait, np.float32(weight_time_warp), out=min_wait)
