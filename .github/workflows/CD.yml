@@ -22,13 +22,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - if: ${{ runner.os == 'Windows' }}
-        run: |
-          choco upgrade mingw --version=12.2.0 -y --no-progress --allow-downgrade
-          echo "cc=gcc" >> $GITHUB_OUTPUT
-          echo "cxx=g++" >> $GITHUB_OUTPUT
-          Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-          refreshenv
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
         with:
