@@ -90,7 +90,7 @@ def compute_neighbours(
             # before the depots: we want to avoid same group neighbours, but it
             # is not problematic if we need to have them.
             idcs = np.ix_(group.clients, group.clients)
-            proximity[idcs] = np.finfo(np.float64).max
+            proximity[idcs] = np.finfo(np.float32).max
 
     np.fill_diagonal(proximity, np.inf)  # cannot be in own neighbourhood
     proximity[: data.num_depots, :] = np.inf  # depots have no neighbours
