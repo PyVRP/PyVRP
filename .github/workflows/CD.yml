@@ -25,8 +25,8 @@ jobs:
       - if: ${{ runner.os == 'Windows' }}
         run: |
           choco upgrade mingw --version=12.2.0 -y --no-progress --allow-downgrade
-          gcc --version
-          g++ --version
+          echo "cc=gcc" >> $GITHUB_OUTPUT
+          echo "cxx=g++" >> $GITHUB_OUTPUT
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
         with:
