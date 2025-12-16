@@ -24,7 +24,7 @@ jobs:
           persist-credentials: false
       - if: ${{ runner.os == 'Windows' }}
         run: |
-          choco upgrade mingw --version=12 -y --no-progress --allow-downgrade
+          choco upgrade mingw --version=12.2.0 -y --no-progress --allow-downgrade
           gcc --version
           g++ --version
       - name: Build wheels
