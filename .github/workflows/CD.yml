@@ -23,7 +23,10 @@ jobs:
         with:
           persist-credentials: false
       - if: ${{ runner.os == 'Windows' }}
-        run: choco upgrade mingw --version=12 -y --no-progress --allow-downgrade
+        run: |
+          choco upgrade mingw --version=12 -y --no-progress --allow-downgrade
+          gcc --version
+          g++ --version
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
         with:
