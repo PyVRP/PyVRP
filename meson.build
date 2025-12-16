@@ -12,7 +12,6 @@ project(
         'cpp_std=c++20',
         'b_ndebug=if-release',  # disables asserts in release builds
         'b_lto=true',  # sets -flto
-        'b_lto_threads=2',
         'werror=true',  # sets -Werror
         'warning_level=3',  # level 3 sets -Wextra and -Wpedantic
     ]
