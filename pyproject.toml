@@ -49,7 +49,7 @@ pyvrp = "pyvrp.cli:main"
 
 [dependency-groups]
 build = [
-    "meson>=1.0.0",
+    "meson==1.9.2",
     "ninja>=1.11.1",
     "gcovr>=7.2",
     "docblock>=0.1.6",
@@ -135,7 +135,7 @@ exclude_lines = [
 
 [tool.cibuildwheel]
 # We do not support old Python versions and somewhat uncommon platforms.
-build = "cp313-* cp314-*"
+build = "cp311-* cp312-* cp313-* cp314-*"
 skip = "*_ppc64le *_i686 *_s390x *-win32"
 build-frontend = "build"
 test-requires = [
@@ -174,5 +174,5 @@ script = "buildtools/build_wrapper.py"
 
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "meson", "ninja", "docblock"]
+requires = ["poetry-core>=1.0.0", "meson==1.9.2", "ninja", "docblock"]
 build-backend = "poetry.core.masonry.api"
