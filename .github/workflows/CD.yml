@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - run: $env:PATH = "C:\msys64\ucrt64\bin;C:\msys64\usr\bin;$env:PATH"
+      - run: echo "C:\msys64\ucrt64\bin;C:\msys64\usr\bin;" >> $env:GITHUB_PATH
         if: ${{ runner.os == 'Windows' }}
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
