@@ -25,8 +25,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - run: echo "C:\msys64\ucrt64\bin;C:\msys64\usr\bin;" >> $env:GITHUB_PATH
+      - name: Install toolchain
         if: ${{ runner.os == 'Windows' }}
+        run: |
+          choco install rtools -y --no-progress --force --version=4.3.5863
+          echo "c:\rtools43\ucrt64\bin;" >> $env:GITHUB_PATH
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
         with:
