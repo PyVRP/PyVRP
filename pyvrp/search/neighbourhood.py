@@ -175,9 +175,8 @@ def _compute_proximity(
         buf += unit_dur * durations[prof].astype(np.float32)
         np.minimum(edge_costs, buf, out=edge_costs)
 
-    min_duration = buf
     first_mat, *rest_mats = durations
-    min_duration[:] = first_mat.astype(np.float32)
+    min_duration = first_mat.astype(np.float32)
     for mat in rest_mats:
         np.minimum(min_duration, mat.astype(np.float32), out=min_duration)
 
