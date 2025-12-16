@@ -25,7 +25,7 @@ jobs:
       - name: Install toolchain
         if: ${{ runner.os == 'Windows' }}
         run: |
-          choco install rtools -y --no-progress --force --version=4.5.6691
+          choco install rtools -y --no-progress --version=4.5.6691
           echo "c:\rtools45\ucrt64\bin;" >> $env:GITHUB_PATH
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
