@@ -56,6 +56,10 @@ bool SearchSpace::isPromising(size_t client) const
 
 void SearchSpace::markPromising(size_t client)
 {
-    assert(client >= data_.numDepots());
+    // TODO client should not be depot?
     promising_[client] = true;
 }
+
+void SearchSpace::markAllPromising() { promising_.set(); }
+
+void SearchSpace::unmarkAllPromising() { promising_.reset(); }

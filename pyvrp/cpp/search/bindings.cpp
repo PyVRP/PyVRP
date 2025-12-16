@@ -298,14 +298,17 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
-                      SearchSpace &,
+                      std::vector<std::vector<size_t>>,
                       PerturbationManager &>(),
              py::arg("data"),
-             py::arg("search_space"),
+             py::arg("neighbours"),
              py::arg("perturbation_manager") = PerturbationManager(),
              py::keep_alive<1, 2>(),  // keep data alive until LS is freed
-             py::keep_alive<1, 3>(),  // also keep search_space alive
              py::keep_alive<1, 4>())  // also keep perturbation_manager alive
+        .def_property("neighbours",
+                      &LocalSearch::neighbours,
+                      &LocalSearch::setNeighbours,
+                      py::return_value_policy::reference_internal)
         .def_property_readonly("statistics", &LocalSearch::statistics)
         .def_property_readonly("node_operators",
                                &LocalSearch::nodeOperators,

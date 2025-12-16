@@ -13,6 +13,7 @@ using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
 using pyvrp::search::RouteOperator;
+using pyvrp::search::SearchSpace;
 
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
@@ -176,7 +177,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 
     // Clear the set of promising nodes. Perturbation determines the initial
     // set of promising nodes for further (local search) improvement.
-    // promising.reset();
+    searchSpace_.unmarkAllPromising();
 
     DynamicBitset perturbed = {data.numLocations()};
     auto const perturb = [&](auto *node, PerturbType action)
@@ -558,7 +559,7 @@ void LocalSearch::loadSolution(Solution const &solution)
     std::fill(lastTestedNodes.begin(), lastTestedNodes.end(), -1);
     std::fill(lastTestedRoutes.begin(), lastTestedRoutes.end(), -1);
     std::fill(lastUpdated.begin(), lastUpdated.end(), 0);
-    // promising.set();
+    searchSpace_.markAllPromising();
     numUpdates_ = 0;
 
     // First empty all routes.
@@ -678,6 +679,16 @@ std::vector<RouteOperator *> const &LocalSearch::routeOperators() const
     return routeOps;
 }
 
+void LocalSearch::setNeighbours(SearchSpace::Neighbours neighbours)
+{
+    searchSpace_.setNeighbours(neighbours);
+}
+
+SearchSpace::Neighbours const &LocalSearch::neighbours() const
+{
+    return searchSpace_.neighbours();
+}
+
 LocalSearch::Statistics LocalSearch::statistics() const
 {
     size_t numMoves = 0;
@@ -698,10 +709,10 @@ LocalSearch::Statistics LocalSearch::statistics() const
 }
 
 LocalSearch::LocalSearch(ProblemData const &data,
-                         SearchSpace &searchSpace,
+                         SearchSpace::Neighbours neighbours,
                          PerturbationManager &perturbationManager)
     : data(data),
-      searchSpace_(searchSpace),
+      searchSpace_(data, neighbours),
       perturbationManager_(perturbationManager),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),

@@ -1,6 +1,5 @@
 import numpy as np
-import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal
 
 from pyvrp import (
     Client,
@@ -17,7 +16,6 @@ from pyvrp.search import (
     Exchange10,
     Exchange11,
     LocalSearch,
-    NeighbourhoodParams,
     PerturbationManager,
     PerturbationParams,
     RelocateWithDepot,
@@ -67,99 +65,22 @@ def test_local_search_call_perturbs_solution(ok_small):
     assert_(perturbed != sol)
 
 
-@pytest.mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
-def test_raises_when_neighbourhood_dimensions_do_not_match(ok_small, size):
+def test_get_set_neighbours(ok_small):
     """
-    Tests that the local search raises when the neighbourhood size does not
-    correspond to the problem dimensions.
-    """
-    rng = RandomNumberGenerator(seed=42)
-
-    # Each of the given sizes is either smaller than or bigger than desired.
-    neighbours = [[] for _ in range(size)]
-
-    with assert_raises(RuntimeError):
-        LocalSearch(ok_small, rng, neighbours)
-
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
-
-    with assert_raises(RuntimeError):
-        ls.neighbours = neighbours
-
-
-def test_raises_when_neighbourhood_contains_self_or_depot(ok_small):
-    """
-    Tests that the local search raises when the granular neighbourhood contains
-    the depot (for any client) or the client is in its own neighbourhood.
+    Tests that getting and setting the local search's granular neighbourhood
+    works as expected. For more details, see the tests for the SearchSpace in
+    ``test_SearchSpace.py``, which handle validation.
     """
     rng = RandomNumberGenerator(seed=42)
-
-    neighbours = [[], [2], [3], [4], [0]]  # 4 has depot as neighbour
-    with assert_raises(RuntimeError):
-        LocalSearch(ok_small, rng, neighbours)
-
-    neighbours = [[], [1], [3], [4], [1]]  # 1 has itself as neighbour
-    with assert_raises(RuntimeError):
-        LocalSearch(ok_small, rng, neighbours)
-
-
-@pytest.mark.parametrize(
-    (
-        "weight_wait_time",
-        "weight_time_warp",
-        "num_neighbours",
-        "symmetric_proximity",
-        "symmetric_neighbours",
-    ),
-    [
-        (20, 20, 10, True, False),
-        (20, 20, 10, True, True),
-        # From original c++ implementation
-        # (18, 20, 34, False),
-        (18, 20, 34, True, True),
-    ],
-)
-def test_local_search_set_get_neighbours(
-    rc208,
-    weight_wait_time: int,
-    weight_time_warp: int,
-    num_neighbours: int,
-    symmetric_proximity: bool,
-    symmetric_neighbours: bool,
-):
-    """
-    Tests setting and getting neighbours on the local search instance.
-    """
-    rng = RandomNumberGenerator(seed=42)
-
-    params = NeighbourhoodParams(num_neighbours=1)
-    prev_neighbours = compute_neighbours(rc208, params)
-    ls = LocalSearch(rc208, rng, prev_neighbours)
-
-    params = NeighbourhoodParams(
-        weight_wait_time,
-        weight_time_warp,
-        num_neighbours,
-        symmetric_proximity,
-        symmetric_neighbours,
-    )
-    neighbours = compute_neighbours(rc208, params)
-
-    # Test that before we set neighbours we don't have same
-    assert_(ls.neighbours != neighbours)
-
-    # Test after we set we have the same
-    ls.neighbours = neighbours
+    neighbours = [[] for _ in range(ok_small.num_locations)]
+    ls = LocalSearch(ok_small, rng, neighbours)
     assert_equal(ls.neighbours, neighbours)
 
-    # Check that the bindings make a copy (in both directions)
-    assert_(ls.neighbours is not neighbours)
-    ls_neighbours = ls.neighbours
-    ls_neighbours[1] = []
-    assert_(ls.neighbours != ls_neighbours)
-    assert_equal(ls.neighbours, neighbours)
-    neighbours[1] = []
-    assert_(ls.neighbours != neighbours)
+    new_neighbours = compute_neighbours(ok_small)
+    assert_(new_neighbours != neighbours)
+
+    ls.neighbours = new_neighbours
+    assert_equal(ls.neighbours, new_neighbours)
 
 
 def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):

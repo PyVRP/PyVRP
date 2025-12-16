@@ -13,8 +13,10 @@ namespace pyvrp::search
  */
 class SearchSpace
 {
+public:
     using Neighbours = std::vector<std::vector<size_t>>;
 
+private:
     ProblemData const &data_;
 
     // Neighborhood restrictions: list of nearby clients for each client (size
@@ -53,6 +55,16 @@ public:
      * Marks the given client as promising.
      */
     void markPromising(size_t client);
+
+    /**
+     * TODO
+     */
+    void markAllPromising();
+
+    /**
+     * TODO
+     */
+    void unmarkAllPromising();
 };
 }  // namespace pyvrp::search
 

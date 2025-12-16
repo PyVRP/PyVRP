@@ -51,7 +51,7 @@ private:
     ProblemData const &data;
 
     // TODO
-    SearchSpace &searchSpace_;
+    SearchSpace searchSpace_;
 
     // Perturbation manager that determines the size of the perturbation during
     // each LS invocation.
@@ -148,6 +148,18 @@ public:
     std::vector<RouteOperator *> const &routeOperators() const;
 
     /**
+     * Set neighbourhood structure to use by the local search. For each client,
+     * the neighbourhood structure is a vector of nearby clients. Depots have
+     * no nearby client.
+     */
+    void setNeighbours(SearchSpace::Neighbours neighbours);
+
+    /**
+     * Returns the current neighbourhood structure.
+     */
+    SearchSpace::Neighbours const &neighbours() const;
+
+    /**
      * Returns search statistics for the currently loaded solution.
      */
     Statistics statistics() const;
@@ -187,7 +199,7 @@ public:
     void shuffle(RandomNumberGenerator &rng);
 
     LocalSearch(ProblemData const &data,
-                SearchSpace &searchSpace,
+                SearchSpace::Neighbours neighbours,
                 PerturbationManager &perturbationManager);
 };
 }  // namespace pyvrp::search

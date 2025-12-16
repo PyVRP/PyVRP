@@ -53,6 +53,17 @@ class SwapStar(RouteOperator):
         self, data: ProblemData, overlap_tolerance: float = 0.05
     ) -> None: ...
 
+class SearchSpace:
+    def __init__(
+        self,
+        data: ProblemData,
+        neighbours: list[list[int]],
+    ) -> None: ...
+    @property
+    def neighbours(self) -> list[list[int]]: ...
+    @neighbours.setter
+    def neighbours(self, neighbours: list[list[int]]) -> None: ...
+
 class PerturbationParams:
     min_perturbations: int
     max_perturbations: int
