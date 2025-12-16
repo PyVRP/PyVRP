@@ -197,8 +197,8 @@ class PenaltyManager:
         # types. This is the cheapest way any edge can be traversed.
         unique_edge_costs = {
             (
-                veh_type.unit_distance_cost,
-                veh_type.unit_duration_cost,
+                np.float32(veh_type.unit_distance_cost),
+                np.float32(veh_type.unit_duration_cost),
                 veh_type.profile,
             )
             for veh_type in data.vehicle_types()
@@ -206,17 +206,17 @@ class PenaltyManager:
 
         first, *rest = unique_edge_costs
         unit_dist, unit_dur, prof = first
-        edge_costs = unit_dist * distances[prof] + unit_dur * durations[prof]
+        edge_costs = unit_dist * distances[prof].astype(np.float32)
+        edge_costs += unit_dur * durations[prof].astype(np.float32)
         for unit_dist, unit_dur, prof in rest:
-            mat = unit_dist * distances[prof] + unit_dur * durations[prof]
+            mat = unit_dist * distances[prof].astype(np.float32)
+            mat += unit_dur * durations[prof].astype(np.float32)
             np.minimum(edge_costs, mat, out=edge_costs)
 
         # Best edge cost/distance/duration over all vehicle types and profiles,
         # and then average that for the entire matrix to obtain an "average
         # best" edge cost/distance/duration.
         avg_cost = edge_costs.mean()
-        avg_distance = np.minimum.reduce(distances).mean()
-        avg_duration = np.minimum.reduce(durations).mean()
 
         avg_load = np.zeros((data.num_load_dimensions,))
         if data.num_clients != 0 and data.num_load_dimensions != 0:
@@ -227,8 +227,13 @@ class PenaltyManager:
         # Initial penalty parameters are meant to weigh an average increase
         # in the relevant value by the same amount as the average edge cost.
         init_load = avg_cost / np.maximum(avg_load, 1)
-        init_tw = avg_cost / max(avg_duration, 1)
-        init_dist = avg_cost / max(avg_distance, 1)
+
+        np.minimum.reduce(durations, out=edge_costs)
+        init_tw = avg_cost / max(edge_costs.mean(), 1)
+
+        np.minimum.reduce(durations, out=edge_costs)
+        init_dist = avg_cost / max(edge_costs.mean(), 1)
+
         return cls((init_load.tolist(), init_tw, init_dist), params)
 
     def _compute(self, penalty: float, feas_percentage: float) -> float:
