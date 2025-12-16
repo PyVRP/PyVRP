@@ -190,11 +190,17 @@ class PenaltyManager:
         params
             PenaltyManager parameters. If not provided, a default will be used.
         """
-        distances = data.distance_matrices()
-        durations = data.duration_matrices()
+
+        def _minimum_reduce(matrices, out):
+            first, *rest = matrices
+            out[:] = first.astype(np.float32)
+            for mat in rest:
+                np.minimum(out, mat.astype(np.float32), out=out)
 
         # We first determine the elementwise minimum cost across all vehicle
         # types. This is the cheapest way any edge can be traversed.
+        distances = data.distance_matrices()
+        durations = data.duration_matrices()
         unique_edge_costs = {
             (
                 np.float32(veh_type.unit_distance_cost),
@@ -208,10 +214,12 @@ class PenaltyManager:
         unit_dist, unit_dur, prof = first
         edge_costs = unit_dist * distances[prof].astype(np.float32)
         edge_costs += unit_dur * durations[prof].astype(np.float32)
+        buf = np.empty_like(edge_costs)
+
         for unit_dist, unit_dur, prof in rest:
-            mat = unit_dist * distances[prof].astype(np.float32)
-            mat += unit_dur * durations[prof].astype(np.float32)
-            np.minimum(edge_costs, mat, out=edge_costs)
+            buf[:] = unit_dist * distances[prof].astype(np.float32)
+            buf += unit_dur * durations[prof].astype(np.float32)
+            np.minimum(edge_costs, buf, out=edge_costs)
 
         # Best edge cost/distance/duration over all vehicle types and profiles,
         # and then average that for the entire matrix to obtain an "average
@@ -228,11 +236,13 @@ class PenaltyManager:
         # in the relevant value by the same amount as the average edge cost.
         init_load = avg_cost / np.maximum(avg_load, 1)
 
-        np.minimum.reduce(durations, out=edge_costs)
-        init_tw = avg_cost / max(edge_costs.mean(), 1)
+        min_duration = buf  # reuse buffer
+        _minimum_reduce(durations, out=min_duration)
+        init_tw = avg_cost / max(min_duration.mean(), 1)
 
-        np.minimum.reduce(durations, out=edge_costs)
-        init_dist = avg_cost / max(edge_costs.mean(), 1)
+        min_distance = buf  # reuse buffer
+        _minimum_reduce(distances, out=min_distance)
+        init_dist = avg_cost / max(min_distance.mean(), 1)
 
         return cls((init_load.tolist(), init_tw, init_dist), params)
 

@@ -139,7 +139,7 @@ def _compute_proximity(
            large class of vehicle routing problems with time-windows.
            *Computers & Operations Research*, 40(1), 475 - 489.
     """
-    early = np.zeros((data.num_locations,), dtype=float)  # avoids overflows
+    early = np.zeros((data.num_locations,), dtype=np.float32)
     early[data.num_depots :] = np.asarray([c.tw_early for c in data.clients()])
 
     late = np.zeros_like(early)
@@ -157,8 +157,8 @@ def _compute_proximity(
     durations = data.duration_matrices()
     unique_edge_costs = {
         (
-            veh_type.unit_distance_cost,
-            veh_type.unit_duration_cost,
+            np.float32(veh_type.unit_distance_cost),
+            np.float32(veh_type.unit_duration_cost),
             veh_type.profile,
         )
         for veh_type in data.vehicle_types()
@@ -166,21 +166,45 @@ def _compute_proximity(
 
     first, *rest = unique_edge_costs
     unit_dist, unit_dur, prof = first
-    edge_costs = unit_dist * distances[prof] + unit_dur * durations[prof]
-    for unit_dist, unit_dur, prof in rest:
-        mat = unit_dist * distances[prof] + unit_dur * durations[prof]
-        np.minimum(edge_costs, mat, out=edge_costs)
+    edge_costs = unit_dist * distances[prof].astype(np.float32)
+    edge_costs += unit_dur * durations[prof].astype(np.float32)
+    buf = np.empty_like(edge_costs)
 
-    # Minimum wait time and time warp of visiting j directly after i.
-    min_duration = np.minimum.reduce(durations)
-    min_wait = early[None, :] - min_duration - service[:, None] - late[:, None]
-    min_tw = early[:, None] + service[:, None] + min_duration - late[None, :]
+    for unit_dist, unit_dur, prof in rest:
+        buf[:] = unit_dist * distances[prof].astype(np.float32)
+        buf += unit_dur * durations[prof].astype(np.float32)
+        np.minimum(edge_costs, buf, out=edge_costs)
+
+    min_duration = buf
+    first_mat, *rest_mats = durations
+    min_duration[:] = first_mat.astype(np.float32)
+    for mat in rest_mats:
+        np.minimum(min_duration, mat.astype(np.float32), out=min_duration)
+
+    # Minimum wait time of visiting j directly after i, equal to
+    # early[j] - min_duration[i, j] - service[i] - late[i]
+    min_wait = buf  # reuse buffer
+    np.subtract(early[None, :], min_duration, out=min_wait)
+    np.subtract(min_wait, service[:, None], out=min_wait)
+    np.subtract(min_wait, late[:, None], out=min_wait)
+    np.multiply(min_wait, np.float32(weight_wait_time), out=min_wait)
+    np.maximum(min_wait, 0, out=min_wait)
+    edge_costs += min_wait
+
+    # Minimum time warp of visiting j directly after i, equal to
+    # early[i] + service[i] + min_duration[i, j] - late[j]
+    min_tw = buf  # reuse buffer
+    np.add(early[:, None], late[None, :], out=min_tw)
+    np.add(min_tw, service[:, None], out=min_tw)
+    np.add(min_tw, min_duration, out=min_tw)
+    np.subtract(min_tw, late[None, :], out=min_tw)
+    np.multiply(min_wait, np.float32(weight_time_warp), out=min_wait)
+    np.maximum(min_tw, 0, out=min_tw)
+    edge_costs += min_tw
+
+    # Subtract prizes to encourage visiting high-prize clients.
+    edge_costs -= prize[None, :]
 
     # Proximity is based on edge costs (and rewards) and penalties for known
     # time-related violations.
-    return (
-        edge_costs.astype(float)
-        - prize[None, :]
-        + weight_wait_time * np.maximum(min_wait, 0)
-        + weight_time_warp * np.maximum(min_tw, 0)
-    )
+    return edge_costs
