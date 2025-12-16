@@ -196,7 +196,7 @@ def _compute_proximity(
     np.add(early[:, None], service[:, None], out=min_tw)
     np.add(min_tw, min_duration, out=min_tw)
     np.subtract(min_tw, late[None, :], out=min_tw)
-    np.multiply(min_wait, np.float32(weight_time_warp), out=min_wait)
+    np.multiply(min_tw, np.float32(weight_time_warp), out=min_tw)
     np.maximum(min_tw, 0, out=min_tw)
     edge_costs += min_tw
 
