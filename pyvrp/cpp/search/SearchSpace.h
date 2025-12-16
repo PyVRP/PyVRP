@@ -9,7 +9,11 @@
 namespace pyvrp::search
 {
 /**
- * TODO
+ * SearchSpace(data: ProblemData, neighbours: list[list[int]])
+ *
+ * Manages a search space for the local search. The search space is granular,
+ * around the given neighbourhood, and uses the concept of promising clients
+ * to determine which client's neighbourhoods to search.
  */
 class SearchSpace
 {
