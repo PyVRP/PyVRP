@@ -27,6 +27,7 @@ jobs:
           choco upgrade mingw --version=12.2.0 -y --no-progress --allow-downgrade
           echo "cc=gcc" >> $GITHUB_OUTPUT
           echo "cxx=g++" >> $GITHUB_OUTPUT
+          refreshenv
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
         with:
