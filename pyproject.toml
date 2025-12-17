@@ -147,6 +147,11 @@ test-requires = [
 test-command = "pytest {package}/tests"
 
 
+[tool.cibuildwheel.windows]
+before-build="pip install delvewheel"
+repair-wheel-command = "delvewheel repair -w {dest_dir} {wheel}"
+
+
 [tool.poetry]
 include = [
     { path = "benchmarks/", format = "sdist" },
