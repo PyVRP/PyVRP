@@ -219,6 +219,8 @@ class PenaltyManager:
         # best" edge cost/distance/duration.
         avg_cost = edge_costs.mean()
 
+        # ``np.minimum.reduce`` is not efficient for lists of arrays, so we
+        # manually compute the elementwise minimum here.
         buf[:] = distances[0]
         for mat in distances[1:]:
             np.minimum(buf, mat, out=buf)

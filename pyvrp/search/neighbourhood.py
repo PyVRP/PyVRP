@@ -178,10 +178,12 @@ def _compute_proximity(
         buf += unit_dur * durations[prof]
         np.minimum(edge_costs, buf, out=edge_costs)
 
-    first_mat, *rest_mats = durations
-    min_duration = first_mat.astype(float)
-    for mat in rest_mats:
-        np.minimum(min_duration, mat, out=min_duration)
+    # ``np.minimum.reduce`` is not efficient for lists of arrays, so we
+    # manually compute the elementwise minimum here.
+    buf[:] = durations[0]
+    for mat in durations[1:]:
+        np.minimum(buf, mat, out=buf)
+    min_duration = buf.copy()
 
     # Minimum wait time of visiting j directly after i, equal to
     # early[j] - min_duration[i, j] - service[i] - late[i]
