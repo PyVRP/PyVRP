@@ -190,13 +190,6 @@ class PenaltyManager:
         params
             PenaltyManager parameters. If not provided, a default will be used.
         """
-
-        def _minimum_reduce(matrices, out):
-            first, *rest = matrices
-            out[:] = first
-            for mat in rest:
-                np.minimum(out, mat, out=out)
-
         # We first determine the elementwise minimum cost across all vehicle
         # types. This is the cheapest way any edge can be traversed.
         distances = data.distance_matrices()
@@ -233,6 +226,12 @@ class PenaltyManager:
         # Initial penalty parameters are meant to weigh an average increase
         # in the relevant value by the same amount as the average edge cost.
         init_load = avg_cost / np.maximum(avg_load, 1)
+
+        def _minimum_reduce(matrices, out):
+            first, *rest = matrices
+            out[:] = first
+            for mat in rest:
+                np.minimum(out, mat, out=out)
 
         min_duration = buf  # reuse buffer
         _minimum_reduce(durations, out=min_duration)
