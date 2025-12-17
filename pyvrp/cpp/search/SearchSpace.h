@@ -61,12 +61,12 @@ public:
     void markPromising(size_t client);
 
     /**
-     * TODO
+     * Marks all clients as promising.
      */
     void markAllPromising();
 
     /**
-     * TODO
+     * Unmarks all clients as promising.
      */
     void unmarkAllPromising();
 };

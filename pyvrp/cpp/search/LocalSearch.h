@@ -50,7 +50,7 @@ public:
 private:
     ProblemData const &data;
 
-    // TODO
+    // Manages the granular neighbourhood and promising clients
     SearchSpace searchSpace_;
 
     // Perturbation manager that determines the size of the perturbation during
@@ -104,7 +104,8 @@ private:
     // Tests moves involving clients in client groups.
     void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
-    // Marks the given node and its direct neighbours as promising.
+    // Marks the given node U and its direct client neighbours as promising.
+    // U must currently be in a route. Does not mark depots.
     void markPromising(Route::Node const *U);
 
     // Updates solution state after an improving local search move.
