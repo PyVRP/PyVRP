@@ -24,12 +24,10 @@ jobs:
           persist-credentials: false
       - name: Install toolchain
         if: ${{ runner.os == 'Windows' }}
-        run: |
-          choco install rtools -y --no-progress --force --version=4.3.5550
-          echo "c:\rtools43\ucrt64\bin;" >> $env:GITHUB_PATH
-          dir c:\rtools43
-          dir c:\rtools43\ucrt64
-          dir c:\rtools43\ucrt64\bin
+        uses: msys2/setup-msys2@v2.22.0
+        with:
+          update: false
+          install: mingw-w64-x86_64-toolchain
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.0
         with:
