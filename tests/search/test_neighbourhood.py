@@ -261,6 +261,7 @@ def test_compute_neighbourhood_peak_memory_usage(mdvrptw):
     tracemalloc.start()
     compute_neighbours(mdvrptw)
     _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
 
     # Peak memory usage should be around 3 times the size of a single matrix,
     # including some overhead.
@@ -273,5 +274,6 @@ def test_compute_neighbourhood_peak_memory_usage(mdvrptw):
     tracemalloc.start()
     compute_neighbours(data)
     _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
 
     assert peak < matrix.nbytes * 3.5

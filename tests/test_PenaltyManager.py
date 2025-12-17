@@ -459,6 +459,7 @@ def test_init_from_peak_memory_usage(mdvrptw):
     tracemalloc.start()
     PenaltyManager.init_from(data)
     _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
 
     # Peak memory usage should be around 2 times the size of a single matrix,
     # including some overhead.
@@ -471,5 +472,6 @@ def test_init_from_peak_memory_usage(mdvrptw):
     tracemalloc.start()
     PenaltyManager.init_from(data)
     _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
 
     assert peak < matrix.nbytes * 2.5
