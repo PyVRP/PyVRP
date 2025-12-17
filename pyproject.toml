@@ -144,7 +144,8 @@ test-requires = [
     "pytest-xdist>=3.6.1",
     "pytest-sugar>=1.0.0",
 ]
-test-command = "pytest {package}/tests"
+test-sources = ["tests"]
+test-command = "pytest ./tests"
 
 
 [tool.cibuildwheel.windows]
