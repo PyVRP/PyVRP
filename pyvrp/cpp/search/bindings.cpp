@@ -265,7 +265,25 @@ PYBIND11_MODULE(_search, m)
         .def_property("neighbours",
                       &SearchSpace::neighbours,
                       &SearchSpace::setNeighbours,
-                      py::return_value_policy::reference_internal);
+                      py::return_value_policy::reference_internal)
+        .def("neighbours_of",
+             &SearchSpace::neighboursOf,
+             py::arg("client"),
+             DOC(pyvrp, search, SearchSpace, neighboursOf))
+        .def("is_promising",
+             &SearchSpace::isPromising,
+             py::arg("client"),
+             DOC(pyvrp, search, SearchSpace, isPromising))
+        .def("mark_promising",
+             &SearchSpace::markPromising,
+             py::arg("client"),
+             DOC(pyvrp, search, SearchSpace, markPromising))
+        .def("mark_all_promising",
+             &SearchSpace::markAllPromising,
+             DOC(pyvrp, search, SearchSpace, markAllPromising))
+        .def("unmark_all_promising",
+             &SearchSpace::unmarkAllPromising,
+             DOC(pyvrp, search, SearchSpace, unmarkAllPromising));
 
     py::class_<PerturbationParams>(
         m, "PerturbationParams", DOC(pyvrp, search, PerturbationParams))

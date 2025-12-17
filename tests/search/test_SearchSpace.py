@@ -90,3 +90,51 @@ def test_set_get_neighbours(
     assert_equal(search_space.neighbours, neighbours)
     neighbours[1] = []
     assert_(search_space.neighbours != neighbours)
+
+
+def test_get_neighbours(ok_small):
+    """
+    Tests getting the SearchSpace's full granular neighbourhood, and
+    client-specific neighbourhoods.
+    """
+    neighbours = [[], [2, 3], [3, 4], [1, 2], [2, 3]]
+
+    search_space = SearchSpace(ok_small, neighbours)
+    assert_equal(search_space.neighbours, neighbours)
+
+    for idx in range(ok_small.num_locations):
+        assert_equal(neighbours[idx], search_space.neighbours_of(idx))
+
+
+def test_promising(ok_small):
+    """
+    Tests marking clients as promising.
+    """
+    search_space = SearchSpace(ok_small, compute_neighbours(ok_small))
+
+    for client in range(ok_small.num_depots, ok_small.num_locations):
+        # The client does not start off promising.
+        assert_(not search_space.is_promising(client))
+
+        # But it is after being marked promising.
+        search_space.mark_promising(client)
+        assert_(search_space.is_promising(client))
+
+
+def test_all_promising(ok_small):
+    """
+    Tests marking and unmarking all clients as promising.
+    """
+    clients = range(ok_small.num_depots, ok_small.num_locations)
+
+    # Initially no clients start off promising.
+    search_space = SearchSpace(ok_small, compute_neighbours(ok_small))
+    assert_(not any(search_space.is_promising(client) for client in clients))
+
+    # But after marking all as promising, they should all indeed be promising.
+    search_space.mark_all_promising()
+    assert_(all(search_space.is_promising(client) for client in clients))
+
+    # After unmarking all, no client should be promising.
+    search_space.unmark_all_promising()
+    assert_(not any(search_space.is_promising(client) for client in clients))

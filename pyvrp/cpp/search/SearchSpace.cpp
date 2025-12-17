@@ -44,7 +44,6 @@ SearchSpace::Neighbours const &SearchSpace::neighbours() const
 
 std::vector<size_t> const &SearchSpace::neighboursOf(size_t client) const
 {
-    assert(client >= data_.numDepots());
     return neighbours_[client];
 }
 
