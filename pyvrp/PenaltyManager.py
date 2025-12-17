@@ -227,18 +227,16 @@ class PenaltyManager:
         # in the relevant value by the same amount as the average edge cost.
         init_load = avg_cost / np.maximum(avg_load, 1)
 
-        def _minimum_reduce(matrices, out):
-            first, *rest = matrices
-            out[:] = first
-            for mat in rest:
-                np.minimum(out, mat, out=out)
-
         min_duration = buf  # reuse buffer
-        _minimum_reduce(durations, out=min_duration)
+        min_duration[:] = durations[0]
+        for mat in durations[1:]:
+            np.minimum(min_duration, mat, out=min_duration)
         init_tw = avg_cost / max(min_duration.mean(), 1)
 
         min_distance = buf  # reuse buffer
-        _minimum_reduce(distances, out=min_distance)
+        min_distance[:] = distances[0]
+        for mat in distances[1:]:
+            np.minimum(min_distance, mat, out=min_distance)
         init_dist = avg_cost / max(min_distance.mean(), 1)
 
         return cls((init_load.tolist(), init_tw, init_dist), params)
