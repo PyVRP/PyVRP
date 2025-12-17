@@ -178,8 +178,8 @@ def _compute_proximity(
         buf += unit_dur * durations[prof]
         np.minimum(edge_costs, buf, out=edge_costs)
 
-    # ``np.minimum.reduce`` is not efficient for lists of arrays, so we
-    # manually compute the elementwise minimum here.
+    # ``np.minimum.reduce`` is not memory efficient for lists of arrays,
+    # so we manually compute the elementwise minimum here.
     buf[:] = durations[0]
     for mat in durations[1:]:
         np.minimum(buf, mat, out=buf)
