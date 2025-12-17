@@ -164,6 +164,8 @@ def _compute_proximity(
         for veh_type in data.vehicle_types()
     }
 
+    # Proximity is based on edge costs (and rewards) and penalties for known
+    # time-related violations.
     first, *rest = unique_edge_costs
     unit_dist, unit_dur, prof = first
     edge_costs = unit_dist * distances[prof]
@@ -204,6 +206,4 @@ def _compute_proximity(
     # Subtract prizes to encourage visiting high-prize clients.
     edge_costs -= prize[None, :]
 
-    # Proximity is based on edge costs (and rewards) and penalties for known
-    # time-related violations.
     return edge_costs
