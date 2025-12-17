@@ -166,12 +166,14 @@ def _compute_proximity(
 
     first, *rest = unique_edge_costs
     unit_dist, unit_dur, prof = first
-    edge_costs = unit_dist * distances[prof] + unit_dur * durations[prof]
+    edge_costs = unit_dist * distances[prof]
+    edge_costs += unit_dur * durations[prof]
     edge_costs = edge_costs.astype(float)
-    buf = np.empty_like(edge_costs, dtype=float)
+    buf = np.empty_like(edge_costs)
 
     for unit_dist, unit_dur, prof in rest:
-        buf[:] = unit_dist * distances[prof] + unit_dur * durations[prof]
+        buf[:] = unit_dist * distances[prof]
+        buf += unit_dur * durations[prof]
         np.minimum(edge_costs, buf, out=edge_costs)
 
     first_mat, *rest_mats = durations
