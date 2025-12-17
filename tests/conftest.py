@@ -150,3 +150,11 @@ def ok_small_overtime(ok_small):
     )
 
     return ok_small.replace(vehicle_types=[veh_type])
+
+
+@pytest.fixture(scope="session")
+def mdvrptw():
+    """
+    Fixture that returns a MDVRPTW instance with 360 clients.
+    """
+    return read("data/PR11A.vrp", round_func="dimacs")

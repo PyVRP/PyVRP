@@ -1,3 +1,5 @@
+import tracemalloc
+
 import numpy as np
 import pytest
 from numpy.testing import (
@@ -445,3 +447,29 @@ def test_init_from_multiple_load_penalties(ok_small_multiple_load):
     # the load penalties should reflect this difference.
     load_penalty1, load_penalty2 = load_penalties
     assert_allclose(load_penalty1 / load_penalty2, 5 / 18)
+
+
+def test_init_from_peak_memory_usage(mdvrptw):
+    """
+    Tests that peak memory usage is within some multiple of the problem data.
+    """
+    data = mdvrptw
+    matrix, *_ = data.distance_matrices()
+
+    tracemalloc.start()
+    PenaltyManager.init_from(data)
+    _, peak = tracemalloc.get_traced_memory()
+
+    # Peak memory usage should be around 2 times the size of a single matrix,
+    # including some overhead.
+    assert peak < matrix.nbytes * 2.5
+
+    # Adding more profiles should not blow up memory usage.
+    matrices = [matrix] * 5
+    data = data.replace(distance_matrices=matrices, duration_matrices=matrices)
+
+    tracemalloc.start()
+    PenaltyManager.init_from(data)
+    _, peak = tracemalloc.get_traced_memory()
+
+    assert peak < matrix.nbytes * 2.5

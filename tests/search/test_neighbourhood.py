@@ -1,3 +1,5 @@
+import tracemalloc
+
 import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
@@ -247,3 +249,29 @@ def test_multiple_routing_profiles(ok_small):
     # neighbourhood computations, resulting in the same neighbourhood as with
     # the original (unchanged) data.
     assert_equal(compute_neighbours(data), compute_neighbours(ok_small))
+
+
+def test_compute_neighbourhood_peak_memory_usage(mdvrptw):
+    """
+    Tests that peak memory usage is within some multiple of the problem data.
+    """
+    data = mdvrptw
+    matrix, *_ = data.distance_matrices()
+
+    tracemalloc.start()
+    compute_neighbours(mdvrptw)
+    _, peak = tracemalloc.get_traced_memory()
+
+    # Peak memory usage should be around 3 times the size of a single matrix,
+    # including some overhead.
+    assert peak < matrix.nbytes * 3.5
+
+    # Adding more profiles should not blow up memory usage.
+    matrices = [matrix] * 5
+    data = data.replace(distance_matrices=matrices, duration_matrices=matrices)
+
+    tracemalloc.start()
+    compute_neighbours(data)
+    _, peak = tracemalloc.get_traced_memory()
+
+    assert peak < matrix.nbytes * 3.5
