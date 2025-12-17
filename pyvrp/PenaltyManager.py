@@ -220,12 +220,12 @@ class PenaltyManager:
         buf[:] = durations[0]
         for mat in durations[1:]:
             np.minimum(buf, mat, out=buf)
-        avg_dur = buf.mean()
+        avg_duration = buf.mean()
 
         buf[:] = distances[0]
         for mat in distances[1:]:
             np.minimum(buf, mat, out=buf)
-        avg_dist = buf.mean()
+        avg_distance = buf.mean()
 
         avg_load = np.zeros((data.num_load_dimensions,))
         if data.num_clients != 0 and data.num_load_dimensions != 0:
@@ -236,8 +236,8 @@ class PenaltyManager:
         # Initial penalty parameters are meant to weigh an average increase
         # in the relevant value by the same amount as the average edge cost.
         init_load = avg_cost / np.maximum(avg_load, 1)
-        init_tw = avg_cost / max(avg_dur, 1)
-        init_dist = avg_cost / max(avg_dist, 1)
+        init_tw = avg_cost / max(avg_duration, 1)
+        init_dist = avg_cost / max(avg_distance, 1)
 
         return cls((init_load.tolist(), init_tw, init_dist), params)
 
