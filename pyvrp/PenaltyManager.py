@@ -193,9 +193,9 @@ class PenaltyManager:
 
         def _minimum_reduce(matrices, out):
             first, *rest = matrices
-            out[:] = first.astype(np.float32)
+            out[:] = first
             for mat in rest:
-                np.minimum(out, mat.astype(np.float32), out=out)
+                np.minimum(out, mat, out=out)
 
         # We first determine the elementwise minimum cost across all vehicle
         # types. This is the cheapest way any edge can be traversed.
@@ -203,8 +203,8 @@ class PenaltyManager:
         durations = data.duration_matrices()
         unique_edge_costs = {
             (
-                np.float32(veh_type.unit_distance_cost),
-                np.float32(veh_type.unit_duration_cost),
+                veh_type.unit_distance_cost,
+                veh_type.unit_duration_cost,
                 veh_type.profile,
             )
             for veh_type in data.vehicle_types()
@@ -212,13 +212,13 @@ class PenaltyManager:
 
         first, *rest = unique_edge_costs
         unit_dist, unit_dur, prof = first
-        edge_costs = unit_dist * distances[prof].astype(np.float32)
-        edge_costs += unit_dur * durations[prof].astype(np.float32)
+        edge_costs = unit_dist * distances[prof]
+        edge_costs += unit_dur * durations[prof]
         buf = np.empty_like(edge_costs)
 
         for unit_dist, unit_dur, prof in rest:
-            buf[:] = unit_dist * distances[prof].astype(np.float32)
-            buf += unit_dur * durations[prof].astype(np.float32)
+            buf[:] = unit_dist * distances[prof]
+            buf += unit_dur * durations[prof]
             np.minimum(edge_costs, buf, out=edge_costs)
 
         # Best edge cost/distance/duration over all vehicle types and profiles,
