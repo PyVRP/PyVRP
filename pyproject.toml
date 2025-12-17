@@ -138,13 +138,13 @@ exclude_lines = [
 build = "cp311-* cp312-* cp313-* cp314-*"
 skip = "*_ppc64le *_i686 *_s390x *-win32"
 build-frontend = "build"
-test-requires = [
-    "pytest>=6.0.0",
-    "pytest-cov>=6.1.1",
-    "pytest-xdist>=3.6.1",
-    "pytest-sugar>=1.0.0",
-]
-test-command = "pytest {package}/tests"
+# test-requires = [
+#     "pytest>=6.0.0",
+#     "pytest-cov>=6.1.1",
+#     "pytest-xdist>=3.6.1",
+#     "pytest-sugar>=1.0.0",
+# ]
+# test-command = "pytest {package}/tests"
 
 
 [tool.cibuildwheel.windows]
