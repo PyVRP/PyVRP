@@ -212,13 +212,11 @@ class PenaltyManager:
 
         first, *rest = unique_edge_costs
         unit_dist, unit_dur, prof = first
-        edge_costs = unit_dist * distances[prof]
-        edge_costs += unit_dur * durations[prof]
+        edge_costs = unit_dist * distances[prof] + unit_dur * durations[prof]
         buf = np.empty_like(edge_costs)
 
         for unit_dist, unit_dur, prof in rest:
-            buf[:] = unit_dist * distances[prof]
-            buf += unit_dur * durations[prof]
+            buf[:] = unit_dist * distances[prof] + unit_dur * durations[prof]
             np.minimum(edge_costs, buf, out=edge_costs)
 
         # Best edge cost/distance/duration over all vehicle types and profiles,
