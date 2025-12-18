@@ -82,7 +82,6 @@ class PerturbationParams:
 class PerturbationManager:
     def __init__(
         self,
-        data: ProblemData,
         params: PerturbationParams = ...,
     ) -> None: ...
     def num_perturbations(self) -> int: ...
@@ -98,7 +97,7 @@ class LocalSearch:
         self,
         data: ProblemData,
         neighbours: list[list[int]],
-        perturbation_manager: PerturbationManager,
+        perturbation_manager: PerturbationManager = ...,
     ) -> None: ...
     def add_node_operator(self, op: NodeOperator) -> None: ...
     def add_route_operator(self, op: RouteOperator) -> None: ...

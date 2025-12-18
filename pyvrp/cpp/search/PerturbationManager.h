@@ -47,7 +47,6 @@ struct PerturbationParams
  */
 class PerturbationManager
 {
-    ProblemData const &data_;
     PerturbationParams const params_;  // owned by us
     size_t numPerturbations_;
 
@@ -57,13 +56,13 @@ class PerturbationManager
      */
     Route::Node *insertAfter(Route::Node *U,
                              LocalSearch::Solution &solution,
+                             ProblemData const &data,
                              SearchSpace &searchSpace,
                              LocalSearch::SearchOrder &searchOrder,
                              CostEvaluator const &costEvaluator);
 
 public:
-    PerturbationManager(ProblemData const &data,
-                        PerturbationParams params = PerturbationParams());
+    PerturbationManager(PerturbationParams params = PerturbationParams());
 
     /**
      * Number of perturbations to apply.
@@ -79,6 +78,7 @@ public:
      * TODO
      */
     void perturb(LocalSearch::Solution &solution,
+                 ProblemData const &data,
                  SearchSpace &searchSpace,
                  LocalSearch::SearchOrder &searchOrder,
                  CostEvaluator const &costEvaluator);

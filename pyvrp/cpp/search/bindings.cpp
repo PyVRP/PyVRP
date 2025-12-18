@@ -298,10 +298,8 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<PerturbationManager>(
         m, "PerturbationManager", DOC(pyvrp, search, PerturbationManager))
-        .def(py::init<pyvrp::ProblemData const &, PerturbationParams>(),
-             py::arg("data"),
-             py::arg("params") = PerturbationParams(),
-             py::keep_alive<1, 2>())  // keep data alive
+        .def(py::init<PerturbationParams>(),
+             py::arg("params") = PerturbationParams())
         .def("num_perturbations",
              &PerturbationManager::numPerturbations,
              DOC(pyvrp, search, PerturbationManager, numPerturbations))
@@ -322,7 +320,7 @@ PYBIND11_MODULE(_search, m)
                       PerturbationManager &>(),
              py::arg("data"),
              py::arg("neighbours"),
-             py::arg("perturbation_manager"),
+             py::arg("perturbation_manager") = PerturbationManager(),
              py::keep_alive<1, 2>(),  // keep data alive until LS is freed
              py::keep_alive<1, 4>())  // also keep perturbation_manager alive
         .def_property("neighbours",

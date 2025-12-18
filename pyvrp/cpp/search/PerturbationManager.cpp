@@ -26,9 +26,8 @@ PerturbationParams::PerturbationParams(size_t minPerturbations,
             "min_perturbations must be <= max_perturbations.");
 }
 
-PerturbationManager::PerturbationManager(ProblemData const &data,
-                                         PerturbationParams params)
-    : data_(data), params_(params), numPerturbations_(params_.minPerturbations)
+PerturbationManager::PerturbationManager(PerturbationParams params)
+    : params_(params), numPerturbations_(params_.minPerturbations)
 {
 }
 
@@ -44,6 +43,7 @@ void PerturbationManager::shuffle(RandomNumberGenerator &rng)
 }
 
 void PerturbationManager::perturb(LocalSearch::Solution &solution,
+                                  ProblemData const &data,
                                   SearchSpace &searchSpace,
                                   LocalSearch::SearchOrder &searchOrder,
                                   CostEvaluator const &costEvaluator)
@@ -57,7 +57,7 @@ void PerturbationManager::perturb(LocalSearch::Solution &solution,
     // set of promising nodes for further (local search) improvement.
     searchSpace.unmarkAllPromising();
 
-    DynamicBitset perturbed = {data_.numLocations()};
+    DynamicBitset perturbed = {solution.nodes.size()};
     auto const perturb = [&](auto *node, PerturbType action)
     {
         // This node has already been touched by a previous perturbation, so
@@ -77,7 +77,7 @@ void PerturbationManager::perturb(LocalSearch::Solution &solution,
         else if (!route && action == PerturbType::INSERT)
         {
             auto *after = insertAfter(
-                node, solution, searchSpace, searchOrder, costEvaluator);
+                node, solution, data, searchSpace, searchOrder, costEvaluator);
 
             if (!after)
                 return;
@@ -119,13 +119,14 @@ void PerturbationManager::perturb(LocalSearch::Solution &solution,
 Route::Node *
 PerturbationManager::insertAfter(Route::Node *U,
                                  LocalSearch::Solution &solution,
+                                 ProblemData const &data,
                                  SearchSpace &searchSpace,
                                  LocalSearch::SearchOrder &searchOrder,
                                  CostEvaluator const &costEvaluator)
 {
     assert(!U->isDepot());
     Route::Node *UAfter = solution.routes[0][0];
-    auto bestCost = insertCost(U, UAfter, data_, costEvaluator);
+    auto bestCost = insertCost(U, UAfter, data, costEvaluator);
 
     for (auto const vClient : searchSpace.neighboursOf(U->client()))
     {
@@ -134,7 +135,7 @@ PerturbationManager::insertAfter(Route::Node *U,
         if (!V->route())
             continue;
 
-        auto const cost = insertCost(U, V, data_, costEvaluator);
+        auto const cost = insertCost(U, V, data, costEvaluator);
         if (cost < bestCost)
         {
             bestCost = cost;
@@ -144,14 +145,14 @@ PerturbationManager::insertAfter(Route::Node *U,
 
     for (auto const &[vehType, begin] : searchOrder.vehTypes)
     {
-        auto const end = begin + data_.vehicleType(vehType).numAvailable;
+        auto const end = begin + data.vehicleType(vehType).numAvailable;
         auto const pred = [](auto const &route) { return route.empty(); };
         auto empty = std::find_if(begin, end, pred);
 
         if (empty == end)
             continue;
 
-        auto const cost = insertCost(U, (*empty)[0], data_, costEvaluator);
+        auto const cost = insertCost(U, (*empty)[0], data, costEvaluator);
         if (cost < bestCost)
             return (*empty)[0];
     }

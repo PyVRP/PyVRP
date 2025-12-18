@@ -145,10 +145,8 @@ def test_cpp_shuffle_results_in_different_solution(rc208):
     result in different solutions generated from the same initial solution.
     """
     rng = RandomNumberGenerator(seed=42)
-    neighbours = compute_neighbours(rc208)
-    perturbation = PerturbationManager(rc208)
 
-    ls = cpp_LocalSearch(rc208, neighbours, perturbation)
+    ls = cpp_LocalSearch(rc208, compute_neighbours(rc208))
     ls.add_node_operator(Exchange10(rc208))
     ls.add_node_operator(Exchange11(rc208))
 
@@ -177,9 +175,8 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     """
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(rc208)
-    perturbation = PerturbationManager(rc208)
 
-    ls = cpp_LocalSearch(rc208, neighbours, perturbation)
+    ls = cpp_LocalSearch(rc208, neighbours)
     ls.add_node_operator(Exchange10(rc208))
     ls.add_node_operator(Exchange11(rc208))
 
@@ -196,7 +193,7 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
         ]
     )
 
-    ls = cpp_LocalSearch(data, neighbours, perturbation)
+    ls = cpp_LocalSearch(data, neighbours)
     ls.add_node_operator(Exchange10(data))
     ls.add_node_operator(Exchange11(data))
 
@@ -224,9 +221,7 @@ def test_bugfix_vehicle_type_offsets(ok_small):
         ]
     )
 
-    neighbours = compute_neighbours(data)
-    perturbation = PerturbationManager(data)
-    ls = cpp_LocalSearch(data, neighbours, perturbation)
+    ls = cpp_LocalSearch(data, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
 
     cost_evaluator = CostEvaluator([1], 1, 0)
@@ -249,9 +244,12 @@ def test_no_op_results_in_same_solution(ok_small):
 
     # Empty local search does not actually search anything, so it should return
     # the exact same solution as what was passed in.
-    neighbours = compute_neighbours(ok_small)
-    perturbation = PerturbationManager(ok_small, PerturbationParams(0, 0))
-    ls = LocalSearch(ok_small, rng, neighbours, perturbation)
+    ls = LocalSearch(
+        ok_small,
+        rng,
+        compute_neighbours(ok_small),
+        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
+    )
 
     cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(ok_small, rng)
@@ -499,20 +497,22 @@ def test_swap_if_improving_mutually_exclusive_group(
 def test_no_op_multi_trip_instance(ok_small_multiple_trips):
     """
     Tests that loading and exporting a multi-trip instance correctly returns an
-    equivalent solution when no operators are available and perturbation is
-    disabled.
+    equivalent solution when no operators are available.
     """
-    data = ok_small_multiple_trips
     rng = RandomNumberGenerator(seed=42)
-    neighbours = [[] for _ in range(data.num_locations)]
-    perturbation = PerturbationManager(data, PerturbationParams(0, 0))
-    ls = LocalSearch(data, rng, neighbours, perturbation)
+    neighbours = [[] for _ in range(ok_small_multiple_trips.num_locations)]
+    ls = LocalSearch(
+        ok_small_multiple_trips,
+        rng,
+        neighbours,
+        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
+    )
 
-    trip1 = Trip(data, [1, 2], 0)
-    trip2 = Trip(data, [3, 4], 0)
-    route = Route(data, [trip1, trip2], 0)
+    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
+    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
+    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
 
-    sol = Solution(data, [route])
+    sol = Solution(ok_small_multiple_trips, [route])
     cost_eval = CostEvaluator([20], 6, 0)
     assert_equal(ls(sol, cost_eval), sol)
 
@@ -573,9 +573,12 @@ def test_search_statistics(ok_small):
     information about the number of evaluated and improving moves.
     """
     rng = RandomNumberGenerator(seed=42)
-    neighbours = compute_neighbours(ok_small)
-    perturbation = PerturbationManager(ok_small, PerturbationParams(0, 0))
-    ls = LocalSearch(ok_small, rng, neighbours, perturbation)
+    ls = LocalSearch(
+        ok_small,
+        rng,
+        compute_neighbours(ok_small),
+        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
+    )
 
     node_op = Exchange10(ok_small)
     ls.add_node_operator(node_op)
@@ -646,7 +649,7 @@ def test_perturb_inserts_clients(ok_small):
     Tests that perturbing an empty solution inserts all missing clients.
     """
     rng = RandomNumberGenerator(seed=42)
-    perturbation = PerturbationManager(ok_small, PerturbationParams(4, 4))
+    perturbation = PerturbationManager(PerturbationParams(4, 4))
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small), perturbation)
 
     sol = Solution(ok_small, [])
@@ -661,7 +664,7 @@ def test_perturb_removes_clients(ok_small):
     Tests that perturbing a complete solution could remove all clients.
     """
     rng = RandomNumberGenerator(seed=42)
-    perturbation = PerturbationManager(ok_small, PerturbationParams(4, 4))
+    perturbation = PerturbationManager(PerturbationParams(4, 4))
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small), perturbation)
 
     sol = Solution(ok_small, [[1, 2], [3, 4]])
@@ -676,7 +679,7 @@ def test_perturb_switches_remove_insert(ok_small):
     Tests that perturbing switches between inserting and removing, depending
     on whether a random initial client is in the solution.
     """
-    perturbation = PerturbationManager(ok_small, PerturbationParams(3, 3))
+    perturbation = PerturbationManager(PerturbationParams(3, 3))
     ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small), perturbation)
 
     # We start with [1, 2] in the solution. We want to perturb three times. We
