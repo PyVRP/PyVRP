@@ -4,6 +4,7 @@
 #include "PerturbationManager.h"
 #include "RelocateWithDepot.h"
 #include "Route.h"
+#include "SearchSpace.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
 #include "SwapTails.h"
@@ -30,6 +31,7 @@ using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
 using pyvrp::search::RouteOperator;
+using pyvrp::search::SearchSpace;
 using pyvrp::search::supports;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
@@ -253,6 +255,35 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &RelocateWithDepot::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<RelocateWithDepot>, py::arg("data"));
+
+    py::class_<SearchSpace>(m, "SearchSpace", DOC(pyvrp, search, SearchSpace))
+        .def(py::init<pyvrp::ProblemData const &,
+                      std::vector<std::vector<size_t>>>(),
+             py::arg("data"),
+             py::arg("neighbours"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property("neighbours",
+                      &SearchSpace::neighbours,
+                      &SearchSpace::setNeighbours,
+                      py::return_value_policy::reference_internal)
+        .def("neighbours_of",
+             &SearchSpace::neighboursOf,
+             py::arg("client"),
+             DOC(pyvrp, search, SearchSpace, neighboursOf))
+        .def("is_promising",
+             &SearchSpace::isPromising,
+             py::arg("client"),
+             DOC(pyvrp, search, SearchSpace, isPromising))
+        .def("mark_promising",
+             &SearchSpace::markPromising,
+             py::arg("client"),
+             DOC(pyvrp, search, SearchSpace, markPromising))
+        .def("mark_all_promising",
+             &SearchSpace::markAllPromising,
+             DOC(pyvrp, search, SearchSpace, markAllPromising))
+        .def("unmark_all_promising",
+             &SearchSpace::unmarkAllPromising,
+             DOC(pyvrp, search, SearchSpace, unmarkAllPromising));
 
     py::class_<PerturbationParams>(
         m, "PerturbationParams", DOC(pyvrp, search, PerturbationParams))

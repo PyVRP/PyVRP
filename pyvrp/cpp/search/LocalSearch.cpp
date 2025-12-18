@@ -1,4 +1,5 @@
 #include "LocalSearch.h"
+#include "DynamicBitset.h"
 #include "Measure.h"
 #include "Trip.h"
 #include "primitives.h"
@@ -12,6 +13,7 @@ using pyvrp::Solution;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NodeOperator;
 using pyvrp::search::RouteOperator;
+using pyvrp::search::SearchSpace;
 
 Solution LocalSearch::operator()(Solution const &solution,
                                  CostEvaluator const &costEvaluator)
@@ -93,10 +95,10 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // We next apply the regular operators that work on pairs of nodes
             // (U, V), where both U and V are in the solution. We only do this
             // if U is a promising candidate for improvement.
-            if (!promising[uClient])
+            if (!searchSpace_.isPromising(uClient))
                 continue;
 
-            for (auto const vClient : neighbours_[uClient])
+            for (auto const vClient : searchSpace_.neighboursOf(uClient))
             {
                 auto *V = &nodes[vClient];
 
@@ -175,9 +177,9 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
 
     // Clear the set of promising nodes. Perturbation determines the initial
     // set of promising nodes for further (local search) improvement.
-    promising.reset();
+    searchSpace_.unmarkAllPromising();
 
-    DynamicBitset perturbed = {promising.size()};
+    DynamicBitset perturbed = {data.numLocations()};
     auto const perturb = [&](auto *node, PerturbType action)
     {
         // This node has already been touched by a previous perturbation, so
@@ -216,7 +218,7 @@ void LocalSearch::perturb(CostEvaluator const &costEvaluator)
         if (!movesLeft)
             return;
 
-        for (auto const vClient : neighbours_[uClient])
+        for (auto const vClient : searchSpace_.neighboursOf(uClient))
         {
             auto *V = &nodes[vClient];
             perturb(V, action);
@@ -374,7 +376,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         return;
 
     // Attempt to re-insert U using a first-improving neighbourhood search.
-    for (auto const vClient : neighbours_[U->client()])
+    for (auto const vClient : searchSpace_.neighboursOf(U->client()))
     {
         auto *V = &nodes[vClient];
         auto *route = V->route();
@@ -473,7 +475,7 @@ void LocalSearch::insert(Route::Node *U,
     Route::Node *UAfter = routes[0][0];
     auto bestCost = insertCost(U, UAfter, data, costEvaluator);
 
-    for (auto const vClient : neighbours_[U->client()])
+    for (auto const vClient : searchSpace_.neighboursOf(U->client()))
     {
         auto *V = &nodes[vClient];
 
@@ -522,13 +524,15 @@ void LocalSearch::insert(Route::Node *U,
 void LocalSearch::markPromising(Route::Node const *U)
 {
     assert(U->route());
-    promising[U->client()] = true;
 
-    if (!U->isStartDepot())
-        promising[p(U)->client()] = true;
+    if (!U->isDepot())
+        searchSpace_.markPromising(U->client());
 
-    if (!U->isEndDepot())
-        promising[n(U)->client()] = true;
+    if (!U->isStartDepot() && !p(U)->isDepot())
+        searchSpace_.markPromising(p(U)->client());
+
+    if (!U->isEndDepot() && !n(U)->isDepot())
+        searchSpace_.markPromising(n(U)->client());
 }
 
 void LocalSearch::update(Route *U, Route *V)
@@ -557,7 +561,7 @@ void LocalSearch::loadSolution(Solution const &solution)
     std::fill(lastTestedNodes.begin(), lastTestedNodes.end(), -1);
     std::fill(lastTestedRoutes.begin(), lastTestedRoutes.end(), -1);
     std::fill(lastUpdated.begin(), lastUpdated.end(), 0);
-    promising.set();
+    searchSpace_.markAllPromising();
     numUpdates_ = 0;
 
     // First empty all routes.
@@ -677,34 +681,14 @@ std::vector<RouteOperator *> const &LocalSearch::routeOperators() const
     return routeOps;
 }
 
-void LocalSearch::setNeighbours(Neighbours neighbours)
+void LocalSearch::setNeighbours(SearchSpace::Neighbours neighbours)
 {
-    if (neighbours.size() != data.numLocations())
-        throw std::runtime_error("Neighbourhood dimensions do not match.");
-
-    for (size_t client = data.numDepots(); client != data.numLocations();
-         ++client)
-    {
-        auto const beginPos = neighbours[client].begin();
-        auto const endPos = neighbours[client].end();
-
-        auto const pred = [&](auto item)
-        { return item == client || item < data.numDepots(); };
-
-        if (std::any_of(beginPos, endPos, pred))
-        {
-            throw std::runtime_error("Neighbourhood of client "
-                                     + std::to_string(client)
-                                     + " contains itself or a depot.");
-        }
-    }
-
-    neighbours_ = neighbours;
+    searchSpace_.setNeighbours(neighbours);
 }
 
-LocalSearch::Neighbours const &LocalSearch::neighbours() const
+SearchSpace::Neighbours const &LocalSearch::neighbours() const
 {
-    return neighbours_;
+    return searchSpace_.neighbours();
 }
 
 LocalSearch::Statistics LocalSearch::statistics() const
@@ -727,20 +711,17 @@ LocalSearch::Statistics LocalSearch::statistics() const
 }
 
 LocalSearch::LocalSearch(ProblemData const &data,
-                         Neighbours neighbours,
+                         SearchSpace::Neighbours neighbours,
                          PerturbationManager &perturbationManager)
     : data(data),
-      neighbours_(data.numLocations()),
+      searchSpace_(data, neighbours),
       perturbationManager_(perturbationManager),
       orderNodes(data.numClients()),
       orderRoutes(data.numVehicles()),
       lastTestedNodes(data.numLocations()),
       lastTestedRoutes(data.numVehicles()),
-      lastUpdated(data.numVehicles()),
-      promising(data.numLocations())
+      lastUpdated(data.numVehicles())
 {
-    setNeighbours(neighbours);
-
     std::iota(orderNodes.begin(), orderNodes.end(), data.numDepots());
     std::iota(orderRoutes.begin(), orderRoutes.end(), 0);
 

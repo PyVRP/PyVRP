@@ -2,12 +2,12 @@
 #define PYVRP_SEARCH_LOCALSEARCH_H
 
 #include "CostEvaluator.h"
-#include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
 #include "PerturbationManager.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
+#include "SearchSpace.h"
 #include "Solution.h"
 
 #include <functional>
@@ -48,13 +48,10 @@ public:
     };
 
 private:
-    using Neighbours = std::vector<std::vector<size_t>>;
-
     ProblemData const &data;
 
-    // Neighborhood restrictions: list of nearby clients for each client (size
-    // numLocations, but nothing is stored for the depots!)
-    Neighbours neighbours_;
+    // Manages the granular neighbourhood and promising clients.
+    SearchSpace searchSpace_;
 
     // Perturbation manager that determines the size of the perturbation during
     // each LS invocation.
@@ -68,8 +65,6 @@ private:
     std::vector<int> lastTestedNodes;   // tracks node operator evaluation
     std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
     std::vector<int> lastUpdated;       // tracks when routes were last modified
-    DynamicBitset promising;            // tracks which nodes are likely to be
-                                        // improved by node ops
 
     std::vector<Route::Node> nodes;
     std::vector<Route> routes;
@@ -109,7 +104,8 @@ private:
     // Tests moves involving clients in client groups.
     void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
-    // Marks the given node and its direct neighbours as promising.
+    // Marks the given node U and its direct client neighbours as promising.
+    // U must currently be in a route. Does not mark depots.
     void markPromising(Route::Node const *U);
 
     // Updates solution state after an improving local search move.
@@ -157,12 +153,12 @@ public:
      * the neighbourhood structure is a vector of nearby clients. Depots have
      * no nearby client.
      */
-    void setNeighbours(Neighbours neighbours);
+    void setNeighbours(SearchSpace::Neighbours neighbours);
 
     /**
      * Returns the current neighbourhood structure.
      */
-    Neighbours const &neighbours() const;
+    SearchSpace::Neighbours const &neighbours() const;
 
     /**
      * Returns search statistics for the currently loaded solution.
@@ -204,7 +200,7 @@ public:
     void shuffle(RandomNumberGenerator &rng);
 
     LocalSearch(ProblemData const &data,
-                Neighbours neighbours,
+                SearchSpace::Neighbours neighbours,
                 PerturbationManager &perturbationManager);
 };
 }  // namespace pyvrp::search
