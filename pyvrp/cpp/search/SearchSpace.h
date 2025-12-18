@@ -24,7 +24,7 @@ private:
     ProblemData const &data_;
 
     // Neighborhood restrictions: list of nearby clients for each client (size
-    // numLocations, but nothing is stored for the depots!)
+    // numLocations, but nothing is stored for the depots!).
     Neighbours neighbours_;
 
     // Tracks clients that can likely be improved by local search operators.

@@ -50,7 +50,7 @@ public:
 private:
     ProblemData const &data;
 
-    // Manages the granular neighbourhood and promising clients
+    // Manages the granular neighbourhood and promising clients.
     SearchSpace searchSpace_;
 
     // Perturbation manager that determines the size of the perturbation during
