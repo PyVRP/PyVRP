@@ -698,3 +698,20 @@ def test_perturb_switches_remove_insert(ok_small):
 
     visits = [visit for r in destroyed.routes() for visit in r.visits()]
     assert_equal(visits, [3])
+
+
+def test_ls_inserts_all_required_clients(ok_small):
+    """
+    Tests that the local search inserts all required clients, if those are
+    currently missing from the solution.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    perturbation = PerturbationManager(PerturbationParams(1, 1))
+    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small), perturbation)
+
+    sol = Solution(ok_small, [[1, 2]])
+    assert_(not sol.is_complete())
+
+    cost_eval = CostEvaluator([20], 6, 0)
+    improved = ls(sol, cost_eval)
+    assert_(improved.is_complete())
