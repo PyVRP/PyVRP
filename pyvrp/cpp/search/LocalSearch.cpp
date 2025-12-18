@@ -157,7 +157,7 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
 {
     loadSolution(solution);
     perturbationManager_.perturb(
-        solution_, data, searchSpace_, order_, costEvaluator);
+        solution_, data, searchSpace_, searchOrder_, costEvaluator);
 
     while (true)
     {
@@ -195,7 +195,7 @@ pyvrp::Solution LocalSearch::perturb(pyvrp::Solution const &solution,
 {
     loadSolution(solution);
     perturbationManager_.perturb(
-        solution_, data, searchSpace_, order_, costEvaluator);
+        solution_, data, searchSpace_, searchOrder_, costEvaluator);
     return exportSolution();
 }
 
@@ -210,7 +210,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
         searchCompleted_ = true;
 
         // Node operators are evaluated for neighbouring (U, V) pairs.
-        for (auto *U : order_.nodes)
+        for (auto *U : searchOrder_.nodes)
         {
             auto const lastTested = lastTestedNodes[U->client()];
             lastTestedNodes[U->client()] = numUpdates_;
@@ -272,7 +272,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
     {
         searchCompleted_ = true;
 
-        for (auto *U : order_.routes)
+        for (auto *U : searchOrder_.routes)
         {
             if (U->empty())
                 continue;
@@ -299,7 +299,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
     perturbationManager_.shuffle(rng);
-    order_.shuffle(rng);
+    searchOrder_.shuffle(rng);
 
     rng.shuffle(nodeOps.begin(), nodeOps.end());
     rng.shuffle(routeOps.begin(), routeOps.end());
@@ -402,7 +402,7 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
     // orderVehTypes. This helps because empty vehicle moves incur fixed cost,
     // and a purely greedy approach over-prioritises vehicles with low fixed
     // costs but possibly high variable costs.
-    for (auto const &[vehType, begin] : order_.vehTypes)
+    for (auto const &[vehType, begin] : searchOrder_.vehTypes)
     {
         auto const end = begin + data.vehicleType(vehType).numAvailable;
         auto const pred = [](auto const &route) { return route.empty(); };
@@ -663,7 +663,7 @@ LocalSearch::LocalSearch(ProblemData const &data,
     : data(data),
       solution_(data),
       searchSpace_(data, neighbours),
-      order_(data, solution_),
+      searchOrder_(data, solution_),
       perturbationManager_(perturbationManager),
       lastTestedNodes(data.numLocations()),
       lastTestedRoutes(data.numVehicles()),

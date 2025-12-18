@@ -39,13 +39,13 @@ public:
     {
         // Number of evaluated moves, that is, number of evaluations of a node
         // or route operator.
-        size_t numMoves = 0;
+        size_t const numMoves;
 
         // Number of evaluated moves that led to an objective improvement.
-        size_t numImproving = 0;
+        size_t const numImproving;
 
         // Number of times the solution has been modified in some way.
-        size_t numUpdates = 0;
+        size_t const numUpdates;
     };
 
     struct Solution
@@ -81,11 +81,14 @@ public:
 private:
     ProblemData const &data;
 
+    // Stores the node-based solution representation used during LS.
     Solution solution_;
 
     // Manages the granular neighbourhood and promising clients.
     SearchSpace searchSpace_;
-    SearchOrder order_;
+
+    // Controls the order in which nodes and routes are searched.
+    SearchOrder searchOrder_;
 
     // Perturbation manager that determines the size of the perturbation during
     // each LS invocation.
