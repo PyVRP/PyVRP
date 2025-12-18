@@ -77,7 +77,7 @@ void PerturbationManager::perturb(LocalSearch::Solution &solution,
         else if (!route && action == PerturbType::INSERT)
         {
             auto *after = insertAfter(
-                node, solution, data, searchSpace, searchOrder, costEvaluator);
+                node, solution, searchSpace, searchOrder, data, costEvaluator);
 
             if (!after)
                 return;
