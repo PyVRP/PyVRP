@@ -280,6 +280,11 @@ PYBIND11_MODULE(_search, m)
              py::overload_cast<size_t>(&SearchSpace::markPromising),
              py::arg("client"),
              DOC(pyvrp, search, SearchSpace, markPromising, 1))
+        .def(
+            "mark_promising",
+            py::overload_cast<Route::Node const *>(&SearchSpace::markPromising),
+            py::arg("node"),
+            DOC(pyvrp, search, SearchSpace, markPromising, 2))
         .def("mark_all_promising",
              &SearchSpace::markAllPromising,
              DOC(pyvrp, search, SearchSpace, markAllPromising))

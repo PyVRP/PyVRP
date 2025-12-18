@@ -1,8 +1,10 @@
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
+from pyvrp import RandomNumberGenerator
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 from pyvrp.search._search import SearchSpace
+from tests.helpers import make_search_route
 
 
 @pytest.mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
@@ -140,4 +142,61 @@ def test_all_promising(ok_small):
     assert_(not any(search_space.is_promising(client) for client in clients))
 
 
-# TODO test node mark_promising
+@pytest.mark.parametrize(
+    ("mark", "exp_marked", "exp_unmarked"),
+    [
+        (0, [1], [2, 3, 4]),  # start depot
+        (1, [1, 2], [3, 4]),
+        (2, [1, 2, 3], [4]),
+        (3, [2, 3, 4], [1]),
+        (4, [3, 4], [1, 2]),
+        (5, [4], [1, 2, 3]),  # end depot
+    ],
+)
+def test_node_promising(
+    ok_small,
+    mark: int,
+    exp_marked: list[int],
+    exp_unmarked: list[int],
+):
+    """
+    Tests marking nodes (and their client neighbours) as promising.
+    """
+    route = make_search_route(ok_small, [1, 2, 3, 4])
+
+    search_space = SearchSpace(ok_small, compute_neighbours(ok_small))
+    search_space.mark_promising(route[mark])
+
+    for exp in exp_marked:
+        assert_(search_space.is_promising(exp))
+
+    for exp in exp_unmarked:
+        assert_(not search_space.is_promising(exp))
+
+
+def test_search_order_and_shuffle(ok_small_two_profiles):
+    """
+    Tests that the search order begins with an unshuffled default, and then
+    randomises with each shuffle call.
+    """
+    data = ok_small_two_profiles
+    search_space = SearchSpace(data, compute_neighbours(data))
+
+    # Initially we have an unshuffled, default search order.
+    assert_equal(search_space.client_order(), [1, 2, 3, 4])  # 4 clients
+    assert_equal(search_space.route_order(), [0, 1, 2, 3, 4, 5])  # 6 vehicles
+    assert_equal(search_space.veh_type_order(), [(0, 0), (1, 3)])  # 2 types
+
+    rng = RandomNumberGenerator(seed=42)
+    search_space.shuffle(rng)
+
+    # After shuffling, the search order has changed, but is still fixed: it
+    # does not change again until we do another shuffle.
+    assert_equal(search_space.client_order(), [3, 4, 2, 1])
+    assert_equal(search_space.client_order(), [3, 4, 2, 1])  # again to check
+    assert_equal(search_space.route_order(), [3, 4, 5, 2, 0, 1])
+    assert_equal(search_space.veh_type_order(), [(1, 3), (0, 0)])
+
+    # Shuffling again changes the search order.
+    search_space.shuffle(rng)
+    assert_equal(search_space.client_order(), [2, 4, 1, 3])
