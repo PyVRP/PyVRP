@@ -7,6 +7,7 @@
 #include "RandomNumberGenerator.h"
 #include "Route.h"
 #include "SearchSpace.h"
+#include "Solution.h"
 
 #include <iosfwd>
 
@@ -55,7 +56,7 @@ class PerturbationManager
      * new route.
      */
     void insert(Route::Node *U,
-                LocalSearch::Solution &solution,
+                Solution &solution,
                 SearchSpace const &searchSpace,
                 ProblemData const &data,
                 CostEvaluator const &costEvaluator) const;
@@ -76,7 +77,7 @@ public:
     /**
      * TODO
      */
-    void perturb(LocalSearch::Solution &solution,
+    void perturb(Solution &solution,
                  SearchSpace &searchSpace,
                  ProblemData const &data,
                  CostEvaluator const &costEvaluator) const;

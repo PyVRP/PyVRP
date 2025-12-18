@@ -42,7 +42,7 @@ void PerturbationManager::shuffle(RandomNumberGenerator &rng)
     numPerturbations_ = params_.minPerturbations + rng.randint(range + 1);
 }
 
-void PerturbationManager::perturb(LocalSearch::Solution &solution,
+void PerturbationManager::perturb(Solution &solution,
                                   SearchSpace &searchSpace,
                                   ProblemData const &data,
                                   CostEvaluator const &costEvaluator) const
@@ -110,7 +110,7 @@ void PerturbationManager::perturb(LocalSearch::Solution &solution,
 }
 
 void PerturbationManager::insert(Route::Node *U,
-                                 LocalSearch::Solution &solution,
+                                 Solution &solution,
                                  SearchSpace const &searchSpace,
                                  ProblemData const &data,
                                  CostEvaluator const &costEvaluator) const

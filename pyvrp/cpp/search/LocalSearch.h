@@ -7,7 +7,7 @@
 #include "RandomNumberGenerator.h"
 #include "Route.h"
 #include "SearchSpace.h"
-#include "Solution.h"
+#include "Solution.h"  // pyvrp::search::Solution
 
 #include <functional>
 #include <stdexcept>
@@ -46,20 +46,6 @@ public:
 
         // Number of times the solution has been modified in some way.
         size_t const numUpdates;
-    };
-
-    struct Solution
-    {
-        std::vector<Route::Node> nodes;
-        std::vector<Route> routes;
-
-        Solution(ProblemData const &data);
-
-        // Converts the given solution into our node-based representation.
-        void load(ProblemData const &data, pyvrp::Solution const &solution);
-
-        // Converts from our representation to a proper solution.
-        pyvrp::Solution unload(ProblemData const &data) const;
     };
 
 private:
