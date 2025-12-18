@@ -19,36 +19,6 @@ class PerturbationManager;  // forward declaration
 
 class LocalSearch
 {
-public:
-    /**
-     * Simple data structure that tracks statistics about the number of local
-     * search moves applied to the most recently improved solution.
-     *
-     * Attributes
-     * ----------
-     * num_moves
-     *     Number of evaluated node and route operator moves.
-     * num_improving
-     *     Number of evaluated moves that led to an objective improvement.
-     * num_updates
-     *     Total number of changes to the solution. This always includes the
-     *     number of evaluated improving moves, but also e.g. insertion of
-     *     required but missing clients.
-     */
-    struct Statistics
-    {
-        // Number of evaluated moves, that is, number of evaluations of a node
-        // or route operator.
-        size_t const numMoves;
-
-        // Number of evaluated moves that led to an objective improvement.
-        size_t const numImproving;
-
-        // Number of times the solution has been modified in some way.
-        size_t const numUpdates;
-    };
-
-private:
     ProblemData const &data;
 
     // Stores the node-based solution representation used during LS.
@@ -113,6 +83,34 @@ private:
     insert(Route::Node *U, CostEvaluator const &costEvaluator, bool required);
 
 public:
+    /**
+     * Simple data structure that tracks statistics about the number of local
+     * search moves applied to the most recently improved solution.
+     *
+     * Attributes
+     * ----------
+     * num_moves
+     *     Number of evaluated node and route operator moves.
+     * num_improving
+     *     Number of evaluated moves that led to an objective improvement.
+     * num_updates
+     *     Total number of changes to the solution. This always includes the
+     *     number of evaluated improving moves, but also e.g. insertion of
+     *     required but missing clients.
+     */
+    struct Statistics
+    {
+        // Number of evaluated moves, that is, number of evaluations of a node
+        // or route operator.
+        size_t const numMoves;
+
+        // Number of evaluated moves that led to an objective improvement.
+        size_t const numImproving;
+
+        // Number of times the solution has been modified in some way.
+        size_t const numUpdates;
+    };
+
     /**
      * Adds a local search operator that works on node/client pairs U and V.
      */
