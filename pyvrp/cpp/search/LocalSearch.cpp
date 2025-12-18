@@ -212,6 +212,9 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
         // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto *U : searchOrder_.nodes)
         {
+            if (!searchSpace_.isPromising(U->client()))
+                continue;
+
             auto const lastTested = lastTestedNodes[U->client()];
             lastTestedNodes[U->client()] = numUpdates_;
 
@@ -230,11 +233,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             applyDepotRemovalMove(n(U), costEvaluator);
 
             // We next apply the regular operators that work on pairs of nodes
-            // (U, V), where both U and V are in the solution. We only do this
-            // if U is a promising candidate for improvement.
-            if (!searchSpace_.isPromising(U->client()))
-                continue;
-
+            // (U, V), where both U and V are in the solution.
             for (auto const vClient : searchSpace_.neighboursOf(U->client()))
             {
                 auto *V = &solution_.nodes[vClient];

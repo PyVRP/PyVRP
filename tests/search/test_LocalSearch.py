@@ -435,8 +435,9 @@ def test_mutually_exclusive_group(gtsp):
 
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(gtsp)
+    perturbation = PerturbationManager(PerturbationParams(0, 0))
 
-    ls = LocalSearch(gtsp, rng, neighbours)
+    ls = LocalSearch(gtsp, rng, neighbours, perturbation)
     ls.add_node_operator(Exchange10(gtsp))
 
     sol = Solution.make_random(gtsp, rng)
@@ -478,14 +479,16 @@ def test_swap_if_improving_mutually_exclusive_group(
     Tests that we swap a client (1) in a mutually exclusive group when another
     client (3) in the group is better to have.
     """
+    data = ok_small_mutually_exclusive_groups
     rng = RandomNumberGenerator(seed=42)
-    neighbours = compute_neighbours(ok_small_mutually_exclusive_groups)
+    neighbours = compute_neighbours(data)
+    perturbation = PerturbationManager(PerturbationParams(0, 0))
 
-    ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
-    ls.add_node_operator(Exchange10(ok_small_mutually_exclusive_groups))
+    ls = LocalSearch(data, rng, neighbours, perturbation)
+    ls.add_node_operator(Exchange10(data))
 
     cost_eval = CostEvaluator([20], 6, 0)
-    sol = Solution(ok_small_mutually_exclusive_groups, [[1, 4]])
+    sol = Solution(data, [[1, 4]])
     improved = ls(sol, cost_eval)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
