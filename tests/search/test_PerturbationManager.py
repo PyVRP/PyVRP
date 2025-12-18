@@ -139,3 +139,31 @@ def test_perturb_switches_remove_insert(ok_small):
     perturbed = sol.unload(ok_small)
     visits = [visit for r in perturbed.routes() for visit in r.visits()]
     assert_equal(visits, [3])
+
+
+def test_perturb_inserts_into_new_routes(ok_small):
+    """
+    Tests that we can perturb into empty routes.
+    """
+    # Change capacity so that each route can serve exactly one client.
+    veh_type = ok_small.vehicle_type(0)
+    data = ok_small.replace(vehicle_types=[veh_type.replace(capacity=[5])])
+
+    # Start with an empty solution, and an empty granular neighbourhood. So
+    # there is no way to insert clients next to their neighbours.
+    sol = Solution(data)
+    neighbours = [[] for _ in range(data.num_locations)]
+
+    search_space = SearchSpace(data, neighbours)
+    cost_eval = CostEvaluator([2000], 0, 0)  # heavily penalise load violations
+
+    # Perturb exactly three times. No clients are currently in the solution, so
+    # we insert. There are no neighbours, so we insert into empty routes (or
+    # the first route, which is a default). The large load violation penalty
+    # ensures that the empty routes are always better. We should thus end up
+    # with three routes in the perturbed solution.
+    perturbation = PerturbationManager(PerturbationParams(3, 3))
+    perturbation.perturb(sol, search_space, data, cost_eval)
+
+    perturbed = sol.unload(data)
+    assert_equal(perturbed.num_routes(), 3)
