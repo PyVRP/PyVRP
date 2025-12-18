@@ -839,8 +839,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::init<ProblemData const &, std::vector<Route>>(),
              py::arg("data"),
              py::arg("routes"))
-        .def(py::init<ProblemData const &,
-                      std::vector<std::vector<size_t>> const &>(),
+        .def(py::init<ProblemData const &, std::vector<std::vector<size_t>>>(),
              py::arg("data"),
              py::arg("routes"))
         .def_property_readonly_static(
