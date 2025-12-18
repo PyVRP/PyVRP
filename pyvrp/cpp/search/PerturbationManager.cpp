@@ -43,9 +43,9 @@ void PerturbationManager::shuffle(RandomNumberGenerator &rng)
 }
 
 void PerturbationManager::perturb(LocalSearch::Solution &solution,
-                                  ProblemData const &data,
                                   SearchSpace &searchSpace,
                                   LocalSearch::SearchOrder &searchOrder,
+                                  ProblemData const &data,
                                   CostEvaluator const &costEvaluator)
 {
     size_t movesLeft = numPerturbations_;
@@ -119,9 +119,9 @@ void PerturbationManager::perturb(LocalSearch::Solution &solution,
 Route::Node *
 PerturbationManager::insertAfter(Route::Node *U,
                                  LocalSearch::Solution &solution,
-                                 ProblemData const &data,
                                  SearchSpace &searchSpace,
                                  LocalSearch::SearchOrder &searchOrder,
+                                 ProblemData const &data,
                                  CostEvaluator const &costEvaluator)
 {
     assert(!U->isDepot());

@@ -64,10 +64,10 @@ public:
 
     struct SearchOrder
     {
-        // Node order used by node-based search (search).
+        // Node order used by node-based search.
         std::vector<Route::Node *> nodes;
 
-        // Route order used by route-based search (intensify).
+        // Route order used by route-based intensify.
         std::vector<Route *> routes;
 
         // Vehicle type order used when inserting into empty routes.

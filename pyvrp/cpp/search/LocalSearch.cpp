@@ -157,7 +157,7 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
 {
     loadSolution(solution);
     perturbationManager_.perturb(
-        solution_, data, searchSpace_, searchOrder_, costEvaluator);
+        solution_, searchSpace_, searchOrder_, data, costEvaluator);
 
     while (true)
     {
@@ -196,7 +196,7 @@ pyvrp::Solution LocalSearch::perturb(pyvrp::Solution const &solution,
 {
     loadSolution(solution);
     perturbationManager_.perturb(
-        solution_, data, searchSpace_, searchOrder_, costEvaluator);
+        solution_, searchSpace_, searchOrder_, data, costEvaluator);
     return solution_.unload(data);
 }
 
