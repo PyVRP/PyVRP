@@ -79,6 +79,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 continue;
 
             auto *U = &solution_.nodes[uClient];
+
             auto const lastTested = lastTestedNodes[U->client()];
             lastTestedNodes[U->client()] = numUpdates_;
 
