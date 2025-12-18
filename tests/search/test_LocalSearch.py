@@ -441,7 +441,7 @@ def test_mutually_exclusive_group(gtsp):
 
     sol = Solution.make_random(gtsp, rng)
     cost_eval = CostEvaluator([20], 6, 0)
-    improved = ls(sol, cost_eval)
+    improved = ls.search(sol, cost_eval)
 
     assert_(not sol.is_group_feasible())
     assert_(improved.is_group_feasible())
@@ -486,7 +486,7 @@ def test_swap_if_improving_mutually_exclusive_group(
 
     cost_eval = CostEvaluator([20], 6, 0)
     sol = Solution(ok_small_mutually_exclusive_groups, [[1, 4]])
-    improved = ls(sol, cost_eval)
+    improved = ls.search(sol, cost_eval)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
     routes = improved.routes()
