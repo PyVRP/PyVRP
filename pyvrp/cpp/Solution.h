@@ -257,6 +257,9 @@ public:
     // This constructs from the given list of Routes.
     Solution(ProblemData const &data, Routes const &routes);
 
+    // This constructs from the given list of Routes using move semantics.
+    Solution(ProblemData const &data, Routes &&routes);
+
     // This constructor does *no* validation. Useful when unserialising objects.
     Solution(size_t numClients,
              size_t numMissingClients,
