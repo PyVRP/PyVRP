@@ -227,12 +227,7 @@ Solution::Solution(ProblemData const &data,
     *this = Solution(data, transformedRoutes);
 }
 
-Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
-    : Solution(data, std::vector<Route>(routes))  // delegate to move ctr
-{
-}
-
-Solution::Solution(ProblemData const &data, std::vector<Route> &&routes)
+Solution::Solution(ProblemData const &data, std::vector<Route> routes)
     : routes_(std::move(routes)), neighbours_(data.numLocations(), std::nullopt)
 {
     if (routes_.size() > data.numVehicles())
