@@ -188,7 +188,7 @@ def solve(
     """
     rng = RandomNumberGenerator(seed=seed)
     neighbours = compute_neighbours(data, params.neighbourhood)
-    perturbation = PerturbationManager(params.perturbation)
+    perturbation = PerturbationManager(data, params.perturbation)
     ls = LocalSearch(data, rng, neighbours, perturbation)
 
     for node_op in params.node_ops:

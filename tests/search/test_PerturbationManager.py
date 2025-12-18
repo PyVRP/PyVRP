@@ -27,12 +27,12 @@ def test_eq():
     assert_(params != 123)
 
 
-def test_shuffle():
+def test_shuffle(ok_small):
     """
     Tests shuffling and drawing random number of perturbations.
     """
     params = PerturbationParams(1, 10)
-    manager = PerturbationManager(params)
+    manager = PerturbationManager(ok_small, params)
 
     rng = RandomNumberGenerator(seed=42)
     for _ in range(10):  # all samples should be within bounds
@@ -40,18 +40,18 @@ def test_shuffle():
         assert_(1 <= manager.num_perturbations() <= 10)
 
     params = PerturbationParams(0, 0)
-    manager = PerturbationManager(params)
+    manager = PerturbationManager(ok_small, params)
     for _ in range(10):  # same, but now we can only draw one outcome: 0
         manager.shuffle(rng)
         assert_equal(manager.num_perturbations(), 0)
 
 
-def test_num_perturbations_randomness():
+def test_num_perturbations_randomness(ok_small):
     """
     Tests the bounds and randomness of repeated shuffles.
     """
     params = PerturbationParams(1, 10)
-    manager = PerturbationManager(params)
+    manager = PerturbationManager(ok_small, params)
 
     # Collect a large sample.
     rng = RandomNumberGenerator(seed=42)

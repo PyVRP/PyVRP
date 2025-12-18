@@ -149,7 +149,7 @@ def test_ils_result_has_correct_stats(ok_small):
     Tests that ILS correctly collects search statistics.
     """
     params = PerturbationParams(0, 0)  # disable perturbation
-    perturbation = PerturbationManager(params)
+    perturbation = PerturbationManager(ok_small, params)
 
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     rng = RandomNumberGenerator(42)
