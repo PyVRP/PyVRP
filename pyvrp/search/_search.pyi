@@ -90,6 +90,13 @@ class PerturbationManager:
     ) -> None: ...
     def num_perturbations(self) -> int: ...
     def shuffle(self, rng: RandomNumberGenerator) -> None: ...
+    def perturb(
+        self,
+        solution: Solution,
+        search_space: SearchSpace,
+        data: ProblemData,
+        cost_evaluator: CostEvaluator,
+    ) -> None: ...
 
 class LocalSearchStatistics:
     num_moves: int
