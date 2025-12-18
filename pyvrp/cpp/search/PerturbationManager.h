@@ -56,9 +56,9 @@ class PerturbationManager
      */
     void insert(Route::Node *U,
                 LocalSearch::Solution &solution,
-                SearchSpace &searchSpace,
+                SearchSpace const &searchSpace,
                 ProblemData const &data,
-                CostEvaluator const &costEvaluator);
+                CostEvaluator const &costEvaluator) const;
 
 public:
     PerturbationManager(PerturbationParams params = PerturbationParams());
@@ -79,7 +79,7 @@ public:
     void perturb(LocalSearch::Solution &solution,
                  SearchSpace &searchSpace,
                  ProblemData const &data,
-                 CostEvaluator const &costEvaluator);
+                 CostEvaluator const &costEvaluator) const;
 };
 }  // namespace pyvrp::search
 
