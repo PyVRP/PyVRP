@@ -321,7 +321,14 @@ PYBIND11_MODULE(_search, m)
         .def("shuffle",
              &PerturbationManager::shuffle,
              py::arg("rng"),
-             DOC(pyvrp, search, PerturbationManager, shuffle));
+             DOC(pyvrp, search, PerturbationManager, shuffle))
+        .def("perturb",
+             &PerturbationManager::perturb,
+             py::arg("solution"),
+             py::arg("search_space"),
+             py::arg("data"),
+             py::arg("cost_evaluator"),
+             DOC(pyvrp, search, PerturbationManager, perturb));
 
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))

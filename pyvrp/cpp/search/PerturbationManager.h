@@ -75,7 +75,21 @@ public:
     void shuffle(RandomNumberGenerator &rng);
 
     /**
-     * TODO
+     * Perturbs the given solution using the neighbourhood and ordering of
+     * the given search space. Perturbation strengthens (weakens) randomly
+     * selected neighbourhoods by inserting (removing) clients. Any perturbed
+     * clients are marked as promising in the search space.
+     *
+     * Parameters
+     * ----------
+     * solution
+     *     Solution to perturb. Perturbation happens in place.
+     * search_space
+     *     The search space to use for perturbation.
+     * data
+     *     Problem data instance.
+     * cost_evaluator
+     *     Evaluator to use for insertions.
      */
     void perturb(Solution &solution,
                  SearchSpace &searchSpace,
