@@ -107,9 +107,6 @@ private:
     // Load an initial solution that we will attempt to improve.
     void loadSolution(pyvrp::Solution const &solution);
 
-    // Export the LS solution back into a solution.
-    pyvrp::Solution exportSolution() const;
-
     // Tests the node pair (U, V).
     bool applyNodeOps(Route::Node *U,
                       Route::Node *V,

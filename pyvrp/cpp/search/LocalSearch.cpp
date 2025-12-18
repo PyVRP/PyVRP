@@ -171,7 +171,7 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
             break;
     }
 
-    return exportSolution();
+    return solution_.unload(data);
 }
 
 pyvrp::Solution LocalSearch::search(pyvrp::Solution const &solution,
@@ -179,7 +179,7 @@ pyvrp::Solution LocalSearch::search(pyvrp::Solution const &solution,
 {
     loadSolution(solution);
     search(costEvaluator);
-    return exportSolution();
+    return solution_.unload(data);
 }
 
 pyvrp::Solution LocalSearch::intensify(pyvrp::Solution const &solution,
@@ -187,7 +187,8 @@ pyvrp::Solution LocalSearch::intensify(pyvrp::Solution const &solution,
 {
     loadSolution(solution);
     intensify(costEvaluator);
-    return exportSolution();
+
+    return solution_.unload(data);
 }
 
 pyvrp::Solution LocalSearch::perturb(pyvrp::Solution const &solution,
@@ -196,7 +197,7 @@ pyvrp::Solution LocalSearch::perturb(pyvrp::Solution const &solution,
     loadSolution(solution);
     perturbationManager_.perturb(
         solution_, data, searchSpace_, searchOrder_, costEvaluator);
-    return exportSolution();
+    return solution_.unload(data);
 }
 
 void LocalSearch::search(CostEvaluator const &costEvaluator)
@@ -600,11 +601,6 @@ void LocalSearch::loadSolution(pyvrp::Solution const &solution)
 
     for (auto *routeOp : routeOps)
         routeOp->init(solution);
-}
-
-pyvrp::Solution LocalSearch::exportSolution() const
-{
-    return solution_.unload(data);
 }
 
 void LocalSearch::addNodeOperator(NodeOperator &op)
