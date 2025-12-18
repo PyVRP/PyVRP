@@ -5,6 +5,7 @@
 #include "RelocateWithDepot.h"
 #include "Route.h"
 #include "SearchSpace.h"
+#include "Solution.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
 #include "SwapTails.h"
@@ -32,6 +33,7 @@ using pyvrp::search::removeCost;
 using pyvrp::search::Route;
 using pyvrp::search::RouteOperator;
 using pyvrp::search::SearchSpace;
+using pyvrp::search::Solution;
 using pyvrp::search::supports;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
@@ -369,6 +371,13 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>())
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
+
+    py::class_<Solution>(m, "Solution", DOC(pyvrp, search, Solution))
+        .def(py::init<pyvrp::ProblemData const &>(), py::arg("data"))
+        .def_readonly("nodes", &Solution::nodes)
+        .def_readonly("routes", &Solution::routes)
+        .def("load", &Solution::load, py::arg("data"), py::arg("solution"))
+        .def("unload", &Solution::unload, py::arg("data"));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
         .def(py::init<pyvrp::ProblemData const &, size_t, size_t>(),

@@ -1,12 +1,12 @@
 from typing import Iterator
 
+import pyvrp
 from pyvrp._pyvrp import (
     CostEvaluator,
     DurationSegment,
     LoadSegment,
     ProblemData,
     RandomNumberGenerator,
-    Solution,
 )
 
 class OperatorStatistics:
@@ -113,19 +113,26 @@ class LocalSearch:
     def statistics(self) -> LocalSearchStatistics: ...
     def __call__(
         self,
-        solution: Solution,
+        solution: pyvrp.Solution,
         cost_evaluator: CostEvaluator,
-    ) -> Solution: ...
+    ) -> pyvrp.Solution: ...
     def shuffle(self, rng: RandomNumberGenerator) -> None: ...
     def intensify(
-        self, solution: Solution, cost_evaluator: CostEvaluator
-    ) -> Solution: ...
+        self, solution: pyvrp.Solution, cost_evaluator: CostEvaluator
+    ) -> pyvrp.Solution: ...
     def search(
-        self, solution: Solution, cost_evaluator: CostEvaluator
-    ) -> Solution: ...
+        self, solution: pyvrp.Solution, cost_evaluator: CostEvaluator
+    ) -> pyvrp.Solution: ...
     def perturb(
-        self, solution: Solution, cost_evaluator: CostEvaluator
-    ) -> Solution: ...
+        self, solution: pyvrp.Solution, cost_evaluator: CostEvaluator
+    ) -> pyvrp.Solution: ...
+
+class Solution:
+    nodes: list[Node]
+    routes: list[Route]
+    def __init__(self, data: ProblemData) -> None: ...
+    def load(self, data: ProblemData, solution: pyvrp.Solution) -> None: ...
+    def unload(self, data: ProblemData) -> pyvrp.Solution: ...
 
 class Route:
     def __init__(

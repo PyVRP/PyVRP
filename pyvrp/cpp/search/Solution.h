@@ -12,14 +12,13 @@ namespace pyvrp::search
  * Solution(data: ProblemData)
  *
  * An alternative representation of a routing solution that is more amenable
- * to efficient search-based modification. This is mostly internal to the
- * local search.
+ * to efficient modification. This is intended for use in the local search.
  *
- * The solution owns a vector of nodes, for the depots and clients. It
- * additionally owns a vector of (search) routes, which have (non-owning)
- * pointers into the nodes. Modifying the solution via search operators
- * involves copying pointers; not whole nodes. That is very efficient in
- * practice.
+ * This solution struct owns a vector of nodes, for the depots and clients. It
+ * additionally owns a vector of (search) routes, which store non-owning
+ * pointers into the nodes to model route visits. Modifying the solution via
+ * search operators involves copying pointers, not whole nodes. That is very
+ * efficient in practice.
  *
  * The solution does not protect its internal state---it is just a simple
  * wrapper around nodes and routes. Ensuring the solution remains valid is
