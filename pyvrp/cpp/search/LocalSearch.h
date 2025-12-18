@@ -3,7 +3,6 @@
 
 #include "CostEvaluator.h"
 #include "LocalSearchOperator.h"
-#include "PerturbationManager.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
@@ -16,6 +15,8 @@
 
 namespace pyvrp::search
 {
+class PerturbationManager;  // forward declaration
+
 class LocalSearch
 {
 public:
@@ -47,39 +48,64 @@ public:
         size_t numUpdates = 0;
     };
 
+    struct Solution
+    {
+        std::vector<Route::Node> nodes;
+        std::vector<Route> routes;
+
+        Solution(ProblemData const &data);
+
+        // Converts the given solution into our node-based representation.
+        void load(ProblemData const &data, pyvrp::Solution const &solution);
+
+        // Converts from our representation to a proper solution.
+        pyvrp::Solution unload(ProblemData const &data) const;
+    };
+
+    struct SearchOrder
+    {
+        // Node order used by node-based search (search).
+        std::vector<Route::Node *> nodes;
+
+        // Route order used by route-based search (intensify).
+        std::vector<Route *> routes;
+
+        // Vehicle type order used when inserting into empty routes.
+        std::vector<std::pair<size_t, Route *>> vehTypes;
+
+        SearchOrder(ProblemData const &data, Solution &solution);
+
+        void shuffle(RandomNumberGenerator &rng);
+    };
+
 private:
     ProblemData const &data;
 
+    Solution solution_;
+
     // Manages the granular neighbourhood and promising clients.
     SearchSpace searchSpace_;
+    SearchOrder order_;
 
     // Perturbation manager that determines the size of the perturbation during
     // each LS invocation.
     PerturbationManager &perturbationManager_;
 
-    std::vector<Route::Node *> orderNodes;  // node order used by LS::search
-    std::vector<Route *> orderRoutes;       // route order used by LS::intensify
-    std::vector<std::pair<size_t, size_t>>  // vehicle type order (incl. offset)
-        orderVehTypes;                      // used by LS::applyEmptyRouteMoves
+    std::vector<NodeOperator *> nodeOps;
+    std::vector<RouteOperator *> routeOps;
 
     std::vector<int> lastTestedNodes;   // tracks node operator evaluation
     std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
     std::vector<int> lastUpdated;       // tracks when routes were last modified
 
-    std::vector<Route::Node> nodes;
-    std::vector<Route> routes;
-
-    std::vector<NodeOperator *> nodeOps;
-    std::vector<RouteOperator *> routeOps;
-
     size_t numUpdates_ = 0;         // modification counter
     bool searchCompleted_ = false;  // No further improving move found?
 
     // Load an initial solution that we will attempt to improve.
-    void loadSolution(Solution const &solution);
+    void loadSolution(pyvrp::Solution const &solution);
 
     // Export the LS solution back into a solution.
-    Solution exportSolution() const;
+    pyvrp::Solution exportSolution() const;
 
     // Tests the node pair (U, V).
     bool applyNodeOps(Route::Node *U,
@@ -162,29 +188,29 @@ public:
      * Iteratively calls ``search()`` and ``intensify()`` until no further
      * improvements are made.
      */
-    Solution operator()(Solution const &solution,
-                        CostEvaluator const &costEvaluator);
+    pyvrp::Solution operator()(pyvrp::Solution const &solution,
+                               CostEvaluator const &costEvaluator);
 
     /**
      * Performs regular (node-based) local search around the given solution,
      * and returns a new, hopefully improved solution.
      */
-    Solution search(Solution const &solution,
-                    CostEvaluator const &costEvaluator);
+    pyvrp::Solution search(pyvrp::Solution const &solution,
+                           CostEvaluator const &costEvaluator);
 
     /**
      * Performs a more intensive route-based local search around the given
      * solution, and returns a new, hopefully improved solution.
      */
-    Solution intensify(Solution const &solution,
-                       CostEvaluator const &costEvaluator);
+    pyvrp::Solution intensify(pyvrp::Solution const &solution,
+                              CostEvaluator const &costEvaluator);
 
     /**
      * Performs a perturbation step around the given solution, and returns a
      * new, modified solution.
      */
-    Solution perturb(Solution const &solution,
-                     CostEvaluator const &costEvaluator);
+    pyvrp::Solution perturb(pyvrp::Solution const &solution,
+                            CostEvaluator const &costEvaluator);
 
     /**
      * Shuffles the order in which the node and route pairs are evaluated, and

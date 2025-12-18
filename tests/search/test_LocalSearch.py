@@ -681,7 +681,7 @@ def test_perturb_switches_remove_insert(ok_small):
 
     # We start with [1, 2] in the solution. We want to perturb three times. We
     # begin by perturbing 1. Since 1 is in the solution, we remove. As 2 is in
-    # 1's neigbhourhood, so we also remove 2. Then we move to perturb 2, but
+    # 1's neighbourhood, so we also remove 2. Then we move to perturb 2, but
     # it's already been perturbed and has an empty neighbourhood, so there is
     # nothing we can do. So we move to perturb 3: it's not in the solution,
     # has not been perturbed yet, so we insert it. That's the third and final

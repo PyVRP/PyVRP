@@ -43,8 +43,9 @@ void PerturbationManager::shuffle(RandomNumberGenerator &rng)
     numPerturbations_ = params_.minPerturbations + rng.randint(range + 1);
 }
 
-void PerturbationManager::perturb(std::vector<Route::Node *> const &orderNodes,
+void PerturbationManager::perturb(LocalSearch::Solution &solution,
                                   SearchSpace &searchSpace,
+                                  LocalSearch::SearchOrder &searchOrder,
                                   CostEvaluator const &costEvaluator)
 {
     size_t movesLeft = numPerturbations_;
@@ -75,7 +76,9 @@ void PerturbationManager::perturb(std::vector<Route::Node *> const &orderNodes,
         // Insert if node is not in a route and we are currently inserting.
         else if (!route && action == PerturbType::INSERT)
         {
-            auto *after = insertAfter(node, searchSpace, costEvaluator);
+            auto *after = insertAfter(
+                node, solution, searchSpace, searchOrder, costEvaluator);
+
             if (!after)
                 return;
 
@@ -94,12 +97,8 @@ void PerturbationManager::perturb(std::vector<Route::Node *> const &orderNodes,
     // randomly selected clients U: if U is in the solution, we remove it and
     // its neighbours, while if it is not, we try to insert instead. Each
     // removal or insertion counts as one perturbation.
-    for (auto *U : orderNodes)
+    for (auto *U : searchOrder.nodes)
     {
-        // We know nodes are aligned in memory, so this bit of pointer
-        // arithmetic is safe (but it is a bit naughty).
-        auto *const nodes = U - U->client();
-
         auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
         perturb(U, action);
 
@@ -108,7 +107,7 @@ void PerturbationManager::perturb(std::vector<Route::Node *> const &orderNodes,
 
         for (auto const vClient : searchSpace.neighboursOf(U->client()))
         {
-            auto *V = nodes + vClient;
+            auto *V = &solution.nodes[vClient];
             perturb(V, action);
 
             if (!movesLeft)
@@ -119,21 +118,18 @@ void PerturbationManager::perturb(std::vector<Route::Node *> const &orderNodes,
 
 Route::Node *
 PerturbationManager::insertAfter(Route::Node *U,
+                                 LocalSearch::Solution &solution,
                                  SearchSpace &searchSpace,
+                                 LocalSearch::SearchOrder &searchOrder,
                                  CostEvaluator const &costEvaluator)
 {
     assert(!U->isDepot());
-
-    // We know nodes are aligned in memory, so this bit of pointer arithmetic
-    // is safe (but it is a bit naughty).
-    auto *const nodes = U - U->client();
-
-    Route::Node *UAfter = nullptr;
-    auto bestCost = std::numeric_limits<Cost>::max();
+    Route::Node *UAfter = solution.routes[0][0];
+    auto bestCost = insertCost(U, UAfter, data_, costEvaluator);
 
     for (auto const vClient : searchSpace.neighboursOf(U->client()))
     {
-        auto *V = nodes + vClient;
+        auto *V = &solution.nodes[vClient];
 
         if (!V->route())
             continue;
@@ -146,7 +142,19 @@ PerturbationManager::insertAfter(Route::Node *U,
         }
     }
 
-    // TODO insert into empty routes?
+    for (auto const &[vehType, begin] : searchOrder.vehTypes)
+    {
+        auto const end = begin + data_.vehicleType(vehType).numAvailable;
+        auto const pred = [](auto const &route) { return route.empty(); };
+        auto empty = std::find_if(begin, end, pred);
+
+        if (empty == end)
+            continue;
+
+        auto const cost = insertCost(U, (*empty)[0], data_, costEvaluator);
+        if (cost < bestCost)
+            return (*empty)[0];
+    }
 
     return UAfter;
 }

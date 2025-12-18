@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_PERTURBATIONMANAGER_H
 
 #include "CostEvaluator.h"
+#include "LocalSearch.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
@@ -55,7 +56,9 @@ class PerturbationManager
      * point can be found, in which case a null pointer is returned.
      */
     Route::Node *insertAfter(Route::Node *U,
+                             LocalSearch::Solution &solution,
                              SearchSpace &searchSpace,
+                             LocalSearch::SearchOrder &searchOrder,
                              CostEvaluator const &costEvaluator);
 
 public:
@@ -75,8 +78,9 @@ public:
     /**
      * TODO
      */
-    void perturb(std::vector<Route::Node *> const &orderNodes,
+    void perturb(LocalSearch::Solution &solution,
                  SearchSpace &searchSpace,
+                 LocalSearch::SearchOrder &searchOrder,
                  CostEvaluator const &costEvaluator);
 };
 }  // namespace pyvrp::search
