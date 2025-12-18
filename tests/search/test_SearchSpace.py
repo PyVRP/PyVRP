@@ -138,3 +138,6 @@ def test_all_promising(ok_small):
     # After unmarking all, no client should be promising.
     search_space.unmark_all_promising()
     assert_(not any(search_space.is_promising(client) for client in clients))
+
+
+# TODO test node mark_promising

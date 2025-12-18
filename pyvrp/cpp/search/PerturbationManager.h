@@ -1,7 +1,11 @@
 #ifndef PYVRP_SEARCH_PERTURBATIONMANAGER_H
 #define PYVRP_SEARCH_PERTURBATIONMANAGER_H
 
+#include "CostEvaluator.h"
+#include "ProblemData.h"
 #include "RandomNumberGenerator.h"
+#include "Route.h"
+#include "SearchSpace.h"
 
 #include <iosfwd>
 
@@ -42,11 +46,21 @@ struct PerturbationParams
  */
 class PerturbationManager
 {
+    ProblemData const &data_;
     PerturbationParams const params_;  // owned by us
     size_t numPerturbations_;
 
+    /**
+     * Attempts to determine a good insertion point for U. May fail if no such
+     * point can be found, in which case a null pointer is returned.
+     */
+    Route::Node *insertAfter(Route::Node *U,
+                             SearchSpace &searchSpace,
+                             CostEvaluator const &costEvaluator);
+
 public:
-    PerturbationManager(PerturbationParams params = PerturbationParams());
+    PerturbationManager(ProblemData const &data,
+                        PerturbationParams params = PerturbationParams());
 
     /**
      * Number of perturbations to apply.
@@ -57,6 +71,13 @@ public:
      * Draws and sets a new random number of perturbations to apply.
      */
     void shuffle(RandomNumberGenerator &rng);
+
+    /**
+     * TODO
+     */
+    void perturb(std::vector<Route::Node *> const &orderNodes,
+                 SearchSpace &searchSpace,
+                 CostEvaluator const &costEvaluator);
 };
 }  // namespace pyvrp::search
 

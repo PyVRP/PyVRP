@@ -1,7 +1,9 @@
 #include "SearchSpace.h"
 
+#include <cassert>
 #include <stdexcept>
 
+using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 
 SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
@@ -57,6 +59,20 @@ void SearchSpace::markPromising(size_t client)
 {
     assert(client >= data_.numDepots());
     promising_[client] = true;
+}
+
+void SearchSpace::markPromising(Route::Node const *node)
+{
+    assert(node->route());
+
+    if (!node->isDepot())
+        markPromising(node->client());
+
+    if (!node->isStartDepot() && !p(node)->isDepot())
+        markPromising(p(node)->client());
+
+    if (!node->isEndDepot() && !n(node)->isDepot())
+        markPromising(n(node)->client());
 }
 
 void SearchSpace::markAllPromising() { promising_.set(); }

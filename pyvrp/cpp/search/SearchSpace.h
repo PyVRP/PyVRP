@@ -3,6 +3,7 @@
 
 #include "DynamicBitset.h"
 #include "ProblemData.h"
+#include "Route.h"
 
 #include <vector>
 
@@ -59,6 +60,14 @@ public:
      * Marks the given client as promising.
      */
     void markPromising(size_t client);
+
+    /**
+     * Convenient overload for route nodes. Since this is typically used during
+     * insert and removals, this method marks the given node and its direct
+     * client neighbours as promising. The node must currently be in a route.
+     * Does not mark depots.
+     */
+    void markPromising(Route::Node const *node);
 
     /**
      * Marks all clients as promising.

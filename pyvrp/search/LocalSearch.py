@@ -37,8 +37,11 @@ class LocalSearch:
         data: ProblemData,
         rng: RandomNumberGenerator,
         neighbours: list[list[int]],
-        perturbation_manager: PerturbationManager = PerturbationManager(),
+        perturbation_manager: PerturbationManager | None = None,
     ):
+        if perturbation_manager is None:
+            perturbation_manager = PerturbationManager(data)
+
         self._ls = _LocalSearch(data, neighbours, perturbation_manager)
         self._rng = rng
 

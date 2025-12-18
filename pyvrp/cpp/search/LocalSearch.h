@@ -57,8 +57,8 @@ private:
     // each LS invocation.
     PerturbationManager &perturbationManager_;
 
-    std::vector<size_t> orderNodes;         // node order used by LS::search
-    std::vector<size_t> orderRoutes;        // route order used by LS::intensify
+    std::vector<Route::Node *> orderNodes;  // node order used by LS::search
+    std::vector<Route *> orderRoutes;       // route order used by LS::intensify
     std::vector<std::pair<size_t, size_t>>  // vehicle type order (incl. offset)
         orderVehTypes;                      // used by LS::applyEmptyRouteMoves
 
@@ -104,10 +104,6 @@ private:
     // Tests moves involving clients in client groups.
     void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
-    // Marks the given node U and its direct client neighbours as promising.
-    // U must currently be in a route. Does not mark depots.
-    void markPromising(Route::Node const *U);
-
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
 
@@ -116,9 +112,6 @@ private:
 
     // Performs intensify on the currently loaded solution.
     void intensify(CostEvaluator const &costEvaluator);
-
-    // Performs perturb on the currently loaded solution.
-    void perturb(CostEvaluator const &costEvaluator);
 
     // Evaluate inserting U after one of its neighbours or a random empty route.
     // Applies the move if it's improving or required for feasibility.
