@@ -124,7 +124,7 @@ pyvrp::Solution LocalSearch::Solution::unload(ProblemData const &data) const
         solRoutes.emplace_back(data, trips, route.vehicleType());
     }
 
-    return {data, solRoutes};
+    return {data, std::move(solRoutes)};
 }
 
 LocalSearch::SearchOrder::SearchOrder(ProblemData const &data,

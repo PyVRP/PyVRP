@@ -227,10 +227,10 @@ Solution::Solution(ProblemData const &data,
     *this = Solution(data, transformedRoutes);
 }
 
-Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
-    : routes_(routes), neighbours_(data.numLocations(), std::nullopt)
+Solution::Solution(ProblemData const &data, std::vector<Route> routes)
+    : routes_(std::move(routes)), neighbours_(data.numLocations(), std::nullopt)
 {
-    if (routes.size() > data.numVehicles())
+    if (routes_.size() > data.numVehicles())
     {
         auto const msg = "Number of routes must not exceed number of vehicles.";
         throw std::runtime_error(msg);
@@ -238,7 +238,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> const &routes)
 
     DynamicBitset isVisited(data.numLocations());
     std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
-    for (auto const &route : routes)
+    for (auto const &route : routes_)
     {
         if (route.empty())
             throw std::runtime_error("Solution should not have empty routes.");
