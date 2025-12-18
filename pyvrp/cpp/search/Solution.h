@@ -26,8 +26,8 @@ namespace pyvrp::search
  */
 struct Solution
 {
-    std::vector<Route::Node> nodes;
-    std::vector<Route> routes;
+    std::vector<Route::Node> nodes;  // size numLocations()
+    std::vector<Route> routes;       // size numVehicles(), ordered by type
 
     Solution(ProblemData const &data);
 

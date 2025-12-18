@@ -285,7 +285,20 @@ PYBIND11_MODULE(_search, m)
              DOC(pyvrp, search, SearchSpace, markAllPromising))
         .def("unmark_all_promising",
              &SearchSpace::unmarkAllPromising,
-             DOC(pyvrp, search, SearchSpace, unmarkAllPromising));
+             DOC(pyvrp, search, SearchSpace, unmarkAllPromising))
+        .def("client_order",
+             &SearchSpace::clientOrder,
+             DOC(pyvrp, search, SearchSpace, clientOrder))
+        .def("route_order",
+             &SearchSpace::routeOrder,
+             DOC(pyvrp, search, SearchSpace, routeOrder))
+        .def("veh_type_order",
+             &SearchSpace::vehTypeOrder,
+             DOC(pyvrp, search, SearchSpace, vehTypeOrder))
+        .def("shuffle",
+             &SearchSpace::shuffle,
+             py::arg("rng"),
+             DOC(pyvrp, search, SearchSpace, shuffle));
 
     py::class_<PerturbationParams>(
         m, "PerturbationParams", DOC(pyvrp, search, PerturbationParams))
