@@ -51,15 +51,14 @@ class PerturbationManager
     size_t numPerturbations_;
 
     /**
-     * Attempts to determine a good insertion point for U. May fail if no such
-     * point can be found, in which case a null pointer is returned.
+     * Inserts U behind one of its neighbours, or, if that's better, into a
+     * new route.
      */
-    Route::Node *insertAfter(Route::Node *U,
-                             LocalSearch::Solution &solution,
-                             SearchSpace &searchSpace,
-                             LocalSearch::SearchOrder &searchOrder,
-                             ProblemData const &data,
-                             CostEvaluator const &costEvaluator);
+    void insert(Route::Node *U,
+                LocalSearch::Solution &solution,
+                SearchSpace &searchSpace,
+                ProblemData const &data,
+                CostEvaluator const &costEvaluator);
 
 public:
     PerturbationManager(PerturbationParams params = PerturbationParams());
@@ -79,7 +78,6 @@ public:
      */
     void perturb(LocalSearch::Solution &solution,
                  SearchSpace &searchSpace,
-                 LocalSearch::SearchOrder &searchOrder,
                  ProblemData const &data,
                  CostEvaluator const &costEvaluator);
 };

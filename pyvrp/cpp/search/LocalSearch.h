@@ -62,33 +62,15 @@ public:
         pyvrp::Solution unload(ProblemData const &data) const;
     };
 
-    struct SearchOrder
-    {
-        // Node order used by node-based search.
-        std::vector<Route::Node *> nodes;
-
-        // Route order used by route-based intensify.
-        std::vector<Route *> routes;
-
-        // Vehicle type order used when inserting into empty routes.
-        std::vector<std::pair<size_t, Route *>> vehTypes;
-
-        SearchOrder(ProblemData const &data, Solution &solution);
-
-        void shuffle(RandomNumberGenerator &rng);
-    };
-
 private:
     ProblemData const &data;
 
     // Stores the node-based solution representation used during LS.
     Solution solution_;
 
-    // Manages the granular neighbourhood and promising clients.
+    // Manages the granular neighbourhood, promising clients, and the order in
+    // which nodes and routes are searched.
     SearchSpace searchSpace_;
-
-    // Controls the order in which nodes and routes are searched.
-    SearchOrder searchOrder_;
 
     // Perturbation manager that determines the size of the perturbation during
     // each LS invocation.

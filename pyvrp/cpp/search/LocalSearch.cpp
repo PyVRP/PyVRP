@@ -127,37 +127,11 @@ pyvrp::Solution LocalSearch::Solution::unload(ProblemData const &data) const
     return {data, std::move(solRoutes)};
 }
 
-LocalSearch::SearchOrder::SearchOrder(ProblemData const &data,
-                                      Solution &solution)
-    : nodes(data.numClients(), nullptr), routes(data.numVehicles(), nullptr)
-{
-    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
-        nodes[idx - data.numDepots()] = &solution.nodes[idx];
-
-    for (size_t idx = 0; idx != data.numVehicles(); ++idx)
-        routes[idx] = &solution.routes[idx];
-
-    Route *begin = routes[0];
-    for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
-    {
-        vehTypes.emplace_back(vehType, begin);
-        begin += data.vehicleType(vehType).numAvailable;
-    }
-}
-
-void LocalSearch::SearchOrder::SearchOrder::shuffle(RandomNumberGenerator &rng)
-{
-    rng.shuffle(nodes.begin(), nodes.end());
-    rng.shuffle(routes.begin(), routes.end());
-    rng.shuffle(vehTypes.begin(), vehTypes.end());
-}
-
 pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
                                         CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    perturbationManager_.perturb(
-        solution_, searchSpace_, searchOrder_, data, costEvaluator);
+    perturbationManager_.perturb(solution_, searchSpace_, data, costEvaluator);
 
     while (true)
     {
@@ -195,8 +169,7 @@ pyvrp::Solution LocalSearch::perturb(pyvrp::Solution const &solution,
                                      CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    perturbationManager_.perturb(
-        solution_, searchSpace_, searchOrder_, data, costEvaluator);
+    perturbationManager_.perturb(solution_, searchSpace_, data, costEvaluator);
     return solution_.unload(data);
 }
 
@@ -211,11 +184,12 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
         searchCompleted_ = true;
 
         // Node operators are evaluated for neighbouring (U, V) pairs.
-        for (auto *U : searchOrder_.nodes)
+        for (auto const uClient : searchSpace_.clientOrder())
         {
-            if (!searchSpace_.isPromising(U->client()))
+            if (!searchSpace_.isPromising(uClient))
                 continue;
 
+            auto *U = &solution_.nodes[uClient];
             auto const lastTested = lastTestedNodes[U->client()];
             lastTestedNodes[U->client()] = numUpdates_;
 
@@ -272,8 +246,11 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
     {
         searchCompleted_ = true;
 
-        for (auto *U : searchOrder_.routes)
+        for (auto const rU : searchSpace_.routeOrder())
         {
+            auto *U = &solution_.routes[rU];
+            assert(U->idx() == rU);
+
             if (U->empty())
                 continue;
 
@@ -299,7 +276,7 @@ void LocalSearch::intensify(CostEvaluator const &costEvaluator)
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
     perturbationManager_.shuffle(rng);
-    searchOrder_.shuffle(rng);
+    searchSpace_.shuffle(rng);
 
     rng.shuffle(nodeOps.begin(), nodeOps.end());
     rng.shuffle(routeOps.begin(), routeOps.end());
@@ -402,8 +379,9 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
     // orderVehTypes. This helps because empty vehicle moves incur fixed cost,
     // and a purely greedy approach over-prioritises vehicles with low fixed
     // costs but possibly high variable costs.
-    for (auto const &[vehType, begin] : searchOrder_.vehTypes)
+    for (auto const &[vehType, offset] : searchSpace_.vehTypeOrder())
     {
+        auto const begin = solution_.routes.begin() + offset;
         auto const end = begin + data.vehicleType(vehType).numAvailable;
         auto const pred = [](auto const &route) { return route.empty(); };
         auto empty = std::find_if(begin, end, pred);
@@ -658,7 +636,6 @@ LocalSearch::LocalSearch(ProblemData const &data,
     : data(data),
       solution_(data),
       searchSpace_(data, neighbours),
-      searchOrder_(data, solution_),
       perturbationManager_(perturbationManager),
       lastTestedNodes(data.numLocations()),
       lastTestedRoutes(data.numVehicles()),

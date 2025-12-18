@@ -44,7 +44,6 @@ void PerturbationManager::shuffle(RandomNumberGenerator &rng)
 
 void PerturbationManager::perturb(LocalSearch::Solution &solution,
                                   SearchSpace &searchSpace,
-                                  LocalSearch::SearchOrder &searchOrder,
                                   ProblemData const &data,
                                   CostEvaluator const &costEvaluator)
 {
@@ -76,14 +75,7 @@ void PerturbationManager::perturb(LocalSearch::Solution &solution,
         // Insert if node is not in a route and we are currently inserting.
         else if (!route && action == PerturbType::INSERT)
         {
-            auto *after = insertAfter(
-                node, solution, searchSpace, searchOrder, data, costEvaluator);
-
-            if (!after)
-                return;
-
-            after->route()->insert(after->idx() + 1, node);
-            after->route()->update();
+            insert(node, solution, searchSpace, data, costEvaluator);
             searchSpace.markPromising(node);
         }
         else  // no-op
@@ -97,8 +89,9 @@ void PerturbationManager::perturb(LocalSearch::Solution &solution,
     // randomly selected clients U: if U is in the solution, we remove it and
     // its neighbours, while if it is not, we try to insert instead. Each
     // removal or insertion counts as one perturbation.
-    for (auto *U : searchOrder.nodes)
+    for (auto const uClient : searchSpace.clientOrder())
     {
+        auto *U = &solution.nodes[uClient];
         auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
         perturb(U, action);
 
@@ -116,11 +109,9 @@ void PerturbationManager::perturb(LocalSearch::Solution &solution,
     }
 }
 
-Route::Node *
-PerturbationManager::insertAfter(Route::Node *U,
+void PerturbationManager::insert(Route::Node *U,
                                  LocalSearch::Solution &solution,
                                  SearchSpace &searchSpace,
-                                 LocalSearch::SearchOrder &searchOrder,
                                  ProblemData const &data,
                                  CostEvaluator const &costEvaluator)
 {
@@ -143,8 +134,9 @@ PerturbationManager::insertAfter(Route::Node *U,
         }
     }
 
-    for (auto const &[vehType, begin] : searchOrder.vehTypes)
+    for (auto const &[vehType, offset] : searchSpace.vehTypeOrder())
     {
+        auto const begin = solution.routes.begin() + offset;
         auto const end = begin + data.vehicleType(vehType).numAvailable;
         auto const pred = [](auto const &route) { return route.empty(); };
         auto empty = std::find_if(begin, end, pred);
@@ -154,8 +146,14 @@ PerturbationManager::insertAfter(Route::Node *U,
 
         auto const cost = insertCost(U, (*empty)[0], data, costEvaluator);
         if (cost < bestCost)
-            return (*empty)[0];
+        {
+            empty->insert(1, U);
+            empty->update();
+            return;
+        }
     }
 
-    return UAfter;
+    auto *route = UAfter->route();
+    route->insert(UAfter->idx() + 1, U);
+    route->update();
 }
