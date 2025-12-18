@@ -655,7 +655,7 @@ Solution LocalSearch::exportSolution() const
         solRoutes.emplace_back(data, trips, route.vehicleType());
     }
 
-    return {data, solRoutes};
+    return {data, std::move(solRoutes)};
 }
 
 void LocalSearch::addNodeOperator(NodeOperator &op)
