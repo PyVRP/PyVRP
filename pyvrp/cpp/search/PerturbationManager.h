@@ -37,7 +37,9 @@ struct PerturbationParams
 /**
  * PerturbationManager(params: PerturbationParams)
  *
- * Manages the number of perturbations to apply during the search.
+ * Handles perturbation during the search. In each iteration, it applies
+ * :meth:`~num_perturbations` perturbations that strengthen (resp., weaken)
+ * randomly selected neighbourhoods by inserting (removing) clients.
  *
  * Parameters
  * ----------
