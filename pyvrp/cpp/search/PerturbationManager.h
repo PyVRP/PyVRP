@@ -2,10 +2,8 @@
 #define PYVRP_SEARCH_PERTURBATIONMANAGER_H
 
 #include "CostEvaluator.h"
-#include "LocalSearch.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
-#include "Route.h"
 #include "SearchSpace.h"
 #include "Solution.h"
 
