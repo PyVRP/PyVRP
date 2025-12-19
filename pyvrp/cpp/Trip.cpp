@@ -64,7 +64,6 @@ Trip::Trip(ProblemData const &data,
     auto const &distances = data.distanceMatrix(vehData.profile);
     auto const &durations = data.durationMatrix(vehData.profile);
 
-    std::vector<LoadSegment> loadSegments(data.numLoadDimensions());
     for (size_t prevClient = startDepot_; auto const client : visits_)
     {
         distance_ += distances(prevClient, client);
@@ -79,10 +78,6 @@ Trip::Trip(ProblemData const &data,
         centroid_.first += static_cast<double>(clientData.x) / size();
         centroid_.second += static_cast<double>(clientData.y) / size();
 
-        for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-            loadSegments[dim]
-                = LoadSegment::merge(loadSegments[dim], {clientData, dim});
-
         prevClient = client;
     }
 
@@ -92,10 +87,17 @@ Trip::Trip(ProblemData const &data,
 
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
-        delivery_[dim] = loadSegments[dim].delivery();
-        pickup_[dim] = loadSegments[dim].pickup();
-        load_[dim] = loadSegments[dim].load();
-        excessLoad_[dim] = loadSegments[dim].excessLoad(vehData.capacity[dim]);
+        LoadSegment segment;
+        for (auto const client : visits_)
+        {
+            ProblemData::Client const &clientData = data.location(client);
+            segment = LoadSegment::merge(segment, {clientData, dim});
+        }
+
+        delivery_[dim] = segment.delivery();
+        pickup_[dim] = segment.pickup();
+        load_[dim] = segment.load();
+        excessLoad_[dim] = segment.excessLoad(vehData.capacity[dim]);
     }
 }
 
