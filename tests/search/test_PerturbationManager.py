@@ -122,7 +122,7 @@ def test_perturb_switches_remove_insert(ok_small):
     sol = Solution(ok_small)  # start with [1, 2] in the solution
     sol.load(pyvrp.Solution(ok_small, [[1, 2]]))
 
-    #  We want to perturb three times. We begin by perturbing 1. Since 1 is in
+    # We want to perturb three times. We begin by perturbing 1. Since 1 is in
     # the solution, we remove. As 2 is in 1's neighbourhood, so we also remove
     # 2. Then we move to perturb 2, but it's already been perturbed and has an
     # empty neighbourhood, so there is nothing we can do. So we move to perturb
