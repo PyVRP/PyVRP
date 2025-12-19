@@ -257,7 +257,6 @@ def test_no_op_results_in_same_solution(ok_small):
     assert_equal(ls(sol, cost_eval), sol)
     assert_equal(ls.search(sol, cost_eval), sol)
     assert_equal(ls.intensify(sol, cost_eval), sol)
-    assert_equal(ls.perturb(sol, cost_eval), sol)
 
 
 def test_intensify_can_improve_solution_further(rc208):
@@ -645,59 +644,6 @@ def test_node_and_route_operators_property(ok_small):
     ls.add_route_operator(route_op)
     assert_equal(len(ls.route_operators), 1)
     assert_(ls.route_operators[0] is route_op)
-
-
-def test_perturb_inserts_clients(ok_small):
-    """
-    Tests that perturbing an empty solution inserts all missing clients.
-    """
-    rng = RandomNumberGenerator(seed=42)
-    perturbation = PerturbationManager(PerturbationParams(4, 4))
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small), perturbation)
-
-    sol = Solution(ok_small, [])
-    cost_eval = CostEvaluator([20], 6, 0)
-
-    perturbed = ls.perturb(sol, cost_eval)
-    assert_equal(perturbed.num_clients(), 4)
-
-
-def test_perturb_removes_clients(ok_small):
-    """
-    Tests that perturbing a complete solution could remove all clients.
-    """
-    rng = RandomNumberGenerator(seed=42)
-    perturbation = PerturbationManager(PerturbationParams(4, 4))
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small), perturbation)
-
-    sol = Solution(ok_small, [[1, 2], [3, 4]])
-    cost_eval = CostEvaluator([20], 6, 0)
-
-    destroyed = ls.perturb(sol, cost_eval)
-    assert_equal(destroyed.num_clients(), 0)
-
-
-def test_perturb_switches_remove_insert(ok_small):
-    """
-    Tests that perturbing switches between inserting and removing, depending
-    on whether a random initial client is in the solution.
-    """
-    perturbation = PerturbationManager(PerturbationParams(3, 3))
-    ls = cpp_LocalSearch(ok_small, compute_neighbours(ok_small), perturbation)
-
-    # We start with [1, 2] in the solution. We want to perturb three times. We
-    # begin by perturbing 1. Since 1 is in the solution, we remove. As 2 is in
-    # 1's neigbhourhood, so we also remove 2. Then we move to perturb 2, but
-    # it's already been perturbed and has an empty neighbourhood, so there is
-    # nothing we can do. So we move to perturb 3: it's not in the solution,
-    # has not been perturbed yet, so we insert it. That's the third and final
-    # perturbation, so the perturbed solution should contain only client 3.
-    sol = Solution(ok_small, [[1, 2]])
-    cost_eval = CostEvaluator([0], 0, 0)
-    destroyed = ls.perturb(sol, cost_eval)
-
-    visits = [visit for r in destroyed.routes() for visit in r.visits()]
-    assert_equal(visits, [3])
 
 
 def test_ls_inserts_all_required_clients(ok_small):

@@ -1,7 +1,10 @@
 #ifndef PYVRP_SEARCH_PERTURBATIONMANAGER_H
 #define PYVRP_SEARCH_PERTURBATIONMANAGER_H
 
+#include "CostEvaluator.h"
 #include "RandomNumberGenerator.h"
+#include "SearchSpace.h"
+#include "Solution.h"
 
 #include <iosfwd>
 
@@ -33,7 +36,9 @@ struct PerturbationParams
 /**
  * PerturbationManager(params: PerturbationParams)
  *
- * Manages the number of perturbations to apply during the search.
+ * Handles perturbation during the search. In each iteration, it applies
+ * :meth:`~num_perturbations` perturbations that strengthen (resp., weaken)
+ * randomly selected neighbourhoods by inserting (removing) clients.
  *
  * Parameters
  * ----------
@@ -57,6 +62,25 @@ public:
      * Draws and sets a new random number of perturbations to apply.
      */
     void shuffle(RandomNumberGenerator &rng);
+
+    /**
+     * Perturbs the given solution using the neighbourhood and ordering of
+     * the given search space. Perturbation strengthens (weakens) randomly
+     * selected neighbourhoods by inserting (removing) clients. Any perturbed
+     * clients are marked as promising in the search space.
+     *
+     * Parameters
+     * ----------
+     * solution
+     *     Solution to perturb. Perturbation happens in place.
+     * search_space
+     *     The search space to use for perturbation.
+     * cost_evaluator
+     *     Evaluator to use for insertions.
+     */
+    void perturb(Solution &solution,
+                 SearchSpace &searchSpace,
+                 CostEvaluator const &costEvaluator) const;
 };
 }  // namespace pyvrp::search
 

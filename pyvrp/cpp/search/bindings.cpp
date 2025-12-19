@@ -5,6 +5,7 @@
 #include "RelocateWithDepot.h"
 #include "Route.h"
 #include "SearchSpace.h"
+#include "Solution.h"
 #include "SwapRoutes.h"
 #include "SwapStar.h"
 #include "SwapTails.h"
@@ -32,6 +33,7 @@ using pyvrp::search::removeCost;
 using pyvrp::search::Route;
 using pyvrp::search::RouteOperator;
 using pyvrp::search::SearchSpace;
+using pyvrp::search::Solution;
 using pyvrp::search::supports;
 using pyvrp::search::SwapRoutes;
 using pyvrp::search::SwapStar;
@@ -260,8 +262,7 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &,
                       std::vector<std::vector<size_t>>>(),
              py::arg("data"),
-             py::arg("neighbours"),
-             py::keep_alive<1, 2>())  // keep data alive
+             py::arg("neighbours"))
         .def_property("neighbours",
                       &SearchSpace::neighbours,
                       &SearchSpace::setNeighbours,
@@ -275,15 +276,33 @@ PYBIND11_MODULE(_search, m)
              py::arg("client"),
              DOC(pyvrp, search, SearchSpace, isPromising))
         .def("mark_promising",
-             &SearchSpace::markPromising,
+             py::overload_cast<size_t>(&SearchSpace::markPromising),
              py::arg("client"),
-             DOC(pyvrp, search, SearchSpace, markPromising))
+             DOC(pyvrp, search, SearchSpace, markPromising, 1))
+        .def(
+            "mark_promising",
+            py::overload_cast<Route::Node const *>(&SearchSpace::markPromising),
+            py::arg("node"),
+            DOC(pyvrp, search, SearchSpace, markPromising, 2))
         .def("mark_all_promising",
              &SearchSpace::markAllPromising,
              DOC(pyvrp, search, SearchSpace, markAllPromising))
         .def("unmark_all_promising",
              &SearchSpace::unmarkAllPromising,
-             DOC(pyvrp, search, SearchSpace, unmarkAllPromising));
+             DOC(pyvrp, search, SearchSpace, unmarkAllPromising))
+        .def("client_order",
+             &SearchSpace::clientOrder,
+             DOC(pyvrp, search, SearchSpace, clientOrder))
+        .def("route_order",
+             &SearchSpace::routeOrder,
+             DOC(pyvrp, search, SearchSpace, routeOrder))
+        .def("veh_type_order",
+             &SearchSpace::vehTypeOrder,
+             DOC(pyvrp, search, SearchSpace, vehTypeOrder))
+        .def("shuffle",
+             &SearchSpace::shuffle,
+             py::arg("rng"),
+             DOC(pyvrp, search, SearchSpace, shuffle));
 
     py::class_<PerturbationParams>(
         m, "PerturbationParams", DOC(pyvrp, search, PerturbationParams))
@@ -306,7 +325,14 @@ PYBIND11_MODULE(_search, m)
         .def("shuffle",
              &PerturbationManager::shuffle,
              py::arg("rng"),
-             DOC(pyvrp, search, PerturbationManager, shuffle));
+             DOC(pyvrp, search, PerturbationManager, shuffle))
+        .def("perturb",
+             &PerturbationManager::perturb,
+             py::arg("solution"),
+             py::arg("search_space"),
+             py::arg("cost_evaluator"),
+             py::call_guard<py::gil_scoped_release>(),
+             DOC(pyvrp, search, PerturbationManager, perturb));
 
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))
@@ -361,14 +387,22 @@ PYBIND11_MODULE(_search, m)
              py::arg("solution"),
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>())
-        .def("perturb",
-             py::overload_cast<pyvrp::Solution const &,
-                               pyvrp::CostEvaluator const &>(
-                 &LocalSearch::perturb),
-             py::arg("solution"),
-             py::arg("cost_evaluator"),
-             py::call_guard<py::gil_scoped_release>())
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
+
+    py::class_<Solution>(m, "Solution", DOC(pyvrp, search, Solution))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_readonly("nodes", &Solution::nodes)
+        .def_readonly("routes", &Solution::routes)
+        .def("load", &Solution::load, py::arg("solution"))
+        .def("unload", &Solution::unload)
+        .def("insert",
+             &Solution::insert,
+             py::arg("node"),
+             py::arg("search_space"),
+             py::arg("cost_evaluator"),
+             py::arg("required"));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
         .def(py::init<pyvrp::ProblemData const &, size_t, size_t>(),

@@ -178,28 +178,3 @@ class LocalSearch:
         """
         self._ls.shuffle(self._rng)
         return self._ls.search(solution, cost_evaluator)
-
-    def perturb(
-        self,
-        solution: Solution,
-        cost_evaluator: CostEvaluator,
-    ) -> Solution:
-        """
-        This method uses the perturbation operators on this local search object
-        to modify the given solution.
-
-        Parameters
-        ----------
-        solution
-            The solution to perturb.
-        cost_evaluator
-            Cost evaluator to use.
-
-        Returns
-        -------
-        Solution
-            The perturbed solution. This is not the same object as the
-            solution that was passed in.
-        """
-        self._ls.shuffle(self._rng)
-        return self._ls.perturb(solution, cost_evaluator)
