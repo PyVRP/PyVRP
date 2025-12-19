@@ -23,10 +23,19 @@ bool operator==(pyvrp::search::Route const &route, pyvrp::Route const &solRoute)
         return false;
 
     assert(route.numClients() == solRoute.size());
-    for (size_t idx = 0; idx != route.numClients(); ++idx)
-        // idx + 1 because route includes depots, whereas the solRoute does not.
-        if (route[idx + 1]->client() != solRoute[idx])
-            return false;
+
+    size_t idx = 0;
+    for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
+    {
+        auto const &trip = solRoute.trip(tripIdx);
+
+        if (tripIdx != 0 && trip.startDepot() != route[++idx]->client())
+            return false;  // not the same reload depot
+
+        for (auto const visit : trip)
+            if (visit != route[++idx]->client())
+                return false;
+    }
 
     return true;
 };
@@ -58,11 +67,11 @@ void Solution::load(pyvrp::Solution const &solution)
         vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
     }
 
-    DynamicBitset keep(routes.size());
-    std::vector<std::pair<size_t, size_t>> loadIdcs;
+    // Track which routes are unmodified and which to reload again.
+    DynamicBitset unmodified(routes.size());
+    std::vector<std::pair<size_t, size_t>> toLoad;  // (routeIdx, solRouteIdx)
     auto const &solRoutes = solution.routes();
 
-    // Load routes from solution.
     for (size_t solIdx = 0; solIdx != solRoutes.size(); ++solIdx)
     {
         auto const &solRoute = solRoutes[solIdx];
@@ -74,22 +83,19 @@ void Solution::load(pyvrp::Solution const &solution)
         auto &route = routes[idx];
 
         if (route == solRoute)
-        {
-            keep[idx] = true;
-            continue;
-        }
-
-        loadIdcs.push_back({idx, solIdx});
+            unmodified[idx] = true;
+        else  // load solution route at this route idx
+            toLoad.push_back({idx, solIdx});
     }
 
-    // First clear routes that are not kept. This is necessary before loading
-    // new routes, because clearing unassigns nodes.
+    // Clear all routes that are not unmodified. We must do this before loading
+    // to avoid accidentally unassigning nodes.
     for (size_t idx = 0; idx != routes.size(); ++idx)
-        if (!keep[idx])
+        if (!unmodified[idx])
             routes[idx].clear();
 
-    // Next load new routes.
-    for (auto const &[idx, solIdx] : loadIdcs)
+    // Reload modified routes from the solution.
+    for (auto const &[idx, solIdx] : toLoad)
     {
         auto &route = routes[idx];
         auto const &solRoute = solRoutes[solIdx];
