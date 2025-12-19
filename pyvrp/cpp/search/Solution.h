@@ -3,6 +3,7 @@
 
 #include "../Solution.h"  // pyvrp::Solution
 #include "CostEvaluator.h"
+#include "ProblemData.h"
 #include "Route.h"  // pyvrp::search::Route
 #include "SearchSpace.h"
 
