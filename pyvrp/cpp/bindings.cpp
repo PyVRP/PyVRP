@@ -836,7 +836,7 @@ PYBIND11_MODULE(_pyvrp, m)
         // both constructors. We want to avoid using the second constructor
         // since that would lose the vehicle type associations. As pybind11
         // will use the first matching constructor we put this one first.
-        .def(py::init<ProblemData const &, std::vector<Route> const &>(),
+        .def(py::init<ProblemData const &, std::vector<Route>>(),
              py::arg("data"),
              py::arg("routes"))
         .def(py::init<ProblemData const &,

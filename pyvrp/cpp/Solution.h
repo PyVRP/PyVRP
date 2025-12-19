@@ -255,7 +255,7 @@ public:
              std::vector<std::vector<Client>> const &routes);
 
     // This constructs from the given list of Routes.
-    Solution(ProblemData const &data, Routes const &routes);
+    Solution(ProblemData const &data, Routes routes);
 
     // This constructor does *no* validation. Useful when unserialising objects.
     Solution(size_t numClients,

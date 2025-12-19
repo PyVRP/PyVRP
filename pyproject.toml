@@ -49,7 +49,7 @@ pyvrp = "pyvrp.cli:main"
 
 [dependency-groups]
 build = [
-    "meson==1.9.2",
+    "meson>=1.0.0",
     "ninja>=1.11.1",
     "gcovr>=7.2",
     "docblock>=0.1.6",
@@ -138,13 +138,14 @@ exclude_lines = [
 build = "cp311-* cp312-* cp313-* cp314-*"
 skip = "*_ppc64le *_i686 *_s390x *-win32"
 build-frontend = "build"
-test-requires = [
-    "pytest>=6.0.0",
-    "pytest-cov>=6.1.1",
-    "pytest-xdist>=3.6.1",
-    "pytest-sugar>=1.0.0",
-]
-test-command = "pytest {package}/tests"
+test-groups = ["dev"]
+test-sources = ["tests"]
+test-command = "pytest ./tests"
+
+
+[tool.cibuildwheel.windows]
+before-build="pip install delvewheel"
+repair-wheel-command = "delvewheel repair -w {dest_dir} {wheel}"
 
 
 [tool.poetry]
@@ -174,5 +175,5 @@ script = "buildtools/build_wrapper.py"
 
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "meson==1.9.2", "ninja", "docblock"]
+requires = ["poetry-core>=1.0.0", "meson", "ninja", "docblock"]
 build-backend = "poetry.core.masonry.api"
