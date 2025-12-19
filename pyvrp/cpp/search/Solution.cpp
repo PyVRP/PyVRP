@@ -66,11 +66,9 @@ void Solution::load(ProblemData const &data, pyvrp::Solution const &solution)
 
 pyvrp::Solution Solution::unload(ProblemData const &data) const
 {
-
     std::vector<pyvrp::Route> solRoutes;
     solRoutes.reserve(data.numVehicles());
 
-    std::vector<Trip> trips;
     std::vector<size_t> visits;
 
     for (auto const &route : routes)
@@ -78,7 +76,7 @@ pyvrp::Solution Solution::unload(ProblemData const &data) const
         if (route.empty())
             continue;
 
-        trips.clear();
+        std::vector<Trip> trips;
         trips.reserve(route.numTrips());
 
         visits.clear();
@@ -106,7 +104,7 @@ pyvrp::Solution Solution::unload(ProblemData const &data) const
         }
 
         assert(trips.size() == route.numTrips());
-        solRoutes.emplace_back(data, trips, route.vehicleType());
+        solRoutes.emplace_back(data, std::move(trips), route.vehicleType());
     }
 
     return {data, std::move(solRoutes)};
