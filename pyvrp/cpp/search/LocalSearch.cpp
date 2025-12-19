@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <limits>
 #include <numeric>
 
 using pyvrp::Solution;
