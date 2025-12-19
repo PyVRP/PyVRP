@@ -333,6 +333,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("search_space"),
              py::arg("data"),
              py::arg("cost_evaluator"),
+             py::call_guard<py::gil_scoped_release>(),
              DOC(pyvrp, search, PerturbationManager, perturb));
 
     py::class_<LocalSearch::Statistics>(
@@ -385,13 +386,6 @@ PYBIND11_MODULE(_search, m)
              py::overload_cast<pyvrp::Solution const &,
                                pyvrp::CostEvaluator const &>(
                  &LocalSearch::intensify),
-             py::arg("solution"),
-             py::arg("cost_evaluator"),
-             py::call_guard<py::gil_scoped_release>())
-        .def("perturb",
-             py::overload_cast<pyvrp::Solution const &,
-                               pyvrp::CostEvaluator const &>(
-                 &LocalSearch::perturb),
              py::arg("solution"),
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>())

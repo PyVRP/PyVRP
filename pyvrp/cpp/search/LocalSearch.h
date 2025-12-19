@@ -167,13 +167,6 @@ public:
                               CostEvaluator const &costEvaluator);
 
     /**
-     * Performs a perturbation step around the given solution, and returns a
-     * new, modified solution.
-     */
-    pyvrp::Solution perturb(pyvrp::Solution const &solution,
-                            CostEvaluator const &costEvaluator);
-
-    /**
      * Shuffles the order in which the node and route pairs are evaluated, and
      * the order in which operators are applied.
      */

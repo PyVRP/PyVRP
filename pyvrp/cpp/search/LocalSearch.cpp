@@ -54,14 +54,6 @@ pyvrp::Solution LocalSearch::intensify(pyvrp::Solution const &solution,
     return solution_.unload(data);
 }
 
-pyvrp::Solution LocalSearch::perturb(pyvrp::Solution const &solution,
-                                     CostEvaluator const &costEvaluator)
-{
-    loadSolution(solution);
-    perturbationManager_.perturb(solution_, searchSpace_, data, costEvaluator);
-    return solution_.unload(data);
-}
-
 void LocalSearch::search(CostEvaluator const &costEvaluator)
 {
     if (nodeOps.empty())

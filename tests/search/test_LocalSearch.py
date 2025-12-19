@@ -257,7 +257,6 @@ def test_no_op_results_in_same_solution(ok_small):
     assert_equal(ls(sol, cost_eval), sol)
     assert_equal(ls.search(sol, cost_eval), sol)
     assert_equal(ls.intensify(sol, cost_eval), sol)
-    assert_equal(ls.perturb(sol, cost_eval), sol)
 
 
 def test_intensify_can_improve_solution_further(rc208):
