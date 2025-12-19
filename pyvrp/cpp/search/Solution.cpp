@@ -38,7 +38,7 @@ bool operator==(pyvrp::search::Route const &route, pyvrp::Route const &solRoute)
     }
 
     return true;
-};
+}
 }  // namespace
 
 Solution::Solution(ProblemData const &data) : data_(data)
