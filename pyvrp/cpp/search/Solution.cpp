@@ -2,6 +2,8 @@
 
 #include "primitives.h"
 
+#include <algorithm>
+#include <cassert>
 #include <iterator>
 
 using pyvrp::search::Solution;
