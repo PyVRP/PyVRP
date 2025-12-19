@@ -25,8 +25,6 @@ public:
     using Neighbours = std::vector<std::vector<size_t>>;
 
 private:
-    ProblemData const &data_;
-
     // Neighborhood restrictions: list of nearby clients for each client (size
     // numLocations, but nothing is stored for the depots!).
     Neighbours neighbours_;

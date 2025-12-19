@@ -8,8 +8,7 @@ using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 
 SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
-    : data_(data),
-      neighbours_(data.numLocations()),
+    : neighbours_(data.numLocations()),
       promising_(data.numLocations()),
       clientOrder_(data.numClients()),
       routeOrder_(data.numVehicles())
@@ -29,17 +28,17 @@ SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
 
 void SearchSpace::setNeighbours(Neighbours neighbours)
 {
-    if (neighbours.size() != data_.numLocations())
+    if (neighbours.size() != neighbours_.size())
         throw std::runtime_error("Neighbourhood dimensions do not match.");
 
-    for (size_t client = data_.numDepots(); client != data_.numLocations();
-         ++client)
+    size_t numDepots = neighbours_.size() - clientOrder_.size();
+    for (size_t client = numDepots; client != neighbours.size(); ++client)
     {
         auto const beginPos = neighbours[client].begin();
         auto const endPos = neighbours[client].end();
 
-        auto const pred = [&](auto item)
-        { return item == client || item < data_.numDepots(); };
+        auto const pred
+            = [&](auto item) { return item == client || item < numDepots; };
 
         if (std::any_of(beginPos, endPos, pred))
         {
@@ -64,13 +63,13 @@ std::vector<size_t> const &SearchSpace::neighboursOf(size_t client) const
 
 bool SearchSpace::isPromising(size_t client) const
 {
-    assert(client >= data_.numDepots());
+    assert(client < neighbours_.size());
     return promising_[client];
 }
 
 void SearchSpace::markPromising(size_t client)
 {
-    assert(client >= data_.numDepots());
+    assert(client < neighbours_.size());
     promising_[client] = true;
 }
 

@@ -262,8 +262,7 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &,
                       std::vector<std::vector<size_t>>>(),
              py::arg("data"),
-             py::arg("neighbours"),
-             py::keep_alive<1, 2>())  // keep data alive
+             py::arg("neighbours"))
         .def_property("neighbours",
                       &SearchSpace::neighbours,
                       &SearchSpace::setNeighbours,
