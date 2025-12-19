@@ -8,6 +8,30 @@
 
 using pyvrp::search::Solution;
 
+namespace
+{
+bool operator==(pyvrp::search::Route const &route, pyvrp::Route const &solRoute)
+{
+    bool const simpleChecks = route.vehicleType() == solRoute.vehicleType()
+                              && route.distanceCost() == solRoute.distanceCost()
+                              && route.durationCost() == solRoute.durationCost()
+                              && route.timeWarp() == solRoute.timeWarp()
+                              && route.numTrips() == solRoute.numTrips()
+                              && route.numClients() == solRoute.size();
+
+    if (!simpleChecks)
+        return false;
+
+    assert(route.numClients() == solRoute.size());
+    for (size_t idx = 0; idx != route.numClients(); ++idx)
+        // idx + 1 because route includes depots, whereas the solRoute does not.
+        if (route[idx + 1]->client() != solRoute[idx])
+            return false;
+
+    return true;
+};
+}  // namespace
+
 Solution::Solution(ProblemData const &data) : data_(data)
 {
     nodes.reserve(data.numLocations());
@@ -26,10 +50,6 @@ Solution::Solution(ProblemData const &data) : data_(data)
 
 void Solution::load(pyvrp::Solution const &solution)
 {
-    // First empty all routes.
-    for (auto &route : routes)
-        route.clear();
-
     // Determine offsets for vehicle types.
     std::vector<size_t> vehicleOffset(data_.numVehicleTypes(), 0);
     for (size_t vehType = 1; vehType < data_.numVehicleTypes(); vehType++)
@@ -38,14 +58,41 @@ void Solution::load(pyvrp::Solution const &solution)
         vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
     }
 
+    DynamicBitset keep(routes.size());
+    std::vector<std::pair<size_t, size_t>> loadIdcs;
+    auto const &solRoutes = solution.routes();
+
     // Load routes from solution.
-    for (auto const &solRoute : solution.routes())
+    for (size_t solIdx = 0; solIdx != solRoutes.size(); ++solIdx)
     {
+        auto const &solRoute = solRoutes[solIdx];
+
         // Determine index of next route of this type to load, where we rely
         // on solution to be valid to not exceed the number of vehicles per
         // vehicle type.
         auto const idx = vehicleOffset[solRoute.vehicleType()]++;
         auto &route = routes[idx];
+
+        if (route == solRoute)
+        {
+            keep[idx] = true;
+            continue;
+        }
+
+        loadIdcs.push_back({idx, solIdx});
+    }
+
+    // First clear routes that are not kept. This is necessary before loading
+    // new routes, because clearing unassigns nodes.
+    for (size_t idx = 0; idx != routes.size(); ++idx)
+        if (!keep[idx])
+            routes[idx].clear();
+
+    // Next load new routes.
+    for (auto const &[idx, solIdx] : loadIdcs)
+    {
+        auto &route = routes[idx];
+        auto const &solRoute = solRoutes[solIdx];
 
         // Routes use a representation with nodes for each client, reload depot
         // (one per trip), and start/end depots. The start depot doubles as the
