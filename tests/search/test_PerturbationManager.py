@@ -89,9 +89,9 @@ def test_perturb_inserts_clients(ok_small):
     # Perturb the empty solution exactly four times. That means we should
     # insert all missing clients.
     perturbation = PerturbationManager(PerturbationParams(4, 4))
-    perturbation.perturb(sol, search_space, ok_small, cost_eval)
+    perturbation.perturb(sol, search_space, cost_eval)
 
-    perturbed = sol.unload(ok_small)
+    perturbed = sol.unload()
     assert_equal(perturbed.num_clients(), 4)
 
 
@@ -100,7 +100,7 @@ def test_perturb_removes_clients(ok_small):
     Tests that perturbing a complete solution could remove all clients.
     """
     sol = Solution(ok_small)  # load a complete solution
-    sol.load(ok_small, pyvrp.Solution(ok_small, [[1, 2], [3, 4]]))
+    sol.load(pyvrp.Solution(ok_small, [[1, 2], [3, 4]]))
 
     search_space = SearchSpace(ok_small, compute_neighbours(ok_small))
     cost_eval = CostEvaluator([20], 6, 0)
@@ -108,9 +108,9 @@ def test_perturb_removes_clients(ok_small):
     # Perturb the complete solution four times. That means we should remove all
     # clients, and the perturbed solution should be empty.
     perturbation = PerturbationManager(PerturbationParams(4, 4))
-    perturbation.perturb(sol, search_space, ok_small, cost_eval)
+    perturbation.perturb(sol, search_space, cost_eval)
 
-    perturbed = sol.unload(ok_small)
+    perturbed = sol.unload()
     assert_equal(perturbed.num_clients(), 0)
 
 
@@ -120,7 +120,7 @@ def test_perturb_switches_remove_insert(ok_small):
     on whether a random initial client is in the solution.
     """
     sol = Solution(ok_small)  # start with [1, 2] in the solution
-    sol.load(ok_small, pyvrp.Solution(ok_small, [[1, 2]]))
+    sol.load(pyvrp.Solution(ok_small, [[1, 2]]))
 
     #  We want to perturb three times. We begin by perturbing 1. Since 1 is in
     # the solution, we remove. As 2 is in 1's neighbourhood, so we also remove
@@ -133,10 +133,10 @@ def test_perturb_switches_remove_insert(ok_small):
     cost_eval = CostEvaluator([0], 0, 0)
 
     perturbation = PerturbationManager(PerturbationParams(3, 3))
-    perturbation.perturb(sol, search_space, ok_small, cost_eval)
+    perturbation.perturb(sol, search_space, cost_eval)
 
     # Test that the perturbed solution contains only client 3.
-    perturbed = sol.unload(ok_small)
+    perturbed = sol.unload()
     visits = [visit for r in perturbed.routes() for visit in r.visits()]
     assert_equal(visits, [3])
 
@@ -163,7 +163,7 @@ def test_perturb_inserts_into_new_routes(ok_small):
     # ensures that the empty routes are always better. We should thus end up
     # with three routes in the perturbed solution.
     perturbation = PerturbationManager(PerturbationParams(3, 3))
-    perturbation.perturb(sol, search_space, data, cost_eval)
+    perturbation.perturb(sol, search_space, cost_eval)
 
-    perturbed = sol.unload(data)
+    perturbed = sol.unload()
     assert_equal(perturbed.num_routes(), 3)

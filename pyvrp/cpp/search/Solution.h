@@ -27,18 +27,21 @@ namespace pyvrp::search
  * wrapper around nodes and routes. Ensuring the solution remains valid is
  * up to the interacting code.
  */
-struct Solution
+class Solution
 {
+    ProblemData const &data_;
+
+public:
     std::vector<Route::Node> nodes;  // size numLocations()
     std::vector<Route> routes;       // size numVehicles(), ordered by type
 
     Solution(ProblemData const &data);
 
     // Converts the given solution into our node-based representation.
-    void load(ProblemData const &data, pyvrp::Solution const &solution);
+    void load(pyvrp::Solution const &solution);
 
     // Converts from our representation to a proper solution.
-    pyvrp::Solution unload(ProblemData const &data) const;
+    pyvrp::Solution unload() const;
 
     // Inserts the given node into the solution - either in its neighbourhood,
     // or in an empty route, if improving or required. Returns true if the node
@@ -46,7 +49,6 @@ struct Solution
     // inserted route is left to the calling code.
     bool insert(Route::Node *node,
                 SearchSpace const &searchSpace,
-                ProblemData const &data,
                 CostEvaluator const &costEvaluator,
                 bool required);
 };

@@ -44,7 +44,6 @@ void PerturbationManager::shuffle(RandomNumberGenerator &rng)
 
 void PerturbationManager::perturb(Solution &solution,
                                   SearchSpace &searchSpace,
-                                  ProblemData const &data,
                                   CostEvaluator const &costEvaluator) const
 {
     size_t movesLeft = numPerturbations_;
@@ -75,7 +74,7 @@ void PerturbationManager::perturb(Solution &solution,
         // Insert if node is not in a route and we are currently inserting.
         else if (!route && action == PerturbType::INSERT)
         {
-            solution.insert(node, searchSpace, data, costEvaluator, true);
+            solution.insert(node, searchSpace, costEvaluator, true);
             node->route()->update();
             searchSpace.markPromising(node);
         }

@@ -8,7 +8,7 @@
 
 using pyvrp::search::Solution;
 
-Solution::Solution(ProblemData const &data)
+Solution::Solution(ProblemData const &data) : data_(data)
 {
     nodes.reserve(data.numLocations());
     for (size_t loc = 0; loc != data.numLocations(); ++loc)
@@ -24,17 +24,17 @@ Solution::Solution(ProblemData const &data)
     }
 }
 
-void Solution::load(ProblemData const &data, pyvrp::Solution const &solution)
+void Solution::load(pyvrp::Solution const &solution)
 {
     // First empty all routes.
     for (auto &route : routes)
         route.clear();
 
     // Determine offsets for vehicle types.
-    std::vector<size_t> vehicleOffset(data.numVehicleTypes(), 0);
-    for (size_t vehType = 1; vehType < data.numVehicleTypes(); vehType++)
+    std::vector<size_t> vehicleOffset(data_.numVehicleTypes(), 0);
+    for (size_t vehType = 1; vehType < data_.numVehicleTypes(); vehType++)
     {
-        auto const prevAvail = data.vehicleType(vehType - 1).numAvailable;
+        auto const prevAvail = data_.vehicleType(vehType - 1).numAvailable;
         vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
     }
 
@@ -70,10 +70,10 @@ void Solution::load(ProblemData const &data, pyvrp::Solution const &solution)
     }
 }
 
-pyvrp::Solution Solution::unload(ProblemData const &data) const
+pyvrp::Solution Solution::unload() const
 {
     std::vector<pyvrp::Route> solRoutes;
-    solRoutes.reserve(data.numVehicles());
+    solRoutes.reserve(data_.numVehicles());
 
     std::vector<size_t> visits;
 
@@ -99,7 +99,7 @@ pyvrp::Solution Solution::unload(ProblemData const &data) const
                 continue;
             }
 
-            trips.emplace_back(data,
+            trips.emplace_back(data_,
                                visits,
                                route.vehicleType(),
                                prevDepot->client(),
@@ -110,22 +110,21 @@ pyvrp::Solution Solution::unload(ProblemData const &data) const
         }
 
         assert(trips.size() == route.numTrips());
-        solRoutes.emplace_back(data, std::move(trips), route.vehicleType());
+        solRoutes.emplace_back(data_, std::move(trips), route.vehicleType());
     }
 
-    return {data, std::move(solRoutes)};
+    return {data_, std::move(solRoutes)};
 }
 
 bool Solution::insert(Route::Node *U,
                       SearchSpace const &searchSpace,
-                      ProblemData const &data,
                       CostEvaluator const &costEvaluator,
                       bool required)
 {
     assert(size_t(std::distance(nodes.data(), U)) < nodes.size());
 
     Route::Node *UAfter = routes[0][0];  // fallback option
-    auto bestCost = insertCost(U, UAfter, data, costEvaluator);
+    auto bestCost = insertCost(U, UAfter, data_, costEvaluator);
 
     // First attempt a neighbourhood search to place U into routes that are
     // already in use.
@@ -136,7 +135,7 @@ bool Solution::insert(Route::Node *U,
         if (!V->route())
             continue;
 
-        auto const cost = insertCost(U, V, data, costEvaluator);
+        auto const cost = insertCost(U, V, data_, costEvaluator);
         if (cost < bestCost)
         {
             bestCost = cost;
@@ -149,14 +148,14 @@ bool Solution::insert(Route::Node *U,
     for (auto const &[vehType, offset] : searchSpace.vehTypeOrder())
     {
         auto const begin = routes.begin() + offset;
-        auto const end = begin + data.vehicleType(vehType).numAvailable;
+        auto const end = begin + data_.vehicleType(vehType).numAvailable;
         auto const pred = [](auto const &route) { return route.empty(); };
         auto empty = std::find_if(begin, end, pred);
 
         if (empty == end)
             continue;
 
-        auto const cost = insertCost(U, (*empty)[0], data, costEvaluator);
+        auto const cost = insertCost(U, (*empty)[0], data_, costEvaluator);
         if (cost < bestCost)
         {
             bestCost = cost;

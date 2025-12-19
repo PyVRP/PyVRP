@@ -18,7 +18,7 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
                                         CostEvaluator const &costEvaluator)
 {
     loadSolution(solution);
-    perturbationManager_.perturb(solution_, searchSpace_, data, costEvaluator);
+    perturbationManager_.perturb(solution_, searchSpace_, costEvaluator);
 
     while (true)
     {
@@ -32,7 +32,7 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
             break;
     }
 
-    return solution_.unload(data);
+    return solution_.unload();
 }
 
 pyvrp::Solution LocalSearch::search(pyvrp::Solution const &solution,
@@ -40,7 +40,7 @@ pyvrp::Solution LocalSearch::search(pyvrp::Solution const &solution,
 {
     loadSolution(solution);
     search(costEvaluator);
-    return solution_.unload(data);
+    return solution_.unload();
 }
 
 pyvrp::Solution LocalSearch::intensify(pyvrp::Solution const &solution,
@@ -48,8 +48,7 @@ pyvrp::Solution LocalSearch::intensify(pyvrp::Solution const &solution,
 {
     loadSolution(solution);
     intensify(costEvaluator);
-
-    return solution_.unload(data);
+    return solution_.unload();
 }
 
 void LocalSearch::search(CostEvaluator const &costEvaluator)
@@ -278,7 +277,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 
     if (uData.required && !U->route())  // then we must insert U
     {
-        solution_.insert(U, searchSpace_, data, costEvaluator, true);
+        solution_.insert(U, searchSpace_, costEvaluator, true);
         update(U->route(), U->route());
         searchSpace_.markPromising(U);
     }
@@ -352,7 +351,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
     if (inSol.empty())
     {
         auto const required = group.required;
-        if (solution_.insert(U, searchSpace_, data, costEvaluator, required))
+        if (solution_.insert(U, searchSpace_, costEvaluator, required))
         {
             update(U->route(), U->route());
             searchSpace_.markPromising(U);
@@ -432,7 +431,7 @@ void LocalSearch::loadSolution(pyvrp::Solution const &solution)
     searchSpace_.markAllPromising();
     numUpdates_ = 0;
 
-    solution_.load(data, solution);
+    solution_.load(solution);
 
     for (auto *nodeOp : nodeOps)
         nodeOp->init(solution);

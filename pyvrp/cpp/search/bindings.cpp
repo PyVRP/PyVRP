@@ -330,7 +330,6 @@ PYBIND11_MODULE(_search, m)
              &PerturbationManager::perturb,
              py::arg("solution"),
              py::arg("search_space"),
-             py::arg("data"),
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>(),
              DOC(pyvrp, search, PerturbationManager, perturb));
@@ -391,16 +390,17 @@ PYBIND11_MODULE(_search, m)
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
 
     py::class_<Solution>(m, "Solution", DOC(pyvrp, search, Solution))
-        .def(py::init<pyvrp::ProblemData const &>(), py::arg("data"))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
         .def_readonly("nodes", &Solution::nodes)
         .def_readonly("routes", &Solution::routes)
-        .def("load", &Solution::load, py::arg("data"), py::arg("solution"))
-        .def("unload", &Solution::unload, py::arg("data"))
+        .def("load", &Solution::load, py::arg("solution"))
+        .def("unload", &Solution::unload)
         .def("insert",
              &Solution::insert,
              py::arg("node"),
              py::arg("search_space"),
-             py::arg("data"),
              py::arg("cost_evaluator"),
              py::arg("required"));
 

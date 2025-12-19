@@ -97,7 +97,6 @@ class PerturbationManager:
         self,
         solution: Solution,
         search_space: SearchSpace,
-        data: ProblemData,
         cost_evaluator: CostEvaluator,
     ) -> None: ...
 
@@ -142,13 +141,12 @@ class Solution:
     nodes: list[Node]
     routes: list[Route]
     def __init__(self, data: ProblemData) -> None: ...
-    def load(self, data: ProblemData, solution: pyvrp.Solution) -> None: ...
-    def unload(self, data: ProblemData) -> pyvrp.Solution: ...
+    def load(self, solution: pyvrp.Solution) -> None: ...
+    def unload(self) -> pyvrp.Solution: ...
     def insert(
         self,
         node: Node,
         search_space: SearchSpace,
-        data: ProblemData,
         cost_evaluator: CostEvaluator,
         required: bool,
     ) -> bool: ...

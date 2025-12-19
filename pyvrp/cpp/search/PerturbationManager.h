@@ -2,7 +2,6 @@
 #define PYVRP_SEARCH_PERTURBATIONMANAGER_H
 
 #include "CostEvaluator.h"
-#include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "SearchSpace.h"
 #include "Solution.h"
@@ -76,14 +75,11 @@ public:
      *     Solution to perturb. Perturbation happens in place.
      * search_space
      *     The search space to use for perturbation.
-     * data
-     *     Problem data instance.
      * cost_evaluator
      *     Evaluator to use for insertions.
      */
     void perturb(Solution &solution,
                  SearchSpace &searchSpace,
-                 ProblemData const &data,
                  CostEvaluator const &costEvaluator) const;
 };
 }  // namespace pyvrp::search

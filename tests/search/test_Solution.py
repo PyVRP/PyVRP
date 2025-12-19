@@ -14,8 +14,8 @@ def test_load_unload(ok_small):
     pyvrp_sol = pyvrp.Solution(ok_small, [[1, 2], [3, 4]])
 
     search_sol = Solution(ok_small)
-    search_sol.load(ok_small, pyvrp_sol)
-    assert_equal(search_sol.unload(ok_small), pyvrp_sol)
+    search_sol.load(pyvrp_sol)
+    assert_equal(search_sol.unload(), pyvrp_sol)
 
 
 def test_nodes_routes_access(ok_small):
@@ -24,7 +24,7 @@ def test_nodes_routes_access(ok_small):
     """
     pyvrp_sol = pyvrp.Solution(ok_small, [[1, 2], [3, 4]])
     search_sol = Solution(ok_small)
-    search_sol.load(ok_small, pyvrp_sol)
+    search_sol.load(pyvrp_sol)
 
     # There should be #locations nodes, and #vehicles routes.
     assert_equal(len(search_sol.nodes), ok_small.num_locations)
@@ -52,5 +52,5 @@ def test_insert_required(ok_small):
     # requiring an insert. Inserting should fail: it's not worth it, since the
     # client has no prize. However, inserting should succeed when required.
     sol = Solution(data)
-    assert_(not sol.insert(sol.nodes[1], search_space, data, cost_eval, False))
-    assert_(sol.insert(sol.nodes[1], search_space, data, cost_eval, True))
+    assert_(not sol.insert(sol.nodes[1], search_space, cost_eval, False))
+    assert_(sol.insert(sol.nodes[1], search_space, cost_eval, True))
