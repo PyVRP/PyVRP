@@ -1,5 +1,7 @@
 #include "Solution.h"
 
+#include "primitives.h"
+
 using pyvrp::search::Solution;
 
 Solution::Solution(ProblemData const &data)
@@ -108,4 +110,61 @@ pyvrp::Solution Solution::unload(ProblemData const &data) const
     }
 
     return {data, std::move(solRoutes)};
+}
+
+bool Solution::insert(Route::Node *U,
+                      SearchSpace const &searchSpace,
+                      ProblemData const &data,
+                      CostEvaluator const &costEvaluator,
+                      bool required)
+{
+    Route::Node *UAfter = routes[0][0];  // fallback option
+    auto bestCost = insertCost(U, UAfter, data, costEvaluator);
+
+    // First attempt a neighbourhood search to place U into routes that are
+    // already in use.
+    for (auto const vClient : searchSpace.neighboursOf(U->client()))
+    {
+        auto *V = &nodes[vClient];
+
+        if (!V->route())
+            continue;
+
+        auto const cost = insertCost(U, V, data, costEvaluator);
+        if (cost < bestCost)
+        {
+            bestCost = cost;
+            UAfter = V;
+        }
+    }
+
+    // Next consider empty routes, of each vehicle type. We insert into the
+    // first improving route.
+    for (auto const &[vehType, offset] : searchSpace.vehTypeOrder())
+    {
+        auto const begin = routes.begin() + offset;
+        auto const end = begin + data.vehicleType(vehType).numAvailable;
+        auto const pred = [](auto const &route) { return route.empty(); };
+        auto empty = std::find_if(begin, end, pred);
+
+        if (empty == end)
+            continue;
+
+        auto const cost = insertCost(U, (*empty)[0], data, costEvaluator);
+        if (cost < bestCost)
+        {
+            bestCost = cost;
+            UAfter = (*empty)[0];
+            break;
+        }
+    }
+
+    if (required || bestCost < 0)
+    {
+        auto *route = UAfter->route();
+        route->insert(UAfter->idx() + 1, U);
+        return true;
+    }
+
+    return false;
 }

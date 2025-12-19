@@ -51,16 +51,6 @@ class PerturbationManager
     PerturbationParams const params_;  // owned by us
     size_t numPerturbations_;
 
-    /**
-     * Inserts U behind one of its neighbours, or, if that's better, into a
-     * new route.
-     */
-    void insert(Route::Node *U,
-                Solution &solution,
-                SearchSpace const &searchSpace,
-                ProblemData const &data,
-                CostEvaluator const &costEvaluator) const;
-
 public:
     PerturbationManager(PerturbationParams params = PerturbationParams());
 

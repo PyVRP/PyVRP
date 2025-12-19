@@ -2,7 +2,9 @@
 #define PYVRP_SEARCH_SOLUTION_H
 
 #include "../Solution.h"  // pyvrp::Solution
-#include "Route.h"        // pyvrp::search::Route
+#include "CostEvaluator.h"
+#include "Route.h"  // pyvrp::search::Route
+#include "SearchSpace.h"
 
 #include <vector>
 
@@ -36,6 +38,16 @@ struct Solution
 
     // Converts from our representation to a proper solution.
     pyvrp::Solution unload(ProblemData const &data) const;
+
+    // Inserts the given node into the solution - either in its neighbourhood,
+    // or in an empty route, if improving or required. Returns true if the node
+    // was succesfully inserted, false otherwise. Updating the search space and
+    // inserted route is left to the calling code.
+    bool insert(Route::Node *node,
+                SearchSpace const &searchSpace,
+                ProblemData const &data,
+                CostEvaluator const &costEvaluator,
+                bool required);
 };
 }  // namespace pyvrp::search
 

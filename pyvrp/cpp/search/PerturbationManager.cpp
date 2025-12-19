@@ -75,7 +75,8 @@ void PerturbationManager::perturb(Solution &solution,
         // Insert if node is not in a route and we are currently inserting.
         else if (!route && action == PerturbType::INSERT)
         {
-            insert(node, solution, searchSpace, data, costEvaluator);
+            solution.insert(node, searchSpace, data, costEvaluator, true);
+            node->route()->update();
             searchSpace.markPromising(node);
         }
         else  // no-op
@@ -107,53 +108,4 @@ void PerturbationManager::perturb(Solution &solution,
                 return;
         }
     }
-}
-
-void PerturbationManager::insert(Route::Node *U,
-                                 Solution &solution,
-                                 SearchSpace const &searchSpace,
-                                 ProblemData const &data,
-                                 CostEvaluator const &costEvaluator) const
-{
-    assert(!U->isDepot());
-    Route::Node *UAfter = solution.routes[0][0];
-    auto bestCost = insertCost(U, UAfter, data, costEvaluator);
-
-    for (auto const vClient : searchSpace.neighboursOf(U->client()))
-    {
-        auto *V = &solution.nodes[vClient];
-
-        if (!V->route())
-            continue;
-
-        auto const cost = insertCost(U, V, data, costEvaluator);
-        if (cost < bestCost)
-        {
-            bestCost = cost;
-            UAfter = V;
-        }
-    }
-
-    for (auto const &[vehType, offset] : searchSpace.vehTypeOrder())
-    {
-        auto const begin = solution.routes.begin() + offset;
-        auto const end = begin + data.vehicleType(vehType).numAvailable;
-        auto const pred = [](auto const &route) { return route.empty(); };
-        auto empty = std::find_if(begin, end, pred);
-
-        if (empty == end)
-            continue;
-
-        auto const cost = insertCost(U, (*empty)[0], data, costEvaluator);
-        if (cost < bestCost)
-        {
-            empty->insert(1, U);
-            empty->update();
-            return;
-        }
-    }
-
-    auto *route = UAfter->route();
-    route->insert(UAfter->idx() + 1, U);
-    route->update();
 }

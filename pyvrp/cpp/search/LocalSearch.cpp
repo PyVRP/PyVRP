@@ -287,7 +287,11 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
     ProblemData::Client const &uData = data.location(U->client());
 
     if (uData.required && !U->route())  // then we must insert U
-        insert(U, costEvaluator, uData.required);
+    {
+        solution_.insert(U, searchSpace_, data, costEvaluator, uData.required);
+        update(U->route(), U->route());
+        searchSpace_.markPromising(U);
+    }
 
     // Required clients are not optional, and have just been inserted above
     // if not already in the solution. Groups have their own operator and are
@@ -357,7 +361,9 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
 
     if (inSol.empty())
     {
-        insert(U, costEvaluator, group.required);
+        solution_.insert(U, searchSpace_, data, costEvaluator, group.required);
+        update(U->route(), U->route());
+        searchSpace_.markPromising(U);
         return;
     }
 
@@ -399,36 +405,6 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
         route->remove(idx);
         route->insert(idx, U);
         update(route, route);
-        searchSpace_.markPromising(U);
-    }
-}
-
-void LocalSearch::insert(Route::Node *U,
-                         CostEvaluator const &costEvaluator,
-                         bool required)
-{
-    Route::Node *UAfter = solution_.routes[0][0];
-    auto bestCost = insertCost(U, UAfter, data, costEvaluator);
-
-    for (auto const vClient : searchSpace_.neighboursOf(U->client()))
-    {
-        auto *V = &solution_.nodes[vClient];
-
-        if (!V->route())
-            continue;
-
-        auto const cost = insertCost(U, V, data, costEvaluator);
-        if (cost < bestCost)
-        {
-            bestCost = cost;
-            UAfter = V;
-        }
-    }
-
-    if (required || bestCost < 0)
-    {
-        UAfter->route()->insert(UAfter->idx() + 1, U);
-        update(UAfter->route(), UAfter->route());
         searchSpace_.markPromising(U);
     }
 }

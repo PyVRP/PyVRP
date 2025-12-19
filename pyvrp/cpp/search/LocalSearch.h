@@ -77,11 +77,6 @@ class LocalSearch
     // Performs intensify on the currently loaded solution.
     void intensify(CostEvaluator const &costEvaluator);
 
-    // Evaluate inserting U after one of its neighbours or a random empty route.
-    // Applies the move if it's improving or required for feasibility.
-    void
-    insert(Route::Node *U, CostEvaluator const &costEvaluator, bool required);
-
 public:
     /**
      * Simple data structure that tracks statistics about the number of local
