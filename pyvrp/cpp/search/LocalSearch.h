@@ -3,6 +3,7 @@
 
 #include "CostEvaluator.h"
 #include "LocalSearchOperator.h"
+#include "PerturbationManager.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
@@ -15,8 +16,6 @@
 
 namespace pyvrp::search
 {
-class PerturbationManager;  // forward declaration
-
 class LocalSearch
 {
     ProblemData const &data;

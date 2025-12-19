@@ -1,7 +1,6 @@
 #include "LocalSearch.h"
 #include "DynamicBitset.h"
 #include "Measure.h"
-#include "PerturbationManager.h"
 #include "Trip.h"
 #include "primitives.h"
 
