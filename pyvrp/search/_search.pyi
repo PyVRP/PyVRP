@@ -137,9 +137,6 @@ class LocalSearch:
     def search(
         self, solution: pyvrp.Solution, cost_evaluator: CostEvaluator
     ) -> pyvrp.Solution: ...
-    def perturb(
-        self, solution: pyvrp.Solution, cost_evaluator: CostEvaluator
-    ) -> pyvrp.Solution: ...
 
 class Solution:
     nodes: list[Node]
