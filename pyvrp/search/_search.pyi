@@ -147,6 +147,14 @@ class Solution:
     def __init__(self, data: ProblemData) -> None: ...
     def load(self, data: ProblemData, solution: pyvrp.Solution) -> None: ...
     def unload(self, data: ProblemData) -> pyvrp.Solution: ...
+    def insert(
+        self,
+        node: Node,
+        search_space: SearchSpace,
+        data: ProblemData,
+        cost_evaluator: CostEvaluator,
+        required: bool,
+    ) -> bool: ...
 
 class Route:
     def __init__(

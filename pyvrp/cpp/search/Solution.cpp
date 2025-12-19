@@ -122,7 +122,7 @@ bool Solution::insert(Route::Node *U,
                       CostEvaluator const &costEvaluator,
                       bool required)
 {
-    assert(std::distance(nodes.data(), U) < nodes.size());  // needs to be ours
+    assert(size_t(std::distance(nodes.data(), U)) < nodes.size());
 
     Route::Node *UAfter = routes[0][0];  // fallback option
     auto bestCost = insertCost(U, UAfter, data, costEvaluator);

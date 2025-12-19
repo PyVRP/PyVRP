@@ -396,7 +396,14 @@ PYBIND11_MODULE(_search, m)
         .def_readonly("nodes", &Solution::nodes)
         .def_readonly("routes", &Solution::routes)
         .def("load", &Solution::load, py::arg("data"), py::arg("solution"))
-        .def("unload", &Solution::unload, py::arg("data"));
+        .def("unload", &Solution::unload, py::arg("data"))
+        .def("insert",
+             &Solution::insert,
+             py::arg("node"),
+             py::arg("search_space"),
+             py::arg("data"),
+             py::arg("cost_evaluator"),
+             py::arg("required"));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
         .def(py::init<pyvrp::ProblemData const &, size_t, size_t>(),

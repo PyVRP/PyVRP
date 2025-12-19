@@ -279,7 +279,7 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
 
     if (uData.required && !U->route())  // then we must insert U
     {
-        solution_.insert(U, searchSpace_, data, costEvaluator, uData.required);
+        solution_.insert(U, searchSpace_, data, costEvaluator, true);
         update(U->route(), U->route());
         searchSpace_.markPromising(U);
     }
@@ -352,9 +352,13 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
 
     if (inSol.empty())
     {
-        solution_.insert(U, searchSpace_, data, costEvaluator, group.required);
-        update(U->route(), U->route());
-        searchSpace_.markPromising(U);
+        auto const required = group.required;
+        if (solution_.insert(U, searchSpace_, data, costEvaluator, required))
+        {
+            update(U->route(), U->route());
+            searchSpace_.markPromising(U);
+        }
+
         return;
     }
 

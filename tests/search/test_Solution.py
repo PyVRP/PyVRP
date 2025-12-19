@@ -1,7 +1,9 @@
-from numpy.testing import assert_equal
+from numpy.testing import assert_, assert_equal
 
 import pyvrp
-from pyvrp.search._search import Solution
+from pyvrp import CostEvaluator
+from pyvrp.search import compute_neighbours
+from pyvrp.search._search import SearchSpace, Solution
 
 
 def test_load_unload(ok_small):
@@ -35,3 +37,20 @@ def test_nodes_routes_access(ok_small):
     for client in [3, 4]:  # [3, 4] are in the second route
         assert_equal(search_sol.nodes[client].client, client)
         assert_equal(search_sol.nodes[client].route, search_sol.routes[1])
+
+
+def test_insert_required(ok_small):
+    """
+    Tests that inserting clients can fail if inserting is too expensive and
+    the insert is not required.
+    """
+    data = ok_small
+    search_space = SearchSpace(data, compute_neighbours(data))
+    cost_eval = CostEvaluator([0], 0, 0)
+
+    # Start with an empty solution and try to insert the first client without
+    # requiring an insert. Inserting should fail: it's not worth it, since the
+    # client has no prize. However, inserting should succeed when required.
+    sol = Solution(data)
+    assert_(not sol.insert(sol.nodes[1], search_space, data, cost_eval, False))
+    assert_(sol.insert(sol.nodes[1], search_space, data, cost_eval, True))
