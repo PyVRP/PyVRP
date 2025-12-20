@@ -650,9 +650,10 @@ def test_node_and_route_operators_property(ok_small):
 @pytest.mark.parametrize(
     ("instance", "exp_clients"),
     [
-        ("ok_small", {1, 2, 3, 4}),  # {1, 2, 3, 4} are all required clients
-        # 3 from required group {1, 2, 3}, 4 is a required client
-        ("ok_small_mutually_exclusive_groups", {3, 4}),
+        # {1, 2, 3, 4} are all required clients.
+        ("ok_small", {1, 2, 3, 4}),
+        # 1 from required group {1, 2, 3}, 4 is a required client.
+        ("ok_small_mutually_exclusive_groups", {1, 4}),
     ],
 )
 def test_inserts_required_missing(instance, exp_clients: set[int], request):
@@ -662,7 +663,8 @@ def test_inserts_required_missing(instance, exp_clients: set[int], request):
     """
     data = request.getfixturevalue(instance)
     rng = RandomNumberGenerator(seed=42)
-    ls = LocalSearch(data, rng, compute_neighbours(data))
+    perturbation = PerturbationManager(PerturbationParams(1, 1))
+    ls = LocalSearch(data, rng, compute_neighbours(data), perturbation)
     ls.add_node_operator(Exchange10(data))
 
     sol = Solution(data, [])
