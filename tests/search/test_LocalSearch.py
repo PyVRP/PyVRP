@@ -654,6 +654,7 @@ def test_ls_inserts_all_required_clients(ok_small):
     rng = RandomNumberGenerator(seed=42)
     perturbation = PerturbationManager(PerturbationParams(1, 1))
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small), perturbation)
+    ls.add_node_operator(Exchange10(ok_small))
 
     sol = Solution(ok_small, [[1, 2]])
     assert_(not sol.is_complete())
