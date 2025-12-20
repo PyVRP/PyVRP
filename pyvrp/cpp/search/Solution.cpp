@@ -67,38 +67,20 @@ void Solution::load(pyvrp::Solution const &solution)
         vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
     }
 
-    // Track which routes are unmodified and which to reload again.
-    DynamicBitset unmodified(routes.size());
-    std::vector<std::pair<size_t, size_t>> toLoad;  // (routeIdx, solRouteIdx)
-    auto const &solRoutes = solution.routes();
-
-    for (size_t solIdx = 0; solIdx != solRoutes.size(); ++solIdx)
+    for (auto const &solRoute : solution.routes())
     {
-        auto const &solRoute = solRoutes[solIdx];
-
         // Determine index of next route of this type to load, where we rely
         // on solution to be valid to not exceed the number of vehicles per
         // vehicle type.
         auto const idx = vehicleOffset[solRoute.vehicleType()]++;
         auto &route = routes[idx];
 
-        if (route == solRoute)
-            unmodified[idx] = true;
-        else  // load solution route at this route idx
-            toLoad.push_back({idx, solIdx});
-    }
+        if (route == solRoute)  // then the current route is still OK and we
+            continue;           // can skip inserting and updating
 
-    // Clear all routes that are not unmodified. We must do this before loading
-    // to avoid accidentally unassigning nodes.
-    for (size_t idx = 0; idx != routes.size(); ++idx)
-        if (!unmodified[idx])
-            routes[idx].clear();
-
-    // Reload modified routes from the solution.
-    for (auto const &[idx, solIdx] : toLoad)
-    {
-        auto &route = routes[idx];
-        auto const &solRoute = solRoutes[solIdx];
+        // Else we need to clear the route and insert the updated route from
+        // the solution.
+        route.clear();
 
         // Routes use a representation with nodes for each client, reload depot
         // (one per trip), and start/end depots. The start depot doubles as the
@@ -120,6 +102,19 @@ void Solution::load(pyvrp::Solution const &solution)
         }
 
         route.update();
+    }
+
+    // Finally, we clear any routes that we have not re-used or inserted from
+    // the solution.
+    size_t firstOfType = 0;
+    for (size_t vehType = 0; vehType != data_.numVehicleTypes(); ++vehType)
+    {
+        auto const numAvailable = data_.vehicleType(vehType).numAvailable;
+        auto const firstOfNextType = firstOfType + numAvailable;
+        for (size_t idx = vehicleOffset[vehType]; idx != firstOfNextType; ++idx)
+            routes[idx].clear();
+
+        firstOfType = firstOfNextType;
     }
 }
 

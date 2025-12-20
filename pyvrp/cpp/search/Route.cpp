@@ -115,8 +115,9 @@ void Route::clear()
     if (nodes.size() == 2)  // then the route is already empty and we have
         return;             // nothing to do.
 
-    for (auto *node : nodes)
-        node->unassign();
+    for (auto *node : nodes)        // only unassign if in route; node may not
+        if (node->route() == this)  // be if it's been assigned to another route
+            node->unassign();       // while loading a new solution into the LS
 
     nodes.clear();
     depots_.clear();
