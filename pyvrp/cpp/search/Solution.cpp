@@ -13,8 +13,8 @@ namespace
 bool operator==(pyvrp::search::Route const &route, pyvrp::Route const &solRoute)
 {
     bool const simpleChecks = route.vehicleType() == solRoute.vehicleType()
-                              && route.distanceCost() == solRoute.distanceCost()
-                              && route.durationCost() == solRoute.durationCost()
+                              && route.distance() == solRoute.distance()
+                              && route.duration() == solRoute.duration()
                               && route.timeWarp() == solRoute.timeWarp()
                               && route.numTrips() == solRoute.numTrips()
                               && route.numClients() == solRoute.size();
@@ -25,15 +25,13 @@ bool operator==(pyvrp::search::Route const &route, pyvrp::Route const &solRoute)
     assert(route.numClients() == solRoute.size());
 
     size_t idx = 0;
-    for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
+    for (auto const &trip : solRoute.trips())
     {
-        auto const &trip = solRoute.trip(tripIdx);
-
-        if (tripIdx != 0 && trip.startDepot() != route[++idx]->client())
+        if (trip.startDepot() != route[idx++]->client())
             return false;  // not the same reload depot
 
         for (auto const visit : trip)
-            if (visit != route[++idx]->client())
+            if (visit != route[idx++]->client())
                 return false;
     }
 
