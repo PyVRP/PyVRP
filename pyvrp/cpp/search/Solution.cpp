@@ -8,37 +8,6 @@
 
 using pyvrp::search::Solution;
 
-namespace
-{
-bool operator==(pyvrp::search::Route const &route, pyvrp::Route const &solRoute)
-{
-    bool const simpleChecks = route.vehicleType() == solRoute.vehicleType()
-                              && route.distance() == solRoute.distance()
-                              && route.duration() == solRoute.duration()
-                              && route.timeWarp() == solRoute.timeWarp()
-                              && route.numTrips() == solRoute.numTrips()
-                              && route.numClients() == solRoute.size();
-
-    if (!simpleChecks)
-        return false;
-
-    assert(route.numClients() == solRoute.size());
-
-    size_t idx = 0;
-    for (auto const &trip : solRoute.trips())
-    {
-        if (trip.startDepot() != route[idx++]->client())
-            return false;  // not the same reload depot
-
-        for (auto const visit : trip)
-            if (visit != route[idx++]->client())
-                return false;
-    }
-
-    return true;
-}
-}  // namespace
-
 Solution::Solution(ProblemData const &data) : data_(data)
 {
     nodes.reserve(data.numLocations());
