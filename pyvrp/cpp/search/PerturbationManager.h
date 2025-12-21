@@ -64,10 +64,9 @@ public:
     void shuffle(RandomNumberGenerator &rng);
 
     /**
-     * Perturbs the given solution using the neighbourhood and ordering of
-     * the given search space. Perturbation strengthens (weakens) randomly
-     * selected neighbourhoods by inserting (removing) clients. Any perturbed
-     * clients are marked as promising in the search space.
+     * Perturbs the given solution using the neighbourhood and ordering of the
+     * given search space. Any perturbed clients are marked as promising in the
+     * search space.
      *
      * Parameters
      * ----------

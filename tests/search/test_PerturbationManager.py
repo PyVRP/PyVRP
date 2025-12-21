@@ -23,7 +23,7 @@ def test_raises_max_smaller_than_min():
 
 def test_eq():
     """
-    Tests that PerturbationParams's ``__eq__`` implementation.
+    Tests that PerturbationParams's ``__eq__`` implementation is correct.
     """
     params = PerturbationParams()
     assert_(params == PerturbationParams())
