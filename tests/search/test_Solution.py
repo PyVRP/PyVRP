@@ -18,6 +18,21 @@ def test_load_unload(ok_small):
     assert_equal(search_sol.unload(), pyvrp_sol)
 
 
+def test_loading_twice_in_a_row(ok_small):
+    """
+    When loading the same solution we re-use the representation of the previous
+    solution as much as possible. Here we test that loading the same solution
+    twice in a row (which triggers that re-use) still produces the same
+    solution when unloading.
+    """
+    pyvrp_sol = pyvrp.Solution(ok_small, [[1, 2], [3, 4]])
+
+    search_sol = Solution(ok_small)
+    search_sol.load(pyvrp_sol)
+    search_sol.load(pyvrp_sol)
+    assert_equal(search_sol.unload(), pyvrp_sol)
+
+
 def test_nodes_routes_access(ok_small):
     """
     Tests nodes and routes access.

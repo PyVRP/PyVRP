@@ -115,8 +115,9 @@ void Route::clear()
     if (nodes.size() == 2)  // then the route is already empty and we have
         return;             // nothing to do.
 
-    for (auto *node : nodes)
-        node->unassign();
+    for (auto *node : nodes)        // only unassign if in route; node may not
+        if (node->route() == this)  // be if it's been assigned to another route
+            node->unassign();       // while loading a new solution into the LS
 
     nodes.clear();
     depots_.clear();
@@ -371,6 +372,51 @@ void Route::update()
 #ifndef NDEBUG
     dirty = false;
 #endif
+}
+
+bool Route::operator==(Route const &other) const
+{
+    assert(!dirty && !other.dirty);
+
+    // First compare simple attributes, since that's a quick and cheap check.
+    // Only when these are the same we test if the visits are all equal.
+    // clang-format off
+    return distance_ == other.distance_
+        && duration_ == other.duration_
+        && timeWarp_ == other.timeWarp_
+        && vehicleType_ == other.vehicleType_
+        && visits == other.visits;
+    // clang-format on
+}
+
+bool Route::operator==(pyvrp::Route const &other) const
+{
+    assert(!dirty);
+
+    // clang-format off
+    bool const simpleChecks = distance_ == other.distance()
+                              && duration_ == other.duration()
+                              && timeWarp_ == other.timeWarp()
+                              && vehicleType() == other.vehicleType()
+                              && numTrips() == other.numTrips()
+                              && numClients() == other.size();
+    // clang-format on
+
+    if (!simpleChecks)
+        return false;
+
+    size_t idx = 0;
+    for (auto const &trip : other.trips())
+    {
+        if (trip.startDepot() != visits[idx++])
+            return false;  // not the same reload depot
+
+        for (auto const visit : trip)
+            if (visit != visits[idx++])
+                return false;
+    }
+
+    return true;
 }
 
 std::ostream &operator<<(std::ostream &out, Route const &route)

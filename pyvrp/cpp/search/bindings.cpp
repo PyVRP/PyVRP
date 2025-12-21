@@ -313,7 +313,7 @@ PYBIND11_MODULE(_search, m)
                       &PerturbationParams::minPerturbations)
         .def_readonly("max_perturbations",
                       &PerturbationParams::maxPerturbations)
-        .def(py::self == py::self, py::arg("other"));  // this is __eq__;
+        .def(py::self == py::self, py::arg("other"));  // this is __eq__
 
     py::class_<PerturbationManager>(
         m, "PerturbationManager", DOC(pyvrp, search, PerturbationManager))
@@ -416,6 +416,12 @@ PYBIND11_MODULE(_search, m)
         .def("num_depots", &Route::numDepots)
         .def("num_trips", &Route::numTrips)
         .def("max_trips", &Route::maxTrips)
+        .def(py::self == py::self, py::arg("other"))  // this is __eq__
+        .def(  // __eq__ overload for pyvrp.Route
+            "__eq__",
+            [](Route const &route, pyvrp::Route const &other)
+            { return route == other; },
+            py::is_operator())
         .def("__delitem__", &Route::remove, py::arg("idx"))
         .def(
             "__getitem__",
