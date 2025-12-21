@@ -223,3 +223,39 @@ def test_ils_acceptance_behaviour(ok_small):
     assert_equal(data[4].current_cost, 9_240)
     assert_equal(data[4].candidate_cost, 9_725)
     assert_equal(data[4].best_cost, 9_240)
+
+
+def test_restart(ok_small):
+    """
+    Tests that restarting clears the history of recent solutions and starts
+    over from scratch.
+    """
+    sols = [
+        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240
+        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
+        Solution(ok_small, [[1, 3], [2, 4]]),  # 22065 (infeas)
+    ]
+
+    ils = IteratedLocalSearch(
+        ok_small,
+        PenaltyManager(initial_penalties=([20], 6, 6)),
+        RandomNumberGenerator(42),
+        lambda *_: sols.pop(0),  # returns from sols one at a time
+        sols[0],
+        IteratedLocalSearchParams(num_iters_no_improvement=1),
+    )
+
+    res = ils.run(MaxIterations(3))
+    data = res.stats.data
+
+    # First iteration is feasible and immediately the best solution in the
+    # sequence. Second is worse (no improvement), which triggers a restart that
+    # clears the history. After that, we accept whatever next solution we
+    # obtain, no matter how bad it is.
+    assert_equal(data[-1].current_cost, 22_065)
+    assert_(not data[-1].current_feas)
+
+    # But the best solution should still be the solution from the first
+    # iteration.
+    assert_equal(data[-1].best_cost, 9_240)
+    assert_(data[-1].best_feas)
