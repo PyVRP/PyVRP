@@ -26,10 +26,6 @@ Solution::Solution(ProblemData const &data) : data_(data)
 
 void Solution::load(pyvrp::Solution const &solution)
 {
-    // First empty all routes.
-    for (auto &route : routes)
-        route.clear();
-
     // Determine offsets for vehicle types.
     std::vector<size_t> vehicleOffset(data_.numVehicleTypes(), 0);
     for (size_t vehType = 1; vehType < data_.numVehicleTypes(); vehType++)
@@ -38,7 +34,6 @@ void Solution::load(pyvrp::Solution const &solution)
         vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
     }
 
-    // Load routes from solution.
     for (auto const &solRoute : solution.routes())
     {
         // Determine index of next route of this type to load, where we rely
@@ -46,6 +41,13 @@ void Solution::load(pyvrp::Solution const &solution)
         // vehicle type.
         auto const idx = vehicleOffset[solRoute.vehicleType()]++;
         auto &route = routes[idx];
+
+        if (route == solRoute)  // then the current route is still OK and we
+            continue;           // can skip inserting and updating
+
+        // Else we need to clear the route and insert the updated route from
+        // the solution.
+        route.clear();
 
         // Routes use a representation with nodes for each client, reload depot
         // (one per trip), and start/end depots. The start depot doubles as the
@@ -67,6 +69,19 @@ void Solution::load(pyvrp::Solution const &solution)
         }
 
         route.update();
+    }
+
+    // Finally, we clear any routes that we have not re-used or inserted from
+    // the solution.
+    size_t firstOfType = 0;
+    for (size_t vehType = 0; vehType != data_.numVehicleTypes(); ++vehType)
+    {
+        auto const numAvailable = data_.vehicleType(vehType).numAvailable;
+        auto const firstOfNextType = firstOfType + numAvailable;
+        for (size_t idx = vehicleOffset[vehType]; idx != firstOfNextType; ++idx)
+            routes[idx].clear();
+
+        firstOfType = firstOfNextType;
     }
 }
 
