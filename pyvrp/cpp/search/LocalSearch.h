@@ -76,6 +76,10 @@ class LocalSearch
     // Performs intensify on the currently loaded solution.
     void intensify(CostEvaluator const &costEvaluator);
 
+    // Marks missing but required clients and groups as promising, to ensure
+    // they get inserted.
+    void markRequiredMissingAsPromising();
+
 public:
     /**
      * Simple data structure that tracks statistics about the number of local

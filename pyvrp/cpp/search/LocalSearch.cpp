@@ -56,6 +56,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     if (nodeOps.empty())
         return;
 
+    markRequiredMissingAsPromising();
+
     searchCompleted_ = false;
     for (int step = 0; !searchCompleted_; ++step)
     {
@@ -399,6 +401,33 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
         route->insert(idx, U);
         update(route, route);
         searchSpace_.markPromising(U);
+    }
+}
+
+void LocalSearch::markRequiredMissingAsPromising()
+{
+    for (auto client = data.numDepots(); client != data.numLocations();
+         ++client)
+    {
+        if (solution_.nodes[client].route())  // then it's not missing, so
+            continue;                         // nothing to do
+
+        ProblemData::Client const &clientData = data.location(client);
+        if (clientData.required)
+        {
+            searchSpace_.markPromising(client);
+            continue;
+        }
+
+        if (clientData.group)  // mark the group's first client as promising so
+        {                      // the group at least gets inserted if needed
+            auto const &group = data.group(clientData.group.value());
+            if (group.required && group.clients().front() == client)
+            {
+                searchSpace_.markPromising(client);
+                continue;
+            }
+        }
     }
 }
 
