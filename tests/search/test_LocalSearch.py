@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import (
@@ -644,3 +645,34 @@ def test_node_and_route_operators_property(ok_small):
     ls.add_route_operator(route_op)
     assert_equal(len(ls.route_operators), 1)
     assert_(ls.route_operators[0] is route_op)
+
+
+@pytest.mark.parametrize(
+    ("instance", "exp_clients"),
+    [
+        # {1, 2, 3, 4} are all required clients.
+        ("ok_small", {1, 2, 3, 4}),
+        # 1 from required group {1, 2, 3}, 4 is a required client.
+        ("ok_small_mutually_exclusive_groups", {1, 4}),
+    ],
+)
+def test_inserts_required_missing(instance, exp_clients: set[int], request):
+    """
+    Tests that the local search inserts all missing clients and groups, if
+    those are currently missing from the solution.
+    """
+    data = request.getfixturevalue(instance)
+    rng = RandomNumberGenerator(seed=42)
+    perturbation = PerturbationManager(PerturbationParams(1, 1))
+    ls = LocalSearch(data, rng, compute_neighbours(data), perturbation)
+    ls.add_node_operator(Exchange10(data))
+
+    sol = Solution(data, [])
+    assert_(not sol.is_complete())
+
+    cost_eval = CostEvaluator([20], 6, 0)
+    improved = ls(sol, cost_eval)
+    assert_(improved.is_complete())
+
+    visits = {client for route in improved.routes() for client in route}
+    assert_equal(visits, exp_clients)
