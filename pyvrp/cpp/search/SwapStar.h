@@ -84,7 +84,7 @@ class SwapStar : public RouteOperator
                       CostEvaluator const &costEvaluator) const;
 
 public:
-    void init(Solution const &solution) override;
+    void init(pyvrp::Solution const &solution) override;
 
     Cost
     evaluate(Route *U, Route *V, CostEvaluator const &costEvaluator) override;

@@ -11,18 +11,10 @@ route_ops = [
 ]
 
 
-[genetic]
-repair_probability = 0.1
-num_iters_no_improvement = 200
-
-
-[population]
-min_pop_size = 10
-generation_size = 20
-num_elite = 3
-num_close = 4
-lb_diversity = 0.0
-ub_diversity = 1.0
+[ils]
+num_iters_no_improvement = 10
+initial_accept_weight = 0.1
+history_length = 1
 
 
 [neighbourhood]
@@ -33,8 +25,12 @@ symmetric_proximity = true
 symmetric_neighbours = true
 
 
+[perturbation]
+min_perturbations = 1
+max_perturbations = 10
+
+
 [penalty]
-repair_booster = 12
 solutions_between_updates = 100
 penalty_increase = 1.25
 penalty_decrease = 0.85

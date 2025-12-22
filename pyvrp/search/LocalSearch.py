@@ -8,6 +8,7 @@ from pyvrp.search._search import LocalSearch as _LocalSearch
 from pyvrp.search._search import (
     LocalSearchStatistics,
     NodeOperator,
+    PerturbationManager,
     RouteOperator,
 )
 
@@ -26,6 +27,8 @@ class LocalSearch:
         Random number generator.
     neighbours
         List of lists that defines the local search neighbourhood.
+    perturbation_manager
+        Perturbation manager that handles perturbation during each invocation.
     """
 
     def __init__(
@@ -33,8 +36,9 @@ class LocalSearch:
         data: ProblemData,
         rng: RandomNumberGenerator,
         neighbours: list[list[int]],
+        perturbation_manager: PerturbationManager = PerturbationManager(),
     ):
-        self._ls = _LocalSearch(data, neighbours)
+        self._ls = _LocalSearch(data, neighbours, perturbation_manager)
         self._rng = rng
 
     def add_node_operator(self, op: NodeOperator):

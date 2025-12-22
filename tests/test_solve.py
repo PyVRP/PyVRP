@@ -1,19 +1,20 @@
+import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 
-from pyvrp.GeneticAlgorithm import GeneticAlgorithmParams
+from pyvrp.IteratedLocalSearch import IteratedLocalSearchParams
 from pyvrp.PenaltyManager import PenaltyParams
-from pyvrp.Population import PopulationParams
 from pyvrp.search import (
     NODE_OPERATORS,
     ROUTE_OPERATORS,
     Exchange10,
     NeighbourhoodParams,
+    PerturbationParams,
     SwapStar,
     SwapTails,
 )
 from pyvrp.solve import SolveParams, solve
 from pyvrp.stop import MaxIterations
-from tests.helpers import DATA_DIR
+from tests.helpers import DATA_DIR, read_solution
 
 
 def test_default_values():
@@ -22,13 +23,14 @@ def test_default_values():
     """
     params = SolveParams()
 
-    assert_equal(params.genetic, GeneticAlgorithmParams())
+    assert_equal(params.ils, IteratedLocalSearchParams())
     assert_equal(params.penalty, PenaltyParams())
-    assert_equal(params.population, PopulationParams())
     assert_equal(params.neighbourhood, NeighbourhoodParams())
     assert_equal(params.node_ops, NODE_OPERATORS)
     assert_equal(params.route_ops, ROUTE_OPERATORS)
     assert_allclose(params.display_interval, 5.0)
+    assert_equal(params.perturbation, PerturbationParams())
+    assert_(params.initial_solution is None)
 
 
 def test_solve_params_from_file():
@@ -37,20 +39,20 @@ def test_solve_params_from_file():
     """
     params = SolveParams.from_file(DATA_DIR / "test_config.toml")
 
-    genetic = GeneticAlgorithmParams(0.1, 200)
-    penalty = PenaltyParams(12, 100, 1.25, 0.85, 0.43)
-    population = PopulationParams(10, 20, 3, 4, 0.0, 1.0)
+    ils = IteratedLocalSearchParams(10, 0.1, 1)
+    penalty = PenaltyParams(100, 1.25, 0.85, 0.43)
     neighbourhood = NeighbourhoodParams(0, 0, 20, True, True)
     node_ops = [Exchange10, SwapTails]
     route_ops = [SwapStar]
+    perturbation = PerturbationParams(1, 10)
 
-    assert_equal(params.genetic, genetic)
+    assert_equal(params.ils, ils)
     assert_equal(params.penalty, penalty)
-    assert_equal(params.population, population)
     assert_equal(params.neighbourhood, neighbourhood)
     assert_equal(params.node_ops, node_ops)
     assert_equal(params.route_ops, route_ops)
     assert_allclose(params.display_interval, 10.0)
+    assert_equal(params.perturbation, perturbation)
 
 
 def test_solve_params_from_file_defaults():
@@ -71,37 +73,46 @@ def test_solve_same_seed(ok_small):
     res2 = solve(ok_small, stop=MaxIterations(10), seed=0)
 
     assert_equal(res1.best, res2.best)
-    assert_equal(res1.stats.feas_stats, res2.stats.feas_stats)
-    assert_equal(res1.stats.infeas_stats, res2.stats.infeas_stats)
+    assert_equal(res1.stats.data, res2.stats.data)
 
 
-def test_solve_custom_params(ok_small):
+def test_solve_initial_solution(rc208):
+    """
+    Tests that solving an instance with an initial solution works as
+    expected by checking that the best solution found is the same as the
+    initial solution.
+    """
+    bks = read_solution("data/RC208.sol", rc208)
+    params = SolveParams(initial_solution=bks)
+    res = solve(rc208, stop=MaxIterations(0), params=params)
+    assert_equal(res.best, bks)
+
+
+def test_solve_custom_params(rc208):
     """
     Tests that solving an instance with custom solver parameters works as
-    expected by checking that the population size is respected.
+    expected by checking how solutions are accepted.
     """
-    # First solve using the default solver parameters.
-    res = solve(ok_small, stop=MaxIterations(200), seed=0)
 
-    pop_params = PopulationParams()
-    max_pop_size = pop_params.min_pop_size + pop_params.generation_size
+    def monotonically_decreasing(arr) -> np.bool_:
+        return np.all(np.diff(arr) <= 0)
 
-    # Neither subpopulation should exceed the maximum population size;
-    # we use the statistics to check this.
-    max_feas_size = max([datum.size for datum in res.stats.feas_stats])
-    max_infeas_size = max([datum.size for datum in res.stats.infeas_stats])
+    # First solve with ``history_length=1``, which means that all candidate
+    # solutions will be accepted.
+    params = SolveParams(IteratedLocalSearchParams(history_length=1))
+    res = solve(rc208, stop=MaxIterations(20), params=params)
 
-    assert_(max_feas_size <= max_pop_size)
-    assert_(max_infeas_size <= max_pop_size)
+    # Because we accept all candidate solutions, the current costs won't
+    # necessarily be monotonically decreasing.
+    costs = [datum.current_cost for datum in res.stats]
+    assert_(not monotonically_decreasing(costs))
 
-    # Let's now use custom parameters with a maximum population size of 15.
-    pop_params = PopulationParams(min_pop_size=5, generation_size=10)
-    params = SolveParams(population=pop_params)
-    res = solve(ok_small, stop=MaxIterations(200), seed=0, params=params)
+    # Now configure ILS to only accept improving solutions by setting
+    # ``initial_accept_weight=0``.
+    params = SolveParams(IteratedLocalSearchParams(initial_accept_weight=0))
+    res = solve(rc208, stop=MaxIterations(20), params=params)
 
-    max_pop_size = pop_params.min_pop_size + pop_params.generation_size
-    max_feas_size = max([datum.size for datum in res.stats.feas_stats])
-    max_infeas_size = max([datum.size for datum in res.stats.infeas_stats])
-
-    assert_(max_feas_size <= max_pop_size)
-    assert_(max_infeas_size <= max_pop_size)
+    # The current costs should now be monotonically decreasing. The first datum
+    # is skipped because it's an empty initial solution with penalised cost 0.
+    costs = [datum.current_cost for datum in res.stats.data[1:]]
+    assert_(monotonically_decreasing(costs))

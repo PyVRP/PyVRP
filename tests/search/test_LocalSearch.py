@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal
 
 from pyvrp import (
     Client,
@@ -17,7 +17,8 @@ from pyvrp.search import (
     Exchange10,
     Exchange11,
     LocalSearch,
-    NeighbourhoodParams,
+    PerturbationManager,
+    PerturbationParams,
     RelocateWithDepot,
     SwapRoutes,
     SwapStar,
@@ -48,99 +49,39 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     assert_equal(ls.search(sol, cost_evaluator), sol)
 
 
-@pytest.mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
-def test_raises_when_neighbourhood_dimensions_do_not_match(ok_small, size):
+def test_local_search_call_perturbs_solution(ok_small):
     """
-    Tests that the local search raises when the neighbourhood size does not
-    correspond to the problem dimensions.
+    Tests that calling local search perturbs a solution.
     """
     rng = RandomNumberGenerator(seed=42)
+    neighbours = compute_neighbours(ok_small)
+    ls = LocalSearch(ok_small, rng, neighbours)
 
-    # Each of the given sizes is either smaller than or bigger than desired.
-    neighbours = [[] for _ in range(size)]
+    sol = Solution.make_random(ok_small, rng)
+    cost_eval = CostEvaluator([1], 1, 0)
 
-    with assert_raises(RuntimeError):
-        LocalSearch(ok_small, rng, neighbours)
-
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
-
-    with assert_raises(RuntimeError):
-        ls.neighbours = neighbours
+    # The local search should perturb the solution even though no node and
+    # route operators are added.
+    perturbed = ls(sol, cost_eval)
+    assert_(perturbed != sol)
 
 
-def test_raises_when_neighbourhood_contains_self_or_depot(ok_small):
+def test_get_set_neighbours(ok_small):
     """
-    Tests that the local search raises when the granular neighbourhood contains
-    the depot (for any client) or the client is in its own neighbourhood.
-    """
-    rng = RandomNumberGenerator(seed=42)
-
-    neighbours = [[], [2], [3], [4], [0]]  # 4 has depot as neighbour
-    with assert_raises(RuntimeError):
-        LocalSearch(ok_small, rng, neighbours)
-
-    neighbours = [[], [1], [3], [4], [1]]  # 1 has itself as neighbour
-    with assert_raises(RuntimeError):
-        LocalSearch(ok_small, rng, neighbours)
-
-
-@pytest.mark.parametrize(
-    (
-        "weight_wait_time",
-        "weight_time_warp",
-        "num_neighbours",
-        "symmetric_proximity",
-        "symmetric_neighbours",
-    ),
-    [
-        (20, 20, 10, True, False),
-        (20, 20, 10, True, True),
-        # From original c++ implementation
-        # (18, 20, 34, False),
-        (18, 20, 34, True, True),
-    ],
-)
-def test_local_search_set_get_neighbours(
-    rc208,
-    weight_wait_time: int,
-    weight_time_warp: int,
-    num_neighbours: int,
-    symmetric_proximity: bool,
-    symmetric_neighbours: bool,
-):
-    """
-    Tests setting and getting neighbours on the local search instance.
+    Tests that getting and setting the local search's granular neighbourhood
+    works as expected. For more details, see the tests for the SearchSpace in
+    ``test_SearchSpace.py``, which handle validation.
     """
     rng = RandomNumberGenerator(seed=42)
-
-    params = NeighbourhoodParams(num_neighbours=1)
-    prev_neighbours = compute_neighbours(rc208, params)
-    ls = LocalSearch(rc208, rng, prev_neighbours)
-
-    params = NeighbourhoodParams(
-        weight_wait_time,
-        weight_time_warp,
-        num_neighbours,
-        symmetric_proximity,
-        symmetric_neighbours,
-    )
-    neighbours = compute_neighbours(rc208, params)
-
-    # Test that before we set neighbours we don't have same
-    assert_(ls.neighbours != neighbours)
-
-    # Test after we set we have the same
-    ls.neighbours = neighbours
+    neighbours = [[] for _ in range(ok_small.num_locations)]
+    ls = LocalSearch(ok_small, rng, neighbours)
     assert_equal(ls.neighbours, neighbours)
 
-    # Check that the bindings make a copy (in both directions)
-    assert_(ls.neighbours is not neighbours)
-    ls_neighbours = ls.neighbours
-    ls_neighbours[1] = []
-    assert_(ls.neighbours != ls_neighbours)
-    assert_equal(ls.neighbours, neighbours)
-    neighbours[1] = []
-    assert_(ls.neighbours != neighbours)
+    new_neighbours = compute_neighbours(ok_small)
+    assert_(new_neighbours != neighbours)
+
+    ls.neighbours = new_neighbours
+    assert_equal(ls.neighbours, new_neighbours)
 
 
 def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):
@@ -297,18 +238,23 @@ def test_bugfix_vehicle_type_offsets(ok_small):
 
 def test_no_op_results_in_same_solution(ok_small):
     """
-    Tests that calling local search without first adding node or route
-    operators is a no-op, and returns the same solution as the one that was
-    given to it.
+    Tests that calling local search without first adding any operators is a
+    no-op, and returns the same solution as the one that was given to it.
     """
     rng = RandomNumberGenerator(seed=42)
+
+    # Empty local search does not actually search anything, so it should return
+    # the exact same solution as what was passed in.
+    ls = LocalSearch(
+        ok_small,
+        rng,
+        compute_neighbours(ok_small),
+        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
+    )
 
     cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(ok_small, rng)
 
-    # Empty local search does not actually search anything, so it should return
-    # the exact same solution as what was passed in.
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
     assert_equal(ls(sol, cost_eval), sol)
     assert_equal(ls.search(sol, cost_eval), sol)
     assert_equal(ls.intensify(sol, cost_eval), sol)
@@ -489,8 +435,9 @@ def test_mutually_exclusive_group(gtsp):
 
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(gtsp)
+    perturbation = PerturbationManager(PerturbationParams(0, 0))
 
-    ls = LocalSearch(gtsp, rng, neighbours)
+    ls = LocalSearch(gtsp, rng, neighbours, perturbation)
     ls.add_node_operator(Exchange10(gtsp))
 
     sol = Solution.make_random(gtsp, rng)
@@ -532,14 +479,16 @@ def test_swap_if_improving_mutually_exclusive_group(
     Tests that we swap a client (1) in a mutually exclusive group when another
     client (3) in the group is better to have.
     """
+    data = ok_small_mutually_exclusive_groups
     rng = RandomNumberGenerator(seed=42)
-    neighbours = compute_neighbours(ok_small_mutually_exclusive_groups)
+    neighbours = compute_neighbours(data)
+    perturbation = PerturbationManager(PerturbationParams(0, 0))
 
-    ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
-    ls.add_node_operator(Exchange10(ok_small_mutually_exclusive_groups))
+    ls = LocalSearch(data, rng, neighbours, perturbation)
+    ls.add_node_operator(Exchange10(data))
 
     cost_eval = CostEvaluator([20], 6, 0)
-    sol = Solution(ok_small_mutually_exclusive_groups, [[1, 4]])
+    sol = Solution(data, [[1, 4]])
     improved = ls(sol, cost_eval)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
@@ -555,7 +504,12 @@ def test_no_op_multi_trip_instance(ok_small_multiple_trips):
     """
     rng = RandomNumberGenerator(seed=42)
     neighbours = [[] for _ in range(ok_small_multiple_trips.num_locations)]
-    ls = LocalSearch(ok_small_multiple_trips, rng, neighbours)
+    ls = LocalSearch(
+        ok_small_multiple_trips,
+        rng,
+        neighbours,
+        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
+    )
 
     trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
     trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
@@ -622,7 +576,12 @@ def test_search_statistics(ok_small):
     information about the number of evaluated and improving moves.
     """
     rng = RandomNumberGenerator(seed=42)
-    ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
+    ls = LocalSearch(
+        ok_small,
+        rng,
+        compute_neighbours(ok_small),
+        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
+    )
 
     node_op = Exchange10(ok_small)
     ls.add_node_operator(node_op)
@@ -686,3 +645,34 @@ def test_node_and_route_operators_property(ok_small):
     ls.add_route_operator(route_op)
     assert_equal(len(ls.route_operators), 1)
     assert_(ls.route_operators[0] is route_op)
+
+
+@pytest.mark.parametrize(
+    ("instance", "exp_clients"),
+    [
+        # {1, 2, 3, 4} are all required clients.
+        ("ok_small", {1, 2, 3, 4}),
+        # 1 from required group {1, 2, 3}, 4 is a required client.
+        ("ok_small_mutually_exclusive_groups", {1, 4}),
+    ],
+)
+def test_inserts_required_missing(instance, exp_clients: set[int], request):
+    """
+    Tests that the local search inserts all missing clients and groups, if
+    those are currently missing from the solution.
+    """
+    data = request.getfixturevalue(instance)
+    rng = RandomNumberGenerator(seed=42)
+    perturbation = PerturbationManager(PerturbationParams(1, 1))
+    ls = LocalSearch(data, rng, compute_neighbours(data), perturbation)
+    ls.add_node_operator(Exchange10(data))
+
+    sol = Solution(data, [])
+    assert_(not sol.is_complete())
+
+    cost_eval = CostEvaluator([20], 6, 0)
+    improved = ls(sol, cost_eval)
+    assert_(improved.is_complete())
+
+    visits = {client for route in improved.routes() for client in route}
+    assert_equal(visits, exp_clients)

@@ -1,8 +1,10 @@
 import logging
 import sys
 
-from .GeneticAlgorithm import GeneticAlgorithm as GeneticAlgorithm
-from .GeneticAlgorithm import GeneticAlgorithmParams as GeneticAlgorithmParams
+from .IteratedLocalSearch import IteratedLocalSearch as IteratedLocalSearch
+from .IteratedLocalSearch import (
+    IteratedLocalSearchParams as IteratedLocalSearchParams,
+)
 from .Model import Edge as Edge
 from .Model import Model as Model
 from .Model import Profile as Profile

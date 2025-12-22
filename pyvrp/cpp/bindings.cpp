@@ -48,6 +48,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("none", &DynamicBitset::none)
         .def("count", &DynamicBitset::count)
         .def("__len__", &DynamicBitset::size)
+        .def("set", &DynamicBitset::set)
         .def("reset", &DynamicBitset::reset)
         .def(
             "__getitem__",

@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
+import pyvrp
 from pyvrp import Client, Depot, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
@@ -1174,3 +1175,30 @@ def test_overtime(ok_small_overtime):
     assert_equal(route.duration(), 5_229)
     assert_equal(route.overtime(), 229)
     assert_equal(route.duration_cost(), 1 * 5_229 + 10 * 229)
+
+
+def test_eq(ok_small):
+    """
+    Tests __eq__.
+    """
+    route1 = make_search_route(ok_small, [1, 2])
+    assert_(route1 == route1)
+    assert_(route1 != object())
+    assert_(route1 != "123")
+
+    route2 = make_search_route(ok_small, [3, 4])
+    assert_(route2 == route2)
+    assert_(route1 != route2)
+
+
+def test_eq_pyvrp_route(ok_small_multiple_trips):
+    """
+    Tests __eq__ between search.Route and pyvrp.Route.
+    """
+    trips = [
+        pyvrp.Trip(ok_small_multiple_trips, [1, 2], 0),
+        pyvrp.Trip(ok_small_multiple_trips, [3, 4], 0),
+    ]
+    pyvrp_route = pyvrp.Route(ok_small_multiple_trips, trips, vehicle_type=0)
+    search_route = make_search_route(ok_small_multiple_trips, [1, 2, 0, 3, 4])
+    assert_(pyvrp_route == search_route)
