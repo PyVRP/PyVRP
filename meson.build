@@ -86,17 +86,6 @@ libsearch = static_library(
     link_with: libpyvrp,
 )
 
-librepair = static_library(
-    'repair',
-    [
-        SRC_DIR / 'repair' / 'greedy_repair.cpp',
-        SRC_DIR / 'repair' / 'nearest_route_insert.cpp',
-        SRC_DIR / 'repair' / 'repair.cpp',
-    ],
-    include_directories: INCLUDES,
-    link_with: [libpyvrp, libsearch],  # uses search to evaluate repair moves
-)
-
 # Extension as [extension name, subdirectory, core C++ library]. The extension
 # name names the eventual module name, subdirectory gives the source and
 # installation directories (relative to top-level directories), and the core 
@@ -105,7 +94,6 @@ extensions = [
     ['pyvrp', '', libpyvrp],
     ['crossover', 'crossover', libcrossover],
     ['diversity', 'diversity', libdiversity],
-    ['repair', 'repair', librepair],
     ['search', 'search', libsearch],
 ]
 
