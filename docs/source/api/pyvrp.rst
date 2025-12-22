@@ -45,15 +45,6 @@ This object stores the best observed solution and detailed runtime statistics.
    .. autoclass:: PenaltyManager
       :members: 
 
-.. automodule:: pyvrp.Population
-
-   .. autoclass:: PopulationParams
-      :members:
-
-   .. autoclass:: Population
-      :members:
-      :special-members: __iter__, __len__
-
 .. automodule:: pyvrp.read
 
    .. autofunction:: read
