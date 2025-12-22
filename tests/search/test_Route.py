@@ -1193,7 +1193,7 @@ def test_eq(ok_small):
 
 def test_eq_pyvrp_route(ok_small_multiple_trips):
     """
-    Tests __eq__ between seach.Route and pyvrp.Route.
+    Tests __eq__ between search.Route and pyvrp.Route.
     """
     trips = [
         pyvrp.Trip(ok_small_multiple_trips, [1, 2], 0),

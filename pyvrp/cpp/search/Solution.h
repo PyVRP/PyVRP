@@ -45,7 +45,7 @@ public:
 
     // Inserts the given node into the solution - either in its neighbourhood,
     // or in an empty route, if improving or required. Returns true if the node
-    // was succesfully inserted, false otherwise. Updating the search space and
+    // was successfully inserted, false otherwise. Updating the search space and
     // inserted route is left to the calling code.
     bool insert(Route::Node *node,
                 SearchSpace const &searchSpace,
