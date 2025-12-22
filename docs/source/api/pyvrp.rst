@@ -113,8 +113,6 @@ This object stores the best observed solution and detailed runtime statistics.
 
    .. autoexception:: ScalingWarning
 
-   .. autoexception:: TspWarning
-
    .. autoexception:: PenaltyBoundWarning
 
 .. automodule:: pyvrp.constants
