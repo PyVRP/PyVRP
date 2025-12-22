@@ -42,30 +42,10 @@ libpyvrp = static_library(
         SRC_DIR / 'Trip.cpp',
         SRC_DIR / 'Route.cpp',
         SRC_DIR / 'Solution.cpp',
-        SRC_DIR / 'SubPopulation.cpp',
         SRC_DIR / 'LoadSegment.cpp',
         SRC_DIR / 'DurationSegment.cpp',
     ],
     include_directories: INCLUDES,
-)
-
-libcrossover = static_library(
-    'crossover',
-    [
-        SRC_DIR / 'crossover' / 'ordered_crossover.cpp',
-        SRC_DIR / 'crossover' / 'selective_route_exchange.cpp',
-    ],
-    include_directories: INCLUDES,
-    link_with: libpyvrp,
-)
-
-libdiversity = static_library(
-    'diversity',
-    [
-        SRC_DIR / 'diversity' / 'broken_pairs_distance.cpp',
-    ],
-    include_directories: INCLUDES,
-    link_with: libpyvrp,
 )
 
 libsearch = static_library(
@@ -92,8 +72,6 @@ libsearch = static_library(
 # C++ library is one of the static libraries we defined above.
 extensions = [
     ['pyvrp', '', libpyvrp],
-    ['crossover', 'crossover', libcrossover],
-    ['diversity', 'diversity', libdiversity],
     ['search', 'search', libsearch],
 ]
 
