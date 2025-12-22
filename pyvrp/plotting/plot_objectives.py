@@ -24,9 +24,9 @@ def plot_objectives(
     ax
         Axes object to draw the plot on. One will be created if not provided.
     ylim_adjust
-        Bounds the y-axis to ``(best * ylim_adjust[0], best * ylim_adjust[1])``
-        where ``best`` denotes the best found feasible objective value. Default
-        (0.99, 1.05).
+        Optional adjustment to bound the y-axis to ``(best * ylim_adjust[0],
+        best * ylim_adjust[1])`` where ``best`` denotes the best found feasible
+        objective value.
     """
     if not ax:
         _, ax = plt.subplots()
