@@ -15,6 +15,8 @@ keywords = [
     "vrp",
     "metaheuristic",
     "logistics",
+    "optimization",
+    "optimisation",
 ]
 classifiers = [
     "Intended Audience :: Developers",
