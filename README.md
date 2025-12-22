@@ -37,7 +37,7 @@ These include:
 - A notebook solving classical VRP variants, [here][4].
   In this notebook we solve several benchmark instances of the CVRP and VRPTW problems.
   We also demonstrate how to use the plotting tools available in PyVRP to visualise the instance and statistics collected during the search procedure. 
-- A notebook implementing a `solve` method using PyVRP's components, [here][9].
+- A notebook implementing a `solve` method using PyVRP's components, [here][8].
   This notebook is a great way to dive deeper into how PyVRP works internally.
 
 If you are new to vehicle routing or metaheuristics, you might also benefit from reading the [introduction to VRP][6] and [introduction to ILS][7] pages.
@@ -81,8 +81,7 @@ Or, using the following BibTeX entry:
 }
 ```
 
-A preprint of this paper is available on [arXiv][11]. 
-Since PyVRP extends [HGS-CVRP][8], please also consider citing [Vidal (2022)][10].
+A preprint of this paper is available on [arXiv][9]. 
 
 [1]: https://pyvrp.org/
 
@@ -98,10 +97,6 @@ Since PyVRP extends [HGS-CVRP][8], please also consider citing [Vidal (2022)][10
 
 [7]: https://pyvrp.org/setup/introduction_to_ils.html
 
-[8]: https://github.com/vidalt/HGS-CVRP/
+[8]: https://pyvrp.org/examples/using_pyvrp_components.html
 
-[9]: https://pyvrp.org/examples/using_pyvrp_components.html
-
-[10]: https://doi.org/10.1016/j.cor.2021.105643
-
-[11]: https://arxiv.org/abs/2403.13795
+[9]: https://arxiv.org/abs/2403.13795
