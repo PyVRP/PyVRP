@@ -178,9 +178,9 @@ def _compute_proximity(
 
     # Proximity is based on edge costs (and rewards) and penalties for known
     # time-related violations.
-    return (
-        edge_costs.astype(float)
-        - prize[None, :]
-        + weight_wait_time * np.maximum(min_wait, 0)
-        + weight_time_warp * np.maximum(min_tw, 0)
-    )
+    edge_costs = edge_costs.astype(float)
+    edge_costs -= prize[None, :]
+    edge_costs += weight_wait_time * np.maximum(min_wait, 0)
+    edge_costs += weight_time_warp * np.maximum(min_tw, 0)
+
+    return edge_costs
