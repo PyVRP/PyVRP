@@ -34,12 +34,16 @@ class IteratedLocalSearchParams:
     history_length
         The number of recent candidate solutions to consider when computing the
         threshold value in the acceptance criterion. Must be positive.
+    decay
+        Decay rate for the initial_accept_weight after each restart. Must be in
+        (0, 1).
     """
 
     num_iters_no_improvement: int = 20_000
     initial_accept_weight: float = 1
     history_length: int = 500
     budget: int = 20_000
+    decay_rate: float = 0.5
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
@@ -130,6 +134,7 @@ class IteratedLocalSearch:
         start = time.perf_counter()
         iters = iters_no_improvement = iters_budget = 0
         best = current = self._init
+        base_weight = self._params.initial_accept_weight
 
         cost_eval = self._pm.cost_evaluator()
         while not stop(cost_eval.cost(best)):
@@ -140,7 +145,6 @@ class IteratedLocalSearch:
             if iters_no_improvement == self._params.num_iters_no_improvement:
                 print_progress.restart()
                 history.clear()
-                history.append(cost_eval.penalised_cost(best))
 
                 current = best
                 iters_no_improvement = 0
@@ -162,11 +166,7 @@ class IteratedLocalSearch:
             # threshold value is a convex combination of the recent best and
             # mean values. Based on Maximo and Nascimento (2021); see
             # https://doi.org/10.1016/j.ejor.2021.02.024 for more details.
-            weight = self._params.initial_accept_weight
-            if (fraction := stop.fraction_remaining()) is not None:
-                weight *= fraction
-
-            weight *= 1 - (iters_budget / self._params.budget)
+            weight = base_weight * (1 - (iters_budget / self._params.budget))
 
             best_weight = (1 - weight) * history.min()
             mean_weight = weight * history.mean()
@@ -174,7 +174,11 @@ class IteratedLocalSearch:
                 current = candidate
 
             if iters_budget >= self._params.budget:
+                history.clear()
+                history.append(cost_eval.penalised_cost(best))
+                current = best
                 iters_budget = 0
+                base_weight *= self._params.decay_rate
 
             stats.collect(
                 current,
