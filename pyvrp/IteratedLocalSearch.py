@@ -168,7 +168,14 @@ class IteratedLocalSearch:
             if cand_cost <= best_weight + mean_weight:
                 current = candidate
 
-            stats.collect(current, candidate, best, cost_eval)
+            stats.collect(
+                current,
+                candidate,
+                best,
+                cost_eval,
+                weight,
+                best_weight + mean_weight,
+            )
             print_progress.iteration(stats)
 
         runtime = time.perf_counter() - start

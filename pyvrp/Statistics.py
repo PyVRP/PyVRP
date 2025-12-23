@@ -19,6 +19,8 @@ class _Datum:
     candidate_feas: bool
     best_cost: int
     best_feas: bool
+    weight: float
+    threshold: float
 
 
 class Statistics:
@@ -68,6 +70,8 @@ class Statistics:
         candidate: Solution,
         best: Solution,
         cost_evaluator: CostEvaluator,
+        weight: float,
+        threshold: float,
     ):
         """
         Collect iteration statistics.
@@ -82,6 +86,10 @@ class Statistics:
             The best solution.
         cost_evaluator
             CostEvaluator used to compute costs for solutions.
+        weight
+            The acceptance weight used in this iteration.
+        threshold
+            The acceptance threshold used in this iteration.
         """
         if not self._collect_stats:
             return
@@ -99,6 +107,8 @@ class Statistics:
             candidate.is_feasible(),
             cost_evaluator.penalised_cost(best),
             best.is_feasible(),
+            weight,
+            threshold,
         )
         self.data.append(datum)
 
