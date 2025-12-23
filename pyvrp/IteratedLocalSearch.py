@@ -39,6 +39,7 @@ class IteratedLocalSearchParams:
     num_iters_no_improvement: int = 20_000
     initial_accept_weight: float = 1
     history_length: int = 500
+    budget: int = 20_000
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
@@ -127,17 +128,19 @@ class IteratedLocalSearch:
         stats = Statistics(collect_stats=collect_stats)
 
         start = time.perf_counter()
-        iters = iters_no_improvement = 0
+        iters = iters_no_improvement = iters_budget = 0
         best = current = self._init
 
         cost_eval = self._pm.cost_evaluator()
         while not stop(cost_eval.cost(best)):
             iters += 1
             iters_no_improvement += 1
+            iters_budget += 1
 
             if iters_no_improvement == self._params.num_iters_no_improvement:
                 print_progress.restart()
                 history.clear()
+                history.append(cost_eval.penalised_cost(best))
 
                 current = best
                 iters_no_improvement = 0
@@ -163,10 +166,15 @@ class IteratedLocalSearch:
             if (fraction := stop.fraction_remaining()) is not None:
                 weight *= fraction
 
+            weight *= 1 - (iters_budget / self._params.budget)
+
             best_weight = (1 - weight) * history.min()
             mean_weight = weight * history.mean()
             if cand_cost <= best_weight + mean_weight:
                 current = candidate
+
+            if iters_budget >= self._params.budget:
+                iters_budget = 0
 
             stats.collect(
                 current,
