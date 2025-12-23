@@ -5,8 +5,7 @@
 Search methods
 ==============
 
-The :mod:`pyvrp.search` module contains classes and search methods responsible for improving a newly created offspring solution.
-This happens just after :mod:`pyvrp.crossover` is performed by the :class:`~pyvrp.GeneticAlgorithm.GeneticAlgorithm`. 
+The :mod:`pyvrp.search` module contains classes and search methods responsible for modifying or improving solutions.
 PyVRP currently provides a :class:`LocalSearch` method.
 
 All search methods implement the :class:`SearchMethod` protocol.
@@ -26,6 +25,13 @@ All search methods implement the :class:`SearchMethod` protocol.
 .. automodule:: pyvrp.search._search
 
    .. autoclass:: LocalSearchStatistics
+
+   .. autoclass:: PerturbationParams
+      :members:
+
+   .. autoclass:: PerturbationManager
+      :members:
+      :exclude-members: perturb
 
 .. automodule:: pyvrp.search.neighbourhood
    :members:

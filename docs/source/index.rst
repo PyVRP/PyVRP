@@ -32,7 +32,7 @@ Contents
    :caption: Getting started
 
    setup/introduction_to_vrp
-   setup/introduction_to_hgs
+   setup/introduction_to_ils
    setup/installation
    setup/getting_help
    setup/faq
@@ -53,9 +53,6 @@ Contents
    :caption: API reference
 
    api/pyvrp
-   api/crossover
-   api/diversity
-   api/repair
    api/search
    api/plotting
    api/stop

@@ -13,8 +13,7 @@ logger = logging.getLogger(__name__)
 # Templates for various different outputs.
 _ITERATION = (
     "{special} {iters:>7} {elapsed:>6}s | "
-    "{feas_size:>3} {feas_avg:>8} {feas_best:>8} | "
-    "{infeas_size:>3} {infeas_avg:>8} {infeas_best:>8}"
+    "{curr:>12}  {curr_feas} {cand:>12}  {cand_feas} {best:>12}  {best_feas}"
 )
 
 _START = """PyVRP v{version}
@@ -24,8 +23,7 @@ Solving an instance with:
     {client_text}
     {vehicle_text} ({vehicle_type_text})
 
-                  |       Feasible        |      Infeasible
-    Iters    Time |   #      Avg     Best |   #      Avg     Best"""
+    Iters    Time |      Current OK    Candidate OK         Best OK"""
 
 _END = """
 Search terminated in {runtime:.2f}s after {iters} iterations.
@@ -34,7 +32,7 @@ Best-found solution has cost {best_cost}.
 {summary}
 """
 
-_RESTART = "R                 |        restart        |        restart"
+_RESTART = "R                 |                      restart"
 
 
 class ProgressPrinter:
@@ -62,9 +60,9 @@ class ProgressPrinter:
 
     def iteration(self, stats: Statistics):
         """
-        Outputs relevant information every few hundred iterations. The output
-        contains information about the feasible and infeasible populations,
-        whether a new best solution has been found, and the search duration.
+        Outputs relevant information every few seconds. The output contains
+        information about the (penalised) cost and feasibility of the current,
+        candidate, and best solutions, as well as the search duration.
         """
         curr_time = perf_counter()
         interval = curr_time - self._last_print_time
@@ -77,26 +75,25 @@ class ProgressPrinter:
         if not should_print:
             return
 
-        feas = stats.feas_stats[-1]
-        infeas = stats.infeas_stats[-1]
-
+        datum = stats.data[-1]
+        new_best = datum.best_feas and datum.best_cost < self._best_cost
         msg = _ITERATION.format(
-            special="H" if feas.best_cost < self._best_cost else " ",
+            special="H" if new_best else " ",
             iters=stats.num_iterations,
             elapsed=round(sum(stats.runtimes)),
-            feas_size=feas.size,
-            feas_avg=round(feas.avg_cost) if feas.size else "-",
-            feas_best=round(feas.best_cost) if feas.size else "-",
-            infeas_size=infeas.size,
-            infeas_avg=round(infeas.avg_cost) if infeas.size else "-",
-            infeas_best=round(infeas.best_cost) if infeas.size else "-",
+            curr=datum.current_cost,
+            curr_feas="Y" if datum.current_feas else "N",
+            cand=datum.candidate_cost,
+            cand_feas="Y" if datum.candidate_feas else "N",
+            best=datum.best_cost,
+            best_feas="Y" if datum.best_feas else "N",
         )
 
         logger.info(msg)
 
         self._last_print_time = curr_time
-        if feas.best_cost < self._best_cost:
-            self._best_cost = feas.best_cost
+        if new_best:
+            self._best_cost = datum.best_cost
 
     def start(self, data: ProblemData):
         """
@@ -138,7 +135,7 @@ class ProgressPrinter:
             msg = _END.format(
                 iters=result.num_iterations,
                 runtime=result.runtime,
-                best_cost=round(result.cost(), 2),
+                best_cost=result.cost(),
                 summary=result.summary(),
             )
 

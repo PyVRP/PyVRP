@@ -1,6 +1,7 @@
 #ifndef PYVRP_SEARCH_ROUTE_H
 #define PYVRP_SEARCH_ROUTE_H
 
+#include "../Route.h"  // pyvrp::Route
 #include "DurationSegment.h"
 #include "LoadSegment.h"
 #include "ProblemData.h"
@@ -618,6 +619,9 @@ public:
      */
     void update();
 
+    bool operator==(Route const &other) const;
+    bool operator==(pyvrp::Route const &other) const;
+
     Route(ProblemData const &data, size_t idx, size_t vehicleType);
     ~Route();
 };
@@ -631,12 +635,24 @@ inline Route::Node *p(Route::Node *node)
     return route[node->idx() - 1];
 }
 
+inline Route::Node const *p(Route::Node const *node)
+{
+    auto const &route = *node->route();
+    return route[node->idx() - 1];
+}
+
 /**
  * Convenience method accessing the node directly after the argument.
  */
 inline Route::Node *n(Route::Node *node)
 {
     auto &route = *node->route();
+    return route[node->idx() + 1];
+}
+
+inline Route::Node const *n(Route::Node const *node)
+{
+    auto const &route = *node->route();
     return route[node->idx() + 1];
 }
 

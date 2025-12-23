@@ -1,15 +1,15 @@
 import logging
 import sys
 
-from .GeneticAlgorithm import GeneticAlgorithm as GeneticAlgorithm
-from .GeneticAlgorithm import GeneticAlgorithmParams as GeneticAlgorithmParams
+from .IteratedLocalSearch import IteratedLocalSearch as IteratedLocalSearch
+from .IteratedLocalSearch import (
+    IteratedLocalSearchParams as IteratedLocalSearchParams,
+)
 from .Model import Edge as Edge
 from .Model import Model as Model
 from .Model import Profile as Profile
 from .PenaltyManager import PenaltyManager as PenaltyManager
 from .PenaltyManager import PenaltyParams as PenaltyParams
-from .Population import Population as Population
-from .Population import PopulationParams as PopulationParams
 from .Result import Result as Result
 from .Statistics import Statistics as Statistics
 from ._pyvrp import Client as Client

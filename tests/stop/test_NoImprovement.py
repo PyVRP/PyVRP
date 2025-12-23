@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp.stop import NoImprovement
@@ -69,3 +69,39 @@ def test_n_max_iterations_with_single_improvement(n, k):
 
     for _ in range(n):
         assert_(stop(1))
+
+
+def test_fraction_remaining():
+    """
+    Tests that calling ``fraction_remaining()`` returns the correct values.
+    """
+    stop = NoImprovement(100)
+    assert_equal(stop.fraction_remaining(), 1)
+
+    # First call registers initial best solution and resets internal counter.
+    stop(1)
+    assert_equal(stop.fraction_remaining(), 1)
+
+    # New solution is not improving, so fraction remaining should decrease.
+    stop(2)
+    assert_equal(stop.fraction_remaining(), 0.99)
+
+    # Found a new best solution, so the iteration counter resets and so does
+    # the fraction remaining.
+    stop(0)
+    assert_equal(stop.fraction_remaining(), 1)
+
+
+def test_fraction_remaining_zero_budget():
+    """
+    Tests that ``fraction_remaining()`` works correctly when max iterations is
+    set to zero.
+    """
+    # Zero max iterations should result in zero fraction remaining from the
+    # start.
+    stop = NoImprovement(0)
+    assert_equal(stop.fraction_remaining(), 0)
+
+    # Fraction remaining should also not go below zero.
+    stop(0)
+    assert_equal(stop.fraction_remaining(), 0)

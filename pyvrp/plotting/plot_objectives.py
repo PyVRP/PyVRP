@@ -8,10 +8,10 @@ def plot_objectives(
     result: Result,
     num_to_skip: int | None = None,
     ax: plt.Axes | None = None,
-    ylim_adjust: tuple[float, float] = (0.95, 1.15),
+    ylim_adjust: tuple[float, float] = (0.99, 1.05),
 ):
     """
-    Plots each subpopulation's objective values.
+    Plots each iteration's objective values.
 
     Parameters
     ----------
@@ -24,9 +24,9 @@ def plot_objectives(
     ax
         Axes object to draw the plot on. One will be created if not provided.
     ylim_adjust
-        Bounds the y-axis to ``(best * ylim_adjust[0], best * ylim_adjust[1])``
-        where ``best`` denotes the best found feasible objective value. Default
-        (0.95, 1.15).
+        Optional adjustment to bound the y-axis to ``(best * ylim_adjust[0],
+        best * ylim_adjust[1])`` where ``best`` denotes the best found feasible
+        objective value.
     """
     if not ax:
         _, ax = plt.subplots()
@@ -38,17 +38,15 @@ def plot_objectives(
         ax.plot(x[num_to_skip:], y[num_to_skip:], *args, **kwargs)
 
     x = 1 + np.arange(result.num_iterations)
-    y = [d.best_cost for d in result.stats.infeas_stats]
-    _plot(x, y, label="Infeas. best", c="tab:red")
 
-    y = [d.avg_cost for d in result.stats.infeas_stats]
-    _plot(x, y, label="Infeas. avg.", c="tab:red", alpha=0.3, ls="--")
+    y = [datum.current_cost for datum in result.stats]
+    _plot(x, y, label="Current")
 
-    y = [d.best_cost for d in result.stats.feas_stats]
-    _plot(x, y, label="Feas. best", c="tab:green")
+    y = [datum.candidate_cost for datum in result.stats]
+    _plot(x, y, label="Candidate", alpha=0.2, zorder=1)
 
-    y = [d.avg_cost for d in result.stats.feas_stats]
-    _plot(x, y, label="Feas. avg.", c="tab:green", alpha=0.3, ls="--")
+    y = [datum.best_cost for datum in result.stats]
+    _plot(x, y, label="Best")
 
     # Use best-found solution to set reasonable y-limits, if available.
     if result.is_feasible():

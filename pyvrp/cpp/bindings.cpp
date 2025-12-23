@@ -8,7 +8,6 @@
 #include "RandomNumberGenerator.h"
 #include "Route.h"
 #include "Solution.h"
-#include "SubPopulation.h"
 #include "Trip.h"
 #include "pyvrp_docs.h"
 
@@ -30,12 +29,10 @@ using pyvrp::DurationSegment;
 using pyvrp::DynamicBitset;
 using pyvrp::LoadSegment;
 using pyvrp::Matrix;
-using pyvrp::PopulationParams;
 using pyvrp::ProblemData;
 using pyvrp::RandomNumberGenerator;
 using pyvrp::Route;
 using pyvrp::Solution;
-using pyvrp::SubPopulation;
 using pyvrp::Trip;
 
 PYBIND11_MODULE(_pyvrp, m)
@@ -48,6 +45,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("none", &DynamicBitset::none)
         .def("count", &DynamicBitset::count)
         .def("__len__", &DynamicBitset::size)
+        .def("set", &DynamicBitset::set)
         .def("reset", &DynamicBitset::reset)
         .def(
             "__getitem__",
@@ -1004,107 +1002,6 @@ PYBIND11_MODULE(_pyvrp, m)
              &CostEvaluator::cost<Solution>,
              py::arg("solution"),
              DOC(pyvrp, CostEvaluator, cost));
-
-    py::class_<PopulationParams>(
-        m, "PopulationParams", DOC(pyvrp, PopulationParams))
-        .def(py::init<size_t, size_t, size_t, size_t, double, double>(),
-             py::arg("min_pop_size") = 25,
-             py::arg("generation_size") = 40,
-             py::arg("num_elite") = 4,
-             py::arg("num_close") = 5,
-             py::arg("lb_diversity") = 0.1,
-             py::arg("ub_diversity") = 0.5)
-        .def(py::self == py::self, py::arg("other"))  // this is __eq__
-        .def_readonly("min_pop_size", &PopulationParams::minPopSize)
-        .def_readonly("generation_size", &PopulationParams::generationSize)
-        .def_property_readonly("max_pop_size",
-                               &PopulationParams::maxPopSize,
-                               DOC(pyvrp, PopulationParams, maxPopSize))
-        .def_readonly("num_elite", &PopulationParams::numElite)
-        .def_readonly("num_close", &PopulationParams::numClose)
-        .def_readonly("lb_diversity", &PopulationParams::lbDiversity)
-        .def_readonly("ub_diversity", &PopulationParams::ubDiversity);
-
-    py::class_<SubPopulation::Item>(m, "SubPopulationItem")
-        .def_readonly("solution",
-                      &SubPopulation::Item::solution,
-                      py::return_value_policy::reference_internal,
-                      R"doc(
-                            Solution for this SubPopulationItem.
-
-                            Returns
-                            -------
-                            Solution
-                                Solution for this SubPopulationItem.
-                      )doc")
-        .def_readonly("fitness",
-                      &SubPopulation::Item::fitness,
-                      R"doc(
-                Fitness value for this SubPopulationItem.
-
-                Returns
-                -------
-                float
-                    Fitness value for this SubPopulationItem.
-
-                .. warning::
-
-                This is a cached property that is not automatically updated.
-                Before accessing the property, 
-                :meth:`~SubPopulation.update_fitness` should be called unless 
-                the population has not changed since the last call.
-            )doc")
-        .def("avg_distance_closest",
-             &SubPopulation::Item::avgDistanceClosest,
-             R"doc(
-                Determines the average distance of the solution wrapped by this
-                item to a number of solutions that are most similar to it. This 
-                provides a measure of the relative 'diversity' of the wrapped
-                solution.
-
-                Returns
-                -------
-                float
-                    The average distance/diversity of the wrapped solution.
-             )doc");
-
-    py::class_<SubPopulation>(m, "SubPopulation", DOC(pyvrp, SubPopulation))
-        .def(py::init<pyvrp::diversity::DiversityMeasure,
-                      PopulationParams const &>(),
-             py::arg("diversity_op"),
-             py::arg("params"),
-             py::keep_alive<1, 3>())  // keep params alive
-        .def("add",
-             &SubPopulation::add,
-             py::arg("solution"),
-             py::arg("cost_evaluator"),
-             DOC(pyvrp, SubPopulation, add))
-        .def("__len__", &SubPopulation::size)
-        .def(
-            "__getitem__",
-            [](SubPopulation const &subPop, int idx)
-            {
-                // int so we also support negative offsets from the end.
-                idx = idx < 0 ? subPop.size() + idx : idx;
-                if (idx < 0 || static_cast<size_t>(idx) >= subPop.size())
-                    throw py::index_error();
-                return subPop[idx];
-            },
-            py::arg("idx"),
-            py::return_value_policy::reference_internal)
-        .def(
-            "__iter__",
-            [](SubPopulation const &subPop)
-            { return py::make_iterator(subPop.cbegin(), subPop.cend()); },
-            py::return_value_policy::reference_internal)
-        .def("purge",
-             &SubPopulation::purge,
-             py::arg("cost_evaluator"),
-             DOC(pyvrp, SubPopulation, purge))
-        .def("update_fitness",
-             &SubPopulation::updateFitness,
-             py::arg("cost_evaluator"),
-             DOC(pyvrp, SubPopulation, updateFitness));
 
     py::class_<LoadSegment>(m, "LoadSegment", DOC(pyvrp, LoadSegment))
         .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
