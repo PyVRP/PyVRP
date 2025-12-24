@@ -42,7 +42,8 @@ class IteratedLocalSearchParams:
     num_iters_no_improvement: int = 20_000
     initial_accept_weight: float = 1
     history_length: int = 500
-    budget: int = 20_000
+    budget: int = 25_000
+    budget_multiplier: float = 1.5
     decay_rate: float = 0.75
 
     def __post_init__(self):
@@ -135,6 +136,7 @@ class IteratedLocalSearch:
         iters = iters_no_improvement = iters_budget = 0
         best = current = self._init
         base_weight = self._params.initial_accept_weight
+        budget = self._params.budget
 
         cost_eval = self._pm.cost_evaluator()
         while not stop(cost_eval.cost(best)):
@@ -168,18 +170,19 @@ class IteratedLocalSearch:
             # threshold value is a convex combination of the recent best and
             # mean values. Based on Maximo and Nascimento (2021); see
             # https://doi.org/10.1016/j.ejor.2021.02.024 for more details.
-            weight = base_weight * (1 - (iters_budget / self._params.budget))
+            weight = base_weight * (1 - (iters_budget / budget))
 
             best_weight = (1 - weight) * history.min()
             mean_weight = weight * history.mean()
             if cand_cost <= best_weight + mean_weight:
                 current = candidate
 
-            if iters_budget == self._params.budget:
+            if iters_budget == budget:
                 history.clear()
                 history.append(cost_eval.penalised_cost(best))
                 current = best
                 iters_budget = 0
+                budget *= self._params.budget_multiplier
                 base_weight *= self._params.decay_rate
 
             stats.collect(
