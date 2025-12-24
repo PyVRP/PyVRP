@@ -27,31 +27,16 @@ class IteratedLocalSearchParams:
     num_iters_no_improvement
         Number of iterations without any improvement needed before a restart
         occurs.
-    initial_accept_weight
-        Initial weight parameter used to determine the threshold value in the
-        acceptance criterion. Larger values result in more accepted candidate
-        solutions. Must be in [0, 1].
     history_length
-        The number of recent candidate solutions to consider when computing the
-        threshold value in the acceptance criterion. Must be positive.
-    decay
-        Decay rate for the initial_accept_weight after each restart. Must be in
-        (0, 1).
+        Length of the LAHC fitness array.
     """
 
     num_iters_no_improvement: int = 20_000
-    initial_accept_weight: float = 1
     history_length: int = 500
-    budget: int = 25_000
-    budget_multiplier: float = 1.5
-    decay_rate: float = 0.75
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
             raise ValueError("num_iters_no_improvement < 0 not understood.")
-
-        if not (0 <= self.initial_accept_weight <= 1):
-            raise ValueError("initial_accept_weight must be in [0, 1].")
 
         if self.history_length <= 0:
             raise ValueError("history_length must be positive.")
@@ -129,29 +114,25 @@ class IteratedLocalSearch:
         print_progress = ProgressPrinter(display, display_interval)
         print_progress.start(self._data)
 
-        history = History(size=self._params.history_length)
         stats = Statistics(collect_stats=collect_stats)
 
         start = time.perf_counter()
-        iters = iters_no_improvement = iters_budget = 0
+        iters = iters_no_improvement = 0
         best = current = self._init
-        base_weight = self._params.initial_accept_weight
-        budget = self._params.budget
 
         cost_eval = self._pm.cost_evaluator()
+        init_cost = cost_eval.penalised_cost(current)
+        history = History(init_cost, self._params.history_length)
+
         while not stop(cost_eval.cost(best)):
             iters += 1
             iters_no_improvement += 1
-            iters_budget += 1
 
             if iters_no_improvement == self._params.num_iters_no_improvement:
                 print_progress.restart()
-                history.clear()
-                history.append(cost_eval.penalised_cost(best))
-
                 current = best
                 iters_no_improvement = 0
-                base_weight = self._params.initial_accept_weight
+                history.reset(history._array.max())
 
             cost_eval = self._pm.cost_evaluator()
             candidate = self._search(current, cost_eval)
@@ -161,37 +142,25 @@ class IteratedLocalSearch:
                 best = candidate
                 iters_no_improvement = 0
 
+            # Late Acceptance Hill Climbing (LAHC) acceptance criterion from
+            # Burke & Bykov (2012) with all enhancements (section 4.2).
             cand_cost = cost_eval.penalised_cost(candidate)
-            history.append(cand_cost)
+            curr_cost = cost_eval.penalised_cost(current)
+            late_cost = history.get_late_cost()
 
-            # Evaluate replacing the current solution with the candidate. A
-            # candidate solution is accepted if it is better than a threshold
-            # value based on the recent history of candidate objectives. This
-            # threshold value is a convex combination of the recent best and
-            # mean values. Based on Maximo and Nascimento (2021); see
-            # https://doi.org/10.1016/j.ejor.2021.02.024 for more details.
-            weight = base_weight * (1 - (iters_budget / budget))
-
-            best_weight = (1 - weight) * history.min()
-            mean_weight = weight * history.mean()
-            if cand_cost <= best_weight + mean_weight:
+            if cand_cost <= curr_cost or cand_cost <= late_cost:
                 current = candidate
+                curr_cost = cand_cost
 
-            if iters_budget == budget:
-                history.clear()
-                history.append(cost_eval.penalised_cost(best))
-                current = best
-                iters_budget = 0
-                budget *= self._params.budget_multiplier
-                base_weight *= self._params.decay_rate
+            history.update(curr_cost, current.is_feasible())
 
             stats.collect(
                 current,
                 candidate,
                 best,
                 cost_eval,
-                weight,
-                best_weight + mean_weight,
+                history._array.min(),
+                history._array.max(),
             )
             print_progress.iteration(stats)
 
@@ -204,27 +173,30 @@ class IteratedLocalSearch:
 
 
 class History:
-    """
-    Small helper class to manage a history of recent candidate solution values.
-    """
+    def __init__(self, cost: float, size: int):
+        self._array = np.full(size, cost)
+        self._iter = 0
 
-    def __init__(self, size: int):
-        self._array = np.full(shape=(size,), fill_value=np.nan)
-        self._idx = 0
+    def reset(self, cost: float):
+        """
+        Resets the fitness array with a new cost used on restart.
+        """
+        self._array[:] = cost
+        self._iter = 0
 
-    def __len__(self) -> int:
-        return np.count_nonzero(~np.isnan(self._array))
+    def get_late_cost(self) -> float:
+        """
+        Returns the cost from Lh iterations ago (the current virtual position).
+        """
+        idx = self._iter % len(self._array)
+        return self._array[idx]
 
-    def clear(self):
-        self._array.fill(np.nan)
-        self._idx = 0
-
-    def append(self, value: int):
-        self._array[self._idx % self._array.size] = value
-        self._idx += 1
-
-    def min(self) -> float:
-        return np.nanmin(self._array)
-
-    def mean(self) -> float:
-        return np.nanmean(self._array)
+    def update(self, current_cost: float, is_feasible: bool):
+        """
+        Updates the fitness array with the current cost, but only if it's
+        better (enhanced history recording from LAHC variant).
+        """
+        idx = self._iter % len(self._array)
+        if is_feasible and current_cost < self._array[idx]:
+            self._array[idx] = current_cost
+        self._iter += 1
