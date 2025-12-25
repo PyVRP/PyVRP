@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
-
-import numpy as np
 
 from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
 from pyvrp.Statistics import Statistics
+from pyvrp._pyvrp import PopulationParams, SubPopulation
+from pyvrp.diversity import broken_pairs_distance
 
 if TYPE_CHECKING:
     from pyvrp.PenaltyManager import PenaltyManager
@@ -27,28 +27,20 @@ class IteratedLocalSearchParams:
     num_iters_no_improvement
         Number of iterations without any improvement needed before a restart
         occurs.
-    initial_accept_weight
-        Initial weight parameter used to determine the threshold value in the
-        acceptance criterion. Larger values result in more accepted candidate
-        solutions. Must be in [0, 1].
-    history_length
-        The number of recent candidate solutions to consider when computing the
-        threshold value in the acceptance criterion. Must be positive.
+    pop_params
+        Population parameters. If not provided, a default will be used.
     """
 
     num_iters_no_improvement: int = 20_000
-    initial_accept_weight: float = 1
-    history_length: int = 500
+    pop_params: PopulationParams = field(
+        default_factory=lambda: PopulationParams(
+            min_pop_size=10, generation_size=0
+        )
+    )
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
             raise ValueError("num_iters_no_improvement < 0 not understood.")
-
-        if not (0 <= self.initial_accept_weight <= 1):
-            raise ValueError("initial_accept_weight must be in [0, 1].")
-
-        if self.history_length <= 0:
-            raise ValueError("history_length must be positive.")
 
 
 class IteratedLocalSearch:
@@ -123,7 +115,8 @@ class IteratedLocalSearch:
         print_progress = ProgressPrinter(display, display_interval)
         print_progress.start(self._data)
 
-        history = History(size=self._params.history_length)
+        pop_params = self._params.pop_params
+        pop = SubPopulation(broken_pairs_distance, pop_params)
         stats = Statistics(collect_stats=collect_stats)
 
         start = time.perf_counter()
@@ -137,7 +130,14 @@ class IteratedLocalSearch:
 
             if iters_no_improvement == self._params.num_iters_no_improvement:
                 print_progress.restart()
-                history.clear()
+                # Create a new population with increased minimum size + 1
+                pop_params = PopulationParams(
+                    min_pop_size=pop_params.min_pop_size + 1, generation_size=0
+                )
+                new = SubPopulation(broken_pairs_distance, pop_params)
+                for sol in pop:
+                    new.add(sol.solution, cost_eval)
+                pop = new
 
                 current = best
                 iters_no_improvement = 0
@@ -151,22 +151,19 @@ class IteratedLocalSearch:
                 iters_no_improvement = 0
 
             cand_cost = cost_eval.penalised_cost(candidate)
-            history.append(cand_cost)
 
-            # Evaluate replacing the current solution with the candidate. A
-            # candidate solution is accepted if it is better than a threshold
-            # value based on the recent history of candidate objectives. This
-            # threshold value is a convex combination of the recent best and
-            # mean values. Based on Maximo and Nascimento (2021); see
-            # https://doi.org/10.1016/j.ejor.2021.02.024 for more details.
-            weight = self._params.initial_accept_weight
-            if (fraction := stop.fraction_remaining()) is not None:
-                weight *= fraction
-
-            best_weight = (1 - weight) * history.min()
-            mean_weight = weight * history.mean()
-            if cand_cost <= best_weight + mean_weight:
+            # Accept candidate if its fitness is better than the worst
+            # individual in the population.
+            if len(pop) < pop_params.max_pop_size:
+                pop.add(candidate, cost_eval)
                 current = candidate
+            else:
+                worst_cost = max(
+                    cost_eval.penalised_cost(item.solution) for item in pop
+                )
+                if cand_cost < worst_cost:
+                    pop.add(candidate, cost_eval)
+                    current = candidate
 
             stats.collect(current, candidate, best, cost_eval)
             print_progress.iteration(stats)
@@ -177,30 +174,3 @@ class IteratedLocalSearch:
         print_progress.end(res)
 
         return res
-
-
-class History:
-    """
-    Small helper class to manage a history of recent candidate solution values.
-    """
-
-    def __init__(self, size: int):
-        self._array = np.full(shape=(size,), fill_value=np.nan)
-        self._idx = 0
-
-    def __len__(self) -> int:
-        return np.count_nonzero(~np.isnan(self._array))
-
-    def clear(self):
-        self._array.fill(np.nan)
-        self._idx = 0
-
-    def append(self, value: int):
-        self._array[self._idx % self._array.size] = value
-        self._idx += 1
-
-    def min(self) -> float:
-        return np.nanmin(self._array)
-
-    def mean(self) -> float:
-        return np.nanmean(self._array)
