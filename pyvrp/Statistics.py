@@ -4,7 +4,7 @@ from pathlib import Path
 from time import perf_counter
 from typing import Iterator, Literal
 
-from pyvrp._pyvrp import CostEvaluator, Solution
+from pyvrp._pyvrp import CostEvaluator, Solution, SubPopulation
 
 
 @dataclass
@@ -19,6 +19,10 @@ class _Datum:
     candidate_feas: bool
     best_cost: int
     best_feas: bool
+    pop_size: int
+    pop_min_cost: int
+    pop_max_cost: int
+    pop_mean_cost: float
 
 
 class Statistics:
@@ -68,6 +72,7 @@ class Statistics:
         candidate: Solution,
         best: Solution,
         cost_evaluator: CostEvaluator,
+        population: SubPopulation,
     ):
         """
         Collect iteration statistics.
@@ -82,6 +87,8 @@ class Statistics:
             The best solution.
         cost_evaluator
             CostEvaluator used to compute costs for solutions.
+        population
+            The population to collect statistics from.
         """
         if not self._collect_stats:
             return
@@ -92,6 +99,10 @@ class Statistics:
         self.runtimes.append(self._clock - start)
         self.num_iterations += 1
 
+        pop_costs = [
+            cost_evaluator.penalised_cost(item.solution) for item in population
+        ]
+
         datum = _Datum(
             cost_evaluator.penalised_cost(current),
             current.is_feasible(),
@@ -99,6 +110,10 @@ class Statistics:
             candidate.is_feasible(),
             cost_evaluator.penalised_cost(best),
             best.is_feasible(),
+            len(pop_costs),
+            min(pop_costs) if pop_costs else 0,
+            max(pop_costs) if pop_costs else 0,
+            sum(pop_costs) / len(pop_costs) if pop_costs else 0.0,
         )
         self.data.append(datum)
 

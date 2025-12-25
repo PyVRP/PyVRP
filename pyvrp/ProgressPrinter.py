@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 # Templates for various different outputs.
 _ITERATION = (
     "{special} {iters:>7} {elapsed:>6}s | "
-    "{curr:>12}  {curr_feas} {cand:>12}  {cand_feas} {best:>12}  {best_feas}"
+    "{curr:>12}  {curr_feas} {cand:>12}  {cand_feas} {best:>12}  {best_feas} | "
+    "{pop_size:>4} {pop_min:>12} {pop_max:>12} {pop_mean:>12.0f}"
 )
 
 _START = """PyVRP v{version}
@@ -23,7 +24,7 @@ Solving an instance with:
     {client_text}
     {vehicle_text} ({vehicle_type_text})
 
-    Iters    Time |      Current OK    Candidate OK         Best OK"""
+    Iters    Time |      Current OK    Candidate OK         Best OK | Size       Pop Min      Pop Max     Pop Mean"""
 
 _END = """
 Search terminated in {runtime:.2f}s after {iters} iterations.
@@ -87,6 +88,10 @@ class ProgressPrinter:
             cand_feas="Y" if datum.candidate_feas else "N",
             best=datum.best_cost,
             best_feas="Y" if datum.best_feas else "N",
+            pop_size=datum.pop_size,
+            pop_min=datum.pop_min_cost,
+            pop_max=datum.pop_max_cost,
+            pop_mean=datum.pop_mean_cost,
         )
 
         logger.info(msg)

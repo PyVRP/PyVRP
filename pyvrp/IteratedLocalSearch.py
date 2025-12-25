@@ -31,10 +31,13 @@ class IteratedLocalSearchParams:
         Population parameters. If not provided, a default will be used.
     """
 
-    num_iters_no_improvement: int = 20_000
+    num_iters_no_improvement: int = 50_000
     pop_params: PopulationParams = field(
         default_factory=lambda: PopulationParams(
-            min_pop_size=10, generation_size=0
+            min_pop_size=10,
+            generation_size=0,
+            num_elite=4,
+            num_close=2,
         )
     )
 
@@ -132,12 +135,15 @@ class IteratedLocalSearch:
                 print_progress.restart()
                 # Create a new population with increased minimum size + 1
                 pop_params = PopulationParams(
-                    min_pop_size=pop_params.min_pop_size + 1, generation_size=0
+                    min_pop_size=pop_params.min_pop_size + 1,
+                    num_elite=pop_params.num_elite + 1,
+                    generation_size=pop_params.generation_size,
                 )
                 new = SubPopulation(broken_pairs_distance, pop_params)
                 for sol in pop:
                     new.add(sol.solution, cost_eval)
                 pop = new
+                print(len(pop))
 
                 current = best
                 iters_no_improvement = 0
@@ -165,7 +171,7 @@ class IteratedLocalSearch:
                     pop.add(candidate, cost_eval)
                     current = candidate
 
-            stats.collect(current, candidate, best, cost_eval)
+            stats.collect(current, candidate, best, cost_eval, pop)
             print_progress.iteration(stats)
 
         runtime = time.perf_counter() - start
