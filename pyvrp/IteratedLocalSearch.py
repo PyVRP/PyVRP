@@ -161,6 +161,8 @@ class IteratedLocalSearch:
                 cost_eval,
                 history._array.min(),
                 history._array.max(),
+                round(history._array.mean()),
+                len(history._array),
             )
             print_progress.iteration(stats)
 

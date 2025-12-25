@@ -19,8 +19,10 @@ class _Datum:
     candidate_feas: bool
     best_cost: int
     best_feas: bool
-    weight: float
-    threshold: float
+    history_min: float
+    history_max: float
+    history_mean: float
+    history_size: int
 
 
 class Statistics:
@@ -70,8 +72,10 @@ class Statistics:
         candidate: Solution,
         best: Solution,
         cost_evaluator: CostEvaluator,
-        weight: float,
-        threshold: float,
+        history_min: float,
+        history_max: float,
+        history_mean: float,
+        history_size: int,
     ):
         """
         Collect iteration statistics.
@@ -86,10 +90,14 @@ class Statistics:
             The best solution.
         cost_evaluator
             CostEvaluator used to compute costs for solutions.
-        weight
-            The acceptance weight used in this iteration.
-        threshold
-            The acceptance threshold used in this iteration.
+        history_min
+            Minimum value in the LAHC history array.
+        history_max
+            Maximum value in the LAHC history array.
+        history_mean
+            Mean value of the LAHC history array.
+        history_size
+            Size of the LAHC history array.
         """
         if not self._collect_stats:
             return
@@ -107,8 +115,10 @@ class Statistics:
             candidate.is_feasible(),
             cost_evaluator.penalised_cost(best),
             best.is_feasible(),
-            weight,
-            threshold,
+            history_min,
+            history_max,
+            history_mean,
+            history_size,
         )
         self.data.append(datum)
 
