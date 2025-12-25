@@ -42,7 +42,7 @@ class IteratedLocalSearchParams:
     num_iters_no_improvement: int = 20_000
     initial_accept_weight: float = 1
     history_length: int = 500
-    budget: int = 20_000
+    budget: int = 30_000
     decay_rate: float = 0.75
 
     def __post_init__(self):
@@ -170,7 +170,7 @@ class IteratedLocalSearch:
             # https://doi.org/10.1016/j.ejor.2021.02.024 for more details.
             weight = base_weight * (1 - (iters_budget / self._params.budget))
 
-            best_weight = (1 - weight) * history.min()
+            best_weight = (1 - weight) * cost_eval.cost(best)
             mean_weight = weight * history.mean()
             if cand_cost <= best_weight + mean_weight:
                 current = candidate
