@@ -203,14 +203,7 @@ def solve(
 
     init = params.initial_solution
     if init is None:
-        init = Solution(data, [])
-        cost_eval = pm.max_cost_evaluator()
-        for _ in range(2000):
-            new = ls(init, cost_eval)
-            if cost_eval.cost(new) < cost_eval.cost(init):
-                init = new
-
-        print(cost_eval.cost(init))
+        init = ls(Solution(data, []), pm.max_cost_evaluator())
 
     algo = IteratedLocalSearch(data, pm, rng, ls, init, params.ils)
     return algo.run(stop, collect_stats, display, params.display_interval)
