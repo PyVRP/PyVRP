@@ -31,7 +31,7 @@ class IteratedLocalSearchParams:
         Length of the LAHC fitness array.
     """
 
-    num_iters_no_improvement: int = 20_000
+    num_iters_no_improvement: int = 50_000
     history_length: int = 500
 
     def __post_init__(self):
@@ -132,11 +132,7 @@ class IteratedLocalSearch:
                 print_progress.restart()
                 current = best
                 iters_no_improvement = 0
-                history.reset(history._array.max() * 1.001)
-                history.update(
-                    cost_eval.penalised_cost(current),
-                    current.is_feasible(),
-                )
+                history.reset(history._array.max())
 
             cost_eval = self._pm.cost_evaluator()
             candidate = self._search(current, cost_eval)
@@ -205,4 +201,4 @@ class History:
         idx = self._iter % len(self._array)
         if is_feasible and current_cost < self._array[idx]:
             self._array[idx] = current_cost
-        self._iter += 1
+            self._iter += 1
