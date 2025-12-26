@@ -32,7 +32,7 @@ class IteratedLocalSearchParams:
     """
 
     num_iters_no_improvement: int = 20_000
-    history_length: int = 1000
+    history_length: int = 500
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
@@ -132,7 +132,11 @@ class IteratedLocalSearch:
                 print_progress.restart()
                 current = best
                 iters_no_improvement = 0
-                history.reset(history._array.max())
+                history.reset(history._array.max() * 1.001)
+                history.update(
+                    cost_eval.penalised_cost(current),
+                    current.is_feasible(),
+                )
 
             cost_eval = self._pm.cost_evaluator()
             candidate = self._search(current, cost_eval)
