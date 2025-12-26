@@ -208,6 +208,7 @@ class History:
         """
         Returns the cost from Lh iterations ago (the current virtual position).
         """
+        return self._array.mean()
         idx = self._iter % len(self._array)
         return self._array[idx]
 
