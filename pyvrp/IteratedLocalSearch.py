@@ -31,7 +31,7 @@ class IteratedLocalSearchParams:
         Length of the LAHC fitness array.
     """
 
-    num_iters_no_improvement: int = 50_000
+    num_iters_no_improvement: int = 100_000
     history_length: int = 500
 
     def __post_init__(self):
@@ -132,7 +132,7 @@ class IteratedLocalSearch:
                 print_progress.restart()
                 current = best
                 iters_no_improvement = 0
-                history.reset(history._array.max())
+                history.reset()
 
             cost_eval = self._pm.cost_evaluator()
             candidate = self._search(current, cost_eval)
@@ -153,6 +153,9 @@ class IteratedLocalSearch:
                 curr_cost = cand_cost
 
             history.update(curr_cost, current.is_feasible())
+
+            if history.is_uniform():
+                history.reset()
 
             stats.collect(
                 current,
@@ -177,14 +180,29 @@ class IteratedLocalSearch:
 class History:
     def __init__(self, cost: float, size: int):
         self._array = np.full(size, cost)
+        self._unique: set[float] = {cost}
         self._iter = 0
 
-    def reset(self, cost: float):
+    def reset(self):
         """
-        Resets the fitness array with a new cost used on restart.
+        Resets the fitness array using unique values seen so far, sorted from
+        lowest to highest, repeated to fill the array up to max size.
         """
-        self._array[:] = cost
+        unique_sorted = sorted(self._unique)
+        num_unique = len(unique_sorted)
+        size = len(self._array)
+
+        # Fill array with unique values repeated cyclically
+        for idx in range(size):
+            self._array[idx] = unique_sorted[min(idx, num_unique - 1)]
+
         self._iter = 0
+
+    def is_uniform(self) -> bool:
+        """
+        Returns True if all values in the history are the same.
+        """
+        return self._array.min() == self._array.max()
 
     def get_late_cost(self) -> float:
         """
@@ -201,4 +219,5 @@ class History:
         idx = self._iter % len(self._array)
         if is_feasible and current_cost < self._array[idx]:
             self._array[idx] = current_cost
-            self._iter += 1
+            self._unique.add(current_cost)
+        self._iter += 1
