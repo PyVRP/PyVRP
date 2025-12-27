@@ -147,6 +147,10 @@ class IteratedLocalSearch:
 
             if cand_cost < max(curr_cost, threshold):  # accept candidate
                 current = candidate
+                if iters < 20_000:
+                    alpha = self._params.ema_alpha * 5
+                else:
+                    alpha = self._params.ema_alpha
                 threshold = alpha * cand_cost + (1 - alpha) * threshold
 
             stats.collect(
