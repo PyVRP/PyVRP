@@ -150,7 +150,7 @@ class IteratedLocalSearch:
                 current = candidate
                 threshold = alpha * cand_cost + (1 - alpha) * threshold
 
-            stats.collect(current, candidate, best, cost_eval)
+            stats.collect(current, candidate, best, cost_eval, round(threshold))
             print_progress.iteration(stats)
 
         runtime = time.perf_counter() - start
