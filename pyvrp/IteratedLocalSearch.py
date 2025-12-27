@@ -33,7 +33,7 @@ class IteratedLocalSearchParams:
     """
 
     num_iters_no_improvement: int = 20_000
-    ema_alpha: float = 0.01
+    ema_alpha: float = 0.002
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
@@ -150,7 +150,9 @@ class IteratedLocalSearch:
                 current = candidate
                 threshold = alpha * cand_cost + (1 - alpha) * threshold
 
-            stats.collect(current, candidate, best, cost_eval, round(threshold))
+            stats.collect(
+                current, candidate, best, cost_eval, round(threshold)
+            )
             print_progress.iteration(stats)
 
         runtime = time.perf_counter() - start
