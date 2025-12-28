@@ -27,25 +27,17 @@ class IteratedLocalSearchParams:
     num_iters_no_improvement
         Number of iterations without any improvement needed before a restart
         occurs.
-    initial_accept_weight
-        Initial weight parameter used to determine the threshold value in the
-        acceptance criterion. Larger values result in more accepted candidate
-        solutions. Must be in [0, 1].
     history_length
         The number of recent candidate solutions to consider when computing the
         threshold value in the acceptance criterion. Must be positive.
     """
 
-    num_iters_no_improvement: int = 20_000
-    initial_accept_weight: float = 1
+    num_iters_no_improvement: int = 50_000
     history_length: int = 500
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
             raise ValueError("num_iters_no_improvement < 0 not understood.")
-
-        if not (0 <= self.initial_accept_weight <= 1):
-            raise ValueError("initial_accept_weight must be in [0, 1].")
 
         if self.history_length <= 0:
             raise ValueError("history_length must be positive.")
@@ -97,7 +89,8 @@ class IteratedLocalSearch:
     ) -> Result:
         """
         Runs the iterated local search algorithm with the provided stopping
-        criterion.
+        criterion. The algorithm uses late acceptance hillclimbing as its
+        acceptance criterion, see [1]_ for details.
 
         Parameters
         ----------
@@ -119,6 +112,13 @@ class IteratedLocalSearch:
         Result
             A Result object, containing statistics (if collected) and the best
             found solution.
+
+        References
+        ----------
+        .. [1] Burke, E.K., and Y. Bykov (2017). The Late Acceptance
+               Hill-Climbing Heuristic. *European Journal of Operational
+               Research*, 258(1): 70 - 78.
+               https://doi.org/10.1016/j.ejor.2016.07.012.
         """
         print_progress = ProgressPrinter(display, display_interval)
         print_progress.start(self._data)
@@ -151,22 +151,29 @@ class IteratedLocalSearch:
                 iters_no_improvement = 0
 
             cand_cost = cost_eval.penalised_cost(candidate)
-            history.append(cand_cost)
+            curr_cost = cost_eval.penalised_cost(current)
 
-            # Evaluate replacing the current solution with the candidate. A
-            # candidate solution is accepted if it is better than a threshold
-            # value based on the recent history of candidate objectives. This
-            # threshold value is a convex combination of the recent best and
-            # mean values. Based on Maximo and Nascimento (2021); see
-            # https://doi.org/10.1016/j.ejor.2021.02.024 for more details.
-            weight = self._params.initial_accept_weight
-            if (fraction := stop.fraction_remaining()) is not None:
-                weight *= fraction
+            # We use either the current best or the current cost value from
+            # some iterations ago to determine whether to accept the candidate
+            # solution, if available.
+            late_cost = cost_eval.penalised_cost(best)
+            if (late := history.peek()) is not None:
+                late_cost = cost_eval.penalised_cost(late)
 
-            best_weight = (1 - weight) * history.min()
-            mean_weight = weight * history.mean()
-            if cand_cost <= best_weight + mean_weight:
+            # Late-acceptance hill climbing of Burke and Bykov (2017). We use
+            # both enhancements of section 4.2:
+            # 1. We accept also when the candidate improves over the current
+            #    solution;
+            if cand_cost < late_cost or cand_cost < curr_cost:
                 current = candidate
+                curr_cost = cand_cost
+
+            # 2. We update the history only when the current solution is better
+            #    than the one already in the history.
+            if curr_cost < late_cost or late is None:
+                history.append(current)
+            else:
+                history.skip()
 
             stats.collect(current, candidate, best, cost_eval)
             print_progress.iteration(stats)
@@ -181,26 +188,28 @@ class IteratedLocalSearch:
 
 class History:
     """
-    Small helper class to manage a history of recent candidate solution values.
+    Helper class to manage a circular buffer of recent current solutions. The
+    buffer may be partially empty, in which case ``None`` is returned for empty
+    entries.
     """
 
     def __init__(self, size: int):
-        self._array = np.full(shape=(size,), fill_value=np.nan)
+        self._array = np.full(shape=(size,), fill_value=None)
         self._idx = 0
 
     def __len__(self) -> int:
-        return np.count_nonzero(~np.isnan(self._array))
+        return sum(val is not None for val in self._array)
 
     def clear(self):
-        self._array.fill(np.nan)
+        self._array.fill(None)
         self._idx = 0
 
-    def append(self, value: int):
-        self._array[self._idx % self._array.size] = value
+    def append(self, sol: Solution):
+        self._array[self._idx % self._array.size] = sol
         self._idx += 1
 
-    def min(self) -> float:
-        return np.nanmin(self._array)
+    def peek(self) -> Solution | None:
+        return self._array[self._idx % self._array.size]
 
-    def mean(self) -> float:
-        return np.nanmean(self._array)
+    def skip(self):
+        self._idx += 1
