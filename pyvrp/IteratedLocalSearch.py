@@ -121,8 +121,7 @@ class IteratedLocalSearch:
         best = current = self._init
 
         cost_eval = self._pm.cost_evaluator()
-        init_cost = cost_eval.penalised_cost(current)
-        history = History(init_cost, self._params.history_length)
+        history = History(self._init, self._params.history_length)
 
         while not stop(cost_eval.cost(best)):
             iters += 1
@@ -132,7 +131,6 @@ class IteratedLocalSearch:
                 print_progress.restart()
                 current = best
                 iters_no_improvement = 0
-                history.reset(history._array.max())
 
             cost_eval = self._pm.cost_evaluator()
             candidate = self._search(current, cost_eval)
@@ -146,21 +144,20 @@ class IteratedLocalSearch:
             # Burke & Bykov (2012) with all enhancements (section 4.2).
             cand_cost = cost_eval.penalised_cost(candidate)
             curr_cost = cost_eval.penalised_cost(current)
-            late_cost = history.get_late_cost()
+            late_cost = history.get_late_cost(cost_eval)
 
-            if cand_cost <= curr_cost or cand_cost <= late_cost:
+            if cand_cost <= max(curr_cost, late_cost):
                 current = candidate
-                curr_cost = cand_cost
 
-            history.update(curr_cost, current.is_feasible())
+            history.update(current, cost_eval)
 
             stats.collect(
                 current,
                 candidate,
                 best,
                 cost_eval,
-                history._array.min(),
-                history._array.max(),
+                history.min(cost_eval),
+                history.max(cost_eval),
             )
             print_progress.iteration(stats)
 
@@ -173,30 +170,35 @@ class IteratedLocalSearch:
 
 
 class History:
-    def __init__(self, cost: float, size: int):
-        self._array = np.full(size, cost)
+    def __init__(self, sol: Solution, size: int):
+        self._array = np.full(size, sol)
         self._iter = 0
 
-    def reset(self, cost: float):
-        """
-        Resets the fitness array with a new cost used on restart.
-        """
-        self._array[:] = cost
-        self._iter = 0
-
-    def get_late_cost(self) -> float:
+    def get_late_cost(self, cost_eval) -> float:
         """
         Returns the cost from Lh iterations ago (the current virtual position).
         """
         idx = self._iter % len(self._array)
-        return self._array[idx]
+        return cost_eval.penalised_cost(self._array[idx])
 
-    def update(self, current_cost: float, is_feasible: bool):
+    def min(self, cost_eval) -> float:
+        return min([cost_eval.penalised_cost(sol) for sol in self._array])
+
+    def max(self, cost_eval) -> float:
+        return max([cost_eval.penalised_cost(sol) for sol in self._array])
+
+    def mean(self, cost_eval) -> float:
+        return np.mean([cost_eval.penalised_cost(sol) for sol in self._array])
+
+    def update(self, current: Solution, cost_eval):
         """
         Updates the fitness array with the current cost, but only if it's
         better (enhanced history recording from LAHC variant).
         """
         idx = self._iter % len(self._array)
-        if is_feasible and current_cost < self._array[idx]:
-            self._array[idx] = current_cost
+        curr_cost = cost_eval.penalised_cost(current)
+
+        if curr_cost < cost_eval.penalised_cost(self._array[idx]):
+            self._array[idx] = current
+
         self._iter += 1
