@@ -31,7 +31,7 @@ class IteratedLocalSearchParams:
         Length of the LAHC fitness array.
     """
 
-    num_iters_no_improvement: int = 20_000
+    num_iters_no_improvement: int = 50_000
     history_length: int = 500
 
     def __post_init__(self):
