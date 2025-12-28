@@ -25,7 +25,7 @@ class IteratedLocalSearchParams:
     num_iters_no_improvement
         Number of iterations without any improvement needed before a restart
         occurs.
-    ema_alpha
+    smoothing_factor
         Smoothing factor for the exponential moving average (EMA) of improved
         solution costs. This EMA is used as the threshold for accepting
         candidate solutions. Higher values give more weight to recent
@@ -33,14 +33,14 @@ class IteratedLocalSearchParams:
     """
 
     num_iters_no_improvement: int = 20_000
-    ema_alpha: float = 0.02
+    smoothing_factor: float = 0.02
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
             raise ValueError("num_iters_no_improvement < 0 not understood.")
 
-        if not (0 < self.ema_alpha <= 1):
-            raise ValueError("ema_alpha must be in (0, 1].")
+        if not (0 < self.smoothing_factor <= 1):
+            raise ValueError("smoothing_factor must be in (0, 1].")
 
 
 class IteratedLocalSearch:
@@ -147,9 +147,9 @@ class IteratedLocalSearch:
             if cand_cost < max(curr_cost, threshold):  # accept candidate
                 current = candidate
 
-                if cand_cost < curr_cost:
-                    alpha = self._params.ema_alpha
-                    threshold = alpha * cand_cost + (1 - alpha) * threshold
+                if cand_cost < curr_cost:  # only update if better
+                    weight = self._params.smoothing_factor
+                    threshold = weight * cand_cost + (1 - weight) * threshold
 
             stats.collect(
                 current,
