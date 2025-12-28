@@ -19,7 +19,6 @@ class _Datum:
     candidate_feas: bool
     best_cost: int
     best_feas: bool
-    threshold: int
 
 
 class Statistics:
@@ -69,7 +68,6 @@ class Statistics:
         candidate: Solution,
         best: Solution,
         cost_evaluator: CostEvaluator,
-        threshold: int,
     ):
         """
         Collect iteration statistics.
@@ -84,8 +82,6 @@ class Statistics:
             The best solution.
         cost_evaluator
             CostEvaluator used to compute costs for solutions.
-        threshold
-            The current acceptance threshold.
         """
         if not self._collect_stats:
             return
@@ -103,7 +99,6 @@ class Statistics:
             candidate.is_feasible(),
             cost_evaluator.penalised_cost(best),
             best.is_feasible(),
-            threshold,
         )
         self.data.append(datum)
 

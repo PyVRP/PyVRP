@@ -151,13 +151,7 @@ class IteratedLocalSearch:
                     weight = self._params.smoothing_factor
                     threshold = weight * cand_cost + (1 - weight) * threshold
 
-            stats.collect(
-                current,
-                candidate,
-                best,
-                cost_eval,
-                round(threshold),
-            )
+            stats.collect(current, candidate, best, cost_eval)
             print_progress.iteration(stats)
 
         runtime = time.perf_counter() - start
