@@ -25,11 +25,10 @@ class IteratedLocalSearchParams:
     Parameters
     ----------
     num_iters_no_improvement
-        Number of iterations without any improvement needed before a restart
-        occurs.
+        Number of iterations without improvement before a restart occurs.
     history_length
-        The number of recent candidate solutions to consider when computing the
-        threshold value in the acceptance criterion. Must be positive.
+        History length for the late acceptance hill-climbing stopping criterion
+        used by the algorithm. Must be positive.
     """
 
     num_iters_no_improvement: int = 50_000
