@@ -122,7 +122,6 @@ class IteratedLocalSearch:
         best = current = self._init
 
         cost_eval = self._pm.cost_evaluator()
-        alpha = self._params.ema_alpha
         threshold: float = cost_eval.penalised_cost(self._init)
 
         while not stop(cost_eval.cost(best)):
@@ -147,7 +146,7 @@ class IteratedLocalSearch:
 
             if cand_cost < max(curr_cost, threshold):  # accept candidate
                 current = candidate
-                if iters < 20_000:
+                if iters < 10_000:
                     alpha = self._params.ema_alpha * 5
                 else:
                     alpha = self._params.ema_alpha
