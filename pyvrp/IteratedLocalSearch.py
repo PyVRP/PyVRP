@@ -144,12 +144,13 @@ class IteratedLocalSearch:
             cand_cost = cost_eval.penalised_cost(candidate)
             curr_cost = cost_eval.penalised_cost(current)
 
-            if cand_cost < max(curr_cost, threshold):  # accept candidate
+            if cand_cost < curr_cost:  # accept if better
                 current = candidate
+                weight = self._params.smoothing_factor
+                threshold = weight * cand_cost + (1 - weight) * threshold
 
-                if cand_cost < curr_cost:  # only update if better
-                    weight = self._params.smoothing_factor
-                    threshold = weight * cand_cost + (1 - weight) * threshold
+            if cand_cost < threshold:  # accept worse if below threshold
+                current = candidate
 
             stats.collect(current, candidate, best, cost_eval)
             print_progress.iteration(stats)
