@@ -13,7 +13,6 @@ route_ops = [
 
 [ils]
 num_iters_no_improvement = 10
-initial_accept_weight = 0.1
 history_length = 1
 
 

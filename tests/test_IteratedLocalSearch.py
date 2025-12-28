@@ -21,17 +21,14 @@ from tests.helpers import read_solution
 
 
 @mark.parametrize(
-    "num_iters_no_improvement, initial_accept_weight, history_length",
+    "num_iters_no_improvement, history_length",
     [
-        (-1, 1, 1),  # num_iters_no_improvement < 0
-        (0, -1, 1),  # initial_accept_weight < 0
-        (0, 2, 1),  # initial_accept_weight > 1
-        (0, 1, 0),  # history_length < 1
+        (-1, 1),  # num_iters_no_improvement < 0
+        (0, 0),  # history_length < 1
     ],
 )
 def test_params_constructor_raises_when_arguments_invalid(
     num_iters_no_improvement: int,
-    initial_accept_weight: float,
     history_length: int,
 ):
     """
@@ -40,36 +37,31 @@ def test_params_constructor_raises_when_arguments_invalid(
     with assert_raises(ValueError):
         IteratedLocalSearchParams(
             num_iters_no_improvement=num_iters_no_improvement,
-            initial_accept_weight=initial_accept_weight,
             history_length=history_length,
         )
 
 
 @mark.parametrize(
-    "num_iters_no_improvement, initial_accept_weight, history_length",
+    "num_iters_no_improvement, history_length",
     [
-        (0, 1, 1),  # num_iters_no_improvement == 0
-        (0, 0, 1),  # initial_accept_weight == 0
-        (0, 1, 1),  # initial_accept_weight == 1
-        (0, 1, 1),  # history_length == 1
+        (0, 1),  # num_iters_no_improvement == 0
+        (0, 1),  # history_length == 1
     ],
 )
 def test_params_constructor_does_not_raise_when_arguments_valid(
     num_iters_no_improvement: int,
-    initial_accept_weight: float,
     history_length: int,
 ):
     """
     Tests valid boundary cases.
     """
     IteratedLocalSearchParams(
-        num_iters_no_improvement=num_iters_no_improvement,
-        initial_accept_weight=initial_accept_weight,
+        num_iters_no_improvement,
         history_length=history_length,
     )
 
 
-def test_history():
+def test_history(ok_small):
     """
     Tests that the history correctly tracks recently inserted values, up to a
     fixed size, and can be cleared to reset its state.
@@ -77,28 +69,30 @@ def test_history():
     history = History(size=2)
     assert_equal(len(history), 0)
 
-    # Insert a single value, and test that the length, min, and mean values
-    # are correct.
-    history.append(1)
+    sol1 = Solution(ok_small, [[1, 4], [2, 3]])
+    sol2 = Solution(ok_small, [[1, 2], [3, 4]])
+
+    # Insert sol1, and test that the length and peek functions return the
+    # correct values: 1 item, and peek at the next slot should return None
+    # since we haven't set it yet.
+    history.append(sol1)
     assert_equal(len(history), 1)
-    assert_equal(history.min(), 1)
-    assert_equal(history.mean(), 1)
+    assert_(history.peek() is None)
 
-    # We now have two values, [1, 3]. min is still 1, but mean is now 2.
-    history.append(3)
+    # Append sol2, and check that the history now has two solutions. Peeking at
+    # the next slot should wrap around, back to sol1, since we can store only
+    # two solutions.
+    history.append(sol2)
     assert_equal(len(history), 2)
-    assert_equal(history.min(), 1)
-    assert_equal(history.mean(), 2)
+    assert_(history.peek() is sol1)
 
-    # We now have three values, [1, 3, 5]. But the history can only store two,
-    # so it should forget about the oldest value, 1. Thus, min is now 3, and
-    # mean is 4.
-    history.append(5)
+    # Skip the next slot. This should not remove anything, but should cause
+    # ``peek()`` to now point to the slot occupied by sol2.
+    history.skip()
     assert_equal(len(history), 2)
-    assert_equal(history.min(), 3)
-    assert_equal(history.mean(), 4)
+    assert_(history.peek() is sol2)
 
-    # Clearing the history class should reset its entire state.
+    # Clearing the history should reset its entire state.
     history.clear()
     assert_equal(len(history), 0)
 

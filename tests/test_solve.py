@@ -39,7 +39,7 @@ def test_solve_params_from_file():
     """
     params = SolveParams.from_file(DATA_DIR / "test_config.toml")
 
-    ils = IteratedLocalSearchParams(10, 0.1, 1)
+    ils = IteratedLocalSearchParams(10, 1)
     penalty = PenaltyParams(100, 1.25, 0.85, 0.43)
     neighbourhood = NeighbourhoodParams(0, 0, 20, True, True)
     node_ops = [Exchange10, SwapTails]
@@ -97,19 +97,9 @@ def test_solve_custom_params(rc208):
     def monotonically_decreasing(arr) -> np.bool_:
         return np.all(np.diff(arr) <= 0)
 
-    # First solve with ``history_length=1``, which means that all candidate
-    # solutions will be accepted.
+    # Configure ILS to only accept improving solutions by setting
+    # ``history_length=1``.
     params = SolveParams(IteratedLocalSearchParams(history_length=1))
-    res = solve(rc208, stop=MaxIterations(20), params=params)
-
-    # Because we accept all candidate solutions, the current costs won't
-    # necessarily be monotonically decreasing.
-    costs = [datum.current_cost for datum in res.stats]
-    assert_(not monotonically_decreasing(costs))
-
-    # Now configure ILS to only accept improving solutions by setting
-    # ``initial_accept_weight=0``.
-    params = SolveParams(IteratedLocalSearchParams(initial_accept_weight=0))
     res = solve(rc208, stop=MaxIterations(20), params=params)
 
     # The current costs should now be monotonically decreasing. The first datum
