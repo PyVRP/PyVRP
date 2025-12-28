@@ -30,7 +30,7 @@ class IteratedLocalSearchParams:
     """
 
     num_iters_no_improvement: int = 20_000
-    initial_tolerance: float = 0.025
+    initial_tolerance: float = 1 / 1_000
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
