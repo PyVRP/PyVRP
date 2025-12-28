@@ -131,6 +131,7 @@ class IteratedLocalSearch:
                 print_progress.restart()
                 current = best
                 iters_no_improvement = 0
+                history.reset(best)
 
             cost_eval = self._pm.cost_evaluator()
             candidate = self._search(current, cost_eval)
@@ -156,8 +157,10 @@ class IteratedLocalSearch:
                 candidate,
                 best,
                 cost_eval,
-                history.min(cost_eval),
-                history.max(cost_eval),
+                0,
+                0,
+                # history.min(cost_eval),
+                # history.max(cost_eval),
             )
             print_progress.iteration(stats)
 
@@ -173,6 +176,9 @@ class History:
     def __init__(self, sol: Solution, size: int):
         self._array = np.full(size, sol)
         self._iter = 0
+
+    def reset(self, sol: Solution):
+        self._array.fill(sol)
 
     def get_late_cost(self, cost_eval) -> float:
         """
