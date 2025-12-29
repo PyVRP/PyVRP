@@ -188,6 +188,6 @@ class Statistics:
             )
             writer.writeheader()
 
-            for idx, (runtime, datum) in enumerate(zip(self.runtimes, data)):
+            for runtime, datum in zip(self.runtimes, data):
                 row = dict(runtime=runtime, **datum)
                 writer.writerow(row)
