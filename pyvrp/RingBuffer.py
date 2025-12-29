@@ -40,7 +40,7 @@ class RingBuffer(Generic[T]):
         Append to the ring buffer, overwriting the oldest element in the
         buffer.
         """
-        self._buffer[self._idx % len(self._buffer)] = value
+        self._buffer[self._idx % self.maxlen] = value
         self._idx += 1
 
     def peek(self) -> T | None:
@@ -48,7 +48,7 @@ class RingBuffer(Generic[T]):
         Returns the next element that will be overwritten when appending
         to the buffer.
         """
-        return self._buffer[self._idx % len(self._buffer)]
+        return self._buffer[self._idx % self.maxlen]
 
     def skip(self):
         """
