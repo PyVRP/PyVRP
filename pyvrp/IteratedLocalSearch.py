@@ -8,11 +8,10 @@ from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
 from pyvrp.RingBuffer import RingBuffer
 from pyvrp.Statistics import Statistics
-from pyvrp._pyvrp import Solution
 
 if TYPE_CHECKING:
     from pyvrp.PenaltyManager import PenaltyManager
-    from pyvrp._pyvrp import ProblemData, RandomNumberGenerator
+    from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
     from pyvrp.search.SearchMethod import SearchMethod
     from pyvrp.stop.StoppingCriterion import StoppingCriterion
 
@@ -122,7 +121,7 @@ class IteratedLocalSearch:
         print_progress = ProgressPrinter(display, display_interval)
         print_progress.start(self._data)
 
-        history = RingBuffer[Solution](maxlen=self._params.history_length)
+        history: RingBuffer[Solution] = RingBuffer(self._params.history_length)
         stats = Statistics(collect_stats=collect_stats)
 
         start = time.perf_counter()
