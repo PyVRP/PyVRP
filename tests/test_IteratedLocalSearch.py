@@ -8,7 +8,6 @@ from pyvrp import (
     RandomNumberGenerator,
     Solution,
 )
-from pyvrp.IteratedLocalSearch import History
 from pyvrp.search import (
     Exchange10,
     LocalSearch,
@@ -59,42 +58,6 @@ def test_params_constructor_does_not_raise_when_arguments_valid(
         num_iters_no_improvement,
         history_length=history_length,
     )
-
-
-def test_history(ok_small):
-    """
-    Tests that the history correctly tracks recently inserted values, up to a
-    fixed size, and can be cleared to reset its state.
-    """
-    history = History(size=2)
-    assert_equal(len(history), 0)
-
-    sol1 = Solution(ok_small, [[1, 4], [2, 3]])
-    sol2 = Solution(ok_small, [[1, 2], [3, 4]])
-
-    # Insert sol1, and test that the length and peek functions return the
-    # correct values: 1 item, and peek at the next slot should return None
-    # since we haven't set it yet.
-    history.append(sol1)
-    assert_equal(len(history), 1)
-    assert_(history.peek() is None)
-
-    # Append sol2, and check that the history now has two solutions. Peeking at
-    # the next slot should wrap around, back to sol1, since we can store only
-    # two solutions.
-    history.append(sol2)
-    assert_equal(len(history), 2)
-    assert_(history.peek() is sol1)
-
-    # Skip the next slot. This should not remove anything, but should cause
-    # ``peek()`` to now point to the slot occupied by sol2.
-    history.skip()
-    assert_equal(len(history), 2)
-    assert_(history.peek() is sol2)
-
-    # Clearing the history should reset its entire state.
-    history.clear()
-    assert_equal(len(history), 0)
 
 
 def test_best_solution_improves_with_more_iterations(rc208):

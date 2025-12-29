@@ -4,15 +4,15 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
+from pyvrp.RingBuffer import RingBuffer
 from pyvrp.Statistics import Statistics
+from pyvrp._pyvrp import Solution
 
 if TYPE_CHECKING:
     from pyvrp.PenaltyManager import PenaltyManager
-    from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
+    from pyvrp._pyvrp import ProblemData, RandomNumberGenerator
     from pyvrp.search.SearchMethod import SearchMethod
     from pyvrp.stop.StoppingCriterion import StoppingCriterion
 
@@ -122,7 +122,7 @@ class IteratedLocalSearch:
         print_progress = ProgressPrinter(display, display_interval)
         print_progress.start(self._data)
 
-        history = History(size=self._params.history_length)
+        history = RingBuffer[Solution](maxlen=self._params.history_length)
         stats = Statistics(collect_stats=collect_stats)
 
         start = time.perf_counter()
@@ -183,32 +183,3 @@ class IteratedLocalSearch:
         print_progress.end(res)
 
         return res
-
-
-class History:
-    """
-    Helper class to manage a circular buffer of recent current solutions. The
-    buffer may be partially empty, in which case ``None`` is returned for empty
-    entries.
-    """
-
-    def __init__(self, size: int):
-        self._array = np.full(shape=(size,), fill_value=None)
-        self._idx = 0
-
-    def __len__(self) -> int:
-        return sum(val is not None for val in self._array)
-
-    def clear(self):
-        self._array.fill(None)
-        self._idx = 0
-
-    def append(self, sol: Solution):
-        self._array[self._idx % self._array.size] = sol
-        self._idx += 1
-
-    def peek(self) -> Solution | None:
-        return self._array[self._idx % self._array.size]
-
-    def skip(self):
-        self._idx += 1
