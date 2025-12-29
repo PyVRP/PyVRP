@@ -8,7 +8,6 @@ from pyvrp import (
     RandomNumberGenerator,
     Solution,
 )
-from pyvrp.IteratedLocalSearch import History
 from pyvrp.search import (
     Exchange10,
     LocalSearch,
@@ -21,17 +20,14 @@ from tests.helpers import read_solution
 
 
 @mark.parametrize(
-    "num_iters_no_improvement, initial_accept_weight, history_length",
+    "num_iters_no_improvement, history_length",
     [
-        (-1, 1, 1),  # num_iters_no_improvement < 0
-        (0, -1, 1),  # initial_accept_weight < 0
-        (0, 2, 1),  # initial_accept_weight > 1
-        (0, 1, 0),  # history_length < 1
+        (-1, 1),  # num_iters_no_improvement < 0
+        (0, 0),  # history_length < 1
     ],
 )
 def test_params_constructor_raises_when_arguments_invalid(
     num_iters_no_improvement: int,
-    initial_accept_weight: float,
     history_length: int,
 ):
     """
@@ -40,67 +36,28 @@ def test_params_constructor_raises_when_arguments_invalid(
     with assert_raises(ValueError):
         IteratedLocalSearchParams(
             num_iters_no_improvement=num_iters_no_improvement,
-            initial_accept_weight=initial_accept_weight,
             history_length=history_length,
         )
 
 
 @mark.parametrize(
-    "num_iters_no_improvement, initial_accept_weight, history_length",
+    "num_iters_no_improvement, history_length",
     [
-        (0, 1, 1),  # num_iters_no_improvement == 0
-        (0, 0, 1),  # initial_accept_weight == 0
-        (0, 1, 1),  # initial_accept_weight == 1
-        (0, 1, 1),  # history_length == 1
+        (0, 1),  # num_iters_no_improvement == 0
+        (0, 1),  # history_length == 1
     ],
 )
 def test_params_constructor_does_not_raise_when_arguments_valid(
     num_iters_no_improvement: int,
-    initial_accept_weight: float,
     history_length: int,
 ):
     """
     Tests valid boundary cases.
     """
     IteratedLocalSearchParams(
-        num_iters_no_improvement=num_iters_no_improvement,
-        initial_accept_weight=initial_accept_weight,
+        num_iters_no_improvement,
         history_length=history_length,
     )
-
-
-def test_history():
-    """
-    Tests that the history correctly tracks recently inserted values, up to a
-    fixed size, and can be cleared to reset its state.
-    """
-    history = History(size=2)
-    assert_equal(len(history), 0)
-
-    # Insert a single value, and test that the length, min, and mean values
-    # are correct.
-    history.append(1)
-    assert_equal(len(history), 1)
-    assert_equal(history.min(), 1)
-    assert_equal(history.mean(), 1)
-
-    # We now have two values, [1, 3]. min is still 1, but mean is now 2.
-    history.append(3)
-    assert_equal(len(history), 2)
-    assert_equal(history.min(), 1)
-    assert_equal(history.mean(), 2)
-
-    # We now have three values, [1, 3, 5]. But the history can only store two,
-    # so it should forget about the oldest value, 1. Thus, min is now 3, and
-    # mean is 4.
-    history.append(5)
-    assert_equal(len(history), 2)
-    assert_equal(history.min(), 3)
-    assert_equal(history.mean(), 4)
-
-    # Clearing the history class should reset its entire state.
-    history.clear()
-    assert_equal(len(history), 0)
 
 
 def test_best_solution_improves_with_more_iterations(rc208):
@@ -188,6 +145,7 @@ def test_ils_acceptance_behaviour(ok_small):
         RandomNumberGenerator(42),
         lambda *_: sols.pop(0),  # returns from sols one at a time
         sols[0],
+        IteratedLocalSearchParams(history_length=2),
     )
 
     res = ils.run(stop=MaxIterations(len(sols)))
@@ -199,15 +157,15 @@ def test_ils_acceptance_behaviour(ok_small):
     assert_equal(data[0].candidate_cost, 22_065)
     assert_equal(data[0].best_cost, 22_065)
 
-    # The second iteration has a solution that is *much* better. This should
-    # be accepted, and, since it's feasible, it should also be the new best
-    # solution at the end of this iteration.
+    # The second iteration has a solution that is *much* better. This new
+    # solution should become both the current and best.
     assert_equal(data[1].current_cost, 9_725)
     assert_equal(data[1].candidate_cost, 9_725)
     assert_equal(data[1].best_cost, 9_725)
 
     # We now get a candidate solution that is a little worse than the previous
-    # iteration, but still good enough to be accepted.
+    # iteration, but better than the solution from two iterations ago. It is
+    # thus accepted.
     assert_equal(data[2].current_cost, 9_868)
     assert_equal(data[2].candidate_cost, 9_868)
     assert_equal(data[2].best_cost, 9_725)
@@ -217,10 +175,10 @@ def test_ils_acceptance_behaviour(ok_small):
     assert_equal(data[3].candidate_cost, 9_240)
     assert_equal(data[3].best_cost, 9_240)
 
-    # In the last iteration we again find a solution we found earlier. But
-    # since we are now at the end of our runtime budget, we no longer accept
-    # worse solutions.
-    assert_equal(data[4].current_cost, 9_240)
+    # In the last iteration we again find a solution we found earlier. This
+    # solution improves over the solution from two iterations ago, and should
+    # thus be accepted.
+    assert_equal(data[4].current_cost, 9_725)
     assert_equal(data[4].candidate_cost, 9_725)
     assert_equal(data[4].best_cost, 9_240)
 
@@ -230,32 +188,41 @@ def test_restart(ok_small):
     Tests that restarting clears the history of recent solutions and starts
     over from scratch.
     """
+    Params = IteratedLocalSearchParams
+
     sols = [
-        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240
-        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
         Solution(ok_small, [[1, 3], [2, 4]]),  # 22065 (infeas)
+        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
+        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
+        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
+        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
+        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240
     ]
 
-    ils = IteratedLocalSearch(
-        ok_small,
-        PenaltyManager(initial_penalties=([20], 6, 6)),
-        RandomNumberGenerator(42),
-        lambda *_: sols.pop(0),  # returns from sols one at a time
-        sols[0],
-        IteratedLocalSearchParams(num_iters_no_improvement=1),
-    )
+    def run(params: IteratedLocalSearchParams):  # run with given params
+        idx = iter(range(len(sols)))
+        ils = IteratedLocalSearch(
+            ok_small,
+            PenaltyManager(initial_penalties=([20], 6, 6)),
+            RandomNumberGenerator(42),
+            lambda *_: sols[next(idx)],  # returns from sols one at a time
+            sols[0],
+            params,
+        )
 
-    res = ils.run(MaxIterations(3))
-    data = res.stats.data
+        res = ils.run(MaxIterations(len(sols)))
+        return res.stats.data
 
-    # First iteration is feasible and immediately the best solution in the
-    # sequence. Second is worse (no improvement), which triggers a restart that
-    # clears the history. After that, we accept whatever next solution we
-    # obtain, no matter how bad it is.
-    assert_equal(data[-1].current_cost, 22_065)
-    assert_(not data[-1].current_feas)
+    # First run without a restart. We look back to the current solution from
+    # four iterations ago, which means that we accept a worsening solution in
+    # the fifth iteration.
+    curr_costs = [22065, 9868, 9868, 9725, 9868, 9240]
+    params = Params(history_length=4)
+    assert_equal([datum.current_cost for datum in run(params)], curr_costs)
 
-    # But the best solution should still be the solution from the first
-    # iteration.
-    assert_equal(data[-1].best_cost, 9_240)
-    assert_(data[-1].best_feas)
+    # But here a restart occurs in the third iteration, and that should trigger
+    # a short period of pure hill climbing. We now do not accept the worsening
+    # solution in the fifth iteration.
+    curr_costs = [22065, 9868, 9868, 9725, 9725, 9240]
+    params = Params(num_iters_no_improvement=1, history_length=4)
+    assert_equal([datum.current_cost for datum in run(params)], curr_costs)
