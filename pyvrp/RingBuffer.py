@@ -52,6 +52,6 @@ class RingBuffer(Generic[T]):
 
     def skip(self):
         """
-        Skip the next element.
+        Skips the next element.
         """
         self._idx += 1

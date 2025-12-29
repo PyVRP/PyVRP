@@ -88,7 +88,7 @@ class IteratedLocalSearch:
     ) -> Result:
         """
         Runs the iterated local search algorithm with the provided stopping
-        criterion. The algorithm uses late acceptance hillclimbing as the
+        criterion. The algorithm uses late acceptance hill-climbing as the
         acceptance criterion; see [1]_ for details.
 
         Parameters
