@@ -145,6 +145,7 @@ def test_ils_acceptance_behaviour(ok_small):
         RandomNumberGenerator(42),
         lambda *_: sols.pop(0),  # returns from sols one at a time
         sols[0],
+        IteratedLocalSearchParams(history_length=2),
     )
 
     res = ils.run(stop=MaxIterations(len(sols)))
@@ -156,15 +157,15 @@ def test_ils_acceptance_behaviour(ok_small):
     assert_equal(data[0].candidate_cost, 22_065)
     assert_equal(data[0].best_cost, 22_065)
 
-    # The second iteration has a solution that is *much* better. This should
-    # be accepted, and, since it's feasible, it should also be the new best
-    # solution at the end of this iteration.
+    # The second iteration has a solution that is *much* better. This new
+    # solution should become both the current and best.
     assert_equal(data[1].current_cost, 9_725)
     assert_equal(data[1].candidate_cost, 9_725)
     assert_equal(data[1].best_cost, 9_725)
 
     # We now get a candidate solution that is a little worse than the previous
-    # iteration, but still good enough to be accepted.
+    # iteration, but better than the solution from two iterations ago. It is
+    # thus accepted.
     assert_equal(data[2].current_cost, 9_868)
     assert_equal(data[2].candidate_cost, 9_868)
     assert_equal(data[2].best_cost, 9_725)
@@ -174,10 +175,10 @@ def test_ils_acceptance_behaviour(ok_small):
     assert_equal(data[3].candidate_cost, 9_240)
     assert_equal(data[3].best_cost, 9_240)
 
-    # In the last iteration we again find a solution we found earlier. But
-    # since we are now at the end of our runtime budget, we no longer accept
-    # worse solutions.
-    assert_equal(data[4].current_cost, 9_240)
+    # In the last iteration we again find a solution we found earlier. This
+    # solution improves over the solution from two iterations ago, and should
+    # thus be accepted.
+    assert_equal(data[4].current_cost, 9_725)
     assert_equal(data[4].candidate_cost, 9_725)
     assert_equal(data[4].best_cost, 9_240)
 
@@ -187,32 +188,41 @@ def test_restart(ok_small):
     Tests that restarting clears the history of recent solutions and starts
     over from scratch.
     """
+    Params = IteratedLocalSearchParams
+
     sols = [
-        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240
-        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
         Solution(ok_small, [[1, 3], [2, 4]]),  # 22065 (infeas)
+        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
+        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
+        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
+        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
+        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240
     ]
 
-    ils = IteratedLocalSearch(
-        ok_small,
-        PenaltyManager(initial_penalties=([20], 6, 6)),
-        RandomNumberGenerator(42),
-        lambda *_: sols.pop(0),  # returns from sols one at a time
-        sols[0],
-        IteratedLocalSearchParams(num_iters_no_improvement=1),
-    )
+    def run(params: IteratedLocalSearchParams):  # run with given params
+        idx = iter(range(len(sols)))
+        ils = IteratedLocalSearch(
+            ok_small,
+            PenaltyManager(initial_penalties=([20], 6, 6)),
+            RandomNumberGenerator(42),
+            lambda *_: sols[next(idx)],  # returns from sols one at a time
+            sols[0],
+            params,
+        )
 
-    res = ils.run(MaxIterations(3))
-    data = res.stats.data
+        res = ils.run(MaxIterations(len(sols)))
+        return res.stats.data
 
-    # First iteration is feasible and immediately the best solution in the
-    # sequence. Second is worse (no improvement), which triggers a restart that
-    # clears the history. After that, we accept whatever next solution we
-    # obtain, no matter how bad it is.
-    assert_equal(data[-1].current_cost, 22_065)
-    assert_(not data[-1].current_feas)
+    # First run without a restart. We look back to the current solution from
+    # four iterations ago, which means that we accept a worsening solution in
+    # the fifth iteration.
+    curr_costs = [22065, 9868, 9868, 9725, 9868, 9240]
+    params = Params(history_length=4)
+    assert_equal([datum.current_cost for datum in run(params)], curr_costs)
 
-    # But the best solution should still be the solution from the first
-    # iteration.
-    assert_equal(data[-1].best_cost, 9_240)
-    assert_(data[-1].best_feas)
+    # But here a restart occurs in the third iteration, and that should trigger
+    # a short period of pure hill climbing. We now do not accept the worsening
+    # solution in the fifth iteration.
+    curr_costs = [22065, 9868, 9868, 9725, 9725, 9240]
+    params = Params(num_iters_no_improvement=1, history_length=4)
+    assert_equal([datum.current_cost for datum in run(params)], curr_costs)

@@ -15,24 +15,24 @@ class RingBuffer(Generic[T]):
     """
 
     def __init__(self, maxlen: int):
-        self._array: list[T | None] = [None for _ in range(maxlen)]
+        self._buffer: list[T | None] = [None for _ in range(maxlen)]
         self._idx = 0
 
     @property
     def maxlen(self) -> int:
-        return len(self._array)
+        return len(self._buffer)
 
     def __len__(self) -> int:
         """
         Returns the number of elements in the ring buffer.
         """
-        return sum(val is not None for val in self._array)
+        return sum(val is not None for val in self._buffer)
 
     def clear(self):
         """
         Clears the ring buffer.
         """
-        self._array = [None for _ in range(self.maxlen)]
+        self._buffer = [None for _ in range(self.maxlen)]
         self._idx = 0
 
     def append(self, value: T):
@@ -40,7 +40,7 @@ class RingBuffer(Generic[T]):
         Append to the ring buffer, overwriting the oldest element in the
         buffer.
         """
-        self._array[self._idx % len(self._array)] = value
+        self._buffer[self._idx % len(self._buffer)] = value
         self._idx += 1
 
     def peek(self) -> T | None:
@@ -48,7 +48,7 @@ class RingBuffer(Generic[T]):
         Returns the next element that will be overwritten when appending
         to the buffer.
         """
-        return self._array[self._idx % len(self._array)]
+        return self._buffer[self._idx % len(self._buffer)]
 
     def skip(self):
         """

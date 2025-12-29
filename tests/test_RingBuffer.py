@@ -37,4 +37,5 @@ def test_ring_buffer():
 
     # Clearing the buffer should reset its entire state.
     buffer.clear()
+    assert_equal(buffer.maxlen, 2)
     assert_equal(len(buffer), 0)
