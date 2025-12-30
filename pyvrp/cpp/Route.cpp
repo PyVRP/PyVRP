@@ -170,7 +170,12 @@ void Route::makeSchedule(ProblemData const &data)
         now += wait;
         now -= tw;
 
-        schedule_.emplace_back(trip.startDepot(), tripIdx, now, now, wait, tw);
+        schedule_.emplace_back(trip.startDepot(),
+                               tripIdx,
+                               now,
+                               now + start.serviceDuration,
+                               wait,
+                               tw);
 
         size_t prevClient = trip.startDepot();
         for (auto const client : trip)
