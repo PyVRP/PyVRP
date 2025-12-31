@@ -1118,7 +1118,8 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
                 // to end the segment within the depot's time windows to
                 // properly account for any release time on our segment.
                 ProblemData::Depot const &depot = data.location(other.last());
-                ds = DurationSegment::merge(edgeDur, {depot}, ds);
+                DurationSegment depotDS = {depot, depot.serviceDuration};
+                ds = DurationSegment::merge(edgeDur, depotDS, ds);
                 ds = ds.finaliseFront();
 
                 edgeDur = 0;  // we are already there!
