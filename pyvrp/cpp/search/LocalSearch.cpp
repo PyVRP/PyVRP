@@ -15,10 +15,13 @@ using pyvrp::search::RouteOperator;
 using pyvrp::search::SearchSpace;
 
 pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
-                                        CostEvaluator const &costEvaluator)
+                                        CostEvaluator const &costEvaluator,
+                                        bool skipPerturbation)
 {
     loadSolution(solution);
-    perturbationManager_.perturb(solution_, searchSpace_, costEvaluator);
+
+    if (!skipPerturbation)
+        perturbationManager_.perturb(solution_, searchSpace_, costEvaluator);
 
     while (true)
     {

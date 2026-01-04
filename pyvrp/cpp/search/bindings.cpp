@@ -372,6 +372,7 @@ PYBIND11_MODULE(_search, m)
              &LocalSearch::operator(),
              py::arg("solution"),
              py::arg("cost_evaluator"),
+             py::arg("skip_perturbation") = false,
              py::call_guard<py::gil_scoped_release>())
         .def("search",
              py::overload_cast<pyvrp::Solution const &,

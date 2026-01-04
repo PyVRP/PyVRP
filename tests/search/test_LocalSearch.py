@@ -66,6 +66,24 @@ def test_local_search_call_perturbs_solution(ok_small):
     assert_(perturbed != sol)
 
 
+def test_local_search_call_skip_perturbation(ok_small):
+    """
+    Tests that calling local search with skip_perturbation=True does not
+    perturb the solution.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbours = compute_neighbours(ok_small)
+    ls = LocalSearch(ok_small, rng, neighbours)
+
+    sol = Solution.make_random(ok_small, rng)
+    cost_eval = CostEvaluator([1], 1, 0)
+
+    # With skip_perturbation=True and no operators, the solution should not
+    # be changed since there is no perturbation and no local search operators.
+    result = ls(sol, cost_eval, skip_perturbation=True)
+    assert_equal(result, sol)
+
+
 def test_get_set_neighbours(ok_small):
     """
     Tests that getting and setting the local search's granular neighbourhood
