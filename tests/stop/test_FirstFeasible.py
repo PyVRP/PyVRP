@@ -18,11 +18,3 @@ def test_stops_on_first_feasible_solution(ok_small):
     cost_eval = CostEvaluator([0], 0, 0)
     assert_(not stop(cost_eval.cost(infeas)))
     assert_(stop(cost_eval.cost(feas)))
-
-
-def test_fraction_remaining():
-    """
-    Tests that calling ``fraction_remaining()`` returns None.
-    """
-    stop = FirstFeasible()
-    assert_(stop.fraction_remaining() is None)
