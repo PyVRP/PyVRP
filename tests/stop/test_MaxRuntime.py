@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_raises
 from pytest import mark
 
 from pyvrp.stop import MaxRuntime
@@ -46,40 +46,3 @@ def test_after_max_runtime(max_runtime):
 
     for _ in range(100):
         assert_(stop(1))
-
-
-def test_fraction_remaining():
-    """
-    Tests that calling ``fraction_remaining()`` returns the correct values.
-    """
-    stop = MaxRuntime(1)
-    assert_equal(stop.fraction_remaining(), 1)
-
-    stop(0)
-    assert_(0 < stop.fraction_remaining() < 1)
-
-
-def test_fraction_remaining_zero_budget():
-    """
-    Tests that ``fraction_remaining()`` works correctly when max runtime is
-    set to zero.
-    """
-    # Zero max runtime should result in zero fraction remaining from the start.
-    stop = MaxRuntime(0)
-    assert_equal(stop.fraction_remaining(), 0)
-
-    # Fraction remaining should not go below zero.
-    stop(0)
-    assert_equal(stop.fraction_remaining(), 0)
-
-
-def test_fraction_remaining_infinite_budget():
-    """
-    Tests that ``fraction_remaining()`` works correctly when max iterations is
-    set to infinity, which is used in PyVRP's CLI.
-    """
-    stop = MaxRuntime(float("inf"))
-    assert_equal(stop.fraction_remaining(), 1)
-
-    stop(0)
-    assert_equal(stop.fraction_remaining(), 1)
