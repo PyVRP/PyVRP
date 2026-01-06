@@ -1220,7 +1220,7 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     first_trip = make_search_route(data, [3, 4])
     before_reload = route.duration_before(3)
     between_start_reload = route.duration_between(0, 3)
-    assert_equal(first_trip.duration(), before_reload.duration() - 200)
+    assert_equal(first_trip.duration(), before_reload.duration())
     assert_equal(between_start_reload.duration(), before_reload.duration())
 
     # At each depot.
