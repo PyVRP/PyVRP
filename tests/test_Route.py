@@ -269,6 +269,28 @@ def test_release_time_and_shift_duration():
     assert_equal(route.time_warp(), 998)
 
 
+def test_release_time_and_service_duration_duration():
+    """
+    Tests the interaction between release times and depot service duration, and
+    checks that service at the depot happens after the tasks are released. See
+    also the ``test_release_time_and_shift_duration`` test.
+    """
+    ok_small = read("data/OkSmallReleaseTimes.txt")
+    depot = Depot(x=2334, y=726, service_duration=6_000)
+    data = ok_small.replace(depots=[depot])
+
+    # This route has a release time of 5000, but we want to start much later
+    # anyway because of the time windows. That's not possible, however, because
+    # of the depot service duration of 6000. The overall route duration is 5998
+    # plus the 6000, and there is no time warp.
+    route = Route(data, [2, 3, 4], 0)
+    assert_equal(route.release_time(), 5_000)
+    assert_equal(route.start_time(), 5_000)
+    assert_equal(route.duration(), 6_000 + 5_998)
+    assert_equal(route.service_duration(), 6_000 + 1_140)
+    assert_equal(route.time_warp(), 0)
+
+
 def test_route_centroid(ok_small):
     """
     Tests that each route's center point is the center point of all clients

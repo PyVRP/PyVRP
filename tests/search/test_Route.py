@@ -1202,3 +1202,43 @@ def test_eq_pyvrp_route(ok_small_multiple_trips):
     pyvrp_route = pyvrp.Route(ok_small_multiple_trips, trips, vehicle_type=0)
     search_route = make_search_route(ok_small_multiple_trips, [1, 2, 0, 3, 4])
     assert_(pyvrp_route == search_route)
+
+
+def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
+    """
+    Tests that the route duration caches correctly account for depot service
+    duration.
+    """
+    old_depot = ok_small_multiple_trips.location(0)
+    new_depot = Depot(old_depot.x, old_depot.y, service_duration=200)
+    data = ok_small_multiple_trips.replace(depots=[new_depot])
+
+    route = make_search_route(data, [3, 4, 0, 1, 2])
+    assert_(route.is_feasible())
+
+    # Check that the first trip's duration matches the route's statistics.
+    first_trip = make_search_route(data, [3, 4])
+    before_reload = route.duration_before(3)
+    between_start_reload = route.duration_between(0, 3)
+    assert_equal(first_trip.duration(), before_reload.duration() - 200)
+    assert_equal(between_start_reload.duration(), before_reload.duration())
+
+    # At each depot.
+    assert_equal(route.duration_at(0).duration(), 200)  # start depot
+    assert_equal(route.duration_at(3).duration(), 200)  # reload depot
+    assert_equal(route.duration_at(6).duration(), 0)  # end depot
+
+    # Before the start and end depots (inclusive).
+    assert_equal(route.duration_before(0).duration(), 200)
+    assert_equal(route.duration_before(6).duration(), route.duration())
+
+    # Now the second trip.
+    second_trip = make_search_route(data, [1, 2])
+    after_reload = route.duration_after(3)
+    between_reload_end = route.duration_between(3, 6)
+    assert_equal(second_trip.duration(), after_reload.duration())
+    assert_equal(between_reload_end.duration(), after_reload.duration())
+
+    # The durations of both trips should equal the total route duration.
+    trips_duration = first_trip.duration() + second_trip.duration()
+    assert_equal(route.duration(), trips_duration)

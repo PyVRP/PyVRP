@@ -325,3 +325,11 @@ def test_supports(ok_small, ok_small_multiple_trips, mtvrptw_release_times):
     assert_(not RelocateWithDepot.supports(ok_small))  # no reloads
     assert_(RelocateWithDepot.supports(ok_small_multiple_trips))  # has reloads
     assert_(RelocateWithDepot.supports(mtvrptw_release_times))  # has reloads
+
+
+def test_depot_service_duration():
+    """
+    Tests that reload depot insertions are correctly evaluated when the reload
+    depot has service duration.
+    """
+    pass  # TODO

@@ -139,11 +139,12 @@ def test_raises_for_invalid_client_data(
 
 
 @pytest.mark.parametrize(
-    ("x", "y", "tw_early", "tw_late"),
+    ("x", "y", "tw_early", "tw_late", "service_duration"),
     [
-        (0, 0, 1, 0),  # tw_early > tw_late
-        (0, 0, -1, 0),  # tw_early < 0
-        (0, 0, 0, -1),  # tw_late < 0
+        (0, 0, 1, 0, 0),  # tw_early > tw_late
+        (0, 0, -1, 0, 0),  # tw_early < 0
+        (0, 0, 0, -1, 0),  # tw_late < 0
+        (0, 0, 0, 0, -1),  # service_duration < 0
     ],
 )
 def test_raises_for_invalid_depot_data(
@@ -151,12 +152,13 @@ def test_raises_for_invalid_depot_data(
     y: float,
     tw_early: int,
     tw_late: int,
+    service_duration: int,
 ):
     """
     Tests that an invalid depot configuration is not accepted.
     """
     with assert_raises(ValueError):
-        Depot(x, y, tw_early, tw_late)
+        Depot(x, y, tw_early, tw_late, service_duration)
 
 
 def test_depot_initialises_data_correctly():
@@ -169,6 +171,7 @@ def test_depot_initialises_data_correctly():
         y=0.5,
         tw_early=5,
         tw_late=7,
+        service_duration=3,
         name="test",
     )
 
@@ -176,6 +179,7 @@ def test_depot_initialises_data_correctly():
     assert_equal(depot.y, 0.5)
     assert_equal(depot.tw_early, 5)
     assert_equal(depot.tw_late, 7)
+    assert_equal(depot.service_duration, 3)
     assert_equal(depot.name, "test")
 
 
