@@ -303,7 +303,8 @@ public:
      * tw_late
      *     Closing time of this depot. Default unconstrained.
      * service_duration
-     *     Time it takes to e.g. load a vehicle at this depot. Default 0.
+     *     Time it takes to e.g. load a vehicle at this depot, at the start of
+     *     a trip. Default 0.
      * name
      *     Free-form name field for this depot. Default empty.
      *
@@ -318,7 +319,8 @@ public:
      * tw_late
      *     Closing time of this depot.
      * service_duration
-     *     Time it takes to e.g. load a vehicle at this depot.
+     *     Time it takes to e.g. load a vehicle at this depot, at the start of
+     *     a trip.
      * name
      *     Free-form name field for this depot.
      */
