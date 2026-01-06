@@ -715,9 +715,7 @@ def test_small_example_from_cattaruzza_paper():
            *Transportation Science* 50(2): 676-693.
            https://doi.org/10.1287/trsc.2015.0608.
     """
-    # The paper has 20 service duration at the depot. We do not have this field
-    # so we instead add the 20 extra time to the outgoing depot arcs.
-    depot = Depot(0, 0, tw_early=0, tw_late=200)
+    depot = Depot(0, 0, tw_early=0, tw_late=200, service_duration=20)
     clients = [
         # Figure 1 details release times for some clients. But release times
         # are not actually binding in the example, so they are not needed.
@@ -729,7 +727,7 @@ def test_small_example_from_cattaruzza_paper():
     ]
 
     matrix = [
-        [0, 25, 35, 40, 30, 35],  # +20 for depot service duration
+        [0, 5, 15, 20, 10, 15],
         [5, 0, 20, 20, 15, 15],
         [15, 20, 0, 40, 20, 30],
         [20, 20, 40, 0, 30, 10],
@@ -760,8 +758,8 @@ def test_small_example_from_cattaruzza_paper():
     assert_equal(route.end_time(), 95)
     assert_equal(route.time_warp(), 75 + 55)  # two time warp violations
     assert_equal(route.slack(), 0)  # there is time warp, so no slack
-    assert_equal(route.service_duration(), 25)  # at clients
-    assert_equal(route.travel_duration(), 185)  # incl. 80 'service' at depots
+    assert_equal(route.service_duration(), 25 + 80)  # at clients and depots
+    assert_equal(route.travel_duration(), 105)
 
 
 def test_multi_trip_with_release_times():
