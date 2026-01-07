@@ -168,7 +168,7 @@ class IteratedLocalSearch:
 
             # 2. We update the history only when the current solution is better
             #    than the one already in the history.
-            if curr_cost < late_cost or late is None:
+            if curr_cost < late_cost:
                 history.append(current)
             else:
                 history.skip()
