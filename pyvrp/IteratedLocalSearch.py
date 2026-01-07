@@ -31,7 +31,7 @@ class IteratedLocalSearchParams:
     """
 
     num_iters_no_improvement: int = 50_000
-    history_length: int = 500
+    history_length: int = 300
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
