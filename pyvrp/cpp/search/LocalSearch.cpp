@@ -16,11 +16,11 @@ using pyvrp::search::SearchSpace;
 
 pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
                                         CostEvaluator const &costEvaluator,
-                                        bool skipPerturbation)
+                                        bool exhaustive)
 {
     loadSolution(solution);
 
-    if (!skipPerturbation)
+    if (!exhaustive)
         perturbationManager_.perturb(solution_, searchSpace_, costEvaluator);
 
     while (true)

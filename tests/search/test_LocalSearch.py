@@ -66,10 +66,10 @@ def test_local_search_call_perturbs_solution(ok_small):
     assert_(perturbed != sol)
 
 
-def test_local_search_call_skip_perturbation(ok_small):
+def test_local_search_call_exhaustive(ok_small):
     """
-    Tests that calling local search with skip_perturbation=True does not
-    perturb the solution.
+    Tests that calling local search with exhaustive=True does not perturb
+    the solution.
     """
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(ok_small)
@@ -78,10 +78,32 @@ def test_local_search_call_skip_perturbation(ok_small):
     sol = Solution.make_random(ok_small, rng)
     cost_eval = CostEvaluator([1], 1, 0)
 
-    # With skip_perturbation=True and no operators, the solution should not
-    # be changed since there is no perturbation and no local search operators.
-    result = ls(sol, cost_eval, skip_perturbation=True)
+    # With exhaustive=True and no operators, the solution should not be
+    # changed since there is no perturbation and no local search operators.
+    result = ls(sol, cost_eval, exhaustive=True)
     assert_equal(result, sol)
+
+
+def test_local_search_exhaustive_still_improves_with_operators(ok_small):
+    """
+    Tests that exhaustive=True skips perturbation but still performs
+    local search when operators are present.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbours = compute_neighbours(ok_small)
+    ls = LocalSearch(ok_small, rng, neighbours)
+    ls.add_node_operator(Exchange10(ok_small))
+
+    sol = Solution.make_random(ok_small, rng)
+    cost_eval = CostEvaluator([1], 1, 0)
+    initial_cost = cost_eval.penalised_cost(sol)
+
+    # exhaustive=True: no perturbation, but search still runs
+    result = ls(sol, cost_eval, exhaustive=True)
+    result_cost = cost_eval.penalised_cost(result)
+
+    # Should be improved (or equal) by local search operators
+    assert_(result_cost <= initial_cost)
 
 
 def test_get_set_neighbours(ok_small):

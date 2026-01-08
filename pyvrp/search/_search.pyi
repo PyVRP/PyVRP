@@ -128,7 +128,7 @@ class LocalSearch:
         self,
         solution: pyvrp.Solution,
         cost_evaluator: CostEvaluator,
-        skip_perturbation: bool = False,
+        exhaustive: bool = False,
     ) -> pyvrp.Solution: ...
     def shuffle(self, rng: RandomNumberGenerator) -> None: ...
     def intensify(

@@ -106,7 +106,7 @@ class LocalSearch:
         self,
         solution: Solution,
         cost_evaluator: CostEvaluator,
-        skip_perturbation: bool = False,
+        exhaustive: bool = False,
     ) -> Solution:
         """
         This method uses the :meth:`~search` and :meth:`~intensify` methods to
@@ -121,7 +121,7 @@ class LocalSearch:
             The solution to improve through local search.
         cost_evaluator
             Cost evaluator to use.
-        skip_perturbation
+        exhaustive
             If True, skips the perturbation step. Default False.
 
         Returns
@@ -131,7 +131,7 @@ class LocalSearch:
             solution that was passed in.
         """
         self._ls.shuffle(self._rng)
-        return self._ls(solution, cost_evaluator, skip_perturbation)
+        return self._ls(solution, cost_evaluator, exhaustive)
 
     def intensify(
         self,

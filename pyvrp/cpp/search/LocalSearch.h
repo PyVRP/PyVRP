@@ -158,12 +158,12 @@ public:
      *     The solution to improve.
      * costEvaluator
      *     Cost evaluator to use.
-     * skipPerturbation
+     * exhaustive
      *     If true, skips the perturbation step. Default false.
      */
     pyvrp::Solution operator()(pyvrp::Solution const &solution,
                                CostEvaluator const &costEvaluator,
-                               bool skipPerturbation = false);
+                               bool exhaustive = false);
 
     /**
      * Performs regular (node-based) local search around the given solution,
