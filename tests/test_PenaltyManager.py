@@ -5,7 +5,6 @@ from numpy.testing import (
     assert_allclose,
     assert_equal,
     assert_raises,
-    assert_warns,
 )
 
 from pyvrp import PenaltyManager, PenaltyParams, Solution, VehicleType
@@ -326,7 +325,7 @@ def test_warns_max_penalty_value(ok_small):
     infeas = Solution(ok_small, [[1, 2, 3, 4]])
     assert_(infeas.has_time_warp())
 
-    with assert_warns(PenaltyBoundWarning):
+    with pytest.warns(PenaltyBoundWarning):
         pm.register(infeas)
 
 
