@@ -232,8 +232,32 @@ def test_restart(ok_small):
     assert_equal([datum.current_cost for datum in run(params)], curr_costs)
 
 
-def test_exhaustive_search_on_new_best_solution():
+def test_exhaustive_search_on_new_best_solution(ok_small):
     """
-    TODO
+    Tests that ILS calls the search method for an exhaustive evaluation on
+    newfound best solutions.
     """
-    pass
+    sols = [
+        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
+        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725 - new best
+        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240 - after exhaustive search
+    ]
+
+    def search(*_, exhaustive: bool):
+        assert_(exhaustive if len(sols) == 1 else not exhaustive)
+        return sols.pop(0)
+
+    ils = IteratedLocalSearch(
+        ok_small,
+        PenaltyManager(initial_penalties=([20], 6, 6)),
+        RandomNumberGenerator(42),
+        search,
+        sols[0],
+    )
+
+    # Just two iterations, but we should pop all three solutions, because the
+    # second iteration again calls into the search method, but this time for
+    # an exhaustive search that returns the final solution.
+    res = ils.run(MaxIterations(2))
+    assert_equal(len(sols), 0)
+    assert_equal(res.cost(), 9_240)
