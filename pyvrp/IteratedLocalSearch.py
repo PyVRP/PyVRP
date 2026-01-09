@@ -30,7 +30,7 @@ class IteratedLocalSearchParams:
         used by the algorithm. Must be positive.
     """
 
-    num_iters_no_improvement: int = 50_000
+    num_iters_no_improvement: int = 150_000
     history_length: int = 300
 
     def __post_init__(self):
@@ -127,7 +127,7 @@ class IteratedLocalSearch:
         start = time.perf_counter()
         iters = iters_no_improvement = 0
         best = current = self._init
-        bests = []
+        prev_bests: list[Solution] = []
 
         cost_eval = self._pm.cost_evaluator()
         while not stop(cost_eval.cost(best)):
@@ -139,7 +139,7 @@ class IteratedLocalSearch:
                 iters_no_improvement = 0
 
                 history.clear()
-                for sol in bests:
+                for sol in prev_bests:
                     history.append(sol)
 
             cost_eval = self._pm.cost_evaluator()
@@ -149,7 +149,7 @@ class IteratedLocalSearch:
             iters_no_improvement += 1
             if cost_eval.cost(candidate) < cost_eval.cost(best):  # new best
                 best = candidate
-                bests.append(best)
+                prev_bests.append(best)
                 iters_no_improvement = 0
 
             cand_cost = cost_eval.penalised_cost(candidate)
