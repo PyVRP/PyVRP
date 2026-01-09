@@ -143,9 +143,9 @@ def test_ils_acceptance_behaviour(ok_small):
         ok_small,
         PenaltyManager(initial_penalties=([20], 6, 6)),
         RandomNumberGenerator(42),
-        lambda *_: sols.pop(0),  # returns from sols one at a time
+        lambda *_, **kws: sols.pop(0),  # returns from sols one at a time
         sols[0],
-        IteratedLocalSearchParams(history_length=2),
+        IteratedLocalSearchParams(history_length=2, exhaustive_on_best=False),
     )
 
     res = ils.run(stop=MaxIterations(len(sols)))
@@ -205,7 +205,7 @@ def test_restart(ok_small):
             ok_small,
             PenaltyManager(initial_penalties=([20], 6, 6)),
             RandomNumberGenerator(42),
-            lambda *_: sols[next(idx)],  # returns from sols one at a time
+            lambda *_, **kw: sols[next(idx)],  # returns sols one at a time
             sols[0],
             params,
         )
@@ -217,12 +217,23 @@ def test_restart(ok_small):
     # four iterations ago, which means that we accept a worsening solution in
     # the fifth iteration.
     curr_costs = [22065, 9868, 9868, 9725, 9868, 9240]
-    params = Params(history_length=4)
+    params = Params(history_length=4, exhaustive_on_best=False)
     assert_equal([datum.current_cost for datum in run(params)], curr_costs)
 
     # But here a restart occurs in the third iteration, and that should trigger
     # a short period of pure hill climbing. We now do not accept the worsening
     # solution in the fifth iteration.
+    params = Params(
+        num_iters_no_improvement=1,
+        history_length=4,
+        exhaustive_on_best=False,
+    )
     curr_costs = [22065, 9868, 9868, 9725, 9725, 9240]
-    params = Params(num_iters_no_improvement=1, history_length=4)
     assert_equal([datum.current_cost for datum in run(params)], curr_costs)
+
+
+def test_exhaustive_search_on_new_best_solution():
+    """
+    TODO
+    """
+    pass

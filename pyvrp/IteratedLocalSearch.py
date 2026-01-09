@@ -28,10 +28,14 @@ class IteratedLocalSearchParams:
     history_length
         History length for the late acceptance hill-climbing stopping criterion
         used by the algorithm. Must be positive.
+    exhaustive_on_best
+        Whether to perform a more expensive, exhaustive search for newly found
+        best solutions.
     """
 
     num_iters_no_improvement: int = 50_000
     history_length: int = 500
+    exhaustive_on_best: bool = True
 
     def __post_init__(self):
         if self.num_iters_no_improvement < 0:
@@ -126,7 +130,7 @@ class IteratedLocalSearch:
 
         start = time.perf_counter()
         iters = iters_no_improvement = 0
-        best = current = self._init
+        best = curr = self._init
 
         cost_eval = self._pm.cost_evaluator()
         while not stop(cost_eval.cost(best)):
@@ -136,20 +140,25 @@ class IteratedLocalSearch:
                 print_progress.restart()
                 history.clear()
 
-                current = best
+                curr = best
                 iters_no_improvement = 0
 
             cost_eval = self._pm.cost_evaluator()
-            candidate = self._search(current, cost_eval)
-            self._pm.register(candidate)
+            cand = self._search(curr, cost_eval, exhaustive=False)
+            self._pm.register(cand)
 
             iters_no_improvement += 1
-            if cost_eval.cost(candidate) < cost_eval.cost(best):  # new best
-                best = candidate
+            if cost_eval.cost(cand) < cost_eval.cost(best):
+                if self._params.exhaustive_on_best:
+                    # Candidate is already a new (global) best, but let's see
+                    # if we can improve it further via an exhaustive search.
+                    cand = self._search(cand, cost_eval, exhaustive=True)
+
+                best = cand
                 iters_no_improvement = 0
 
-            cand_cost = cost_eval.penalised_cost(candidate)
-            curr_cost = cost_eval.penalised_cost(current)
+            cand_cost = cost_eval.penalised_cost(cand)
+            curr_cost = cost_eval.penalised_cost(curr)
 
             # We use either the current best or the current cost value from
             # some iterations ago to determine whether to accept the candidate
@@ -163,17 +172,17 @@ class IteratedLocalSearch:
             # 1. We accept also when the candidate improves over the current
             #    solution;
             if cand_cost < late_cost or cand_cost < curr_cost:
-                current = candidate
+                curr = cand
                 curr_cost = cand_cost
 
             # 2. We update the history only when the current solution is better
             #    than the one already in the history.
             if curr_cost < late_cost or late is None:
-                history.append(current)
+                history.append(curr)
             else:
                 history.skip()
 
-            stats.collect(current, candidate, best, cost_eval)
+            stats.collect(curr, cand, best, cost_eval)
             print_progress.iteration(stats)
 
         runtime = time.perf_counter() - start
