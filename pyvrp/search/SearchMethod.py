@@ -25,9 +25,9 @@ class SearchMethod(Protocol):  # pragma: no cover
         cost_evaluator
             Cost evaluator to use when evaluating improvements.
         exhaustive
-            Whether to perform an exhaustive search. When ``True``, the search
-            method skips any randomizing perturbation steps and focuses purely
-            on deterministic improvement moves. Default ``False``.
+            Whether to explicitly require a complete search, rather than allow
+            the search method to perform a limited search. Default ``False``,
+            that is, the search method gets to decide for itself what to do.
 
         Returns
         -------

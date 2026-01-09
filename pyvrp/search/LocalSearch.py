@@ -122,7 +122,8 @@ class LocalSearch:
         cost_evaluator
             Cost evaluator to use.
         exhaustive
-            If True, skips the perturbation step. Default False.
+            Performs an exhaustive, complete search if set. Otherwise does
+            only a limited search over perturbed clients (default).
 
         Returns
         -------

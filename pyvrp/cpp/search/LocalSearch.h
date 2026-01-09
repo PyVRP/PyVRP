@@ -151,15 +151,6 @@ public:
     /**
      * Iteratively calls ``search()`` and ``intensify()`` until no further
      * improvements are made.
-     *
-     * Parameters
-     * ----------
-     * solution
-     *     The solution to improve.
-     * costEvaluator
-     *     Cost evaluator to use.
-     * exhaustive
-     *     If true, skips the perturbation step. Default false.
      */
     pyvrp::Solution operator()(pyvrp::Solution const &solution,
                                CostEvaluator const &costEvaluator,

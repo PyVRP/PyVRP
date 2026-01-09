@@ -66,46 +66,6 @@ def test_local_search_call_perturbs_solution(ok_small):
     assert_(perturbed != sol)
 
 
-def test_local_search_call_exhaustive(ok_small):
-    """
-    Tests that calling local search with exhaustive=True does not perturb
-    the solution.
-    """
-    rng = RandomNumberGenerator(seed=42)
-    neighbours = compute_neighbours(ok_small)
-    ls = LocalSearch(ok_small, rng, neighbours)
-
-    sol = Solution.make_random(ok_small, rng)
-    cost_eval = CostEvaluator([1], 1, 0)
-
-    # With exhaustive=True and no operators, the solution should not be
-    # changed since there is no perturbation and no local search operators.
-    result = ls(sol, cost_eval, exhaustive=True)
-    assert_equal(result, sol)
-
-
-def test_local_search_exhaustive_still_improves_with_operators(ok_small):
-    """
-    Tests that exhaustive=True skips perturbation but still performs
-    local search when operators are present.
-    """
-    rng = RandomNumberGenerator(seed=42)
-    neighbours = compute_neighbours(ok_small)
-    ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_node_operator(Exchange10(ok_small))
-
-    sol = Solution.make_random(ok_small, rng)
-    cost_eval = CostEvaluator([1], 1, 0)
-    initial_cost = cost_eval.penalised_cost(sol)
-
-    # exhaustive=True: no perturbation, but search still runs
-    result = ls(sol, cost_eval, exhaustive=True)
-    result_cost = cost_eval.penalised_cost(result)
-
-    # Should be improved (or equal) by local search operators
-    assert_(result_cost <= initial_cost)
-
-
 def test_get_set_neighbours(ok_small):
     """
     Tests that getting and setting the local search's granular neighbourhood
@@ -716,3 +676,33 @@ def test_inserts_required_missing(instance, exp_clients: set[int], request):
 
     visits = {client for route in improved.routes() for client in route}
     assert_equal(visits, exp_clients)
+
+
+def test_local_search_exhaustive(rc208):
+    """
+    Tests calling the local search with the optional ``exhaustive`` argument
+    for a complete evaluation.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
+    ls.add_node_operator(Exchange10(rc208))
+
+    init = Solution.make_random(rc208, rng)
+    cost_eval = CostEvaluator([20], 6, 0)
+
+    # The returned solution by default evaluates only around perturbed,
+    # promising clients. That is not a full search. But when exhaustive is
+    # explicitly is explicitly set, a full search must be done. The resulting
+    # solution should be better than what's returned after perturbation,
+    # because a full search evaluates many more moves.
+    perturbed = ls(init, cost_eval, exhaustive=False)
+    exhaustive = ls(init, cost_eval, exhaustive=True)
+
+    perturbed_cost = cost_eval.penalised_cost(perturbed)
+    exhaustive_cost = cost_eval.penalised_cost(exhaustive)
+    assert_(exhaustive_cost < perturbed_cost)
+
+    # Both should also be better than the initial, random solution.
+    init_cost = cost_eval.penalised_cost(init)
+    assert_(perturbed_cost < init_cost)
+    assert_(exhaustive_cost < init_cost)
