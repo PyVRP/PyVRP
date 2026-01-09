@@ -127,6 +127,7 @@ class IteratedLocalSearch:
         start = time.perf_counter()
         iters = iters_no_improvement = 0
         best = current = self._init
+        bests = []
 
         cost_eval = self._pm.cost_evaluator()
         while not stop(cost_eval.cost(best)):
@@ -134,10 +135,12 @@ class IteratedLocalSearch:
 
             if iters_no_improvement == self._params.num_iters_no_improvement:
                 print_progress.restart()
-                history.clear()
-
                 current = best
                 iters_no_improvement = 0
+
+                history.clear()
+                for sol in bests:
+                    history.append(sol)
 
             cost_eval = self._pm.cost_evaluator()
             candidate = self._search(current, cost_eval)
@@ -146,6 +149,7 @@ class IteratedLocalSearch:
             iters_no_improvement += 1
             if cost_eval.cost(candidate) < cost_eval.cost(best):  # new best
                 best = candidate
+                bests.append(best)
                 iters_no_improvement = 0
 
             cand_cost = cost_eval.penalised_cost(candidate)
