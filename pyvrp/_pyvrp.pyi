@@ -93,6 +93,7 @@ class Depot:
     y: float
     tw_early: int
     tw_late: int
+    service_duration: int
     name: str
     def __init__(
         self,
@@ -100,6 +101,7 @@ class Depot:
         y: float,
         tw_early: int = 0,
         tw_late: int = ...,
+        service_duration: int = 0,
         *,
         name: str = "",
     ) -> None: ...

@@ -227,9 +227,18 @@ ProblemData::Depot::Depot(Coordinate x,
                           Coordinate y,
                           Duration twEarly,
                           Duration twLate,
+                          Duration serviceDuration,
                           std::string name)
-    : x(x), y(y), twEarly(twEarly), twLate(twLate), name(duplicate(name.data()))
+    : x(x),
+      y(y),
+      serviceDuration(serviceDuration),
+      twEarly(twEarly),
+      twLate(twLate),
+      name(duplicate(name.data()))
 {
+    if (serviceDuration < 0)
+        throw std::invalid_argument("service_duration must be >= 0.");
+
     if (twEarly > twLate)
         throw std::invalid_argument("tw_early must be <= tw_late.");
 
@@ -240,6 +249,7 @@ ProblemData::Depot::Depot(Coordinate x,
 ProblemData::Depot::Depot(Depot const &depot)
     : x(depot.x),
       y(depot.y),
+      serviceDuration(depot.serviceDuration),
       twEarly(depot.twEarly),
       twLate(depot.twLate),
       name(duplicate(depot.name))
@@ -249,6 +259,7 @@ ProblemData::Depot::Depot(Depot const &depot)
 ProblemData::Depot::Depot(Depot &&depot)
     : x(depot.x),
       y(depot.y),
+      serviceDuration(depot.serviceDuration),
       twEarly(depot.twEarly),
       twLate(depot.twLate),
       name(depot.name)  // we can steal
@@ -265,6 +276,7 @@ bool ProblemData::Depot::operator==(Depot const &other) const
         && y == other.y
         && twEarly == other.twEarly
         && twLate == other.twLate
+        && serviceDuration == other.serviceDuration
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }

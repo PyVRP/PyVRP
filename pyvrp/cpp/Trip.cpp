@@ -64,6 +64,9 @@ Trip::Trip(ProblemData const &data,
     auto const &distances = data.distanceMatrix(vehData.profile);
     auto const &durations = data.durationMatrix(vehData.profile);
 
+    ProblemData::Depot const &depot = data.location(startDepot_);
+    service_ += depot.serviceDuration;
+
     for (size_t prevClient = startDepot_; auto const client : visits_)
     {
         distance_ += distances(prevClient, client);
