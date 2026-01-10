@@ -203,7 +203,7 @@ def solve(
 
     init = params.initial_solution
     if init is None:
-        init = ls.search(Solution(data, []), pm.max_cost_evaluator())
+        init = ls(Solution(data, []), pm.max_cost_evaluator(), exhaustive=True)
 
     algo = IteratedLocalSearch(data, pm, rng, ls, init, params.ils)
     return algo.run(stop, collect_stats, display, params.display_interval)
