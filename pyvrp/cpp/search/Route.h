@@ -700,7 +700,7 @@ bool Route::Node::isStartReloadDepot() const
 
 bool Route::Node::isEndReloadDepot() const
 {
-    return route_ && this == &route_->depots_[trip_].second;
+    return isReloadDepot() && !isStartReloadDepot();
 }
 
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
@@ -998,7 +998,7 @@ size_t Route::size() const { return nodes.size(); }
 
 size_t Route::numClients() const { return size() - numDepots(); }
 
-size_t Route::numDepots() const { return depots_.size(); }
+size_t Route::numDepots() const { return 2 * depots_.size(); }
 
 size_t Route::numTrips() const { return depots_.size(); }
 
