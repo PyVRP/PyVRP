@@ -122,14 +122,13 @@ void Route::clear()
     nodes.clear();
     depots_.clear();
 
-    depots_.emplace_back(vehicleType_.startDepot);
-    depots_.emplace_back(vehicleType_.endDepot);
+    depots_.emplace_back(vehicleType_.startDepot, vehicleType_.endDepot);
 
-    for (size_t idx : {0, 1})
-    {
-        nodes.push_back(&depots_[idx]);
-        depots_[idx].assign(this, idx, idx);
-    }
+    nodes.push_back(&depots_[0].first);
+    depots_[0].first.assign(this, 0, 0);
+
+    nodes.push_back(&depots_[0].second);
+    depots_[0].second.assign(this, 1, 0);
 
     update();
     assert(empty());
@@ -142,23 +141,37 @@ void Route::insert(size_t idx, Node *node)
     assert(0 < idx && idx < nodes.size());
     auto const isDepot = node->client() < data.numDepots();
 
-    if (isDepot)  // is depot, so we need to insert a copy into our own memory
+    if (isDepot)  // is depot, so we need to insert copies into our own memory
     {
         if (depots_.size() == depots_.capacity())  // then we reallocate and
         {                                          // must update references
             depots_.reserve(depots_.size() + 1);
-            for (auto &depot : depots_)
-                nodes[depot.idx()] = &depot;
+            for (auto &[start, end] : depots_)
+            {
+                nodes[start.idx()] = &start;
+                nodes[end.idx()] = &end;
+            }
         }
 
-        node = &depots_.emplace_back(node->client());
+        auto &[start, end]
+            = depots_.emplace_back(node->client(), node->client());
+
+        nodes.insert(nodes.begin() + idx, &start);
+        start.assign(this, idx, nodes[idx - 1]->trip());
+
+        nodes.insert(nodes.begin() + idx, &end);
+        end.assign(this, idx, nodes[idx - 1]->trip());
+
+        idx++;  // end depot belongs to current trip
+    }
+    else
+    {
+        nodes.insert(nodes.begin() + idx, node);
+        node->assign(this, idx, nodes[idx - 1]->trip());
     }
 
     if (numTrips() > maxTrips())
         throw std::invalid_argument("Vehicle cannot perform this many trips.");
-
-    nodes.insert(nodes.begin() + idx, node);
-    node->assign(this, idx, nodes[idx - 1]->trip());
 
     for (size_t after = idx; after != nodes.size(); ++after)
     {
@@ -180,16 +193,24 @@ void Route::remove(size_t idx)
     {
         // We own this node - it's in our depots vector. We erase it, and then
         // update reload depot references that were invalidated by the erasure.
-        auto const depotIdx = std::distance(depots_.data(), nodes[idx]);
-        auto it = depots_.erase(depots_.begin() + depotIdx);
+        auto it = depots_.erase(depots_.begin() + nodes[idx]->trip());
         for (; it != depots_.end(); ++it)
-            nodes[it->idx()] = &*it;
+        {
+            auto &[start, end] = *it;
+            nodes[start.idx()] = &start;
+            nodes[end.idx()] = &end;
+        }
+
+        nodes.erase(nodes.begin() + idx);  // remove dangling pointers
+        nodes.erase(nodes.begin() + idx);
     }
     else
+    {
         // We do not own this node, so we only unassign it.
         nodes[idx]->unassign();
+        nodes.erase(nodes.begin() + idx);  // remove dangling pointer
+    }
 
-    nodes.erase(nodes.begin() + idx);  // remove dangling pointer
     for (auto after = idx; after != nodes.size(); ++after)
     {
         nodes[after]->idx_ = after;
@@ -340,7 +361,7 @@ void Route::update()
         excessLoad_[dim]
             = loadBefore[dim][nodes.size() - 1].excessLoad(capacity);
         for (auto it = depots_.begin() + 1; it != depots_.end(); ++it)
-            load_[dim] += loadBefore[dim][it->idx()].load();
+            load_[dim] += loadBefore[dim][it->second.idx()].load();
 
         loadAfter[dim].resize(nodes.size());
         loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
@@ -427,7 +448,10 @@ std::ostream &operator<<(std::ostream &out, Route const &route)
             out << ' ';
 
         if (route[idx]->isReloadDepot())
+        {
             out << '|';
+            idx++;  // skip second depot of (start, end) pair
+        }
         else
             out << *route[idx];
     }

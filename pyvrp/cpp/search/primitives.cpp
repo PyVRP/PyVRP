@@ -88,9 +88,17 @@ pyvrp::Cost pyvrp::search::removeCost(Route::Node *U,
               - Cost(route->numClients() == 1) * route->fixedVehicleCost();
     }
 
-    costEvaluator.deltaCost<true>(deltaCost,
-                                  Route::Proposal(route->before(U->idx() - 1),
-                                                  route->after(U->idx() + 1)));
+    size_t start = U->idx() - 1;
+    size_t end = U->idx() + 1;
+
+    if (U->isStartReloadDepot())
+        start -= 1;  // also exclude end depot
+
+    if (U->isEndReloadDepot())
+        end += 1;  // also exclude start depot
+
+    costEvaluator.deltaCost<true>(
+        deltaCost, Route::Proposal(route->before(start), route->after(end)));
 
     return deltaCost;
 }

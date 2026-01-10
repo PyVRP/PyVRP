@@ -85,6 +85,12 @@ void SearchSpace::markPromising(Route::Node const *node)
 
     if (!node->isEndDepot() && !n(node)->isDepot())
         markPromising(n(node)->client());
+
+    if (node->isStartReloadDepot() && !p(p(node))->isDepot())
+        markPromising(p(p(node))->client());
+
+    if (node->isEndReloadDepot() && !n(n(node))->isDepot())
+        markPromising(n(n(node))->client());
 }
 
 void SearchSpace::markAllPromising() { promising_.set(); }

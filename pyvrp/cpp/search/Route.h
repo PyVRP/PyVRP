@@ -173,6 +173,8 @@ public:
          * Returns whether this node is a reload depot.
          */
         [[nodiscard]] inline bool isReloadDepot() const;
+        [[nodiscard]] inline bool isStartReloadDepot() const;
+        [[nodiscard]] inline bool isEndReloadDepot() const;
 
         /**
          * Assigns the node to the given route, at the given index, in the
@@ -311,7 +313,9 @@ private:
     Cost durationCost_;
     Duration timeWarp_;
 
-    std::vector<Node> depots_;  // start, end, and reload depots (in that order)
+    // Pairs of (start, end) depots, for the whole route, and reload depots
+    // (in that order).
+    std::vector<std::pair<Node, Node>> depots_;
 
     std::vector<Node *> nodes;   // Nodes in this route, including depots
     std::vector<size_t> visits;  // Locations in this route, incl. depots
@@ -671,12 +675,12 @@ bool Route::Node::isDepot() const
 
 bool Route::Node::isStartDepot() const
 {
-    return route_ && this == &route_->depots_[0];
+    return route_ && this == &route_->depots_[0].first;
 }
 
 bool Route::Node::isEndDepot() const
 {
-    return route_ && this == &route_->depots_[1];
+    return route_ && this == &route_->depots_[0].second;
 }
 
 bool Route::Node::isReloadDepot() const
@@ -687,6 +691,16 @@ bool Route::Node::isReloadDepot() const
         && !isStartDepot()
         && !isEndDepot();
     // clang-format on
+}
+
+bool Route::Node::isStartReloadDepot() const
+{
+    return route_ && this == &route_->depots_[trip_].first;
+}
+
+bool Route::Node::isEndReloadDepot() const
+{
+    return route_ && this == &route_->depots_[trip_].second;
 }
 
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
@@ -986,7 +1000,7 @@ size_t Route::numClients() const { return size() - numDepots(); }
 
 size_t Route::numDepots() const { return depots_.size(); }
 
-size_t Route::numTrips() const { return depots_.size() - 1; }
+size_t Route::numTrips() const { return depots_.size(); }
 
 size_t Route::maxTrips() const { return vehicleType_.maxTrips(); }
 
