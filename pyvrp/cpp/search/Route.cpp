@@ -162,7 +162,7 @@ void Route::insert(size_t idx, Node *node)
         nodes.insert(nodes.begin() + idx, &end);
         end.assign(this, idx, nodes[idx - 1]->trip());
 
-        idx++;  // end depot belongs to current trip
+        idx++;  // end depot belongs to previous trip
     }
     else
     {
@@ -191,9 +191,23 @@ void Route::remove(size_t idx)
 
     if (isDepot)
     {
+        auto const isStart = nodes[idx]->isStartReloadDepot();
+        auto const isEnd = nodes[idx]->isEndReloadDepot();
+
         // We own this node - it's in our depots vector. We erase it, and then
         // update reload depot references that were invalidated by the erasure.
-        auto it = depots_.erase(depots_.begin() + nodes[idx]->trip());
+        auto it = depots_.begin();
+        for (auto &[start, end] : depots_)
+        {
+            if (nodes[idx] == &start || nodes[idx] == &end)
+            {
+                it = depots_.erase(it);
+                break;
+            }
+
+            it++;
+        }
+
         for (; it != depots_.end(); ++it)
         {
             auto &[start, end] = *it;
@@ -201,8 +215,14 @@ void Route::remove(size_t idx)
             nodes[end.idx()] = &end;
         }
 
-        nodes.erase(nodes.begin() + idx);  // remove dangling pointers
+        // remove dangling pointers
         nodes.erase(nodes.begin() + idx);
+
+        if (isEnd)
+            nodes.erase(nodes.begin() + idx);
+
+        if (isStart)
+            nodes.erase(nodes.begin() + idx - 1);
     }
     else
     {

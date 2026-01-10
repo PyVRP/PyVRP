@@ -695,7 +695,7 @@ bool Route::Node::isReloadDepot() const
 
 bool Route::Node::isStartReloadDepot() const
 {
-    return route_ && this == &route_->depots_[trip_].first;
+    return isReloadDepot() && trip_ == p(this)->trip_ + 1;
 }
 
 bool Route::Node::isEndReloadDepot() const
@@ -722,10 +722,8 @@ Route::SegmentBetween::SegmentBetween(Route const &route,
 {
     assert(start <= end && end < route.size());
 
-    // The segment must consist of a single trip only, possibly including the
-    // depot that begins the next trip (and ends this one). So the difference
-    // in trips is at most one.
-    assert(route[end]->trip() - route[start]->trip() <= route[end]->isDepot());
+    // The segment must consist of a only single trip.
+    assert(route[end]->trip() == route[start]->trip());
 }
 
 Distance Route::SegmentAfter::distance([[maybe_unused]] size_t profile) const

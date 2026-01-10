@@ -52,7 +52,7 @@ void Solution::load(pyvrp::Solution const &solution)
         // Routes use a representation with nodes for each client, reload depot
         // (one per trip), and start/end depots. The start depot doubles as the
         // reload depot for the first trip.
-        route.reserve(solRoute.size() + solRoute.numTrips() + 1);
+        route.reserve(solRoute.size() + 2 * solRoute.numTrips());
 
         for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
         {
@@ -122,6 +122,9 @@ pyvrp::Solution Solution::unload() const
 
             visits.clear();
             prevDepot = node;
+
+            if (node->isReloadDepot())
+                idx++;  // skip start reload depot directly after
         }
 
         assert(trips.size() == route.numTrips());

@@ -1080,11 +1080,11 @@ def test_multi_trip_duration_caches(ok_small_multiple_trips):
     assert_equal(between_start_reload.duration(), before_reload.duration())
 
     # Test the postfix cache for the trip [1, 2], starting at the reload depot
-    # at index 3. We again test direct computation, and compare against a route
+    # at index 4. We again test direct computation, and compare against a route
     # corresponding to the second trip.
     second_trip = make_search_route(ok_small_multiple_trips, [1, 2])
-    after_reload = route.duration_after(3)
-    between_reload_end = route.duration_between(3, 6)
+    after_reload = route.duration_after(4)
+    between_reload_end = route.duration_between(4, 7)
     assert_equal(second_trip.duration(), after_reload.duration())
     assert_equal(between_reload_end.duration(), after_reload.duration())
 

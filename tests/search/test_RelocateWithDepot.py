@@ -32,7 +32,7 @@ def test_inserts_depot_single_route(ok_small_multiple_trips):
 
     # There should now be an additional reload depot and trip, and all excess
     # load should have been resolved by the reloading.
-    assert_equal(route.num_depots(), 3)
+    assert_equal(route.num_depots(), 4)
     assert_equal(route.num_trips(), 2)
     assert_equal(route.excess_load(), [0])
 
@@ -191,7 +191,7 @@ def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
     # This move would result in either 3 | 2 | 1 4, or 3 | 2 1 | 4, both of
     # which would resolve any excess load. But that's more trips than the
     # vehicle can perform, so this move cannot be done.
-    assert_equal(op.evaluate(route[3], route[4], cost_eval), 0)
+    assert_equal(op.evaluate(route[4], route[5], cost_eval), 0)
     assert_equal(route.num_trips(), route.max_trips())
 
 
@@ -231,10 +231,10 @@ def test_bug_release_times(mtvrptw_release_times):
 
     op = RelocateWithDepot(mtvrptw_release_times)
     cost_eval = CostEvaluator([0], 1, 0)
-    delta_cost = op.evaluate(route1[3], route2[1], cost_eval)
+    delta_cost = op.evaluate(route1[4], route2[1], cost_eval)
     assert_(delta_cost < 0)
 
-    op.apply(route1[3], route2[1])
+    op.apply(route1[4], route2[1])
     assert_equal(str(route1), "34 | 38 48")
     assert_equal(str(route2), "6 23 |")
 
