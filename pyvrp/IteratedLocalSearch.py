@@ -149,13 +149,17 @@ class IteratedLocalSearch:
 
             iters_no_improvement += 1
             if cost_eval.cost(cand) < cost_eval.cost(best):
-                if self._params.exhaustive_on_best:
-                    # Candidate is already a new (global) best, but let's see
-                    # if we can improve it further via an exhaustive search.
-                    cand = self._search(cand, cost_eval, exhaustive=True)
-
                 best = cand
                 iters_no_improvement = 0
+
+                if self._params.exhaustive_on_best:
+                    # Candidate is already a new (global) best, but let's see
+                    # if we can improve it via an exhaustive search. That new
+                    # candidate solution might be infeasible, so we need to
+                    # check before updating best.
+                    cand = self._search(cand, cost_eval, exhaustive=True)
+                    if cand.is_feasible():
+                        best = cand
 
             cand_cost = cost_eval.penalised_cost(cand)
             curr_cost = cost_eval.penalised_cost(curr)
