@@ -44,7 +44,7 @@ class NeighbourhoodParams:
 
     weight_wait_time: float = 0.2
     weight_time_warp: float = 1.0
-    num_neighbours: int = 60
+    num_neighbours: int = 50
     symmetric_proximity: bool = True
     symmetric_neighbours: bool = False
 
