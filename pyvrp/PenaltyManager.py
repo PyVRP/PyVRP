@@ -83,8 +83,8 @@ class PenaltyParams:
     solutions_between_updates: int = 500
     penalty_increase: float = 1.50
     penalty_decrease: float = 0.95
-    target_feasible: float = 0.65
-    feas_tolerance: float = 0.05
+    target_feasible: float = 1.00
+    feas_tolerance: float = 0.00
     min_penalty: float = 0.1
     max_penalty: float = 100_000.0
 
