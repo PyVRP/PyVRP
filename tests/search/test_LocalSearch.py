@@ -676,3 +676,33 @@ def test_inserts_required_missing(instance, exp_clients: set[int], request):
 
     visits = {client for route in improved.routes() for client in route}
     assert_equal(visits, exp_clients)
+
+
+def test_local_search_exhaustive(rc208):
+    """
+    Tests calling the local search with the optional ``exhaustive`` argument
+    for a complete evaluation.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
+    ls.add_node_operator(Exchange10(rc208))
+
+    init = Solution.make_random(rc208, rng)
+    cost_eval = CostEvaluator([20], 6, 0)
+
+    # The returned solution by default evaluates only around perturbed,
+    # promising clients. That is not a full search. But when exhaustive is
+    # explicitly is explicitly set, a full search must be done. The resulting
+    # solution should be better than what's returned after perturbation,
+    # because a full search evaluates many more moves.
+    perturbed = ls(init, cost_eval, exhaustive=False)
+    exhaustive = ls(init, cost_eval, exhaustive=True)
+
+    perturbed_cost = cost_eval.penalised_cost(perturbed)
+    exhaustive_cost = cost_eval.penalised_cost(exhaustive)
+    assert_(exhaustive_cost < perturbed_cost)
+
+    # Both should also be better than the initial, random solution.
+    init_cost = cost_eval.penalised_cost(init)
+    assert_(perturbed_cost < init_cost)
+    assert_(exhaustive_cost < init_cost)
