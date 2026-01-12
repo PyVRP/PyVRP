@@ -7,7 +7,6 @@ from numpy.testing import (
     assert_allclose,
     assert_equal,
     assert_raises,
-    assert_warns,
 )
 
 from pyvrp import CostEvaluator
@@ -172,7 +171,7 @@ def test_warns_about_scaling_issues():
     Tests that ``read()`` warns about scaling issues when a distance value is
     very large.
     """
-    with assert_warns(ScalingWarning):
+    with pytest.warns(ScalingWarning):
         # The arc from the depot to client 4 is really large (one billion), so
         # that should trigger a warning.
         read("data/ReallyLargeDistance.txt")

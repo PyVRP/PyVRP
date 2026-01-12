@@ -1,11 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import (
-    assert_,
-    assert_equal,
-    assert_raises,
-    assert_warns,
-)
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
@@ -458,10 +453,10 @@ def test_data_warns_about_scaling_issues(recwarn):
 
     # But a value exceeding the maximum value is not OK. This should warn (both
     # for distance and/or duration).
-    with assert_warns(ScalingWarning):
+    with pytest.warns(ScalingWarning):
         model.add_edge(depot, client, distance=MAX_VALUE + 1)
 
-    with assert_warns(ScalingWarning):
+    with pytest.warns(ScalingWarning):
         model.add_edge(depot, client, distance=0, duration=MAX_VALUE + 1)
 
 
