@@ -131,7 +131,6 @@ class IteratedLocalSearch:
         start = time.perf_counter()
         iters = iters_no_improvement = 0
         best = curr = self._init
-        prev_bests: list[Solution] = []
 
         cost_eval = self._pm.cost_evaluator()
         while not stop(cost_eval.cost(best)):
@@ -140,11 +139,8 @@ class IteratedLocalSearch:
             if iters_no_improvement == self._params.num_iters_no_improvement:
                 print_progress.restart()
                 curr = best
-                iters_no_improvement = 0
-
                 history.clear()
-                for sol in prev_bests:
-                    history.append(sol)
+                iters_no_improvement = 0
 
             cost_eval = self._pm.cost_evaluator()
             cand = self._search(curr, cost_eval, exhaustive=False)
@@ -153,7 +149,6 @@ class IteratedLocalSearch:
             iters_no_improvement += 1
             if cost_eval.cost(cand) < cost_eval.cost(best):
                 best = cand
-                prev_bests.append(best)
                 iters_no_improvement = 0
 
                 if self._params.exhaustive_on_best:
@@ -171,7 +166,7 @@ class IteratedLocalSearch:
             # We use either the current best or the current cost value from
             # some iterations ago to determine whether to accept the candidate
             # solution, if available.
-            late_cost = cost_eval.penalised_cost(best)
+            late_cost = float("inf")
             if (late := history.peek()) is not None:
                 late_cost = cost_eval.penalised_cost(late)
 
