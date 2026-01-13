@@ -287,12 +287,31 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
         auto const prev = idx - 1;
-        auto const before = nodes[prev]->isReloadDepot()
-                                ? durBefore[prev].finaliseBack()
-                                : durBefore[prev];
+
+        auto before = durBefore[prev];
+        if (nodes[prev]->isReloadDepot())
+        {
+            ProblemData::Depot const &depot = data.location(visits[prev]);
+            before
+                = DurationSegment::merge(0,
+                                         before.finaliseBack(),
+                                         {depot.serviceDuration,
+                                          0,
+                                          0,
+                                          std::numeric_limits<Duration>::max(),
+                                          0});
+        }
 
         auto const edgeDur = durations(visits[prev], visits[idx]);
-        durBefore[idx] = DurationSegment::merge(edgeDur, before, durAt[idx]);
+        if (nodes[idx]->isReloadDepot())
+        {
+            ProblemData::Depot const &depot = data.location(visits[idx]);
+            durBefore[idx]
+                = DurationSegment::merge(edgeDur, before, {depot, 0});
+        }
+        else
+            durBefore[idx]
+                = DurationSegment::merge(edgeDur, before, durAt[idx]);
     }
 
     durAfter.resize(nodes.size());

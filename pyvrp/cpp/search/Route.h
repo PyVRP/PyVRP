@@ -823,8 +823,20 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
     {
         auto const from = route_.visits[step];
         auto const to = route_.visits[step + 1];
-        auto const &durAt = route_.durAt[step + 1];
-        durSegment = DurationSegment::merge(mat(from, to), durSegment, durAt);
+
+        if (route_.nodes[step + 1]->isReloadDepot())
+        {
+            ProblemData::Depot const &depot = route_.data.location(to);
+            DurationSegment const durAt = {depot, 0};
+            durSegment
+                = DurationSegment::merge(mat(from, to), durSegment, durAt);
+        }
+        else
+        {
+            auto const &durAt = route_.durAt[step + 1];
+            durSegment
+                = DurationSegment::merge(mat(from, to), durSegment, durAt);
+        }
     }
 
     return durSegment;
