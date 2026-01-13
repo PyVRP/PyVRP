@@ -172,10 +172,8 @@ class Statistics:
             Additional keyword arguments. These are passed to
             :class:`csv.DictWriter`.
         """
-        field_names = [f.name for f in fields(_Datum)]
-
         with open(where, "w") as fh:
-            header = ["runtime", *field_names]
+            header = ["runtime", *(f.name for f in fields(_Datum))]
             writer = csv.DictWriter(
                 fh, header, delimiter=delimiter, quoting=quoting, **kwargs
             )
