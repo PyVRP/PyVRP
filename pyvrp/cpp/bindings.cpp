@@ -1064,6 +1064,7 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, DurationSegment, duration))
         .def("finalise_back",
              &DurationSegment::finaliseBack,
+             py::arg("service_duration"),
              DOC(pyvrp, DurationSegment, finaliseBack))
         .def("finalise_front",
              &DurationSegment::finaliseFront,

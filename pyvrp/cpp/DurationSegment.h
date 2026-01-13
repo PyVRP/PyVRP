@@ -72,8 +72,15 @@ public:
      * other statistics have been suitably adjusted. This is useful with
      * multiple trips because the finalised segment can be concatenated with
      * segments of later trips.
+     *
+     * Parameters
+     * ----------
+     * service_duration
+     *     Service duration at the (reload) depot at the end of this segment.
+     *     This service occurs at the start of the next trip.
      */
-    [[nodiscard]] inline DurationSegment finaliseBack() const;
+    [[nodiscard]] inline DurationSegment
+    finaliseBack(Duration serviceDuration) const;
 
     /**
      * Finalises this segment towards the front (at the start of the segment),
@@ -221,7 +228,7 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
             first.prevEndLate_};  // field is evaluated left-to-right
 }
 
-DurationSegment DurationSegment::finaliseBack() const
+DurationSegment DurationSegment::finaliseBack(Duration serviceDuration) const
 {
     // We finalise this segment by taking into account the end time of the
     // previous trip, and then merging with this segment, finalised at the
@@ -230,7 +237,7 @@ DurationSegment DurationSegment::finaliseBack() const
     DurationSegment const prev = {0, 0, 0, prevEndLate_, 0};
     DurationSegment const finalised = merge(0, prev, finaliseFront());
 
-    return {0,
+    return {serviceDuration,  // depot service at the start of the next trip
             0,
             finalised.endEarly(),
             // The next trip is free to start at any time after this trip can

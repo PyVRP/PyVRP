@@ -287,19 +287,12 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
         auto const prev = idx - 1;
-
         auto before = durBefore[prev];
+
         if (nodes[prev]->isReloadDepot())
         {
             ProblemData::Depot const &depot = data.location(visits[prev]);
-            before
-                = DurationSegment::merge(0,
-                                         before.finaliseBack(),
-                                         {depot.serviceDuration,
-                                          0,
-                                          0,
-                                          std::numeric_limits<Duration>::max(),
-                                          0});
+            before = before.finaliseBack(depot.serviceDuration);
         }
 
         auto const edgeDur = durations(visits[prev], visits[idx]);
