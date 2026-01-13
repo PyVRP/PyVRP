@@ -179,7 +179,7 @@ class Statistics:
             )
             writer.writeheader()
 
-            for runtime, datum in zip(self.runtimes, self.data):
+            for datum, runtime in zip(self.data, self.runtimes):
                 row = {
                     f: (int(v) if isinstance(v, bool) else v)  # bool as 0/1
                     for f, v in asdict(datum).items()
