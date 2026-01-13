@@ -138,8 +138,9 @@ class IteratedLocalSearch:
 
             if iters_no_improvement == self._params.num_iters_no_improvement:
                 print_progress.restart()
-                curr = best
                 history.clear()
+
+                curr = best
                 iters_no_improvement = 0
 
             cost_eval = self._pm.cost_evaluator()
