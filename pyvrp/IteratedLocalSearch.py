@@ -163,10 +163,10 @@ class IteratedLocalSearch:
             cand_cost = cost_eval.penalised_cost(cand)
             curr_cost = cost_eval.penalised_cost(curr)
 
-            # We use either the current best or the current cost value from
+            # We use either the initial cost or the current cost value from
             # some iterations ago to determine whether to accept the candidate
             # solution, if available.
-            late_cost = float("inf")
+            late_cost = cost_eval.penalised_cost(self._init)
             if (late := history.peek()) is not None:
                 late_cost = cost_eval.penalised_cost(late)
 
