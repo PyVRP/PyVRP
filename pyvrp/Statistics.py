@@ -1,5 +1,5 @@
 import csv
-from dataclasses import dataclass, fields
+from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from time import perf_counter
 from typing import Iterator, Literal
@@ -176,7 +176,7 @@ class Statistics:
         data = [
             {
                 f: int(v) if isinstance(v, bool) else v  # store bool as 0/1
-                for f, v in zip(field_names, vars(datum).values())
+                for f, v in zip(field_names, asdict(datum).values())
             }
             for datum in self.data
         ]
