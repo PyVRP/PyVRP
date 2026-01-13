@@ -166,7 +166,7 @@ class IteratedLocalSearch:
             # We use either the current best or the current cost value from
             # some iterations ago to determine whether to accept the candidate
             # solution, if available.
-            late_cost = cost_eval.penalised_cost(best) * 1.01
+            late_cost = cost_eval.penalised_cost(best)
             if (late := history.peek()) is not None:
                 late_cost = cost_eval.penalised_cost(late)
 
