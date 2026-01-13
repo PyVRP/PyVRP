@@ -173,13 +173,6 @@ class Statistics:
             :class:`csv.DictWriter`.
         """
         field_names = [f.name for f in fields(_Datum)]
-        data = [
-            {
-                f: int(v) if isinstance(v, bool) else v  # store bool as 0/1
-                for f, v in zip(field_names, asdict(datum).values())
-            }
-            for datum in self.data
-        ]
 
         with open(where, "w") as fh:
             header = ["runtime", *field_names]
@@ -188,6 +181,10 @@ class Statistics:
             )
             writer.writeheader()
 
-            for runtime, datum in zip(self.runtimes, data):
-                row = dict(runtime=runtime, **datum)
+            for runtime, datum in zip(self.runtimes, self.data):
+                row = {
+                    f: (int(v) if isinstance(v, bool) else v)  # bool as 0/1
+                    for f, v in zip(field_names, asdict(datum).values())
+                }
+                row["runtime"] = runtime
                 writer.writerow(row)
