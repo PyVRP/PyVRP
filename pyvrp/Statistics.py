@@ -1,5 +1,5 @@
 import csv
-from dataclasses import dataclass, fields
+from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from time import perf_counter
 from typing import Iterator, Literal
@@ -7,7 +7,7 @@ from typing import Iterator, Literal
 from pyvrp._pyvrp import CostEvaluator, Solution
 
 
-@dataclass
+@dataclass(slots=True)
 class _Datum:
     """
     Single iteration data point.
@@ -172,22 +172,17 @@ class Statistics:
             Additional keyword arguments. These are passed to
             :class:`csv.DictWriter`.
         """
-        field_names = [f.name for f in fields(_Datum)]
-        data = [
-            {
-                f: int(v) if isinstance(v, bool) else v  # store bool as 0/1
-                for f, v in zip(field_names, vars(datum).values())
-            }
-            for datum in self.data
-        ]
-
         with open(where, "w") as fh:
-            header = ["runtime", *field_names]
+            header = ["runtime", *(f.name for f in fields(_Datum))]
             writer = csv.DictWriter(
                 fh, header, delimiter=delimiter, quoting=quoting, **kwargs
             )
             writer.writeheader()
 
-            for runtime, datum in zip(self.runtimes, data):
-                row = dict(runtime=runtime, **datum)
+            for datum, runtime in zip(self.data, self.runtimes):
+                row = {
+                    f: int(v) if isinstance(v, bool) else v  # bool as 0/1
+                    for f, v in asdict(datum).items()
+                }
+                row["runtime"] = runtime
                 writer.writerow(row)
