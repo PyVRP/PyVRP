@@ -33,7 +33,7 @@ class IteratedLocalSearchParams:
         best solutions.
     """
 
-    num_iters_no_improvement: int = 150_000
+    num_iters_no_improvement: int = 50_000
     history_length: int = 300
     exhaustive_on_best: bool = True
 
