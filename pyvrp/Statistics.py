@@ -181,7 +181,7 @@ class Statistics:
 
             for datum, runtime in zip(self.data, self.runtimes):
                 row = {
-                    f: (int(v) if isinstance(v, bool) else v)  # bool as 0/1
+                    f: int(v) if isinstance(v, bool) else v  # bool as 0/1
                     for f, v in asdict(datum).items()
                 }
                 row["runtime"] = runtime
