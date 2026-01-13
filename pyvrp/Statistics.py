@@ -7,7 +7,7 @@ from typing import Iterator, Literal
 from pyvrp._pyvrp import CostEvaluator, Solution
 
 
-@dataclass
+@dataclass(slots=True)
 class _Datum:
     """
     Single iteration data point.
