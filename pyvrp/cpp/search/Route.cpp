@@ -309,16 +309,15 @@ void Route::update()
                                ? durAfter[next].finaliseFront()
                                : durAfter[next];
 
-        auto const edgeDur = durations(visits[idx], visits[next]);
+        auto atNode = durAt[idx];
         if (nodes[idx]->isDepot())
         {
             ProblemData::Depot const &depot = data.location(visits[idx]);
-            auto const atDepot
-                = DurationSegment::merge(durAt[idx], {depot.serviceDuration});
-            durAfter[idx] = DurationSegment::merge(edgeDur, atDepot, after);
+            atNode = DurationSegment::merge(atNode, {depot.serviceDuration});
         }
-        else
-            durAfter[idx] = DurationSegment::merge(edgeDur, durAt[idx], after);
+
+        auto const edgeDur = durations(visits[idx], visits[next]);
+        durAfter[idx] = DurationSegment::merge(edgeDur, atNode, after);
     }
 
     // Load.

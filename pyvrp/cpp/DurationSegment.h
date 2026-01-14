@@ -66,7 +66,7 @@ public:
           DurationSegment const &first,
           DurationSegment const &second);
 
-    [[nodiscard]] static inline DurationSegment
+    [[nodiscard]] static inline DurationSegment  // convenient helper
     merge(DurationSegment const &first, DurationSegment const &second);
 
     /**
