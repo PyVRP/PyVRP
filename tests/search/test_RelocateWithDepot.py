@@ -343,11 +343,15 @@ def test_depot_service_duration(ok_small_multiple_trips):
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([1_000], 0, 0)
 
+    # Single route, no reload depots. This route has excess load, which the
+    # cost evaluator penalises heavily, but is feasible w.r.t. duration.
     route = make_search_route(data, [3, 2, 4, 1])
     assert_(route.excess_load(), [8])
-    assert_(route.duration(), 200 + 360 + 360 + 360 + 420)
+    assert_(route.duration(), 200 + 360 + 360 + 360 + 420)  # depot and clients
     assert_(not route.has_time_warp())
 
+    # The reload depot removes excess load (improvement of -8_000) but adds 200
+    # extra service duration at the depot. So the overall delta cost is -7_800.
     assert_equal(op.evaluate(route[1], route[3], cost_eval), -7_800)
 
     op.apply(route[1], route[3])
