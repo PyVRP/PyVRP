@@ -683,7 +683,7 @@ def test_local_search_exhaustive(rc208):
     Tests calling the local search with the optional ``exhaustive`` argument
     for a complete evaluation.
     """
-    rng = RandomNumberGenerator(seed=42)
+    rng = RandomNumberGenerator(seed=2)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
     ls.add_node_operator(Exchange10(rc208))
 

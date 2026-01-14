@@ -192,11 +192,9 @@ def test_restart(ok_small):
 
     sols = [
         Solution(ok_small, [[1, 3], [2, 4]]),  # 22065 (infeas)
-        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
-        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
+        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
         Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
         Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
-        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240
     ]
 
     def run(params: IteratedLocalSearchParams):  # run with given params
@@ -214,21 +212,19 @@ def test_restart(ok_small):
         return res.stats.data
 
     # First run without a restart. We look back to the current solution from
-    # four iterations ago, which means that we accept a worsening solution in
-    # the fifth iteration.
-    curr_costs = [22065, 9868, 9868, 9725, 9868, 9240]
-    params = Params(history_length=4, exhaustive_on_best=False)
+    # last iteration, which means that we only accept improving solutions.
+    curr_costs = [22065, 9725, 9725, 9725]
+    params = Params(history_length=1, exhaustive_on_best=False)
     assert_equal([datum.current_cost for datum in run(params)], curr_costs)
 
-    # But here a restart occurs in the third iteration, and that should trigger
-    # a short period of pure hill climbing. We now do not accept the worsening
-    # solution in the fifth iteration.
+    # But here a restart occurs in the third iteration, and that should clear
+    # the history. We now accept the worsening solution in the last iteration.
     params = Params(
         num_iters_no_improvement=1,
-        history_length=4,
+        history_length=1,
         exhaustive_on_best=False,
     )
-    curr_costs = [22065, 9868, 9868, 9725, 9725, 9240]
+    curr_costs = [22065, 9725, 9725, 9868]
     assert_equal([datum.current_cost for datum in run(params)], curr_costs)
 
 
