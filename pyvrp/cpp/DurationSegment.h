@@ -12,11 +12,11 @@ namespace pyvrp
 {
 /**
  * DurationSegment(
- *     duration: int,
- *     time_warp: int,
- *     start_early: int,
- *     start_late: int,
- *     release_time: int,
+ *     duration: int = 0,
+ *     time_warp: int = 0,
+ *     start_early: int = 0,
+ *     start_late: int = np.iinfo(np.int64).max,
+ *     release_time: int = 0,
  *     cum_duration: int = 0,
  *     cum_time_warp: int = 0,
  *     prev_end_late: int = np.iinfo(np.int64).max,
@@ -72,15 +72,8 @@ public:
      * other statistics have been suitably adjusted. This is useful with
      * multiple trips because the finalised segment can be concatenated with
      * segments of later trips.
-     *
-     * Parameters
-     * ----------
-     * service_duration
-     *     Service duration at the (reload) depot at the end of this segment.
-     *     This service occurs at the start of the next trip.
      */
-    [[nodiscard]] inline DurationSegment
-    finaliseBack(Duration serviceDuration) const;
+    [[nodiscard]] inline DurationSegment finaliseBack() const;
 
     /**
      * Finalises this segment towards the front (at the start of the segment),
@@ -152,8 +145,6 @@ public:
      */
     [[nodiscard]] Duration slack() const;
 
-    DurationSegment() = default;  // default is all zero
-
     // Construct from attributes of the given client.
     DurationSegment(ProblemData::Client const &client);
 
@@ -170,11 +161,12 @@ public:
                     Duration const twLate);
 
     // Construct from raw data.
-    inline DurationSegment(Duration duration,
-                           Duration timeWarp,
-                           Duration startEarly,
-                           Duration startLate,
-                           Duration releaseTime,
+    inline DurationSegment(Duration duration = 0,
+                           Duration timeWarp = 0,
+                           Duration startEarly = 0,
+                           Duration startLate
+                           = std::numeric_limits<Duration>::max(),
+                           Duration releaseTime = 0,
                            Duration cumDuration = 0,
                            Duration cumTimeWarp = 0,
                            Duration prevEndLate
@@ -228,7 +220,7 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
             first.prevEndLate_};  // field is evaluated left-to-right
 }
 
-DurationSegment DurationSegment::finaliseBack(Duration serviceDuration) const
+DurationSegment DurationSegment::finaliseBack() const
 {
     // We finalise this segment by taking into account the end time of the
     // previous trip, and then merging with this segment, finalised at the
@@ -237,7 +229,7 @@ DurationSegment DurationSegment::finaliseBack(Duration serviceDuration) const
     DurationSegment const prev = {0, 0, 0, prevEndLate_, 0};
     DurationSegment const finalised = merge(0, prev, finaliseFront());
 
-    return {serviceDuration,  // depot service at the start of the next trip
+    return {0,
             0,
             finalised.endEarly(),
             // The next trip is free to start at any time after this trip can

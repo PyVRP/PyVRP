@@ -197,7 +197,7 @@ def test_finalise_back_with_time_warp_from_release_time():
     assert_equal(segment.time_warp(), 5)  # due to release time
 
     # Tests that finalising does not affect duration and time warp.
-    finalised = segment.finalise_back(0)
+    finalised = segment.finalise_back()
     assert_equal(finalised.duration(), 5)
     assert_equal(finalised.time_warp(), 5)
 
@@ -295,7 +295,7 @@ def test_repeated_merge_and_finalise_back():
     segment2 = DurationSegment(50, 0, 70, 110, 100)
 
     # segment1 finalises at a reload depot, so we need to finalise at the end.
-    finalised1 = segment1.finalise_back(0)
+    finalised1 = segment1.finalise_back()
     assert_equal(finalised1.start_early(), 95)
     assert_equal(finalised1.start_late(), _INT_MAX)
     assert_equal(finalised1.release_time(), 95)
@@ -315,7 +315,7 @@ def test_repeated_merge_and_finalise_back():
 
     # Return to the end depot. Duration should not change, but we do need to
     # make sure the end times are correct.
-    finalised2 = merged.finalise_back(0)
+    finalised2 = merged.finalise_back()
     assert_equal(finalised2.duration(), 100)
     assert_equal(finalised2.start_early(), 150)
     assert_equal(finalised2.start_late(), _INT_MAX)
@@ -331,13 +331,13 @@ def test_finalise_nonzero_route_slack():
     segment1 = DurationSegment(0, 0, 0, 100, 0)
     segment2 = DurationSegment(0, 0, 50, 75, 0)
 
-    finalised1 = segment1.finalise_back(0)
+    finalised1 = segment1.finalise_back()
     assert_equal(finalised1.release_time(), 0)
     assert_equal(finalised1.prev_end_late(), 100)
     assert_equal(finalised1.slack(), 100)
 
     merged = DurationSegment.merge(0, finalised1, segment2)
-    finalised2 = merged.finalise_back(0)
+    finalised2 = merged.finalise_back()
     assert_equal(finalised2.release_time(), 50)
     assert_equal(finalised2.prev_end_late(), 75)
     assert_equal(finalised2.slack(), 25)
@@ -368,14 +368,7 @@ def test_finalise_back_front_merge_same_thing():
     # Finalise the first segment at its back, then merge. Or finalise the
     # second segment at the front and then merge. This should result in the
     # same segment w.r.t. time warp and duration.
-    finalise_back = DurationSegment.merge(0, ds1.finalise_back(0), ds2)
+    finalise_back = DurationSegment.merge(0, ds1.finalise_back(), ds2)
     finalise_front = DurationSegment.merge(0, ds1, ds2.finalise_front())
     assert_equal(finalise_back.time_warp(), finalise_front.time_warp())
     assert_equal(finalise_back.duration(), finalise_front.duration())
-
-
-def test_finalise_back_depot_service_duration():
-    """
-    TODO
-    """
-    pass

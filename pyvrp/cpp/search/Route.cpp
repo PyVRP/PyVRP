@@ -292,7 +292,8 @@ void Route::update()
         if (nodes[prev]->isDepot())
         {
             ProblemData::Depot const &depot = data.location(visits[prev]);
-            before = before.finaliseBack(depot.serviceDuration);
+            before = DurationSegment::merge(
+                0, before.finaliseBack(), {depot.serviceDuration});
         }
 
         auto const edgeDur = durations(visits[prev], visits[idx]);
@@ -313,7 +314,7 @@ void Route::update()
         {
             ProblemData::Depot const &depot = data.location(visits[idx]);
             auto const atDepot = DurationSegment::merge(
-                0, durAt[idx], {depot, depot.serviceDuration});
+                0, durAt[idx], {depot.serviceDuration});
             durAfter[idx] = DurationSegment::merge(edgeDur, atDepot, after);
         }
         else

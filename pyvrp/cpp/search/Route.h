@@ -823,8 +823,8 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
     {
         auto const from = route_.visits[start];
         ProblemData::Depot const &depot = route_.data.location(from);
-        durSegment = DurationSegment::merge(
-            0, durSegment, {depot, depot.serviceDuration});
+        durSegment
+            = DurationSegment::merge(0, durSegment, {depot.serviceDuration});
     }
 
     for (size_t step = start; step != end; ++step)

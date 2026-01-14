@@ -1050,11 +1050,12 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration>(),
-             py::arg("duration"),
-             py::arg("time_warp"),
-             py::arg("start_early"),
-             py::arg("start_late"),
-             py::arg("release_time"),
+             py::arg("duration") = 0,
+             py::arg("time_warp") = 0,
+             py::arg("start_early") = 0,
+             py::arg("start_late")
+             = std::numeric_limits<pyvrp::Duration>::max(),
+             py::arg("release_time") = 0,
              py::arg("cum_duration") = 0,
              py::arg("cum_time_warp") = 0,
              py::arg("prev_end_late")
@@ -1064,7 +1065,6 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, DurationSegment, duration))
         .def("finalise_back",
              &DurationSegment::finaliseBack,
-             py::arg("service_duration"),
              DOC(pyvrp, DurationSegment, finaliseBack))
         .def("finalise_front",
              &DurationSegment::finaliseFront,
