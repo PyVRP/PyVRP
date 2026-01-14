@@ -817,14 +817,13 @@ DurationSegment
 Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
 {
     auto const &mat = route_.data.durationMatrix(profile);
-    auto durSegment = route_.durAt[start];
+    auto segment = route_.durAt[start];
 
-    if (size() != 1 && route_.nodes[start]->isDepot())
+    if (size() != 1 && route_[start]->isDepot())
     {
-        auto const from = route_.visits[start];
+        auto const from = route_[start]->client();
         ProblemData::Depot const &depot = route_.data.location(from);
-        durSegment
-            = DurationSegment::merge(durSegment, {depot.serviceDuration});
+        segment = DurationSegment::merge(segment, {depot.serviceDuration});
     }
 
     for (size_t step = start; step != end; ++step)
@@ -832,21 +831,21 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
         auto const from = route_.visits[step];
         auto const to = route_.visits[step + 1];
         auto const &durAt = route_.durAt[step + 1];
-        durSegment = DurationSegment::merge(mat(from, to), durSegment, durAt);
+        segment = DurationSegment::merge(mat(from, to), segment, durAt);
     }
 
-    return durSegment;
+    return segment;
 }
 
 LoadSegment Route::SegmentBetween::load(size_t dimension) const
 {
     auto const &loads = route_.loadAt[dimension];
 
-    auto loadSegment = loads[start];
+    auto segment = loads[start];
     for (size_t step = start; step != end; ++step)
-        loadSegment = LoadSegment::merge(loadSegment, loads[step + 1]);
+        segment = LoadSegment::merge(segment, loads[step + 1]);
 
-    return loadSegment;
+    return segment;
 }
 
 bool Route::isFeasible() const

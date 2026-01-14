@@ -287,13 +287,16 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
         auto const prev = idx - 1;
-        auto before = durBefore[prev];
+        auto before = nodes[prev]->isReloadDepot()
+                          ? durBefore[prev].finaliseBack()
+                          : durBefore[prev];
 
         if (nodes[prev]->isDepot())
         {
+            // Then we need to first account for depot service before we merge
+            // with the idx segment.
             ProblemData::Depot const &depot = data.location(visits[prev]);
-            before = DurationSegment::merge(before.finaliseBack(),
-                                            {depot.serviceDuration});
+            before = DurationSegment::merge(before, {depot.serviceDuration});
         }
 
         auto const edgeDur = durations(visits[prev], visits[idx]);
@@ -305,19 +308,22 @@ void Route::update()
     for (size_t next = nodes.size() - 1; next != 0; --next)
     {
         auto const idx = next - 1;
-        auto const after = nodes[next]->isReloadDepot()
-                               ? durAfter[next].finaliseFront()
-                               : durAfter[next];
+        auto after = nodes[next]->isReloadDepot()
+                         ? durAfter[next].finaliseFront()
+                         : durAfter[next];
 
-        auto atNode = durAt[idx];
         if (nodes[idx]->isDepot())
         {
+            // This is not entirely correct logically, since we now do service
+            // at idx after already travelling to next, but that's OK since
+            // we're essentially using the trick of adding service to the
+            // outgoing edge.
             ProblemData::Depot const &depot = data.location(visits[idx]);
-            atNode = DurationSegment::merge(atNode, {depot.serviceDuration});
+            after = DurationSegment::merge({depot.serviceDuration}, after);
         }
 
         auto const edgeDur = durations(visits[idx], visits[next]);
-        durAfter[idx] = DurationSegment::merge(edgeDur, atNode, after);
+        durAfter[idx] = DurationSegment::merge(edgeDur, durAt[idx], after);
     }
 
     // Load.
