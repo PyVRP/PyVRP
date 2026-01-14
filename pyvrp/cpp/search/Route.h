@@ -328,6 +328,10 @@ private:
     std::vector<Load> load_;        // Route loads (for each dimension)
     std::vector<Load> excessLoad_;  // Route excess load (for each dimension)
 
+    // Duration data, for singleton, prefix, and suffix segments. If a segment
+    // *ends* at a depot, that depot's service duration is not included, since
+    // end depots have no service. In particular, a singleton depot segment
+    // does *not* include service.
     std::vector<DurationSegment> durAt;      // Duration data at each node
     std::vector<DurationSegment> durAfter;   // Dur of node -> end (incl.)
     std::vector<DurationSegment> durBefore;  // Dur of start -> node (incl.)
