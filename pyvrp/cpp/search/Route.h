@@ -330,7 +330,7 @@ private:
 
     // Duration data, for singleton, suffix, and prefix segments. If a segment
     // *ends* at a depot, that depot's service duration is not included, since
-    // end depots have no service. In particular, a singleton reload and end
+    // end depots have no service. In particular, a singleton reload or end
     // depot segment does *not* include service.
     std::vector<DurationSegment> durAt;      // Duration data at each node
     std::vector<DurationSegment> durAfter;   // Dur of node -> end (incl.)
