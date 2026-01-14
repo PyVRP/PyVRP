@@ -819,8 +819,8 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
     auto const &mat = route_.data.durationMatrix(profile);
     auto segment = route_.durAt[start];
 
-    if (size() != 1 && route_[start]->isDepot())
-    {
+    if (size() != 1 && route_[start]->isDepot())  // then we need to add the
+    {                                             // start depot's service
         auto const from = route_[start]->client();
         ProblemData::Depot const &depot = route_.data.location(from);
         segment = DurationSegment::merge(segment, {depot.serviceDuration});
@@ -841,11 +841,11 @@ LoadSegment Route::SegmentBetween::load(size_t dimension) const
 {
     auto const &loads = route_.loadAt[dimension];
 
-    auto segment = loads[start];
+    auto loadSegment = loads[start];
     for (size_t step = start; step != end; ++step)
-        segment = LoadSegment::merge(segment, loads[step + 1]);
+        loadSegment = LoadSegment::merge(loadSegment, loads[step + 1]);
 
-    return segment;
+    return loadSegment;
 }
 
 bool Route::isFeasible() const
