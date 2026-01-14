@@ -1095,11 +1095,14 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_duration")
              = std::numeric_limits<pyvrp::Duration>::max(),
              DOC(pyvrp, DurationSegment, timeWarp))
-        .def_static("merge",
-                    &DurationSegment::merge,
-                    py::arg("edge_duration"),
-                    py::arg("first"),
-                    py::arg("second"))
+        .def_static(
+            "merge",
+            py::overload_cast<pyvrp::Duration const,
+                              DurationSegment const &,
+                              DurationSegment const &>(&DurationSegment::merge),
+            py::arg("edge_duration"),
+            py::arg("first"),
+            py::arg("second"))
         .def("__str__",
              [](DurationSegment const &segment)
              {

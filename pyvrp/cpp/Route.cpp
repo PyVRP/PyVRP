@@ -264,7 +264,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
             ds = ds.finaliseFront();  // unless this is the first one
 
         ProblemData::Depot const &end = data.location(trip->endDepot());
-        ds = DurationSegment::merge(0, {end, 0}, ds);
+        ds = DurationSegment::merge({end, 0}, ds);
 
         size_t nextClient = trip->endDepot();
         for (auto it = trip->rbegin(); it != trip->rend(); ++it)
@@ -284,7 +284,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         ds = DurationSegment::merge(edgeDuration, depotDS, ds);
     }
 
-    ds = DurationSegment::merge(0, {vehData, vehData.startLate}, ds);
+    ds = DurationSegment::merge({vehData, vehData.startLate}, ds);
 
     duration_ = ds.duration();
     overtime_ = std::max<Duration>(duration_ - vehData.shiftDuration, 0);

@@ -66,6 +66,9 @@ public:
           DurationSegment const &first,
           DurationSegment const &second);
 
+    [[nodiscard]] static inline DurationSegment
+    merge(DurationSegment const &first, DurationSegment const &second);
+
     /**
      * Finalises this segment towards the back (at the end of the segment),
      * and returns a new segment where release times have been reset, and all
@@ -181,10 +184,9 @@ public:
     inline DurationSegment &operator=(DurationSegment &&) = default;
 };
 
-DurationSegment
-DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
-                       [[maybe_unused]] DurationSegment const &first,
-                       [[maybe_unused]] DurationSegment const &second)
+DurationSegment DurationSegment::merge(Duration const edgeDuration,
+                                       DurationSegment const &first,
+                                       DurationSegment const &second)
 {
     // Because clients' default time windows are [0, INT_MAX], the ternaries in
     // this method are carefully designed to avoid integer over- and underflow
@@ -220,14 +222,20 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
             first.prevEndLate_};  // field is evaluated left-to-right
 }
 
+DurationSegment DurationSegment::merge(DurationSegment const &first,
+                                       DurationSegment const &second)
+{
+    return merge(0, first, second);
+}
+
 DurationSegment DurationSegment::finaliseBack() const
 {
     // We finalise this segment by taking into account the end time of the
     // previous trip, and then merging with this segment, finalised at the
     // start, because that accounts for release times and our earliest and
     // latest start (and, as a consequence, end).
-    DurationSegment const prev = {0, 0, 0, prevEndLate_, 0};
-    DurationSegment const finalised = merge(0, prev, finaliseFront());
+    DurationSegment const prev = {0, 0, 0, prevEndLate_};
+    DurationSegment const finalised = merge(prev, finaliseFront());
 
     return {0,
             0,
@@ -248,11 +256,8 @@ DurationSegment DurationSegment::finaliseFront() const
 {
     // We finalise at the start of this segment. This is pretty easy, via a
     // merge with our release times, if they are binding.
-    DurationSegment const curr
-        = {duration_, timeWarp_, startEarly_, startLate_, 0};
-    DurationSegment const release = {0, 0, startEarly(), startLate(), 0};
-
-    return merge(0, release, curr);
+    DurationSegment const release = {0, 0, startEarly(), startLate()};
+    return merge(release, {duration_, timeWarp_, startEarly_, startLate_});
 }
 
 Duration DurationSegment::duration() const
