@@ -256,13 +256,13 @@ void Route::update()
 
     ProblemData::Depot const &start = data.location(startDepot());
     DurationSegment const vehStart(vehicleType_, vehicleType_.startLate);
-    DurationSegment const depotStart(start);
-    durAt[0] = DurationSegment::merge(0, vehStart, depotStart);
+    DurationSegment const depotStart(start, start.serviceDuration);
+    durAt[0] = DurationSegment::merge(vehStart, depotStart);
 
     ProblemData::Depot const &end = data.location(endDepot());
-    DurationSegment const depotEnd(end);
+    DurationSegment const depotEnd(end, 0);
     DurationSegment const vehEnd(vehicleType_, vehicleType_.twLate);
-    durAt[nodes.size() - 1] = DurationSegment::merge(0, depotEnd, vehEnd);
+    durAt[nodes.size() - 1] = DurationSegment::merge(depotEnd, vehEnd);
 
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
     {
@@ -276,7 +276,7 @@ void Route::update()
         else
         {
             ProblemData::Depot const &depot = data.location(node->client());
-            durAt[idx] = {depot};
+            durAt[idx] = {depot, 0};
         }
     }
 
@@ -287,9 +287,17 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size(); ++idx)
     {
         auto const prev = idx - 1;
-        auto const before = nodes[prev]->isReloadDepot()
-                                ? durBefore[prev].finaliseBack()
-                                : durBefore[prev];
+        auto before = nodes[prev]->isReloadDepot()
+                          ? durBefore[prev].finaliseBack()
+                          : durBefore[prev];
+
+        if (nodes[prev]->isReloadDepot())
+        {
+            // Then we need to first account for depot service before we merge
+            // with the idx segment.
+            ProblemData::Depot const &depot = data.location(visits[prev]);
+            before = DurationSegment::merge(before, {depot.serviceDuration});
+        }
 
         auto const edgeDur = durations(visits[prev], visits[idx]);
         durBefore[idx] = DurationSegment::merge(edgeDur, before, durAt[idx]);
@@ -300,9 +308,19 @@ void Route::update()
     for (size_t next = nodes.size() - 1; next != 0; --next)
     {
         auto const idx = next - 1;
-        auto const after = nodes[next]->isReloadDepot()
-                               ? durAfter[next].finaliseFront()
-                               : durAfter[next];
+        auto after = nodes[next]->isReloadDepot()
+                         ? durAfter[next].finaliseFront()
+                         : durAfter[next];
+
+        if (nodes[idx]->isReloadDepot())
+        {
+            // This is not entirely correct logically, since we now do service
+            // at idx after already travelling to next, but that's OK since
+            // we're essentially using the trick of adding service to the
+            // outgoing edge.
+            ProblemData::Depot const &depot = data.location(visits[idx]);
+            after = DurationSegment::merge({depot.serviceDuration}, after);
+        }
 
         auto const edgeDur = durations(visits[idx], visits[next]);
         durAfter[idx] = DurationSegment::merge(edgeDur, durAt[idx], after);

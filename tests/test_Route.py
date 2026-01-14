@@ -269,6 +269,28 @@ def test_release_time_and_shift_duration():
     assert_equal(route.time_warp(), 998)
 
 
+def test_release_time_and_service_duration():
+    """
+    Tests the interaction between release times and depot service duration, and
+    checks that service at the depot happens after the tasks are released. See
+    also the ``test_release_time_and_shift_duration`` test.
+    """
+    ok_small = read("data/OkSmallReleaseTimes.txt")
+    depot = Depot(x=2334, y=726, service_duration=6_000)
+    data = ok_small.replace(depots=[depot])
+
+    # This route has a release time of 5000, but we want to start much later
+    # anyway because of the time windows. That's not possible, however, because
+    # of the depot service duration of 6000. The overall route duration is 5998
+    # plus the 6000, and there is no time warp.
+    route = Route(data, [2, 3, 4], 0)
+    assert_equal(route.release_time(), 5_000)
+    assert_equal(route.start_time(), 5_000)
+    assert_equal(route.duration(), 6_000 + 5_998)
+    assert_equal(route.service_duration(), 6_000 + 1_140)
+    assert_equal(route.time_warp(), 0)
+
+
 def test_route_centroid(ok_small):
     """
     Tests that each route's center point is the center point of all clients
@@ -693,9 +715,7 @@ def test_small_example_from_cattaruzza_paper():
            *Transportation Science* 50(2): 676-693.
            https://doi.org/10.1287/trsc.2015.0608.
     """
-    # The paper has 20 service duration at the depot. We do not have this field
-    # so we instead add the 20 extra time to the outgoing depot arcs.
-    depot = Depot(0, 0, tw_early=0, tw_late=200)
+    depot = Depot(0, 0, tw_early=0, tw_late=200, service_duration=20)
     clients = [
         # Figure 1 details release times for some clients. But release times
         # are not actually binding in the example, so they are not needed.
@@ -707,7 +727,7 @@ def test_small_example_from_cattaruzza_paper():
     ]
 
     matrix = [
-        [0, 25, 35, 40, 30, 35],  # +20 for depot service duration
+        [0, 5, 15, 20, 10, 15],
         [5, 0, 20, 20, 15, 15],
         [15, 20, 0, 40, 20, 30],
         [20, 20, 40, 0, 30, 10],
@@ -738,8 +758,20 @@ def test_small_example_from_cattaruzza_paper():
     assert_equal(route.end_time(), 95)
     assert_equal(route.time_warp(), 75 + 55)  # two time warp violations
     assert_equal(route.slack(), 0)  # there is time warp, so no slack
-    assert_equal(route.service_duration(), 25)  # at clients
-    assert_equal(route.travel_duration(), 185)  # incl. 80 'service' at depots
+    assert_equal(route.service_duration(), 25 + 80)  # at clients and depots
+    assert_equal(route.travel_duration(), 105)
+
+    # Numbers from the paper. Trip 3 starts at 125, 4 at 115, and the route
+    # ends at the end depot at 95.
+    schedule = route.schedule()
+    assert_equal(schedule[5].start_service, 125)  # trip 3
+    assert_equal(schedule[5].service_duration, 20)
+
+    assert_equal(schedule[7].start_service, 115)  # trip 4
+    assert_equal(schedule[7].service_duration, 20)
+
+    assert_equal(schedule[9].start_service, 95)  # end depot
+    assert_equal(schedule[9].service_duration, 0)
 
 
 def test_multi_trip_with_release_times():

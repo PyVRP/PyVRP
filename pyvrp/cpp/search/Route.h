@@ -328,6 +328,10 @@ private:
     std::vector<Load> load_;        // Route loads (for each dimension)
     std::vector<Load> excessLoad_;  // Route excess load (for each dimension)
 
+    // Duration data, for singleton, suffix, and prefix segments. If a segment
+    // *ends* at a depot, that depot's service duration is not included, since
+    // end depots have no service. In particular, a singleton reload or end
+    // depot segment does *not* include service.
     std::vector<DurationSegment> durAt;      // Duration data at each node
     std::vector<DurationSegment> durAfter;   // Dur of node -> end (incl.)
     std::vector<DurationSegment> durBefore;  // Dur of start -> node (incl.)
@@ -817,17 +821,24 @@ DurationSegment
 Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
 {
     auto const &mat = route_.data.durationMatrix(profile);
-    auto durSegment = route_.durAt[start];
+    auto segment = route_.durAt[start];
+
+    if (size() != 1 && route_[start]->isReloadDepot())  // first need to add the
+    {                                                   // start depot's service
+        auto const from = route_[start]->client();
+        ProblemData::Depot const &depot = route_.data.location(from);
+        segment = DurationSegment::merge(segment, {depot.serviceDuration});
+    }
 
     for (size_t step = start; step != end; ++step)
     {
         auto const from = route_.visits[step];
         auto const to = route_.visits[step + 1];
         auto const &durAt = route_.durAt[step + 1];
-        durSegment = DurationSegment::merge(mat(from, to), durSegment, durAt);
+        segment = DurationSegment::merge(mat(from, to), segment, durAt);
     }
 
-    return durSegment;
+    return segment;
 }
 
 LoadSegment Route::SegmentBetween::load(size_t dimension) const
@@ -1118,7 +1129,8 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
                 // to end the segment within the depot's time windows to
                 // properly account for any release time on our segment.
                 ProblemData::Depot const &depot = data.location(other.last());
-                ds = DurationSegment::merge(edgeDur, {depot}, ds);
+                DurationSegment depotDS = {depot, depot.serviceDuration};
+                ds = DurationSegment::merge(edgeDur, depotDS, ds);
                 ds = ds.finaliseFront();
 
                 edgeDur = 0;  // we are already there!

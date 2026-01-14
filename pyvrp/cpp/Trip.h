@@ -98,7 +98,7 @@ public:
     [[nodiscard]] std::vector<Load> const &excessLoad() const;
 
     /**
-     * Total duration of service on this trip.
+     * Total duration of client and depot service on this trip.
      */
     [[nodiscard]] Duration serviceDuration() const;
 

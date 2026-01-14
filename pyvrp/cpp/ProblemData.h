@@ -281,6 +281,7 @@ public:
      *    y: float,
      *    tw_early: int = 0,
      *    tw_late: int = np.iinfo(np.int64).max,
+     *    service_duration: int = 0,
      *    *,
      *    name: str = "",
      * )
@@ -301,6 +302,9 @@ public:
      *     Opening time of this depot. Default 0.
      * tw_late
      *     Closing time of this depot. Default unconstrained.
+     * service_duration
+     *     Time it takes to e.g. load a vehicle at this depot, at the start of
+     *     a trip. Default 0.
      * name
      *     Free-form name field for this depot. Default empty.
      *
@@ -314,6 +318,9 @@ public:
      *     Opening time of this depot.
      * tw_late
      *     Closing time of this depot.
+     * service_duration
+     *     Time it takes to e.g. load a vehicle at this depot, at the start of
+     *     a trip.
      * name
      *     Free-form name field for this depot.
      */
@@ -321,6 +328,7 @@ public:
     {
         Coordinate const x;
         Coordinate const y;
+        Duration const serviceDuration;
         Duration const twEarly;  // Depot opening time
         Duration const twLate;   // Depot closing time
         char const *name;        // Depot name (for reference)
@@ -329,6 +337,7 @@ public:
               Coordinate y,
               Duration twEarly = 0,
               Duration twLate = std::numeric_limits<Duration>::max(),
+              Duration serviceDuration = 0,
               std::string name = "");
 
         bool operator==(Depot const &other) const;

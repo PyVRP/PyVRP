@@ -12,11 +12,11 @@ namespace pyvrp
 {
 /**
  * DurationSegment(
- *     duration: int,
- *     time_warp: int,
- *     start_early: int,
- *     start_late: int,
- *     release_time: int,
+ *     duration: int = 0,
+ *     time_warp: int = 0,
+ *     start_early: int = 0,
+ *     start_late: int = np.iinfo(np.int64).max,
+ *     release_time: int = 0,
  *     cum_duration: int = 0,
  *     cum_time_warp: int = 0,
  *     prev_end_late: int = np.iinfo(np.int64).max,
@@ -65,6 +65,9 @@ public:
     merge(Duration const edgeDuration,
           DurationSegment const &first,
           DurationSegment const &second);
+
+    [[nodiscard]] static inline DurationSegment  // convenient helper
+    merge(DurationSegment const &first, DurationSegment const &second);
 
     /**
      * Finalises this segment towards the back (at the end of the segment),
@@ -145,15 +148,14 @@ public:
      */
     [[nodiscard]] Duration slack() const;
 
-    DurationSegment() = default;  // default is all zero
-
     // Construct from attributes of the given client.
     DurationSegment(ProblemData::Client const &client);
 
     /**
-     * Construct from attributes of the given depot.
+     * Construct from attributes of the given depot and service duration.
      */
-    DurationSegment(ProblemData::Depot const &depot);
+    DurationSegment(ProblemData::Depot const &depot,
+                    Duration const serviceDuration);
 
     /**
      * Construct from attributes of the given vehicle type and latest finish.
@@ -162,11 +164,12 @@ public:
                     Duration const twLate);
 
     // Construct from raw data.
-    inline DurationSegment(Duration duration,
-                           Duration timeWarp,
-                           Duration startEarly,
-                           Duration startLate,
-                           Duration releaseTime,
+    inline DurationSegment(Duration duration = 0,
+                           Duration timeWarp = 0,
+                           Duration startEarly = 0,
+                           Duration startLate
+                           = std::numeric_limits<Duration>::max(),
+                           Duration releaseTime = 0,
                            Duration cumDuration = 0,
                            Duration cumTimeWarp = 0,
                            Duration prevEndLate
@@ -181,10 +184,9 @@ public:
     inline DurationSegment &operator=(DurationSegment &&) = default;
 };
 
-DurationSegment
-DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
-                       [[maybe_unused]] DurationSegment const &first,
-                       [[maybe_unused]] DurationSegment const &second)
+DurationSegment DurationSegment::merge(Duration const edgeDuration,
+                                       DurationSegment const &first,
+                                       DurationSegment const &second)
 {
     // Because clients' default time windows are [0, INT_MAX], the ternaries in
     // this method are carefully designed to avoid integer over- and underflow
@@ -220,14 +222,20 @@ DurationSegment::merge([[maybe_unused]] Duration const edgeDuration,
             first.prevEndLate_};  // field is evaluated left-to-right
 }
 
+DurationSegment DurationSegment::merge(DurationSegment const &first,
+                                       DurationSegment const &second)
+{
+    return merge(0, first, second);
+}
+
 DurationSegment DurationSegment::finaliseBack() const
 {
     // We finalise this segment by taking into account the end time of the
     // previous trip, and then merging with this segment, finalised at the
     // start, because that accounts for release times and our earliest and
     // latest start (and, as a consequence, end).
-    DurationSegment const prev = {0, 0, 0, prevEndLate_, 0};
-    DurationSegment const finalised = merge(0, prev, finaliseFront());
+    DurationSegment const prev = {0, 0, 0, prevEndLate_};
+    DurationSegment const finalised = merge(prev, finaliseFront());
 
     return {0,
             0,
@@ -248,11 +256,8 @@ DurationSegment DurationSegment::finaliseFront() const
 {
     // We finalise at the start of this segment. This is pretty easy, via a
     // merge with our release times, if they are binding.
-    DurationSegment const curr
-        = {duration_, timeWarp_, startEarly_, startLate_, 0};
-    DurationSegment const release = {0, 0, startEarly(), startLate(), 0};
-
-    return merge(0, release, curr);
+    DurationSegment const release = {0, 0, startEarly(), startLate()};
+    return merge(release, {duration_, timeWarp_, startEarly_, startLate_});
 }
 
 Duration DurationSegment::duration() const

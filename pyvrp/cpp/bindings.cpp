@@ -150,25 +150,32 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Coordinate,
                       pyvrp::Duration,
                       pyvrp::Duration,
+                      pyvrp::Duration,
                       char const *>(),
              py::arg("x"),
              py::arg("y"),
              py::arg("tw_early") = 0,
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
+             py::arg("service_duration") = 0,
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("x", &ProblemData::Depot::x)
         .def_readonly("y", &ProblemData::Depot::y)
         .def_readonly("tw_early", &ProblemData::Depot::twEarly)
         .def_readonly("tw_late", &ProblemData::Depot::twLate)
+        .def_readonly("service_duration", &ProblemData::Depot::serviceDuration)
         .def_readonly("name",
                       &ProblemData::Depot::name,
                       py::return_value_policy::reference_internal)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::Depot const &depot) {  // __getstate__
-                return py::make_tuple(
-                    depot.x, depot.y, depot.twEarly, depot.twLate, depot.name);
+                return py::make_tuple(depot.x,
+                                      depot.y,
+                                      depot.twEarly,
+                                      depot.twLate,
+                                      depot.serviceDuration,
+                                      depot.name);
             },
             [](py::tuple t) {  // __setstate__
                 ProblemData::Depot depot(
@@ -176,7 +183,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[1].cast<pyvrp::Coordinate>(),  // y
                     t[2].cast<pyvrp::Duration>(),    // tw early
                     t[3].cast<pyvrp::Duration>(),    // tw late
-                    t[4].cast<std::string>());       // name
+                    t[4].cast<pyvrp::Duration>(),    // service duration
+                    t[5].cast<std::string>());       // name
 
                 return depot;
             }))
@@ -1042,11 +1050,12 @@ PYBIND11_MODULE(_pyvrp, m)
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration>(),
-             py::arg("duration"),
-             py::arg("time_warp"),
-             py::arg("start_early"),
-             py::arg("start_late"),
-             py::arg("release_time"),
+             py::arg("duration") = 0,
+             py::arg("time_warp") = 0,
+             py::arg("start_early") = 0,
+             py::arg("start_late")
+             = std::numeric_limits<pyvrp::Duration>::max(),
+             py::arg("release_time") = 0,
              py::arg("cum_duration") = 0,
              py::arg("cum_time_warp") = 0,
              py::arg("prev_end_late")
@@ -1086,11 +1095,14 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_duration")
              = std::numeric_limits<pyvrp::Duration>::max(),
              DOC(pyvrp, DurationSegment, timeWarp))
-        .def_static("merge",
-                    &DurationSegment::merge,
-                    py::arg("edge_duration"),
-                    py::arg("first"),
-                    py::arg("second"))
+        .def_static(
+            "merge",
+            py::overload_cast<pyvrp::Duration const,
+                              DurationSegment const &,
+                              DurationSegment const &>(&DurationSegment::merge),
+            py::arg("edge_duration"),
+            py::arg("first"),
+            py::arg("second"))
         .def("__str__",
              [](DurationSegment const &segment)
              {

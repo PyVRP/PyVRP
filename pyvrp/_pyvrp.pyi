@@ -93,6 +93,7 @@ class Depot:
     y: float
     tw_early: int
     tw_late: int
+    service_duration: int
     name: str
     def __init__(
         self,
@@ -100,6 +101,7 @@ class Depot:
         y: float,
         tw_early: int = 0,
         tw_late: int = ...,
+        service_duration: int = 0,
         *,
         name: str = "",
     ) -> None: ...
@@ -379,11 +381,11 @@ class LoadSegment:
 class DurationSegment:
     def __init__(
         self,
-        duration: int,
-        time_warp: int,
-        start_early: int,
-        start_late: int,
-        release_time: int,
+        duration: int = 0,
+        time_warp: int = 0,
+        start_early: int = 0,
+        start_late: int = ...,
+        release_time: int = 0,
         cum_duration: int = 0,
         cum_time_warp: int = 0,
         prev_end_late: int = ...,
