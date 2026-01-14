@@ -1223,9 +1223,10 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     assert_equal(first_trip.duration(), before_reload.duration())
     assert_equal(between_start_reload.duration(), before_reload.duration())
 
-    # Service duration at each depot is 200, but singleton segments do not
-    # include that as end depots (which these singletons are) have no service.
-    assert_equal(route.duration_at(0).duration(), 0)  # start depot
+    # Service duration at each depot is 200, but singleton end depots (incl.
+    # reload depots, which are both start and end depots for trips) do not
+    # include their service
+    assert_equal(route.duration_at(0).duration(), 200)  # start depot
     assert_equal(route.duration_at(3).duration(), 0)  # reload depot
     assert_equal(route.duration_at(6).duration(), 0)  # end depot
 
@@ -1241,7 +1242,7 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     assert_equal(route.duration(), trips_duration)
 
     # Before the start and end depots.
-    assert_equal(route.duration_before(0).duration(), 0)
+    assert_equal(route.duration_before(0).duration(), 200)
     assert_equal(route.duration_before(6).duration(), route.duration())
 
     # After the start and end depots.

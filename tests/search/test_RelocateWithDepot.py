@@ -327,9 +327,33 @@ def test_supports(ok_small, ok_small_multiple_trips, mtvrptw_release_times):
     assert_(RelocateWithDepot.supports(mtvrptw_release_times))  # has reloads
 
 
-def test_depot_service_duration():
+def test_depot_service_duration(ok_small_multiple_trips):
     """
     Tests that reload depot insertions are correctly evaluated when the reload
     depot has service duration.
     """
-    pass  # TODO
+    veh_type = ok_small_multiple_trips.vehicle_type(0)
+    data = ok_small_multiple_trips.replace(
+        depots=[Depot(0, 0, service_duration=200)],
+        vehicle_types=[veh_type.replace(unit_duration_cost=1)],
+        distance_matrices=[np.zeros((5, 5))],
+        duration_matrices=[np.zeros((5, 5))],
+    )
+
+    op = RelocateWithDepot(data)
+    cost_eval = CostEvaluator([1_000], 0, 0)
+
+    route = make_search_route(data, [3, 2, 4, 1])
+    assert_(route.excess_load(), [8])
+    assert_(route.duration(), 200 + 360 + 360 + 360 + 420)
+    assert_(not route.has_time_warp())
+
+    assert_equal(op.evaluate(route[1], route[3], cost_eval), -7_800)
+
+    op.apply(route[1], route[3])
+    route.update()
+
+    assert_equal(str(route), "2 4 | 3 1")
+    assert_equal(route.excess_load(), [0])
+    assert_equal(route.duration(), 2 * 200 + 360 + 360 + 360 + 420)
+    assert_(not route.has_time_warp())

@@ -256,7 +256,7 @@ void Route::update()
 
     ProblemData::Depot const &start = data.location(startDepot());
     DurationSegment const vehStart(vehicleType_, vehicleType_.startLate);
-    DurationSegment const depotStart(start, 0);
+    DurationSegment const depotStart(start, start.serviceDuration);
     durAt[0] = DurationSegment::merge(vehStart, depotStart);
 
     ProblemData::Depot const &end = data.location(endDepot());
@@ -291,7 +291,7 @@ void Route::update()
                           ? durBefore[prev].finaliseBack()
                           : durBefore[prev];
 
-        if (nodes[prev]->isDepot())
+        if (nodes[prev]->isReloadDepot())
         {
             // Then we need to first account for depot service before we merge
             // with the idx segment.
@@ -312,7 +312,7 @@ void Route::update()
                          ? durAfter[next].finaliseFront()
                          : durAfter[next];
 
-        if (nodes[idx]->isDepot())
+        if (nodes[idx]->isReloadDepot())
         {
             // This is not entirely correct logically, since we now do service
             // at idx after already travelling to next, but that's OK since

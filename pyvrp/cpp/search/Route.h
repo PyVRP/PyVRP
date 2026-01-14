@@ -328,10 +328,10 @@ private:
     std::vector<Load> load_;        // Route loads (for each dimension)
     std::vector<Load> excessLoad_;  // Route excess load (for each dimension)
 
-    // Duration data, for singleton, prefix, and suffix segments. If a segment
+    // Duration data, for singleton, suffix, and prefix segments. If a segment
     // *ends* at a depot, that depot's service duration is not included, since
-    // end depots have no service. In particular, a singleton depot segment
-    // does *not* include service.
+    // end depots have no service. In particular, a singleton reload and end
+    // depot segment does *not* include service.
     std::vector<DurationSegment> durAt;      // Duration data at each node
     std::vector<DurationSegment> durAfter;   // Dur of node -> end (incl.)
     std::vector<DurationSegment> durBefore;  // Dur of start -> node (incl.)
@@ -823,8 +823,8 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
     auto const &mat = route_.data.durationMatrix(profile);
     auto segment = route_.durAt[start];
 
-    if (size() != 1 && route_[start]->isDepot())  // then we need to add the
-    {                                             // start depot's service
+    if (size() != 1 && route_[start]->isReloadDepot())  // first need to add the
+    {                                                   // start depot's service
         auto const from = route_[start]->client();
         ProblemData::Depot const &depot = route_.data.location(from);
         segment = DurationSegment::merge(segment, {depot.serviceDuration});

@@ -269,7 +269,7 @@ def test_release_time_and_shift_duration():
     assert_equal(route.time_warp(), 998)
 
 
-def test_release_time_and_service_duration_duration():
+def test_release_time_and_service_duration():
     """
     Tests the interaction between release times and depot service duration, and
     checks that service at the depot happens after the tasks are released. See
