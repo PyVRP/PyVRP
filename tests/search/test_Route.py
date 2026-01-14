@@ -1224,12 +1224,12 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     assert_equal(between_start_reload.duration(), before_reload.duration())
 
     # At each depot.
-    assert_equal(route.duration_at(0).duration(), 200)  # start depot
-    assert_equal(route.duration_at(3).duration(), 200)  # reload depot
+    assert_equal(route.duration_at(0).duration(), 0)  # start depot
+    assert_equal(route.duration_at(3).duration(), 0)  # reload depot
     assert_equal(route.duration_at(6).duration(), 0)  # end depot
 
     # Before the start and end depots (inclusive).
-    assert_equal(route.duration_before(0).duration(), 200)
+    assert_equal(route.duration_before(0).duration(), 0)
     assert_equal(route.duration_before(6).duration(), route.duration())
 
     # Now the second trip.
