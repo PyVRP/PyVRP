@@ -761,6 +761,18 @@ def test_small_example_from_cattaruzza_paper():
     assert_equal(route.service_duration(), 25 + 80)  # at clients and depots
     assert_equal(route.travel_duration(), 105)
 
+    # Numbers from the paper. Trip 3 starts at 125, 4 at 115, and the route
+    # ends at the end depot at 95.
+    schedule = route.schedule()
+    assert_equal(schedule[5].start_service, 125)  # trip 3
+    assert_equal(schedule[5].service_duration, 20)
+
+    assert_equal(schedule[7].start_service, 115)  # trip 4
+    assert_equal(schedule[7].service_duration, 20)
+
+    assert_equal(schedule[9].start_service, 95)  # end depot
+    assert_equal(schedule[9].service_duration, 0)
+
 
 def test_multi_trip_with_release_times():
     """
