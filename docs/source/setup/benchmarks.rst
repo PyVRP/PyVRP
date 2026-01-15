@@ -34,7 +34,7 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - `0.13.0 <https://github.com/PyVRP/PyVRP/tree/9d18224b09bfee81fea7600991300c4ceee9a922>`_
      - 0.31%
      - 0.63%
-     - TODO
+     - 0.16%
      - 0.69%
      - 0.55%
      - 0.53%
