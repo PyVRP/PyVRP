@@ -1119,3 +1119,14 @@ def test_profile_name_and_str():
     profile = m.add_profile(name="test2")
     assert_equal(profile.name, "test2")
     assert_equal(str(profile), "test2")
+
+
+def test_model_solve_initial_solution(rc208):
+    """
+    Tests that the Model correctly forwards an initial solution.
+    """
+    m = Model.from_data(rc208)
+
+    bks = read_solution("data/RC208.sol", rc208)
+    res = m.solve(stop=MaxIterations(0), initial_solution=bks)
+    assert_equal(res.best, bks)
