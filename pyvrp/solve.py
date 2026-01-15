@@ -167,7 +167,7 @@ def solve(
         Solver parameters to use. If not provided, a default will be used.
     initial_solution
         Optional solution to use as a warm start. The solver constructs a
-        (possibly poor) solution if this argument is not provided.
+        (possibly poor) initial solution if this argument is not provided.
 
     Returns
     -------
