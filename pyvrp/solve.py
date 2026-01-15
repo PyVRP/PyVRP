@@ -113,10 +113,6 @@ class SolveParams:
     def from_file(cls, loc: str | pathlib.Path):
         """
         Loads the solver parameters from a TOML file.
-
-        .. note::
-           The initial solution cannot be loaded from file, and will always be
-           set to ``None``.
         """
         with open(loc, "rb") as fh:
             data = tomllib.load(fh)
@@ -170,8 +166,8 @@ def solve(
     params
         Solver parameters to use. If not provided, a default will be used.
     initial_solution
-        Optional initial solution to use as a warm start. The solver constructs
-        a (possibly poor) initial solution if this argument is not provided.
+        Optional solution to use as a warm start. The solver constructs a
+        (possibly poor) solution if this argument is not provided.
 
     Returns
     -------
