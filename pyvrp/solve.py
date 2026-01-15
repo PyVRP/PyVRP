@@ -49,9 +49,6 @@ class SolveParams:
         Time (in seconds) between iteration logs. Default 5s.
     perturbation
         Perturbation parameters.
-    initial_solution
-        Solution to start the search from. If not provided, a default solution
-        will be created.
     """
 
     def __init__(
@@ -63,7 +60,6 @@ class SolveParams:
         route_ops: list[type[RouteOperator]] = ROUTE_OPERATORS,
         display_interval: float = 5.0,
         perturbation: PerturbationParams = PerturbationParams(),
-        initial_solution: Solution | None = None,
     ):
         self._ils = ils
         self._penalty = penalty
@@ -72,7 +68,6 @@ class SolveParams:
         self._route_ops = route_ops
         self._display_interval = display_interval
         self._perturbation = perturbation
-        self._initial_solution = initial_solution
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -84,7 +79,6 @@ class SolveParams:
             and self.route_ops == other.route_ops
             and self.display_interval == other.display_interval
             and self.perturbation == other.perturbation
-            and self.initial_solution == other.initial_solution
         )
 
     @property
@@ -115,10 +109,6 @@ class SolveParams:
     def perturbation(self):
         return self._perturbation
 
-    @property
-    def initial_solution(self) -> Solution | None:
-        return self._initial_solution
-
     @classmethod
     def from_file(cls, loc: str | pathlib.Path):
         """
@@ -147,7 +137,6 @@ class SolveParams:
             route_ops,
             data.get("display_interval", 5.0),
             PerturbationParams(**data.get("perturbation", {})),
-            None,  # initial solution cannot be loaded from file
         )
 
 
@@ -158,6 +147,7 @@ def solve(
     collect_stats: bool = True,
     display: bool = False,
     params: SolveParams = SolveParams(),
+    initial_solution: Solution | None = None,
 ) -> Result:
     """
     Solves the given problem data instance.
@@ -179,6 +169,9 @@ def solve(
         ``collect_stats`` is also set, which it is by default.
     params
         Solver parameters to use. If not provided, a default will be used.
+    initial_solution
+        Optional initial solution to use as a warm start. The solver constructs
+        a (possibly poor) initial solution if this argument is not provided.
 
     Returns
     -------
@@ -201,7 +194,7 @@ def solve(
 
     pm = PenaltyManager.init_from(data, params.penalty)
 
-    init = params.initial_solution
+    init = initial_solution
     if init is None:
         init = ls(Solution(data, []), pm.max_cost_evaluator(), exhaustive=True)
 
