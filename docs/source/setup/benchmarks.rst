@@ -30,6 +30,15 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - VRPB
      - HFVRP
      - MTVRPTWR
+   * - 15 January 2026
+     - `0.13.0 <https://github.com/PyVRP/PyVRP/tree/9d18224b09bfee81fea7600991300c4ceee9a922>`_
+     - 0.31%
+     - 0.63%
+     - TODO
+     - 0.69%
+     - 0.55%
+     - 0.53%
+     - 0.33%
    * - 20 October 2025
      - `0.12.0 <https://github.com/PyVRP/PyVRP/tree/0f84c35356c5be16255b02aee3475aa2d69cc632>`_
      - 0.43%
