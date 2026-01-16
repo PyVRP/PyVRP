@@ -192,7 +192,10 @@ def solve(
 
     init = initial_solution
     if init is None:
-        init = ls(Solution(data, []), pm.max_cost_evaluator(), exhaustive=True)
+        # Start from a random initial solution to ensure it's not completely
+        # empty (because starting from empty solutions can be a bit difficult).
+        random = Solution.make_random(data, rng)
+        init = ls(random, pm.max_cost_evaluator(), exhaustive=True)
 
     algo = IteratedLocalSearch(data, pm, rng, ls, init, params.ils)
     return algo.run(stop, collect_stats, display, params.display_interval)
