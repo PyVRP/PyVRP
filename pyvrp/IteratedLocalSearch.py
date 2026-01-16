@@ -157,8 +157,7 @@ class IteratedLocalSearch:
                     # if we can improve it via an exhaustive search. That new
                     # candidate solution might be infeasible, so we need to
                     # check before updating best.
-                    max_cost_eval = self._pm.max_cost_evaluator()
-                    cand = self._search(cand, max_cost_eval, exhaustive=True)
+                    cand = self._search(cand, cost_eval, exhaustive=True)
                     if cand.is_feasible():
                         best = cand
 
