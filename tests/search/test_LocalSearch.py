@@ -706,3 +706,35 @@ def test_local_search_exhaustive(rc208):
     init_cost = cost_eval.penalised_cost(init)
     assert_(perturbed_cost < init_cost)
     assert_(exhaustive_cost < init_cost)
+
+
+def test_local_search_inserts_into_empty_solutions():
+    """
+    Tests that the local search inserts into empty solutions, even when the
+    granular neighbourhood is empty.
+    """
+    data = ProblemData(
+        clients=[
+            Client(0, 0, prize=1_000, required=False),  # high prizes make
+            Client(0, 0, prize=1_000, required=False),  # inserting worthwhile
+        ],
+        depots=[Depot(0, 0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[np.zeros((3, 3), dtype=int)],
+        duration_matrices=[np.zeros((3, 3), dtype=int)],
+    )
+
+    rng = RandomNumberGenerator(seed=2)
+    cost_eval = CostEvaluator([], 0, 0)
+    ls = LocalSearch(data, rng, [[], [], []])
+    ls.add_node_operator(Exchange10(data))
+
+    empty = Solution(data, [])
+    assert_equal(empty.num_clients(), 0)
+    assert_equal(empty.uncollected_prizes(), 2_000)
+
+    # Start from the empty solution and check that the improved solution is no
+    # longer empty - the local search should have inserted the missing clients.
+    sol = ls(empty, cost_eval, exhaustive=True)
+    assert_equal(sol.num_clients(), 2)
+    assert_equal(sol.uncollected_prizes(), 0)
