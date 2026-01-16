@@ -193,8 +193,7 @@ def solve(
     init = initial_solution
     if init is None:
         # Start from a random initial solution to ensure it's not completely
-        # empty (because starting from empty but feasible solutions can be
-        # a bit difficult).
+        # empty (because starting from empty solutions can be a bit difficult).
         random = Solution.make_random(data, rng)
         init = ls(random, pm.max_cost_evaluator(), exhaustive=True)
 
