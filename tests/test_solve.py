@@ -125,3 +125,4 @@ def test_instance(ok_small_prizes):
 
     result = solve(data, MaxIterations(10))
     assert_equal(result.best.num_clients(), 4)
+    assert_equal(result.cost(), 9155)
