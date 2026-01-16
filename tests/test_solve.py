@@ -122,7 +122,9 @@ def test_instance(ok_small_prizes):
         for c in ok_small_prizes.clients()
     ]
     data = ok_small_prizes.replace(clients=clients)
-
     result = solve(data, MaxIterations(10))
+
+    # All clients have a very high prize, so they should all be served.
+    # The cost is equal to the optimal solution of the OkSmall instance.
     assert_equal(result.best.num_clients(), 4)
     assert_equal(result.cost(), 9155)
