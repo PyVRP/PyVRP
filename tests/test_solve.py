@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 
+from pyvrp import Client
 from pyvrp.IteratedLocalSearch import IteratedLocalSearchParams
 from pyvrp.PenaltyManager import PenaltyParams
 from pyvrp.search import (
@@ -104,3 +105,23 @@ def test_solve_custom_params(rc208):
     # is skipped because it's an empty initial solution with penalised cost 0.
     costs = [datum.current_cost for datum in res.stats.data[1:]]
     assert_(monotonically_decreasing(costs))
+
+
+def test_instance(ok_small_prizes):
+    clients = [
+        Client(
+            x=c.x,
+            y=c.y,
+            delivery=c.delivery,
+            pickup=c.pickup,
+            tw_early=c.tw_early,
+            tw_late=c.tw_late,
+            prize=1_000_000,
+            required=False,
+        )
+        for c in ok_small_prizes.clients()
+    ]
+    data = ok_small_prizes.replace(clients=clients)
+
+    result = solve(data, MaxIterations(10))
+    assert_equal(result.best.num_clients(), 4)
