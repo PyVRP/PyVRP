@@ -336,6 +336,8 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
         }
     }
 
+    // Evaluate inserting after the first route's start depot as a fallback if
+    // U has not already been inserted.
     auto &route = solution_.routes[0];
     if (!U->route() && insertCost(U, route[0], data, costEvaluator) < 0)
     {
