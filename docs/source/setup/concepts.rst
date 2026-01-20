@@ -28,8 +28,9 @@ The following figure explains this graphically.
 Depots
 ^^^^^^
 
-Depots modelled with :class:`~pyvrp._pyvrp.Depot` objects support opening hours restrictions through their time window attributes.
-The opening hours indicate when vehicles may visit the depot to start and end their routes, or to reload.
+Depots modelled using :class:`~pyvrp._pyvrp.Depot` objects support opening hour restrictions through their time window attributes.
+The opening hours indicate when vehicles may visit the depot to start, end, or reload along their routes.
+As with client time windows, waiting for a depot to open is allowed, but arriving late is not.
 The depot's :attr:`~pyvrp._pyvrp.Depot.service_duration` applies to vehicles leaving the depot, and can for example be used to model the time it takes to load the vehicle. 
 
 Vehicles
