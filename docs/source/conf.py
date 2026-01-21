@@ -25,8 +25,8 @@ with open("../../pyproject.toml", "rb") as fh:
 with open("versions.json") as fh:  # type: ignore
     version_info = json.load(fh)
 
-print("Copying example notebooks into docs/source/examples/")
-shutil.copytree("../../examples", "examples/", dirs_exist_ok=True)
+print("Copying notebooks into docs/source/notebooks/")
+shutil.copytree("../../notebooks", "notebooks/", dirs_exist_ok=True)
 
 # -- API documentation
 autoclass_content = "class"

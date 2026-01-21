@@ -31,7 +31,7 @@ Contents
    :maxdepth: 1
    :caption: Getting started
 
-   examples/quick_start
+   notebooks/quick_start
    setup/installation
    setup/getting_help
    setup/faq
@@ -48,9 +48,9 @@ Contents
 
 .. toctree::
    :maxdepth: 1
-   :caption: Examples
+   :caption: Tutorials
 
-   examples/quick_tutorial
+   notebooks/quick_tutorial
 
 .. toctree::
    :maxdepth: 1
@@ -66,7 +66,7 @@ Contents
    :caption: Developing PyVRP
 
    dev/algorithm
-   examples/pyvrp_implementation
+   notebooks/pyvrp_implementation
    dev/benchmarking
    dev/contributing
    dev/releasing
