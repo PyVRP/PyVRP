@@ -50,7 +50,12 @@ Contents
    :maxdepth: 1
    :caption: Tutorials
 
-   notebooks/quick_tutorial
+   notebooks/load
+   notebooks/duration_constraints
+   notebooks/optional_clients
+   notebooks/profiles
+   notebooks/mutually_exclusive_groups
+   notebooks/reloading
 
 .. toctree::
    :maxdepth: 1
