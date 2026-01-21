@@ -51,9 +51,7 @@ Contents
    :caption: Examples
 
    examples/quick_tutorial
-   examples/basic_vrps
    examples/using_pyvrp_components
-
 
 .. toctree::
    :maxdepth: 1
