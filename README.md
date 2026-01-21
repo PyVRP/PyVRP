@@ -95,7 +95,7 @@ A preprint of this paper is available on [arXiv][9].
 
 [6]: https://pyvrp.org/setup/introduction_to_vrp.html
 
-[7]: https://pyvrp.org/setup/introduction_to_ils.html
+[7]: https://pyvrp.org/dev/algorithm.html
 
 [8]: https://pyvrp.org/examples/using_pyvrp_components.html
 
