@@ -38,7 +38,14 @@ Contents
    setup/faq
    setup/concepts
    setup/benchmarks
-   setup/citing
+
+.. toctree::
+   :maxdepth: 1
+   :caption: About us
+
+   about/about
+   about/funding
+   about/citing
 
 .. toctree::
    :maxdepth: 1
@@ -47,6 +54,7 @@ Contents
    examples/quick_tutorial
    examples/basic_vrps
    examples/using_pyvrp_components
+
 
 .. toctree::
    :maxdepth: 1
