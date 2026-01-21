@@ -31,7 +31,7 @@ Contents
    :maxdepth: 1
    :caption: Getting started
 
-   setup/introduction_to_vrp
+   examples/quick_start
    setup/installation
    setup/getting_help
    setup/faq
