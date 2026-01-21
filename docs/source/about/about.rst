@@ -14,7 +14,7 @@ Timeline
 --------
 
 Starting in late 2022, PyVRP has seen many extensions and improvements to become the capable vehicle routing solver that it is today.
-A timeline sketches the most significant to date:
+The following timeline sketches the most significant to date:
 
 * **2023**: PyVRP is released, and adds support for multiple vehicle types, optional clients, and a high-level :class:`~pyvrp.Model.Model` interface;
 * **2024**: PyVRP adds support for multiple depots, simultaneous pickups and deliveries, mutually exclusive groups, multiple distance and duration matrices through the profile mechanism, and multiple load dimensions;
