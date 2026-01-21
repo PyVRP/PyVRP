@@ -51,7 +51,6 @@ Contents
    :caption: Examples
 
    examples/quick_tutorial
-   examples/using_pyvrp_components
 
 .. toctree::
    :maxdepth: 1
@@ -67,6 +66,7 @@ Contents
    :caption: Developing PyVRP
 
    dev/algorithm
+   examples/pyvrp_implementation
    dev/benchmarking
    dev/contributing
    dev/releasing

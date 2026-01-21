@@ -1,4 +1,4 @@
-PyVRP's algorithm
+The ILS algorithm
 =================
 
 PyVRP provides a high-performance implementation of the iterated local search (ILS) algorithm for vehicle routing problems (VRPs).
