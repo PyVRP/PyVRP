@@ -7,7 +7,7 @@ The most straightforward way to use the ``pyvrp`` package in your project is to 
 
    pip install pyvrp
 
-Alternatively, PyVRP can be installed from directly from the source code on GitHub:
+Alternatively, PyVRP can also be installed directly from the source code on GitHub:
 
 .. code-block:: shell
 
