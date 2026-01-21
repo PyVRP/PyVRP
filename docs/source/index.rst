@@ -32,7 +32,6 @@ Contents
    :caption: Getting started
 
    setup/introduction_to_vrp
-   setup/introduction_to_ils
    setup/installation
    setup/getting_help
    setup/faq
@@ -69,6 +68,7 @@ Contents
    :maxdepth: 1
    :caption: Developing PyVRP
 
+   dev/algorithm
    dev/benchmarking
    dev/contributing
    dev/releasing

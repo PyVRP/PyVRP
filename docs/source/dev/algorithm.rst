@@ -1,5 +1,5 @@
-A brief introduction to ILS
-===========================
+PyVRP's algorithm
+=================
 
 PyVRP provides a high-performance implementation of the iterated local search (ILS) algorithm for vehicle routing problems (VRPs).
 ILS is a single-trajectory algorithm that improves a solution by repeated applications of small perturbations and local improvement procedures.
@@ -9,7 +9,8 @@ This approach effectively balances between exploration and exploitation of the s
 
    For a more thorough introduction to ILS for VRPs, we refer to the works of `Lourenço et al. (2019) <https://link.springer.com/chapter/10.1007/978-3-319-91086-4_5>`_ and `Accorsi and Vigo (2021) <https://pubsonline.informs.org/doi/abs/10.1287/trsc.2021.1059>`_.
 
-The ILS algorithm works as follows.
+Iterated local search
+^^^^^^^^^^^^^^^^^^^^^
 
 The algorithm begins with an initial solution which becomes the current and best solution.
 In each iteration, the algorithm perturbs the current solution just enough to escape from a local optimum, while preserving much of the solution's structure.
@@ -33,8 +34,8 @@ In pseudocode, ILS works as follows:
 |         :math:`s^\text{best} \leftarrow s^\text{cand}`
 | **return** :math:`s^\text{best}`
 
-PyVRP provides well-tested and high-quality implementations of the ILS algorithm, stopping criteria, acceptance criteria and various perturbation and local search procedures.
+Implementation
+--------------
 
-.. hint::
-
-   See the :doc:`tutorial <../examples/quick_tutorial>` page to get started with PyVRP.
+PyVRP provides a well-tested and high-quality implementation of ILS through the :class:`~pyvrp.IteratedLocalSearch.IteratedLocalSearch` class, various stopping criteria in :mod:`pyvrp.stop`, and perturbation and local search procedures in :mod:`pyvrp.search`.
+All are implemented in Python, except for the perturbation and local search procedures, which are implemented in C++.
