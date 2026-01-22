@@ -27,20 +27,20 @@ The documentation is available [here][1].
 > [!TIP]
 > Looking for professional support? [RoutingLab](https://routinglab.tech) provides consulting, custom development, and FastVRP - a production-ready route optimisation API built on PyVRP.
 
-### Examples
+### Tutorials
 
-We provide some example notebooks that show how PyVRP may be used to solve vehicle routing problems.
-These include:
+We provide many tutorials that show how to use PyVRP to solve vehicle routing problems.
+The [quickstart][4] introduces PyVRP's modelling interface and is a great way to get started.
 
-- A short tutorial and introduction to PyVRP's modelling interface, [here][5].
-  This is a great way to get started with PyVRP.
-- A notebook solving classical VRP variants, [here][4].
-  In this notebook we solve several benchmark instances of the CVRP and VRPTW problems.
-  We also demonstrate how to use the plotting tools available in PyVRP to visualise the instance and statistics collected during the search procedure. 
-- A notebook implementing a `solve` method using PyVRP's components, [here][8].
-  This notebook is a great way to dive deeper into how PyVRP works internally.
+The following tutorials cover specific features in more detail:
+- [Load and vehicle capacities][5]: pickups, deliveries, and multiple load dimensions.
+- [Time and duration constraints][6]: time windows, service durations, release times, and shifts.
+- [Profiles][7]: routing profiles for different vehicle types and access restrictions.
+- [Optional clients][8]: visiting optional clients with rewards.
+- [Mutually exclusive groups][9]: client groups for modelling alternative services.
+- [Reloading][10]: vehicle reloading at depots to reset capacity.
 
-If you are new to vehicle routing or metaheuristics, you might also benefit from reading the [introduction to VRP][6] and [introduction to ILS][7] pages.
+For those interested in PyVRP's underlying algorithm, see [this page][11] for a high-level description of the iterated local search algorithm, and [this notebook][12] for an implementation of the `solve` method using PyVRP's components.
 
 ### Getting help
 
@@ -81,7 +81,7 @@ Or, using the following BibTeX entry:
 }
 ```
 
-A preprint of this paper is available on [arXiv][9]. 
+A preprint of this paper is available on [arXiv][13].
 
 [1]: https://pyvrp.org/
 
@@ -89,14 +89,22 @@ A preprint of this paper is available on [arXiv][9].
 
 [3]: https://pyvrp.org/setup/getting_help.html
 
-[4]: https://pyvrp.org/examples/basic_vrps.html
+[4]: https://pyvrp.org/notebooks/quick_start.html
 
-[5]: https://pyvrp.org/examples/quick_tutorial.html
+[5]: https://pyvrp.org/notebooks/load.html
 
-[6]: https://pyvrp.org/setup/introduction_to_vrp.html
+[6]: https://pyvrp.org/notebooks/duration_constraints.html
 
-[7]: https://pyvrp.org/dev/algorithm.html
+[7]: https://pyvrp.org/notebooks/profiles.html
 
-[8]: https://pyvrp.org/examples/using_pyvrp_components.html
+[8]: https://pyvrp.org/notebooks/optional_clients.html
 
-[9]: https://arxiv.org/abs/2403.13795
+[9]: https://pyvrp.org/notebooks/mutually_exclusive_groups.html
+
+[10]: https://pyvrp.org/notebooks/reloading.html
+
+[11]: https://pyvrp.org/dev/algorithm.html
+
+[12]: https://pyvrp.org/notebooks/pyvrp_implementation.html
+
+[13]: https://arxiv.org/abs/2403.13795
