@@ -177,7 +177,7 @@ heaptrack.*.gz
 # Data files
 data/
 !tests/data/
-!examples/data
+!notebooks/data
 
 # Ignore Mac DS_Store files
 .DS_Store

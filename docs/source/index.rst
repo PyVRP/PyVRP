@@ -31,7 +31,7 @@ Contents
    :maxdepth: 1
    :caption: Getting started
 
-   setup/introduction_to_vrp
+   notebooks/quick_start
    setup/installation
    setup/getting_help
    setup/faq
@@ -48,12 +48,14 @@ Contents
 
 .. toctree::
    :maxdepth: 1
-   :caption: Examples
+   :caption: Tutorials
 
-   examples/quick_tutorial
-   examples/basic_vrps
-   examples/using_pyvrp_components
-
+   notebooks/load
+   notebooks/duration_constraints
+   notebooks/profiles
+   notebooks/optional_clients
+   notebooks/mutually_exclusive_groups
+   notebooks/reloading
 
 .. toctree::
    :maxdepth: 1
@@ -69,6 +71,7 @@ Contents
    :caption: Developing PyVRP
 
    dev/algorithm
+   notebooks/pyvrp_implementation
    dev/benchmarking
    dev/contributing
    dev/releasing
