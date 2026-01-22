@@ -52,8 +52,8 @@ Contents
 
    notebooks/load
    notebooks/duration_constraints
-   notebooks/optional_clients
    notebooks/profiles
+   notebooks/optional_clients
    notebooks/mutually_exclusive_groups
    notebooks/reloading
 
