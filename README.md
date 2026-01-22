@@ -34,11 +34,11 @@ The [quickstart][4] introduces PyVRP's modelling interface and is a great way to
 
 The following tutorials cover specific features in more detail:
 - [Load and vehicle capacities][5]: pickups, deliveries, and multiple load dimensions.
-- [Time and duration constraints][6]: time windows, service durations, release times, and shifts.
-- [Profiles][7]: routing profiles for different vehicle types and access restrictions.
-- [Optional clients][8]: visiting optional clients with rewards.
-- [Mutually exclusive groups][9]: client groups for modelling alternative services.
-- [Reloading][10]: vehicle reloading at depots to reset capacity.
+- [Time and duration constraints][6]: time windows, service durations, release times, shifts and overtime.
+- [Profiles][7]: different distances and durations for different vehicle types, and modelling access restrictions.
+- [Optional clients][8]: using rewards to visit optional clients.
+- [Mutually exclusive groups][9]: modelling alternative services.
+- [Reloading][10]: vehicle reloading at depots during routes.
 
 For those interested in PyVRP's underlying algorithm, see [this page][11] for a high-level description of the iterated local search algorithm, and [this notebook][12] for an implementation of the `solve` method using PyVRP's components.
 
