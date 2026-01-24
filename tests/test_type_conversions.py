@@ -1,3 +1,6 @@
+# This file is part of the PyVRP project (https://github.com/PyVRP/PyVRP), and
+# licensed under the terms of the MIT license.
+
 __doc__ = """
 The tests in this file check that Python objects convertible to integers are
 handled appropriately on the C++ side - this includes checking for potential

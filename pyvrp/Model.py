@@ -1,3 +1,6 @@
+# This file is part of the PyVRP project (https://github.com/PyVRP/PyVRP), and
+# licensed under the terms of the MIT license.
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Sequence

@@ -1,3 +1,6 @@
+# This file is part of the PyVRP project (https://github.com/PyVRP/PyVRP), and
+# licensed under the terms of the MIT license.
+
 """
 Wrapper file for building the native extensions. This file wraps the
 build_extensions script, and uses a temporary build directory for Meson.

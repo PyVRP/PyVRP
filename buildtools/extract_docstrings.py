@@ -1,3 +1,6 @@
+# This file is part of the PyVRP project (https://github.com/PyVRP/PyVRP), and
+# licensed under the terms of the MIT license.
+
 """
 This script extracts the docstrings from various C++ header files, and writes
 them into a documentation header file. This is used to generate documentation

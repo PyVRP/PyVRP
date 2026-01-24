@@ -1,3 +1,6 @@
+# This file is part of the PyVRP project (https://github.com/PyVRP/PyVRP), and
+# licensed under the terms of the MIT license.
+
 import numpy as np
 
 _INT_MAX = np.iinfo(np.int64).max

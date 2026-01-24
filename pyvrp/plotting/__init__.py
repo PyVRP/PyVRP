@@ -1,3 +1,6 @@
+# This file is part of the PyVRP project (https://github.com/PyVRP/PyVRP), and
+# licensed under the terms of the MIT license.
+
 from .plot_coordinates import plot_coordinates as plot_coordinates
 from .plot_demands import plot_demands as plot_demands
 from .plot_instance import plot_instance as plot_instance

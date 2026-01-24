@@ -1,3 +1,6 @@
+# This file is part of the PyVRP project (https://github.com/PyVRP/PyVRP), and
+# licensed under the terms of the MIT license.
+
 import csv
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path

@@ -1,3 +1,6 @@
+# This file is part of the PyVRP project (https://github.com/PyVRP/PyVRP), and
+# licensed under the terms of the MIT license.
+
 import numpy as np
 from matplotlib.testing.decorators import image_comparison as img_comp
 from numpy.testing import assert_equal, assert_raises

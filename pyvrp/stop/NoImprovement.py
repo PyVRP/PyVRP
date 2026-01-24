@@ -1,3 +1,7 @@
+# This file is part of the PyVRP project (https://github.com/PyVRP/PyVRP), and
+# licensed under the terms of the MIT license.
+
+
 class NoImprovement:
     """
     Criterion that stops if the best solution has not been improved for a fixed

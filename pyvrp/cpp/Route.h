@@ -1,3 +1,8 @@
+/*
+ * This file is part of the PyVRP project (https://github.com/PyVRP/PyVRP), and
+ * licensed under the terms of the MIT license.
+ */
+
 #ifndef PYVRP_ROUTE_H
 #define PYVRP_ROUTE_H
 
