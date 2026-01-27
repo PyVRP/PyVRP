@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iterator>
 #include <numeric>
 
 using pyvrp::Solution;
@@ -80,8 +81,12 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 if (!V->route())
                     continue;
 
-                if (lastUpdated[U->route()->idx()] > lastTested
-                    || lastUpdated[V->route()->idx()] > lastTested)
+                if (lastUpdated[std::distance(solution_.routes.data(),
+                                              U->route())]
+                        > lastTested
+                    || lastUpdated[std::distance(solution_.routes.data(),
+                                                 V->route())]
+                           > lastTested)
                 {
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
@@ -360,12 +365,12 @@ void LocalSearch::update(Route *U, Route *V)
     searchCompleted_ = false;
 
     U->update();
-    lastUpdated[U->idx()] = numUpdates_;
+    lastUpdated[std::distance(solution_.routes.data(), U)] = numUpdates_;
 
     if (U != V)
     {
         V->update();
-        lastUpdated[V->idx()] = numUpdates_;
+        lastUpdated[std::distance(solution_.routes.data(), V)] = numUpdates_;
     }
 }
 

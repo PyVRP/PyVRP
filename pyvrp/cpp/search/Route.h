@@ -302,7 +302,6 @@ private:
     ProblemData const &data;
 
     ProblemData::VehicleType const &vehicleType_;
-    size_t const idx_;
 
     Distance distance_;  // Separately cached cost components
     Cost distanceCost_;
@@ -345,11 +344,6 @@ private:
 #endif
 
 public:
-    /**
-     * Route index.
-     */
-    [[nodiscard]] inline size_t idx() const;
-
     /**
      * @return The client or depot node at the given ``idx``.
      */
@@ -865,8 +859,6 @@ bool Route::hasTimeWarp() const
     assert(!dirty);
     return timeWarp() > 0;
 }
-
-size_t Route::idx() const { return idx_; }
 
 Route::Node *Route::operator[](size_t idx)
 {

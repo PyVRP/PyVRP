@@ -24,8 +24,7 @@ def test_node_init(loc: int):
 @pytest.mark.parametrize(("idx", "vehicle_type"), [(0, 0), (1, 0), (1, 1)])
 def test_route_init(ok_small, idx: int, vehicle_type: int):
     """
-    Tests that after initialisation, a Route has the given index and vehicle
-    type.
+    Tests that after initialisation, a Route has the given vehicle type.
     """
     data = ok_small.replace(
         vehicle_types=[
@@ -35,7 +34,6 @@ def test_route_init(ok_small, idx: int, vehicle_type: int):
     )
 
     route = Route(data, idx=idx, vehicle_type=vehicle_type)
-    assert_equal(route.idx, idx)
     assert_equal(route.vehicle_type, vehicle_type)
 
 

@@ -355,7 +355,6 @@ PYBIND11_MODULE(_search, m)
              py::arg("idx"),
              py::arg("vehicle_type"),
              py::keep_alive<1, 2>())  // keep data alive
-        .def_property_readonly("idx", &Route::idx)
         .def_property_readonly("vehicle_type", &Route::vehicleType)
         .def("num_clients", &Route::numClients)
         .def("num_depots", &Route::numDepots)

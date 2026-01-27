@@ -58,10 +58,11 @@ Route::Iterator &Route::Iterator::operator++()
     return *this;
 }
 
-Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
+Route::Route(ProblemData const &data,
+             [[maybe_unused]] size_t idx,
+             size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
-      idx_(idx),
       loadAt(data.numLoadDimensions()),
       loadAfter(data.numLoadDimensions()),
       loadBefore(data.numLoadDimensions()),
