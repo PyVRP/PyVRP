@@ -32,7 +32,6 @@ class LocalSearch
     PerturbationManager &perturbationManager_;
 
     std::vector<NodeOperator *> nodeOps;
-    std::vector<RouteOperator *> routeOps;
 
     std::vector<int> lastTestedNodes;   // tracks node operator evaluation
     std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
@@ -73,9 +72,6 @@ class LocalSearch
     // Performs search on the currently loaded solution.
     void search(CostEvaluator const &costEvaluator);
 
-    // Performs intensify on the currently loaded solution.
-    void intensify(CostEvaluator const &costEvaluator);
-
     // Marks missing but required clients and groups as promising, to ensure
     // they get inserted.
     void markRequiredMissingAsPromising();
@@ -88,7 +84,7 @@ public:
      * Attributes
      * ----------
      * num_moves
-     *     Number of evaluated node and route operator moves.
+     *     Number of evaluated operator moves.
      * num_improving
      *     Number of evaluated moves that led to an objective improvement.
      * num_updates
@@ -98,8 +94,7 @@ public:
      */
     struct Statistics
     {
-        // Number of evaluated moves, that is, number of evaluations of a node
-        // or route operator.
+        // Number of evaluated operator moves.
         size_t const numMoves;
 
         // Number of evaluated moves that led to an objective improvement.
@@ -115,21 +110,10 @@ public:
     void addNodeOperator(NodeOperator &op);
 
     /**
-     * Adds a local search operator that works on route pairs U and V.
-     */
-    void addRouteOperator(RouteOperator &op);
-
-    /**
      * Returns the node operators in use. Note that there is no defined
      * ordering.
      */
     std::vector<NodeOperator *> const &nodeOperators() const;
-
-    /**
-     * Returns the route operators in use. Note that there is no defined
-     * ordering.
-     */
-    std::vector<RouteOperator *> const &routeOperators() const;
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,
@@ -149,26 +133,19 @@ public:
     Statistics statistics() const;
 
     /**
-     * Iteratively calls ``search()`` and ``intensify()`` until no further
-     * improvements are made.
+     * Performs a local search around the given solution, and returns a new,
+     * hopefully improved solution.
      */
     pyvrp::Solution operator()(pyvrp::Solution const &solution,
                                CostEvaluator const &costEvaluator,
                                bool exhaustive = false);
 
     /**
-     * Performs regular (node-based) local search around the given solution,
-     * and returns a new, hopefully improved solution.
+     * Performs a local search around the given solution, and returns a new,
+     * hopefully improved solution.
      */
     pyvrp::Solution search(pyvrp::Solution const &solution,
                            CostEvaluator const &costEvaluator);
-
-    /**
-     * Performs a more intensive route-based local search around the given
-     * solution, and returns a new, hopefully improved solution.
-     */
-    pyvrp::Solution intensify(pyvrp::Solution const &solution,
-                              CostEvaluator const &costEvaluator);
 
     /**
      * Shuffles the order in which the node and route pairs are evaluated, and

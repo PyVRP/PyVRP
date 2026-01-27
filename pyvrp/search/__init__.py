@@ -15,9 +15,6 @@ from ._search import NodeOperator as NodeOperator
 from ._search import PerturbationManager as PerturbationManager
 from ._search import PerturbationParams as PerturbationParams
 from ._search import RelocateWithDepot as RelocateWithDepot
-from ._search import RouteOperator as RouteOperator
-from ._search import SwapRoutes as SwapRoutes
-from ._search import SwapStar as SwapStar
 from ._search import SwapTails as SwapTails
 from .neighbourhood import NeighbourhoodParams as NeighbourhoodParams
 from .neighbourhood import compute_neighbours as compute_neighbours
@@ -31,5 +28,3 @@ NODE_OPERATORS: list[Type[NodeOperator]] = [
     SwapTails,
     RelocateWithDepot,
 ]
-
-ROUTE_OPERATORS: list[Type[RouteOperator]] = []

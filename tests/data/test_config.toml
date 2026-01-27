@@ -6,11 +6,6 @@ node_ops = [
 ]
 
 
-route_ops = [
-    "SwapStar",
-]
-
-
 [ils]
 num_iters_no_improvement = 10
 history_length = 1
