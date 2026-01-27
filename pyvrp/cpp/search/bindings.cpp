@@ -254,9 +254,6 @@ PYBIND11_MODULE(_search, m)
         .def("client_order",
              &SearchSpace::clientOrder,
              DOC(pyvrp, search, SearchSpace, clientOrder))
-        .def("route_order",
-             &SearchSpace::routeOrder,
-             DOC(pyvrp, search, SearchSpace, routeOrder))
         .def("veh_type_order",
              &SearchSpace::vehTypeOrder,
              DOC(pyvrp, search, SearchSpace, vehTypeOrder))

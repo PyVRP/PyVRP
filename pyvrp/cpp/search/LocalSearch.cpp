@@ -372,7 +372,6 @@ void LocalSearch::update(Route *U, Route *V)
 void LocalSearch::loadSolution(pyvrp::Solution const &solution)
 {
     std::fill(lastTestedNodes.begin(), lastTestedNodes.end(), -1);
-    std::fill(lastTestedRoutes.begin(), lastTestedRoutes.end(), -1);
     std::fill(lastUpdated.begin(), lastUpdated.end(), 0);
     searchSpace_.markAllPromising();
     numUpdates_ = 0;
@@ -429,7 +428,6 @@ LocalSearch::LocalSearch(ProblemData const &data,
       searchSpace_(data, neighbours),
       perturbationManager_(perturbationManager),
       lastTestedNodes(data.numLocations()),
-      lastTestedRoutes(data.numVehicles()),
       lastUpdated(data.numVehicles())
 {
 }

@@ -28,8 +28,8 @@ struct OperatorStatistics
 
 template <typename Arg> class LocalSearchOperator
 {
-    // Can only be specialised into either a Node operator; there are no other
-    // types that are expected to work.
+    // Can only be specialised into a Node operator; there are no other types
+    // that are expected to work.
     static_assert(std::is_same<Arg, Route::Node>::value);
 
 protected:

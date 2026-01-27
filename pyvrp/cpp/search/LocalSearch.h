@@ -33,9 +33,8 @@ class LocalSearch
 
     std::vector<NodeOperator *> nodeOps;
 
-    std::vector<int> lastTestedNodes;   // tracks node operator evaluation
-    std::vector<int> lastTestedRoutes;  // tracks route operator evaluation
-    std::vector<int> lastUpdated;       // tracks when routes were last modified
+    std::vector<int> lastTestedNodes;  // tracks node operator evaluation
+    std::vector<int> lastUpdated;      // tracks when routes were last modified
 
     size_t numUpdates_ = 0;         // modification counter
     bool searchCompleted_ = false;  // No further improving move found?
