@@ -495,11 +495,6 @@ PYBIND11_MODULE(_search, m)
             [](Route const &route, size_t end)
             { return route.before(end).duration(route.profile()); },
             py::arg("end"))
-        .def("centroid", &Route::centroid)
-        .def("overlaps_with",
-             &Route::overlapsWith,
-             py::arg("other"),
-             py::arg("tolerance"))
         .def("append",
              &Route::push_back,
              py::arg("node"),

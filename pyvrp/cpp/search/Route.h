@@ -315,7 +315,6 @@ private:
 
     std::vector<Node *> nodes;   // Nodes in this route, including depots
     std::vector<size_t> visits;  // Locations in this route, incl. depots
-    std::pair<Coordinate, Coordinate> centroid_;  // Client center point
 
     std::vector<Distance> cumDist;  // Dist of start -> node (incl.)
 
@@ -566,20 +565,9 @@ public:
     [[nodiscard]] inline SegmentBetween between(size_t start, size_t end) const;
 
     /**
-     * Center point of the client locations on this route.
-     */
-    [[nodiscard]] std::pair<Coordinate, Coordinate> const &centroid() const;
-
-    /**
      * @return This route's vehicle type.
      */
     [[nodiscard]] size_t vehicleType() const;
-
-    /**
-     * Tests if this route potentially overlaps with the other route, subject
-     * to a tolerance in [0, 1].
-     */
-    [[nodiscard]] bool overlapsWith(Route const &other, double tolerance) const;
 
     /**
      * Clears all clients on this route. After calling this method, ``empty()``

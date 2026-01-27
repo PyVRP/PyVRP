@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 
 import pyvrp
 from pyvrp import Client, Depot, ProblemData, VehicleType
@@ -274,34 +274,6 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     assert_equal(route.dist_at(1), 0)
 
 
-def test_route_overlaps_with_self_no_matter_the_tolerance_value(ok_small):
-    """
-    Tests that a route always overlaps with itself.
-    """
-    route = make_search_route(ok_small, [1, 2])
-    assert_(route.overlaps_with(route, 0))
-    assert_(route.overlaps_with(route, 0.5))
-    assert_(route.overlaps_with(route, 1))
-
-
-def test_all_routes_overlap_with_maximum_tolerance_value(ok_small):
-    """
-    Tests that any route overlaps with any other route with the maximum
-    tolerance value.
-    """
-    route1 = make_search_route(ok_small, [1, 2], idx=0)
-    route2 = make_search_route(ok_small, [3, 4], idx=1)
-
-    # The routes are clearly not the same, and don't overlap with zero
-    # tolerance.
-    assert_(not route1.overlaps_with(route2, 0))
-    assert_(not route2.overlaps_with(route1, 0))
-
-    # But with maximum tolerance, they do.
-    assert_(route1.overlaps_with(route2, 1))
-    assert_(route2.overlaps_with(route1, 1))
-
-
 @pytest.mark.parametrize("locs", [(1, 2, 3), (3, 4), (1,)])
 def test_str_contains_route(ok_small, locs: list[int]):
     """
@@ -519,18 +491,6 @@ def test_shift_duration_depot_time_window_interaction(
         ds = route.duration_at(idx)
         assert_equal(ds.start_early(), expected_start[0])
         assert_equal(ds.start_late(), expected_start[1])
-
-
-@pytest.mark.parametrize("clients", [(1, 2, 3, 4), (1, 2), (3, 4)])
-def test_route_centroid(ok_small, clients):
-    """
-    Tests that Route computes the center point of client locations correctly.
-    """
-    route = make_search_route(ok_small, clients)
-
-    x = [ok_small.location(client).x for client in clients]
-    y = [ok_small.location(client).y for client in clients]
-    assert_allclose(route.centroid(), (np.mean(x), np.mean(y)))
 
 
 @pytest.mark.parametrize(
