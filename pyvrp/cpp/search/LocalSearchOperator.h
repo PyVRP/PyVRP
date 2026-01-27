@@ -28,10 +28,9 @@ struct OperatorStatistics
 
 template <typename Arg> class LocalSearchOperator
 {
-    // Can only be specialised into either a Node or Route operator; there
-    // are no other types that are expected to work.
-    static_assert(std::is_same<Arg, Route::Node>::value
-                  || std::is_same<Arg, Route>::value);
+    // Can only be specialised into a Node operator; there are no other types
+    // that are expected to work.
+    static_assert(std::is_same<Arg, Route::Node>::value);
 
 protected:
     ProblemData const &data;
@@ -82,22 +81,6 @@ public:
  * Node operator base class.
  */
 using NodeOperator = LocalSearchOperator<Route::Node>;
-
-/**
- * Route operator base class.
- */
-class RouteOperator : public LocalSearchOperator<Route>
-{
-    using LocalSearchOperator::LocalSearchOperator;
-
-public:
-    /**
-     * Called when a route has been changed. Can be used to update caches, but
-     * the implementation should be fast: this is called every time something
-     * changes!
-     */
-    virtual void update([[maybe_unused]] Route *U) {};
-};
 
 /**
  * Helper template function that may be specialised to determine if an operator

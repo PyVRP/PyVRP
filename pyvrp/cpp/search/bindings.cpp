@@ -6,8 +6,6 @@
 #include "Route.h"
 #include "SearchSpace.h"
 #include "Solution.h"
-#include "SwapRoutes.h"
-#include "SwapStar.h"
 #include "SwapTails.h"
 #include "primitives.h"
 #include "search_docs.h"
@@ -31,18 +29,14 @@ using pyvrp::search::PerturbationParams;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
-using pyvrp::search::RouteOperator;
 using pyvrp::search::SearchSpace;
 using pyvrp::search::Solution;
 using pyvrp::search::supports;
-using pyvrp::search::SwapRoutes;
-using pyvrp::search::SwapStar;
 using pyvrp::search::SwapTails;
 
 PYBIND11_MODULE(_search, m)
 {
     py::class_<NodeOperator>(m, "NodeOperator");
-    py::class_<RouteOperator>(m, "RouteOperator");
 
     py::class_<OperatorStatistics>(
         m, "OperatorStatistics", DOC(pyvrp, search, OperatorStatistics))
@@ -193,39 +187,6 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<Exchange<3, 3>>, py::arg("data"));
 
-    py::class_<SwapRoutes, RouteOperator>(
-        m, "SwapRoutes", DOC(pyvrp, search, SwapRoutes))
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>())  // keep data alive
-        .def_property_readonly("statistics",
-                               &SwapRoutes::statistics,
-                               py::return_value_policy::reference_internal)
-        .def("evaluate",
-             &SwapRoutes::evaluate,
-             py::arg("U"),
-             py::arg("V"),
-             py::arg("cost_evaluator"))
-        .def("apply", &SwapRoutes::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &supports<SwapRoutes>, py::arg("data"));
-
-    py::class_<SwapStar, RouteOperator>(
-        m, "SwapStar", DOC(pyvrp, search, SwapStar))
-        .def(py::init<pyvrp::ProblemData const &, double>(),
-             py::arg("data"),
-             py::arg("overlap_tolerance") = 0.05,
-             py::keep_alive<1, 2>())  // keep data alive
-        .def_property_readonly("statistics",
-                               &SwapStar::statistics,
-                               py::return_value_policy::reference_internal)
-        .def("evaluate",
-             &SwapStar::evaluate,
-             py::arg("U"),
-             py::arg("V"),
-             py::arg("cost_evaluator"))
-        .def("apply", &SwapStar::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &supports<SwapStar>, py::arg("data"));
-
     py::class_<SwapTails, NodeOperator>(
         m, "SwapTails", DOC(pyvrp, search, SwapTails))
         .def(py::init<pyvrp::ProblemData const &>(),
@@ -293,9 +254,6 @@ PYBIND11_MODULE(_search, m)
         .def("client_order",
              &SearchSpace::clientOrder,
              DOC(pyvrp, search, SearchSpace, clientOrder))
-        .def("route_order",
-             &SearchSpace::routeOrder,
-             DOC(pyvrp, search, SearchSpace, routeOrder))
         .def("veh_type_order",
              &SearchSpace::vehTypeOrder,
              DOC(pyvrp, search, SearchSpace, vehTypeOrder))
@@ -357,15 +315,8 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("node_operators",
                                &LocalSearch::nodeOperators,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("route_operators",
-                               &LocalSearch::routeOperators,
-                               py::return_value_policy::reference_internal)
         .def("add_node_operator",
              &LocalSearch::addNodeOperator,
-             py::arg("op"),
-             py::keep_alive<1, 2>())
-        .def("add_route_operator",
-             &LocalSearch::addRouteOperator,
              py::arg("op"),
              py::keep_alive<1, 2>())
         .def("__call__",
@@ -378,13 +329,6 @@ PYBIND11_MODULE(_search, m)
              py::overload_cast<pyvrp::Solution const &,
                                pyvrp::CostEvaluator const &>(
                  &LocalSearch::search),
-             py::arg("solution"),
-             py::arg("cost_evaluator"),
-             py::call_guard<py::gil_scoped_release>())
-        .def("intensify",
-             py::overload_cast<pyvrp::Solution const &,
-                               pyvrp::CostEvaluator const &>(
-                 &LocalSearch::intensify),
              py::arg("solution"),
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>())

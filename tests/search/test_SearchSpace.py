@@ -184,19 +184,17 @@ def test_search_order_and_shuffle(ok_small_two_profiles):
 
     # Initially we have an unshuffled, default search order.
     assert_equal(search_space.client_order(), [1, 2, 3, 4])  # 4 clients
-    assert_equal(search_space.route_order(), [0, 1, 2, 3, 4, 5])  # 6 vehicles
     assert_equal(search_space.veh_type_order(), [(0, 0), (1, 3)])  # 2 types
 
-    rng = RandomNumberGenerator(seed=42)
+    rng = RandomNumberGenerator(seed=1821)
     search_space.shuffle(rng)
 
     # After shuffling, the search order has changed, but is still fixed: it
     # does not change again until we do another shuffle.
-    assert_equal(search_space.client_order(), [3, 4, 2, 1])
-    assert_equal(search_space.client_order(), [3, 4, 2, 1])  # again to check
-    assert_equal(search_space.route_order(), [3, 4, 5, 2, 0, 1])
+    assert_equal(search_space.client_order(), [1, 3, 2, 4])
+    assert_equal(search_space.client_order(), [1, 3, 2, 4])  # again to check
     assert_equal(search_space.veh_type_order(), [(1, 3), (0, 0)])
 
     # Shuffling again changes the search order.
     search_space.shuffle(rng)
-    assert_equal(search_space.client_order(), [2, 4, 1, 3])
+    assert_equal(search_space.client_order(), [4, 3, 2, 1])

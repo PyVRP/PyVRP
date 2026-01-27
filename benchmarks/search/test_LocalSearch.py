@@ -1,12 +1,7 @@
 import pytest
 
 from pyvrp import CostEvaluator, RandomNumberGenerator, Solution
-from pyvrp.search import (
-    NODE_OPERATORS,
-    ROUTE_OPERATORS,
-    LocalSearch,
-    compute_neighbours,
-)
+from pyvrp.search import NODE_OPERATORS, LocalSearch, compute_neighbours
 
 
 @pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr"])
@@ -22,10 +17,6 @@ def test_all_operators(instance, benchmark, request):
     for node_op in NODE_OPERATORS:
         if node_op.supports(data):
             ls.add_node_operator(node_op(data))
-
-    for route_op in ROUTE_OPERATORS:
-        if route_op.supports(data):
-            ls.add_route_operator(route_op(data))
 
     sol = Solution.make_random(data, rng)
     cost_evaluator = CostEvaluator([20], 6, 6)
@@ -44,10 +35,6 @@ def test_all_operators_on_vrptw_from_bks(benchmark, vrptw, vrptw_bks):
         if node_op.supports(vrptw):
             ls.add_node_operator(node_op(vrptw))
 
-    for route_op in ROUTE_OPERATORS:
-        if route_op.supports(vrptw):
-            ls.add_route_operator(route_op(vrptw))
-
     cost_evaluator = CostEvaluator([20], 6, 6)
     benchmark(ls, vrptw_bks, cost_evaluator)
 
@@ -62,22 +49,6 @@ def test_each_node_operator(node_op, instance, benchmark, request):
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_node_operator(node_op(data))
-
-    sol = Solution.make_random(data, rng)
-    cost_evaluator = CostEvaluator([20], 6, 6)
-    benchmark(ls, sol, cost_evaluator)
-
-
-@pytest.mark.parametrize("route_op", ROUTE_OPERATORS)
-@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr"])
-def test_each_route_operator(route_op, instance, benchmark, request):
-    """
-    Tests performance of each route operator on a few instances.
-    """
-    data = request.getfixturevalue(instance)
-    rng = RandomNumberGenerator(seed=42)
-    ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_route_operator(route_op(data))
 
     sol = Solution.make_random(data, rng)
     cost_evaluator = CostEvaluator([20], 6, 6)

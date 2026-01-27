@@ -35,9 +35,6 @@ private:
     // Client order used for node-based search.
     std::vector<size_t> clientOrder_;
 
-    // Route order used for route-based search.
-    std::vector<size_t> routeOrder_;
-
     // Vehicle type order - pairs of [veh type, offset] - used for empty route
     // search.
     std::vector<std::pair<size_t, size_t>> vehTypeOrder_;
@@ -95,12 +92,6 @@ public:
      * traversed. This order remains unchanged until :meth:`~shuffle` is called.
      */
     std::vector<size_t> const &clientOrder() const;
-
-    /**
-     * Returns a randomised order in which the route search space may be
-     * traversed. This order remains unchanged until :meth:`~shuffle` is called.
-     */
-    std::vector<size_t> const &routeOrder() const;
 
     /**
      * Returns a randomised order in which the vehicle type space may be

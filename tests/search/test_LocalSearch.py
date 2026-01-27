@@ -20,8 +20,6 @@ from pyvrp.search import (
     PerturbationManager,
     PerturbationParams,
     RelocateWithDepot,
-    SwapRoutes,
-    SwapStar,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -60,8 +58,8 @@ def test_local_search_call_perturbs_solution(ok_small):
     sol = Solution.make_random(ok_small, rng)
     cost_eval = CostEvaluator([1], 1, 0)
 
-    # The local search should perturb the solution even though no node and
-    # route operators are added.
+    # The local search should perturb the solution even though no node
+    # operators are added.
     perturbed = ls(sol, cost_eval)
     assert_(perturbed != sol)
 
@@ -257,75 +255,6 @@ def test_no_op_results_in_same_solution(ok_small):
 
     assert_equal(ls(sol, cost_eval), sol)
     assert_equal(ls.search(sol, cost_eval), sol)
-    assert_equal(ls.intensify(sol, cost_eval), sol)
-
-
-def test_intensify_can_improve_solution_further(rc208):
-    """
-    Tests that ``intensify()`` improves a solution further once ``search()`` is
-    stuck.
-    """
-    rng = RandomNumberGenerator(seed=11)
-
-    ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    ls.add_node_operator(Exchange11(rc208))
-    ls.add_route_operator(SwapStar(rc208))
-
-    cost_eval = CostEvaluator([1], 1, 0)
-
-    # The following solution is locally optimal w.r.t. the node operators. This
-    # solution cannot be improved further by repeated calls to ``search()``.
-    search_opt = ls.search(Solution.make_random(rc208, rng), cost_eval)
-    search_cost = cost_eval.penalised_cost(search_opt)
-
-    # But it can be improved further using the intensifying route operators,
-    # as the following solution shows.
-    intensify_opt = ls.intensify(search_opt, cost_eval)
-    intensify_cost = cost_eval.penalised_cost(intensify_opt)
-
-    assert_(intensify_cost < search_cost)
-
-    # Both solutions are locally optimal. ``search_opt`` w.r.t. to the node
-    # operators, and ``intensify_opt`` w.r.t. to the route operators. Repeated
-    # calls to ``search()`` and ``intensify`` do not result in further
-    # improvements for such locally optimal solutions.
-    for _ in range(10):
-        assert_equal(ls.search(search_opt, cost_eval), search_opt)
-        assert_equal(ls.intensify(intensify_opt, cost_eval), intensify_opt)
-
-
-def test_intensify_can_swap_routes(ok_small):
-    """
-    Tests that the bug identified in #742 is fixed. The intensify method should
-    be able to improve a solution by swapping routes.
-    """
-    rng = RandomNumberGenerator(seed=42)
-
-    data = ok_small.replace(
-        vehicle_types=[
-            VehicleType(1, capacity=[5]),
-            VehicleType(1, capacity=[20]),
-        ]
-    )
-    ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_route_operator(SwapRoutes(data))
-
-    # High load penalty, so the solution is penalised for having excess load.
-    cost_eval = CostEvaluator([100_000], 0, 0)
-    route1 = Route(data, [1, 2, 3], 0)  # Excess load: 13 - 5 = 8
-    route2 = Route(data, [4], 1)  # Excess load: 0
-    init_sol = Solution(data, [route1, route2])
-    init_cost = cost_eval.penalised_cost(init_sol)
-
-    assert_equal(init_sol.excess_load(), [8])
-
-    # This solution can be improved by using the intensifying route operators
-    # to swap the routes in the solution.
-    intensify_sol = ls.intensify(init_sol, cost_eval)
-    intensify_cost = cost_eval.penalised_cost(intensify_sol)
-
-    assert_(intensify_cost < init_cost)
-    assert_equal(intensify_sol.excess_load(), [0])
 
 
 def test_local_search_completes_incomplete_solutions(ok_small_prizes):
@@ -619,10 +548,9 @@ def test_search_statistics(ok_small):
     assert_equal(stats.num_updates, 0)
 
 
-def test_node_and_route_operators_property(ok_small):
+def test_node_operators_property(ok_small):
     """
-    Tests adding and accessing node and route operators to the LocalSearch
-    object.
+    Tests adding and accessing node operators to the LocalSearch object.
     """
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
@@ -630,7 +558,6 @@ def test_node_and_route_operators_property(ok_small):
     # The local search has not yet been equipped with operators, so it should
     # start empty.
     assert_equal(len(ls.node_operators), 0)
-    assert_equal(len(ls.route_operators), 0)
 
     # Now we add a node operator. The local search does not take ownership, so
     # its only node operator should be the exact same object as the one we just
@@ -639,12 +566,6 @@ def test_node_and_route_operators_property(ok_small):
     ls.add_node_operator(node_op)
     assert_equal(len(ls.node_operators), 1)
     assert_(ls.node_operators[0] is node_op)
-
-    # And a route operator, for which the same should hold.
-    route_op = SwapStar(ok_small)
-    ls.add_route_operator(route_op)
-    assert_equal(len(ls.route_operators), 1)
-    assert_(ls.route_operators[0] is route_op)
 
 
 @pytest.mark.parametrize(
