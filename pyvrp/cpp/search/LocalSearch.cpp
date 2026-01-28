@@ -55,8 +55,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
             auto *U = &solution_.nodes[uClient];
 
-            auto const lastTested = lastTestedNodes[U->client()];
-            lastTestedNodes[U->client()] = numUpdates_;
+            auto const lastTest = lastTest_[U->client()];
+            lastTest_[U->client()] = numUpdates_;
 
             // First test removing or inserting U. Particularly relevant if not
             // all clients are required (e.g., when prize collecting).
@@ -81,12 +81,9 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 if (!V->route())
                     continue;
 
-                if (lastUpdated[std::distance(solution_.routes.data(),
-                                              U->route())]
-                        > lastTested
-                    || lastUpdated[std::distance(solution_.routes.data(),
-                                                 V->route())]
-                           > lastTested)
+                auto uIdx = std::distance(solution_.routes.data(), U->route());
+                auto vIdx = std::distance(solution_.routes.data(), V->route());
+                if (std::max(lastUpdate_[uIdx], lastUpdate_[vIdx]) > lastTest)
                 {
                     if (applyNodeOps(U, V, costEvaluator))
                         continue;
@@ -365,19 +362,19 @@ void LocalSearch::update(Route *U, Route *V)
     searchCompleted_ = false;
 
     U->update();
-    lastUpdated[std::distance(solution_.routes.data(), U)] = numUpdates_;
+    lastUpdate_[std::distance(solution_.routes.data(), U)] = numUpdates_;
 
     if (U != V)
     {
         V->update();
-        lastUpdated[std::distance(solution_.routes.data(), V)] = numUpdates_;
+        lastUpdate_[std::distance(solution_.routes.data(), V)] = numUpdates_;
     }
 }
 
 void LocalSearch::loadSolution(pyvrp::Solution const &solution)
 {
-    std::fill(lastTestedNodes.begin(), lastTestedNodes.end(), -1);
-    std::fill(lastUpdated.begin(), lastUpdated.end(), 0);
+    std::fill(lastTest_.begin(), lastTest_.end(), -1);
+    std::fill(lastUpdate_.begin(), lastUpdate_.end(), 0);
     searchSpace_.markAllPromising();
     numUpdates_ = 0;
 
@@ -432,7 +429,7 @@ LocalSearch::LocalSearch(ProblemData const &data,
       solution_(data),
       searchSpace_(data, neighbours),
       perturbationManager_(perturbationManager),
-      lastTestedNodes(data.numLocations()),
-      lastUpdated(data.numVehicles())
+      lastTest_(data.numLocations()),
+      lastUpdate_(data.numVehicles())
 {
 }
