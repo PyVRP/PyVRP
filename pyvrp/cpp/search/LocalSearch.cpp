@@ -212,8 +212,8 @@ void LocalSearch::insertIfRequired(Route::Node *U,
             return;
 
         for (auto const client : group.clients())  // check if any of the group
-            if (solution_.nodes[client].route())   // is already present in sol
-                return;
+            if (solution_.nodes[client].route())   // is already present - then
+                return;                            // we need not insert
 
         if (solution_.insert(U, searchSpace_, costEvaluator, true))
         {
