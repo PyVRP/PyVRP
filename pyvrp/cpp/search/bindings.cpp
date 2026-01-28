@@ -325,13 +325,6 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"),
              py::arg("exhaustive") = false,
              py::call_guard<py::gil_scoped_release>())
-        .def("search",
-             py::overload_cast<pyvrp::Solution const &,
-                               pyvrp::CostEvaluator const &>(
-                 &LocalSearch::search),
-             py::arg("solution"),
-             py::arg("cost_evaluator"),
-             py::call_guard<py::gil_scoped_release>())
         .def("shuffle", &LocalSearch::shuffle, py::arg("rng"));
 
     py::class_<Solution>(m, "Solution", DOC(pyvrp, search, Solution))

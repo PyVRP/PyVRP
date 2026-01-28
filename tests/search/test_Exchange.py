@@ -56,7 +56,7 @@ def test_swap_single_route_stays_single_route(rc208, operator):
 
     single_route = list(range(rc208.num_depots, rc208.num_locations))
     sol = Solution(rc208, [single_route])
-    improved_sol = ls.search(sol, cost_evaluator)
+    improved_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     # The new solution should strictly improve on our original solution.
     assert_equal(improved_sol.num_routes(), 1)
@@ -80,7 +80,7 @@ def test_relocate_uses_empty_routes(rc208, operator):
 
     single_route = list(range(rc208.num_depots, rc208.num_locations))
     sol = Solution(rc208, [single_route])
-    improved_sol = ls.search(sol, cost_evaluator)
+    improved_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     # The new solution should strictly improve on our original solution, and
     # should use more routes.
@@ -115,7 +115,7 @@ def test_cannot_exchange_when_parts_overlap_with_depot(ok_small, operator):
     ls.add_node_operator(operator(ok_small))
 
     sol = Solution(ok_small, [[1, 2], [3], [4]])
-    new_sol = ls.search(sol, cost_evaluator)
+    new_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     assert_equal(new_sol, sol)
 
@@ -134,7 +134,7 @@ def test_cannot_exchange_when_segments_overlap(ok_small, operator):
     ls.add_node_operator(operator(ok_small))
 
     sol = Solution(ok_small, [[1, 2, 3, 4]])
-    new_sol = ls.search(sol, cost_evaluator)
+    new_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     assert_equal(new_sol, sol)
 
@@ -155,7 +155,7 @@ def test_cannot_swap_adjacent_segments(ok_small):
     # solution [3, 4, 1, 2], which has a much lower cost. But that's not
     # allowed because adjacent swaps are not allowed.
     sol = Solution(ok_small, [[1, 2, 3, 4]])
-    new_sol = ls.search(sol, cost_evaluator)
+    new_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     assert_equal(new_sol, sol)
 
@@ -173,7 +173,7 @@ def test_swap_between_routes_OkSmall(ok_small):
     ls.add_node_operator(Exchange21(ok_small))
 
     sol = Solution(ok_small, [[1, 2], [3, 4]])
-    improved_sol = ls.search(sol, cost_evaluator)
+    improved_sol = ls(sol, cost_evaluator, exhaustive=True)
     expected = Solution(ok_small, [[3, 4, 2], [1]])
     assert_equal(improved_sol, expected)
 
@@ -268,8 +268,8 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_node_operator(Exchange10(data))
 
-    assert_equal(ls.search(duration_optimal, cost_evaluator), duration_optimal)
-    assert_equal(ls.search(distance_optimal, cost_evaluator), duration_optimal)
+    assert_equal(ls(duration_optimal, cost_evaluator), duration_optimal)
+    assert_equal(ls(distance_optimal, cost_evaluator), duration_optimal)
 
 
 def test_relocate_to_heterogeneous_empty_route(ok_small):
@@ -309,7 +309,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
             SolRoute(data, [3], 3),
         ],
     )
-    assert_equal(ls.search(sol, cost_evaluator), expected)
+    assert_equal(ls(sol, cost_evaluator), expected)
 
 
 @pytest.mark.parametrize(
