@@ -302,7 +302,6 @@ private:
     ProblemData const &data;
 
     ProblemData::VehicleType const &vehicleType_;
-    size_t const idx_;
 
     Distance distance_;  // Separately cached cost components
     Cost distanceCost_;
@@ -315,7 +314,6 @@ private:
 
     std::vector<Node *> nodes;   // Nodes in this route, including depots
     std::vector<size_t> visits;  // Locations in this route, incl. depots
-    std::pair<Coordinate, Coordinate> centroid_;  // Client center point
 
     std::vector<Distance> cumDist;  // Dist of start -> node (incl.)
 
@@ -346,11 +344,6 @@ private:
 #endif
 
 public:
-    /**
-     * Route index.
-     */
-    [[nodiscard]] inline size_t idx() const;
-
     /**
      * @return The client or depot node at the given ``idx``.
      */
@@ -566,20 +559,9 @@ public:
     [[nodiscard]] inline SegmentBetween between(size_t start, size_t end) const;
 
     /**
-     * Center point of the client locations on this route.
-     */
-    [[nodiscard]] std::pair<Coordinate, Coordinate> const &centroid() const;
-
-    /**
      * @return This route's vehicle type.
      */
     [[nodiscard]] size_t vehicleType() const;
-
-    /**
-     * Tests if this route potentially overlaps with the other route, subject
-     * to a tolerance in [0, 1].
-     */
-    [[nodiscard]] bool overlapsWith(Route const &other, double tolerance) const;
 
     /**
      * Clears all clients on this route. After calling this method, ``empty()``
@@ -626,7 +608,7 @@ public:
     bool operator==(Route const &other) const;
     bool operator==(pyvrp::Route const &other) const;
 
-    Route(ProblemData const &data, size_t idx, size_t vehicleType);
+    Route(ProblemData const &data, size_t vehicleType);
     ~Route();
 };
 
@@ -877,8 +859,6 @@ bool Route::hasTimeWarp() const
     assert(!dirty);
     return timeWarp() > 0;
 }
-
-size_t Route::idx() const { return idx_; }
 
 Route::Node *Route::operator[](size_t idx)
 {

@@ -74,7 +74,7 @@ def test_insert_cost_between_different_depots(ok_small_multi_depot):
     vehicle_type = VehicleType(3, [10], start_depot=0, end_depot=1)
     data = ok_small_multi_depot.replace(vehicle_types=[vehicle_type])
 
-    route = Route(data, idx=0, vehicle_type=0)
+    route = Route(data, vehicle_type=0)
     route.update()
 
     cost_eval = CostEvaluator([0], 0, 0)
@@ -136,12 +136,12 @@ def test_insert_fixed_vehicle_cost():
     # can happen due to vehicle changes. In this, case we evaluate inserting a
     # client into an empty route. That adds the fixed vehicle cost of 7 for
     # this vehicle type.
-    route = Route(data, idx=0, vehicle_type=0)
+    route = Route(data, vehicle_type=0)
     assert_equal(insert_cost(Node(loc=1), route[0], data, cost_eval), 7)
 
     # Same story for this route, but now we have a different vehicle type with
     # fixed cost 13.
-    route = Route(data, idx=0, vehicle_type=1)
+    route = Route(data, vehicle_type=1)
     assert_equal(insert_cost(Node(loc=1), route[0], data, cost_eval), 13)
 
 
@@ -179,7 +179,7 @@ def test_inplace_cost_zero_when_shortcutting_on_guard_clauses(ok_small):
     not.
     """
     cost_eval = CostEvaluator([1], 1, 0)
-    route = Route(ok_small, idx=0, vehicle_type=0)
+    route = Route(ok_small, vehicle_type=0)
     node1 = Node(loc=1)
     node2 = Node(loc=2)
 
@@ -207,7 +207,7 @@ def test_inplace_cost_delta_distance_computation(ok_small):
     Tests that inplace_cost() correctly evaluates the delta distance of an
     improving move.
     """
-    route = Route(ok_small, idx=0, vehicle_type=0)
+    route = Route(ok_small, vehicle_type=0)
     node1 = Node(loc=1)
     node2 = Node(loc=2)
     node3 = Node(loc=3)

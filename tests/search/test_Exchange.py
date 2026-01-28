@@ -191,8 +191,8 @@ def test_relocate_after_depot_should_work(ok_small):
 
     # We create two routes: one with clients [1, 2, 3], and the other empty.
     # It is an improving move to insert client 3 into the empty route.
-    route1 = Route(ok_small, idx=0, vehicle_type=0)
-    route2 = Route(ok_small, idx=1, vehicle_type=0)
+    route1 = Route(ok_small, vehicle_type=0)
+    route2 = Route(ok_small, vehicle_type=0)
 
     nodes = [Node(loc=client) for client in [1, 2, 3]]
     for node in nodes:
@@ -336,7 +336,7 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     op = op(data)
 
     route1 = make_search_route(data, [2, 4, 1, 3])
-    route2 = make_search_route(data, [], idx=1)
+    route2 = make_search_route(data, [])
 
     # First route is not empty, second route is. The operator evaluates moving
     # some nodes to the second route, which would use both of them. That should
@@ -365,8 +365,8 @@ def test_exchange_with_duration_constraint(ok_small, op, max_dur, cost):
     data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 
-    route1 = make_search_route(data, [2, 4], idx=0)
-    route2 = make_search_route(data, [1, 3], idx=1)
+    route1 = make_search_route(data, [2, 4])
+    route2 = make_search_route(data, [1, 3])
 
     # Without duration constraint, route1 has a duration of 5_229 and no time
     # warp while route2 has a duration of 5_814 and timewarp 2_087, for a net
@@ -433,8 +433,8 @@ def test_relocate_max_distance(ok_small, max_distance: int, expected: int):
     vehicle_type = VehicleType(2, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    route1 = make_search_route(data, [1, 2], idx=0)
-    route2 = make_search_route(data, [], idx=1)
+    route1 = make_search_route(data, [1, 2])
+    route2 = make_search_route(data, [])
 
     assert_equal(route1.distance(), 5_501)
     assert_equal(route1.excess_distance(), max(5_501 - max_distance, 0))
@@ -483,8 +483,8 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
     vehicle_type = VehicleType(2, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    route1 = make_search_route(data, [1, 2], idx=0)
-    route2 = make_search_route(data, [3], idx=1)
+    route1 = make_search_route(data, [1, 2])
+    route2 = make_search_route(data, [3])
 
     assert_equal(route1.distance(), 5_501)
     assert_equal(route1.excess_distance(), max(5_501 - max_distance, 0))
@@ -527,8 +527,8 @@ def test_swap_with_different_profiles(ok_small_two_profiles):
     """
     data = ok_small_two_profiles
 
-    route1 = make_search_route(data, [3], idx=0, vehicle_type=0)
-    route2 = make_search_route(data, [4], idx=1, vehicle_type=1)
+    route1 = make_search_route(data, [3], vehicle_type=0)
+    route2 = make_search_route(data, [4], vehicle_type=1)
 
     op = Exchange11(data)
     cost_eval = CostEvaluator([0], 0, 0)  # all zero so no costs from penalties
@@ -576,8 +576,8 @@ def test_bug_evaluating_move_with_initial_load():
     op = Exchange21(data)
     cost_eval = CostEvaluator([1], 0, 0)
 
-    route1 = make_search_route(data, [2, 3], idx=0, vehicle_type=0)
-    route2 = make_search_route(data, [1], idx=1, vehicle_type=0)
+    route1 = make_search_route(data, [2, 3])
+    route2 = make_search_route(data, [1])
 
     # This move just permutes the solution, turning route1 into route2, and
     # vice versa. Thus, the delta cost of this move should be zero.
@@ -610,14 +610,14 @@ def test_bug_release_time_shift_time_windows():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    route1 = make_search_route(data, [1], idx=0, vehicle_type=0)
+    route1 = make_search_route(data, [1], vehicle_type=0)
     assert_(route1.is_feasible())
 
     # Vehicle's time windows are constrained to [0, 1], but client 2 is not
     # released until 2. So there's a unit of time warp when we leave the depot.
     # Then we have to wait until 2 at the client, and have another unit of time
     # warp when we return to the depot.
-    route2 = make_search_route(data, [2], idx=1, vehicle_type=1)
+    route2 = make_search_route(data, [2], vehicle_type=1)
     assert_equal(route2.time_warp(), 2)
 
     # This move proposes inserting 1 before 2 in route2. That changes nothing
@@ -651,8 +651,8 @@ def test_empty_route_delta_cost_bug():
         distance_matrices=[mat],
     )
 
-    route1 = make_search_route(data, [2], 0, 0)
-    route2 = make_search_route(data, [], 1, 1)
+    route1 = make_search_route(data, [2], vehicle_type=0)
+    route2 = make_search_route(data, [], vehicle_type=1)
 
     # This move proposes inserting the client 2 in route2. Before fixing the
     # bug, route2's cost was included in the delta cost computation, claiming
@@ -668,8 +668,8 @@ def test_relocate_overtime(ok_small_overtime):
     Tests a relocate move involving overtime correctly evaluates the resulting
     (duration-based) cost delta.
     """
-    route1 = make_search_route(ok_small_overtime, [1, 3], idx=0)
-    route2 = make_search_route(ok_small_overtime, [], idx=1)
+    route1 = make_search_route(ok_small_overtime, [1, 3])
+    route2 = make_search_route(ok_small_overtime, [])
 
     # First route takes 5'814, of which 814 is overtime. The cost structure
     # is 1x duration + 10x overtime.
