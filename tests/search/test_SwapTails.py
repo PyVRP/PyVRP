@@ -2,19 +2,30 @@ import numpy as np
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
+import pyvrp
 from pyvrp import (
     Client,
     CostEvaluator,
     Depot,
     ProblemData,
     RandomNumberGenerator,
-    Solution,
     VehicleType,
 )
 from pyvrp import Route as SolRoute
 from pyvrp.search import LocalSearch, SwapTails
-from pyvrp.search._search import Node
-from tests.helpers import make_search_route
+from pyvrp.search._search import Node, Solution
+
+
+def make_search_solution(data: ProblemData, pyvrp_sol: pyvrp.Solution):
+    """
+    Creates a pyvrp.search.Solution from the given pyvrp.Solution. We need this
+    because SwapTails compares pointers to routes, which assumes a particular
+    memory layout that Python does not normally respect. Laying out the routes
+    inside a pyvrp.search.Solution does.
+    """
+    sol = Solution(data)
+    sol.load(pyvrp_sol)
+    return sol
 
 
 @mark.parametrize(
@@ -46,10 +57,10 @@ def test_OkSmall_multiple_vehicle_types(
     ls.add_node_operator(SwapTails(data))
 
     routes1 = [SolRoute(data, [1, 3], 0), SolRoute(data, [2, 4], 1)]
-    sol1 = Solution(data, routes1)
+    sol1 = pyvrp.Solution(data, routes1)
 
     routes2 = [SolRoute(data, [1, 4], 0), SolRoute(data, [2, 3], 1)]
-    sol2 = Solution(data, routes2)
+    sol2 = pyvrp.Solution(data, routes2)
 
     cost1 = cost_evaluator.penalised_cost(sol1)
     cost2 = cost_evaluator.penalised_cost(sol2)
@@ -80,8 +91,10 @@ def test_move_involving_empty_routes():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    route1 = make_search_route(data, [1, 2], vehicle_type=0)
-    route2 = make_search_route(data, [], vehicle_type=1)
+    # First route is [1, 2], second route is empty.
+    pyvrp_routes = [SolRoute(data, [1, 2], 0)]
+    sol = make_search_solution(data, pyvrp.Solution(data, pyvrp_routes))
+    route1, route2 = sol.routes
 
     op = SwapTails(data)
     cost_eval = CostEvaluator([], 0, 0)
@@ -148,8 +161,9 @@ def test_move_involving_multiple_depots():
         duration_matrices=[np.zeros((4, 4), dtype=int)],
     )
 
-    route1 = make_search_route(data, [3], vehicle_type=0)
-    route2 = make_search_route(data, [2], vehicle_type=1)
+    pyvrp_routes = [SolRoute(data, [3], 0), SolRoute(data, [2], 1)]
+    sol = make_search_solution(data, pyvrp.Solution(data, pyvrp_routes))
+    route1, route2 = sol.routes
 
     assert_equal(route1.distance(), 16)
     assert_equal(route2.distance(), 16)
@@ -176,8 +190,9 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     data = ok_small_two_profiles
     dist1, dist2 = data.distance_matrices()
 
-    route1 = make_search_route(data, [3], vehicle_type=0)
-    route2 = make_search_route(data, [2], vehicle_type=1)
+    pyvrp_routes = [SolRoute(data, [3], 0), SolRoute(data, [2], 1)]
+    sol = make_search_solution(data, pyvrp.Solution(data, pyvrp_routes))
+    route1, route2 = sol.routes[0], sol.routes[3]
 
     op = SwapTails(data)
     cost_eval = CostEvaluator([0], 0, 0)  # all zero so no costs from penalties
