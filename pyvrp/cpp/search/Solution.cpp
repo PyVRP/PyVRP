@@ -15,12 +15,11 @@ Solution::Solution(ProblemData const &data) : data_(data)
         nodes.emplace_back(loc);
 
     routes.reserve(data.numVehicles());
-    size_t rIdx = 0;
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
     {
         auto const numAvailable = data.vehicleType(vehType).numAvailable;
         for (size_t vehicle = 0; vehicle != numAvailable; ++vehicle)
-            routes.emplace_back(data, rIdx++, vehType);
+            routes.emplace_back(data, vehType);
     }
 }
 

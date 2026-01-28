@@ -80,8 +80,8 @@ def test_move_involving_empty_routes():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    route1 = make_search_route(data, [1, 2], idx=0, vehicle_type=0)
-    route2 = make_search_route(data, [], idx=1, vehicle_type=1)
+    route1 = make_search_route(data, [1, 2], vehicle_type=0)
+    route2 = make_search_route(data, [], vehicle_type=1)
 
     op = SwapTails(data)
     cost_eval = CostEvaluator([], 0, 0)
@@ -148,8 +148,8 @@ def test_move_involving_multiple_depots():
         duration_matrices=[np.zeros((4, 4), dtype=int)],
     )
 
-    route1 = make_search_route(data, [3], idx=0, vehicle_type=0)
-    route2 = make_search_route(data, [2], idx=1, vehicle_type=1)
+    route1 = make_search_route(data, [3], vehicle_type=0)
+    route2 = make_search_route(data, [2], vehicle_type=1)
 
     assert_equal(route1.distance(), 16)
     assert_equal(route2.distance(), 16)
@@ -176,8 +176,8 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     data = ok_small_two_profiles
     dist1, dist2 = data.distance_matrices()
 
-    route1 = make_search_route(data, [3], idx=0, vehicle_type=0)
-    route2 = make_search_route(data, [2], idx=1, vehicle_type=1)
+    route1 = make_search_route(data, [3], vehicle_type=0)
+    route2 = make_search_route(data, [2], vehicle_type=1)
 
     op = SwapTails(data)
     cost_eval = CostEvaluator([0], 0, 0)  # all zero so no costs from penalties

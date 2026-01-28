@@ -29,6 +29,9 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
     if (uRoute == vRoute)
         return 0;  // same route
 
+    if (uRoute > vRoute && !uRoute->empty() && !vRoute->empty())
+        return 0;  // move will be tackled in a later iteration
+
     if (!onLastTrip(U) || !onLastTrip(V))
         // We cannot move reload depots, so we only evaluate a move if it does
         // not include a reload depot.

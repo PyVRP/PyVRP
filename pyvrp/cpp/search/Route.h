@@ -608,7 +608,7 @@ public:
     bool operator==(Route const &other) const;
     bool operator==(pyvrp::Route const &other) const;
 
-    Route(ProblemData const &data, size_t idx, size_t vehicleType);
+    Route(ProblemData const &data, size_t vehicleType);
     ~Route();
 };
 

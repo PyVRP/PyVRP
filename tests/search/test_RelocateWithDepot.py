@@ -45,8 +45,8 @@ def test_inserts_depot_across_routes(ok_small_multiple_trips):
     Tests that RelocateWithDepot inserts a reload depot along with the node
     relocation across routes.
     """
-    route1 = make_search_route(ok_small_multiple_trips, [3], idx=0)
-    route2 = make_search_route(ok_small_multiple_trips, [1, 2, 4], idx=1)
+    route1 = make_search_route(ok_small_multiple_trips, [3])
+    route2 = make_search_route(ok_small_multiple_trips, [1, 2, 4])
 
     assert_equal(str(route1), "3")
     assert_equal(str(route2), "1 2 4")
@@ -164,8 +164,8 @@ def test_fixed_vehicle_cost():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    route1 = make_search_route(data, [1], idx=0)
-    route2 = make_search_route(data, [2], idx=1)
+    route1 = make_search_route(data, [1])
+    route2 = make_search_route(data, [2])
 
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([0], 0, 0)
@@ -220,7 +220,7 @@ def test_bug_release_times(mtvrptw_release_times):
     # - Leave the depot at 4718.
     # - Visit 6 at 4970, leave at 5870.
     # - Return to depot at 6122.
-    route2 = make_search_route(mtvrptw_release_times, [6], idx=1)
+    route2 = make_search_route(mtvrptw_release_times, [6])
 
     assert_equal(route2.distance(), 504)
     assert_equal(route2.time_warp(), 0)
