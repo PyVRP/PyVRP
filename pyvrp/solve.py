@@ -17,7 +17,6 @@ from pyvrp.search import (
     NeighbourhoodParams,
     PerturbationManager,
     PerturbationParams,
-    UnaryOperator,
     compute_neighbours,
 )
 
@@ -53,7 +52,7 @@ class SolveParams:
         ils: IteratedLocalSearchParams = IteratedLocalSearchParams(),
         penalty: PenaltyParams = PenaltyParams(),
         neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
-        operators: list[type[UnaryOperator | BinaryOperator]] = OPERATORS,
+        operators: list[type[BinaryOperator]] = OPERATORS,
         display_interval: float = 5.0,
         perturbation: PerturbationParams = PerturbationParams(),
     ):

@@ -8,7 +8,6 @@ from pyvrp.search._search import (
     BinaryOperator,
     LocalSearchStatistics,
     PerturbationManager,
-    UnaryOperator,
 )
 from pyvrp.search._search import LocalSearch as _LocalSearch
 
@@ -41,7 +40,7 @@ class LocalSearch:
         self._ls = _LocalSearch(data, neighbours, perturbation_manager)
         self._rng = rng
 
-    def add_operator(self, op: UnaryOperator | BinaryOperator):
+    def add_operator(self, op: BinaryOperator):
         """
         Adds an operator to this local search object. The operator will be used
         to improve a solution.
@@ -67,13 +66,6 @@ class LocalSearch:
         by the local search object.
         """
         self._ls.neighbours = neighbours
-
-    @property
-    def unary_operators(self) -> list[UnaryOperator]:
-        """
-        Returns the unary operators in use.
-        """
-        return self._ls.unary_operators
 
     @property
     def binary_operators(self) -> list[BinaryOperator]:

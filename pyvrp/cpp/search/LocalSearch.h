@@ -31,7 +31,6 @@ class LocalSearch
     // each LS invocation.
     PerturbationManager &perturbationManager_;
 
-    std::vector<UnaryOperator *> unaryOps_;
     std::vector<BinaryOperator *> binaryOps_;
 
     std::vector<int> lastTest_;    // tracks last client evaluations
@@ -39,8 +38,6 @@ class LocalSearch
 
     size_t numUpdates_ = 0;         // modification counter
     bool searchCompleted_ = false;  // No further improving move found?
-
-    bool applyUnaryOps(Route::Node *U, CostEvaluator const &costEvaluator);
 
     // Tests the node pair (U, V).
     bool applyBinaryOps(Route::Node *U,
@@ -62,15 +59,15 @@ class LocalSearch
     // Tests moves involving clients in client groups.
     void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
+    // Insert U into the solution if U's a required client, or part of a
+    // required group that is currently missing.
+    void insertIfRequired(Route::Node *U, CostEvaluator const &costEvaluator);
+
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
 
     // Performs search on the currently loaded solution.
     void search(CostEvaluator const &costEvaluator);
-
-    // Marks missing but required clients and groups as promising, to ensure
-    // they get inserted.
-    void markRequiredMissingAsPromising();
 
 public:
     /**
@@ -101,20 +98,9 @@ public:
     };
 
     /**
-     * Adds a local search operator that works on client nodes U.
-     */
-    void addOperator(UnaryOperator &op);
-
-    /**
      * Adds a local search operator that works on client node pairs U and V.
      */
     void addOperator(BinaryOperator &op);
-
-    /**
-     * Returns the unary operators in use. Note that there is no defined
-     * ordering.
-     */
-    std::vector<UnaryOperator *> const &unaryOperators() const;
 
     /**
      * Returns the binary operators in use. Note that there is no defined

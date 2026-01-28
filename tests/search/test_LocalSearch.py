@@ -557,7 +557,6 @@ def test_operators_property(ok_small):
 
     # The local search has not yet been equipped with operators, so it should
     # start empty.
-    assert_equal(len(ls.unary_operators), 0)
     assert_equal(len(ls.binary_operators), 0)
 
     # Now we add a binary operator. The local search does not take ownership,
@@ -574,7 +573,7 @@ def test_operators_property(ok_small):
         # {1, 2, 3, 4} are all required clients.
         ("ok_small", {1, 2, 3, 4}),
         # 1 from required group {1, 2, 3}, 4 is a required client.
-        ("ok_small_mutually_exclusive_groups", {1, 4}),
+        ("ok_small_mutually_exclusive_groups", {3, 4}),
     ],
 )
 def test_inserts_required_missing(instance, exp_clients: set[int], request):
