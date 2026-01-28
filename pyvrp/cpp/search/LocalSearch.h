@@ -39,9 +39,6 @@ class LocalSearch
     size_t numUpdates_ = 0;         // modification counter
     bool searchCompleted_ = false;  // No further improving move found?
 
-    // Load an initial solution that we will attempt to improve.
-    void loadSolution(pyvrp::Solution const &solution);
-
     // Tests the node pair (U, V).
     bool applyNodeOps(Route::Node *U,
                       Route::Node *V,
@@ -138,13 +135,6 @@ public:
     pyvrp::Solution operator()(pyvrp::Solution const &solution,
                                CostEvaluator const &costEvaluator,
                                bool exhaustive = false);
-
-    /**
-     * Performs a local search around the given solution, and returns a new,
-     * hopefully improved solution.
-     */
-    pyvrp::Solution search(pyvrp::Solution const &solution,
-                           CostEvaluator const &costEvaluator);
 
     /**
      * Shuffles the order in which the node and route pairs are evaluated, and

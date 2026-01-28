@@ -18,20 +18,22 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
                                         CostEvaluator const &costEvaluator,
                                         bool exhaustive)
 {
-    loadSolution(solution);
+    std::fill(lastTest_.begin(), lastTest_.end(), -1);
+    std::fill(lastUpdate_.begin(), lastUpdate_.end(), 0);
+    numUpdates_ = 0;
 
-    if (!exhaustive)
+    solution_.load(solution);
+
+    for (auto *nodeOp : nodeOps)
+        nodeOp->init(solution);
+
+    if (exhaustive)
+        searchSpace_.markAllPromising();
+    else
         perturbationManager_.perturb(solution_, searchSpace_, costEvaluator);
 
     search(costEvaluator);
-    return solution_.unload();
-}
 
-pyvrp::Solution LocalSearch::search(pyvrp::Solution const &solution,
-                                    CostEvaluator const &costEvaluator)
-{
-    loadSolution(solution);
-    search(costEvaluator);
     return solution_.unload();
 }
 
@@ -369,19 +371,6 @@ void LocalSearch::update(Route *U, Route *V)
         V->update();
         lastUpdate_[std::distance(solution_.routes.data(), V)] = numUpdates_;
     }
-}
-
-void LocalSearch::loadSolution(pyvrp::Solution const &solution)
-{
-    std::fill(lastTest_.begin(), lastTest_.end(), -1);
-    std::fill(lastUpdate_.begin(), lastUpdate_.end(), 0);
-    searchSpace_.markAllPromising();
-    numUpdates_ = 0;
-
-    solution_.load(solution);
-
-    for (auto *nodeOp : nodeOps)
-        nodeOp->init(solution);
 }
 
 void LocalSearch::addNodeOperator(NodeOperator &op)

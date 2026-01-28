@@ -109,26 +109,3 @@ class LocalSearch:
         """
         self._ls.shuffle(self._rng)
         return self._ls(solution, cost_evaluator, exhaustive)
-
-    def search(
-        self, solution: Solution, cost_evaluator: CostEvaluator
-    ) -> Solution:
-        """
-        This method uses the node operators on this local search object to
-        improve the given solution.
-
-        Parameters
-        ----------
-        solution
-            The solution to improve.
-        cost_evaluator
-            Cost evaluator to use.
-
-        Returns
-        -------
-        Solution
-            The improved solution. This is not the same object as the
-            solution that was passed in.
-        """
-        self._ls.shuffle(self._rng)
-        return self._ls.search(solution, cost_evaluator)

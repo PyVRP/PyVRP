@@ -67,8 +67,8 @@ def test_OkSmall_multiple_vehicle_types(
     assert_(not np.allclose(cost1, cost2))
 
     # Using the local search, the result should not get worse.
-    improved_sol1 = ls.search(sol1, cost_evaluator)
-    improved_sol2 = ls.search(sol2, cost_evaluator)
+    improved_sol1 = ls(sol1, cost_evaluator, exhaustive=True)
+    improved_sol2 = ls(sol2, cost_evaluator, exhaustive=True)
 
     expected_sol = sol1 if cost1 < cost2 else sol2
     assert_equal(improved_sol1, expected_sol)

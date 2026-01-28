@@ -111,9 +111,6 @@ class LocalSearch:
         exhaustive: bool = False,
     ) -> pyvrp.Solution: ...
     def shuffle(self, rng: RandomNumberGenerator) -> None: ...
-    def search(
-        self, solution: pyvrp.Solution, cost_evaluator: CostEvaluator
-    ) -> pyvrp.Solution: ...
 
 class Solution:
     nodes: list[Node]

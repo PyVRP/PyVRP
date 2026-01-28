@@ -44,7 +44,7 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     # neighbourhood. This also prevents moves involving empty routes,
     # which are not explicitly forbidden by the empty neighbourhood.
     sol = Solution.make_random(ok_small, rng)
-    assert_equal(ls.search(sol, cost_evaluator), sol)
+    assert_equal(ls(sol, cost_evaluator, exhaustive=True), sol)
 
 
 def test_local_search_call_perturbs_solution(ok_small):
@@ -103,7 +103,7 @@ def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):
 
     # With 0 timewarp penalty, the solution should not change since
     # the solution [2, 1, 3, 4] has larger distance.
-    improved_sol = ls.search(sol, CostEvaluator([0], 0, 0))
+    improved_sol = ls(sol, CostEvaluator([0], 0, 0), exhaustive=True)
     assert_equal(sol, improved_sol)
 
     # Now doing it again with a large TW penalty, we must find the alternative
@@ -111,7 +111,7 @@ def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):
     # (previously this was not the case since due to caching the current TW was
     # computed as being zero, causing the move to be evaluated as worse)
     cost_evaluator_tw = CostEvaluator([0], 1000, 0)
-    improved_sol = ls.search(sol, cost_evaluator_tw)
+    improved_sol = ls(sol, cost_evaluator_tw, exhaustive=True)
     improved_cost = cost_evaluator_tw.penalised_cost(improved_sol)
     assert_(improved_cost < cost_evaluator_tw.penalised_cost(sol))
 
@@ -131,7 +131,7 @@ def test_prize_collecting(prize_collecting):
     ls.add_node_operator(Exchange10(prize_collecting))  # relocate
     ls.add_node_operator(Exchange11(prize_collecting))  # swap
 
-    improved = ls.search(sol, cost_evaluator)
+    improved = ls(sol, cost_evaluator, exhaustive=True)
     improved_cost = cost_evaluator.penalised_cost(improved)
 
     assert_(improved.num_clients() < prize_collecting.num_clients)
@@ -152,16 +152,16 @@ def test_cpp_shuffle_results_in_different_solution(rc208):
     cost_evaluator = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(rc208, rng)
 
-    # LocalSearch::search is deterministic, so two calls with the same base
+    # LocalSearch is deterministic, so two calls with the same base
     # solution should result in the same improved solution.
-    improved1 = ls.search(sol, cost_evaluator)
-    improved2 = ls.search(sol, cost_evaluator)
+    improved1 = ls(sol, cost_evaluator)
+    improved2 = ls(sol, cost_evaluator)
     assert_(improved1 == improved2)
 
     # But the shuffle method changes the order in which moves are evaluated,
     # which should result in a very different search trajectory.
     ls.shuffle(rng)
-    improved3 = ls.search(sol, cost_evaluator)
+    improved3 = ls(sol, cost_evaluator)
     assert_(improved3 != improved1)
 
 
@@ -182,7 +182,7 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     cost_evaluator = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(rc208, rng)
 
-    improved = ls.search(sol, cost_evaluator)
+    improved = ls(sol, cost_evaluator, exhaustive=True)
 
     # Now make the instance heterogeneous and update the local search.
     data = rc208.replace(
@@ -200,9 +200,9 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     routes = [Route(data, r.visits(), 1) for r in improved.routes()]
     improved = Solution(data, routes)
 
-    # Doing the search should not find any further improvements thus not change
-    # the solution.
-    further_improved = ls.search(improved, cost_evaluator)
+    # This should not find any further improvements and thus not change the
+    # solution.
+    further_improved = ls(improved, cost_evaluator, exhaustive=True)
     assert_equal(further_improved, improved)
 
 
@@ -228,7 +228,7 @@ def test_bugfix_vehicle_type_offsets(ok_small):
     current = Solution(data, [Route(data, [1, 3], 1), Route(data, [2, 4], 1)])
     current_cost = cost_evaluator.penalised_cost(current)
 
-    improved = ls.search(current, cost_evaluator)
+    improved = ls(current, cost_evaluator, exhaustive=True)
     improved_cost = cost_evaluator.penalised_cost(improved)
 
     assert_(improved_cost <= current_cost)
@@ -253,8 +253,8 @@ def test_no_op_results_in_same_solution(ok_small):
     cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(ok_small, rng)
 
-    assert_equal(ls(sol, cost_eval), sol)
-    assert_equal(ls.search(sol, cost_eval), sol)
+    assert_equal(ls(sol, cost_eval, exhaustive=True), sol)
+    assert_equal(ls(sol, cost_eval, exhaustive=True), sol)
 
 
 def test_local_search_completes_incomplete_solutions(ok_small_prizes):
@@ -272,7 +272,7 @@ def test_local_search_completes_incomplete_solutions(ok_small_prizes):
     sol = Solution(ok_small_prizes, [[2], [3, 4]])
     assert_(not sol.is_complete())  # 1 is required but not visited
 
-    new_sol = ls.search(sol, cost_eval)
+    new_sol = ls(sol, cost_eval, exhaustive=True)
     assert_(new_sol.is_complete())
 
 
@@ -307,7 +307,7 @@ def test_local_search_does_not_remove_required_clients():
     # the second. The first client is required, so could not be removed, but
     # the second could and that is an improving move.
     cost_eval = CostEvaluator([100], 100, 0)
-    new_sol = ls.search(sol, cost_eval)
+    new_sol = ls(sol, cost_eval, exhaustive=True)
     assert_equal(new_sol.num_clients(), 1)
     assert_(new_sol.is_complete())
 
@@ -418,7 +418,7 @@ def test_swap_if_improving_mutually_exclusive_group(
 
     cost_eval = CostEvaluator([20], 6, 0)
     sol = Solution(data, [[1, 4]])
-    improved = ls(sol, cost_eval)
+    improved = ls(sol, cost_eval, exhaustive=True)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
     routes = improved.routes()
@@ -525,7 +525,7 @@ def test_search_statistics(ok_small):
     # number of moves.
     rnd_sol = Solution.make_random(ok_small, rng)
     cost_eval = CostEvaluator([1], 1, 1)
-    improved = ls(rnd_sol, cost_eval)
+    improved = ls(rnd_sol, cost_eval, exhaustive=True)
 
     stats = ls.statistics
     assert_(stats.num_moves > 0)
@@ -540,7 +540,7 @@ def test_search_statistics(ok_small):
     # The improved solution is already locally optimal, so it cannot be further
     # improved by the local search. The number of improving moves should thus
     # be zero after another attempt.
-    ls(improved, cost_eval)
+    ls(improved, cost_eval, exhaustive=True)
 
     stats = ls.statistics
     assert_(stats.num_moves > 0)
