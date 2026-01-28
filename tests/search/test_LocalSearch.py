@@ -253,7 +253,7 @@ def test_no_op_results_in_same_solution(ok_small):
     cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(ok_small, rng)
 
-    assert_equal(ls(sol, cost_eval, exhaustive=True), sol)
+    assert_equal(ls(sol, cost_eval, exhaustive=False), sol)
     assert_equal(ls(sol, cost_eval, exhaustive=True), sol)
 
 
