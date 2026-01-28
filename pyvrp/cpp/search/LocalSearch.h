@@ -31,21 +31,21 @@ class LocalSearch
     // each LS invocation.
     PerturbationManager &perturbationManager_;
 
-    std::vector<BinaryOperator *> nodeOps;
+    std::vector<UnaryOperator *> unaryOps_;
+    std::vector<BinaryOperator *> binaryOps_;
 
-    std::vector<int> lastTest_;    // tracks node operator evaluation
+    std::vector<int> lastTest_;    // tracks last client evaluations
     std::vector<int> lastUpdate_;  // tracks when routes were last modified
 
     size_t numUpdates_ = 0;         // modification counter
     bool searchCompleted_ = false;  // No further improving move found?
 
-    // Tests the node pair (U, V).
-    bool applyNodeOps(Route::Node *U,
-                      Route::Node *V,
-                      CostEvaluator const &costEvaluator);
+    bool applyUnaryOps(Route::Node *U, CostEvaluator const &costEvaluator);
 
-    // Tests the route pair (U, V).
-    bool applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
+    // Tests the node pair (U, V).
+    bool applyBinaryOps(Route::Node *U,
+                        Route::Node *V,
+                        CostEvaluator const &costEvaluator);
 
     // Tests a move removing the given reload depot.
     void applyDepotRemovalMove(Route::Node *U,
@@ -101,15 +101,26 @@ public:
     };
 
     /**
-     * Adds a local search operator that works on node/client pairs U and V.
+     * Adds a local search operator that works on client nodes U.
      */
-    void addNodeOperator(BinaryOperator &op);
+    void addOperator(UnaryOperator &op);
 
     /**
-     * Returns the node operators in use. Note that there is no defined
+     * Adds a local search operator that works on client node pairs U and V.
+     */
+    void addOperator(BinaryOperator &op);
+
+    /**
+     * Returns the unary operators in use. Note that there is no defined
      * ordering.
      */
-    std::vector<BinaryOperator *> const &nodeOperators() const;
+    std::vector<UnaryOperator *> const &unaryOperators() const;
+
+    /**
+     * Returns the binary operators in use. Note that there is no defined
+     * ordering.
+     */
+    std::vector<BinaryOperator *> const &binaryOperators() const;
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,

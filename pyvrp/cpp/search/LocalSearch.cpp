@@ -13,6 +13,7 @@ using pyvrp::Solution;
 using pyvrp::search::BinaryOperator;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::SearchSpace;
+using pyvrp::search::UnaryOperator;
 
 pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
                                         CostEvaluator const &costEvaluator,
@@ -24,8 +25,11 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
 
     solution_.load(solution);
 
-    for (auto *nodeOp : nodeOps)
-        nodeOp->init(solution);
+    for (auto *op : unaryOps_)
+        op->init(solution);
+
+    for (auto *op : binaryOps_)
+        op->init(solution);
 
     if (exhaustive)
         searchSpace_.markAllPromising();
@@ -39,7 +43,7 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
 
 void LocalSearch::search(CostEvaluator const &costEvaluator)
 {
-    if (nodeOps.empty())
+    if (unaryOps_.empty() && binaryOps_.empty())
         return;
 
     markRequiredMissingAsPromising();
@@ -49,7 +53,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     {
         searchCompleted_ = true;
 
-        // Node operators are evaluated for neighbouring (U, V) pairs.
         for (auto const uClient : searchSpace_.clientOrder())
         {
             if (!searchSpace_.isPromising(uClient))
@@ -87,11 +90,11 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 auto vIdx = std::distance(solution_.routes.data(), V->route());
                 if (std::max(lastUpdate_[uIdx], lastUpdate_[vIdx]) > lastTest)
                 {
-                    if (applyNodeOps(U, V, costEvaluator))
+                    if (applyBinaryOps(U, V, costEvaluator))
                         continue;
 
                     if (p(V)->isStartDepot()
-                        && applyNodeOps(U, p(V), costEvaluator))
+                        && applyBinaryOps(U, p(V), costEvaluator))
                         continue;
                 }
             }
@@ -109,16 +112,16 @@ void LocalSearch::shuffle(RandomNumberGenerator &rng)
     perturbationManager_.shuffle(rng);
     searchSpace_.shuffle(rng);
 
-    rng.shuffle(nodeOps.begin(), nodeOps.end());
+    rng.shuffle(binaryOps_.begin(), binaryOps_.end());
 }
 
-bool LocalSearch::applyNodeOps(Route::Node *U,
-                               Route::Node *V,
-                               CostEvaluator const &costEvaluator)
+bool LocalSearch::applyBinaryOps(Route::Node *U,
+                                 Route::Node *V,
+                                 CostEvaluator const &costEvaluator)
 {
-    for (auto *nodeOp : nodeOps)
+    for (auto *op : binaryOps_)
     {
-        auto const deltaCost = nodeOp->evaluate(U, V, costEvaluator);
+        auto const deltaCost = op->evaluate(U, V, costEvaluator);
         if (deltaCost < 0)
         {
             auto *rU = U->route();  // copy these because the operator can
@@ -131,7 +134,7 @@ bool LocalSearch::applyNodeOps(Route::Node *U,
             searchSpace_.markPromising(U);
             searchSpace_.markPromising(V);
 
-            nodeOp->apply(U, V);
+            op->apply(U, V);
             update(rU, rV);
 
             [[maybe_unused]] auto const costAfter
@@ -184,7 +187,7 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
         auto const pred = [](auto const &route) { return route.empty(); };
         auto empty = std::find_if(begin, end, pred);
 
-        if (empty != end && applyNodeOps(U, (*empty)[0], costEvaluator))
+        if (empty != end && applyBinaryOps(U, (*empty)[0], costEvaluator))
             break;
     }
 }
@@ -373,14 +376,24 @@ void LocalSearch::update(Route *U, Route *V)
     }
 }
 
-void LocalSearch::addNodeOperator(BinaryOperator &op)
+void LocalSearch::addOperator(UnaryOperator &op)
 {
-    nodeOps.emplace_back(&op);
+    unaryOps_.emplace_back(&op);
 }
 
-std::vector<BinaryOperator *> const &LocalSearch::nodeOperators() const
+void LocalSearch::addOperator(BinaryOperator &op)
 {
-    return nodeOps;
+    binaryOps_.emplace_back(&op);
+}
+
+std::vector<UnaryOperator *> const &LocalSearch::unaryOperators() const
+{
+    return unaryOps_;
+}
+
+std::vector<BinaryOperator *> const &LocalSearch::binaryOperators() const
+{
+    return binaryOps_;
 }
 
 void LocalSearch::setNeighbours(SearchSpace::Neighbours neighbours)
@@ -405,7 +418,7 @@ LocalSearch::Statistics LocalSearch::statistics() const
         numImproving += stats.numApplications;
     };
 
-    std::for_each(nodeOps.begin(), nodeOps.end(), count);
+    std::for_each(binaryOps_.begin(), binaryOps_.end(), count);
 
     assert(numImproving <= numUpdates_);
     return {numMoves, numImproving, numUpdates_};

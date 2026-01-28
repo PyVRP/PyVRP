@@ -27,8 +27,8 @@ from pyvrp.search._search import LocalSearch as cpp_LocalSearch
 
 def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     """
-    Tests that calling the local search when it only has node operators and
-    an empty neighbourhood is a no-op: since the node operators respect the
+    Tests that calling the local search when it only has binary operators and
+    an empty neighbourhood is a no-op: since the binary operators respect the
     neighbourhood definition, they cannot do anything with an empty
     neighbourhood.
     """
@@ -37,8 +37,8 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
 
     neighbours = [[] for _ in range(ok_small.num_locations)]
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_node_operator(Exchange10(ok_small))
-    ls.add_node_operator(Exchange11(ok_small))
+    ls.add_operator(Exchange10(ok_small))
+    ls.add_operator(Exchange11(ok_small))
 
     # The search is completed after one iteration due to the empty
     # neighbourhood. This also prevents moves involving empty routes,
@@ -99,7 +99,7 @@ def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):
     # sufficiently large time warp penalty.
     neighbours = [[], [2], [], [], []]  # 1 -> 2 only
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_node_operator(Exchange10(ok_small))
+    ls.add_operator(Exchange10(ok_small))
 
     # With 0 timewarp penalty, the solution should not change since
     # the solution [2, 1, 3, 4] has larger distance.
@@ -128,8 +128,8 @@ def test_prize_collecting(prize_collecting):
 
     neighbours = compute_neighbours(prize_collecting)
     ls = LocalSearch(prize_collecting, rng, neighbours)
-    ls.add_node_operator(Exchange10(prize_collecting))  # relocate
-    ls.add_node_operator(Exchange11(prize_collecting))  # swap
+    ls.add_operator(Exchange10(prize_collecting))  # relocate
+    ls.add_operator(Exchange11(prize_collecting))  # swap
 
     improved = ls(sol, cost_evaluator, exhaustive=True)
     improved_cost = cost_evaluator.penalised_cost(improved)
@@ -146,8 +146,8 @@ def test_cpp_shuffle_results_in_different_solution(rc208):
     rng = RandomNumberGenerator(seed=42)
 
     ls = cpp_LocalSearch(rc208, compute_neighbours(rc208))
-    ls.add_node_operator(Exchange10(rc208))
-    ls.add_node_operator(Exchange11(rc208))
+    ls.add_operator(Exchange10(rc208))
+    ls.add_operator(Exchange11(rc208))
 
     cost_evaluator = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(rc208, rng)
@@ -176,8 +176,8 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     neighbours = compute_neighbours(rc208)
 
     ls = cpp_LocalSearch(rc208, neighbours)
-    ls.add_node_operator(Exchange10(rc208))
-    ls.add_node_operator(Exchange11(rc208))
+    ls.add_operator(Exchange10(rc208))
+    ls.add_operator(Exchange11(rc208))
 
     cost_evaluator = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(rc208, rng)
@@ -193,8 +193,8 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     )
 
     ls = cpp_LocalSearch(data, neighbours)
-    ls.add_node_operator(Exchange10(data))
-    ls.add_node_operator(Exchange11(data))
+    ls.add_operator(Exchange10(data))
+    ls.add_operator(Exchange11(data))
 
     # Update the improved (locally optimal) solution with vehicles of type 1.
     routes = [Route(data, r.visits(), 1) for r in improved.routes()]
@@ -221,7 +221,7 @@ def test_bugfix_vehicle_type_offsets(ok_small):
     )
 
     ls = cpp_LocalSearch(data, compute_neighbours(data))
-    ls.add_node_operator(Exchange10(data))
+    ls.add_operator(Exchange10(data))
 
     cost_evaluator = CostEvaluator([1], 1, 0)
 
@@ -266,7 +266,7 @@ def test_local_search_completes_incomplete_solutions(ok_small_prizes):
     rng = RandomNumberGenerator(seed=42)
 
     ls = LocalSearch(ok_small_prizes, rng, compute_neighbours(ok_small_prizes))
-    ls.add_node_operator(Exchange10(ok_small_prizes))
+    ls.add_operator(Exchange10(ok_small_prizes))
 
     cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution(ok_small_prizes, [[2], [3, 4]])
@@ -298,7 +298,7 @@ def test_local_search_does_not_remove_required_clients():
     )
 
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_node_operator(Exchange10(data))
+    ls.add_operator(Exchange10(data))
 
     sol = Solution(data, [[1, 2]])
     assert_(sol.is_complete())
@@ -339,7 +339,7 @@ def test_replacing_optional_client():
 
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_node_operator(Exchange10(data))
+    ls.add_operator(Exchange10(data))
 
     # We start with a solution containing just client 1.
     sol = Solution(data, [[1]])
@@ -367,7 +367,7 @@ def test_mutually_exclusive_group(gtsp):
     perturbation = PerturbationManager(PerturbationParams(0, 0))
 
     ls = LocalSearch(gtsp, rng, neighbours, perturbation)
-    ls.add_node_operator(Exchange10(gtsp))
+    ls.add_operator(Exchange10(gtsp))
 
     sol = Solution.make_random(gtsp, rng)
     cost_eval = CostEvaluator([20], 6, 0)
@@ -392,7 +392,7 @@ def test_mutually_exclusive_group_not_in_solution(
     neighbours = compute_neighbours(ok_small_mutually_exclusive_groups)
 
     ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
-    ls.add_node_operator(Exchange10(ok_small_mutually_exclusive_groups))
+    ls.add_operator(Exchange10(ok_small_mutually_exclusive_groups))
 
     sol = Solution(ok_small_mutually_exclusive_groups, [[4]])
     assert_(not sol.is_group_feasible())
@@ -414,7 +414,7 @@ def test_swap_if_improving_mutually_exclusive_group(
     perturbation = PerturbationManager(PerturbationParams(0, 0))
 
     ls = LocalSearch(data, rng, neighbours, perturbation)
-    ls.add_node_operator(Exchange10(data))
+    ls.add_operator(Exchange10(data))
 
     cost_eval = CostEvaluator([20], 6, 0)
     sol = Solution(data, [[1, 4]])
@@ -458,7 +458,7 @@ def test_local_search_inserts_reload_depots(ok_small_multiple_trips):
     neighbours = compute_neighbours(ok_small_multiple_trips)
 
     ls = LocalSearch(ok_small_multiple_trips, rng, neighbours)
-    ls.add_node_operator(RelocateWithDepot(ok_small_multiple_trips))
+    ls.add_operator(RelocateWithDepot(ok_small_multiple_trips))
 
     sol = Solution(ok_small_multiple_trips, [[1, 2, 3, 4]])
     assert_(sol.has_excess_load())
@@ -482,7 +482,7 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     data = ok_small_multiple_trips
     rng = RandomNumberGenerator(seed=2)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_node_operator(Exchange10(data))
+    ls.add_operator(Exchange10(data))
 
     route1 = Route(data, [Trip(data, [1], 0), Trip(data, [3], 0)], 0)
     route2 = Route(data, [2, 4], 0)
@@ -512,8 +512,8 @@ def test_search_statistics(ok_small):
         PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
     )
 
-    node_op = Exchange10(ok_small)
-    ls.add_node_operator(node_op)
+    op = Exchange10(ok_small)
+    ls.add_operator(op)
 
     # No solution is yet loaded/improved, so all these numbers should be zero.
     stats = ls.statistics
@@ -532,10 +532,10 @@ def test_search_statistics(ok_small):
     assert_(stats.num_improving > 0)
     assert_(stats.num_updates >= stats.num_improving)
 
-    # Since we have only a single node operator, the number of moves and the
-    # number of improving moves should match what the node operator tracks.
-    assert_equal(stats.num_moves, node_op.statistics.num_evaluations)
-    assert_equal(stats.num_improving, node_op.statistics.num_applications)
+    # Since we have only a single operator, the number of moves and the number
+    # of improving moves should match what the operator tracks.
+    assert_equal(stats.num_moves, op.statistics.num_evaluations)
+    assert_equal(stats.num_improving, op.statistics.num_applications)
 
     # The improved solution is already locally optimal, so it cannot be further
     # improved by the local search. The number of improving moves should thus
@@ -548,24 +548,24 @@ def test_search_statistics(ok_small):
     assert_equal(stats.num_updates, 0)
 
 
-def test_node_operators_property(ok_small):
+def test_operators_property(ok_small):
     """
-    Tests adding and accessing node operators to the LocalSearch object.
+    Tests adding and accessing operators to the LocalSearch object.
     """
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small))
 
     # The local search has not yet been equipped with operators, so it should
     # start empty.
-    assert_equal(len(ls.node_operators), 0)
+    assert_equal(len(ls.unary_operators), 0)
+    assert_equal(len(ls.binary_operators), 0)
 
-    # Now we add a node operator. The local search does not take ownership, so
-    # its only node operator should be the exact same object as the one we just
-    # created.
-    node_op = Exchange10(ok_small)
-    ls.add_node_operator(node_op)
-    assert_equal(len(ls.node_operators), 1)
-    assert_(ls.node_operators[0] is node_op)
+    # Now we add a binary operator. The local search does not take ownership,
+    # so its only operator should be the exact object we just created.
+    op = Exchange10(ok_small)
+    ls.add_operator(op)
+    assert_equal(len(ls.binary_operators), 1)
+    assert_(ls.binary_operators[0] is op)
 
 
 @pytest.mark.parametrize(
@@ -586,7 +586,7 @@ def test_inserts_required_missing(instance, exp_clients: set[int], request):
     rng = RandomNumberGenerator(seed=42)
     perturbation = PerturbationManager(PerturbationParams(1, 1))
     ls = LocalSearch(data, rng, compute_neighbours(data), perturbation)
-    ls.add_node_operator(Exchange10(data))
+    ls.add_operator(Exchange10(data))
 
     sol = Solution(data, [])
     assert_(not sol.is_complete())
@@ -606,7 +606,7 @@ def test_local_search_exhaustive(rc208):
     """
     rng = RandomNumberGenerator(seed=2)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    ls.add_node_operator(Exchange10(rc208))
+    ls.add_operator(Exchange10(rc208))
 
     init = Solution.make_random(rc208, rng)
     cost_eval = CostEvaluator([20], 6, 0)
@@ -648,7 +648,7 @@ def test_local_search_inserts_into_empty_solutions():
     rng = RandomNumberGenerator(seed=2)
     cost_eval = CostEvaluator([], 0, 0)
     ls = LocalSearch(data, rng, [[], [], []])
-    ls.add_node_operator(Exchange10(data))
+    ls.add_operator(Exchange10(data))
 
     empty = Solution(data, [])
     assert_equal(empty.num_clients(), 0)

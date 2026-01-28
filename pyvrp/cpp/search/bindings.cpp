@@ -33,10 +33,12 @@ using pyvrp::search::SearchSpace;
 using pyvrp::search::Solution;
 using pyvrp::search::supports;
 using pyvrp::search::SwapTails;
+using pyvrp::search::UnaryOperator;
 
 PYBIND11_MODULE(_search, m)
 {
     py::class_<BinaryOperator>(m, "BinaryOperator");
+    py::class_<UnaryOperator>(m, "UnaryOperator");
 
     py::class_<OperatorStatistics>(
         m, "OperatorStatistics", DOC(pyvrp, search, OperatorStatistics))
@@ -312,11 +314,18 @@ PYBIND11_MODULE(_search, m)
                       &LocalSearch::setNeighbours,
                       py::return_value_policy::reference_internal)
         .def_property_readonly("statistics", &LocalSearch::statistics)
-        .def_property_readonly("node_operators",
-                               &LocalSearch::nodeOperators,
+        .def_property_readonly("unary_operators",
+                               &LocalSearch::unaryOperators,
                                py::return_value_policy::reference_internal)
-        .def("add_node_operator",
-             &LocalSearch::addNodeOperator,
+        .def_property_readonly("binary_operators",
+                               &LocalSearch::binaryOperators,
+                               py::return_value_policy::reference_internal)
+        .def("add_operator",
+             py::overload_cast<UnaryOperator &>(&LocalSearch::addOperator),
+             py::arg("op"),
+             py::keep_alive<1, 2>())
+        .def("add_operator",
+             py::overload_cast<BinaryOperator &>(&LocalSearch::addOperator),
              py::arg("op"),
              py::keep_alive<1, 2>())
         .def("__call__",

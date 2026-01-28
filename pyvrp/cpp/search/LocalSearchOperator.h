@@ -28,8 +28,6 @@ struct OperatorStatistics
 
 template <std::same_as<Route::Node *>... Args> class LocalSearchOperator
 {
-    static_assert(sizeof...(Args) > 0);  // need at least one argument
-
 protected:
     ProblemData const &data;
     mutable OperatorStatistics stats_;

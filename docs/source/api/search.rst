@@ -37,22 +37,24 @@ All search methods implement the :class:`SearchMethod` protocol.
    :members:
 
 
-Node operators
---------------
+Operators
+---------
 
-Instances of these operators can be added to the :class:`~pyvrp.search.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.search.LocalSearch.LocalSearch.add_node_operator` method.
-Each node operator inherits from :class:`~pyvrp.search._search.NodeOperator`.
-As a convenience, the :mod:`pyvrp.search` module makes most relevant operators available as ``NODE_OPERATORS``:
+Instances of these operators can be added to the :class:`~pyvrp.search.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.search.LocalSearch.LocalSearch.add_operator` method.
+Each operator inherits from :class:`~pyvrp.search._search.UnaryOperator` or :class:`~pyvrp.search._search.BinaryOperator`.
+As a convenience, the :mod:`pyvrp.search` module makes most relevant operators available as ``OPERATORS``:
 
 .. code-block:: python
 
-   from pyvrp.search import NODE_OPERATORS
+   from pyvrp.search import OPERATORS
 
 
 .. automodule:: pyvrp.search._search
    :noindex:
 
-   .. autoclass:: NodeOperator
+   .. autoclass:: BinaryOperator
+
+   .. autoclass:: UnaryOperator
 
    .. autoclass:: Exchange10
       :exclude-members: evaluate, apply, statistics, supports
