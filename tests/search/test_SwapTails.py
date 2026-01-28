@@ -16,15 +16,15 @@ from pyvrp.search import LocalSearch, SwapTails
 from pyvrp.search._search import Node, Solution
 
 
-def make_search_solution(data: ProblemData, pyvrp_sol: pyvrp.Solution):
+def make_search_solution(data: ProblemData, routes: list[SolRoute]):
     """
-    Creates a pyvrp.search.Solution from the given pyvrp.Solution. We need this
-    because SwapTails compares pointers to routes, which assumes a particular
-    memory layout that Python does not normally respect. Laying out the routes
-    inside a pyvrp.search.Solution does.
+    Creates a pyvrp.search.Solution from the given routes. We need this because
+    SwapTails compares pointers to routes, which assumes a particular memory
+    layout that Python does not normally respect. Laying out the routes inside
+    a pyvrp.search.Solution does.
     """
     sol = Solution(data)
-    sol.load(pyvrp_sol)
+    sol.load(pyvrp.Solution(data, routes))
     return sol
 
 
@@ -92,8 +92,7 @@ def test_move_involving_empty_routes():
     )
 
     # First route is [1, 2], second route is empty.
-    pyvrp_routes = [SolRoute(data, [1, 2], 0)]
-    sol = make_search_solution(data, pyvrp.Solution(data, pyvrp_routes))
+    sol = make_search_solution(data, [SolRoute(data, [1, 2], 0)])
     route1, route2 = sol.routes
 
     op = SwapTails(data)
@@ -161,8 +160,8 @@ def test_move_involving_multiple_depots():
         duration_matrices=[np.zeros((4, 4), dtype=int)],
     )
 
-    pyvrp_routes = [SolRoute(data, [3], 0), SolRoute(data, [2], 1)]
-    sol = make_search_solution(data, pyvrp.Solution(data, pyvrp_routes))
+    routes = [SolRoute(data, [3], 0), SolRoute(data, [2], 1)]
+    sol = make_search_solution(data, routes)
     route1, route2 = sol.routes
 
     assert_equal(route1.distance(), 16)
@@ -190,8 +189,8 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     data = ok_small_two_profiles
     dist1, dist2 = data.distance_matrices()
 
-    pyvrp_routes = [SolRoute(data, [3], 0), SolRoute(data, [2], 1)]
-    sol = make_search_solution(data, pyvrp.Solution(data, pyvrp_routes))
+    routes = [SolRoute(data, [3], 0), SolRoute(data, [2], 1)]
+    sol = make_search_solution(data, routes)
     route1, route2 = sol.routes[0], sol.routes[3]
 
     op = SwapTails(data)
