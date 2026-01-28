@@ -31,7 +31,7 @@ class LocalSearch
     // each LS invocation.
     PerturbationManager &perturbationManager_;
 
-    std::vector<NodeOperator *> nodeOps;
+    std::vector<BinaryOperator *> nodeOps;
 
     std::vector<int> lastTest_;    // tracks node operator evaluation
     std::vector<int> lastUpdate_;  // tracks when routes were last modified
@@ -103,13 +103,13 @@ public:
     /**
      * Adds a local search operator that works on node/client pairs U and V.
      */
-    void addNodeOperator(NodeOperator &op);
+    void addNodeOperator(BinaryOperator &op);
 
     /**
      * Returns the node operators in use. Note that there is no defined
      * ordering.
      */
-    std::vector<NodeOperator *> const &nodeOperators() const;
+    std::vector<BinaryOperator *> const &nodeOperators() const;
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,

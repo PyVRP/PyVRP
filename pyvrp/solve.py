@@ -12,9 +12,9 @@ from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
 from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
 from pyvrp.search import (
     NODE_OPERATORS,
+    BinaryOperator,
     LocalSearch,
     NeighbourhoodParams,
-    NodeOperator,
     PerturbationManager,
     PerturbationParams,
     compute_neighbours,
@@ -52,7 +52,7 @@ class SolveParams:
         ils: IteratedLocalSearchParams = IteratedLocalSearchParams(),
         penalty: PenaltyParams = PenaltyParams(),
         neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
-        node_ops: list[type[NodeOperator]] = NODE_OPERATORS,
+        node_ops: list[type[BinaryOperator]] = NODE_OPERATORS,
         display_interval: float = 5.0,
         perturbation: PerturbationParams = PerturbationParams(),
     ):

@@ -10,8 +10,8 @@
 #include <numeric>
 
 using pyvrp::Solution;
+using pyvrp::search::BinaryOperator;
 using pyvrp::search::LocalSearch;
-using pyvrp::search::NodeOperator;
 using pyvrp::search::SearchSpace;
 
 pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
@@ -373,12 +373,12 @@ void LocalSearch::update(Route *U, Route *V)
     }
 }
 
-void LocalSearch::addNodeOperator(NodeOperator &op)
+void LocalSearch::addNodeOperator(BinaryOperator &op)
 {
     nodeOps.emplace_back(&op);
 }
 
-std::vector<NodeOperator *> const &LocalSearch::nodeOperators() const
+std::vector<BinaryOperator *> const &LocalSearch::nodeOperators() const
 {
     return nodeOps;
 }

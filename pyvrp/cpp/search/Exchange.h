@@ -20,9 +20,9 @@ namespace pyvrp::search
  * The :math:`(N, M)`-exchange class uses C++ templates for different :math:`N`
  * and :math:`M` to efficiently evaluate these moves.
  */
-template <size_t N, size_t M> class Exchange : public NodeOperator
+template <size_t N, size_t M> class Exchange : public BinaryOperator
 {
-    using NodeOperator::NodeOperator;
+    using BinaryOperator::BinaryOperator;
 
     static_assert(N >= M && N > 0, "N < M or N == 0 does not make sense");
 

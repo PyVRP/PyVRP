@@ -4,12 +4,12 @@ from pyvrp._pyvrp import (
     RandomNumberGenerator,
     Solution,
 )
-from pyvrp.search._search import LocalSearch as _LocalSearch
 from pyvrp.search._search import (
+    BinaryOperator,
     LocalSearchStatistics,
-    NodeOperator,
     PerturbationManager,
 )
+from pyvrp.search._search import LocalSearch as _LocalSearch
 
 
 class LocalSearch:
@@ -40,10 +40,10 @@ class LocalSearch:
         self._ls = _LocalSearch(data, neighbours, perturbation_manager)
         self._rng = rng
 
-    def add_node_operator(self, op: NodeOperator):
+    def add_node_operator(self, op: BinaryOperator):
         """
         Adds a node operator to this local search object. The node operator
-        will be used by :meth:`~search` to improve a solution.
+        will be used to improve a solution.
 
         Parameters
         ----------
@@ -68,7 +68,7 @@ class LocalSearch:
         self._ls.neighbours = neighbours
 
     @property
-    def node_operators(self) -> list[NodeOperator]:
+    def node_operators(self) -> list[BinaryOperator]:
         """
         Returns the node operators in use.
         """
