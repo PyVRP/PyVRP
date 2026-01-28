@@ -291,10 +291,8 @@ def test_route_duration_access(ok_small):
     Tests access to a client's or depot's duration segment, as tracked by the
     route.
     """
-    route = Route(ok_small, vehicle_type=0)
-    for client in range(ok_small.num_depots, ok_small.num_locations):
-        route.append(Node(loc=client))
-    route.update()
+    clients = range(ok_small.num_depots, ok_small.num_locations)
+    route = make_search_route(ok_small, clients)
 
     for idx in range(len(route)):
         is_depot = idx % (len(route) - 1) == 0
@@ -416,13 +414,10 @@ def test_duration_between_single_route_has_correct_time_warp(ok_small):
     Tests duration segment access on a single-route solution where we know
     exactly where in the route time warp occurs.
     """
-    route = Route(ok_small, vehicle_type=0)
-    for client in range(ok_small.num_depots, ok_small.num_locations):
-        route.append(Node(loc=client))
-
+    clients = range(ok_small.num_depots, ok_small.num_locations)
+    route = make_search_route(ok_small, clients)
     assert_equal(route.num_clients(), ok_small.num_clients)
 
-    route.update()
     assert_(route.has_time_warp())
     assert_equal(route.duration_between(0, 5).time_warp(), route.time_warp())
 
