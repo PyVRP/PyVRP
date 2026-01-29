@@ -669,7 +669,7 @@ def test_does_not_insert_optional_groups():
     matrix = np.ones((3, 3), dtype=int)
     np.fill_diagonal(matrix, 0)
 
-    # Instnace with all optional clients, that are in turn part of an optional
+    # Instance with all optional clients, that are in turn part of an optional
     # group. The group isn't worth visiting since that incurs distance cost,
     # and there is no prize to be obtained.
     data = ProblemData(
