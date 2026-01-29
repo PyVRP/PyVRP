@@ -1,17 +1,16 @@
 Why choose PyVRP?
 =================
 
-PyVRP is one of several open-source vehicle routing solver alternatives, like `VROOM <https://github.com/VROOM-Project/vroom/>`_, `jsprit <https://github.com/graphhopper/jsprit>`_, or implementing a solver yourself using the building blocks provided by `OR-Tools <https://github.com/google/or-tools>`_.
-Why choose us for your route optimisation, rather than one of those alternatives?
-In this document we try to give a structured answer to this question, by comparing features, and project-specific strengths and weaknesses.
+There are several additional open-source vehicle routing solvers, including `VROOM <https://github.com/VROOM-Project/vroom/>`_, `jsprit <https://github.com/graphhopper/jsprit>`_, or implementing a solver yourself using the building blocks provided by `OR-Tools <https://github.com/google/or-tools>`_.
+Why choose PyVRP for your route optimisation, rather than one of those alternatives?
+On this page we try to give a structured answer to this question, by comparing features and project-specific strengths and weaknesses.
+
 
 Feature comparison
 ------------------
 
-Our aim is to provide a neutral and complete overview of each solver's main features.
-
 .. note::
-   The following table does not include OR-Tools, by design: OR-Tools can be used to implement essentially any feature you'd like, but *you* need to do the implementation.
+   The following table does not include OR-Tools, by design: OR-Tools can be used to implement essentially any feature you want, but *you* need to do the implementation.
    This approach offers tremendous flexibility, at the cost of (significant) implementation work.
 
 .. list-table::
@@ -84,8 +83,8 @@ Strengths and weaknesses
 
 Each of the projects we compare here has its own strengths and weaknesses.
 We do not aim for a completely exhaustive discussion, but instead try to focus on the following aspects: *scale*, *solution quality*, *project activity*, *ease of use*, and *ease of modification*.
-The following table provides a subjective overview of the relative strengths of each project.
-We discuss these further below.
+The following table provides a balanced overview of each project.
+We discuss our reasoning further below.
 
 .. list-table::
    :header-rows: 1
