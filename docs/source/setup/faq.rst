@@ -28,6 +28,18 @@ Modelling
       Rather than specifying an explicit service duration for the clients or depots, add the service duration to the duration all the edges leaving the location.
       Using route profiles, you can then set up different travel duration matrices for the vehicles that include the vehicle-specific service durations.
 
+   How can I model clients with multiple time windows?
+
+      By adding the client multiple times, once for each time window, and making the duplicate clients part of a :class:`~pyvrp._pyvrp.ClientGroup`.
+      PyVRP will then select one of the alternatives to visit.
+      See :doc:`this tutorial notebook <../notebooks/mutually_exclusive_groups>` for an example of modelling with mutually exclusive groups.
+
+   How can I model open routing problems, without start or end depots?
+
+      By adding dummy start and end depots for the relevant vehicle types.
+      Set zero distance and duration on edges leaving (for start depots) or entering (for end depots) the dummy depots.
+      You can then drop these dummy depots from PyVRP's solution in a post-processing step. 
+
 Debugging
 ---------
 
