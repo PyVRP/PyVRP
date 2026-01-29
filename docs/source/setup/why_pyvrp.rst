@@ -119,7 +119,7 @@ We discuss these further below.
      - ⭐
      - ⭐⭐
      - ⭐⭐
-     - ⭐⭐
+     - ⭐
 
 
 Scale
