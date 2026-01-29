@@ -31,21 +31,18 @@ class LocalSearch
     // each LS invocation.
     PerturbationManager &perturbationManager_;
 
-    std::vector<NodeOperator *> nodeOps;
+    std::vector<BinaryOperator *> binaryOps_;
 
-    std::vector<int> lastTest_;    // tracks node operator evaluation
+    std::vector<int> lastTest_;    // tracks last client evaluations
     std::vector<int> lastUpdate_;  // tracks when routes were last modified
 
     size_t numUpdates_ = 0;         // modification counter
     bool searchCompleted_ = false;  // No further improving move found?
 
     // Tests the node pair (U, V).
-    bool applyNodeOps(Route::Node *U,
-                      Route::Node *V,
-                      CostEvaluator const &costEvaluator);
-
-    // Tests the route pair (U, V).
-    bool applyRouteOps(Route *U, Route *V, CostEvaluator const &costEvaluator);
+    bool applyBinaryOps(Route::Node *U,
+                        Route::Node *V,
+                        CostEvaluator const &costEvaluator);
 
     // Tests a move removing the given reload depot.
     void applyDepotRemovalMove(Route::Node *U,
@@ -62,15 +59,15 @@ class LocalSearch
     // Tests moves involving clients in client groups.
     void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
+    // Insert U if it is a required client or part of a required group that is
+    // currently missing.
+    void insertRequired(Route::Node *U, CostEvaluator const &costEvaluator);
+
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);
 
     // Performs search on the currently loaded solution.
     void search(CostEvaluator const &costEvaluator);
-
-    // Marks missing but required clients and groups as promising, to ensure
-    // they get inserted.
-    void markRequiredMissingAsPromising();
 
 public:
     /**
@@ -101,15 +98,15 @@ public:
     };
 
     /**
-     * Adds a local search operator that works on node/client pairs U and V.
+     * Adds a local search operator that works on client node pairs U and V.
      */
-    void addNodeOperator(NodeOperator &op);
+    void addOperator(BinaryOperator &op);
 
     /**
-     * Returns the node operators in use. Note that there is no defined
+     * Returns the binary operators in use. Note that there is no defined
      * ordering.
      */
-    std::vector<NodeOperator *> const &nodeOperators() const;
+    std::vector<BinaryOperator *> const &binaryOperators() const;
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,

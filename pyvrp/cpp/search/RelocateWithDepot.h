@@ -19,9 +19,9 @@ namespace pyvrp::search
  *        *Transportation Science*, 53(6): 1706 - 1730.
  *        https://doi.org/10.1287/trsc.2019.0909.
  */
-class RelocateWithDepot : public NodeOperator
+class RelocateWithDepot : public BinaryOperator
 {
-    using NodeOperator::NodeOperator;
+    using BinaryOperator::BinaryOperator;
 
     enum class MoveType
     {

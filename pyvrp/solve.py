@@ -11,10 +11,10 @@ from pyvrp.IteratedLocalSearch import (
 from pyvrp.PenaltyManager import PenaltyManager, PenaltyParams
 from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
 from pyvrp.search import (
-    NODE_OPERATORS,
+    OPERATORS,
+    BinaryOperator,
     LocalSearch,
     NeighbourhoodParams,
-    NodeOperator,
     PerturbationManager,
     PerturbationParams,
     compute_neighbours,
@@ -39,8 +39,8 @@ class SolveParams:
         Penalty parameters.
     neighbourhood
         Neighbourhood parameters.
-    node_ops
-        Node operators to use in the search.
+    operators
+        Operators to use in the search.
     display_interval
         Time (in seconds) between iteration logs. Default 5s.
     perturbation
@@ -52,14 +52,14 @@ class SolveParams:
         ils: IteratedLocalSearchParams = IteratedLocalSearchParams(),
         penalty: PenaltyParams = PenaltyParams(),
         neighbourhood: NeighbourhoodParams = NeighbourhoodParams(),
-        node_ops: list[type[NodeOperator]] = NODE_OPERATORS,
+        operators: list[type[BinaryOperator]] = OPERATORS,
         display_interval: float = 5.0,
         perturbation: PerturbationParams = PerturbationParams(),
     ):
         self._ils = ils
         self._penalty = penalty
         self._neighbourhood = neighbourhood
-        self._node_ops = node_ops
+        self._operators = operators
         self._display_interval = display_interval
         self._perturbation = perturbation
 
@@ -69,7 +69,7 @@ class SolveParams:
             and self.ils == other.ils
             and self.penalty == other.penalty
             and self.neighbourhood == other.neighbourhood
-            and self.node_ops == other.node_ops
+            and self.operators == other.operators
             and self.display_interval == other.display_interval
             and self.perturbation == other.perturbation
         )
@@ -87,8 +87,8 @@ class SolveParams:
         return self._neighbourhood
 
     @property
-    def node_ops(self):
-        return self._node_ops
+    def operators(self):
+        return self._operators
 
     @property
     def display_interval(self) -> float:
@@ -106,15 +106,15 @@ class SolveParams:
         with open(loc, "rb") as fh:
             data = tomllib.load(fh)
 
-        node_ops = NODE_OPERATORS
-        if "node_ops" in data:
-            node_ops = [getattr(pyvrp.search, op) for op in data["node_ops"]]
+        operators = OPERATORS
+        if "operators" in data:
+            operators = [getattr(pyvrp.search, op) for op in data["operators"]]
 
         return cls(
             IteratedLocalSearchParams(**data.get("ils", {})),
             PenaltyParams(**data.get("penalty", {})),
             NeighbourhoodParams(**data.get("neighbourhood", {})),
-            node_ops,
+            operators,
             data.get("display_interval", 5.0),
             PerturbationParams(**data.get("perturbation", {})),
         )
@@ -164,9 +164,9 @@ def solve(
     perturbation = PerturbationManager(params.perturbation)
     ls = LocalSearch(data, rng, neighbours, perturbation)
 
-    for node_op in params.node_ops:
-        if node_op.supports(data):
-            ls.add_node_operator(node_op(data))
+    for op in params.operators:
+        if op.supports(data):
+            ls.add_operator(op(data))
 
     pm = PenaltyManager.init_from(data, params.penalty)
 
