@@ -59,9 +59,9 @@ class LocalSearch
     // Tests moves involving clients in client groups.
     void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
-    // Insert U into the solution if U's a required client, or part of a
-    // required group that is currently missing.
-    void insertIfRequired(Route::Node *U, CostEvaluator const &costEvaluator);
+    // Insert U if it is a required client or part of a required group that is
+    // currently missing.
+    void insertRequired(Route::Node *U, CostEvaluator const &costEvaluator);
 
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);

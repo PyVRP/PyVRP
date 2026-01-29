@@ -50,7 +50,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
         for (auto const uClient : searchSpace_.clientOrder())
         {
             auto *U = &solution_.nodes[uClient];
-            insertIfRequired(U, costEvaluator);
+            insertRequired(U, costEvaluator);
 
             if (!searchSpace_.isPromising(uClient))
                 continue;
@@ -187,8 +187,8 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
     }
 }
 
-void LocalSearch::insertIfRequired(Route::Node *U,
-                                   CostEvaluator const &costEvaluator)
+void LocalSearch::insertRequired(Route::Node *U,
+                                 CostEvaluator const &costEvaluator)
 {
     if (U->route())
         return;
