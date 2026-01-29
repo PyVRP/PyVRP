@@ -6,6 +6,8 @@ body:
         Thanks for your interest in PyVRP!
         This form asks a few questions up front because answering user questions and solving problems on GitHub consumes a significant amount of our time.
         By answering these questions in a structured way through this form, it will be much easier to help you.
+
+        Before posting about your question or error, please make sure to check our [FAQ](https://pyvrp.org/setup/faq.html), [discussions](https://github.com/PyVRP/PyVRP/discussions?discussions_q=) and [issue tracker](https://github.com/PyVRP/PyVRP/issues?q=is%3Aissue) for similar posts.
   - type: textarea
     id: description
     attributes:
