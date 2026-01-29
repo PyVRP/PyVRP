@@ -1,9 +1,9 @@
 Why choose PyVRP?
 =================
 
-There are several additional open-source vehicle routing solvers, including `VROOM <https://github.com/VROOM-Project/vroom/>`_, `jsprit <https://github.com/graphhopper/jsprit>`_, or implementing a solver yourself using the building blocks provided by `OR-Tools <https://github.com/google/or-tools>`_.
+There are several alternative open-source vehicle routing solvers, including `VROOM <https://github.com/VROOM-Project/vroom/>`_, `jsprit <https://github.com/graphhopper/jsprit>`_, or implementing a solver yourself using the building blocks provided by `OR-Tools <https://github.com/google/or-tools>`_.
 Why choose PyVRP for your route optimisation, rather than one of those alternatives?
-On this page we try to give a structured answer to this question, by comparing features and project-specific strengths and weaknesses.
+This page aims to help you decide through a structured comparison of features and project-specific strengths and weaknesses.
 
 
 Feature comparison
@@ -11,7 +11,7 @@ Feature comparison
 
 .. note::
    The following table does not include OR-Tools, by design: OR-Tools can be used to implement essentially any feature you want, but *you* need to do the implementation.
-   This approach offers tremendous flexibility, at the cost of (significant) implementation work.
+   That approach offers tremendous flexibility, at the cost of (significant) implementation work.
 
 .. list-table::
    :header-rows: 1
@@ -82,7 +82,7 @@ Strengths and weaknesses
 ------------------------
 
 Each of the projects we compare here has its own strengths and weaknesses.
-We do not aim for a completely exhaustive discussion, but instead try to focus on the following aspects: *scale*, *solution quality*, *project activity*, *ease of use*, and *ease of modification*.
+We do not aim for a completely exhaustive discussion, but instead focus on the following aspects: *scale*, *solution quality*, *project activity*, *ease of use*, and *ease of modification*.
 The following table provides a balanced overview of each project.
 We discuss our reasoning further below.
 
@@ -136,9 +136,9 @@ Solution quality
    Have a look at our :doc:`benchmarks <benchmarks>`! 
 
 We define *solution quality* by how good the returned solution typically is, after a modest amount of runtime (a few minutes).
-PyVRP combines an effective metaheuristic with a very efficient local search, and typically finds near-optimal solutions very quickly.
-VROOM has a strong local search, but no metaheuristic on top: its solutions are good, but it can get stuck in a mediocre local optimum.
-jsprit implements a ruin-and-recreate metaheuristic, but does not efficiently evaluate moves, which means it cannot quickly evaluate many moves.
+PyVRP combines an effective metaheuristic with a very efficient local search, and typically finds near-optimal solutions quickly.
+VROOM has a local search component, but no metaheuristic on top: it is very fast, and returns good solutions, but it can occasionally get stuck in a mediocre local optimum.
+jsprit implements a ruin-and-recreate metaheuristic, but does not efficiently evaluate moves, which means it cannot quickly iterate through the search space.
 Its performance is comparable to VROOM on medium-sized instances. 
 OR-Tools implements a guided local search, which is not very effective in practice.
 
@@ -146,9 +146,9 @@ OR-Tools implements a guided local search, which is not very effective in practi
 Project activity
 ^^^^^^^^^^^^^^^^
 
-We define *project activity* loosely based on the project's issue tracker, discussion, and development activity.
+We define *project activity* based on the project's issue tracker, discussion, and development activity.
 PyVRP is under active development, but is still fairly new, and has a relatively small user and developer community.
-Both VROOM and OR-Tools are large, established projects, with an active user and developer community around them.
+Both VROOM and OR-Tools are large, established projects, with active user and developer communities.
 Finally, jsprit appears largely abandoned, with few, sporadic commits and posts to their issue tracker.
 
 
@@ -156,9 +156,9 @@ Ease of use
 ^^^^^^^^^^^
 
 We define *ease of use* by how easy it is to define and solve a vehicle routing problem using the software.
-PyVRP is straightforward to use, with clear examples, documentation, and a high-level modelling interface (:class:`~pyvrp.Model.Model`).
+PyVRP is straightforward to use, with clear examples, documentation, and a high-level modelling interface via its :class:`~pyvrp.Model.Model`.
 VROOM similarly provides clear examples and API documentation.
-jsprit provides documentation inside their repository, but those are nearly a decade old and only contain code snippets, not complete examples.
+jsprit provides documentation in their repository, but those are nearly a decade old and only contain code snippets, not complete examples.
 
 Finally, OR-Tools offers significant documentation, lots of examples, and an active discussion forum.
 These are also needed because the user needs to implement all their routing constraints mostly from scratch, and that requires some understanding of OR-Tools' constraint programming model.
@@ -173,6 +173,6 @@ VROOM and jsprit are fully implemented in C++ and Java, respectively, and relati
 OR-Tools is a complicated C++ codebase, but one rarely needs to dive deep into its internals since OR-Tools already offers a great deal of flexibility for implementing custom requirements.
 
 Finally, PyVRP implements both C++ and Python components.
-Extending PyVRP thus requires a solid understanding of both languages.
-Additionally, PyVRP uses various concepts from the operational research literature to speed up its local search component, most notably its :term:`concatenation schemes <Concatenation scheme>` and :term:`route segments <Route segment>`.
-These concepts can certainly be learned, but some prior familiarity with the relevant literature is very helpful in getting up to speed quickly.
+Extending PyVRP requires a solid understanding of both languages.
+Additionally, PyVRP uses various concepts from the operational research literature to speed up its local search component, most notably in its :term:`concatenation schemes <Concatenation scheme>` and :term:`route segments <Route segment>`.
+Some prior familiarity with the relevant literature is very helpful in getting up to speed quickly.
