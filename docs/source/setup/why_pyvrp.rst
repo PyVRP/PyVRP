@@ -83,7 +83,7 @@ Strengths and weaknesses
 ------------------------
 
 Each of the projects we consider her has its own strengths and weaknesses, depending on where the project's focus lies.
-We do not aim for a completely exhaustive discussion, but instead try to focus on the following aspects: *scale*, *solution quality*, *project activity*, *ease of modification*, and *ease of use*.
+We do not aim for a completely exhaustive discussion, but instead try to focus on the following aspects: *scale*, *solution quality*, *project activity*, *ease of use*, and *ease of modification*.
 The following table provides a subjective overview of the relative strenghts of each project.
 We discuss these further below.
 
@@ -110,16 +110,16 @@ We discuss these further below.
      - ⭐⭐⭐
      - ⭐ 
      - ⭐⭐⭐
-   * - Ease of modification
-     - ⭐
-     - ⭐⭐
-     - ⭐⭐
-     - ⭐⭐
    * - Ease of use
      - ⭐⭐⭐
      - ⭐⭐⭐
      - ⭐⭐
      - ⭐
+   * - Ease of modification
+     - ⭐
+     - ⭐⭐
+     - ⭐⭐
+     - ⭐⭐
 
 
 Scale
@@ -146,17 +146,17 @@ We define *activity* loosely by the project's overall community size, as evidenc
 TODO
 
 
-Ease of modification
-^^^^^^^^^^^^^^^^^^^^
-
-We define *ease of modification* by how easy it is to make changes to the project's codebase, particularly to adjust or implement your own features.
-
-TODO
-
-
 Ease of use
 ^^^^^^^^^^^
 
 We define *ease of use* by how easy it is to define and solve a vehicle routing problem using the software.
+
+TODO
+
+
+Ease of modification
+^^^^^^^^^^^^^^^^^^^^
+
+We define *ease of modification* by how easy it is to make changes to the project's codebase, particularly to adjust or implement your own features.
 
 TODO
