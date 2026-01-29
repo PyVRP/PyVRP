@@ -1,19 +1,18 @@
 Why choose PyVRP?
 =================
 
-PyVRP is just one of many open-source vehicle routing solver alternatives, like `VROOM <https://github.com/VROOM-Project/vroom/>`_ or `jsprit <https://github.com/graphhopper/jsprit>`_.
+PyVRP is one of several open-source vehicle routing solver alternatives, like `VROOM <https://github.com/VROOM-Project/vroom/>`_, `jsprit <https://github.com/graphhopper/jsprit>`_, or implementing a solver yourself using the building blocks provided by `OR-Tools <https://github.com/google/or-tools>`_.
 Why choose us for your route optimisation, rather than one of those alternatives?
 In this document we try to give a structured answer to this question, by comparing features, and project-specific strengths and weaknesses.
 
-TODO mention OR-Tools, general optimisation packages
-
-.. note::
-   Our aim is to provide a factual and neutral overview of each project's features, strengths and weaknesses.
-   Please contact us if you think we made a mistake!
-
-
 Feature comparison
 ------------------
+
+Our aim is to provide a neutral and complete overview of each solver's main features.
+
+.. note::
+   The following table does not include OR-Tools, by design: OR-Tools can be used to implement essentially any feature you'd like, but *you* need to do the implementation.
+   This approach offers tremendous flexibility, at the cost of (significant) implementation work.
 
 .. list-table::
    :header-rows: 1
@@ -27,9 +26,9 @@ Feature comparison
      - ✅
      - ✅
    * - Time windows
-     - ✅ (many)
-     - ✅ (many)
-     - ✅ (many)
+     - ✅ (multiple)
+     - ✅ (multiple)
+     - ✅ (multiple)
    * - Heterogeneous fleet
      - ✅
      - ✅
@@ -50,9 +49,9 @@ Feature comparison
      - ❌
      - ✅ (fixed)
      - ✅ (fixed)
-   * - Minimise duration
+   * - Duration objective
      - ✅
-     - ⚠️ (only travel and service)
+     - ⚠️ (not wait duration)
      - ✅
    * - Alternative visits
      - ✅
@@ -83,10 +82,73 @@ Feature comparison
 Strengths and weaknesses
 ------------------------
 
-TODO along the following dims:
+Each of the projects we consider her has its own strengths and weaknesses, depending on where the project's focus lies.
+We do not aim for a completely exhaustive discussion, but instead try to focus on the following aspects: *scale*, *solution quality*, *activity*, *ease of modification*, and *ease of use*.
+We define these as follows:
 
-* scale (max instance size, solve speed)
-* solution quality
-* active development
-* nuanced features
-* ease of use
+* *Scale*: size of the largest instance for which a reasonable solution can typically still be found.
+* *Solution quality*: how good the returned solution typically is.
+* *Activity*: overall project community and development activity.
+* *Ease of modification*: how easy it to adjust the existing code implementation.
+* *Ease of use*: how easy it is to define and solve a vehicle routing problem using the softwares.
+
+The following table provides a subjective overview of the relative strenghts of each project.
+We discuss these further below.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Aspect
+     - PyVRP
+     - VROOM
+     - jsprit
+     - OR-Tools
+   * - Scale
+     - ⭐⭐⭐
+     - ⭐⭐⭐
+     - ⭐⭐
+     - ⭐⭐
+   * - Solution quality
+     - ⭐⭐⭐
+     - ⭐⭐
+     - ⭐⭐
+     - ⭐
+   * - Activity
+     - ⭐⭐
+     - ⭐⭐⭐
+     - ⭐ 
+     - ⭐⭐⭐
+   * - Ease of modification
+     - ⭐
+     - ⭐⭐
+     - ⭐⭐
+     - ⭐⭐
+   * - Ease of use
+     - ⭐⭐⭐
+     - ⭐⭐⭐
+     - ⭐⭐
+     - ⭐
+
+
+PyVRP
+^^^^^
+
+TODO
+
+
+VROOM
+^^^^^
+
+TODO
+
+
+jsprit
+^^^^^^
+
+TODO
+
+
+OR-Tools
+^^^^^^^^
+
+TODO
