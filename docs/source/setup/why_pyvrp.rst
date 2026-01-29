@@ -84,7 +84,7 @@ Strengths and weaknesses
 
 Each of the projects we consider her has its own strengths and weaknesses, depending on where the project's focus lies.
 We do not aim for a completely exhaustive discussion, but instead try to focus on the following aspects: *scale*, *solution quality*, *project activity*, *ease of use*, and *ease of modification*.
-The following table provides a subjective overview of the relative strenghts of each project.
+The following table provides a subjective overview of the relative strengths of each project.
 We discuss these further below.
 
 .. list-table::
