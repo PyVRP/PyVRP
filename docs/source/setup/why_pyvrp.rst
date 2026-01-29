@@ -88,7 +88,7 @@ We define these as follows:
 
 * *Scale*: size of the largest instance for which a reasonable solution can typically still be found.
 * *Solution quality*: how good the returned solution typically is.
-* *Activity*: overall project community and development activity.
+* *Activity*: overall project community size and development activity.
 * *Ease of modification*: how easy it to adjust the existing code implementation.
 * *Ease of use*: how easy it is to define and solve a vehicle routing problem using the softwares.
 
