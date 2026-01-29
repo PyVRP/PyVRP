@@ -157,7 +157,8 @@ Ease of use
 ^^^^^^^^^^^
 
 We define *ease of use* by how easy it is to define and solve a vehicle routing problem using the software.
-PyVRP and VROOM are straightforward to use, with clear examples and documentation.
+PyVRP is straightforward to use, with clear examples, documentation, and a high-level modelling interface (:class:`~pyvrp.Model.Model`).
+VROOM similarly provides clear examples and API documentation.
 jsprit provides documentation inside their repository, but those are nearly a decade old and only contain code snippets, not complete examples.
 
 Finally, OR-Tools offers significant documentation, lots of examples, and an active discussion forum.
