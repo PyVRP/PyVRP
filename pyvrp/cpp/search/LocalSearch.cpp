@@ -345,6 +345,17 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
         route->insert(idx, U);
         update(route, route);
         searchSpace_.markPromising(U);
+        return;
+    }
+
+    // Test removing V if that's an improving and allowed move.
+    if (!group.required && removeCost(V, data, costEvaluator) < 0)
+    {
+        searchSpace_.markPromising(V);
+        auto *route = V->route();
+        route->remove(V->idx());
+        update(route, route);
+        return;
     }
 }
 

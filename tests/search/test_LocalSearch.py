@@ -4,6 +4,7 @@ from numpy.testing import assert_, assert_equal
 
 from pyvrp import (
     Client,
+    ClientGroup,
     CostEvaluator,
     Depot,
     ProblemData,
@@ -658,3 +659,38 @@ def test_local_search_inserts_into_empty_solutions():
     sol = ls(empty, cost_eval, exhaustive=True)
     assert_equal(sol.num_clients(), 2)
     assert_equal(sol.uncollected_prizes(), 0)
+
+
+def test_does_not_insert_optional_groups():
+    """
+    Tests that the local search does not insert optional groups, and in fact
+    completely removes those if that's more beneficial.
+    """
+    matrix = np.ones((3, 3), dtype=int)
+    np.fill_diagonal(matrix, 0)
+
+    # Instnace with all optional clients, that are in turn part of an optional
+    # group. The group isn't worth visiting since that incurs distance cost,
+    # and there is no prize to be obtained.
+    data = ProblemData(
+        clients=[
+            Client(x=0, y=0, group=0, required=False),
+            Client(x=0, y=0, group=0, required=False),
+        ],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+        groups=[ClientGroup([1, 2], required=False)],
+    )
+
+    rng = RandomNumberGenerator(seed=2)
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_operator(Exchange10(data))
+
+    # Start with a full solution. After local search, the solution should be
+    # empty because the group is not worth keeping around.
+    sol = Solution(data, [[1, 2]])
+    cost_eval = CostEvaluator([], 0, 0)
+    improved = ls(sol, cost_eval, exhaustive=True)
+    assert_equal(improved.num_clients(), 0)
