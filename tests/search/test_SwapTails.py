@@ -54,7 +54,7 @@ def test_OkSmall_multiple_vehicle_types(
 
     neighbours: list[list[int]] = [[], [2], [], [], []]  # only 1 -> 2
     ls = LocalSearch(data, rng, neighbours)
-    ls.add_node_operator(SwapTails(data))
+    ls.add_operator(SwapTails(data))
 
     routes1 = [SolRoute(data, [1, 3], 0), SolRoute(data, [2, 4], 1)]
     sol1 = pyvrp.Solution(data, routes1)

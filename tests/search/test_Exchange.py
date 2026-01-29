@@ -52,7 +52,7 @@ def test_swap_single_route_stays_single_route(rc208, operator):
 
     nb_params = NeighbourhoodParams(num_neighbours=rc208.num_clients)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
-    ls.add_node_operator(operator(rc208))
+    ls.add_operator(operator(rc208))
 
     single_route = list(range(rc208.num_depots, rc208.num_locations))
     sol = Solution(rc208, [single_route])
@@ -76,7 +76,7 @@ def test_relocate_uses_empty_routes(rc208, operator):
 
     nb_params = NeighbourhoodParams(num_neighbours=rc208.num_clients)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
-    ls.add_node_operator(operator(rc208))
+    ls.add_operator(operator(rc208))
 
     single_route = list(range(rc208.num_depots, rc208.num_locations))
     sol = Solution(rc208, [single_route])
@@ -112,7 +112,7 @@ def test_cannot_exchange_when_parts_overlap_with_depot(ok_small, operator):
 
     nb_params = NeighbourhoodParams(num_neighbours=ok_small.num_clients)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
-    ls.add_node_operator(operator(ok_small))
+    ls.add_operator(operator(ok_small))
 
     sol = Solution(ok_small, [[1, 2], [3], [4]])
     new_sol = ls(sol, cost_evaluator, exhaustive=True)
@@ -131,7 +131,7 @@ def test_cannot_exchange_when_segments_overlap(ok_small, operator):
 
     nb_params = NeighbourhoodParams(num_neighbours=ok_small.num_clients)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
-    ls.add_node_operator(operator(ok_small))
+    ls.add_operator(operator(ok_small))
 
     sol = Solution(ok_small, [[1, 2, 3, 4]])
     new_sol = ls(sol, cost_evaluator, exhaustive=True)
@@ -149,7 +149,7 @@ def test_cannot_swap_adjacent_segments(ok_small):
 
     nb_params = NeighbourhoodParams(num_neighbours=ok_small.num_clients)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
-    ls.add_node_operator(Exchange22(ok_small))
+    ls.add_operator(Exchange22(ok_small))
 
     # An adjacent swap by (2, 2)-exchange could have created the single-route
     # solution [3, 4, 1, 2], which has a much lower cost. But that's not
@@ -170,7 +170,7 @@ def test_swap_between_routes_OkSmall(ok_small):
 
     nb_params = NeighbourhoodParams(num_neighbours=ok_small.num_clients)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
-    ls.add_node_operator(Exchange21(ok_small))
+    ls.add_operator(Exchange21(ok_small))
 
     sol = Solution(ok_small, [[1, 2], [3, 4]])
     improved_sol = ls(sol, cost_evaluator, exhaustive=True)
@@ -266,7 +266,7 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     cost_evaluator = CostEvaluator([], 1, 0)
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_node_operator(Exchange10(data))
+    ls.add_operator(Exchange10(data))
 
     assert_equal(ls(duration_optimal, cost_evaluator), duration_optimal)
     assert_equal(ls(distance_optimal, cost_evaluator), duration_optimal)
@@ -292,7 +292,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     neighbours[2].append(1)
 
     ls = LocalSearch(data, rng, neighbours)
-    ls.add_node_operator(Exchange10(data))
+    ls.add_operator(Exchange10(data))
 
     # The initial solution has routes with loads [13, 5, 0, 0]
     # with excess [1, 0, 0, 0]. Moving node 3 to route 4 will resolve all

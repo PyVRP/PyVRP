@@ -69,7 +69,7 @@ def test_best_solution_improves_with_more_iterations(rc208):
     rng = RandomNumberGenerator(seed=42)
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    ls.add_node_operator(Exchange10(rc208))
+    ls.add_operator(Exchange10(rc208))
     init = Solution.make_random(rc208, rng)
     algo = IteratedLocalSearch(rc208, pm, rng, ls, init)
 

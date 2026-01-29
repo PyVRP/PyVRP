@@ -18,11 +18,11 @@
 
 namespace py = pybind11;
 
+using pyvrp::search::BinaryOperator;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
 using pyvrp::search::LocalSearch;
-using pyvrp::search::NodeOperator;
 using pyvrp::search::OperatorStatistics;
 using pyvrp::search::PerturbationManager;
 using pyvrp::search::PerturbationParams;
@@ -36,14 +36,14 @@ using pyvrp::search::SwapTails;
 
 PYBIND11_MODULE(_search, m)
 {
-    py::class_<NodeOperator>(m, "NodeOperator");
+    py::class_<BinaryOperator>(m, "BinaryOperator");
 
     py::class_<OperatorStatistics>(
         m, "OperatorStatistics", DOC(pyvrp, search, OperatorStatistics))
         .def_readonly("num_evaluations", &OperatorStatistics::numEvaluations)
         .def_readonly("num_applications", &OperatorStatistics::numApplications);
 
-    py::class_<Exchange<1, 0>, NodeOperator>(
+    py::class_<Exchange<1, 0>, BinaryOperator>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -59,7 +59,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &Exchange<1, 0>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<Exchange<1, 0>>, py::arg("data"));
 
-    py::class_<Exchange<2, 0>, NodeOperator>(
+    py::class_<Exchange<2, 0>, BinaryOperator>(
         m, "Exchange20", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -75,7 +75,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &Exchange<2, 0>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<Exchange<2, 0>>, py::arg("data"));
 
-    py::class_<Exchange<3, 0>, NodeOperator>(
+    py::class_<Exchange<3, 0>, BinaryOperator>(
         m, "Exchange30", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -91,7 +91,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &Exchange<3, 0>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<Exchange<3, 0>>, py::arg("data"));
 
-    py::class_<Exchange<1, 1>, NodeOperator>(
+    py::class_<Exchange<1, 1>, BinaryOperator>(
         m, "Exchange11", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -107,7 +107,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &Exchange<1, 1>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<Exchange<1, 1>>, py::arg("data"));
 
-    py::class_<Exchange<2, 1>, NodeOperator>(
+    py::class_<Exchange<2, 1>, BinaryOperator>(
         m, "Exchange21", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -123,7 +123,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &Exchange<2, 1>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<Exchange<2, 1>>, py::arg("data"));
 
-    py::class_<Exchange<3, 1>, NodeOperator>(
+    py::class_<Exchange<3, 1>, BinaryOperator>(
         m, "Exchange31", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -139,7 +139,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &Exchange<3, 1>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<Exchange<3, 1>>, py::arg("data"));
 
-    py::class_<Exchange<2, 2>, NodeOperator>(
+    py::class_<Exchange<2, 2>, BinaryOperator>(
         m, "Exchange22", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -155,7 +155,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &Exchange<2, 2>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<Exchange<2, 2>>, py::arg("data"));
 
-    py::class_<Exchange<3, 2>, NodeOperator>(
+    py::class_<Exchange<3, 2>, BinaryOperator>(
         m, "Exchange32", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -171,7 +171,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &Exchange<3, 2>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<Exchange<3, 2>>, py::arg("data"));
 
-    py::class_<Exchange<3, 3>, NodeOperator>(
+    py::class_<Exchange<3, 3>, BinaryOperator>(
         m, "Exchange33", DOC(pyvrp, search, Exchange))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -187,7 +187,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<Exchange<3, 3>>, py::arg("data"));
 
-    py::class_<SwapTails, NodeOperator>(
+    py::class_<SwapTails, BinaryOperator>(
         m, "SwapTails", DOC(pyvrp, search, SwapTails))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -203,7 +203,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &SwapTails::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &supports<SwapTails>, py::arg("data"));
 
-    py::class_<RelocateWithDepot, NodeOperator>(
+    py::class_<RelocateWithDepot, BinaryOperator>(
         m, "RelocateWithDepot", DOC(pyvrp, search, RelocateWithDepot))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
@@ -312,11 +312,11 @@ PYBIND11_MODULE(_search, m)
                       &LocalSearch::setNeighbours,
                       py::return_value_policy::reference_internal)
         .def_property_readonly("statistics", &LocalSearch::statistics)
-        .def_property_readonly("node_operators",
-                               &LocalSearch::nodeOperators,
+        .def_property_readonly("binary_operators",
+                               &LocalSearch::binaryOperators,
                                py::return_value_policy::reference_internal)
-        .def("add_node_operator",
-             &LocalSearch::addNodeOperator,
+        .def("add_operator",
+             &LocalSearch::addOperator,
              py::arg("op"),
              py::keep_alive<1, 2>())
         .def("__call__",

@@ -4,7 +4,7 @@ from numpy.testing import assert_, assert_allclose, assert_equal
 from pyvrp.IteratedLocalSearch import IteratedLocalSearchParams
 from pyvrp.PenaltyManager import PenaltyParams
 from pyvrp.search import (
-    NODE_OPERATORS,
+    OPERATORS,
     Exchange10,
     NeighbourhoodParams,
     PerturbationParams,
@@ -24,7 +24,7 @@ def test_default_values():
     assert_equal(params.ils, IteratedLocalSearchParams())
     assert_equal(params.penalty, PenaltyParams())
     assert_equal(params.neighbourhood, NeighbourhoodParams())
-    assert_equal(params.node_ops, NODE_OPERATORS)
+    assert_equal(params.operators, OPERATORS)
     assert_allclose(params.display_interval, 5.0)
     assert_equal(params.perturbation, PerturbationParams())
 
@@ -38,13 +38,13 @@ def test_solve_params_from_file():
     ils = IteratedLocalSearchParams(10, 1)
     penalty = PenaltyParams(100, 1.25, 0.85, 0.43)
     neighbourhood = NeighbourhoodParams(0, 0, 20, True, True)
-    node_ops = [Exchange10, SwapTails]
+    operators = [Exchange10, SwapTails]
     perturbation = PerturbationParams(1, 10)
 
     assert_equal(params.ils, ils)
     assert_equal(params.penalty, penalty)
     assert_equal(params.neighbourhood, neighbourhood)
-    assert_equal(params.node_ops, node_ops)
+    assert_equal(params.operators, operators)
     assert_allclose(params.display_interval, 10.0)
     assert_equal(params.perturbation, perturbation)
 
