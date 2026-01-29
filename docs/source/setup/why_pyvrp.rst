@@ -83,15 +83,7 @@ Strengths and weaknesses
 ------------------------
 
 Each of the projects we consider her has its own strengths and weaknesses, depending on where the project's focus lies.
-We do not aim for a completely exhaustive discussion, but instead try to focus on the following aspects: *scale*, *solution quality*, *activity*, *ease of modification*, and *ease of use*.
-We define these as follows:
-
-* *Scale*: size of the largest instance for which a reasonable solution can typically still be found.
-* *Solution quality*: how good the returned solution typically is.
-* *Activity*: overall project community size and development activity.
-* *Ease of modification*: how easy it to adjust the existing code implementation.
-* *Ease of use*: how easy it is to define and solve a vehicle routing problem using the softwares.
-
+We do not aim for a completely exhaustive discussion, but instead try to focus on the following aspects: *scale*, *solution quality*, *project activity*, *ease of modification*, and *ease of use*.
 The following table provides a subjective overview of the relative strenghts of each project.
 We discuss these further below.
 
@@ -113,7 +105,7 @@ We discuss these further below.
      - ⭐⭐
      - ⭐⭐
      - ⭐
-   * - Activity
+   * - Project activity
      - ⭐⭐
      - ⭐⭐⭐
      - ⭐ 
@@ -130,25 +122,41 @@ We discuss these further below.
      - ⭐
 
 
-PyVRP
+Scale
 ^^^^^
 
-TODO
-
-
-VROOM
-^^^^^
+We define *scale* as the size of the largest instances for which a reasonable solution can typically still be found.
 
 TODO
 
 
-jsprit
-^^^^^^
+Solution quality
+^^^^^^^^^^^^^^^^
+
+We define *solution quality* by how good the returned solution typically is, after a modest amount of runtime (at least a few minutes).
 
 TODO
 
 
-OR-Tools
-^^^^^^^^
+Project activity
+^^^^^^^^^^^^^^^^
+
+We define *activity* loosely by the project's overall community size, as evidenced by the activity on its issue tracker and development activity.
+
+TODO
+
+
+Ease of modification
+^^^^^^^^^^^^^^^^^^^^
+
+We define *ease of modification* by how easy it is to make changes to the project's codebase, particularly to adjust or implement your own features.
+
+TODO
+
+
+Ease of use
+^^^^^^^^^^^
+
+We define *ease of use* by how easy it is to define and solve a vehicle routing problem using the software.
 
 TODO
