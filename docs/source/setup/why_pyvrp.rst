@@ -102,12 +102,12 @@ We discuss our reasoning further below.
    * - Solution quality
      - ⭐⭐⭐
      - ⭐⭐
-     - ⭐⭐
+     - ⭐
      - ⭐
    * - Project activity
      - ⭐⭐
      - ⭐⭐⭐
-     - ⭐ 
+     - ⭐
      - ⭐⭐⭐
    * - Ease of use
      - ⭐⭐⭐
@@ -137,10 +137,10 @@ Solution quality
 
 We define *solution quality* by how good the returned solution typically is, after a modest amount of runtime (a few minutes).
 PyVRP combines an effective metaheuristic with a very efficient local search, and typically finds near-optimal solutions quickly.
-VROOM has a local search component, but no metaheuristic on top: it is very fast, and returns good solutions, but it can occasionally get stuck in a mediocre local optimum.
-jsprit implements a ruin-and-recreate metaheuristic, but does not efficiently evaluate moves, which means it cannot quickly iterate through the search space.
-Its performance is comparable to VROOM on medium-sized instances. 
-OR-Tools implements a guided local search, which is not very effective in practice.
+VROOM has a local search component, but no metaheuristic on top: it is fast and returns good solutions, but it can occasionally get stuck in a mediocre local optimum.
+jsprit implements a ruin-and-recreate metaheuristic but does not efficiently evaluate moves, which means it cannot quickly iterate through the search space.
+It performs adequately on small and medium-sized instances but can be poor on large instances, or those with shipments (pickup-and-delivery). 
+OR-Tools implements a guided local search that performs similarly to jsprit on most routing problems, but is better on instances with shipments.
 
 
 Project activity
@@ -148,7 +148,7 @@ Project activity
 
 We define *project activity* based on the project's issue tracker, discussion, and development activity.
 PyVRP is under active development, but is still fairly new, and has a relatively small user and developer community.
-Both VROOM and OR-Tools are large, established projects, with active user and developer communities.
+Both VROOM and OR-Tools are large, established projects, with active user and developer communities, although OR-Tools' routing components have not been updated in recent years.
 Finally, jsprit appears largely abandoned, with few, sporadic commits and posts to their issue tracker.
 
 
