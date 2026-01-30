@@ -108,7 +108,7 @@ We discuss our reasoning further below.
      - ⭐⭐
      - ⭐⭐⭐
      - ⭐
-     - ⭐⭐⭐
+     - ⭐⭐
    * - Ease of use
      - ⭐⭐⭐
      - ⭐⭐⭐
