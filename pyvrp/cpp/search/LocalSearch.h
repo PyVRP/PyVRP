@@ -40,14 +40,13 @@ class LocalSearch
     size_t numUpdates_ = 0;         // modification counter
     bool searchCompleted_ = false;  // No further improving move found?
 
+    // Tests the node U.
+    bool applyUnaryOps(Route::Node *U, CostEvaluator const &costEvaluator);
+
     // Tests the node pair (U, V).
     bool applyBinaryOps(Route::Node *U,
                         Route::Node *V,
                         CostEvaluator const &costEvaluator);
-
-    // Tests a move removing the given reload depot.
-    void applyDepotRemovalMove(Route::Node *U,
-                               CostEvaluator const &costEvaluator);
 
     // Tests moves involving empty routes.
     void applyEmptyRouteMoves(Route::Node *U,

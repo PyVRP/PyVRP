@@ -25,6 +25,9 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
 
     solution_.load(solution);
 
+    for (auto *op : unaryOps_)
+        op->init(solution);
+
     for (auto *op : binaryOps_)
         op->init(solution);
 
@@ -59,6 +62,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             auto const lastTest = lastTest_[U->client()];
             lastTest_[U->client()] = numUpdates_;
 
+            applyUnaryOps(U, costEvaluator);
+
             // First test removing or inserting U. Particularly relevant if not
             // all clients are required (e.g., when prize collecting).
             applyOptionalClientMoves(U, costEvaluator);
@@ -69,12 +74,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!U->route())  // we already evaluated inserting U, so there is
                 continue;     // nothing left to be done for this client.
 
-            // If U borders a reload depot, try removing it.
-            applyDepotRemovalMove(p(U), costEvaluator);
-            applyDepotRemovalMove(n(U), costEvaluator);
-
-            // We next apply the regular operators that work on pairs of nodes
-            // (U, V), where both U and V are in the solution.
             for (auto const vClient : searchSpace_.neighboursOf(U->client()))
             {
                 auto *V = &solution_.nodes[vClient];
@@ -112,6 +111,39 @@ void LocalSearch::shuffle(RandomNumberGenerator &rng)
     rng.shuffle(binaryOps_.begin(), binaryOps_.end());
 }
 
+bool LocalSearch::applyUnaryOps(Route::Node *U,
+                                CostEvaluator const &costEvaluator)
+{
+    for (auto *op : unaryOps_)
+    {
+        auto const deltaCost = op->evaluate(U, costEvaluator);
+        if (deltaCost < 0)
+        {
+            auto *rU = U->route();
+
+            [[maybe_unused]] auto const costBefore
+                = costEvaluator.penalisedCost(*rU);
+
+            searchSpace_.markPromising(U);
+
+            op->apply(U);
+            update(rU, rU);
+
+            [[maybe_unused]] auto const costAfter
+                = costEvaluator.penalisedCost(*rU);
+
+            // When there is an improving move, the delta cost evaluation must
+            // be exact. The resulting cost is then the sum of the cost before
+            // the move, plus the delta cost.
+            assert(costAfter == costBefore + deltaCost);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool LocalSearch::applyBinaryOps(Route::Node *U,
                                  Route::Node *V,
                                  CostEvaluator const &costEvaluator)
@@ -121,8 +153,8 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
         auto const deltaCost = op->evaluate(U, V, costEvaluator);
         if (deltaCost < 0)
         {
-            auto *rU = U->route();  // copy these because the operator can
-            auto *rV = V->route();  // modify the nodes' route membership
+            auto *rU = U->route();
+            auto *rV = V->route();
 
             [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(*rU)
@@ -148,24 +180,6 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
     }
 
     return false;
-}
-
-void LocalSearch::applyDepotRemovalMove(Route::Node *U,
-                                        CostEvaluator const &costEvaluator)
-{
-    if (!U->isReloadDepot())
-        return;
-
-    // We remove the depot when that's either better, or neutral. It can be
-    // neutral if for example it's the same depot visited consecutively, but
-    // that's then unnecessary.
-    if (removeCost(U, data, costEvaluator) <= 0)
-    {
-        searchSpace_.markPromising(U);  // U's neighbours might not be depots
-        auto *route = U->route();
-        route->remove(U->idx());
-        update(route, route);
-    }
 }
 
 void LocalSearch::applyEmptyRouteMoves(Route::Node *U,

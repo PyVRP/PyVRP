@@ -3,6 +3,7 @@
 #include "LocalSearch.h"
 #include "PerturbationManager.h"
 #include "RelocateWithDepot.h"
+#include "RemoveAdjacentDepot.h"
 #include "Route.h"
 #include "SearchSpace.h"
 #include "Solution.h"
@@ -27,6 +28,7 @@ using pyvrp::search::OperatorStatistics;
 using pyvrp::search::PerturbationManager;
 using pyvrp::search::PerturbationParams;
 using pyvrp::search::RelocateWithDepot;
+using pyvrp::search::RemoveAdjacentDepot;
 using pyvrp::search::removeCost;
 using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
@@ -44,6 +46,22 @@ PYBIND11_MODULE(_search, m)
         m, "OperatorStatistics", DOC(pyvrp, search, OperatorStatistics))
         .def_readonly("num_evaluations", &OperatorStatistics::numEvaluations)
         .def_readonly("num_applications", &OperatorStatistics::numApplications);
+
+    py::class_<RemoveAdjacentDepot, UnaryOperator>(
+        m, "RemoveAdjacentDepot", DOC(pyvrp, search, RemoveAdjacentDepot))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &RemoveAdjacentDepot::statistics,
+                               py::return_value_policy::reference_internal)
+        .def("evaluate",
+             &RemoveAdjacentDepot::evaluate,
+             py::arg("U"),
+             py::arg("cost_evaluator"))
+        .def("apply", &RemoveAdjacentDepot::apply, py::arg("U"))
+        .def_static(
+            "supports", &supports<RemoveAdjacentDepot>, py::arg("data"));
 
     py::class_<Exchange<1, 0>, BinaryOperator>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))
