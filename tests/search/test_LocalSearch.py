@@ -278,46 +278,6 @@ def test_local_search_completes_incomplete_solutions(ok_small_prizes):
     assert_(new_sol.is_complete())
 
 
-def test_local_search_does_not_remove_required_clients():
-    """
-    Tests that the local search object does not remove required clients, even
-    when that might result in a significant cost improvement.
-    """
-    rng = RandomNumberGenerator(seed=42)
-    data = ProblemData(
-        clients=[
-            # This client cannot be removed, even though it causes significant
-            # load violations.
-            Client(x=1, y=1, delivery=[100], required=True),
-            # This client can and should be removed, because the prize is not
-            # worth the detour.
-            Client(x=2, y=2, delivery=[0], prize=0, required=False),
-        ],
-        depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(1, capacity=[50])],
-        distance_matrices=[np.where(np.eye(3), 0, 10)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
-    )
-
-    ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_operator(Exchange10(data))
-
-    sol = Solution(data, [[1, 2]])
-    assert_(sol.is_complete())
-
-    # Test that the improved solution contains the first client, but removes
-    # the second. The first client is required, so could not be removed, but
-    # the second could and that is an improving move.
-    cost_eval = CostEvaluator([100], 100, 0)
-    new_sol = ls(sol, cost_eval, exhaustive=True)
-    assert_equal(new_sol.num_clients(), 1)
-    assert_(new_sol.is_complete())
-
-    sol_cost = cost_eval.penalised_cost(sol)
-    new_cost = cost_eval.penalised_cost(new_sol)
-    assert_(new_cost < sol_cost)
-
-
 def test_replacing_optional_client():
     """
     Tests that the local search evaluates moves where an optional client is

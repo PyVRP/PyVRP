@@ -242,22 +242,9 @@ void LocalSearch::insertRequired(Route::Node *U,
 void LocalSearch::applyOptionalClientMoves(Route::Node *U,
                                            CostEvaluator const &costEvaluator)
 {
+    // Groups have their own operator and are not processed here.
     ProblemData::Client const &uData = data.location(U->client());
-
-    // Required clients are not optional. Groups have their own operator and are
-    // not processed here.
-    if (uData.required || uData.group)
-        return;
-
-    if (removeCost(U, data, costEvaluator) < 0)  // remove if improving
-    {
-        searchSpace_.markPromising(U);
-        auto *route = U->route();
-        route->remove(U->idx());
-        update(route, route);
-    }
-
-    if (U->route())
+    if (U->route() || uData.group)
         return;
 
     // Attempt to re-insert U using a first-improving neighbourhood search.
