@@ -1,13 +1,7 @@
 import numpy as np
 from numpy.testing import assert_equal
 
-from pyvrp import (
-    Client,
-    CostEvaluator,
-    Depot,
-    ProblemData,
-    VehicleType,
-)
+from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
 from pyvrp.search import RemoveOptional
 from tests.helpers import make_search_route
 
