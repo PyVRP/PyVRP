@@ -21,6 +21,7 @@ from pyvrp.search import (
     PerturbationManager,
     PerturbationParams,
     RelocateWithDepot,
+    RemoveAdjacentDepot,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -558,14 +559,23 @@ def test_operators_property(ok_small):
 
     # The local search has not yet been equipped with operators, so it should
     # start empty.
+    assert_equal(len(ls.unary_operators), 0)
     assert_equal(len(ls.binary_operators), 0)
 
     # Now we add a binary operator. The local search does not take ownership,
     # so its only operator should be the exact object we just created.
     op = Exchange10(ok_small)
     ls.add_operator(op)
+    assert_equal(len(ls.unary_operators), 0)
     assert_equal(len(ls.binary_operators), 1)
     assert_(ls.binary_operators[0] is op)
+
+    # And similarly for a unary operator.
+    op = RemoveAdjacentDepot(ok_small)
+    ls.add_operator(op)
+    assert_equal(len(ls.unary_operators), 1)
+    assert_equal(len(ls.binary_operators), 1)
+    assert_(ls.unary_operators[0] is op)
 
 
 @pytest.mark.parametrize(
