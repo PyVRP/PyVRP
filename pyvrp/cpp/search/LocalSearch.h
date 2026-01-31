@@ -31,6 +31,7 @@ class LocalSearch
     // each LS invocation.
     PerturbationManager &perturbationManager_;
 
+    std::vector<UnaryOperator *> unaryOps_;
     std::vector<BinaryOperator *> binaryOps_;
 
     std::vector<int> lastTest_;    // tracks last client evaluations
@@ -98,9 +99,20 @@ public:
     };
 
     /**
+     * Adds a local search operator that works on client nodes U.
+     */
+    void addOperator(UnaryOperator &op);
+
+    /**
      * Adds a local search operator that works on client node pairs U and V.
      */
     void addOperator(BinaryOperator &op);
+
+    /**
+     * Returns the unary operators in use. Note that there is no defined
+     * ordering.
+     */
+    std::vector<UnaryOperator *> const &unaryOperators() const;
 
     /**
      * Returns the binary operators in use. Note that there is no defined

@@ -20,7 +20,7 @@ from ._search import UnaryOperator as UnaryOperator
 from .neighbourhood import NeighbourhoodParams as NeighbourhoodParams
 from .neighbourhood import compute_neighbours as compute_neighbours
 
-OPERATORS: list[Type[BinaryOperator]] = [
+OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     Exchange10,
     Exchange20,
     Exchange11,

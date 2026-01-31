@@ -13,6 +13,7 @@ using pyvrp::Solution;
 using pyvrp::search::BinaryOperator;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::SearchSpace;
+using pyvrp::search::UnaryOperator;
 
 pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
                                         CostEvaluator const &costEvaluator,
@@ -39,7 +40,7 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
 
 void LocalSearch::search(CostEvaluator const &costEvaluator)
 {
-    if (binaryOps_.empty())
+    if (unaryOps_.empty() && binaryOps_.empty())
         return;
 
     searchCompleted_ = false;
@@ -107,6 +108,7 @@ void LocalSearch::shuffle(RandomNumberGenerator &rng)
     perturbationManager_.shuffle(rng);
     searchSpace_.shuffle(rng);
 
+    rng.shuffle(unaryOps_.begin(), unaryOps_.end());
     rng.shuffle(binaryOps_.begin(), binaryOps_.end());
 }
 
@@ -374,9 +376,19 @@ void LocalSearch::update(Route *U, Route *V)
     }
 }
 
+void LocalSearch::addOperator(UnaryOperator &op)
+{
+    unaryOps_.emplace_back(&op);
+}
+
 void LocalSearch::addOperator(BinaryOperator &op)
 {
     binaryOps_.emplace_back(&op);
+}
+
+std::vector<UnaryOperator *> const &LocalSearch::unaryOperators() const
+{
+    return unaryOps_;
 }
 
 std::vector<BinaryOperator *> const &LocalSearch::binaryOperators() const
@@ -406,6 +418,7 @@ LocalSearch::Statistics LocalSearch::statistics() const
         numImproving += stats.numApplications;
     };
 
+    std::for_each(unaryOps_.begin(), unaryOps_.end(), count);
     std::for_each(binaryOps_.begin(), binaryOps_.end(), count);
 
     assert(numImproving <= numUpdates_);
