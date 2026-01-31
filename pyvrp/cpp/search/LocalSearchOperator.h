@@ -72,6 +72,7 @@ public:
     virtual ~LocalSearchOperator() = default;
 };
 
+using UnaryOperator = LocalSearchOperator<Route::Node *>;
 using BinaryOperator = LocalSearchOperator<Route::Node *, Route::Node *>;
 
 /**

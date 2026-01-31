@@ -41,7 +41,7 @@ Operators
 ---------
 
 Instances of these operators can be added to the :class:`~pyvrp.search.LocalSearch.LocalSearch` object via the :meth:`~pyvrp.search.LocalSearch.LocalSearch.add_operator` method.
-Each operator inherits from :class:`~pyvrp.search._search.BinaryOperator`.
+Each operator inherits from :class:`~pyvrp.search._search.BinaryOperator` or :class:`~pyvrp.search._search.UnaryOperator`.
 As a convenience, the :mod:`pyvrp.search` module makes most relevant operators available as ``OPERATORS``:
 
 .. code-block:: python
@@ -53,6 +53,8 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
    :noindex:
 
    .. autoclass:: BinaryOperator
+
+   .. autoclass:: UnaryOperator
 
    .. autoclass:: Exchange10
       :exclude-members: evaluate, apply, statistics, supports
@@ -82,6 +84,12 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
       :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: RelocateWithDepot
+      :exclude-members: evaluate, apply, statistics, supports
+
+   .. autoclass:: RemoveAdjacentDepot
+      :exclude-members: evaluate, apply, statistics, supports
+
+   .. autoclass:: RemoveOptional
       :exclude-members: evaluate, apply, statistics, supports
 
    .. autoclass:: SwapTails

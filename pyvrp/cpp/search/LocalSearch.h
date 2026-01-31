@@ -31,6 +31,7 @@ class LocalSearch
     // each LS invocation.
     PerturbationManager &perturbationManager_;
 
+    std::vector<UnaryOperator *> unaryOps_;
     std::vector<BinaryOperator *> binaryOps_;
 
     std::vector<int> lastTest_;    // tracks last client evaluations
@@ -39,14 +40,13 @@ class LocalSearch
     size_t numUpdates_ = 0;         // modification counter
     bool searchCompleted_ = false;  // No further improving move found?
 
+    // Tests the node U.
+    bool applyUnaryOps(Route::Node *U, CostEvaluator const &costEvaluator);
+
     // Tests the node pair (U, V).
     bool applyBinaryOps(Route::Node *U,
                         Route::Node *V,
                         CostEvaluator const &costEvaluator);
-
-    // Tests a move removing the given reload depot.
-    void applyDepotRemovalMove(Route::Node *U,
-                               CostEvaluator const &costEvaluator);
 
     // Tests moves involving empty routes.
     void applyEmptyRouteMoves(Route::Node *U,
@@ -98,9 +98,20 @@ public:
     };
 
     /**
+     * Adds a local search operator that works on client nodes U.
+     */
+    void addOperator(UnaryOperator &op);
+
+    /**
      * Adds a local search operator that works on client node pairs U and V.
      */
     void addOperator(BinaryOperator &op);
+
+    /**
+     * Returns the unary operators in use. Note that there is no defined
+     * ordering.
+     */
+    std::vector<UnaryOperator *> const &unaryOperators() const;
 
     /**
      * Returns the binary operators in use. Note that there is no defined
