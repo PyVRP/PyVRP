@@ -33,9 +33,11 @@ using pyvrp::search::SearchSpace;
 using pyvrp::search::Solution;
 using pyvrp::search::supports;
 using pyvrp::search::SwapTails;
+using pyvrp::search::UnaryOperator;
 
 PYBIND11_MODULE(_search, m)
 {
+    py::class_<UnaryOperator>(m, "UnaryOperator");
     py::class_<BinaryOperator>(m, "BinaryOperator");
 
     py::class_<OperatorStatistics>(
