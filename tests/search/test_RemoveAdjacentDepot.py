@@ -44,6 +44,10 @@ def test_removes_best_adjacent_depot(ok_small_multiple_trips):
     # we evaluated for client 2, so we should find the same delta cost.
     assert_equal(op.evaluate(route[5], cost_eval), -3_275)
 
+    # Applying the last evaluated move removes the depot between 2 and 3.
+    op.apply(route[5])
+    assert_equal(str(route), "1 | 2 3")
+
 
 def test_removes_consecutive_depots(ok_small_multiple_trips):
     """

@@ -3,6 +3,7 @@
 #include "primitives.h"
 
 #include <cassert>
+#include <limits>
 
 using pyvrp::search::RemoveAdjacentDepot;
 
@@ -15,7 +16,7 @@ pyvrp::Cost RemoveAdjacentDepot::evaluate(Route::Node *U,
     if (!U->route())
         return 0;
 
-    Cost bestCost = 0;
+    Cost bestCost = std::numeric_limits<Cost>::max();
 
     if (p(U)->isReloadDepot())
     {
