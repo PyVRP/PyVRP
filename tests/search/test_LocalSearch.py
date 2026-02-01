@@ -664,3 +664,27 @@ def test_does_not_insert_optional_groups():
     cost_eval = CostEvaluator([], 0, 0)
     improved = ls(sol, cost_eval, exhaustive=True)
     assert_equal(improved.num_clients(), 0)
+
+
+def test_removes_useless_consecutive_depots(ok_small_multiple_trips):
+    """
+    Tests that the local search removes consecutive visits to the same reload
+    depot.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=2)
+    data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
+
+    rng = RandomNumberGenerator(seed=2)
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_operator(RemoveAdjacentDepot(data))
+
+    # Set up a route with an empty trip, so a consecutive reload depot visit.
+    trips = [Trip(data, visits, vehicle_type=0) for visits in [[1], [], [2]]]
+    route = Route(data, trips, vehicle_type=0)
+    assert_equal(str(route), "1 |  | 2")
+
+    # The local search should remove this consecutive depot visit.
+    sol = Solution(data, [route])
+    cost_eval = CostEvaluator([1], 1, 1)
+    improved = ls(sol, cost_eval, exhaustive=True)
+    assert_(" |  | " not in str(improved))
