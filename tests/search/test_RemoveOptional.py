@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_, assert_equal
 
 from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
 from pyvrp.search import RemoveOptional
@@ -38,3 +38,17 @@ def test_does_not_remove_required_clients():
     # Should remove the second client.
     op.apply(route[2])
     assert_equal(str(route), "1")
+
+
+def test_supports(
+    ok_small,
+    ok_small_prizes,
+    ok_small_mutually_exclusive_groups,
+):
+    """
+    Tests that RemoveOptional supports prize-collecting instances, but not
+    instances with groups or only required clients.
+    """
+    assert_(RemoveOptional.supports(ok_small_prizes))
+    assert_(not RemoveOptional.supports(ok_small))
+    assert_(not RemoveOptional.supports(ok_small_mutually_exclusive_groups))
