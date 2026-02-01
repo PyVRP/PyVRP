@@ -99,16 +99,16 @@ def test_move_involving_empty_routes():
     cost_eval = CostEvaluator([], 0, 0)
 
     # This move does not change the route structure, so the delta cost is 0.
-    assert_equal(op.evaluate(route1[2], route2[0], cost_eval), 0)
+    assert_equal(op.evaluate(route1[2], route2[0], cost_eval), (0, False))
 
     # This move creates routes (depot -> 1 -> depot) and (depot -> 2 -> depot),
     # making route 2 non-empty and thus incurring its fixed cost of 100.
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 100)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (100, False))
 
     # This move creates routes (depot -> depot) and (depot -> 1 -> 2 -> depot),
     # making route 1 empty, while making route 2 non-empty. The total fixed
     # cost incurred is thus -10 + 100 = 90.
-    assert_equal(op.evaluate(route1[0], route2[0], cost_eval), 90)
+    assert_equal(op.evaluate(route1[0], route2[0], cost_eval), (90, False))
 
     # Now we reverse the visits of route 1 and 2, so that we can hit the cases
     # where route 1 is empty.
@@ -121,19 +121,19 @@ def test_move_involving_empty_routes():
     route2.update()  # depot -> 1 -> 2 -> depot
 
     # This move does not change the route structure, so the delta cost is 0.
-    assert_equal(op.evaluate(route1[0], route2[2], cost_eval), 0)
-    assert_equal(op.evaluate(route2[2], route1[0], cost_eval), 0)
+    assert_equal(op.evaluate(route1[0], route2[2], cost_eval), (0, False))
+    assert_equal(op.evaluate(route2[2], route1[0], cost_eval), (0, False))
 
     # This move creates routes (depot -> 2 -> depot) and (depot -> 1 -> depot),
     # making route 1 non-empty and thus incurring its fixed cost of 10.
-    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), 10)
-    assert_equal(op.evaluate(route2[1], route1[0], cost_eval), 10)
+    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), (10, False))
+    assert_equal(op.evaluate(route2[1], route1[0], cost_eval), (10, False))
 
     # This move creates routes (depot -> 1 -> 2 -> depot) and (depot -> depot),
     # making route 1 non-empty, while making route 2 empty. The total fixed
     # cost incurred is thus 10 - 100 = -90.
-    assert_equal(op.evaluate(route1[0], route2[0], cost_eval), -90)
-    assert_equal(op.evaluate(route2[0], route1[0], cost_eval), -90)
+    assert_equal(op.evaluate(route1[0], route2[0], cost_eval), (-90, True))
+    assert_equal(op.evaluate(route2[0], route1[0], cost_eval), (-90, True))
 
 
 def test_move_involving_multiple_depots():
@@ -170,15 +170,16 @@ def test_move_involving_multiple_depots():
     op = SwapTails(data)
     cost_eval = CostEvaluator([], 1, 0)
 
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), 0)  # no-op
+    # This is a no-op, and should be ignored.
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
 
     # First would be 0 -> 3 -> 2 -> 0, second 1 -> 1. Distance on route2 would
     # be zero, and on route1 16. Thus delta cost is -16.
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), -16)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (-16, True))
 
     # First would be 0 -> 0, second 1 -> 2 -> 3 -> 1. Distance on route1 would
     # be zero, and on route2 16. Thus delta cost is -16.
-    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), -16)
+    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), (-16, True))
 
 
 def test_move_with_different_profiles(ok_small_two_profiles):
@@ -209,12 +210,12 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     # This move evaluates the setting where the second route would be empty,
     # and the first becomes 0 -> 3 -> 2 -> 0.
     delta = dist1[3, 2] + dist1[2, 0] - dist1[3, 0] - route2.distance()
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), delta)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (delta, True))
 
     # This move evaluates the setting where the first route would be empty, and
     # the second becomes 0 -> 2 -> 3 -> 0.
     delta = dist2[2, 3] + dist2[3, 0] - dist2[2, 0] - route1.distance()
-    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), delta)
+    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), (delta, True))
 
 
 def test_supports(ok_small, pr107):
