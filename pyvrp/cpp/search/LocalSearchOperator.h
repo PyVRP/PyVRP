@@ -39,13 +39,13 @@ public:
      * Determines the cost delta of applying this operator to the arguments.
      * If the cost delta is negative, this is an improving move. The second,
      * boolean return value indicates whether the operator believes the move
-     * should be applied. This is sometimes used by neutral but structurally
-     * improving moves (e.g., removing consecutive depot visits).
+     * should be applied (i.e., improves the solution).
      *
-     * Improving moves are fully evaluated. The operator, however, is free to
-     * return early if it knows the move will never be good: that is, when it
-     * determines the cost delta cannot become negative at all. In that case,
-     * the returned (non-negative) cost delta may not be a complete evaluation.
+     * Moves that the operator believes should be applied must be fully
+     * evaluated. The operator, however, is free to return early if it knows
+     * the move will never be good: that is, when it determines the cost delta
+     * cannot become negative at all. In that case, the returned (non-negative)
+     * cost delta may not be a complete evaluation.
      */
     virtual std::pair<Cost, bool> evaluate(Args... args,
                                            CostEvaluator const &costEvaluator)
