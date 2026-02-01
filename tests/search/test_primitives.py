@@ -267,6 +267,24 @@ def test_remove_consecutive_reload_depots(ok_small_multiple_trips):
     assert_equal(remove_cost(route[4], data, CostEvaluator([1000], 0, 0)), 0)
 
 
+def test_remove_reload_depots_service_duration(ok_small_multiple_trips):
+    """
+    Tests that removing one of multiple, consecutive reload depots is also
+    evaluated correctly in case the reload depots have service duration.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0)
+    data = ok_small_multiple_trips.replace(
+        depots=[Depot(x=2334, y=726, service_duration=90)],
+        vehicle_types=[veh_type.replace(max_reloads=2, unit_duration_cost=1)],
+    )
+
+    # Reloads twice in a row. Removing either of the reloads should only impact
+    # duration cost, by removing the associated depot service duration.
+    route = make_search_route(data, [1, 2, 0, 0, 3, 4])
+    assert_equal(remove_cost(route[3], data, CostEvaluator([0], 0, 0)), -90)
+    assert_equal(remove_cost(route[4], data, CostEvaluator([0], 0, 0)), -90)
+
+
 def test_empty_route_delta_cost_bug():
     """
     Tests that a bug identified in #853 has been fixed. Before fixing this bug,
