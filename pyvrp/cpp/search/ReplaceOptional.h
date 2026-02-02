@@ -8,7 +8,7 @@ namespace pyvrp::search
 /**
  * ReplaceOptional(data: ProblemData)
  *
- * Evaluates replacing an optional client node :math:`V` with :math:`V`.
+ * Evaluates replacing an optional client node :math:`V` with :math:`U`.
  */
 class ReplaceOptional : public BinaryOperator
 {

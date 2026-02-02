@@ -51,6 +51,7 @@ libpyvrp = static_library(
 libsearch = static_library(
     'search',
     [
+        SRC_DIR / 'search' / 'InsertOptional.cpp',
         SRC_DIR / 'search' / 'LocalSearch.cpp',
         SRC_DIR / 'search' / 'PerturbationManager.cpp',
         SRC_DIR / 'search' / 'Route.cpp',
@@ -58,6 +59,7 @@ libsearch = static_library(
         SRC_DIR / 'search' / 'RelocateWithDepot.cpp',
         SRC_DIR / 'search' / 'RemoveAdjacentDepot.cpp',
         SRC_DIR / 'search' / 'RemoveOptional.cpp',
+        SRC_DIR / 'search' / 'ReplaceOptional.cpp',
         SRC_DIR / 'search' / 'SearchSpace.cpp',
         SRC_DIR / 'search' / 'Solution.cpp',
         SRC_DIR / 'search' / 'SwapTails.cpp',

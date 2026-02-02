@@ -9,6 +9,8 @@ using pyvrp::search::InsertOptional;
 std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
+    stats_.numEvaluations++;
+
     if (U->route() || !V->route())
         return std::make_pair(0, false);
 
@@ -19,6 +21,8 @@ std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
 void InsertOptional::apply(Route::Node *U, Route::Node *V) const
 {
     assert(!U->route() && V->route());
+    stats_.numApplications++;
+
     auto *route = V->route();
     route->insert(V->idx() + 1, U);
 }

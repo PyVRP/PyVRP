@@ -9,6 +9,8 @@ using pyvrp::search::ReplaceOptional;
 std::pair<pyvrp::Cost, bool> ReplaceOptional::evaluate(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
+    stats_.numEvaluations++;
+
     if (U->route() || !V->route())
         return std::make_pair(0, false);
 
@@ -23,6 +25,8 @@ std::pair<pyvrp::Cost, bool> ReplaceOptional::evaluate(
 void ReplaceOptional::apply(Route::Node *U, Route::Node *V) const
 {
     assert(!U->route() && V->route());
+    stats_.numApplications++;
+
     auto *route = V->route();
     auto const idx = V->idx();
     route->remove(idx);
