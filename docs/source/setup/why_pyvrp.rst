@@ -52,7 +52,7 @@ Feature comparison
      - ✅
      - ⚠️ (not wait duration)
      - ✅
-   * - Alternative visits
+   * - Alternative visits [#mutually_exclusive_groups]_
      - ✅
      - ❌
      - ❌
@@ -84,6 +84,9 @@ Feature comparison
 .. [#pickup_delivery]
    Shipments require an amount of goods to be picked up at one location and then delivered to another.
    PyVRP only supports shipments from and to the depot, not between general client visits.
+
+.. [#mutually_exclusive_groups]
+   Have a look at our :doc:`../notebooks/mutually_exclusive_groups` tutorial to get started using this feature.
 
 .. [#skills]
    Matching visits and vehicles based on skills that the visit requires, and the vehicle must have.
