@@ -36,10 +36,10 @@ protected:
 
 public:
     /**
-     * Determines the cost delta of applying this operator to the arguments.
-     * If the cost delta is negative, this is an improving move. The second,
-     * boolean return value indicates whether the operator believes the move
-     * should be applied (i.e., improves the solution).
+     * Determines the cost delta of applying this move to the arguments. If the
+     * cost delta is negative, this is an improving move. The second, boolean
+     * return value indicates whether the operator believes the move should be
+     * applied (i.e., improves the solution).
      *
      * Moves that the operator believes should be applied must be fully
      * evaluated. The operator, however, is free to return early if it knows
@@ -52,10 +52,9 @@ public:
         = 0;
 
     /**
-     * Applies this operator to the given arguments. For improvements, should
-     * only be called if <code>evaluate()</code> returns a negative delta cost.
+     * Applies this move to the given arguments. Should only be called
+     * when ``evaluate()`` suggests applying the move.
      */
-    // TODO remove arguments - always applies to most recently evaluated pair.
     virtual void apply(Args... args) const = 0;
 
     /**

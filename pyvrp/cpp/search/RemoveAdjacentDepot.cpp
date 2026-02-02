@@ -40,7 +40,7 @@ RemoveAdjacentDepot::evaluate(Route::Node *U,
     }
 
     // Apply this move it's either better or neutral. It can be neutral if e.g.
-    // the same depot visited consecutively, but that's unnecessary.
+    // the same depot is visited consecutively, but that's unnecessary.
     return std::make_pair(bestCost, bestCost <= 0);
 }
 
