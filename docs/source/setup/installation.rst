@@ -1,7 +1,7 @@
-Installation instructions
-=========================
+Installation
+============
 
-The most straightforward way to use the ``pyvrp`` package in your project is to install it directly from the Python package index, like so:
+The most straightforward way to obtain the ``pyvrp`` package is to install it directly from the Python package index, like so:
 
 .. code-block:: shell
 

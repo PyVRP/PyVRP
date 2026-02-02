@@ -32,6 +32,7 @@ Contents
    :caption: Getting started
 
    notebooks/quick_start
+   setup/why_pyvrp
    setup/installation
    setup/getting_help
    setup/faq
