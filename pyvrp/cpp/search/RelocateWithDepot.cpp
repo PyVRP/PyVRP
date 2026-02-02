@@ -1,7 +1,5 @@
 #include "RelocateWithDepot.h"
 
-#include "Route.h"
-
 #include <cassert>
 
 using pyvrp::search::RelocateWithDepot;

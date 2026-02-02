@@ -13,6 +13,7 @@ using pyvrp::Solution;
 using pyvrp::search::BinaryOperator;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::SearchSpace;
+using pyvrp::search::UnaryOperator;
 
 pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
                                         CostEvaluator const &costEvaluator,
@@ -23,6 +24,9 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
     numUpdates_ = 0;
 
     solution_.load(solution);
+
+    for (auto *op : unaryOps_)
+        op->init(solution);
 
     for (auto *op : binaryOps_)
         op->init(solution);
@@ -39,7 +43,7 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
 
 void LocalSearch::search(CostEvaluator const &costEvaluator)
 {
-    if (binaryOps_.empty())
+    if (unaryOps_.empty() && binaryOps_.empty())
         return;
 
     searchCompleted_ = false;
@@ -58,6 +62,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             auto const lastTest = lastTest_[U->client()];
             lastTest_[U->client()] = numUpdates_;
 
+            applyUnaryOps(U, costEvaluator);
+
             // First test removing or inserting U. Particularly relevant if not
             // all clients are required (e.g., when prize collecting).
             applyOptionalClientMoves(U, costEvaluator);
@@ -68,12 +74,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!U->route())  // we already evaluated inserting U, so there is
                 continue;     // nothing left to be done for this client.
 
-            // If U borders a reload depot, try removing it.
-            applyDepotRemovalMove(p(U), costEvaluator);
-            applyDepotRemovalMove(n(U), costEvaluator);
-
-            // We next apply the regular operators that work on pairs of nodes
-            // (U, V), where both U and V are in the solution.
             for (auto const vClient : searchSpace_.neighboursOf(U->client()))
             {
                 auto *V = &solution_.nodes[vClient];
@@ -107,7 +107,41 @@ void LocalSearch::shuffle(RandomNumberGenerator &rng)
     perturbationManager_.shuffle(rng);
     searchSpace_.shuffle(rng);
 
+    rng.shuffle(unaryOps_.begin(), unaryOps_.end());
     rng.shuffle(binaryOps_.begin(), binaryOps_.end());
+}
+
+bool LocalSearch::applyUnaryOps(Route::Node *U,
+                                CostEvaluator const &costEvaluator)
+{
+    for (auto *op : unaryOps_)
+    {
+        auto const [deltaCost, shouldApply] = op->evaluate(U, costEvaluator);
+        if (shouldApply)
+        {
+            auto *rU = U->route();
+
+            [[maybe_unused]] auto const costBefore
+                = costEvaluator.penalisedCost(*rU);
+
+            searchSpace_.markPromising(U);
+
+            op->apply(U);
+            update(rU, rU);
+
+            [[maybe_unused]] auto const costAfter
+                = costEvaluator.penalisedCost(*rU);
+
+            // When there is an improving move, the delta cost evaluation must
+            // be exact. The resulting cost is then the sum of the cost before
+            // the move, plus the delta cost.
+            assert(costAfter == costBefore + deltaCost);
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool LocalSearch::applyBinaryOps(Route::Node *U,
@@ -119,8 +153,8 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
         auto const [deltaCost, shouldApply] = op->evaluate(U, V, costEvaluator);
         if (shouldApply)
         {
-            auto *rU = U->route();  // copy these because the operator can
-            auto *rV = V->route();  // modify the nodes' route membership
+            auto *rU = U->route();
+            auto *rV = V->route();
 
             [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(*rU)
@@ -146,24 +180,6 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
     }
 
     return false;
-}
-
-void LocalSearch::applyDepotRemovalMove(Route::Node *U,
-                                        CostEvaluator const &costEvaluator)
-{
-    if (!U->isReloadDepot())
-        return;
-
-    // We remove the depot when that's either better, or neutral. It can be
-    // neutral if for example it's the same depot visited consecutively, but
-    // that's then unnecessary.
-    if (removeCost(U, data, costEvaluator) <= 0)
-    {
-        searchSpace_.markPromising(U);  // U's neighbours might not be depots
-        auto *route = U->route();
-        route->remove(U->idx());
-        update(route, route);
-    }
 }
 
 void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
@@ -226,22 +242,9 @@ void LocalSearch::insertRequired(Route::Node *U,
 void LocalSearch::applyOptionalClientMoves(Route::Node *U,
                                            CostEvaluator const &costEvaluator)
 {
+    // Groups have their own operator and are not processed here.
     ProblemData::Client const &uData = data.location(U->client());
-
-    // Required clients are not optional. Groups have their own operator and are
-    // not processed here.
-    if (uData.required || uData.group)
-        return;
-
-    if (removeCost(U, data, costEvaluator) < 0)  // remove if improving
-    {
-        searchSpace_.markPromising(U);
-        auto *route = U->route();
-        route->remove(U->idx());
-        update(route, route);
-    }
-
-    if (U->route())
+    if (U->route() || uData.group)
         return;
 
     // Attempt to re-insert U using a first-improving neighbourhood search.
@@ -374,9 +377,19 @@ void LocalSearch::update(Route *U, Route *V)
     }
 }
 
+void LocalSearch::addOperator(UnaryOperator &op)
+{
+    unaryOps_.emplace_back(&op);
+}
+
 void LocalSearch::addOperator(BinaryOperator &op)
 {
     binaryOps_.emplace_back(&op);
+}
+
+std::vector<UnaryOperator *> const &LocalSearch::unaryOperators() const
+{
+    return unaryOps_;
 }
 
 std::vector<BinaryOperator *> const &LocalSearch::binaryOperators() const
@@ -406,6 +419,7 @@ LocalSearch::Statistics LocalSearch::statistics() const
         numImproving += stats.numApplications;
     };
 
+    std::for_each(unaryOps_.begin(), unaryOps_.end(), count);
     std::for_each(binaryOps_.begin(), binaryOps_.end(), count);
 
     assert(numImproving <= numUpdates_);

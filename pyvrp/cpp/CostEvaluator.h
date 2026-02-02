@@ -170,7 +170,6 @@ public:
      * The return value indicates whether the evaluation was exact or not.
      */
     template <bool exact = false,
-              bool skipLoad = false,
               typename... Args,
               template <typename...>
               class T>
@@ -187,7 +186,6 @@ public:
      * The return value indicates whether the evaluation was exact or not.
      */
     template <bool exact = false,
-              bool skipLoad = false,
               typename... uArgs,
               typename... vArgs,
               template <typename...>
@@ -266,11 +264,7 @@ template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
                             : std::numeric_limits<Cost>::max();
 }
 
-template <bool exact,
-          bool skipLoad,
-          typename... Args,
-          template <typename...>
-          class T>
+template <bool exact, typename... Args, template <typename...> class T>
     requires(DeltaCostEvaluatable<T<Args...>>)
 bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
 {
@@ -280,8 +274,7 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
         out -= route->distanceCost();
         out -= excessDistPenalty(route->excessDistance());
 
-        if constexpr (!skipLoad)
-            out -= excessLoadPenalties(route->excessLoad());
+        out -= excessLoadPenalties(route->excessLoad());
 
         out -= route->durationCost();
         out -= twPenalty(route->timeWarp());
@@ -294,17 +287,14 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
         out += excessDistPenalty(excess);
     }
 
-    if constexpr (!skipLoad)
+    auto const &capacity = route->capacity();
+    for (size_t dim = 0; dim != capacity.size(); ++dim)
     {
-        auto const &capacity = route->capacity();
-        for (size_t dim = 0; dim != capacity.size(); ++dim)
-        {
-            if constexpr (!exact)
-                if (out >= 0)
-                    return false;
+        if constexpr (!exact)
+            if (out >= 0)
+                return false;
 
-            out += loadPenalty(proposal.excessLoad(dim), 0, dim);
-        }
+        out += loadPenalty(proposal.excessLoad(dim), 0, dim);
     }
 
     if (route->hasDurationCost())
@@ -318,7 +308,6 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
 }
 
 template <bool exact,
-          bool skipLoad,
           typename... uArgs,
           typename... vArgs,
           template <typename...>
@@ -335,8 +324,7 @@ bool CostEvaluator::deltaCost(Cost &out,
         out -= uRoute->distanceCost();
         out -= excessDistPenalty(uRoute->excessDistance());
 
-        if constexpr (!skipLoad)
-            out -= excessLoadPenalties(uRoute->excessLoad());
+        out -= excessLoadPenalties(uRoute->excessLoad());
 
         out -= uRoute->durationCost();
         out -= twPenalty(uRoute->timeWarp());
@@ -348,8 +336,7 @@ bool CostEvaluator::deltaCost(Cost &out,
         out -= vRoute->distanceCost();
         out -= excessDistPenalty(vRoute->excessDistance());
 
-        if constexpr (!skipLoad)
-            out -= excessLoadPenalties(vRoute->excessLoad());
+        out -= excessLoadPenalties(vRoute->excessLoad());
 
         out -= vRoute->durationCost();
         out -= twPenalty(vRoute->timeWarp());
@@ -369,27 +356,24 @@ bool CostEvaluator::deltaCost(Cost &out,
         out += excessDistPenalty(excess);
     }
 
-    if constexpr (!skipLoad)
+    auto const &uCapacity = uRoute->capacity();
+    for (size_t dim = 0; dim != uCapacity.size(); ++dim)
     {
-        auto const &uCapacity = uRoute->capacity();
-        for (size_t dim = 0; dim != uCapacity.size(); ++dim)
-        {
-            if constexpr (!exact)
-                if (out >= 0)
-                    return false;
+        if constexpr (!exact)
+            if (out >= 0)
+                return false;
 
-            out += loadPenalty(uProposal.excessLoad(dim), 0, dim);
-        }
+        out += loadPenalty(uProposal.excessLoad(dim), 0, dim);
+    }
 
-        auto const &vCapacity = vRoute->capacity();
-        for (size_t dim = 0; dim != vCapacity.size(); ++dim)
-        {
-            if constexpr (!exact)
-                if (out >= 0)
-                    return false;
+    auto const &vCapacity = vRoute->capacity();
+    for (size_t dim = 0; dim != vCapacity.size(); ++dim)
+    {
+        if constexpr (!exact)
+            if (out >= 0)
+                return false;
 
-            out += loadPenalty(vProposal.excessLoad(dim), 0, dim);
-        }
+        out += loadPenalty(vProposal.excessLoad(dim), 0, dim);
     }
 
     if constexpr (!exact)
