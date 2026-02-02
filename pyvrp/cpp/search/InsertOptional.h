@@ -8,7 +8,7 @@ namespace pyvrp::search
 /**
  * InsertOptional(data: ProblemData)
  *
- * Evaluates inserting an optional client node :math:`U` behind :math:`V`.
+ * Evaluates inserting an optional client node :math:`U` after :math:`V`.
  */
 class InsertOptional : public BinaryOperator
 {

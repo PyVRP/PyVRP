@@ -17,6 +17,7 @@ from pyvrp import (
 from pyvrp.search import (
     Exchange10,
     Exchange11,
+    InsertOptional,
     LocalSearch,
     PerturbationManager,
     PerturbationParams,
@@ -618,7 +619,7 @@ def test_local_search_inserts_into_empty_solutions():
     rng = RandomNumberGenerator(seed=2)
     cost_eval = CostEvaluator([], 0, 0)
     ls = LocalSearch(data, rng, [[], [], []])
-    ls.add_operator(Exchange10(data))
+    ls.add_operator(InsertOptional(data))
 
     empty = Solution(data, [])
     assert_equal(empty.num_clients(), 0)

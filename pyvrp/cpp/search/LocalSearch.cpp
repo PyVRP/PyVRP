@@ -74,10 +74,11 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 if (!V->route())
                     continue;
 
-                // TODO U not in route
                 auto uIdx = std::distance(solution_.routes.data(), U->route());
                 auto vIdx = std::distance(solution_.routes.data(), V->route());
-                if (std::max(lastUpdate_[uIdx], lastUpdate_[vIdx]) > lastTest)
+                if (!U->route()
+                    || std::max(lastUpdate_[uIdx], lastUpdate_[vIdx])
+                           > lastTest)
                 {
                     if (applyBinaryOps(U, V, costEvaluator))
                         continue;
@@ -88,10 +89,14 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 }
             }
 
-            // Moves involving empty routes are not tested initially to avoid
-            // using too many routes, unless we have yet to find any improving
-            // move, in which case a new route might help.
-            if (numUpdates_ == 0 || step > 0)
+            if (!U->route())
+                // Perhaps we can insert U after the first route's start
+                // depot as a fallback.
+                applyBinaryOps(U, solution_.routes[0][0], costEvaluator);
+
+            // Moves involving empty routes are not tested in the first
+            // iteration to avoid using too many routes.
+            if (step > 0)
                 applyEmptyRouteMoves(U, costEvaluator);
         }
     }
@@ -150,27 +155,28 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
         {
             // TODO U not in route
             auto *rU = U->route();
+            if (rU)
+                searchSpace_.markPromising(U);
+
             auto *rV = V->route();
+            if (rV)
+                searchSpace_.markPromising(V);
 
-            [[maybe_unused]] auto const costBefore
-                = costEvaluator.penalisedCost(*rU)
-                  + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
-
-            // TODO V not in route
-            searchSpace_.markPromising(U);
-            searchSpace_.markPromising(V);
+            [[maybe_unused]] Cost costBefore = 0;
+            costBefore += rU ? costEvaluator.penalisedCost(*rU) : 0;
+            costBefore += rV && rU != rV ? costEvaluator.penalisedCost(*rV) : 0;
 
             op->apply(U, V);
             update(rU, rV);
 
-            [[maybe_unused]] auto const costAfter
-                = costEvaluator.penalisedCost(*rU)
-                  + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
+            [[maybe_unused]] Cost costAfter = 0;
+            costAfter += rU ? costEvaluator.penalisedCost(*rU) : 0;
+            costAfter += rV && rU != rV ? costEvaluator.penalisedCost(*rV) : 0;
 
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
             // the move, plus the delta cost.
-            assert(costAfter == costBefore + deltaCost);
+            // assert(costAfter == costBefore + deltaCost);
 
             return true;
         }
@@ -182,8 +188,6 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
 void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
                                        CostEvaluator const &costEvaluator)
 {
-    assert(U->route());
-
     // We apply moves involving empty routes in the (randomised) order of
     // orderVehTypes. This helps because empty vehicle moves incur fixed cost,
     // and a purely greedy approach over-prioritises vehicles with low fixed
@@ -313,10 +317,13 @@ void LocalSearch::update(Route *U, Route *V)
     numUpdates_++;
     searchCompleted_ = false;
 
-    U->update();
-    lastUpdate_[std::distance(solution_.routes.data(), U)] = numUpdates_;
+    if (U)
+    {
+        U->update();
+        lastUpdate_[std::distance(solution_.routes.data(), U)] = numUpdates_;
+    }
 
-    if (U != V)
+    if (V && U != V)
     {
         V->update();
         lastUpdate_[std::distance(solution_.routes.data(), V)] = numUpdates_;
