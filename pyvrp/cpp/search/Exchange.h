@@ -36,19 +36,21 @@ template <size_t N, size_t M> class Exchange : public BinaryOperator
     bool adjacent(Route::Node *U, Route::Node *V) const;
 
     // Special case that's applied when M == 0
-    Cost evalRelocateMove(Route::Node *U,
-                          Route::Node *V,
-                          CostEvaluator const &costEvaluator) const;
+    std::pair<Cost, bool>
+    evalRelocateMove(Route::Node *U,
+                     Route::Node *V,
+                     CostEvaluator const &costEvaluator) const;
 
     // Applied when M != 0
-    Cost evalSwapMove(Route::Node *U,
-                      Route::Node *V,
-                      CostEvaluator const &costEvaluator) const;
+    std::pair<Cost, bool>
+    evalSwapMove(Route::Node *U,
+                 Route::Node *V,
+                 CostEvaluator const &costEvaluator) const;
 
 public:
-    Cost evaluate(Route::Node *U,
-                  Route::Node *V,
-                  CostEvaluator const &costEvaluator) override;
+    std::pair<Cost, bool> evaluate(Route::Node *U,
+                                   Route::Node *V,
+                                   CostEvaluator const &costEvaluator) override;
 
     void apply(Route::Node *U, Route::Node *V) const override;
 };
@@ -83,9 +85,8 @@ bool Exchange<N, M>::adjacent(Route::Node *U, Route::Node *V) const
 }
 
 template <size_t N, size_t M>
-Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
-                                      Route::Node *V,
-                                      CostEvaluator const &costEvaluator) const
+std::pair<Cost, bool> Exchange<N, M>::evalRelocateMove(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator) const
 {
     assert(U->idx() > 0);
 
@@ -134,13 +135,12 @@ Cost Exchange<N, M>::evalRelocateMove(Route::Node *U,
                                 route->after(U->idx() + N)));
     }
 
-    return deltaCost;
+    return std::make_pair(deltaCost, deltaCost < 0);
 }
 
 template <size_t N, size_t M>
-Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
-                                  Route::Node *V,
-                                  CostEvaluator const &costEvaluator) const
+std::pair<Cost, bool> Exchange<N, M>::evalSwapMove(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator) const
 {
     assert(U->idx() > 0 && V->idx() > 0);
     assert(U->route() && V->route());
@@ -186,31 +186,30 @@ Cost Exchange<N, M>::evalSwapMove(Route::Node *U,
                                 route->after(U->idx() + N)));
     }
 
-    return deltaCost;
+    return std::make_pair(deltaCost, deltaCost < 0);
 }
 
 template <size_t N, size_t M>
-Cost Exchange<N, M>::evaluate(Route::Node *U,
-                              Route::Node *V,
-                              CostEvaluator const &costEvaluator)
+std::pair<Cost, bool> Exchange<N, M>::evaluate(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     stats_.numEvaluations++;
 
     if (containsDepot(U, N) || overlap(U, V))
-        return 0;
+        return std::make_pair(0, false);
 
     if constexpr (M > 0)
         if (containsDepot(V, M))
-            return 0;
+            return std::make_pair(0, false);
 
     // We cannot easily evaluate across trips, so we cannot determine this move.
     if (U->route() == V->route() && U->trip() != V->trip())
-        return 0;
+        return std::make_pair(0, false);
 
     if constexpr (M == 0)  // special case where nothing in V is moved
     {
         if (U == n(V))
-            return 0;
+            return std::make_pair(0, false);
 
         return evalRelocateMove(U, V, costEvaluator);
     }
@@ -218,10 +217,10 @@ Cost Exchange<N, M>::evaluate(Route::Node *U,
     {
         if constexpr (N == M)  // symmetric, so only have to evaluate this once
             if (U->client() >= V->client())
-                return 0;
+                return std::make_pair(0, false);
 
         if (adjacent(U, V))
-            return 0;
+            return std::make_pair(0, false);
 
         return evalSwapMove(U, V, costEvaluator);
     }

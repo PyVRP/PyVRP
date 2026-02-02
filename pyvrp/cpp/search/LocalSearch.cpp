@@ -150,8 +150,8 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
 {
     for (auto *op : binaryOps_)
     {
-        auto const deltaCost = op->evaluate(U, V, costEvaluator);
-        if (deltaCost < 0)
+        auto const [deltaCost, shouldApply] = op->evaluate(U, V, costEvaluator);
+        if (shouldApply)
         {
             auto *rU = U->route();
             auto *rV = V->route();

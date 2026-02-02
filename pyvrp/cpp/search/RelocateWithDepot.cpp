@@ -165,9 +165,8 @@ void RelocateWithDepot::evalDepotAfter(Cost fixedCost,
     }
 }
 
-pyvrp::Cost RelocateWithDepot::evaluate(Route::Node *U,
-                                        Route::Node *V,
-                                        CostEvaluator const &costEvaluator)
+std::pair<pyvrp::Cost, bool> RelocateWithDepot::evaluate(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     assert(!U->isDepot() && !V->isEndDepot());
     stats_.numEvaluations++;
@@ -176,15 +175,15 @@ pyvrp::Cost RelocateWithDepot::evaluate(Route::Node *U,
     auto const *vRoute = V->route();
 
     if (U == n(V) || vRoute->empty())  // if V's empty, Exchange<1, 0> suffices
-        return 0;
+        return std::make_pair(0, false);
 
     if (vRoute->numTrips() == vRoute->maxTrips())
-        return 0;
+        return std::make_pair(0, false);
 
     // Cannot evaluate this move because it requires a load segment to contain
     // a reload depot in the middle, which makes concatenation far more complex.
     if (uRoute == vRoute && U->trip() != V->trip())
-        return 0;
+        return std::make_pair(0, false);
 
     move_ = {};
 
@@ -204,7 +203,7 @@ pyvrp::Cost RelocateWithDepot::evaluate(Route::Node *U,
         // might be OK to ensure the vehicle returns empty.
         evalDepotAfter(fixedCost, U, V, costEvaluator);
 
-    return move_.cost;
+    return std::make_pair(move_.cost, move_.cost < 0);
 }
 
 void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
