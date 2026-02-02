@@ -163,7 +163,7 @@ Project activity
 
 We define *project activity* based on the project's issue tracker, discussion, and development activity.
 PyVRP is under active development, but is still fairly new, and has a relatively small user and developer community.
-Both VROOM and OR-Tools are large, established projects, with active user and developer communities, although OR-Tools' routing components have not seem much feature development in recent years.
+Both VROOM and OR-Tools are large, established projects, with active user and developer communities, although OR-Tools' routing components have not seen much feature development in recent years.
 Finally, jsprit appears largely abandoned, with few, sporadic `commits <https://github.com/graphhopper/jsprit/commits/master/>`_ and posts to their `issue tracker <https://github.com/graphhopper/jsprit/issues>`_.
 
 
