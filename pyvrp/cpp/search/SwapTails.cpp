@@ -25,8 +25,8 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 
-    if (uRoute == vRoute)
-        return std::make_pair(0, false);  // same route
+    if (!uRoute || uRoute == vRoute)
+        return std::make_pair(0, false);  // unassigned, or same route
 
     if (uRoute > vRoute && !uRoute->empty() && !vRoute->empty())
         return std::make_pair(0, false);  // move will be tackled later

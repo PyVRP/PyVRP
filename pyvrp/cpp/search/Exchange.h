@@ -195,7 +195,7 @@ std::pair<Cost, bool> Exchange<N, M>::evaluate(
 {
     stats_.numEvaluations++;
 
-    if (containsDepot(U, N) || overlap(U, V))
+    if (!U->route() || containsDepot(U, N) || overlap(U, V))
         return std::make_pair(0, false);
 
     if constexpr (M > 0)

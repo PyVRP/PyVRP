@@ -174,7 +174,7 @@ std::pair<pyvrp::Cost, bool> RelocateWithDepot::evaluate(
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 
-    if (U == n(V) || vRoute->empty())  // if V's empty, Exchange<1, 0> suffices
+    if (!uRoute || U == n(V) || vRoute->empty())
         return std::make_pair(0, false);
 
     if (vRoute->numTrips() == vRoute->maxTrips())

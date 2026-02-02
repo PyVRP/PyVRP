@@ -52,10 +52,6 @@ class LocalSearch
     void applyEmptyRouteMoves(Route::Node *U,
                               CostEvaluator const &costEvaluator);
 
-    // Tests moves involving missing or optional clients.
-    void applyOptionalClientMoves(Route::Node *U,
-                                  CostEvaluator const &costEvaluator);
-
     // Tests moves involving clients in client groups.
     void applyGroupMoves(Route::Node *U, CostEvaluator const &costEvaluator);
 
