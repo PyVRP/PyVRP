@@ -53,9 +53,9 @@ class RelocateWithDepot : public BinaryOperator
                         CostEvaluator const &costEvaluator);
 
 public:
-    Cost evaluate(Route::Node *U,
-                  Route::Node *V,
-                  CostEvaluator const &costEvaluator) override;
+    std::pair<Cost, bool> evaluate(Route::Node *U,
+                                   Route::Node *V,
+                                   CostEvaluator const &costEvaluator) override;
 
     void apply(Route::Node *U, Route::Node *V) const override;
 };

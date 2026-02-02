@@ -204,7 +204,9 @@ def test_relocate_after_depot_should_work(ok_small):
     # (1, 0)-exchange never performed this move.
     cost_evaluator = CostEvaluator([20], 6, 0)
     assert_(route1[3] is nodes[-1])
-    assert_(op.evaluate(nodes[-1], route2[0], cost_evaluator) < 0)
+    cost, should_apply = op.evaluate(nodes[-1], route2[0], cost_evaluator)
+    assert_(cost < 0)
+    assert_(should_apply)
 
     assert_(nodes[-1].route is route1)
     assert_equal(route1.num_clients(), 3)
@@ -342,9 +344,9 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     # some nodes to the second route, which would use both of them. That should
     # add to the fixed vehicle cost.
     cost_eval = CostEvaluator([1], 1, 0)
-    assert_equal(
-        op.evaluate(route1[1], route2[0], cost_eval), base_cost + fixed_cost
-    )
+    actual, should_apply = op.evaluate(route1[1], route2[0], cost_eval)
+    assert_equal(actual, base_cost + fixed_cost)
+    assert_(not should_apply)  # all worse
 
 
 @pytest.mark.parametrize(
@@ -379,7 +381,9 @@ def test_exchange_with_duration_constraint(ok_small, op, max_dur, cost):
     assert_equal(route2.duration(), 5_814)
 
     cost_eval = CostEvaluator([1], 1, 0)
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), cost)
+    delta, should_apply = op.evaluate(route1[1], route2[1], cost_eval)
+    assert_equal(delta, cost)
+    assert_equal(should_apply, cost < 0)
 
 
 @pytest.mark.parametrize("operator", [Exchange10, Exchange11])
@@ -413,7 +417,7 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
     # before 1.
     op = operator(data)
     cost_eval = CostEvaluator([1], 1, 0)
-    assert_equal(op.evaluate(route[1], route[3], cost_eval), -5)
+    assert_equal(op.evaluate(route[1], route[3], cost_eval), (-5, True))
 
 
 @pytest.mark.parametrize(
@@ -444,7 +448,9 @@ def test_relocate_max_distance(ok_small, max_distance: int, expected: int):
 
     # Moving client #2 from route1 to route2 does not improve the overall
     # distance, but can be helpful in reducing maximum distance violations.
-    assert_equal(op.evaluate(route1[2], route2[0], cost_eval), expected)
+    actual, should_apply = op.evaluate(route1[2], route2[0], cost_eval)
+    assert_equal(actual, expected)
+    assert_equal(should_apply, expected < 0)
     op.apply(route1[2], route2[0])
 
     route1.update()
@@ -497,7 +503,9 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
 
     # Swapping client #2 in route1 and client #3 in route2 improves the overall
     # distance and reduces the excess distance violations.
-    assert_equal(op.evaluate(route1[2], route2[1], cost_eval), expected)
+    actual, should_apply = op.evaluate(route1[2], route2[1], cost_eval)
+    assert_equal(actual, expected)
+    assert_(should_apply)
     op.apply(route1[2], route2[1])
 
     route1.update()
@@ -538,7 +546,7 @@ def test_swap_with_different_profiles(ok_small_two_profiles):
     dist1, dist2 = data.distance_matrices()
     delta = dist1[0, 4] + dist1[4, 0] + dist2[0, 3] + dist2[3, 0]
     delta -= route1.distance() + route2.distance()
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), delta)
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (delta, False))
 
 
 def test_swap_does_not_swap_depots(ok_small_multiple_trips):
@@ -553,7 +561,7 @@ def test_swap_does_not_swap_depots(ok_small_multiple_trips):
     cost_eval = CostEvaluator([0], 0, 0)
 
     # This move overlaps with reload depot at index 3, so cannot be evaluated.
-    assert_equal(op.evaluate(route[2], route[4], cost_eval), 0)
+    assert_equal(op.evaluate(route[2], route[4], cost_eval), (0, False))
 
 
 def test_bug_evaluating_move_with_initial_load():
@@ -581,7 +589,7 @@ def test_bug_evaluating_move_with_initial_load():
 
     # This move just permutes the solution, turning route1 into route2, and
     # vice versa. Thus, the delta cost of this move should be zero.
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), 0)
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
 
 
 @pytest.mark.parametrize("operator", [Exchange10, Exchange21, Exchange33])
@@ -624,7 +632,7 @@ def test_bug_release_time_shift_time_windows():
     # about route2's time warp, so the move should not affect costs.
     op = Exchange10(data)
     cost_eval = CostEvaluator([], 1, 0)
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (0, False))
 
 
 def test_empty_route_delta_cost_bug():
@@ -660,7 +668,7 @@ def test_empty_route_delta_cost_bug():
     # included in the delta cost.
     op = Exchange10(data)
     cost_eval = CostEvaluator([], 1, 1)
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (0, False))
 
 
 def test_relocate_overtime(ok_small_overtime):
@@ -688,5 +696,5 @@ def test_relocate_overtime(ok_small_overtime):
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(
         op.evaluate(route1[2], route2[0], cost_eval),
-        new_cost - old_cost,
+        (new_cost - old_cost, True),
     )
