@@ -32,11 +32,11 @@ Feature comparison
      - ✅
      - ✅
      - ✅
-   * - Multiple trips (reloading)
+   * - Reloading [#reloading]_
      - ✅
      - ❌
      - ❌
-   * - Shipments (pickup-and-delivery)
+   * - Shipments [#pickup_delivery]_
      - ❌
      - ✅
      - ✅
@@ -52,7 +52,7 @@ Feature comparison
      - ✅
      - ⚠️ (not wait duration)
      - ✅
-   * - Alternative visits
+   * - Alternative visits [#mutually_exclusive_groups]_
      - ✅
      - ❌
      - ❌
@@ -72,10 +72,25 @@ Feature comparison
      - ✅
      - ✅
      - ✅
-   * - Skills
+   * - Skills [#skills]_
      - ✅ (via load constraints)
      - ✅
      - ✅
+
+
+.. [#reloading]
+   Have a look at our :doc:`../notebooks/reloading` tutorial to get started using this feature.
+
+.. [#pickup_delivery]
+   Shipments require an amount of goods to be picked up at one location and then delivered to another.
+   PyVRP only supports shipments from and to the depot, not between general client visits.
+
+.. [#mutually_exclusive_groups]
+   Have a look at our :doc:`../notebooks/mutually_exclusive_groups` tutorial to get started using this feature.
+
+.. [#skills]
+   Matching visits and vehicles based on skills that the visit requires, and the vehicle must have.
+   PyVRP uses load constraints for this; see our :doc:`../notebooks/load` tutorial for an example.
 
 
 Strengths and weaknesses
@@ -148,8 +163,8 @@ Project activity
 
 We define *project activity* based on the project's issue tracker, discussion, and development activity.
 PyVRP is under active development, but is still fairly new, and has a relatively small user and developer community.
-Both VROOM and OR-Tools are large, established projects, with active user and developer communities, although OR-Tools' routing components have not been updated in recent years.
-Finally, jsprit appears largely abandoned, with few, sporadic commits and posts to their issue tracker.
+Both VROOM and OR-Tools are large, established projects, with active user and developer communities, although OR-Tools' routing components have not seen much feature development in recent years.
+Finally, jsprit appears largely abandoned, with few, sporadic `commits <https://github.com/graphhopper/jsprit/commits/master/>`_ and posts to their `issue tracker <https://github.com/graphhopper/jsprit/issues>`_.
 
 
 Ease of use
