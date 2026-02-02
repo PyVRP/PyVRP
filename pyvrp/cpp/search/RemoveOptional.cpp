@@ -4,16 +4,17 @@
 
 using pyvrp::search::RemoveOptional;
 
-pyvrp::Cost RemoveOptional::evaluate(Route::Node *U,
-                                     CostEvaluator const &costEvaluator)
+std::pair<pyvrp::Cost, bool>
+RemoveOptional::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
 {
     stats_.numEvaluations++;
 
     ProblemData::Client const &uData = data.location(U->client());
     if (!U->route() || uData.required || uData.group)
-        return 0;
+        return std::make_pair(0, false);
 
-    return removeCost(U, data, costEvaluator);
+    auto const deltaCost = removeCost(U, data, costEvaluator);
+    return std::make_pair(deltaCost, deltaCost < 0);
 }
 
 void RemoveOptional::apply(Route::Node *U) const

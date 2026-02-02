@@ -32,8 +32,8 @@ def test_does_not_remove_required_clients():
 
     # Test that the the operator cannot remove the first required client, but
     # does want to remove the second.
-    assert_equal(op.evaluate(route[1], cost_eval), 0)
-    assert_equal(op.evaluate(route[2], cost_eval), -10)
+    assert_equal(op.evaluate(route[1], cost_eval), (0, False))
+    assert_equal(op.evaluate(route[2], cost_eval), (-10, True))
 
     # Should remove the second client.
     op.apply(route[2])

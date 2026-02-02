@@ -23,7 +23,8 @@ class RemoveAdjacentDepot : public UnaryOperator
     MoveType move_;
 
 public:
-    Cost evaluate(Route::Node *U, CostEvaluator const &costEvaluator) override;
+    std::pair<Cost, bool> evaluate(Route::Node *U,
+                                   CostEvaluator const &costEvaluator) override;
 
     void apply(Route::Node *U) const override;
 };

@@ -15,7 +15,7 @@ def test_cannot_evaluate_unassigned(ok_small_multiple_trips):
     op = RemoveAdjacentDepot(data)
 
     unassigned = Node(loc=1)
-    assert_equal(op.evaluate(unassigned, cost_eval), 0)
+    assert_equal(op.evaluate(unassigned, cost_eval), (0, False))
 
 
 def test_removes_best_adjacent_depot(ok_small_multiple_trips):
@@ -34,15 +34,15 @@ def test_removes_best_adjacent_depot(ok_small_multiple_trips):
     #   delta = dist(1, 2) - dist(1, 0) - dist(0, 2)
     #         = 1_992 - 1_726 - 1_944
     #         = -1_678.
-    assert_equal(op.evaluate(route[1], cost_eval), -1_678)
+    assert_equal(op.evaluate(route[1], cost_eval), (-1_678, True))
 
     # Client 2 has a depot before and after it. Removing the depot after it is
     # better, so that's the move we should apply.
-    assert_equal(op.evaluate(route[3], cost_eval), -3_275)
+    assert_equal(op.evaluate(route[3], cost_eval), (-3_275, True))
 
     # Client 3 has a depot before it. Removing that depot is the same move as
     # we evaluated for client 2, so we should find the same delta cost.
-    assert_equal(op.evaluate(route[5], cost_eval), -3_275)
+    assert_equal(op.evaluate(route[5], cost_eval), (-3_275, True))
 
     # Applying the last evaluated move removes the depot between 2 and 3.
     op.apply(route[5])
@@ -60,7 +60,10 @@ def test_removes_consecutive_depots(ok_small_multiple_trips):
     cost_eval = CostEvaluator([0], 0, 0)
     op = RemoveAdjacentDepot(data)
 
-    assert_(op.evaluate(route[1], cost_eval) < 0)  # TODO
+    # The move is cost neutral, but should be applied anyway.
+    delta_cost, should_apply = op.evaluate(route[1], cost_eval)
+    assert_equal(delta_cost, 0)
+    assert_(should_apply)
 
 
 def test_supports(ok_small, ok_small_multiple_trips, mtvrptw_release_times):

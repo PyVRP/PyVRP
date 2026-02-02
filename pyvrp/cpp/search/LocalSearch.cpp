@@ -116,8 +116,8 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
 {
     for (auto *op : unaryOps_)
     {
-        auto const deltaCost = op->evaluate(U, costEvaluator);
-        if (deltaCost < 0)
+        auto const [deltaCost, shouldApply] = op->evaluate(U, costEvaluator);
+        if (shouldApply)
         {
             auto *rU = U->route();
 

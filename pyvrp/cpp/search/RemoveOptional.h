@@ -15,7 +15,8 @@ class RemoveOptional : public UnaryOperator
     using UnaryOperator::UnaryOperator;
 
 public:
-    Cost evaluate(Route::Node *U, CostEvaluator const &costEvaluator) override;
+    std::pair<Cost, bool> evaluate(Route::Node *U,
+                                   CostEvaluator const &costEvaluator) override;
 
     void apply(Route::Node *U) const override;
 };

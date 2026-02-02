@@ -7,14 +7,15 @@
 
 using pyvrp::search::RemoveAdjacentDepot;
 
-pyvrp::Cost RemoveAdjacentDepot::evaluate(Route::Node *U,
-                                          CostEvaluator const &costEvaluator)
+std::pair<pyvrp::Cost, bool>
+RemoveAdjacentDepot::evaluate(Route::Node *U,
+                              CostEvaluator const &costEvaluator)
 {
     assert(!U->isDepot());
     stats_.numEvaluations++;
 
     if (!U->route())
-        return 0;
+        return std::make_pair(0, false);
 
     Cost bestCost = std::numeric_limits<Cost>::max();
 
@@ -38,7 +39,9 @@ pyvrp::Cost RemoveAdjacentDepot::evaluate(Route::Node *U,
         }
     }
 
-    return bestCost;
+    // Apply this move it's either better or neutral. It can be neutral if e.g.
+    // the same depot visited consecutively, but that's unnecessary.
+    return std::make_pair(bestCost, bestCost <= 0);
 }
 
 void RemoveAdjacentDepot::apply(Route::Node *U) const
