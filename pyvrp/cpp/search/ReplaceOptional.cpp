@@ -14,8 +14,9 @@ std::pair<pyvrp::Cost, bool> ReplaceOptional::evaluate(
     if (U->route() || !V->route())
         return std::make_pair(0, false);
 
+    ProblemData::Client const &uData = data.location(U->client());
     ProblemData::Client const &vData = data.location(V->client());
-    if (vData.required)
+    if (vData.required || uData.group || vData.group)
         return std::make_pair(0, false);
 
     auto const deltaCost = inplaceCost(U, V, data, costEvaluator);
