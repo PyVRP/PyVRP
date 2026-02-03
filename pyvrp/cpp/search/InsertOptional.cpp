@@ -11,7 +11,8 @@ std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
 {
     stats_.numEvaluations++;
 
-    if (U->route() || !V->route())
+    ProblemData::Client const &uData = data.location(U->client());
+    if (U->route() || !V->route() || uData.group)
         return std::make_pair(0, false);
 
     auto const deltaCost = insertCost(U, V, data, costEvaluator);
