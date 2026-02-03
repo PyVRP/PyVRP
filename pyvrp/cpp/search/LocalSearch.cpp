@@ -153,25 +153,22 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
         auto const [deltaCost, shouldApply] = op->evaluate(U, V, costEvaluator);
         if (shouldApply)
         {
-            // TODO U not in route
             auto *rU = U->route();
             if (rU)
                 searchSpace_.markPromising(U);
 
             auto *rV = V->route();
-            if (rV)
-                searchSpace_.markPromising(V);
+            assert(rV);
+            searchSpace_.markPromising(V);
 
-            [[maybe_unused]] Cost costBefore = 0;
-            costBefore += rU ? costEvaluator.penalisedCost(*rU) : 0;
-            costBefore += rV && rU != rV ? costEvaluator.penalisedCost(*rV) : 0;
+            [[maybe_unused]] Cost costBefore = costEvaluator.penalisedCost(*rV);
+            costBefore += rU && rU != rV ? costEvaluator.penalisedCost(*rU) : 0;
 
             op->apply(U, V);
             update(rU, rV);
 
-            [[maybe_unused]] Cost costAfter = 0;
-            costAfter += rU ? costEvaluator.penalisedCost(*rU) : 0;
-            costAfter += rV && rU != rV ? costEvaluator.penalisedCost(*rV) : 0;
+            [[maybe_unused]] Cost costAfter = costEvaluator.penalisedCost(*rV);
+            costAfter += rU && rU != rV ? costEvaluator.penalisedCost(*rU) : 0;
 
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
@@ -314,6 +311,7 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
 
 void LocalSearch::update(Route *U, Route *V)
 {
+    assert(V);
     numUpdates_++;
     searchCompleted_ = false;
 
@@ -323,7 +321,7 @@ void LocalSearch::update(Route *U, Route *V)
         lastUpdate_[std::distance(solution_.routes.data(), U)] = numUpdates_;
     }
 
-    if (V && U != V)
+    if (U != V)
     {
         V->update();
         lastUpdate_[std::distance(solution_.routes.data(), V)] = numUpdates_;
