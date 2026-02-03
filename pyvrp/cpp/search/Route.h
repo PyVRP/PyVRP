@@ -309,6 +309,7 @@ private:
     Duration duration_;
     Cost durationCost_;
     Duration timeWarp_;
+    Cost prizes_;
 
     std::vector<Node> depots_;  // start, end, and reload depots (in that order)
 
@@ -498,6 +499,11 @@ public:
      * @return Total time warp on this route.
      */
     [[nodiscard]] inline Duration timeWarp() const;
+
+    /**
+     * @reutrn Total collected prizes on this route.
+     */
+    [[nodiscard]] inline Cost prizes() const;
 
     /**
      * @return The routing profile of the vehicle servicing this route.
@@ -960,6 +966,12 @@ Duration Route::maxDuration() const { return vehicleType_.maxDuration; }
 Duration Route::maxOvertime() const { return vehicleType_.maxOvertime; }
 
 Distance Route::maxDistance() const { return vehicleType_.maxDistance; }
+
+Cost Route::prizes() const
+{
+    assert(!dirty);
+    return prizes_;
+}
 
 Duration Route::timeWarp() const
 {

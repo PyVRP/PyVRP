@@ -176,7 +176,7 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
             // the move, plus the delta cost.
-            // assert(costAfter == costBefore + deltaCost);
+            assert(costAfter == costBefore + deltaCost);
 
             return true;
         }

@@ -20,6 +20,7 @@ concept CostEvaluatable = requires(T arg) {
     { arg.distanceCost() } -> std::same_as<Cost>;
     { arg.durationCost() } -> std::same_as<Cost>;
     { arg.fixedVehicleCost() } -> std::same_as<Cost>;
+    { arg.prizes() } -> std::same_as<Cost>;
     { arg.excessLoad() } -> std::convertible_to<std::vector<Load>>;
     { arg.excessDistance() } -> std::same_as<Distance>;
     { arg.timeWarp() } -> std::same_as<Duration>;
@@ -27,11 +28,11 @@ concept CostEvaluatable = requires(T arg) {
     { arg.isFeasible() } -> std::same_as<bool>;
 };
 
-// If, additionally, methods related to optional clients and prize collecting
-// are implemented we can also take that aspect into account. See the
+// If, additionally, methods related to the uncollected prizes of optional
+// clients are implemented we can also take that aspect into account. See the
 // CostEvaluator implementation for details.
 template <typename T>
-concept PrizeCostEvaluatable = CostEvaluatable<T> && requires(T arg) {
+concept HasUncollectedPrizes = CostEvaluatable<T> && requires(T arg) {
     { arg.uncollectedPrizes() } -> std::same_as<Cost>;
 };
 
@@ -239,7 +240,7 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
 {
     if (arg.empty())
     {
-        if constexpr (PrizeCostEvaluatable<T>)
+        if constexpr (HasUncollectedPrizes<T>)
             return arg.uncollectedPrizes();
         return 0;
     }
@@ -250,10 +251,15 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
           + excessLoadPenalties(arg.excessLoad()) + twPenalty(arg.timeWarp())
           + distPenalty(arg.excessDistance(), 0);
 
-    if constexpr (PrizeCostEvaluatable<T>)
+    if constexpr (HasUncollectedPrizes<T>)
+        // The upside of this cost versus the one based on prizes is that this
+        // never goes negative. But it is a global, solution-level property:
+        // routes do not know about all uncollected prizes.
         return cost + arg.uncollectedPrizes();
-
-    return cost;
+    else
+        // For routes we simply return the cost minus the collected prizes,
+        // which are known at the route-level.
+        return cost - arg.prizes();
 }
 
 template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
