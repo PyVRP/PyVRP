@@ -154,11 +154,11 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
         if (shouldApply)
         {
             auto *rU = U->route();
-            if (rU)
-                searchSpace_.markPromising(U);
-
             auto *rV = V->route();
             assert(rV);
+
+            if (rU)
+                searchSpace_.markPromising(U);
             searchSpace_.markPromising(V);
 
             [[maybe_unused]] Cost costBefore = costEvaluator.penalisedCost(*rV);
