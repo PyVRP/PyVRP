@@ -602,8 +602,7 @@ def test_local_search_exhaustive(rc208):
 
 def test_local_search_inserts_into_empty_solutions():
     """
-    Tests that the local search inserts into empty solutions, even when the
-    granular neighbourhood is empty.
+    Tests that the local search inserts into empty solutions.
     """
     data = ProblemData(
         clients=[
@@ -618,7 +617,7 @@ def test_local_search_inserts_into_empty_solutions():
 
     rng = RandomNumberGenerator(seed=2)
     cost_eval = CostEvaluator([], 0, 0)
-    ls = LocalSearch(data, rng, [[], [], []])
+    ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_operator(InsertOptional(data))
 
     empty = Solution(data, [])
