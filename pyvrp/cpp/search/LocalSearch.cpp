@@ -90,8 +90,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             }
 
             if (!U->route())
-                // Perhaps we can insert U after the first route's start
-                // depot as a fallback.
+                // Perhaps we can insert U after the first route's start depot
+                // as a fallback.
                 applyBinaryOps(U, solution_.routes[0][0], costEvaluator);
 
             // Moves involving empty routes are not tested in the first
