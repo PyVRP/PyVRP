@@ -11,12 +11,12 @@ To find out about available options, run
 
 We use the following instances and configurations to benchmark PyVRP:
 
-* For the CVRP, we use `the X-instances of Uchoa <http://vrp.atd-lab.inf.puc-rio.br/media/com_vrp/instances/Vrp-Set-X.tgz>`_.
+* For the CVRP, we use `the X-instances of Uchoa <https://github.com/PyVRP/Instances/tree/main/CVRP>`_.
   Each instance has :math:`n` clients; the runtimes are computed as :math:`2.4 n` seconds on a reference CPU with PassMark score 2183.
   Thus, an instance with 100 clients is ran for 240 seconds, assuming a CPU with PassMark score 2183.
   For this benchmark, the ``round`` rounding function should be used.
 
-* For the VRPTW, we use `the Gehring and Homberger instances <http://vrp.atd-lab.inf.puc-rio.br/media/com_vrp/instances/Vrp-Set-HG.tgz>`_, particularly those with 1000 clients.
+* For the VRPTW, we use `the Gehring and Homberger instances <https://github.com/PyVRP/Instances/tree/main/VRPTW#vrptw>`_, particularly those with 1000 clients.
   These instances are each run for two hours on a reference CPU with PassMark score 2000.
   For this benchmark, the ``dimacs`` rounding function should be used.
 
