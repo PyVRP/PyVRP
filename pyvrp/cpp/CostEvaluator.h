@@ -14,7 +14,7 @@
 namespace pyvrp
 {
 // The following methods must be implemented for a type to be evaluatable by
-// the CostEvaluator.
+// the CostEvaluator. It evaluates "cost minus profits (prizes)".
 template <typename T>
 concept CostEvaluatable = requires(T arg) {
     { arg.distanceCost() } -> std::same_as<Cost>;
@@ -28,9 +28,9 @@ concept CostEvaluatable = requires(T arg) {
     { arg.isFeasible() } -> std::same_as<bool>;
 };
 
-// If, additionally, methods related to the uncollected prizes of optional
-// clients are implemented we can also take that aspect into account. See the
-// CostEvaluator implementation for details.
+// If, additionally, the uncollected prizes of optional clients are implemented
+// we can also take that aspect into account. The CostEvaluator then evaluates
+// "cost plus uncollected profits (prizes)".
 template <typename T>
 concept HasUncollectedPrizes = CostEvaluatable<T> && requires(T arg) {
     { arg.uncollectedPrizes() } -> std::same_as<Cost>;
@@ -118,8 +118,7 @@ public:
     /**
      * Computes a smoothed objective (penalised cost) for a given solution.
      */
-    // The docstring above is written for Python, where we only expose this
-    // method for Solution.
+    // We only expose Solution bindings to Python.
     template <CostEvaluatable T>
     [[nodiscard]] Cost penalisedCost(T const &arg) const;
 
@@ -254,7 +253,7 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
     if constexpr (HasUncollectedPrizes<T>)
         // The upside of this cost versus the one based on prizes is that this
         // never goes negative. But it is a global, solution-level property:
-        // routes do not know about all uncollected prizes.
+        // for example, routes do not know about all uncollected prizes.
         return cost + arg.uncollectedPrizes();
     else
         // For routes we simply return the cost minus the collected prizes,
