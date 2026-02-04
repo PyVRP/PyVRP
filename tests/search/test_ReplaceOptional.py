@@ -69,6 +69,26 @@ def test_skips_replacing_required_client():
     assert_equal(op.evaluate(client2, route[1], cost_eval), (0, False))
 
 
+def skips_assigned_or_missing_other(ok_small_prizes):
+    """
+    Tests that InsertOptional skips assigned clients, or when the other client
+    to replace is missing.
+    """
+    route = make_search_route(ok_small_prizes, [1, 2])
+    assert_(route[1].route)
+    assert_(route[2].route)
+
+    # Client 1 is already assigned, cannot be inserted again.
+    op = ReplaceOptional(ok_small_prizes)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(route[1], route[2], cost_eval), (0, False))
+
+    # These are not assigned anywhere, so cannot replace.
+    node3 = Node(loc=3)
+    node4 = Node(loc=4)
+    assert_equal(op.evaluate(node3, node4, cost_eval), (0, False))
+
+
 def test_supports(
     ok_small,
     ok_small_prizes,
