@@ -158,14 +158,14 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
                 searchSpace_.markPromising(U);
             searchSpace_.markPromising(V);
 
-            [[maybe_unused]] Cost const costBefore
+            [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(*rV)
                   + (rU && rU != rV ? costEvaluator.penalisedCost(*rU) : 0);
 
             op->apply(U, V);
             update(rU, rV);
 
-            [[maybe_unused]] Cost const costAfter
+            [[maybe_unused]] auto const costAfter
                 = costEvaluator.penalisedCost(*rV)
                   + (rU && rU != rV ? costEvaluator.penalisedCost(*rU) : 0);
 
