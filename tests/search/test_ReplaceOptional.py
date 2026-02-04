@@ -69,7 +69,7 @@ def test_skips_replacing_required_client():
     assert_equal(op.evaluate(client2, route[1], cost_eval), (0, False))
 
 
-def skips_assigned_or_missing_other(ok_small_prizes):
+def test_skips_assigned_or_missing_other(ok_small_prizes):
     """
     Tests that InsertOptional skips assigned clients, or when the other client
     to replace is missing.
