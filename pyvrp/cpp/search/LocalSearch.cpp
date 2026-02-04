@@ -74,11 +74,12 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 if (!V->route())
                     continue;
 
-                auto uIdx = std::distance(solution_.routes.data(), U->route());
-                auto vIdx = std::distance(solution_.routes.data(), V->route());
-                if (!U->route()
-                    || std::max(lastUpdate_[uIdx], lastUpdate_[vIdx])
-                           > lastTest)
+                auto *routes = solution_.routes.data();
+                auto uUpdate = 0;
+                if (U->route())
+                    uUpdate = lastUpdate_[std::distance(routes, U->route())];
+                auto vUpdate = lastUpdate_[std::distance(routes, V->route())];
+                if (uUpdate > lastTest || vUpdate > lastTest)
                 {
                     if (applyBinaryOps(U, V, costEvaluator))
                         continue;
@@ -157,14 +158,16 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
                 searchSpace_.markPromising(U);
             searchSpace_.markPromising(V);
 
-            [[maybe_unused]] Cost costBefore = costEvaluator.penalisedCost(*rV);
-            costBefore += rU && rU != rV ? costEvaluator.penalisedCost(*rU) : 0;
+            [[maybe_unused]] Cost const costBefore
+                = costEvaluator.penalisedCost(*rV)
+                  + (rU && rU != rV ? costEvaluator.penalisedCost(*rU) : 0);
 
             op->apply(U, V);
             update(rU, rV);
 
-            [[maybe_unused]] Cost costAfter = costEvaluator.penalisedCost(*rV);
-            costAfter += rU && rU != rV ? costEvaluator.penalisedCost(*rU) : 0;
+            [[maybe_unused]] Cost const costAfter
+                = costEvaluator.penalisedCost(*rV)
+                  + (rU && rU != rV ? costEvaluator.penalisedCost(*rU) : 0);
 
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
