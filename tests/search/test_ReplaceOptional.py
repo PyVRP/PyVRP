@@ -3,7 +3,7 @@ from numpy.testing import assert_, assert_equal
 
 from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
 from pyvrp.search import ReplaceOptional
-from pyvrp.search._search import Node, Solution
+from pyvrp.search._search import Node
 from tests.helpers import make_search_route
 
 
@@ -111,15 +111,9 @@ def test_replaces_same_group(ok_small_mutually_exclusive_groups):
     skips other groups.
     """
     data = ok_small_mutually_exclusive_groups
-
-    solution = Solution(data)
-    route = solution.routes[0]
-    route.append(solution.nodes[1])
-    route.append(solution.nodes[4])
-    route.update()
+    route = make_search_route(data, [1, 4])
 
     op = ReplaceOptional(data)
-    op.init(solution)
 
     # Replacing client 1 with 2 is slightly improving:
     # delta = dist(0, 2) + dist(2, 4) - dist(0, 1) - dist(1, 4)
