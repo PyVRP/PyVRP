@@ -52,3 +52,17 @@ def test_supports(
     assert_(not RemoveOptional.supports(ok_small))
     assert_(RemoveOptional.supports(ok_small_prizes))
     assert_(RemoveOptional.supports(ok_small_mutually_exclusive_groups))
+
+
+def test_skip_only_in_required_group():
+    """
+    TODO
+    """
+    pass
+
+
+def test_removes_duplicate_group():
+    """
+    TODO
+    """
+    pass

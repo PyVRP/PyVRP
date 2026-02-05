@@ -60,3 +60,17 @@ def test_supports(
     assert_(not InsertOptional.supports(ok_small))
     assert_(InsertOptional.supports(ok_small_prizes))
     assert_(InsertOptional.supports(ok_small_mutually_exclusive_groups))
+
+
+def test_group_skip_required():
+    """
+    TODO
+    """
+    pass
+
+
+def test_group_skip_duplicate():
+    """
+    TODO
+    """
+    pass

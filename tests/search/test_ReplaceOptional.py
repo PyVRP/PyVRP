@@ -103,3 +103,17 @@ def test_supports(
     assert_(not ReplaceOptional.supports(ok_small))
     assert_(ReplaceOptional.supports(ok_small_prizes))
     assert_(ReplaceOptional.supports(ok_small_mutually_exclusive_groups))
+
+
+def test_replaces_same_group():
+    """
+    TODO
+    """
+    pass
+
+
+def test_skips_other_group():
+    """
+    TODO
+    """
+    pass
