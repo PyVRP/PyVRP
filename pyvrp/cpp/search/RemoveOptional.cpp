@@ -26,8 +26,8 @@ void RemoveOptional::apply(Route::Node *U) const
 template <>
 bool pyvrp::search::supports<RemoveOptional>(ProblemData const &data)
 {
-    for (auto const &client : data.clients())   // need at least one optional
-        if (!client.required && !client.group)  // client not part of a group
+    for (auto const &client : data.clients())  // need at least one optional
+        if (!client.required)                  // client
             return true;
 
     return false;

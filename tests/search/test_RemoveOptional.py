@@ -47,8 +47,8 @@ def test_supports(
 ):
     """
     Tests that RemoveOptional supports prize-collecting instances, but not
-    instances with groups or only required clients.
+    instances with only required clients.
     """
-    assert_(RemoveOptional.supports(ok_small_prizes))
     assert_(not RemoveOptional.supports(ok_small))
-    assert_(not RemoveOptional.supports(ok_small_mutually_exclusive_groups))
+    assert_(RemoveOptional.supports(ok_small_prizes))
+    assert_(RemoveOptional.supports(ok_small_mutually_exclusive_groups))

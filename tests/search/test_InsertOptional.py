@@ -57,6 +57,6 @@ def test_supports(
     """
     Tests that InsertOptional supports instances with optional clients.
     """
-    assert_(InsertOptional.supports(ok_small_prizes))
     assert_(not InsertOptional.supports(ok_small))
-    assert_(not InsertOptional.supports(ok_small_mutually_exclusive_groups))
+    assert_(InsertOptional.supports(ok_small_prizes))
+    assert_(InsertOptional.supports(ok_small_mutually_exclusive_groups))

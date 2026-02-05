@@ -100,6 +100,6 @@ def test_supports(
     """
     Tests that ReplaceOptional supports instances with optional clients.
     """
-    assert_(ReplaceOptional.supports(ok_small_prizes))
     assert_(not ReplaceOptional.supports(ok_small))
-    assert_(not ReplaceOptional.supports(ok_small_mutually_exclusive_groups))
+    assert_(ReplaceOptional.supports(ok_small_prizes))
+    assert_(ReplaceOptional.supports(ok_small_mutually_exclusive_groups))

@@ -26,10 +26,10 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
     solution_.load(solution);
 
     for (auto *op : unaryOps_)
-        op->init(solution);
+        op->init(solution_);
 
     for (auto *op : binaryOps_)
-        op->init(solution);
+        op->init(solution_);
 
     if (exhaustive)
         searchSpace_.markAllPromising();

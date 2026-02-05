@@ -31,8 +31,8 @@ void InsertOptional::apply(Route::Node *U, Route::Node *V) const
 template <>
 bool pyvrp::search::supports<InsertOptional>(ProblemData const &data)
 {
-    for (auto const &client : data.clients())   // need at least one optional
-        if (!client.required && !client.group)  // client not part of a group
+    for (auto const &client : data.clients())  // need at least one optional
+        if (!client.required)                  // client
             return true;
 
     return false;
