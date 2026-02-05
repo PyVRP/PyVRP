@@ -15,15 +15,16 @@ RemoveAdjacentDepot::evaluate(Route::Node *U,
     if (!U->route())
         return std::make_pair(0, false);
 
-    auto *route = U->route();
+    auto const *route = U->route();
     Cost bestCost = std::numeric_limits<Cost>::max();
 
     if (p(U)->isReloadDepot())
     {
         Cost deltaCost = 0;
-        costEvaluator.deltaCost(deltaCost,
-                                Route::Proposal(route->before(U->idx() - 2),
-                                                route->after(U->idx())));
+        costEvaluator.deltaCost<true>(
+            deltaCost,
+            Route::Proposal(route->before(U->idx() - 2),
+                            route->after(U->idx())));
 
         if (deltaCost < bestCost)
         {
@@ -35,9 +36,10 @@ RemoveAdjacentDepot::evaluate(Route::Node *U,
     if (n(U)->isReloadDepot())
     {
         Cost deltaCost = 0;
-        costEvaluator.deltaCost(deltaCost,
-                                Route::Proposal(route->before(U->idx()),
-                                                route->after(U->idx() + 2)));
+        costEvaluator.deltaCost<true>(
+            deltaCost,
+            Route::Proposal(route->before(U->idx()),
+                            route->after(U->idx() + 2)));
 
         if (deltaCost < bestCost)
         {

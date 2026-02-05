@@ -127,3 +127,35 @@ def test_group_skip_duplicates():
     node = solution.nodes[2]
     cost_eval = CostEvaluator([], 0, 0)
     assert_equal(op.evaluate(node, route[0], cost_eval), (0, False))
+
+
+def test_insert_in_empty_routes_considers_fixed_vehicle_cost():
+    """
+    Tests that InsertOptional considers fixed vehicle costs when routes are
+    empty.
+    """
+    cost_eval = CostEvaluator([], 0, 0)
+    data = ProblemData(
+        clients=[
+            Client(x=1, y=1, required=False),
+            Client(x=1, y=0, required=False),
+        ],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(fixed_cost=7), VehicleType(fixed_cost=13)],
+        distance_matrices=[np.zeros((3, 3), dtype=int)],
+        duration_matrices=[np.zeros((3, 3), dtype=int)],
+    )
+
+    op = InsertOptional(data)
+
+    # All distances, durations, and loads are equal. So the only cost change
+    # can happen due to vehicle changes. In this, case we evaluate inserting a
+    # client into an empty route. That adds the fixed vehicle cost of 7 for
+    # this vehicle type.
+    route = make_search_route(data, [], vehicle_type=0)
+    assert_equal(op.evaluate(Node(loc=1), route[0], cost_eval), (7, False))
+
+    # Same story for this route, but now we have a different vehicle type with
+    # fixed cost 13.
+    route = make_search_route(data, [], vehicle_type=1)
+    assert_equal(op.evaluate(Node(loc=1), route[0], cost_eval), (13, False))
