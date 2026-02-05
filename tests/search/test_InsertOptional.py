@@ -1,8 +1,16 @@
+import numpy as np
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import CostEvaluator
+from pyvrp import (
+    Client,
+    ClientGroup,
+    CostEvaluator,
+    Depot,
+    ProblemData,
+    VehicleType,
+)
 from pyvrp.search import InsertOptional
-from pyvrp.search._search import Node
+from pyvrp.search._search import Node, Solution
 from tests.helpers import make_search_route
 
 
@@ -57,6 +65,65 @@ def test_supports(
     """
     Tests that InsertOptional supports instances with optional clients.
     """
-    assert_(InsertOptional.supports(ok_small_prizes))
     assert_(not InsertOptional.supports(ok_small))
-    assert_(not InsertOptional.supports(ok_small_mutually_exclusive_groups))
+    assert_(InsertOptional.supports(ok_small_prizes))
+    assert_(InsertOptional.supports(ok_small_mutually_exclusive_groups))
+
+
+def test_group_skip_required(ok_small_mutually_exclusive_groups):
+    """
+    Tests that InsertOptional skips inserting for required groups, since those
+    are already handled via the local search.
+    """
+    data = ok_small_mutually_exclusive_groups
+    assert_(data.group(0).required)
+
+    solution = Solution(data)
+    route = solution.routes[0]
+
+    op = InsertOptional(data)
+    op.init(solution)
+
+    # The group is required, and that means the operator skips it: required
+    # groups are handled in the local search, and should always be present.
+    node = Node(loc=1)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(node, route[0], cost_eval), (0, False))
+
+
+def test_group_skip_duplicates():
+    """
+    Tests that InsertOptional skips inserting for groups when they are already
+    present in the solution.
+    """
+    data = ProblemData(
+        clients=[
+            Client(0, 0, prize=1, required=False, group=0),
+            Client(0, 0, prize=1, required=False, group=0),
+        ],
+        depots=[Depot(0, 0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[np.zeros((3, 3), dtype=int)],
+        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        groups=[ClientGroup([1, 2], required=False)],
+    )
+
+    solution = Solution(data)
+    route = solution.routes[0]
+
+    op = InsertOptional(data)
+    op.init(solution)
+
+    # Group is not yet in the solution. Inserting it via the first client
+    # yields a prize value, and is thus an improving move.
+    node = solution.nodes[1]
+    cost_eval = CostEvaluator([], 0, 0)
+    assert_equal(op.evaluate(node, route[0], cost_eval), (-1, True))
+    op.apply(node, route[0])
+    route.update()
+
+    # Trying this again, now with the second client (in the same group) is not
+    # possible, because the group is already in the solution.
+    node = solution.nodes[2]
+    cost_eval = CostEvaluator([], 0, 0)
+    assert_equal(op.evaluate(node, route[0], cost_eval), (0, False))

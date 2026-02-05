@@ -1,11 +1,11 @@
 #ifndef PYVRP_SEARCH_LOCALSEARCHOPERATOR_H
 #define PYVRP_SEARCH_LOCALSEARCHOPERATOR_H
 
-#include "../Solution.h"  // pyvrp::Solution
 #include "CostEvaluator.h"
 #include "Measure.h"
 #include "ProblemData.h"
 #include "Route.h"
+#include "Solution.h"  // pyvrp::search::Solution
 
 #include <utility>
 
@@ -61,7 +61,7 @@ public:
      * Called once after loading the solution to improve. This can be used to
      * e.g. update local operator state.
      */
-    virtual void init([[maybe_unused]] pyvrp::Solution const &solution)
+    virtual void init([[maybe_unused]] Solution const &solution)
     {
         stats_ = {};  // reset call statistics
     };

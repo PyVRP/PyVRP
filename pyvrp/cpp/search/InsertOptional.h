@@ -14,12 +14,16 @@ class InsertOptional : public BinaryOperator
 {
     using BinaryOperator::BinaryOperator;
 
+    Solution const *solution_ = nullptr;
+
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
                                    Route::Node *V,
                                    CostEvaluator const &costEvaluator) override;
 
     void apply(Route::Node *U, Route::Node *V) const override;
+
+    void init(Solution const &solution) override;
 };
 
 template <> bool supports<InsertOptional>(ProblemData const &data);

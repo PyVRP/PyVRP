@@ -179,22 +179,6 @@ def test_proximity_with_prizes(prize_collecting):
     assert_(count_20 > count_36)
 
 
-def test_proximity_with_mutually_exclusive_groups(
-    ok_small_mutually_exclusive_groups,
-):
-    """
-    Tests that clients that are a member of a mutually exclusive client group
-    are not in each other's neighbourhood.
-    """
-    params = NeighbourhoodParams(0, 0, num_neighbours=1)
-    neighbours = compute_neighbours(ok_small_mutually_exclusive_groups, params)
-
-    group = ok_small_mutually_exclusive_groups.group(0)
-    members = group.clients
-    for client in members:
-        assert_(all(other not in neighbours[client] for other in members))
-
-
 def test_different_routing_costs(ok_small):
     """
     High-level smoke test that checks that the granular neighbourhood takes
