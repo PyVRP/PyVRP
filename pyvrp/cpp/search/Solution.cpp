@@ -13,8 +13,7 @@ pyvrp::Cost insertCost(pyvrp::search::Route::Node *U,
                        pyvrp::ProblemData const &data,
                        pyvrp::CostEvaluator const &costEvaluator)
 {
-    if (!V->route() || U->isDepot())
-        return 0;
+    assert(V->route() && !U->isDepot());
 
     auto *route = V->route();
     pyvrp::ProblemData::Client const &client = data.location(U->client());
