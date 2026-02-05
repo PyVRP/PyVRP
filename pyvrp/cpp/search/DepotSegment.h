@@ -51,4 +51,4 @@ public:
 };
 }  // namespace pyvrp::search
 
-#endif
+#endif  // PYVRP_SEARCH_DEPOTSEGMENT_H
