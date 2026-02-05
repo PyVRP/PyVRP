@@ -64,9 +64,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
             applyUnaryOps(U, costEvaluator);
 
-            // Evaluate moves involving the client's group, if it is in any.
-            applyGroupMoves(U, costEvaluator);
-
             for (auto const vClient : searchSpace_.neighboursOf(U->client()))
             {
                 auto *V = &solution_.nodes[vClient];
@@ -233,78 +230,6 @@ void LocalSearch::insertRequired(Route::Node *U,
             update(U->route(), U->route());
             searchSpace_.markPromising(U);
         }
-    }
-}
-
-void LocalSearch::applyGroupMoves(Route::Node *U,
-                                  CostEvaluator const &costEvaluator)
-{
-    ProblemData::Client const &uData = data.location(U->client());
-
-    if (!uData.group)
-        return;
-
-    auto const &group = data.group(*uData.group);
-    assert(group.mutuallyExclusive);
-
-    std::vector<size_t> inSol;
-    auto const pred
-        = [&](auto client) { return solution_.nodes[client].route(); };
-    std::copy_if(group.begin(), group.end(), std::back_inserter(inSol), pred);
-
-    if (inSol.empty())  // then it's not required, since if required we would
-        return;         // have inserted U before.
-
-    // We remove clients in order of increasing cost delta (biggest improvement
-    // first), and evaluate swapping the last client with U.
-    std::vector<Cost> costs;
-    for (auto const client : inSol)
-    {
-        auto cost = removeCost(&solution_.nodes[client], data, costEvaluator);
-        costs.push_back(cost);
-    }
-
-    // Sort clients in order of increasing removal costs.
-    std::vector<size_t> range(inSol.size());
-    std::iota(range.begin(), range.end(), 0);
-    std::sort(range.begin(),
-              range.end(),
-              [&costs](auto idx1, auto idx2)
-              { return costs[idx1] < costs[idx2]; });
-
-    // Remove all but the last client, whose removal is the least valuable.
-    for (auto idx = range.begin(); idx != range.end() - 1; ++idx)
-    {
-        auto const client = inSol[*idx];
-        auto const &node = solution_.nodes[client];
-        auto *route = node.route();
-
-        searchSpace_.markPromising(&node);
-        route->remove(node.idx());
-        update(route, route);
-    }
-
-    // Test swapping U and V, and do so if U is better to have than V.
-    auto *V = &solution_.nodes[inSol[range.back()]];
-    if (U != V && inplaceCost(U, V, data, costEvaluator) < 0)
-    {
-        auto *route = V->route();
-        auto const idx = V->idx();
-        route->remove(idx);
-        route->insert(idx, U);
-        update(route, route);
-        searchSpace_.markPromising(U);
-        return;
-    }
-
-    // Test removing V if that's an improving and allowed move.
-    if (!group.required && removeCost(V, data, costEvaluator) < 0)
-    {
-        searchSpace_.markPromising(V);
-        auto *route = V->route();
-        route->remove(V->idx());
-        update(route, route);
-        return;
     }
 }
 
