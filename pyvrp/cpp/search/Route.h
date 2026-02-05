@@ -501,7 +501,7 @@ public:
     [[nodiscard]] inline Duration timeWarp() const;
 
     /**
-     * @reutrn Total collected prizes on this route.
+     * @return Total collected prizes on this route.
      */
     [[nodiscard]] inline Cost prizes() const;
 

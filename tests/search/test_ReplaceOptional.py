@@ -9,7 +9,7 @@ from tests.helpers import make_search_route
 
 def test_replacing_optional_client():
     """
-    Tests that the local search evaluates moves where an optional client is
+    Tests that ReplaceOptional evaluates moves where an optional client is
     replaced with another that is not currently in the solution.
     """
     data = ProblemData(
@@ -69,10 +69,10 @@ def test_skips_replacing_required_client():
     assert_equal(op.evaluate(client2, route[1], cost_eval), (0, False))
 
 
-def test_skips_assigned_or_missing_other(ok_small_prizes):
+def test_skips_assigned_depot_or_missing_other(ok_small_prizes):
     """
-    Tests that InsertOptional skips assigned clients, or when the other client
-    to replace is missing.
+    Tests that ReplaceOptional skips assigned clients, depots, or when the
+    other client to replace is missing.
     """
     route = make_search_route(ok_small_prizes, [1, 2])
     assert_(route[1].route)
@@ -87,6 +87,9 @@ def test_skips_assigned_or_missing_other(ok_small_prizes):
     node3 = Node(loc=3)
     node4 = Node(loc=4)
     assert_equal(op.evaluate(node3, node4, cost_eval), (0, False))
+
+    # This is a depot, which cannot be replaced.
+    assert_equal(op.evaluate(route[1], route[0], cost_eval), (0, False))
 
 
 def test_supports(

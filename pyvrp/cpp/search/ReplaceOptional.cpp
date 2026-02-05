@@ -11,7 +11,7 @@ std::pair<pyvrp::Cost, bool> ReplaceOptional::evaluate(
 {
     stats_.numEvaluations++;
 
-    if (U->route() || !V->route())
+    if (U->route() || !V->route() || V->isDepot())
         return std::make_pair(0, false);
 
     ProblemData::Client const &uData = data.location(U->client());
