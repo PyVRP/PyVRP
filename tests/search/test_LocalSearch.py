@@ -23,6 +23,8 @@ from pyvrp.search import (
     PerturbationParams,
     RelocateWithDepot,
     RemoveAdjacentDepot,
+    RemoveOptional,
+    ReplaceOptional,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -291,7 +293,9 @@ def test_mutually_exclusive_group(gtsp):
     perturbation = PerturbationManager(PerturbationParams(0, 0))
 
     ls = LocalSearch(gtsp, rng, neighbours, perturbation)
-    ls.add_operator(Exchange10(gtsp))
+    ls.add_operator(InsertOptional(gtsp))
+    ls.add_operator(ReplaceOptional(gtsp))
+    ls.add_operator(RemoveOptional(gtsp))
 
     sol = Solution.make_random(gtsp, rng)
     cost_eval = CostEvaluator([20], 6, 0)
@@ -316,7 +320,7 @@ def test_mutually_exclusive_group_not_in_solution(
     neighbours = compute_neighbours(ok_small_mutually_exclusive_groups)
 
     ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
-    ls.add_operator(Exchange10(ok_small_mutually_exclusive_groups))
+    ls.add_operator(InsertOptional(ok_small_mutually_exclusive_groups))
 
     sol = Solution(ok_small_mutually_exclusive_groups, [[4]])
     assert_(not sol.is_group_feasible())
@@ -338,7 +342,7 @@ def test_swap_if_improving_mutually_exclusive_group(
     perturbation = PerturbationManager(PerturbationParams(0, 0))
 
     ls = LocalSearch(data, rng, neighbours, perturbation)
-    ls.add_operator(Exchange10(data))
+    ls.add_operator(ReplaceOptional(data))
 
     cost_eval = CostEvaluator([20], 6, 0)
     sol = Solution(data, [[1, 4]])
@@ -617,7 +621,8 @@ def test_does_not_insert_optional_groups():
 
     rng = RandomNumberGenerator(seed=2)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_operator(Exchange10(data))
+    ls.add_operator(InsertOptional(data))
+    ls.add_operator(RemoveOptional(data))
 
     # Start with a full solution. After local search, the solution should be
     # empty because the group is not worth keeping around.
