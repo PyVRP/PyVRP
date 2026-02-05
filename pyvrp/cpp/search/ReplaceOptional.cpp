@@ -1,6 +1,6 @@
 #include "ReplaceOptional.h"
 
-#include "primitives.h"
+#include "ClientSegment.h"
 
 #include <cassert>
 
@@ -21,7 +21,13 @@ std::pair<pyvrp::Cost, bool> ReplaceOptional::evaluate(
         // same mutually exclusive group.
         return std::make_pair(0, false);
 
-    auto const deltaCost = inplaceCost(U, V, data, costEvaluator);
+    auto *route = V->route();
+    Cost deltaCost = vData.prize - uData.prize;
+    costEvaluator.deltaCost(deltaCost,
+                            Route::Proposal(route->before(V->idx() - 1),
+                                            ClientSegment(data, U->client()),
+                                            route->after(V->idx() + 1)));
+
     return std::make_pair(deltaCost, deltaCost < 0);
 }
 

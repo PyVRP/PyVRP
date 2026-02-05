@@ -1,6 +1,6 @@
 #include "InsertOptional.h"
 
-#include "primitives.h"
+#include "ClientSegment.h"
 
 #include <cassert>
 
@@ -27,7 +27,15 @@ std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
                 return std::make_pair(0, false);   // insert another
     }
 
-    auto const deltaCost = insertCost(U, V, data, costEvaluator);
+    auto *route = V->route();
+    Cost deltaCost
+        = Cost(route->empty()) * route->fixedVehicleCost() - uData.prize;
+
+    costEvaluator.deltaCost(deltaCost,
+                            Route::Proposal(route->before(V->idx()),
+                                            ClientSegment(data, U->client()),
+                                            route->after(V->idx() + 1)));
+
     return std::make_pair(deltaCost, deltaCost < 0);
 }
 
