@@ -17,6 +17,7 @@ from pyvrp import (
 from pyvrp.search import (
     Exchange10,
     Exchange11,
+    InsertOptional,
     LocalSearch,
     PerturbationManager,
     PerturbationParams,
@@ -276,45 +277,6 @@ def test_local_search_completes_incomplete_solutions(ok_small_prizes):
 
     new_sol = ls(sol, cost_eval, exhaustive=True)
     assert_(new_sol.is_complete())
-
-
-def test_replacing_optional_client():
-    """
-    Tests that the local search evaluates moves where an optional client is
-    replaced with another that is not currently in the solution.
-    """
-    mat = [
-        [0, 0, 0],
-        [0, 0, 2],
-        [0, 2, 0],
-    ]
-    data = ProblemData(
-        clients=[
-            Client(0, 0, tw_early=0, tw_late=1, prize=1, required=False),
-            Client(0, 0, tw_early=0, tw_late=1, prize=5, required=False),
-        ],
-        depots=[Depot(0, 0)],
-        vehicle_types=[VehicleType()],
-        distance_matrices=[mat],
-        duration_matrices=[mat],
-    )
-
-    rng = RandomNumberGenerator(seed=42)
-    ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_operator(Exchange10(data))
-
-    # We start with a solution containing just client 1.
-    sol = Solution(data, [[1]])
-    assert_equal(sol.prizes(), 1)
-    assert_(sol.is_feasible())
-
-    # A unit of time warp has a penalty of 5 units, so it's never worthwhile to
-    # have both clients 1 and 2 in the solution. However, replacing client 1
-    # with 2 yields a prize of 5, rather than 1, at no additional cost.
-    cost_eval = CostEvaluator([], 5, 0)
-    improved = ls(sol, cost_eval)
-    assert_equal(improved.prizes(), 5)
-    assert_(improved.is_feasible())
 
 
 def test_mutually_exclusive_group(gtsp):
@@ -601,8 +563,7 @@ def test_local_search_exhaustive(rc208):
 
 def test_local_search_inserts_into_empty_solutions():
     """
-    Tests that the local search inserts into empty solutions, even when the
-    granular neighbourhood is empty.
+    Tests that the local search inserts into empty solutions.
     """
     data = ProblemData(
         clients=[
@@ -617,8 +578,8 @@ def test_local_search_inserts_into_empty_solutions():
 
     rng = RandomNumberGenerator(seed=2)
     cost_eval = CostEvaluator([], 0, 0)
-    ls = LocalSearch(data, rng, [[], [], []])
-    ls.add_operator(Exchange10(data))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_operator(InsertOptional(data))
 
     empty = Solution(data, [])
     assert_equal(empty.num_clients(), 0)

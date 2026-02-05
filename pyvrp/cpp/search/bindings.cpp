@@ -1,10 +1,12 @@
 #include "bindings.h"
 #include "Exchange.h"
+#include "InsertOptional.h"
 #include "LocalSearch.h"
 #include "PerturbationManager.h"
 #include "RelocateWithDepot.h"
 #include "RemoveAdjacentDepot.h"
 #include "RemoveOptional.h"
+#include "ReplaceOptional.h"
 #include "Route.h"
 #include "SearchSpace.h"
 #include "Solution.h"
@@ -24,6 +26,7 @@ using pyvrp::search::BinaryOperator;
 using pyvrp::search::Exchange;
 using pyvrp::search::inplaceCost;
 using pyvrp::search::insertCost;
+using pyvrp::search::InsertOptional;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::OperatorStatistics;
 using pyvrp::search::PerturbationManager;
@@ -32,6 +35,7 @@ using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::RemoveAdjacentDepot;
 using pyvrp::search::removeCost;
 using pyvrp::search::RemoveOptional;
+using pyvrp::search::ReplaceOptional;
 using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 using pyvrp::search::Solution;
@@ -79,6 +83,38 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &RemoveOptional::apply, py::arg("U"))
         .def_static("supports", &supports<RemoveOptional>, py::arg("data"));
+
+    py::class_<InsertOptional, BinaryOperator>(
+        m, "InsertOptional", DOC(pyvrp, search, InsertOptional))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &InsertOptional::statistics,
+                               py::return_value_policy::reference_internal)
+        .def("evaluate",
+             &InsertOptional::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &InsertOptional::apply, py::arg("U"), py::arg("V"))
+        .def_static("supports", &supports<InsertOptional>, py::arg("data"));
+
+    py::class_<ReplaceOptional, BinaryOperator>(
+        m, "ReplaceOptional", DOC(pyvrp, search, ReplaceOptional))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &ReplaceOptional::statistics,
+                               py::return_value_policy::reference_internal)
+        .def("evaluate",
+             &ReplaceOptional::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &ReplaceOptional::apply, py::arg("U"), py::arg("V"))
+        .def_static("supports", &supports<ReplaceOptional>, py::arg("data"));
 
     py::class_<Exchange<1, 0>, BinaryOperator>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))
@@ -449,6 +485,7 @@ PYBIND11_MODULE(_search, m)
         .def("has_distance_cost", &Route::hasDistanceCost)
         .def("duration", &Route::duration)
         .def("overtime", &Route::overtime)
+        .def("prizes", &Route::prizes)
         .def("duration_cost", &Route::durationCost)
         .def("unit_duration_cost", &Route::unitDurationCost)
         .def("unit_overtime_cost", &Route::unitOvertimeCost)

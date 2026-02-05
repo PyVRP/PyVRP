@@ -64,15 +64,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
             applyUnaryOps(U, costEvaluator);
 
-            // First test removing or inserting U. Particularly relevant if not
-            // all clients are required (e.g., when prize collecting).
-            applyOptionalClientMoves(U, costEvaluator);
-
             // Evaluate moves involving the client's group, if it is in any.
             applyGroupMoves(U, costEvaluator);
-
-            if (!U->route())  // we already evaluated inserting U, so there is
-                continue;     // nothing left to be done for this client.
 
             for (auto const vClient : searchSpace_.neighboursOf(U->client()))
             {
@@ -81,9 +74,12 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 if (!V->route())
                     continue;
 
-                auto uIdx = std::distance(solution_.routes.data(), U->route());
-                auto vIdx = std::distance(solution_.routes.data(), V->route());
-                if (std::max(lastUpdate_[uIdx], lastUpdate_[vIdx]) > lastTest)
+                auto *routes = solution_.routes.data();
+                auto uUpdate = 0;
+                if (U->route())
+                    uUpdate = lastUpdate_[std::distance(routes, U->route())];
+                auto vUpdate = lastUpdate_[std::distance(routes, V->route())];
+                if (uUpdate > lastTest || vUpdate > lastTest)
                 {
                     if (applyBinaryOps(U, V, costEvaluator))
                         continue;
@@ -94,9 +90,10 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 }
             }
 
-            // Moves involving empty routes are not tested in the first
-            // iteration to avoid using too many routes.
-            if (step > 0)
+            // Moves involving empty routes are not tested initially to avoid
+            // using too many routes, but we will try it if we have not been
+            // able to insert U yet (perhaps the solution is empty?).
+            if (step > 0 || !U->route())
                 applyEmptyRouteMoves(U, costEvaluator);
         }
     }
@@ -155,20 +152,22 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
         {
             auto *rU = U->route();
             auto *rV = V->route();
+            assert(rV);
+
+            if (rU)
+                searchSpace_.markPromising(U);
+            searchSpace_.markPromising(V);
 
             [[maybe_unused]] auto const costBefore
-                = costEvaluator.penalisedCost(*rU)
-                  + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
-
-            searchSpace_.markPromising(U);
-            searchSpace_.markPromising(V);
+                = costEvaluator.penalisedCost(*rV)
+                  + (rU && rU != rV ? costEvaluator.penalisedCost(*rU) : 0);
 
             op->apply(U, V);
             update(rU, rV);
 
             [[maybe_unused]] auto const costAfter
-                = costEvaluator.penalisedCost(*rU)
-                  + Cost(rU != rV) * costEvaluator.penalisedCost(*rV);
+                = costEvaluator.penalisedCost(*rV)
+                  + (rU && rU != rV ? costEvaluator.penalisedCost(*rU) : 0);
 
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
@@ -185,8 +184,6 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
 void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
                                        CostEvaluator const &costEvaluator)
 {
-    assert(U->route());
-
     // We apply moves involving empty routes in the (randomised) order of
     // orderVehTypes. This helps because empty vehicle moves incur fixed cost,
     // and a purely greedy approach over-prioritises vehicles with low fixed
@@ -236,57 +233,6 @@ void LocalSearch::insertRequired(Route::Node *U,
             update(U->route(), U->route());
             searchSpace_.markPromising(U);
         }
-    }
-}
-
-void LocalSearch::applyOptionalClientMoves(Route::Node *U,
-                                           CostEvaluator const &costEvaluator)
-{
-    // Groups have their own operator and are not processed here.
-    ProblemData::Client const &uData = data.location(U->client());
-    if (U->route() || uData.group)
-        return;
-
-    // Attempt to re-insert U using a first-improving neighbourhood search.
-    for (auto const vClient : searchSpace_.neighboursOf(U->client()))
-    {
-        auto *V = &solution_.nodes[vClient];
-        auto *route = V->route();
-
-        if (!route)
-            continue;
-
-        if (insertCost(U, V, data, costEvaluator) < 0)  // insert if improving
-        {
-            route->insert(V->idx() + 1, U);
-            update(route, route);
-            searchSpace_.markPromising(U);
-            return;
-        }
-
-        // We prefer inserting over replacing, but if V is not required and
-        // replacing V with U is improving, we also do that now.
-        ProblemData::Client const &vData = data.location(V->client());
-        if (!vData.required && inplaceCost(U, V, data, costEvaluator) < 0)
-        {
-            searchSpace_.markPromising(V);
-            auto const idx = V->idx();
-            route->remove(idx);
-            route->insert(idx, U);
-            update(route, route);
-            searchSpace_.markPromising(U);
-            return;
-        }
-    }
-
-    // Evaluate inserting after the first route's start depot as a fallback if
-    // U has not already been inserted.
-    auto &route = solution_.routes[0];
-    if (!U->route() && insertCost(U, route[0], data, costEvaluator) < 0)
-    {
-        route.insert(1, U);
-        update(&route, &route);
-        searchSpace_.markPromising(U);
     }
 }
 
@@ -364,11 +310,15 @@ void LocalSearch::applyGroupMoves(Route::Node *U,
 
 void LocalSearch::update(Route *U, Route *V)
 {
+    assert(V);
     numUpdates_++;
     searchCompleted_ = false;
 
-    U->update();
-    lastUpdate_[std::distance(solution_.routes.data(), U)] = numUpdates_;
+    if (U)
+    {
+        U->update();
+        lastUpdate_[std::distance(solution_.routes.data(), U)] = numUpdates_;
+    }
 
     if (U != V)
     {
