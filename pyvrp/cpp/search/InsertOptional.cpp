@@ -19,7 +19,7 @@ std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
     {
         assert(solution_);
         auto const &group = data.group(*uData.group);
-        if (group.required)  // then we have already inserted a member before
+        if (group.required)  // then we have already inserted a client in the LS
             return std::make_pair(0, false);
 
         for (auto const client : group.clients())  // if any client is already
