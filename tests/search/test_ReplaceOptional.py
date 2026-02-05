@@ -3,7 +3,7 @@ from numpy.testing import assert_, assert_equal
 
 from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
 from pyvrp.search import ReplaceOptional
-from pyvrp.search._search import Node
+from pyvrp.search._search import Node, Solution
 from tests.helpers import make_search_route
 
 
@@ -105,15 +105,30 @@ def test_supports(
     assert_(ReplaceOptional.supports(ok_small_mutually_exclusive_groups))
 
 
-def test_replaces_same_group():
+def test_replaces_same_group(ok_small_mutually_exclusive_groups):
     """
-    TODO
+    Tests that ReplaceOptional can replace clients within the same group, and
+    skips other groups.
     """
-    pass
+    data = ok_small_mutually_exclusive_groups
 
+    solution = Solution(data)
+    route = solution.routes[0]
+    route.append(solution.nodes[1])
+    route.append(solution.nodes[4])
+    route.update()
 
-def test_skips_other_group():
-    """
-    TODO
-    """
-    pass
+    op = ReplaceOptional(data)
+    op.init(solution)
+
+    # Replacing client 1 with 2 is slightly improving:
+    # delta = dist(0, 2) + dist(2, 4) - dist(0, 1) - dist(1, 4)
+    #       = 1944 + 1090 - 1544 - 1593
+    #       = -103.
+    node = Node(loc=2)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(node, route[1], cost_eval), (-103, True))
+
+    # Cannot replace a group client with a client from outside the group.
+    node = Node(loc=4)
+    assert_equal(op.evaluate(node, route[1], cost_eval), (0, False))

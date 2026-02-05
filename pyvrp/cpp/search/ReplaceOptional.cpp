@@ -16,7 +16,7 @@ std::pair<pyvrp::Cost, bool> ReplaceOptional::evaluate(
 
     ProblemData::Client const &uData = data.location(U->client());
     ProblemData::Client const &vData = data.location(V->client());
-    if (vData.required || (uData.group && uData.group != vData.group))
+    if (vData.required || uData.group != vData.group)
         // Cannot replace required clients, or clients that are not in the
         // same mutually exclusive group.
         return std::make_pair(0, false);
