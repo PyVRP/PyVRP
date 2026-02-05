@@ -1,6 +1,6 @@
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import CostEvaluator
+from pyvrp import CostEvaluator, Depot
 from pyvrp.search import RemoveAdjacentDepot
 from pyvrp.search._search import Node
 from tests.helpers import make_search_route
@@ -73,3 +73,46 @@ def test_supports(ok_small, ok_small_multiple_trips, mtvrptw_release_times):
     assert_(not RemoveAdjacentDepot.supports(ok_small))
     assert_(RemoveAdjacentDepot.supports(ok_small_multiple_trips))
     assert_(RemoveAdjacentDepot.supports(mtvrptw_release_times))
+
+
+def test_remove_reload_depot(ok_small_multiple_trips):
+    """
+    Tests that RemoveAdjacentDepot correctly evaluates removing a reload depot.
+    """
+    data = ok_small_multiple_trips
+    route = make_search_route(data, [1, 2, 0, 3, 4])
+
+    assert_(not route.has_excess_load())
+    assert_(route[3].is_reload_depot())
+
+    # If we remove the reload depot, we gain 8 excess load. That costs 8_000
+    # with this cost evaluator. Additionally, we have some changes in distance
+    # cost, as follows:
+    #              dist(2, 3) = 621
+    # dist(2, 0) + dist(0, 3) = 1965 + 1931
+    #              dist delta = -3275
+    op = RemoveAdjacentDepot(data)
+    cost_eval = CostEvaluator([1000], 0, 0)
+    assert_equal(op.evaluate(route[2], cost_eval), (8_000 - 3_275, False))
+
+
+def test_remove_reload_depots_service_duration(ok_small_multiple_trips):
+    """
+    Tests that removing one of multiple, consecutive reload depots is also
+    evaluated correctly in case the reload depots have service duration.
+    """
+    veh_type = ok_small_multiple_trips.vehicle_type(0)
+    data = ok_small_multiple_trips.replace(
+        depots=[Depot(x=2334, y=726, service_duration=90)],
+        vehicle_types=[veh_type.replace(max_reloads=2, unit_duration_cost=1)],
+    )
+
+    op = RemoveAdjacentDepot(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+
+    # Reloads twice in a row. Removing either of the reloads should only impact
+    # duration cost, by removing the associated depot service duration. We
+    # evaluate from the adjacent client nodes.
+    route = make_search_route(data, [1, 2, 0, 0, 3, 4])
+    assert_equal(op.evaluate(route[2], cost_eval), (-90, True))
+    assert_equal(op.evaluate(route[5], cost_eval), (-90, True))

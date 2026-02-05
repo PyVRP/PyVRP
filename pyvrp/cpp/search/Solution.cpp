@@ -1,10 +1,37 @@
 #include "Solution.h"
 
-#include "primitives.h"
+#include "ClientSegment.h"
 
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+
+namespace
+{
+pyvrp::Cost insertCost(pyvrp::search::Route::Node *U,
+                       pyvrp::search::Route::Node *V,
+                       pyvrp::ProblemData const &data,
+                       pyvrp::CostEvaluator const &costEvaluator)
+{
+    assert(V->route() && !U->isDepot());
+
+    auto *route = V->route();
+    pyvrp::ProblemData::Client const &client = data.location(U->client());
+
+    pyvrp::Cost deltaCost
+        = pyvrp::Cost(route->empty()) * route->fixedVehicleCost()
+          - client.prize;
+
+    costEvaluator.deltaCost<true>(
+        deltaCost,
+        pyvrp::search::Route::Proposal(
+            route->before(V->idx()),
+            pyvrp::search::ClientSegment(data, U->client()),
+            route->after(V->idx() + 1)));
+
+    return deltaCost;
+}
+}  // namespace
 
 using pyvrp::search::Solution;
 
@@ -135,6 +162,7 @@ bool Solution::insert(Route::Node *U,
                       CostEvaluator const &costEvaluator,
                       bool required)
 {
+    assert(!U->isDepot());
     assert(size_t(std::distance(nodes.data(), U)) < nodes.size());
 
     Route::Node *UAfter = routes[0][0];  // fallback option

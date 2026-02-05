@@ -11,7 +11,6 @@
 #include "SearchSpace.h"
 #include "Solution.h"
 #include "SwapTails.h"
-#include "primitives.h"
 #include "search_docs.h"
 
 #include <pybind11/operators.h>
@@ -24,8 +23,6 @@ namespace py = pybind11;
 
 using pyvrp::search::BinaryOperator;
 using pyvrp::search::Exchange;
-using pyvrp::search::inplaceCost;
-using pyvrp::search::insertCost;
 using pyvrp::search::InsertOptional;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::OperatorStatistics;
@@ -33,7 +30,6 @@ using pyvrp::search::PerturbationManager;
 using pyvrp::search::PerturbationParams;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::RemoveAdjacentDepot;
-using pyvrp::search::removeCost;
 using pyvrp::search::RemoveOptional;
 using pyvrp::search::ReplaceOptional;
 using pyvrp::search::Route;
@@ -616,27 +612,4 @@ PYBIND11_MODULE(_search, m)
                  stream << node;
                  return stream.str();
              });
-
-    m.def("insert_cost",
-          &insertCost,
-          py::arg("U"),
-          py::arg("V"),
-          py::arg("data"),
-          py::arg("cost_evaluator"),
-          DOC(pyvrp, search, insertCost));
-
-    m.def("inplace_cost",
-          &inplaceCost,
-          py::arg("U"),
-          py::arg("V"),
-          py::arg("data"),
-          py::arg("cost_evaluator"),
-          DOC(pyvrp, search, inplaceCost));
-
-    m.def("remove_cost",
-          &removeCost,
-          py::arg("U"),
-          py::arg("data"),
-          py::arg("cost_evaluator"),
-          DOC(pyvrp, search, removeCost));
 }

@@ -2,7 +2,6 @@
 #include "DynamicBitset.h"
 #include "Measure.h"
 #include "Trip.h"
-#include "primitives.h"
 
 #include <algorithm>
 #include <cassert>
