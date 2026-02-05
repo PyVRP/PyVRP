@@ -49,6 +49,6 @@ public:
         return {data.location(client), dimension};
     }
 };
-};  // namespace pyvrp::search
+}  // namespace pyvrp::search
 
 #endif

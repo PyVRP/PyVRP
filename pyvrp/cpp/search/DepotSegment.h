@@ -49,6 +49,6 @@ public:
         return {};
     }
 };
-};  // namespace pyvrp::search
+}  // namespace pyvrp::search
 
 #endif
