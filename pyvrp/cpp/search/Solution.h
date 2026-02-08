@@ -52,17 +52,49 @@ public:
                 CostEvaluator const &costEvaluator,
                 bool required);
 
-    // Members needed for the type to be CostEvaluatable and further account
-    // for optional, global prizes via the HasUncollectedPrizes concept. See
-    // the CostEvaluator for the details.
+    /**
+     * Distance cost of all routes in this solution.
+     */
     Cost distanceCost() const;
+
+    /**
+     * Duration cost of all routes in this solution.
+     */
     Cost durationCost() const;
+
+    /**
+     * Fixed vehicle cost of all non-empty routes in this solution.
+     */
     Cost fixedVehicleCost() const;
+
+    /**
+     * Excess loads of all routes in this solution.
+     */
     std::vector<Load> excessLoad() const;
+
+    /**
+     * Excess distance of all routes in this solution.
+     */
     Distance excessDistance() const;
+
+    /**
+     * Time warp of all routes in this solution.
+     */
     Duration timeWarp() const;
+
+    /**
+     * True if all routes are empty, false otherwise.
+     */
     bool empty() const;
+
+    /**
+     * True if all routes are feasible, false otherwise.
+     */
     bool isFeasible() const;
+
+    /**
+     * Total value of all uncollected prizes.
+     */
     Cost uncollectedPrizes() const;
 };
 }  // namespace pyvrp::search
