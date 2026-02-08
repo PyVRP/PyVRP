@@ -204,15 +204,6 @@ void Route::update()
     for (auto const *node : nodes)
         visits.emplace_back(node->client());
 
-    // Prizes.
-    prizes_ = 0;
-    for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-        if (!nodes[idx]->isDepot())
-        {
-            ProblemData::Client const &client = data.location(visits[idx]);
-            prizes_ += client.prize;
-        }
-
     // Distance.
     auto const &distMat = data.distanceMatrix(profile());
 

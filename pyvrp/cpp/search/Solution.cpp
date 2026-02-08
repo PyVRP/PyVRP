@@ -6,21 +6,25 @@
 #include <cassert>
 #include <iterator>
 
+using pyvrp::Cost;
+using pyvrp::Distance;
+using pyvrp::Duration;
+using pyvrp::Load;
+
 namespace
 {
-pyvrp::Cost insertCost(pyvrp::search::Route::Node *U,
-                       pyvrp::search::Route::Node *V,
-                       pyvrp::ProblemData const &data,
-                       pyvrp::CostEvaluator const &costEvaluator)
+Cost insertCost(pyvrp::search::Route::Node *U,
+                pyvrp::search::Route::Node *V,
+                pyvrp::ProblemData const &data,
+                pyvrp::CostEvaluator const &costEvaluator)
 {
     assert(V->route() && !U->isDepot());
 
     auto *route = V->route();
     pyvrp::ProblemData::Client const &client = data.location(U->client());
 
-    pyvrp::Cost deltaCost
-        = pyvrp::Cost(route->empty()) * route->fixedVehicleCost()
-          - client.prize;
+    Cost deltaCost
+        = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
 
     costEvaluator.deltaCost<true>(
         deltaCost,
@@ -215,3 +219,21 @@ bool Solution::insert(Route::Node *U,
 
     return false;
 }
+
+Cost Solution::distanceCost() const {}
+
+Cost Solution::durationCost() const {}
+
+Cost Solution::fixedVehicleCost() const {}
+
+std::vector<Load> Solution::excessLoad() const {}
+
+Distance Solution::excessDistance() const {}
+
+Duration Solution::timeWarp() const {}
+
+bool Solution::empty() const {}
+
+bool Solution::isFeasible() const {}
+
+Cost Solution::uncollectedPrizes() const {}

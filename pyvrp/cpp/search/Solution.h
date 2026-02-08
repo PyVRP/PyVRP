@@ -51,6 +51,19 @@ public:
                 SearchSpace const &searchSpace,
                 CostEvaluator const &costEvaluator,
                 bool required);
+
+    // Members needed for the type to be CostEvaluatable and further account
+    // for optional, global prizes via the HasUncollectedPrizes concept. See
+    // the CostEvaluator for the details.
+    Cost distanceCost() const;
+    Cost durationCost() const;
+    Cost fixedVehicleCost() const;
+    std::vector<Load> excessLoad() const;
+    Distance excessDistance() const;
+    Duration timeWarp() const;
+    bool empty() const;
+    bool isFeasible() const;
+    Cost uncollectedPrizes() const;
 };
 }  // namespace pyvrp::search
 

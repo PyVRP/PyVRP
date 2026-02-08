@@ -14,13 +14,12 @@
 namespace pyvrp
 {
 // The following methods must be implemented for a type to be evaluatable by
-// the CostEvaluator. It evaluates "cost minus profits (prizes)".
+// the CostEvaluator.
 template <typename T>
 concept CostEvaluatable = requires(T arg) {
     { arg.distanceCost() } -> std::same_as<Cost>;
     { arg.durationCost() } -> std::same_as<Cost>;
     { arg.fixedVehicleCost() } -> std::same_as<Cost>;
-    { arg.prizes() } -> std::same_as<Cost>;
     { arg.excessLoad() } -> std::convertible_to<std::vector<Load>>;
     { arg.excessDistance() } -> std::same_as<Distance>;
     { arg.timeWarp() } -> std::same_as<Duration>;
@@ -251,14 +250,9 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
           + distPenalty(arg.excessDistance(), 0);
 
     if constexpr (HasUncollectedPrizes<T>)
-        // The upside of this cost versus the one based on prizes is that this
-        // never goes negative. But it is a global, solution-level property:
-        // for example, routes do not know about all uncollected prizes.
         return cost + arg.uncollectedPrizes();
-    else
-        // For routes we simply return the cost minus the collected prizes,
-        // which are known at the route-level.
-        return cost - arg.prizes();
+
+    return cost;
 }
 
 template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
