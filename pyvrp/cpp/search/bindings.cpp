@@ -438,7 +438,6 @@ PYBIND11_MODULE(_search, m)
         .def("excess_load", &Solution::excessLoad)
         .def("excess_distance", &Solution::excessDistance)
         .def("time_warp", &Solution::timeWarp)
-        .def("is_feasible", &Solution::isFeasible)
         .def("uncollected_prizes", &Solution::uncollectedPrizes);
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))

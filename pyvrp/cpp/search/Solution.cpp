@@ -292,13 +292,6 @@ bool Solution::empty() const
                        [](auto const &route) { return route.empty(); });
 }
 
-bool Solution::isFeasible() const
-{
-    return std::all_of(routes.begin(),
-                       routes.end(),
-                       [](auto const &route) { return route.isFeasible(); });
-}
-
 Cost Solution::uncollectedPrizes() const
 {
     Cost uncollected = 0;

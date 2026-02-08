@@ -69,3 +69,45 @@ def test_insert_required(ok_small):
     sol = Solution(data)
     assert_(not sol.insert(sol.nodes[1], search_space, cost_eval, False))
     assert_(sol.insert(sol.nodes[1], search_space, cost_eval, True))
+
+
+def test_distance_and_duration_cost():
+    """
+    TODO
+    """
+    pass
+
+
+def test_fixed_vehicle_cost():
+    """
+    TODO
+    """
+    pass
+
+
+def test_excess_load():
+    """
+    TODO
+    """
+    pass
+
+
+def test_excess_distance():
+    """
+    TODO
+    """
+    pass
+
+
+def test_time_warp():
+    """
+    TODO
+    """
+    pass
+
+
+def test_uncollected_prizes():
+    """
+    TODO
+    """
+    pass

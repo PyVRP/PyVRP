@@ -88,11 +88,6 @@ public:
     bool empty() const;
 
     /**
-     * True if all routes are feasible, false otherwise.
-     */
-    bool isFeasible() const;
-
-    /**
      * Total value of all uncollected prizes.
      */
     Cost uncollectedPrizes() const;
