@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <numeric>
 
 using pyvrp::Cost;
 using pyvrp::Distance;
@@ -220,20 +221,93 @@ bool Solution::insert(Route::Node *U,
     return false;
 }
 
-Cost Solution::distanceCost() const {}
+Cost Solution::distanceCost() const
+{
+    return std::transform_reduce(routes.begin(),
+                                 routes.end(),
+                                 Cost(),
+                                 std::plus<>(),
+                                 [](auto const &route)
+                                 { return route.distanceCost(); });
+}
 
-Cost Solution::durationCost() const {}
+Cost Solution::durationCost() const
+{
+    return std::transform_reduce(routes.begin(),
+                                 routes.end(),
+                                 Cost(),
+                                 std::plus<>(),
+                                 [](auto const &route)
+                                 { return route.durationCost(); });
+}
 
-Cost Solution::fixedVehicleCost() const {}
+Cost Solution::fixedVehicleCost() const
+{
+    return std::transform_reduce(
+        routes.begin(),
+        routes.end(),
+        Cost(),
+        std::plus<>(),
+        [](auto const &route)
+        { return !route.empty() ? route.fixedVehicleCost() : 0; });
+}
 
-std::vector<Load> Solution::excessLoad() const {}
+std::vector<Load> Solution::excessLoad() const
+{
+    std::vector<Load> excessLoads(data_.numLoadDimensions(), 0);
+    for (auto const &route : routes)
+    {
+        auto const &excess = route.excessLoad();
+        for (size_t idx = 0; idx != data_.numLoadDimensions(); ++idx)
+            excessLoads[idx] += excess[idx];
+    }
 
-Distance Solution::excessDistance() const {}
+    return excessLoads;
+}
 
-Duration Solution::timeWarp() const {}
+Distance Solution::excessDistance() const
+{
+    return std::transform_reduce(routes.begin(),
+                                 routes.end(),
+                                 Distance(),
+                                 std::plus<>(),
+                                 [](auto const &route)
+                                 { return route.excessDistance(); });
+}
 
-bool Solution::empty() const {}
+Duration Solution::timeWarp() const
+{
+    return std::transform_reduce(routes.begin(),
+                                 routes.end(),
+                                 Duration(),
+                                 std::plus<>(),
+                                 [](auto const &route)
+                                 { return route.timeWarp(); });
+}
 
-bool Solution::isFeasible() const {}
+bool Solution::empty() const
+{
+    return std::all_of(routes.begin(),
+                       routes.end(),
+                       [](auto const &route) { return route.empty(); });
+}
 
-Cost Solution::uncollectedPrizes() const {}
+bool Solution::isFeasible() const
+{
+    return std::all_of(routes.begin(),
+                       routes.end(),
+                       [](auto const &route) { return route.isFeasible(); });
+}
+
+Cost Solution::uncollectedPrizes() const
+{
+    Cost uncollected = 0;
+    for (size_t idx = data_.numDepots(); idx != data_.numLocations(); ++idx)
+        if (!nodes[idx].route())
+        {
+            ProblemData::Client const &client = data_.location(idx);
+            uncollected += client.prize;
+        }
+
+    return uncollected;
+}
