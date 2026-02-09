@@ -1,8 +1,9 @@
+import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal
 
 import pyvrp
-from pyvrp import CostEvaluator, Route, VehicleType
+from pyvrp import Client, CostEvaluator, Depot, ProblemData, Route, VehicleType
 from pyvrp import Solution as PyVRPSolution
 from pyvrp.search import compute_neighbours
 from pyvrp.search._search import SearchSpace, Solution
@@ -139,6 +140,24 @@ def test_excess_load(ok_small):
     assert_equal(needed, 18)
     assert_equal(available, 10)
     assert_equal(sol.excess_load(), [needed - available])
+
+
+def test_excess_load_no_dims():
+    """
+    Tests the Solution's excess_load() method on an instance without load
+    dimensions.
+    """
+    data = ProblemData(
+        depots=[Depot(x=0, y=0)],
+        clients=[Client(x=0, y=0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[np.zeros((2, 2), dtype=int)],
+        duration_matrices=[np.zeros((2, 2), dtype=int)],
+    )
+
+    sol = Solution(data)
+    sol.load(PyVRPSolution(data, [[1]]))
+    assert_equal(sol.excess_load(), [])
 
 
 def test_excess_distance(ok_small):
