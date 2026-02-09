@@ -654,3 +654,44 @@ def test_removes_useless_consecutive_depots(ok_small_multiple_trips):
     cost_eval = CostEvaluator([1], 1, 1)
     improved = ls(sol, cost_eval, exhaustive=True)
     assert_(" |  | " not in str(improved))
+
+
+def test_insert_missing_groups_and_clients(ok_small_mutually_exclusive_groups):
+    """
+    Tests that the local search establishes basic structural feasibility, by
+    inserting required groups and clients if they are missing.
+    """
+    data = ok_small_mutually_exclusive_groups
+    sol = Solution(data, [])
+    assert_(not sol.is_complete())
+    assert_(not sol.is_group_feasible())
+
+    rng = RandomNumberGenerator(seed=42)
+    cost_eval = CostEvaluator([0], 0, 0)
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+
+    new = ls(sol, cost_eval)
+    assert_(new.is_complete())
+    assert_(new.is_group_feasible())
+
+
+def test_removes_duplicate_group_members(ok_small_mutually_exclusive_groups):
+    """
+    Tests that the local search removes duplicate group members. In this case,
+    the group is {1, 2, 3}, and 4 is a required client. The group is initially
+    present with both 1 and 2, which is not structurally feasible.
+    """
+    data = ok_small_mutually_exclusive_groups
+    sol = Solution(data, [[1, 2, 4]])
+    assert_(sol.is_complete())
+    assert_(not sol.is_group_feasible())  # group is present twice, via 1 and 2
+
+    rng = RandomNumberGenerator(seed=42)
+    cost_eval = CostEvaluator([0], 0, 0)
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+
+    # New solution no longer visits 2, only 1 and 4. That's group feasible.
+    new = ls(sol, cost_eval)
+    assert_(new.is_complete())
+    assert_(new.is_group_feasible())
+    assert_equal({client for r in new.routes() for client in r}, {1, 4})
