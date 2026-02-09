@@ -18,13 +18,8 @@ RemoveOptional::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
     {
         assert(solution_);
         auto const &group = data.group(*uData.group);
-
-        size_t count = 0;
-        for (auto const client : group.clients())
-            count += solution_->nodes[client].route() != nullptr;
-
-        if (group.required && count == 1)     // then we cannot remove the only
-            return std::make_pair(0, false);  // group member
+        if (group.required)                   // then we cannot remove
+            return std::make_pair(0, false);  // the only group member
     }
 
     auto *route = U->route();

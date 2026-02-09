@@ -3,7 +3,6 @@ from numpy.testing import assert_, assert_equal
 
 from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
 from pyvrp.search import RemoveOptional
-from pyvrp.search._search import Solution
 from tests.helpers import make_search_route
 
 
@@ -53,37 +52,6 @@ def test_supports(
     assert_(not RemoveOptional.supports(ok_small))
     assert_(RemoveOptional.supports(ok_small_prizes))
     assert_(RemoveOptional.supports(ok_small_mutually_exclusive_groups))
-
-
-def test_skip_only_in_required_group(ok_small_mutually_exclusive_groups):
-    """
-    Tests that RemoveOptional only removes clients in required groups when
-    there is more than one group client in the solution.
-    """
-    data = ok_small_mutually_exclusive_groups
-    solution = Solution(data)
-    route = solution.routes[0]
-    route.append(solution.nodes[1])
-    route.append(solution.nodes[2])
-    route.update()
-
-    op = RemoveOptional(data)
-    cost_eval = CostEvaluator([0], 0, 0)
-    op.init(solution)
-
-    # The mutually exclusive group is in the solution twice, with both clients
-    # 1 and 2. That's infeasible, and removing either is an improving move.
-    assert_equal(op.evaluate(route[1], cost_eval), (-1_592, True))
-    assert_equal(op.evaluate(route[2], cost_eval), (-2_231, True))
-
-    # Remove the second client. There's now only one client left in the
-    # solution for this group.
-    op.apply(route[2])
-    route.update()
-
-    # And that means we cannot remove the last client, since that would render
-    # the solution group infeasible.
-    assert_equal(op.evaluate(route[1], cost_eval), (0, False))
 
 
 def test_fixed_vehicle_cost():
