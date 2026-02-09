@@ -910,3 +910,55 @@ def test_overtime(ok_small_overtime):
     assert_equal(sol.overtime(), route.overtime())
     assert_equal(sol.duration(), route.duration())
     assert_equal(sol.duration_cost(), route.duration_cost())
+
+
+def test_raises_duplicate_group(ok_small_mutually_exclusive_groups):
+    """
+    Tests that Solution raises when a group is present in the solution more
+    than once.
+    """
+    with pytest.raises(RuntimeError):
+        # 1 and 2 are both part of the same mutually exclusive group, and thus
+        # cannot be in the solution at the same time.
+        Solution(ok_small_mutually_exclusive_groups, [[1, 2]])
+
+    # But just once is OK.
+    Solution(ok_small_mutually_exclusive_groups, [[1]])
+    Solution(ok_small_mutually_exclusive_groups, [[2]])
+
+
+@pytest.mark.parametrize(
+    ("visits", "is_complete"),
+    [
+        ([1, 4], True),  # 1 is from a required group, 4 is a required client
+        ([1], False),  # missing the required client
+        ([4], False),  # missing the required group
+    ],
+)
+def test_is_complete(
+    ok_small_mutually_exclusive_groups,
+    visits: list[int],
+    is_complete: bool,
+):
+    """
+    Tests that the is_complete() method looks at both missing clients and
+    groups.
+    """
+    sol = Solution(ok_small_mutually_exclusive_groups, [visits])
+    assert_equal(sol.is_complete(), is_complete)
+
+
+def test_make_random(ok_small_mutually_exclusive_groups, gtsp):
+    """
+    Smoke test that checks that make_random() returns a complete solution,
+    without any missing clients or groups.
+    """
+    for seed in range(10):
+        rng = RandomNumberGenerator(seed=seed)
+        sol = Solution.make_random(ok_small_mutually_exclusive_groups, rng)
+        assert_(sol.is_complete())
+
+    for seed in range(10):
+        rng = RandomNumberGenerator(seed=seed)
+        sol = Solution.make_random(gtsp, rng)
+        assert_(sol.is_complete())
