@@ -52,9 +52,10 @@ class LocalSearch
     void applyEmptyRouteMoves(Route::Node *U,
                               CostEvaluator const &costEvaluator);
 
-    // Insert U if it is a required client or part of a required group that is
-    // currently missing.
-    void insertRequired(Route::Node *U, CostEvaluator const &costEvaluator);
+    // Ensures structural feasibility for the loaded solution. This means the
+    // local search will insert required clients if they are missing, and
+    // ensure groups are present at most once in the solution.
+    void ensureStructuralFeasibility(CostEvaluator const &costEvaluator);
 
     // Updates solution state after an improving local search move.
     void update(Route *U, Route *V);

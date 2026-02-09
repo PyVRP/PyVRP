@@ -35,6 +35,7 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
     else
         perturbationManager_.perturb(solution_, searchSpace_, costEvaluator);
 
+    ensureStructuralFeasibility(costEvaluator);
     search(costEvaluator);
 
     return solution_.unload();
@@ -53,8 +54,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
         for (auto const uClient : searchSpace_.clientOrder())
         {
             auto *U = &solution_.nodes[uClient];
-            insertRequired(U, costEvaluator);
-
             if (!searchSpace_.isPromising(uClient))
                 continue;
 
@@ -194,38 +193,63 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
     }
 }
 
-void LocalSearch::insertRequired(Route::Node *U,
-                                 CostEvaluator const &costEvaluator)
+void LocalSearch::ensureStructuralFeasibility(
+    CostEvaluator const &costEvaluator)
 {
-    if (U->route())
-        return;
-
-    ProblemData::Client const &uData = data.location(U->client());
-
-    if (uData.required)  // then we must insert U
+    // Ensure all required clients are present in the solution.
+    for (auto const client : searchSpace_.clientOrder())
     {
-        solution_.insert(U, searchSpace_, costEvaluator, true);
-        update(U->route(), U->route());
-        searchSpace_.markPromising(U);
-        return;
+        auto &node = solution_.nodes[client];
+        ProblemData::Client const &uData = data.location(client);
+
+        if (!node.route() && uData.required)  // then we must insert the client
+        {
+            solution_.insert(&node, searchSpace_, costEvaluator, true);
+            update(node.route(), node.route());
+            searchSpace_.markPromising(&node);
+            continue;
+        }
     }
 
-    if (uData.group)
+    // Ensure all optional groups are present at most once, and all required
+    // groups exactly once. Inserts and removes as needed to satisfy this
+    // constraint.
+    for (auto const &group : data.groups())
     {
-        auto const &group = data.group(*uData.group);
-        assert(group.mutuallyExclusive);
+        assert(!group.empty());  // ProblemData validates this assumption
 
-        if (!group.required)
-            return;
+        size_t inSolCount = 0;
+        for (auto const client : group.clients())
+            inSolCount += solution_.nodes[client].route() != nullptr;
 
-        for (auto const client : group.clients())  // check if any of the group
-            if (solution_.nodes[client].route())   // is already present - then
-                return;                            // we need not insert
+        if (inSolCount == 0 && group.required)  // then we insert the first
+        {                                       // group member
+            auto const first = group.clients()[0];
+            auto &node = solution_.nodes[first];
 
-        if (solution_.insert(U, searchSpace_, costEvaluator, true))
-        {
-            update(U->route(), U->route());
-            searchSpace_.markPromising(U);
+            solution_.insert(&node, searchSpace_, costEvaluator, true);
+            update(node.route(), node.route());
+            searchSpace_.markPromising(&node);
+            continue;
+        }
+
+        if (inSolCount > 1)  // then we remove until we have exactly one member
+        {                    // left
+            for (auto const client : group.clients())
+            {
+                auto &node = solution_.nodes[client];
+                if (node.route())
+                {
+                    searchSpace_.markPromising(&node);
+                    auto *route = node.route();
+                    route->remove(node.idx());
+                    update(route, route);
+                    inSolCount--;
+                }
+
+                if (inSolCount == 1)
+                    break;
+            }
         }
     }
 }
