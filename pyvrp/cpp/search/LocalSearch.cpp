@@ -212,45 +212,28 @@ void LocalSearch::ensureStructuralFeasibility(
     }
 
     // Ensure all optional groups are present at most once, and all required
-    // groups exactly once. Inserts and removes as needed to satisfy this
-    // constraint.
+    // groups exactly once. Inserts as needed to satisfy this constraint.
     for (auto const &group : data.groups())
     {
-        assert(!group.empty());  // ProblemData validates this assumption
-
-        size_t inSolCount = 0;
-        for (auto const client : group.clients())
-            inSolCount += solution_.nodes[client].route() != nullptr;
-
-        if (inSolCount == 0 && group.required)  // then we insert the first
-        {                                       // group member
-            auto const first = group.clients()[0];
-            auto &node = solution_.nodes[first];
-
-            solution_.insert(&node, searchSpace_, costEvaluator, true);
-            update(node.route(), node.route());
-            searchSpace_.markPromising(&node);
+        if (!group.required)
             continue;
-        }
 
-        if (inSolCount > 1)  // then we remove until we have exactly one member
-        {                    // left
-            for (auto const client : group.clients())
-            {
-                auto &node = solution_.nodes[client];
-                if (node.route())
-                {
-                    searchSpace_.markPromising(&node);
-                    auto *route = node.route();
-                    route->remove(node.idx());
-                    update(route, route);
-                    inSolCount--;
-                }
+        auto const &clients = group.clients();
+        bool const inSol = std::any_of(
+            clients.begin(),
+            clients.end(),
+            [&](auto const client) { return solution_.nodes[client].route(); });
 
-                if (inSolCount == 1)
-                    break;
-            }
-        }
+        if (inSol)  // then we do not need to insert
+            continue;
+
+        assert(!group.empty());  // ProblemData validates this assumption
+        auto const first = group.clients()[0];
+        auto &node = solution_.nodes[first];
+
+        solution_.insert(&node, searchSpace_, costEvaluator, true);
+        update(node.route(), node.route());
+        searchSpace_.markPromising(&node);
     }
 }
 

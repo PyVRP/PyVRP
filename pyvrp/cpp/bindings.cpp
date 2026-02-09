@@ -883,9 +883,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("is_feasible",
              &Solution::isFeasible,
              DOC(pyvrp, Solution, isFeasible))
-        .def("is_group_feasible",
-             &Solution::isGroupFeasible,
-             DOC(pyvrp, Solution, isGroupFeasible))
         .def("is_complete",
              &Solution::isComplete,
              DOC(pyvrp, Solution, isComplete))
@@ -945,7 +942,6 @@ PYBIND11_MODULE(_pyvrp, m)
                                       sol.prizes(),
                                       sol.uncollectedPrizes(),
                                       sol.timeWarp(),
-                                      sol.isGroupFeasible(),
                                       sol.routes(),
                                       sol.neighbours());
             },
@@ -968,9 +964,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[10].cast<pyvrp::Cost>(),              // prizes
                     t[11].cast<pyvrp::Cost>(),              // uncollected
                     t[12].cast<pyvrp::Duration>(),          // time warp
-                    t[13].cast<bool>(),                     // is group feasible
-                    t[14].cast<Routes>(),                   // routes
-                    t[15].cast<Neighbours>());              // neighbours
+                    t[13].cast<Routes>(),                   // routes
+                    t[14].cast<Neighbours>());              // neighbours
 
                 return sol;
             }))

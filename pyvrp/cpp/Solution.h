@@ -58,7 +58,6 @@ class Solution
     Cost prizes_ = 0;               // Total collected prize value
     Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
     Duration timeWarp_ = 0;         // Total time warp over all routes
-    bool isGroupFeas_ = true;       // Is feasible w.r.t. client groups?
 
     Routes routes_;
     Neighbours neighbours_;  // client [pred, succ] pairs, null if unassigned
@@ -132,12 +131,6 @@ public:
      * Whether this solution is feasible.
      */
     [[nodiscard]] bool isFeasible() const;
-
-    /**
-     * Returns whether this solution is feasible w.r.t. the client group
-     * restrictions.
-     */
-    [[nodiscard]] bool isGroupFeasible() const;
 
     /**
      * Returns whether this solution is complete, which it is when it has all
@@ -271,7 +264,6 @@ public:
              Cost prizes,
              Cost uncollectedPrizes,
              Duration timeWarp,
-             bool isGroupFeasible,
              Routes routes,
              Neighbours neighbours);
 };
