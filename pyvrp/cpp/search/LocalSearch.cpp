@@ -211,8 +211,8 @@ void LocalSearch::ensureStructuralFeasibility(
         }
     }
 
-    // Ensure all optional groups are present at most once, and all required
-    // groups exactly once. Inserts as needed to satisfy this constraint.
+    // Ensure all required groups are present. Inserts as needed to satisfy
+    // this constraint.
     for (auto const &group : data.groups())
     {
         if (!group.required)
