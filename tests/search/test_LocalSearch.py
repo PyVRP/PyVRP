@@ -510,7 +510,7 @@ def test_operators_property(ok_small):
         # {1, 2, 3, 4} are all required clients.
         ("ok_small", {1, 2, 3, 4}),
         # 1 from required group {1, 2, 3}, 4 is a required client.
-        ("ok_small_mutually_exclusive_groups", {3, 4}),
+        ("ok_small_mutually_exclusive_groups", {1, 4}),
     ],
 )
 def test_inserts_required_missing(instance, exp_clients: set[int], request):
