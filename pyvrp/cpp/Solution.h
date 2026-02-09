@@ -232,7 +232,7 @@ public:
     /**
      * make_random(data: ProblemData, rng: RandomNumberGenerator) -> Solution
      *
-     * Creates a randomly generated solution.
+     * Creates a randomly generated, complete solution.
      *
      * Parameters
      * ----------
