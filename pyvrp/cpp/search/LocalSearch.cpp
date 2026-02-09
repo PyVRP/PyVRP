@@ -196,7 +196,7 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
 void LocalSearch::ensureStructuralFeasibility(
     CostEvaluator const &costEvaluator)
 {
-    // First ensure all required clients are present in the solution.
+    // Ensure all required clients are present in the solution.
     for (auto const client : searchSpace_.clientOrder())
     {
         auto &node = solution_.nodes[client];
