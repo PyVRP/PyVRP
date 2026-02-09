@@ -821,7 +821,6 @@ def test_fixed_vehicle_cost(
     [
         ([[1], [3, 4]], True),  # only one - OK
         ([[2], [3, 4]], True),  # only one - OK
-        ([[1, 2], [3, 4]], False),  # both are in the solution - not OK
         ([[3, 4]], False),  # none - not OK
     ],
 )
@@ -845,7 +844,7 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     data = ok_small.replace(clients=clients, groups=[group])
     sol = Solution(data, routes)
     assert_equal(sol.is_feasible(), feasible)
-    assert_equal(sol.is_group_feasible(), feasible)
+    assert_equal(sol.num_missing_groups(), 0 if feasible else 1)
 
 
 def test_optional_mutually_exclusive_group(ok_small):
@@ -867,7 +866,7 @@ def test_optional_mutually_exclusive_group(ok_small):
     data = ok_small.replace(clients=clients, groups=[group])
     sol = Solution(data, [[3, 4]])
     assert_(sol.is_feasible())
-    assert_(sol.is_group_feasible())
+    assert_equal(sol.num_missing_groups(), 0)
 
 
 def test_distance_duration_cost_calculations(ok_small):

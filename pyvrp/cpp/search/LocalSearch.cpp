@@ -215,25 +215,38 @@ void LocalSearch::ensureStructuralFeasibility(
     // this constraint.
     for (auto const &group : data.groups())
     {
-        if (!group.required)
+        size_t inSolCount = 0;
+        for (auto const client : group.clients())
+            inSolCount += solution_.nodes[client].route() != nullptr;
+
+        if (group.required && inSolCount == 0)  // then we insert the first
+        {                                       // group member
+            auto const &clients = group.clients();
+            auto &node = solution_.nodes[clients.front()];
+
+            solution_.insert(&node, searchSpace_, costEvaluator, true);
+            update(node.route(), node.route());
+            searchSpace_.markPromising(&node);
             continue;
+        }
 
-        auto const &clients = group.clients();
-        bool const inSol = std::any_of(
-            clients.begin(),
-            clients.end(),
-            [&](auto const client) { return solution_.nodes[client].route(); });
-
-        if (inSol)  // then we do not need to insert
-            continue;
-
-        assert(!group.empty());  // ProblemData validates this assumption
-        auto const first = group.clients()[0];
-        auto &node = solution_.nodes[first];
-
-        solution_.insert(&node, searchSpace_, costEvaluator, true);
-        update(node.route(), node.route());
-        searchSpace_.markPromising(&node);
+        // There can be multiple clients from the group in the solution after
+        // perturbation, since perturbation does not know about client groups.
+        // We just remove clients until there is only one left.
+        for (auto client = group.begin();
+             inSolCount > 1 && client != group.end();
+             ++client)
+        {
+            auto &node = solution_.nodes[*client];
+            if (node.route())
+            {
+                searchSpace_.markPromising(&node);
+                auto *route = node.route();
+                route->remove(node.idx());
+                update(route, route);
+                inSolCount--;
+            }
+        }
     }
 }
 

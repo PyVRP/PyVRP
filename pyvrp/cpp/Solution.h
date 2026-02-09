@@ -47,6 +47,7 @@ class Solution
 
     size_t numClients_ = 0;         // Number of clients in the solution
     size_t numMissingClients_ = 0;  // Number of required but missing clients
+    size_t numMissingGroups_ = 0;   // Number of required but missing groups
     Distance distance_ = 0;         // Total travel distance over all routes
     Cost distanceCost_ = 0;         // Total cost of all routes' travel distance
     Duration duration_ = 0;         // Total duration over all routes
@@ -105,6 +106,11 @@ public:
     [[nodiscard]] size_t numMissingClients() const;
 
     /**
+     * Number of required groups that are not in this solution.
+     */
+    [[nodiscard]] size_t numMissingGroups() const;
+
+    /**
      * The solution's routing decisions.
      *
      * Returns
@@ -134,7 +140,7 @@ public:
 
     /**
      * Returns whether this solution is complete, which it is when it has all
-     * required clients.
+     * required clients and groups.
      */
     [[nodiscard]] bool isComplete() const;
 
@@ -253,6 +259,7 @@ public:
     // This constructor does *no* validation. Useful when unserialising objects.
     Solution(size_t numClients,
              size_t numMissingClients,
+             size_t numMissingGroups,
              Distance distance,
              Cost distanceCost,
              Duration duration,

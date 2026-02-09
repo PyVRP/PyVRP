@@ -64,6 +64,8 @@ size_t Solution::numClients() const { return numClients_; }
 
 size_t Solution::numMissingClients() const { return numMissingClients_; }
 
+size_t Solution::numMissingGroups() const { return numMissingGroups_; }
+
 Routes const &Solution::routes() const { return routes_; }
 
 Neighbours const &Solution::neighbours() const { return neighbours_; }
@@ -78,7 +80,10 @@ bool Solution::isFeasible() const
     // clang-format on
 }
 
-bool Solution::isComplete() const { return numMissingClients_ == 0; }
+bool Solution::isComplete() const
+{
+    return numMissingClients_ == 0 && numMissingGroups_ == 0;
+}
 
 bool Solution::hasExcessLoad() const
 {
@@ -162,12 +167,26 @@ bool Solution::operator==(Solution const &other) const
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     : neighbours_(data.numLocations(), std::nullopt)
 {
-    // Add all required and randomly selected optional clients.
+    // Add all required and randomly selected optional clients. For required
+    // groups we insert a random client, for optional groups we choose randomly
+    // whether to insert at all.
     std::vector<size_t> clients;
     clients.reserve(data.numClients());
+
+    for (auto const &group : data.groups())  // first handle groups
+        if (group.required || rng.rand() < 0.5)
+        {
+            auto const &groupMembers = group.clients();
+            auto const idx = rng.randint(groupMembers.size());
+            clients.push_back(groupMembers[idx]);
+        }
+
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
     {
         ProblemData::Client const &clientData = data.location(idx);
+        if (clientData.group)  // already handled groups above, skip here
+            continue;
+
         if (clientData.required || rng.rand() < 0.5)
             clients.push_back(idx);
     }
@@ -267,12 +286,16 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         assert(group.mutuallyExclusive);
 
         auto const inSol = [&](auto client) { return isVisited[client]; };
-        if (std::count_if(group.begin(), group.end(), inSol) > 1)
+        auto const count = std::count_if(group.begin(), group.end(), inSol);
+        if (count > 1)
         {
             std::ostringstream msg;
             msg << "Group " << idx << " is visited more than once.";
             throw std::runtime_error(msg.str());
         }
+
+        if (group.required && count == 0)  // required but missing group
+            numMissingGroups_++;
     }
 
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
@@ -291,6 +314,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
 
 Solution::Solution(size_t numClients,
                    size_t numMissingClients,
+                   size_t numMissingGroups,
                    Distance distance,
                    Cost distanceCost,
                    Duration duration,
@@ -306,6 +330,7 @@ Solution::Solution(size_t numClients,
                    Neighbours neighbours)
     : numClients_(numClients),
       numMissingClients_(numMissingClients),
+      numMissingGroups_(numMissingGroups),
       distance_(distance),
       distanceCost_(distanceCost),
       duration_(duration),
