@@ -1,7 +1,9 @@
+import pytest
 from numpy.testing import assert_, assert_equal
 
 import pyvrp
-from pyvrp import CostEvaluator
+from pyvrp import CostEvaluator, Route, VehicleType
+from pyvrp import Solution as PyVRPSolution
 from pyvrp.search import compute_neighbours
 from pyvrp.search._search import SearchSpace, Solution
 
@@ -71,43 +73,124 @@ def test_insert_required(ok_small):
     assert_(sol.insert(sol.nodes[1], search_space, cost_eval, True))
 
 
-def test_distance_and_duration_cost():
+def test_distance_and_duration_cost(ok_small):
     """
-    TODO
+    Tests the Solution's distance_cost() and duration_cost() methods.
     """
-    pass
+    veh_type = ok_small.vehicle_type(0).replace(unit_duration_cost=1)
+    data = ok_small.replace(vehicle_types=[veh_type])
+
+    sol = Solution(data)
+    pyvrp_sol = PyVRPSolution(data, [[1, 2], [3, 4]])
+    sol.load(pyvrp_sol)
+
+    assert_(sol.distance_cost() > 0)
+    assert_equal(sol.distance_cost(), pyvrp_sol.distance_cost())
+    assert_equal(
+        sol.distance_cost(),
+        sum(route.distance_cost() for route in sol.routes),
+    )
+
+    assert_(sol.duration_cost() > 0)
+    assert_equal(sol.duration_cost(), pyvrp_sol.duration_cost())
+    assert_equal(
+        sol.duration_cost(),
+        sum(route.duration_cost() for route in sol.routes),
+    )
 
 
-def test_fixed_vehicle_cost():
+@pytest.mark.parametrize(
+    ("assignment", "expected"), [((0, 0), 0), ((0, 1), 10), ((1, 1), 20)]
+)
+def test_fixed_vehicle_cost(
+    ok_small, assignment: tuple[int, int], expected: int
+):
     """
-    TODO
+    Tests the Solution's fixed_vehicle_cost() method.
     """
-    pass
+    # First vehicle type is free, second costs 10 per vehicle. The solution
+    # should be able to track this.
+    data = ok_small.replace(
+        vehicle_types=[
+            VehicleType(2, capacity=[10], fixed_cost=0),
+            VehicleType(2, capacity=[10], fixed_cost=10),
+        ],
+    )
+
+    routes = [Route(data, [1], assignment[0]), Route(data, [2], assignment[1])]
+    pyvrp_sol = PyVRPSolution(data, routes)
+
+    sol = Solution(data)
+    sol.load(pyvrp_sol)
+
+    assert_equal(sol.fixed_vehicle_cost(), expected)
+    assert_equal(sol.fixed_vehicle_cost(), pyvrp_sol.fixed_vehicle_cost())
 
 
-def test_excess_load():
+def test_excess_load(ok_small):
     """
-    TODO
+    Tests the Solution's excess_load() method.
     """
-    pass
+    sol = Solution(ok_small)
+    sol.load(PyVRPSolution(ok_small, [[1, 2, 3, 4]]))
+
+    needed = sum(client.delivery[0] for client in ok_small.clients())
+    available = ok_small.vehicle_type(0).capacity[0]
+    assert_equal(needed, 18)
+    assert_equal(available, 10)
+    assert_equal(sol.excess_load(), [needed - available])
 
 
-def test_excess_distance():
+def test_excess_distance(ok_small):
     """
-    TODO
+    Tests the Solution's excess_distance() method.
     """
-    pass
+    vehicle_type = VehicleType(3, capacity=[10], max_distance=5_000)
+    data = ok_small.replace(vehicle_types=[vehicle_type])
+
+    sol = Solution(data)
+    sol.load(PyVRPSolution(data, [[1, 2]]))
+
+    assert_equal(sol.distance_cost(), 5501)  # unit cost, so also distance()
+    assert_equal(sol.routes[0].distance(), 5501)
+
+    assert_equal(sol.excess_distance(), 501)
+    assert_equal(sol.routes[0].excess_distance(), 501)
 
 
-def test_time_warp():
+def test_time_warp(ok_small):
     """
-    TODO
+    Tests the Solution's time_warp() method.
     """
-    pass
+    sol = Solution(ok_small)
+    sol.load(PyVRPSolution(ok_small, [[1, 2, 3, 4]]))
+
+    # Visiting all clients of this instance in order always yields 3_633 time
+    # warp because visiting 1 before 3 is infeasible.
+    assert_equal(sol.time_warp(), 3_633)
+
+    # Swapping 1 and 3 is time-feasible.
+    sol.load(PyVRPSolution(ok_small, [[3, 2, 1, 4]]))
+    assert_equal(sol.time_warp(), 0)
 
 
-def test_uncollected_prizes():
+@pytest.mark.parametrize(
+    ("visits", "exp_uncollected"),
+    [
+        ([], 35),  # all uncollected
+        ([1], 35),  # first client has no prize
+        ([1, 2], 20),
+        ([1, 2, 3, 4], 0),  # all collected
+    ],
+)
+def test_uncollected_prizes(
+    ok_small_prizes,
+    visits: list[int],
+    exp_uncollected: int,
+):
     """
-    TODO
+    Tests the Solution's uncollected_prizes() method.
     """
-    pass
+    sol = Solution(ok_small_prizes)
+    sol.load(PyVRPSolution(ok_small_prizes, [visits] if visits else []))
+    assert_equal(sol.uncollected_prizes(), exp_uncollected)
