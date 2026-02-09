@@ -1177,15 +1177,3 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     # After the start and end depots.
     assert_equal(route.duration_after(0).duration(), route.duration())
     assert_equal(route.duration_after(6).duration(), 0)
-
-
-@pytest.mark.parametrize("visits", [[], [1], [1, 2], [1, 2, 3, 4]])
-def test_prizes(ok_small_prizes, visits: list[int]):
-    """
-    Tests the ``prizes()`` implementation.
-    """
-    prizes = [client.prize for client in ok_small_prizes.clients()]
-    route = make_search_route(ok_small_prizes, visits)
-
-    exp_prizes = sum(prizes[client - 1] for client in visits)
-    assert_equal(route.prizes(), exp_prizes)

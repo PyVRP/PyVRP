@@ -14,25 +14,30 @@
 namespace pyvrp
 {
 // The following methods must be implemented for a type to be evaluatable by
-// the CostEvaluator. It evaluates "cost minus profits (prizes)".
+// the CostEvaluator's penalisedCost method.
 template <typename T>
-concept CostEvaluatable = requires(T arg) {
+concept PenalisedCostEvaluatable = requires(T arg) {
     { arg.distanceCost() } -> std::same_as<Cost>;
     { arg.durationCost() } -> std::same_as<Cost>;
     { arg.fixedVehicleCost() } -> std::same_as<Cost>;
-    { arg.prizes() } -> std::same_as<Cost>;
     { arg.excessLoad() } -> std::convertible_to<std::vector<Load>>;
     { arg.excessDistance() } -> std::same_as<Distance>;
     { arg.timeWarp() } -> std::same_as<Duration>;
     { arg.empty() } -> std::same_as<bool>;
+};
+
+// Additionally, the CostEvaluator's cost method requires a feasible argument.
+// This concept establishes what's required.
+template <typename T>
+concept CostEvaluatable = PenalisedCostEvaluatable<T> && requires(T arg) {
     { arg.isFeasible() } -> std::same_as<bool>;
 };
 
-// If, additionally, the uncollected prizes of optional clients are implemented
-// we can also take that aspect into account. The CostEvaluator then evaluates
-// "cost plus uncollected profits (prizes)".
+// Finally, if the uncollected prizes of optional clients are available the
+// CostEvaluator can also take that aspect into account. This is optional since
+// it is a global attribute (individual routes cannot be evaluated like this).
 template <typename T>
-concept HasUncollectedPrizes = CostEvaluatable<T> && requires(T arg) {
+concept PrizeCostEvaluatable = PenalisedCostEvaluatable<T> && requires(T arg) {
     { arg.uncollectedPrizes() } -> std::same_as<Cost>;
 };
 
@@ -119,7 +124,7 @@ public:
      * Computes a smoothed objective (penalised cost) for a given solution.
      */
     // We only expose Solution bindings to Python.
-    template <CostEvaluatable T>
+    template <PenalisedCostEvaluatable T>
     [[nodiscard]] Cost penalisedCost(T const &arg) const;
 
     /**
@@ -234,12 +239,12 @@ Cost CostEvaluator::excessDistPenalty(Distance excessDistance) const
     return static_cast<Cost>(excessDistance.get() * distPenalty_);
 }
 
-template <CostEvaluatable T>
+template <PenalisedCostEvaluatable T>
 Cost CostEvaluator::penalisedCost(T const &arg) const
 {
     if (arg.empty())
     {
-        if constexpr (HasUncollectedPrizes<T>)
+        if constexpr (PrizeCostEvaluatable<T>)
             return arg.uncollectedPrizes();
         return 0;
     }
@@ -250,15 +255,10 @@ Cost CostEvaluator::penalisedCost(T const &arg) const
           + excessLoadPenalties(arg.excessLoad()) + twPenalty(arg.timeWarp())
           + distPenalty(arg.excessDistance(), 0);
 
-    if constexpr (HasUncollectedPrizes<T>)
-        // The upside of this cost versus the one based on prizes is that this
-        // never goes negative. But it is a global, solution-level property:
-        // for example, routes do not know about all uncollected prizes.
+    if constexpr (PrizeCostEvaluatable<T>)
         return cost + arg.uncollectedPrizes();
-    else
-        // For routes we simply return the cost minus the collected prizes,
-        // which are known at the route-level.
-        return cost - arg.prizes();
+
+    return cost;
 }
 
 template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const

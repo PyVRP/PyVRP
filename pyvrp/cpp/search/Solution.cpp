@@ -5,22 +5,27 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <numeric>
+
+using pyvrp::Cost;
+using pyvrp::Distance;
+using pyvrp::Duration;
+using pyvrp::Load;
 
 namespace
 {
-pyvrp::Cost insertCost(pyvrp::search::Route::Node *U,
-                       pyvrp::search::Route::Node *V,
-                       pyvrp::ProblemData const &data,
-                       pyvrp::CostEvaluator const &costEvaluator)
+Cost insertCost(pyvrp::search::Route::Node *U,
+                pyvrp::search::Route::Node *V,
+                pyvrp::ProblemData const &data,
+                pyvrp::CostEvaluator const &costEvaluator)
 {
     assert(V->route() && !U->isDepot());
 
     auto *route = V->route();
     pyvrp::ProblemData::Client const &client = data.location(U->client());
 
-    pyvrp::Cost deltaCost
-        = pyvrp::Cost(route->empty()) * route->fixedVehicleCost()
-          - client.prize;
+    Cost deltaCost
+        = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
 
     costEvaluator.deltaCost<true>(
         deltaCost,
@@ -214,4 +219,88 @@ bool Solution::insert(Route::Node *U,
     }
 
     return false;
+}
+
+Cost Solution::distanceCost() const
+{
+    return std::transform_reduce(routes.begin(),
+                                 routes.end(),
+                                 Cost(),
+                                 std::plus<>(),
+                                 [](auto const &route)
+                                 { return route.distanceCost(); });
+}
+
+Cost Solution::durationCost() const
+{
+    return std::transform_reduce(routes.begin(),
+                                 routes.end(),
+                                 Cost(),
+                                 std::plus<>(),
+                                 [](auto const &route)
+                                 { return route.durationCost(); });
+}
+
+Cost Solution::fixedVehicleCost() const
+{
+    return std::transform_reduce(
+        routes.begin(),
+        routes.end(),
+        Cost(),
+        std::plus<>(),
+        [](auto const &route)
+        { return !route.empty() ? route.fixedVehicleCost() : 0; });
+}
+
+std::vector<Load> Solution::excessLoad() const
+{
+    std::vector<Load> excessLoads(data_.numLoadDimensions(), 0);
+    for (auto const &route : routes)
+    {
+        auto const &excess = route.excessLoad();
+        for (size_t idx = 0; idx != data_.numLoadDimensions(); ++idx)
+            excessLoads[idx] += excess[idx];
+    }
+
+    return excessLoads;
+}
+
+Distance Solution::excessDistance() const
+{
+    return std::transform_reduce(routes.begin(),
+                                 routes.end(),
+                                 Distance(),
+                                 std::plus<>(),
+                                 [](auto const &route)
+                                 { return route.excessDistance(); });
+}
+
+Duration Solution::timeWarp() const
+{
+    return std::transform_reduce(routes.begin(),
+                                 routes.end(),
+                                 Duration(),
+                                 std::plus<>(),
+                                 [](auto const &route)
+                                 { return route.timeWarp(); });
+}
+
+bool Solution::empty() const
+{
+    return std::all_of(routes.begin(),
+                       routes.end(),
+                       [](auto const &route) { return route.empty(); });
+}
+
+Cost Solution::uncollectedPrizes() const
+{
+    Cost uncollected = 0;
+    for (size_t idx = data_.numDepots(); idx != data_.numLocations(); ++idx)
+        if (!nodes[idx].route())
+        {
+            ProblemData::Client const &client = data_.location(idx);
+            uncollected += client.prize;
+        }
+
+    return uncollected;
 }
