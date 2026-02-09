@@ -1149,5 +1149,5 @@ def test_solution_satisfies_group_constraints():
         for to in m.locations:
             m.add_edge(frm, to, 0, 0)
 
-    res = m.solve(stop=MaxIterations(1), seed=42, display=True)
+    res = m.solve(stop=MaxIterations(1), seed=42)
     assert_(res.best.is_group_feasible())
