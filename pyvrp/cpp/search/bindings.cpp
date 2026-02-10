@@ -6,6 +6,7 @@
 #include "RelocateWithDepot.h"
 #include "RemoveAdjacentDepot.h"
 #include "RemoveOptional.h"
+#include "ReplaceGroup.h"
 #include "ReplaceOptional.h"
 #include "Route.h"
 #include "SearchSpace.h"
@@ -31,6 +32,7 @@ using pyvrp::search::PerturbationParams;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::RemoveAdjacentDepot;
 using pyvrp::search::RemoveOptional;
+using pyvrp::search::ReplaceGroup;
 using pyvrp::search::ReplaceOptional;
 using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
@@ -81,6 +83,22 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &RemoveOptional::apply, py::arg("U"))
         .def("init", &RemoveOptional::init, py::arg("solution"))
         .def_static("supports", &supports<RemoveOptional>, py::arg("data"));
+
+    py::class_<ReplaceGroup, UnaryOperator>(
+        m, "ReplaceGroup", DOC(pyvrp, search, ReplaceGroup))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &ReplaceGroup::statistics,
+                               py::return_value_policy::reference_internal)
+        .def("evaluate",
+             &ReplaceGroup::evaluate,
+             py::arg("U"),
+             py::arg("cost_evaluator"))
+        .def("apply", &ReplaceGroup::apply, py::arg("U"))
+        .def("init", &ReplaceGroup::init, py::arg("solution"))
+        .def_static("supports", &supports<ReplaceGroup>, py::arg("data"));
 
     py::class_<InsertOptional, BinaryOperator>(
         m, "InsertOptional", DOC(pyvrp, search, InsertOptional))

@@ -23,7 +23,7 @@ public:
 
     void apply(Route::Node *U, Route::Node *V) const override;
 
-    void init(Solution const &solution) override;
+    void init(Solution &solution) override;
 };
 
 template <> bool supports<InsertOptional>(ProblemData const &data);

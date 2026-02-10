@@ -14,13 +14,8 @@ RemoveOptional::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
     if (!U->route() || uData.required)
         return std::make_pair(0, false);
 
-    if (uData.group)
-    {
-        assert(solution_);
-        auto const &group = data.group(*uData.group);
-        if (group.required)                   // then we cannot remove
-            return std::make_pair(0, false);  // the only group member
-    }
+    if (uData.group && data.group(*uData.group).required)  // cannot remove
+        return std::make_pair(0, false);                   // required member
 
     auto *route = U->route();
     Cost deltaCost
@@ -38,12 +33,6 @@ void RemoveOptional::apply(Route::Node *U) const
 {
     stats_.numApplications++;
     U->route()->remove(U->idx());
-}
-
-void RemoveOptional::init(Solution const &solution)
-{
-    stats_ = {};
-    solution_ = &solution;
 }
 
 template <>

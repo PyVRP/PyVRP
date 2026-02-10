@@ -216,7 +216,7 @@ void LocalSearch::ensureStructuralFeasibility(
     for (auto const &group : data.groups())
     {
         size_t inSolCount = 0;
-        for (auto const client : group.clients())
+        for (auto const client : group)
             inSolCount += solution_.nodes[client].route() != nullptr;
 
         if (group.required && inSolCount == 0)  // then we insert the first

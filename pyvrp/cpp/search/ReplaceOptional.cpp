@@ -16,9 +16,7 @@ std::pair<pyvrp::Cost, bool> ReplaceOptional::evaluate(
 
     ProblemData::Client const &uData = data.location(U->client());
     ProblemData::Client const &vData = data.location(V->client());
-    if (vData.required || uData.group != vData.group)
-        // Cannot replace required clients, or clients that are not in the
-        // same mutually exclusive group.
+    if (vData.required || uData.group || vData.group)
         return std::make_pair(0, false);
 
     auto *route = V->route();
@@ -45,8 +43,8 @@ void ReplaceOptional::apply(Route::Node *U, Route::Node *V) const
 template <>
 bool pyvrp::search::supports<ReplaceOptional>(ProblemData const &data)
 {
-    for (auto const &client : data.clients())  // need at least one optional
-        if (!client.required)                  // client
+    for (auto const &client : data.clients())   // need at least one optional
+        if (!client.required && !client.group)  // client not in a group
             return true;
 
     return false;

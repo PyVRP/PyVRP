@@ -9,6 +9,7 @@ using pyvrp::search::InsertOptional;
 std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
+    assert(!U->isDepot());
     stats_.numEvaluations++;
 
     ProblemData::Client const &uData = data.location(U->client());
@@ -22,7 +23,7 @@ std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
         if (group.required)  // then we have already inserted a client in the LS
             return std::make_pair(0, false);
 
-        for (auto const client : group.clients())  // if any client is already
+        for (auto const client : group)            // if any client is already
             if (solution_->nodes[client].route())  // in solution we cannot
                 return std::make_pair(0, false);   // insert another
     }
@@ -48,7 +49,7 @@ void InsertOptional::apply(Route::Node *U, Route::Node *V) const
     route->insert(V->idx() + 1, U);
 }
 
-void InsertOptional::init(Solution const &solution)
+void InsertOptional::init(Solution &solution)
 {
     stats_ = {};
     solution_ = &solution;

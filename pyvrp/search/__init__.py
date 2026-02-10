@@ -18,6 +18,7 @@ from ._search import PerturbationParams as PerturbationParams
 from ._search import RelocateWithDepot as RelocateWithDepot
 from ._search import RemoveAdjacentDepot as RemoveAdjacentDepot
 from ._search import RemoveOptional as RemoveOptional
+from ._search import ReplaceGroup as ReplaceGroup
 from ._search import ReplaceOptional as ReplaceOptional
 from ._search import SwapTails as SwapTails
 from ._search import UnaryOperator as UnaryOperator
@@ -36,4 +37,5 @@ OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     RemoveOptional,
     InsertOptional,
     ReplaceOptional,
+    ReplaceGroup,
 ]

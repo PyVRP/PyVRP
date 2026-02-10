@@ -61,7 +61,7 @@ public:
      * Called once after loading the solution to improve. This can be used to
      * e.g. update local operator state.
      */
-    virtual void init([[maybe_unused]] Solution const &solution)
+    virtual void init([[maybe_unused]] Solution &solution)
     {
         stats_ = {};  // reset call statistics
     };
