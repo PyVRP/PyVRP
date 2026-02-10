@@ -778,8 +778,8 @@ def test_tsp_instance_with_mutually_exclusive_groups(gtsp):
     res = m.solve(stop=MaxIterations(5))
 
     assert_(res.best.is_feasible())
-    assert_(res.best.is_group_feasible())
     assert_equal(res.best.num_clients(), gtsp.num_groups)
+    assert_equal(res.best.num_missing_groups(), 0)
 
 
 def test_minimise_distance_or_duration(ok_small):
@@ -1150,4 +1150,4 @@ def test_solution_satisfies_group_constraints():
             m.add_edge(frm, to, 0, 0)
 
     res = m.solve(stop=MaxIterations(1), seed=42)
-    assert_(res.best.is_group_feasible())
+    assert_equal(res.best.num_missing_groups(), 0)

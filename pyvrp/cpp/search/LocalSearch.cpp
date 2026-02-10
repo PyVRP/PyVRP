@@ -211,21 +211,18 @@ void LocalSearch::ensureStructuralFeasibility(
         }
     }
 
-    // Ensure all optional groups are present at most once, and all required
-    // groups exactly once. Inserts and removes as needed to satisfy this
-    // constraint.
+    // Ensure all required groups are present. Inserts as needed to satisfy
+    // this constraint.
     for (auto const &group : data.groups())
     {
-        assert(!group.empty());  // ProblemData validates this assumption
-
         size_t inSolCount = 0;
         for (auto const client : group.clients())
             inSolCount += solution_.nodes[client].route() != nullptr;
 
-        if (inSolCount == 0 && group.required)  // then we insert the first
+        if (group.required && inSolCount == 0)  // then we insert the first
         {                                       // group member
-            auto const first = group.clients()[0];
-            auto &node = solution_.nodes[first];
+            auto const &clients = group.clients();
+            auto &node = solution_.nodes[clients.front()];
 
             solution_.insert(&node, searchSpace_, costEvaluator, true);
             update(node.route(), node.route());
@@ -233,22 +230,21 @@ void LocalSearch::ensureStructuralFeasibility(
             continue;
         }
 
-        if (inSolCount > 1)  // then we remove until we have exactly one member
-        {                    // left
-            for (auto const client : group.clients())
+        // There can be multiple clients from the group in the solution after
+        // perturbation, since perturbation does not know about client groups.
+        // We just remove clients until there is only one left.
+        for (auto client = group.begin();
+             inSolCount > 1 && client != group.end();
+             ++client)
+        {
+            auto &node = solution_.nodes[*client];
+            if (node.route())
             {
-                auto &node = solution_.nodes[client];
-                if (node.route())
-                {
-                    searchSpace_.markPromising(&node);
-                    auto *route = node.route();
-                    route->remove(node.idx());
-                    update(route, route);
-                    inSolCount--;
-                }
-
-                if (inSolCount == 1)
-                    break;
+                searchSpace_.markPromising(&node);
+                auto *route = node.route();
+                route->remove(node.idx());
+                update(route, route);
+                inSolCount--;
             }
         }
     }

@@ -47,6 +47,7 @@ class Solution
 
     size_t numClients_ = 0;         // Number of clients in the solution
     size_t numMissingClients_ = 0;  // Number of required but missing clients
+    size_t numMissingGroups_ = 0;   // Number of required but missing groups
     Distance distance_ = 0;         // Total travel distance over all routes
     Cost distanceCost_ = 0;         // Total cost of all routes' travel distance
     Duration duration_ = 0;         // Total duration over all routes
@@ -58,7 +59,6 @@ class Solution
     Cost prizes_ = 0;               // Total collected prize value
     Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
     Duration timeWarp_ = 0;         // Total time warp over all routes
-    bool isGroupFeas_ = true;       // Is feasible w.r.t. client groups?
 
     Routes routes_;
     Neighbours neighbours_;  // client [pred, succ] pairs, null if unassigned
@@ -106,6 +106,11 @@ public:
     [[nodiscard]] size_t numMissingClients() const;
 
     /**
+     * Number of required groups that are not in this solution.
+     */
+    [[nodiscard]] size_t numMissingGroups() const;
+
+    /**
      * The solution's routing decisions.
      *
      * Returns
@@ -134,14 +139,8 @@ public:
     [[nodiscard]] bool isFeasible() const;
 
     /**
-     * Returns whether this solution is feasible w.r.t. the client group
-     * restrictions.
-     */
-    [[nodiscard]] bool isGroupFeasible() const;
-
-    /**
      * Returns whether this solution is complete, which it is when it has all
-     * required clients.
+     * required clients and groups.
      */
     [[nodiscard]] bool isComplete() const;
 
@@ -233,7 +232,7 @@ public:
     /**
      * make_random(data: ProblemData, rng: RandomNumberGenerator) -> Solution
      *
-     * Creates a randomly generated solution.
+     * Creates a randomly generated, complete solution.
      *
      * Parameters
      * ----------
@@ -260,6 +259,7 @@ public:
     // This constructor does *no* validation. Useful when unserialising objects.
     Solution(size_t numClients,
              size_t numMissingClients,
+             size_t numMissingGroups,
              Distance distance,
              Cost distanceCost,
              Duration duration,
@@ -271,7 +271,6 @@ public:
              Cost prizes,
              Cost uncollectedPrizes,
              Duration timeWarp,
-             bool isGroupFeasible,
              Routes routes,
              Neighbours neighbours);
 };
