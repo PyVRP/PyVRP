@@ -1,7 +1,14 @@
 import numpy as np
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
+from pyvrp import (
+    Client,
+    ClientGroup,
+    CostEvaluator,
+    Depot,
+    ProblemData,
+    VehicleType,
+)
 from pyvrp.search import RemoveOptional
 from tests.helpers import make_search_route
 
@@ -47,11 +54,24 @@ def test_supports(
 ):
     """
     Tests that RemoveOptional supports prize-collecting instances, but not
-    instances with only required clients.
+    instances with only required clients or groups.
     """
     assert_(not RemoveOptional.supports(ok_small))
     assert_(RemoveOptional.supports(ok_small_prizes))
-    assert_(RemoveOptional.supports(ok_small_mutually_exclusive_groups))
+
+    data = ProblemData(  # instance with optional group
+        clients=[Client(x=0, y=0, group=0, required=False)],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[np.zeros((2, 2), dtype=int)],
+        duration_matrices=[np.zeros((2, 2), dtype=int)],
+        groups=[ClientGroup(clients=[1], required=False)],
+    )
+
+    # RemoveOptional does not support instances with required groups, but it
+    # does support those with optional groups.
+    assert_(not RemoveOptional.supports(ok_small_mutually_exclusive_groups))
+    assert_(RemoveOptional.supports(data))
 
 
 def test_fixed_vehicle_cost():
