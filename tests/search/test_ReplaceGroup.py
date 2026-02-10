@@ -32,6 +32,7 @@ def test_replace(ok_small_mutually_exclusive_groups):
 
 
 def test_supports(
+    gtsp,
     ok_small,
     ok_small_prizes,
     ok_small_mutually_exclusive_groups,
@@ -39,6 +40,7 @@ def test_supports(
     """
     Tests that ReplaceGroup only supports instances with groups.
     """
+    assert_(ReplaceGroup.supports(gtsp))
     assert_(ReplaceGroup.supports(ok_small_mutually_exclusive_groups))
     assert_(not ReplaceGroup.supports(ok_small))
     assert_(not ReplaceGroup.supports(ok_small_prizes))
