@@ -202,58 +202,70 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
 void LocalSearch::ensureStructuralFeasibility(
     CostEvaluator const &costEvaluator)
 {
-    // Ensure all required clients are present in the solution.
+    std::vector<size_t> groupCount(data.numGroups(), 0);  // tracks membership
+    for (size_t idx = 0; idx != data.numGroups(); ++idx)  // count in solution
+    {
+        auto const &group = data.group(idx);
+        for (auto const client : group)
+            if (solution_.nodes[client].route())
+                groupCount[idx]++;
+    }
+
+    // Ensure all required clients and groups are present in the solution.
     for (auto const client : searchSpace_.clientOrder())
     {
         auto &node = solution_.nodes[client];
-        ProblemData::Client const &uData = data.location(client);
+        ProblemData::Client const &clientData = data.location(client);
 
-        if (!node.route() && uData.required)  // then we must insert the client
+        if (!node.route() && clientData.required)  // then we must insert
         {
             solution_.insert(&node, searchSpace_, costEvaluator, true);
             update(node.route(), node.route());
             searchSpace_.markPromising(&node);
             continue;
         }
-    }
 
-    // Ensure all required groups are present. Inserts as needed to satisfy
-    // this constraint.
-    for (auto const &group : data.groups())
-    {
-        size_t inSolCount = 0;
-        for (auto const client : group)
-            inSolCount += solution_.nodes[client].route() != nullptr;
-
-        if (group.required && inSolCount == 0)  // then we insert the first
-        {                                       // group member
-            auto const &clients = group.clients();
-            auto &node = solution_.nodes[clients.front()];
-
-            solution_.insert(&node, searchSpace_, costEvaluator, true);
-            update(node.route(), node.route());
-            searchSpace_.markPromising(&node);
-            continue;
-        }
-
-        // There can be multiple clients from the group in the solution after
-        // perturbation, since perturbation does not know about client groups.
-        // We just remove clients until there is only one left.
-        for (auto client = group.begin();
-             inSolCount > 1 && client != group.end();
-             ++client)
+        if (clientData.group)
         {
-            auto &node = solution_.nodes[*client];
-            if (node.route())
+            auto const idx = *clientData.group;
+            auto const &group = data.group(idx);
+
+            if (group.required && groupCount[idx] == 0)  // then we must insert
+            {
+                assert(!node.route());
+                solution_.insert(&node, searchSpace_, costEvaluator, true);
+                update(node.route(), node.route());
+                searchSpace_.markPromising(&node);
+                groupCount[idx]++;
+                continue;
+            }
+
+            if (node.route() && groupCount[idx] > 1)  // then we must remove
             {
                 searchSpace_.markPromising(&node);
                 auto *route = node.route();
                 route->remove(node.idx());
                 update(route, route);
-                inSolCount--;
+                groupCount[idx]--;
             }
         }
     }
+
+#ifndef NDEBUG
+    // Debug checks to ensure we have restored structural feasibility.
+    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
+    {
+        auto const &node = solution_.nodes[idx];
+        ProblemData::Client const &clientData = data.location(idx);
+        assert(node.route() || !clientData.required);
+    }
+
+    for (size_t idx = 0; idx != data.numGroups(); ++idx)
+    {
+        auto const &group = data.group(idx);
+        assert(group.required ? groupCount[idx] == 1 : groupCount[idx] <= 1);
+    }
+#endif
 }
 
 void LocalSearch::update(Route *U, Route *V)
