@@ -24,7 +24,7 @@ from pyvrp.search import (
     RelocateWithDepot,
     RemoveAdjacentDepot,
     RemoveOptional,
-    ReplaceOptional,
+    ReplaceGroup,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -314,7 +314,7 @@ def test_swap_if_improving_mutually_exclusive_group(
     perturbation = PerturbationManager(PerturbationParams(0, 0))
 
     ls = LocalSearch(data, rng, neighbours, perturbation)
-    ls.add_operator(ReplaceOptional(data))
+    ls.add_operator(ReplaceGroup(data))
 
     cost_eval = CostEvaluator([20], 6, 0)
     sol = Solution(data, [[1, 4]])
@@ -481,8 +481,8 @@ def test_operators_property(ok_small):
     [
         # {1, 2, 3, 4} are all required clients.
         ("ok_small", {1, 2, 3, 4}),
-        # 1 from required group {1, 2, 3}, 4 is a required client.
-        ("ok_small_mutually_exclusive_groups", {1, 4}),
+        # 3 from required group {1, 2, 3}, 4 is a required client.
+        ("ok_small_mutually_exclusive_groups", {3, 4}),
     ],
 )
 def test_inserts_required_missing(instance, exp_clients: set[int], request):

@@ -1,7 +1,14 @@
 import numpy as np
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
+from pyvrp import (
+    Client,
+    ClientGroup,
+    CostEvaluator,
+    Depot,
+    ProblemData,
+    VehicleType,
+)
 from pyvrp.search import RemoveOptional
 from tests.helpers import make_search_route
 
@@ -47,11 +54,24 @@ def test_supports(
 ):
     """
     Tests that RemoveOptional supports prize-collecting instances, but not
-    instances with only required clients.
+    instances with only required clients or groups.
     """
     assert_(not RemoveOptional.supports(ok_small))
     assert_(RemoveOptional.supports(ok_small_prizes))
-    assert_(RemoveOptional.supports(ok_small_mutually_exclusive_groups))
+
+    data = ProblemData(  # instance with optional group
+        clients=[Client(x=0, y=0, group=0, required=False)],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[np.zeros((2, 2), dtype=int)],
+        duration_matrices=[np.zeros((2, 2), dtype=int)],
+        groups=[ClientGroup(clients=[1], required=False)],
+    )
+
+    # RemoveOptional does not support instances with required groups, but it
+    # does support those with optional groups.
+    assert_(not RemoveOptional.supports(ok_small_mutually_exclusive_groups))
+    assert_(RemoveOptional.supports(data))
 
 
 def test_fixed_vehicle_cost():
@@ -132,3 +152,36 @@ def test_empty_route_delta_cost_bug():
     # not include the empty route's costs.
     route = make_search_route(data, [2])
     assert_equal(op.evaluate(route[1], cost_eval), (-4, True))
+
+
+def test_cannot_remove_required_group():
+    """
+    Tests that RemoveOptional cannot remove members from required groups, since
+    that could render the solution structurally infeasible.
+    """
+    data = ProblemData(
+        depots=[Depot(x=0, y=0)],
+        clients=[
+            Client(x=0, y=0, group=0, required=False),
+            Client(x=0, y=0, group=1, required=False),
+        ],
+        vehicle_types=[VehicleType()],
+        duration_matrices=[np.where(np.eye(3), 0, 1)],
+        distance_matrices=[np.where(np.eye(3), 0, 1)],
+        groups=[
+            ClientGroup([1], required=False),
+            ClientGroup([2], required=True),
+        ],
+    )
+
+    # Mix of required and optional groups. RemoveOptional supports this.
+    assert_(RemoveOptional.supports(data))
+
+    op = RemoveOptional(data)
+    cost_eval = CostEvaluator([], 1, 1)
+    route = make_search_route(data, [1, 2])
+
+    # The first client in the route is from the optional group and can be
+    # removed. The second client is from the required group, and cannot.
+    assert_equal(op.evaluate(route[1], cost_eval), (-1, True))
+    assert_equal(op.evaluate(route[2], cost_eval), (0, False))

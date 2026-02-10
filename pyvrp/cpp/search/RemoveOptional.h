@@ -14,15 +14,11 @@ class RemoveOptional : public UnaryOperator
 {
     using UnaryOperator::UnaryOperator;
 
-    Solution const *solution_ = nullptr;
-
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
                                    CostEvaluator const &costEvaluator) override;
 
     void apply(Route::Node *U) const override;
-
-    void init(Solution const &solution) override;
 };
 
 template <> bool supports<RemoveOptional>(ProblemData const &data);

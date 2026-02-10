@@ -63,11 +63,25 @@ def test_supports(
     ok_small_mutually_exclusive_groups,
 ):
     """
-    Tests that InsertOptional supports instances with optional clients.
+    Tests that InsertOptional supports instances with optional clients, if
+    those are not in a required group.
     """
     assert_(not InsertOptional.supports(ok_small))
     assert_(InsertOptional.supports(ok_small_prizes))
-    assert_(InsertOptional.supports(ok_small_mutually_exclusive_groups))
+
+    data = ProblemData(  # instance with optional group
+        clients=[Client(x=0, y=0, group=0, required=False)],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[np.zeros((2, 2), dtype=int)],
+        duration_matrices=[np.zeros((2, 2), dtype=int)],
+        groups=[ClientGroup(clients=[1], required=False)],
+    )
+
+    # InsertOptional does not support instances with required groups, but it
+    # does support those with optional groups.
+    assert_(not InsertOptional.supports(ok_small_mutually_exclusive_groups))
+    assert_(InsertOptional.supports(data))
 
 
 def test_group_skip_required(ok_small_mutually_exclusive_groups):
