@@ -91,31 +91,9 @@ def test_supports(
     ok_small_mutually_exclusive_groups,
 ):
     """
-    Tests that ReplaceOptional supports instances with optional clients.
+    Tests that ReplaceOptional supports instances with optional clients, but
+    not when those clients are in groups.
     """
     assert_(not ReplaceOptional.supports(ok_small))
+    assert_(not ReplaceOptional.supports(ok_small_mutually_exclusive_groups))
     assert_(ReplaceOptional.supports(ok_small_prizes))
-    assert_(ReplaceOptional.supports(ok_small_mutually_exclusive_groups))
-
-
-def test_replaces_same_group(ok_small_mutually_exclusive_groups):
-    """
-    Tests that ReplaceOptional can replace clients within the same group, and
-    skips other groups.
-    """
-    data = ok_small_mutually_exclusive_groups
-    route = make_search_route(data, [1, 4])
-
-    op = ReplaceOptional(data)
-
-    # Replacing client 1 with 2 is slightly improving:
-    # delta = dist(0, 2) + dist(2, 4) - dist(0, 1) - dist(1, 4)
-    #       = 1944 + 1090 - 1544 - 1593
-    #       = -103.
-    node = Node(loc=2)
-    cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(node, route[1], cost_eval), (-103, True))
-
-    # Cannot replace a group client with a client from outside the group.
-    node = Node(loc=4)
-    assert_equal(op.evaluate(node, route[1], cost_eval), (0, False))

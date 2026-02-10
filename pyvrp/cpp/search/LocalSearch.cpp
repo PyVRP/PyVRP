@@ -112,13 +112,19 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
         if (shouldApply)
         {
             auto *rU = U->route();
+            if (rU)
+                searchSpace_.markPromising(U);
 
             [[maybe_unused]] auto const costBefore
                 = costEvaluator.penalisedCost(solution_);
 
-            searchSpace_.markPromising(U);
-
             op->apply(U);
+            if (!rU)  // then U wasn't in the solution before, and the operator
+            {         // just inserted it.
+                rU = U->route();
+                searchSpace_.markPromising(U);
+            }
+
             update(rU, rU);
 
             [[maybe_unused]] auto const costAfter

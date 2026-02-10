@@ -24,7 +24,7 @@ from pyvrp.search import (
     RelocateWithDepot,
     RemoveAdjacentDepot,
     RemoveOptional,
-    ReplaceOptional,
+    ReplaceGroup,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -314,7 +314,7 @@ def test_swap_if_improving_mutually_exclusive_group(
     perturbation = PerturbationManager(PerturbationParams(0, 0))
 
     ls = LocalSearch(data, rng, neighbours, perturbation)
-    ls.add_operator(ReplaceOptional(data))
+    ls.add_operator(ReplaceGroup(data))
 
     cost_eval = CostEvaluator([20], 6, 0)
     sol = Solution(data, [[1, 4]])
