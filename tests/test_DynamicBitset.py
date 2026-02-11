@@ -31,7 +31,7 @@ def test_eq():
     """
     bitset1 = DynamicBitset(64)
     bitset2 = DynamicBitset(64)
-    assert_equal(bitset1, bitset2)  # both empty, equal size
+    assert_(bitset1 == bitset2)  # both empty, equal size - should be the same
 
     bitset2[0] = True
     assert_(bitset1 != bitset2)  # 2 is no longer empty; should not be the same
