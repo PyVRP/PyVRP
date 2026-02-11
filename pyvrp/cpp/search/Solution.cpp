@@ -304,3 +304,17 @@ Cost Solution::uncollectedPrizes() const
 
     return uncollected;
 }
+
+template <>
+pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
+    pyvrp::search::Solution const &solution) const
+{
+    if (solution.empty())
+        return solution.uncollectedPrizes();
+
+    Cost cost = 0;
+    for (auto const &route : solution.routes)
+        cost += penalisedCost(route);
+
+    return cost + solution.uncollectedPrizes();
+};

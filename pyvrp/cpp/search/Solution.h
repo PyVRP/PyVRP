@@ -94,4 +94,8 @@ public:
 };
 }  // namespace pyvrp::search
 
+template <>  // specialisation for pyvrp::search::Solution
+pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
+    pyvrp::search::Solution const &solution) const;
+
 #endif  // PYVRP_SEARCH_SOLUTION_H
