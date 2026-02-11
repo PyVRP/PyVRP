@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp._pyvrp import DynamicBitset
@@ -64,6 +64,22 @@ def test_get_set_item():
         assert_(not bitset[idx])
 
     assert_equal(bitset.count(), 0)  # now no bits should be set
+
+
+def test_get_set_raises_out_of_bounds():
+    """
+    Tests that setting and retrieving out of bounds raises an IndexError.
+    """
+    bitset = DynamicBitset(128)
+
+    with assert_raises(IndexError):
+        bitset[128]
+
+    with assert_raises(IndexError):
+        bitset[128] = True
+
+    # Raising out of bounds is also needed to make this assert_equal work.
+    assert_equal(bitset, bitset)
 
 
 def test_all_any_none():
