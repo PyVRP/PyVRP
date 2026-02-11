@@ -49,12 +49,21 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("reset", &DynamicBitset::reset)
         .def(
             "__getitem__",
-            [](DynamicBitset const &bitset, size_t idx) { return bitset[idx]; },
+            [](DynamicBitset const &bitset, size_t idx)
+            {
+                if (idx >= bitset.size())
+                    throw py::index_error();
+                return bitset[idx];
+            },
             py::arg("idx"))
         .def(
             "__setitem__",
             [](DynamicBitset &bitset, size_t idx, bool value)
-            { bitset[idx] = value; },
+            {
+                if (idx >= bitset.size())
+                    throw py::index_error();
+                bitset[idx] = value;
+            },
             py::arg("idx"),
             py::arg("value"))
         .def("__or__", &DynamicBitset::operator|, py::arg("other"))
