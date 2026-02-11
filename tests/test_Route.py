@@ -929,3 +929,15 @@ def test_zero_centroid_empty_routes(ok_small):
     """
     route = Route(ok_small, [], 0)
     assert_equal(route.centroid(), (0.0, 0.0))
+
+
+@pytest.mark.parametrize("fixed_cost", (0, 10))
+def test_fixed_vehicle_cost(ok_small, fixed_cost: int):
+    """
+    Tests the Route's fixed_vehicle_cost() method.
+    """
+    veh_type = ok_small.vehicle_type(0).replace(fixed_cost=fixed_cost)
+    data = ok_small.replace(vehicle_types=[veh_type])
+
+    route = Route(data, [], 0)
+    assert_equal(route.fixed_vehicle_cost(), fixed_cost)

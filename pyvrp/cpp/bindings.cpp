@@ -700,6 +700,9 @@ PYBIND11_MODULE(_pyvrp, m)
              &Route::visits,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, Route, visits))
+        .def("fixed_vehicle_cost",
+             &Route::fixedVehicleCost,
+             DOC(pyvrp, Route, fixedVehicleCost))
         .def("distance", &Route::distance, DOC(pyvrp, Route, distance))
         .def("distance_cost",
              &Route::distanceCost,

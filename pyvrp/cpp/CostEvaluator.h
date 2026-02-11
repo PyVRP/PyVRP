@@ -2,7 +2,6 @@
 #define PYVRP_COSTEVALUATOR_H
 
 #include "Measure.h"
-#include "Solution.h"
 
 #include <cassert>
 #include <concepts>
@@ -13,34 +12,6 @@
 
 namespace pyvrp
 {
-// The following methods must be implemented for a type to be evaluatable by
-// the CostEvaluator's penalisedCost method.
-template <typename T>
-concept PenalisedCostEvaluatable = requires(T arg) {
-    { arg.distanceCost() } -> std::same_as<Cost>;
-    { arg.durationCost() } -> std::same_as<Cost>;
-    { arg.fixedVehicleCost() } -> std::same_as<Cost>;
-    { arg.excessLoad() } -> std::convertible_to<std::vector<Load>>;
-    { arg.excessDistance() } -> std::same_as<Distance>;
-    { arg.timeWarp() } -> std::same_as<Duration>;
-    { arg.empty() } -> std::same_as<bool>;
-};
-
-// Additionally, the CostEvaluator's cost method requires a feasible argument.
-// This concept establishes what's required.
-template <typename T>
-concept CostEvaluatable = PenalisedCostEvaluatable<T> && requires(T arg) {
-    { arg.isFeasible() } -> std::same_as<bool>;
-};
-
-// Finally, if the uncollected prizes of optional clients are available the
-// CostEvaluator can also take that aspect into account. This is optional since
-// it is a global attribute (individual routes cannot be evaluated like this).
-template <typename T>
-concept PrizeCostEvaluatable = PenalisedCostEvaluatable<T> && requires(T arg) {
-    { arg.uncollectedPrizes() } -> std::same_as<Cost>;
-};
-
 // The following methods must be available before a type's delta cost can be
 // evaluated by the CostEvaluator.
 template <typename T>
@@ -123,9 +94,8 @@ public:
     /**
      * Computes a smoothed objective (penalised cost) for a given solution.
      */
-    // We only expose Solution bindings to Python.
-    template <PenalisedCostEvaluatable T>
-    [[nodiscard]] Cost penalisedCost(T const &arg) const;
+    template <typename T> [[nodiscard]] Cost penalisedCost(T const &arg) const;
+    // We only expose penalisedCost() for the Solution class to Python.
 
     /**
      * Hand-waving some details, each solution consists of a set of non-empty
@@ -161,9 +131,8 @@ public:
      *    If that is not what you want, consider calling :meth:`penalised_cost`
      *    instead.
      */
-    // The docstring above is written for Python, where we only expose this
-    // method for the Solution class.
-    template <CostEvaluatable T> [[nodiscard]] Cost cost(T const &arg) const;
+    template <typename T> [[nodiscard]] Cost cost(T const &arg) const;
+    // We only expose cost() for the Solution class to Python.
 
     /**
      * Evaluates the cost delta of the given route proposal, and writes the
@@ -239,29 +208,7 @@ Cost CostEvaluator::excessDistPenalty(Distance excessDistance) const
     return static_cast<Cost>(excessDistance.get() * distPenalty_);
 }
 
-template <PenalisedCostEvaluatable T>
-Cost CostEvaluator::penalisedCost(T const &arg) const
-{
-    if (arg.empty())
-    {
-        if constexpr (PrizeCostEvaluatable<T>)
-            return arg.uncollectedPrizes();
-        return 0;
-    }
-
-    // Standard objective plus infeasibility-related penalty terms.
-    auto const cost
-        = arg.distanceCost() + arg.durationCost() + arg.fixedVehicleCost()
-          + excessLoadPenalties(arg.excessLoad()) + twPenalty(arg.timeWarp())
-          + distPenalty(arg.excessDistance(), 0);
-
-    if constexpr (PrizeCostEvaluatable<T>)
-        return cost + arg.uncollectedPrizes();
-
-    return cost;
-}
-
-template <CostEvaluatable T> Cost CostEvaluator::cost(T const &arg) const
+template <typename T> Cost CostEvaluator::cost(T const &arg) const
 {
     // Penalties are zero when the solution is feasible, so we can fall back to
     // penalised cost in that case.

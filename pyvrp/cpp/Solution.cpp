@@ -37,7 +37,7 @@ void Solution::evaluate(ProblemData const &data)
         durationCost_ += route.durationCost();
         excessDistance_ += route.excessDistance();
         timeWarp_ += route.timeWarp();
-        fixedVehicleCost_ += data.vehicleType(route.vehicleType()).fixedCost;
+        fixedVehicleCost_ += route.fixedVehicleCost();
 
         auto const &excessLoad = route.excessLoad();
         for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
@@ -345,6 +345,20 @@ Solution::Solution(size_t numClients,
       routes_(std::move(routes)),
       neighbours_(std::move(neighbours))
 {
+}
+
+template <>
+Cost pyvrp::CostEvaluator::penalisedCost(Solution const &solution) const
+{
+    Cost cost = solution.uncollectedPrizes();
+
+    if (solution.empty())
+        return 0;
+
+    for (auto const &route : solution.routes())
+        cost += penalisedCost(route);
+
+    return cost;
 }
 
 std::ostream &operator<<(std::ostream &out, Solution const &sol)

@@ -213,6 +213,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     auto const &vehData = data.vehicleType(vehType);
     startDepot_ = vehData.startDepot;
     endDepot_ = vehData.endDepot;
+    fixedVehicleCost_ = vehData.fixedCost;
 
     validate(data);
 
@@ -385,6 +386,8 @@ std::vector<Route::ScheduledVisit> const &Route::schedule() const
     return schedule_;
 }
 
+Cost Route::fixedVehicleCost() const { return fixedVehicleCost_; }
+
 Distance Route::distance() const { return distance_; }
 
 Cost Route::distanceCost() const { return distanceCost_; }
@@ -458,6 +461,21 @@ bool Route::operator==(Route const &other) const
         && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
         && trips_ == other.trips_;
+    // clang-format on
+}
+
+template <> Cost pyvrp::CostEvaluator::penalisedCost(Route const &route) const
+{
+    if (route.empty())
+        return 0;
+
+    // clang-format off
+    return route.distanceCost()
+         + route.durationCost()
+         + route.fixedVehicleCost()
+         + excessLoadPenalties(route.excessLoad())
+         + twPenalty(route.timeWarp())
+         + distPenalty(route.excessDistance(), 0);
     // clang-format on
 }
 
