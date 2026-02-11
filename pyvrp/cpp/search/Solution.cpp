@@ -317,4 +317,4 @@ pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
         cost += penalisedCost(route);
 
     return cost + solution.uncollectedPrizes();
-};
+}
