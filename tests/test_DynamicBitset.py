@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp._pyvrp import DynamicBitset
@@ -42,6 +42,20 @@ def test_eq():
     assert_(bitset1 != "test")
 
 
+def test_assert_equal():
+    """
+    This test exercises the issue identified in #1038, when assert_equal would
+    hang when comparing two bitsets.
+    """
+    bitset1 = DynamicBitset(128)
+    bitset2 = DynamicBitset(128)
+
+    # assert_equal iterates via __getitem__ since __iter__ isn't implemented.
+    # This requires __getitem__ to raise IndexError when out of bounds,
+    # otherwise iteration never terminates.
+    assert_equal(bitset1, bitset2)
+
+
 def test_get_set_item():
     """
     Tests that setting and retrieving an item from the bitset works correctly.
@@ -64,6 +78,19 @@ def test_get_set_item():
         assert_(not bitset[idx])
 
     assert_equal(bitset.count(), 0)  # now no bits should be set
+
+
+def test_get_set_raises_out_of_bounds():
+    """
+    Tests that setting and retrieving out of bounds raises an IndexError.
+    """
+    bitset = DynamicBitset(128)
+
+    with assert_raises(IndexError):
+        bitset[128]
+
+    with assert_raises(IndexError):
+        bitset[128] = True
 
 
 def test_all_any_none():
