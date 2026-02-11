@@ -449,14 +449,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("node"),
              py::arg("search_space"),
              py::arg("cost_evaluator"),
-             py::arg("required"))
-        .def("distance_cost", &Solution::distanceCost)
-        .def("duration_cost", &Solution::durationCost)
-        .def("fixed_vehicle_cost", &Solution::fixedVehicleCost)
-        .def("excess_load", &Solution::excessLoad)
-        .def("excess_distance", &Solution::excessDistance)
-        .def("time_warp", &Solution::timeWarp)
-        .def("uncollected_prizes", &Solution::uncollectedPrizes);
+             py::arg("required"));
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
         .def(py::init<pyvrp::ProblemData const &, size_t>(),

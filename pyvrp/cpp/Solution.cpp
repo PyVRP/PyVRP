@@ -351,10 +351,6 @@ template <>
 Cost pyvrp::CostEvaluator::penalisedCost(Solution const &solution) const
 {
     Cost cost = solution.uncollectedPrizes();
-
-    if (solution.empty())
-        return 0;
-
     for (auto const &route : solution.routes())
         cost += penalisedCost(route);
 
