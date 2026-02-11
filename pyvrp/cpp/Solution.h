@@ -1,6 +1,7 @@
 #ifndef PYVRP_SOLUTION_H
 #define PYVRP_SOLUTION_H
 
+#include "CostEvaluator.h"
 #include "Measure.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
@@ -274,6 +275,9 @@ public:
              Routes routes,
              Neighbours neighbours);
 };
+
+template <>  // specialisation for pyvrp::Solution
+Cost CostEvaluator::penalisedCost(Solution const &solution) const;
 }  // namespace pyvrp
 
 std::ostream &operator<<(std::ostream &out, pyvrp::Solution const &sol);

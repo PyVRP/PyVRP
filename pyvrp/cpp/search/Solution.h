@@ -31,6 +31,8 @@ class Solution
 {
     ProblemData const &data_;
 
+    friend class pyvrp::CostEvaluator;
+
 public:
     std::vector<Route::Node> nodes;  // size numLocations()
     std::vector<Route> routes;       // size numVehicles(), ordered by type
@@ -51,47 +53,11 @@ public:
                 SearchSpace const &searchSpace,
                 CostEvaluator const &costEvaluator,
                 bool required);
-
-    /**
-     * Distance cost of all routes in this solution.
-     */
-    Cost distanceCost() const;
-
-    /**
-     * Duration cost of all routes in this solution.
-     */
-    Cost durationCost() const;
-
-    /**
-     * Fixed vehicle cost of all non-empty routes in this solution.
-     */
-    Cost fixedVehicleCost() const;
-
-    /**
-     * Excess loads of all routes in this solution.
-     */
-    std::vector<Load> excessLoad() const;
-
-    /**
-     * Excess distance of all routes in this solution.
-     */
-    Distance excessDistance() const;
-
-    /**
-     * Time warp of all routes in this solution.
-     */
-    Duration timeWarp() const;
-
-    /**
-     * True if all routes are empty, false otherwise.
-     */
-    bool empty() const;
-
-    /**
-     * Total value of all uncollected prizes.
-     */
-    Cost uncollectedPrizes() const;
 };
 }  // namespace pyvrp::search
+
+template <>  // specialisation for pyvrp::search::Solution
+pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
+    pyvrp::search::Solution const &solution) const;
 
 #endif  // PYVRP_SEARCH_SOLUTION_H

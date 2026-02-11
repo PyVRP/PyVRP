@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_ROUTE_H
 
 #include "../Route.h"  // pyvrp::Route
+#include "CostEvaluator.h"
 #include "DurationSegment.h"
 #include "LoadSegment.h"
 #include "ProblemData.h"
@@ -1191,5 +1192,9 @@ std::ostream &operator<<(std::ostream &out, pyvrp::search::Route const &route);
 
 std::ostream &operator<<(std::ostream &out,  // for debugging
                          pyvrp::search::Route::Node const &node);
+
+template <>  // specialisation for pyvrp::search::Route
+pyvrp::Cost
+pyvrp::CostEvaluator::penalisedCost(pyvrp::search::Route const &route) const;
 
 #endif  // PYVRP_SEARCH_ROUTE_H
