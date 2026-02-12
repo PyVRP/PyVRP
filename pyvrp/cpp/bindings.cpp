@@ -17,6 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <climits>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -78,7 +79,7 @@ PYBIND11_MODULE(_pyvrp, m)
                 return blocks;
             },
             [](std::vector<unsigned long long> const &blocks) {  // __setstate__
-                std::vector<std::bitset<DynamicBitset::BLOCK_SIZE>> data;
+                std::vector<DynamicBitset::Block> data;
                 for (auto val : blocks)
                     data.emplace_back(val);
                 return DynamicBitset(std::move(data));

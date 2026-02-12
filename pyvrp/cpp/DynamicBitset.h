@@ -25,9 +25,9 @@ class DynamicBitset
 {
 public:
     static constexpr size_t BLOCK_SIZE = sizeof(unsigned long long) * CHAR_BIT;
+    using Block = std::bitset<BLOCK_SIZE>;
 
 private:
-    using Block = std::bitset<BLOCK_SIZE>;
     std::vector<Block> data_;
 
 public:
