@@ -69,7 +69,18 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("__or__", &DynamicBitset::operator|, py::arg("other"))
         .def("__and__", &DynamicBitset::operator&, py::arg("other"))
         .def("__xor__", &DynamicBitset::operator^, py::arg("other"))
-        .def("__invert__", &DynamicBitset::operator~);
+        .def("__invert__", &DynamicBitset::operator~)
+        .def(py::pickle(
+            [](DynamicBitset const &bitset) {  // __getstate__
+                std::vector<unsigned long long> blocks;
+                for (auto const &block : bitset.data())
+                    blocks.push_back(block.to_ullong());
+                return blocks;
+            },
+            [](std::vector<unsigned long long> const &blocks) -> DynamicBitset {
+                return std::vector<DynamicBitset::Block>(blocks.begin(),
+                                                         blocks.end());
+            }));
 
     py::class_<ProblemData::Client>(
         m, "Client", DOC(pyvrp, ProblemData, Client))

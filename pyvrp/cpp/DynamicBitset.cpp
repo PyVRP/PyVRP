@@ -34,6 +34,11 @@ DynamicBitset::Block::reference DynamicBitset::operator[](size_t idx)
     return data_[q][r];
 }
 
+std::vector<DynamicBitset::Block> const &DynamicBitset::data() const
+{
+    return data_;
+}
+
 bool DynamicBitset::all() const
 {
     for (auto const &bitset : data_)

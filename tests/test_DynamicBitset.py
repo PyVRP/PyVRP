@@ -1,3 +1,5 @@
+import pickle
+
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
@@ -221,3 +223,16 @@ def test_reset():
 
     bitset.reset()
     assert_equal(bitset.count(), 0)
+
+
+def test_pickle():
+    """
+    Tests that DynamicBitset can be pickled and unpickled correctly.
+    """
+    bitset = DynamicBitset(128)
+    bitset[0] = True
+    bitset[64] = True
+
+    pickled = pickle.dumps(bitset)
+    unpickled = pickle.loads(pickled)
+    assert_equal(bitset, unpickled)
