@@ -223,11 +223,6 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         service_ += trip.serviceDuration();
         travel_ += trip.travelDuration();
         prizes_ += trip.prizes();
-
-        auto const [x, y] = trip.centroid();
-        auto const numClients = empty() ? 1 : size();  // avoid division by zero
-        centroid_.first += (x.get() * trip.size()) / numClients;
-        centroid_.second += (y.get() * trip.size()) / numClients;
     }
 
     distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
@@ -314,7 +309,6 @@ Route::Route(Trips trips,
              Duration startTime,
              Duration slack,
              Cost prizes,
-             std::pair<Coordinate, Coordinate> centroid,
              size_t vehicleType,
              size_t startDepot,
              size_t endDepot,
@@ -336,7 +330,6 @@ Route::Route(Trips trips,
       startTime_(startTime),
       slack_(slack),
       prizes_(prizes),
-      centroid_(centroid),
       vehicleType_(vehicleType),
       startDepot_(startDepot),
       endDepot_(endDepot)
@@ -423,11 +416,6 @@ Duration Route::slack() const { return slack_; }
 Duration Route::releaseTime() const { return trips_[0].releaseTime(); }
 
 Cost Route::prizes() const { return prizes_; }
-
-std::pair<Coordinate, Coordinate> const &Route::centroid() const
-{
-    return centroid_;
-}
 
 size_t Route::vehicleType() const { return vehicleType_; }
 

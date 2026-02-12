@@ -1,5 +1,5 @@
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import Route, Trip
 
@@ -74,7 +74,6 @@ def test_single_route_and_trip_same_statistics(ok_small, visits: list[int]):
     assert_equal(trip.start_depot(), route.start_depot())
     assert_equal(trip.end_depot(), route.end_depot())
     assert_equal(trip.visits(), route.visits())
-    assert_allclose(trip.centroid(), route.centroid())
 
     # Distance- and cost-related statistics.
     assert_equal(trip.distance(), route.distance())

@@ -487,10 +487,6 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::durationMatrices,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, durationMatrices))
-        .def("centroid",
-             &ProblemData::centroid,
-             py::return_value_policy::reference_internal,
-             DOC(pyvrp, ProblemData, centroid))
         .def("group",
              &ProblemData::group,
              py::arg("group"),
@@ -582,7 +578,6 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, Trip, serviceDuration))
         .def("release_time", &Trip::releaseTime, DOC(pyvrp, Trip, releaseTime))
         .def("prizes", &Trip::prizes, DOC(pyvrp, Trip, prizes))
-        .def("centroid", &Trip::centroid, DOC(pyvrp, Trip, centroid))
         .def("vehicle_type", &Trip::vehicleType, DOC(pyvrp, Trip, vehicleType))
         .def("start_depot", &Trip::startDepot, DOC(pyvrp, Trip, startDepot))
         .def("end_depot", &Trip::endDepot, DOC(pyvrp, Trip, endDepot))
@@ -620,14 +615,11 @@ PYBIND11_MODULE(_pyvrp, m)
                                       trip.serviceDuration(),
                                       trip.releaseTime(),
                                       trip.prizes(),
-                                      trip.centroid(),
                                       trip.vehicleType(),
                                       trip.startDepot(),
                                       trip.endDepot());
             },
             [](py::tuple t) {  // __setstate__
-                using Coord = pyvrp::Coordinate;
-                using Centroid = std::pair<Coord, Coord>;
                 using Loads = std::vector<pyvrp::Load>;
 
                 Trip trip(t[0].cast<Trip::Visits>(),     // visits
@@ -640,10 +632,9 @@ PYBIND11_MODULE(_pyvrp, m)
                           t[7].cast<pyvrp::Duration>(),  // service
                           t[8].cast<pyvrp::Duration>(),  // release
                           t[9].cast<pyvrp::Cost>(),      // prizes
-                          t[10].cast<Centroid>(),        // centroid
-                          t[11].cast<size_t>(),          // vehicle type
-                          t[12].cast<size_t>(),          // start depot
-                          t[13].cast<size_t>());         // end depot
+                          t[10].cast<size_t>(),          // vehicle type
+                          t[11].cast<size_t>(),          // start depot
+                          t[12].cast<size_t>());         // end depot
 
                 return trip;
             }))
@@ -752,7 +743,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(
             "release_time", &Route::releaseTime, DOC(pyvrp, Route, releaseTime))
         .def("prizes", &Route::prizes, DOC(pyvrp, Route, prizes))
-        .def("centroid", &Route::centroid, DOC(pyvrp, Route, centroid))
         .def(
             "vehicle_type", &Route::vehicleType, DOC(pyvrp, Route, vehicleType))
         .def("start_depot", &Route::startDepot, DOC(pyvrp, Route, startDepot))
@@ -802,15 +792,12 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.startTime(),
                                       route.slack(),
                                       route.prizes(),
-                                      route.centroid(),
                                       route.vehicleType(),
                                       route.startDepot(),
                                       route.endDepot(),
                                       route.schedule());
             },
             [](py::tuple t) {  // __setstate__
-                using Coord = pyvrp::Coordinate;
-                using Centroid = std::pair<Coord, Coord>;
                 using Trips = std::vector<Trip>;
                 using Schedule = std::vector<Route::ScheduledVisit>;
 
@@ -831,11 +818,10 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[13].cast<pyvrp::Duration>(),          // start time
                     t[14].cast<pyvrp::Duration>(),          // slack
                     t[15].cast<pyvrp::Cost>(),              // prizes
-                    t[16].cast<Centroid>(),                 // centroid
-                    t[17].cast<size_t>(),                   // vehicle type
-                    t[18].cast<size_t>(),                   // start depot
-                    t[19].cast<size_t>(),                   // end depot
-                    t[20].cast<Schedule>());                // visit schedule
+                    t[16].cast<size_t>(),                   // vehicle type
+                    t[17].cast<size_t>(),                   // start depot
+                    t[18].cast<size_t>(),                   // end depot
+                    t[19].cast<Schedule>());                // visit schedule
 
                 return route;
             }))

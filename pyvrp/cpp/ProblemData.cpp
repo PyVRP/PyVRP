@@ -540,12 +540,6 @@ ProblemData::vehicleType(size_t vehicleType) const
     return vehicleTypes_[vehicleType];
 }
 
-std::pair<pyvrp::Coordinate, pyvrp::Coordinate> const &
-ProblemData::centroid() const
-{
-    return centroid_;
-}
-
 size_t ProblemData::numClients() const { return clients_.size(); }
 
 size_t ProblemData::numDepots() const { return depots_.size(); }
@@ -749,11 +743,5 @@ ProblemData::ProblemData(std::vector<Client> clients,
                          vehicleTypes_.end(),
                          hasTimeWindow<VehicleType>))
 {
-    for (auto const &client : clients_)
-    {
-        centroid_.first += static_cast<double>(client.x) / numClients();
-        centroid_.second += static_cast<double>(client.y) / numClients();
-    }
-
     validate();
 }
