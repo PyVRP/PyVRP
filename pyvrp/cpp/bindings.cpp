@@ -78,10 +78,7 @@ PYBIND11_MODULE(_pyvrp, m)
                 return blocks;
             },
             [](std::vector<unsigned long long> const &blocks) {  // __setstate__
-                std::vector<DynamicBitset::Block> data;
-                for (auto val : blocks)
-                    data.emplace_back(val);
-                return DynamicBitset(std::move(data));
+                return DynamicBitset(blocks.begin(), blocks.end());
             }));
 
     py::class_<ProblemData::Client>(

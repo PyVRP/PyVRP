@@ -229,7 +229,6 @@ def test_pickle():
     """
     Tests that DynamicBitset can be pickled and unpickled correctly.
     """
-
     bitset = DynamicBitset(128)
     bitset[0] = True
     bitset[64] = True
