@@ -1,7 +1,6 @@
 #include "DynamicBitset.h"
 
 #include <cassert>
-#include <climits>
 
 using pyvrp::DynamicBitset;
 

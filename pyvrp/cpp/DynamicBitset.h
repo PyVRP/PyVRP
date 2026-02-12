@@ -2,6 +2,7 @@
 #define PYVRP_DYNAMICBITSET_H
 
 #include <bitset>
+#include <climits>
 #include <vector>
 
 namespace pyvrp
