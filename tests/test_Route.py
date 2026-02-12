@@ -1,9 +1,8 @@
 import pickle
 from itertools import pairwise
 
-import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
@@ -289,26 +288,6 @@ def test_release_time_and_service_duration():
     assert_equal(route.duration(), 6_000 + 5_998)
     assert_equal(route.service_duration(), 6_000 + 1_140)
     assert_equal(route.time_warp(), 0)
-
-
-def test_route_centroid(ok_small):
-    """
-    Tests that each route's center point is the center point of all clients
-    visited by that route.
-    """
-    x = np.array([ok_small.location(idx).x for idx in range(5)])
-    y = np.array([ok_small.location(idx).y for idx in range(5)])
-
-    routes = [
-        Route(ok_small, [1, 2], 0),
-        Route(ok_small, [3], 0),
-        Route(ok_small, [4], 0),
-    ]
-
-    for route in routes:
-        x_center, y_center = route.centroid()
-        assert_allclose(x_center, x[route].mean())
-        assert_allclose(y_center, y[route].mean())
 
 
 def test_route_can_be_pickled(rc208):
@@ -633,7 +612,6 @@ def test_statistics_with_small_multi_trip_example(ok_small_multiple_trips):
 
     # Route structure and general statistics.
     assert_equal(route2.prizes(), route1.prizes())
-    assert_allclose(route2.centroid(), route1.centroid())
     assert_equal(route2.start_depot(), route1.start_depot())
     assert_equal(route2.end_depot(), route1.end_depot())
 
@@ -920,15 +898,6 @@ def test_route_release_time_after_vehicle_start_late():
 
     # Sanity check that all time warp is also accounted for in the schedule.
     assert_equal(sum(v.time_warp for v in route.schedule()), route.time_warp())
-
-
-def test_zero_centroid_empty_routes(ok_small):
-    """
-    Tests that the centroid for empty routes is (0, 0). Previously, this
-    returned NaN due to a divide-by-zero bug. See #908 for details.
-    """
-    route = Route(ok_small, [], 0)
-    assert_equal(route.centroid(), (0.0, 0.0))
 
 
 @pytest.mark.parametrize("fixed_cost", (0, 10))
