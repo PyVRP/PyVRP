@@ -7,7 +7,6 @@
 #include <fstream>
 #include <numeric>
 
-using pyvrp::Coordinate;
 using pyvrp::Cost;
 using pyvrp::Distance;
 using pyvrp::Duration;
