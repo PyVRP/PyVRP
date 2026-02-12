@@ -77,7 +77,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     blocks.push_back(block.to_ullong());
                 return py::make_tuple(blocks);
             },
-            [](py::tuple t) -> DynamicBitset
+            [](py::tuple t) -> DynamicBitset  // __setstate__
             {
                 auto const blocks
                     = t[0].cast<std::vector<unsigned long long>>();
