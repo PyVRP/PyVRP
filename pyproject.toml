@@ -1,6 +1,6 @@
 [project]
 name = "pyvrp"
-version = "0.13.2"
+version = "0.13.3"
 description = "A state-of-the-art vehicle routing problem solver."
 authors = [
     { name = "Niels Wouda", email = "nielswouda@gmail.com" },
