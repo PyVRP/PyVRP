@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import numpy as np
+import numpy.typing as npt
 
 if TYPE_CHECKING:
     from pyvrp import ProblemData
@@ -114,7 +115,7 @@ def compute_neighbours(
 
 def _compute_proximity(
     data: ProblemData, weight_wait_time: float, weight_time_warp: float
-) -> np.ndarray[float]:
+) -> npt.NDArray[np.float64]:
     """
     Computes proximity for neighborhood. Proximity is based on [1]_, with
     modification for additional VRP variants.
