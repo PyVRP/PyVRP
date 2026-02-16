@@ -1136,6 +1136,8 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
 
         auto const duration = ds.duration();
         auto const overtime = std::max<Duration>(duration - shiftDuration, 0);
+        //TODO: #1044-FormPup41: Same as /cpp/Route.cpp (line 286) and /cpp/search/Route.cpp (line 348).
+        // Note, this entire template function should be modified to use the same logic to properly use the PWL cost functions.
         auto const cost = unitDurationCost * static_cast<Cost>(duration)
                           + unitOvertimeCost * static_cast<Cost>(overtime);
         auto const timeWarp = ds.timeWarp(maxDuration);

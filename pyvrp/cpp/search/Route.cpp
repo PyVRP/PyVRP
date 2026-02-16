@@ -345,6 +345,7 @@ void Route::update()
     timeWarp_ = durAfter[0].timeWarp(maxDuration());
 
     auto const overtime = std::max<Duration>(duration_ - shiftDuration(), 0);
+    //TODO: #1044-FormPup41: Same as /cpp/Route.cpp (line 286) and /ccp/search/Route.h (line 1139).
     durationCost_ = unitDurationCost() * static_cast<Cost>(duration_)
                     + unitOvertimeCost() * static_cast<Cost>(overtime);
 
