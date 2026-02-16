@@ -37,6 +37,7 @@ dependencies = [
     "matplotlib>=2.2.0",
     "vrplib>=1.4.0",
     "tqdm>=4.64.1",
+    "numpy>=2.4.2",
 ]
 
 [project.urls]
