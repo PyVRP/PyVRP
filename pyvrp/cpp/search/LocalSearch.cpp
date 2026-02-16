@@ -321,10 +321,11 @@ void LocalSearch::applyOptionalClientMoves(Route::Node *U,
             return;
         }
 
-        // We prefer inserting over replacing, but if V is not required and
-        // replacing V with U is improving, we also do that now.
+        // We prefer inserting over replacing, but if V is not required, not in
+        // a group, and replacing V with U is improving, we also do that now.
         ProblemData::Client const &vData = data.location(V->client());
-        if (!vData.required && inplaceCost(U, V, data, costEvaluator) < 0)
+        if (!vData.required && !vData.group
+            && inplaceCost(U, V, data, costEvaluator) < 0)
         {
             searchSpace_.markPromising(V);
             auto const idx = V->idx();
