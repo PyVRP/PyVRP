@@ -283,14 +283,11 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
 
     duration_ = ds.duration();
     overtime_ = std::max<Duration>(duration_ - vehData.shiftDuration, 0);
-    //TODO: #1044-FormPup41: Eventually, this will become the default, however, if clients provided arguments 
-    // for the PWL functions then the default should be replaced for the more complex PWL method. 
-    // NOTE: Do not add it to the timeWarp because the time warp quantifies violations of time-related constraints, 
-    // mainly time windows and the hard maximum duration constraint. Overtime is a violation of the soft maximum duration 
-    // constraint, and should therefore be penalised separately.
-    // Same as /cpp/search/Route.cpp (line 348) and /ccp/search/Route.h (line 1139).
-    durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_)
-                    + vehData.unitOvertimeCost * static_cast<Cost>(overtime_);
+
+    // Old code: FIXME: #925/1044-FormPup41: 
+    //durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_)
+    //                + vehData.unitOvertimeCost * static_cast<Cost>(overtime_);
+    durationCost_ = vehData.durationCostFunction(duration_); 
     startTime_ = ds.startEarly();
     slack_ = ds.slack();
     timeWarp_ = ds.timeWarp(vehData.maxDuration);

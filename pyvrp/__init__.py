@@ -17,6 +17,8 @@ from ._pyvrp import ClientGroup as ClientGroup
 from ._pyvrp import CostEvaluator as CostEvaluator
 from ._pyvrp import Depot as Depot
 from ._pyvrp import DynamicBitset as DynamicBitset
+from ._pyvrp import DurationCostFunction as DurationCostFunction
+from ._pyvrp import PiecewiseLinearFunction as PiecewiseLinearFunction
 from ._pyvrp import ProblemData as ProblemData
 from ._pyvrp import RandomNumberGenerator as RandomNumberGenerator
 from ._pyvrp import Route as Route

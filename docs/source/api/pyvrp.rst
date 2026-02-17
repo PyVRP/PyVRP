@@ -100,6 +100,14 @@ This object stores the best observed solution and detailed runtime statistics.
    .. autoclass:: ScheduledVisit
       :members:
 
+   .. autoclass:: PiecewiseLinearFunction
+      :members:
+      :special-members: __call__, __eq__
+
+   .. autoclass:: DurationCostFunction
+      :members:
+      :special-members: __call__, __eq__
+
    .. autoclass:: DynamicBitset
       :members:
       :special-members: __and__, __or__, __xor__, __getitem__, __setitem__,

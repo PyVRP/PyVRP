@@ -133,6 +133,13 @@ public:
      */
     [[nodiscard]] bool isZero() const;
 
+    /**
+     * Returns a linear proxy slope (cost per duration unit) for edge-based
+     * heuristics. For the current piecewise-linear implementation this is the
+     * slope of the first segment.
+     */
+    [[nodiscard]] Cost edgeCostSlope() const;
+
     bool operator==(DurationCostFunction const &other) const = default;
 };
 

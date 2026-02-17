@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
 import pyvrp
-from pyvrp import Client, Depot, ProblemData, VehicleType
+from pyvrp import Client, Depot, DurationCostFunction, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
 
@@ -937,12 +937,13 @@ def test_multi_trip_with_release_times():
     Test a small example with multiple trips and (binding) release times. See
     the test of the same name for ``pyvrp::Route`` for further details.
     """
-    matrix = [
+    raw_matrix = [
         [0, 30, 20, 40],
         [0, 0, 10, 0],
         [5, 0, 0, 0],
         [10, 0, 0, 0],
     ]
+    matrix = np.asarray(raw_matrix, dtype=np.int64)
 
     data = ProblemData(
         clients=[
@@ -1059,12 +1060,19 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
         (VehicleType(tw_early=5), Depot(0, 0), True),  # constraint (vehicle)
         (VehicleType(tw_late=5), Depot(0, 0), True),  # constraint (vehicle)
         (VehicleType(shift_duration=0), Depot(0, 0), True),  # constraint (veh)
-        (VehicleType(unit_duration_cost=1), Depot(0, 0), True),  # unit cost
+        (VehicleType(unit_duration_cost=1), Depot(0, 0), True),  # unit cost (legacy)
         # unit cost but no max_overtime, so never relevant
         (VehicleType(unit_overtime_cost=1), Depot(0, 0), False),
         # unit cost and overtime, so could be relevant
         (VehicleType(unit_overtime_cost=1, max_overtime=1), Depot(0, 0), True),
         (VehicleType(max_overtime=5), Depot(0, 0), False),  # not constrained
+        (
+            VehicleType(duration_cost_function=DurationCostFunction([0], [1])),
+            Depot(0, 0),
+            True,
+        ),  # custom cost
+        # Finite shift duration and non-zero duration unit cost activates duration constraint.
+        (VehicleType(shift_duration=5, unit_overtime_cost=1), Depot(0, 0), True),
     ],
 )
 def test_has_duration_cost(veh_type: VehicleType, depot: Depot, exp: bool):

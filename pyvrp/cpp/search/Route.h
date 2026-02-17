@@ -466,6 +466,11 @@ public:
     [[nodiscard]] inline Cost unitOvertimeCost() const;
 
     /**
+     * @return Duration cost function used by this route.
+     */
+    [[nodiscard]] inline DurationCostFunction const &durationCostFunction() const;
+
+    /**
      * Returns true if this route has duration-related cost components, either
      * via the objective or via penalised constraints. False otherwise.
      */
@@ -944,14 +949,18 @@ Cost Route::unitDurationCost() const { return vehicleType_.unitDurationCost; }
 
 Cost Route::unitOvertimeCost() const { return vehicleType_.unitOvertimeCost; }
 
+DurationCostFunction const &Route::durationCostFunction() const
+{
+    return vehicleType_.durationCostFunction;
+}
+
 bool Route::hasDurationCost() const
 {
-    // clang-format off
-    return data.hasTimeWindows()
-        || unitDurationCost() != 0
-        || (unitOvertimeCost() != 0 && maxOvertime() != 0)
-        || maxDuration() != std::numeric_limits<Duration>::max();
-    // clang-format on
+    auto const hasDurationConstraint
+        = data.hasTimeWindows()
+          || maxDuration() != std::numeric_limits<Duration>::max();
+
+    return hasDurationConstraint || !durationCostFunction().isZero();
 }
 
 Duration Route::shiftDuration() const { return vehicleType_.shiftDuration; }
@@ -1081,9 +1090,7 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
         return std::make_pair(0, 0);
 
     auto const &data = route()->data;
-    auto const unitDurationCost = route()->unitDurationCost();
-    auto const unitOvertimeCost = route()->unitOvertimeCost();
-    auto const shiftDuration = route()->shiftDuration();
+    auto const &durationCostFunction = route()->durationCostFunction();
     auto const maxDuration = route()->maxDuration();
     auto const profile = route()->profile();
     auto const &matrix = data.durationMatrix(profile);
@@ -1135,11 +1142,11 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
         merge(merge, std::forward<decltype(args)>(args)...);
 
         auto const duration = ds.duration();
-        auto const overtime = std::max<Duration>(duration - shiftDuration, 0);
-        //TODO: #1044-FormPup41: Same as /cpp/Route.cpp (line 286) and /cpp/search/Route.cpp (line 348).
-        // Note, this entire template function should be modified to use the same logic to properly use the PWL cost functions.
-        auto const cost = unitDurationCost * static_cast<Cost>(duration)
-                          + unitOvertimeCost * static_cast<Cost>(overtime);
+        // OLD CODE:
+        //auto const overtime = std::max<Duration>(duration - shiftDuration, 0);
+        //auto const cost = unitDurationCost * static_cast<Cost>(duration)
+        //                  + unitOvertimeCost * static_cast<Cost>(overtime);
+        auto const cost = durationCostFunction(duration);
         auto const timeWarp = ds.timeWarp(maxDuration);
         return std::make_pair(cost, timeWarp);
     };

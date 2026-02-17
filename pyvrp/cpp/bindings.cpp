@@ -1,9 +1,11 @@
 #include "bindings.h"
 #include "CostEvaluator.h"
+#include "DurationCostFunction.h"
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
 #include "LoadSegment.h"
 #include "Matrix.h"
+#include "PiecewiseLinearFunction.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
@@ -17,18 +19,22 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <cstdint>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <variant>
 
 namespace py = pybind11;
 
 using pyvrp::CostEvaluator;
+using pyvrp::DurationCostFunction;
 using pyvrp::DurationSegment;
 using pyvrp::DynamicBitset;
 using pyvrp::LoadSegment;
 using pyvrp::Matrix;
+using pyvrp::PiecewiseLinearFunction;
 using pyvrp::ProblemData;
 using pyvrp::RandomNumberGenerator;
 using pyvrp::Route;
@@ -83,6 +89,95 @@ PYBIND11_MODULE(_pyvrp, m)
                     = t[0].cast<std::vector<unsigned long long>>();
                 return std::vector<DynamicBitset::Block>(blocks.begin(),
                                                          blocks.end());
+            }));
+
+    py::class_<PiecewiseLinearFunction>(
+        m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
+        .def(py::init<std::vector<int64_t>, std::vector<int64_t>, int64_t>(),
+             py::arg("breakpoints") = std::vector<int64_t>{0},
+             py::arg("slopes") = std::vector<int64_t>{0},
+             py::arg("intercept") = 0)
+        .def("__call__",
+             &PiecewiseLinearFunction::operator(),
+             py::arg("x"))
+        .def_property_readonly("breakpoints",
+                               &PiecewiseLinearFunction::breakpoints,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("slopes",
+                               &PiecewiseLinearFunction::slopes,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("values",
+                               &PiecewiseLinearFunction::values,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("intercept", &PiecewiseLinearFunction::intercept)
+        .def("is_zero",
+             &PiecewiseLinearFunction::isZero,
+             DOC(pyvrp, PiecewiseLinearFunction, isZero))
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](PiecewiseLinearFunction const &function)  // __getstate__
+            {
+                return py::make_tuple(
+                    function.breakpoints(), function.slopes(), function.intercept());
+            },
+            [](py::tuple t)  // __setstate__
+            {
+                return PiecewiseLinearFunction(
+                    t[0].cast<std::vector<int64_t>>(),  // breakpoints
+                    t[1].cast<std::vector<int64_t>>(),  // slopes
+                    t[2].cast<int64_t>());              // intercept
+            }));
+
+    py::class_<DurationCostFunction>(
+        m, "DurationCostFunction", DOC(pyvrp, DurationCostFunction))
+        .def(py::init<std::vector<pyvrp::Duration>, std::vector<pyvrp::Cost>>(),
+             py::arg("breakpoints") = std::vector<pyvrp::Duration>{0},
+             py::arg("slopes") = std::vector<pyvrp::Cost>{0})
+        .def(py::init<PiecewiseLinearFunction>(), py::arg("piecewise_linear"))
+        .def_static("from_linear",
+                    &DurationCostFunction::fromLinear,
+                    py::arg("shift_duration"),
+                    py::arg("unit_duration_cost"),
+                    py::arg("unit_overtime_cost"))
+        .def("__call__",
+             &DurationCostFunction::operator(),
+             py::arg("duration"))
+        .def_property_readonly("breakpoints",
+                               &DurationCostFunction::breakpoints,
+                               DOC(pyvrp, DurationCostFunction, breakpoints))
+        .def_property_readonly("slopes",
+                               &DurationCostFunction::slopes,
+                               DOC(pyvrp, DurationCostFunction, slopes))
+        .def_property_readonly("values",
+                               &DurationCostFunction::values,
+                               DOC(pyvrp, DurationCostFunction, values))
+        .def_property_readonly("piecewise_linear",
+                               &DurationCostFunction::piecewiseLinear,
+                               py::return_value_policy::reference_internal,
+                               DOC(pyvrp,
+                                   DurationCostFunction,
+                                   piecewiseLinear))
+        .def_property_readonly("edge_cost_slope",
+                               &DurationCostFunction::edgeCostSlope)
+        .def("is_zero",
+             &DurationCostFunction::isZero,
+             DOC(pyvrp, DurationCostFunction, isZero))
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](DurationCostFunction const &function)  // __getstate__
+            {
+                return py::make_tuple(function.breakpoints(), function.slopes());
+            },
+            [](py::tuple t)  // __setstate__
+            {
+                if (t.size() == 2)
+                {
+                    return DurationCostFunction(
+                        t[0].cast<std::vector<pyvrp::Duration>>(),  // breakpoints
+                        t[1].cast<std::vector<pyvrp::Cost>>());     // slopes
+                }
+
+                throw std::runtime_error("Invalid DurationCostFunction state.");
             }));
 
     py::class_<ProblemData::Client>(
@@ -281,6 +376,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       size_t,
                       pyvrp::Duration,
                       pyvrp::Cost,
+                      std::optional<DurationCostFunction>,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
@@ -302,6 +398,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_reloads") = std::numeric_limits<size_t>::max(),
              py::arg("max_overtime") = 0,
              py::arg("unit_overtime_cost") = 0,
+             py::arg("duration_cost_function") = py::none(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -332,37 +429,115 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("max_overtime", &ProblemData::VehicleType::maxOvertime)
         .def_readonly("unit_overtime_cost",
                       &ProblemData::VehicleType::unitOvertimeCost)
+        .def_readonly("duration_cost_function",
+                      &ProblemData::VehicleType::durationCostFunction)
+        .def_property_readonly("duration_cost_slope",
+                               &ProblemData::VehicleType::durationCostSlope)
         .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration)
         .def_property_readonly("max_trips", &ProblemData::VehicleType::maxTrips)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
-        .def("replace",
-             &ProblemData::VehicleType::replace,
-             py::arg("num_available") = py::none(),
-             py::arg("capacity") = py::none(),
-             py::arg("start_depot") = py::none(),
-             py::arg("end_depot") = py::none(),
-             py::arg("fixed_cost") = py::none(),
-             py::arg("tw_early") = py::none(),
-             py::arg("tw_late") = py::none(),
-             py::arg("shift_duration") = py::none(),
-             py::arg("max_distance") = py::none(),
-             py::arg("unit_distance_cost") = py::none(),
-             py::arg("unit_duration_cost") = py::none(),
-             py::arg("profile") = py::none(),
-             py::arg("start_late") = py::none(),
-             py::arg("initial_load") = py::none(),
-             py::arg("reload_depots") = py::none(),
-             py::arg("max_reloads") = py::none(),
-             py::arg("max_overtime") = py::none(),
-             py::arg("unit_overtime_cost") = py::none(),
-             py::kw_only(),
-             py::arg("name") = py::none(),
-             DOC(pyvrp, ProblemData, VehicleType, replace))
+        // NOTE:
+        // We bind replace() through a lambda instead of directly binding the
+        // C++ method pointer. The Python API needs tri-state semantics for
+        // duration_cost_function:
+        //   1) argument omitted  -> keep current duration cost mode;
+        //   2) explicitly None   -> clear custom function and switch to legacy;
+        //   3) concrete function -> set/replace custom duration cost function.
+        //
+        // Pybind's regular optional binding cannot reliably distinguish (1)
+        // from (2), so we parse a raw py::object and pass the explicit
+        // durationCostFunctionProvided flag to VehicleType::replace().
+        .def(
+            "replace",
+            [](ProblemData::VehicleType const &vehicleType,
+               std::optional<size_t> numAvailable,
+               std::optional<std::vector<pyvrp::Load>> capacity,
+               std::optional<size_t> startDepot,
+               std::optional<size_t> endDepot,
+               std::optional<pyvrp::Cost> fixedCost,
+               std::optional<pyvrp::Duration> twEarly,
+               std::optional<pyvrp::Duration> twLate,
+               std::optional<pyvrp::Duration> shiftDuration,
+               std::optional<pyvrp::Distance> maxDistance,
+               std::optional<pyvrp::Cost> unitDistanceCost,
+               std::optional<pyvrp::Cost> unitDurationCost,
+               std::optional<size_t> profile,
+               std::optional<pyvrp::Duration> startLate,
+               std::optional<std::vector<pyvrp::Load>> initialLoad,
+               std::optional<std::vector<size_t>> reloadDepots,
+               std::optional<size_t> maxReloads,
+               std::optional<pyvrp::Duration> maxOvertime,
+               std::optional<pyvrp::Cost> unitOvertimeCost,
+               py::object durationCostFunction,
+               std::optional<std::string> name)
+            {
+                // Ellipsis means: not provided from Python.
+                auto const durationCostFunctionProvided = !durationCostFunction.is(py::ellipsis());
+
+                // Keep nullopt both when the argument is omitted and when it is
+                // explicitly None; durationCostFunctionProvided disambiguates.
+                std::optional<DurationCostFunction> parsedDurationCostFunction = std::nullopt;
+                if (durationCostFunctionProvided && !durationCostFunction.is_none())
+                {
+                    parsedDurationCostFunction = durationCostFunction.cast<DurationCostFunction>();
+                }
+
+                return vehicleType.replace(numAvailable,
+                                           capacity,
+                                           startDepot,
+                                           endDepot,
+                                           fixedCost,
+                                           twEarly,
+                                           twLate,
+                                           shiftDuration,
+                                           maxDistance,
+                                           unitDistanceCost,
+                                           unitDurationCost,
+                                           profile,
+                                           startLate,
+                                           initialLoad,
+                                           reloadDepots,
+                                           maxReloads,
+                                           maxOvertime,
+                                           unitOvertimeCost,
+                                           parsedDurationCostFunction,
+                                           name,
+                                           durationCostFunctionProvided);
+            },
+            py::arg("num_available") = py::none(),
+            py::arg("capacity") = py::none(),
+            py::arg("start_depot") = py::none(),
+            py::arg("end_depot") = py::none(),
+            py::arg("fixed_cost") = py::none(),
+            py::arg("tw_early") = py::none(),
+            py::arg("tw_late") = py::none(),
+            py::arg("shift_duration") = py::none(),
+            py::arg("max_distance") = py::none(),
+            py::arg("unit_distance_cost") = py::none(),
+            py::arg("unit_duration_cost") = py::none(),
+            py::arg("profile") = py::none(),
+            py::arg("start_late") = py::none(),
+            py::arg("initial_load") = py::none(),
+            py::arg("reload_depots") = py::none(),
+            py::arg("max_reloads") = py::none(),
+            py::arg("max_overtime") = py::none(),
+            py::arg("unit_overtime_cost") = py::none(),
+            // Default is ellipsis, not None, so we can distinguish omitted from
+            // explicit None in the lambda above.
+            py::arg("duration_cost_function") = py::ellipsis(),
+            py::kw_only(),
+            py::arg("name") = py::none(),
+            DOC(pyvrp, ProblemData, VehicleType, replace))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::VehicleType const &vehicleType) {  // __getstate__
+                // NOTE:
+                // We currently serialise both legacy scalar duration-cost fields
+                // (unitDurationCost/unitOvertimeCost/shiftDuration) and the
+                // resolved durationCostFunction. This keeps the pickle payload
+                // explicit and deterministic across legacy and custom modes.
                 return py::make_tuple(vehicleType.numAvailable,
                                       vehicleType.capacity,
                                       vehicleType.startDepot,
@@ -381,9 +556,36 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.maxReloads,
                                       vehicleType.maxOvertime,
                                       vehicleType.unitOvertimeCost,
+                                      vehicleType.durationCostFunction,
                                       vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
+                // NOTE:
+                // VehicleType construction is strict: custom duration function
+                // and non-zero legacy duration/overtime costs are mutually
+                // exclusive. But the pickle schema stores both representations.
+                // During load we therefore normalise equivalent mixed state
+                // (function equals legacy fromLinear form) back to legacy mode.
+                // This preserves strict runtime semantics without breaking
+                // round-trip deserialisation.
+                auto const shiftDuration = t[7].cast<pyvrp::Duration>();
+                auto const unitDurationCost = t[10].cast<pyvrp::Cost>();
+                auto const unitOvertimeCost = t[17].cast<pyvrp::Cost>();
+                auto const durationCostFunction = t[18].cast<DurationCostFunction>();
+
+                auto const legacyDurationCostFunction
+                    = DurationCostFunction::fromLinear(shiftDuration, unitDurationCost, unitOvertimeCost);
+
+                // If the serialized function is exactly the legacy equivalent,
+                // pass nullopt so VehicleType resolves from legacy scalars.
+                // Otherwise keep the custom function and let strict validation
+                // reject incompatible mixed inputs.
+                auto const maybeDurationCostFunction
+                    = durationCostFunction == legacyDurationCostFunction
+                          ? std::optional<DurationCostFunction>{}
+                          : std::optional<DurationCostFunction>{
+                                durationCostFunction};
+
                 ProblemData::VehicleType vehicleType(
                     t[0].cast<size_t>(),                    // num available
                     t[1].cast<std::vector<pyvrp::Load>>(),  // capacity
@@ -392,18 +594,19 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[4].cast<pyvrp::Cost>(),               // fixed cost
                     t[5].cast<pyvrp::Duration>(),           // tw early
                     t[6].cast<pyvrp::Duration>(),           // tw late
-                    t[7].cast<pyvrp::Duration>(),           // shift duration
+                    shiftDuration,                          // shift duration
                     t[8].cast<pyvrp::Distance>(),           // max distance
                     t[9].cast<pyvrp::Cost>(),       // unit distance cost
-                    t[10].cast<pyvrp::Cost>(),      // unit duration cost
+                    unitDurationCost,               // unit duration cost
                     t[11].cast<size_t>(),           // profile
                     t[12].cast<pyvrp::Duration>(),  // start late
                     t[13].cast<std::vector<pyvrp::Load>>(),  // initial load
                     t[14].cast<std::vector<size_t>>(),       // reload depots
                     t[15].cast<size_t>(),                    // max reloads
                     t[16].cast<pyvrp::Duration>(),           // max overtime
-                    t[17].cast<pyvrp::Cost>(),   // unit overtime cost
-                    t[18].cast<std::string>());  // name
+                    unitOvertimeCost,               // unit overtime
+                    maybeDurationCostFunction,      // duration cost fn
+                    t[19].cast<std::string>());             // name
 
                 return vehicleType;
             }))

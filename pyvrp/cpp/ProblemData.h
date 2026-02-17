@@ -1,6 +1,7 @@
 #ifndef PYVRP_PROBLEMDATA_H
 #define PYVRP_PROBLEMDATA_H
 
+#include "DurationCostFunction.h"
 #include "Matrix.h"
 #include "Measure.h"
 
@@ -371,6 +372,7 @@ public:
      *     max_reloads: int = np.iinfo(np.uint64).max,
      *     max_overtime: int = 0,
      *     unit_overtime_cost: int = 0,
+     *     duration_cost_function: DurationCostFunction | None = None,
      *     *,
      *     name: str = "",
      * )
@@ -434,6 +436,16 @@ public:
      * unit_overtime_cost
      *     Cost of a unit of overtime. This is in addition to the regular
      *     :py:attr:`~unit_duration_cost` of route durations. Default 0.
+     * duration_cost_function
+     *     Optional piecewise linear duration cost function. If not provided,
+     *     this defaults to the legacy linear/overtime cost based on
+     *     :py:attr:`~unit_duration_cost`, :py:attr:`~shift_duration`, and
+     *     :py:attr:`~unit_overtime_cost`. This argument is mutually exclusive
+     *     with non-zero :py:attr:`~unit_duration_cost` and
+     *     :py:attr:`~unit_overtime_cost`. In :meth:`replace`, set
+     *     ``duration_cost_function=None`` explicitly to switch from custom
+     *     duration costs back to legacy linear/overtime costs or pass the 
+     *     :py:attr:`~DurationCostFunction` instance to use the default duration costs.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -482,6 +494,9 @@ public:
      *     :py:attr:`~shift_duration`.
      * unit_overtime_cost
      *     Additional cost of a unit of overtime.
+     * duration_cost_function
+     *     Piecewise linear duration cost function used to evaluate route
+     *     duration costs for this vehicle type.
      * max_duration
      *     Hard maximum route duration constraint, computed as the sum of
      *     :py:attr:`~shift_duration` and :py:attr:`~max_overtime`.
@@ -508,6 +523,7 @@ public:
         size_t const maxReloads;                 // Maximum number of reloads
         Duration const maxOvertime;              // Maximum allowed overtime
         Cost const unitOvertimeCost;             // Cost per unit of overtime
+        DurationCostFunction const durationCostFunction;  // Duration cost fn
         Duration const maxDuration;  // Maximum route duration, incl. overtime
         char const *name;            // Type name (for reference)
 
@@ -530,6 +546,7 @@ public:
                     size_t maxReloads = std::numeric_limits<size_t>::max(),
                     Duration maxOvertime = 0,
                     Cost unitOvertimeCost = 0,
+                    std::optional<DurationCostFunction> durationCostFunction = std::nullopt,
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -543,9 +560,20 @@ public:
         ~VehicleType();
 
         /**
-         * Returns a new ``VehicleType`` with the same data as this one, except
-         * for the given parameters, which are used instead.
-         */
+        * Returns a new ``VehicleType`` with the same data as this one, except 
+        * for the given parameters, which are used instead.
+        *
+        * Duration-cost update semantics:
+        * - ``durationCostFunctionProvided == false``: keep current duration cost mode.
+        * - ``durationCostFunctionProvided == true`` and ``durationCostFunction`` set:
+        *   use the provided custom duration cost function.
+        * - ``durationCostFunctionProvided == true`` and ``durationCostFunction`` empty:
+        *   clear custom duration cost and use legacy linear/overtime costs via the 
+        *   ``unitDurationCost`` and ``unitOvertimeCost`` parameters.
+        *
+        * A custom duration cost function is mutually exclusive with updating
+        * ``unitDurationCost`` / ``unitOvertimeCost`` in the same call.
+        */
         VehicleType replace(std::optional<size_t> numAvailable,
                             std::optional<std::vector<Load>> capacity,
                             std::optional<size_t> startDepot,
@@ -564,12 +592,43 @@ public:
                             std::optional<size_t> maxReloads,
                             std::optional<Duration> maxOvertime,
                             std::optional<Cost> unitOvertimeCost,
-                            std::optional<std::string> name) const;
+                            std::optional<DurationCostFunction> durationCostFunction,
+                            std::optional<std::string> name,
+                            bool durationCostFunctionProvided = false) const; 
+                            //FIXME: #925/1044-FormPup41:
+                            // This bool is a bit of an awkward API, but it allows us to distinguish between 
+                            // "no update to duration cost function" and "update duration cost function to the 
+                            // provided value, which may be empty to switch back to legacy duration costs".
+                            // However, we may want to refactor this in the future to a more intuitive API.
 
         /**
          * Returns the maximum number of trips these vehicle can execute.
          */
         size_t maxTrips() const;
+
+        /**
+         * Returns a linear proxy slope for duration edge costs used by
+         * neighbourhood and penalty initialisation heuristics.
+         *
+         * This delegates to :py:attr:`~duration_cost_function` and currently
+         * equals the slope of its first segment.
+         */
+        Cost durationCostSlope() const;
+
+    private:
+        /**
+         * Resolves the duration cost function from constructor inputs.
+         *
+         * This helper is specific to ``VehicleType`` input policy: users must
+         * provide either a custom duration cost function or legacy unit
+         * duration/overtime costs.
+         */
+        static DurationCostFunction
+        resolveDurationCostFunction(
+            Duration shiftDuration,
+            Cost unitDurationCost,
+            Cost unitOvertimeCost,
+            std::optional<DurationCostFunction> const &durationCostFunction);
     };
 
 private:

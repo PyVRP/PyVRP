@@ -39,6 +39,64 @@ class DynamicBitset:
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
 
+class PiecewiseLinearFunction:
+    def __init__(
+        self,
+        breakpoints: list[int] = [0],
+        slopes: list[int] = [0],
+        intercept: int = 0,
+    ) -> None: ...
+    def __call__(self, x: int) -> int: ...
+    @property
+    def breakpoints(self) -> list[int]: ...
+    @property
+    def slopes(self) -> list[int]: ...
+    @property
+    def values(self) -> list[int]: ...
+    @property
+    def intercept(self) -> int: ...
+    def is_zero(self) -> bool: ...
+    def __eq__(self, other: object) -> bool: ...
+    def __getstate__(self) -> tuple: ...
+    def __setstate__(self, state: tuple, /) -> None: ...
+
+#FIXME: #925/1044-FormPup41: 
+# Should we not include docs to explain what the input requirements are for the breakpoints and slopes of the PWL function? 
+# Or is this automatically imported from the cpp docstrings? Or should we add it to the docstring of '.add_vehicle_type()' in the Model class?
+#FIXME: #925/1044-FormPup41:
+# Perhaps it is best not to expose '.from_linear()' as a public method of DurationCostFunction, since it is really just a helper to convert the legacy linear duration cost parameters to the new PWL format. 
+# Including them would require more effort in removing the method if unit_costs would be outphased.
+class DurationCostFunction:
+    @overload
+    def __init__(
+        self,
+        breakpoints: list[int] = [0],
+        slopes: list[int] = [0],
+    ) -> None: ...
+    @overload
+    def __init__(self, piecewise_linear: PiecewiseLinearFunction) -> None: ...
+    @staticmethod
+    def from_linear(
+        shift_duration: int,
+        unit_duration_cost: int,
+        unit_overtime_cost: int,
+    ) -> DurationCostFunction: ...
+    def __call__(self, duration: int) -> int: ...
+    @property
+    def breakpoints(self) -> list[int]: ...
+    @property
+    def slopes(self) -> list[int]: ...
+    @property
+    def values(self) -> list[int]: ...
+    @property
+    def piecewise_linear(self) -> PiecewiseLinearFunction: ...
+    @property
+    def edge_cost_slope(self) -> int: ...
+    def is_zero(self) -> bool: ...
+    def __eq__(self, other: object) -> bool: ...
+    def __getstate__(self) -> tuple: ...
+    def __setstate__(self, state: tuple, /) -> None: ...
+
 class Client:
     x: float
     y: float
@@ -133,6 +191,13 @@ class VehicleType:
     max_reloads: int
     max_overtime: int
     unit_overtime_cost: int
+    duration_cost_function: DurationCostFunction
+    # `duration_cost_slope` is derived from `duration_cost_function` and used for edge-based heuristics. 
+    # It returns the slope of the first segment of the piecewise linear duration cost function, which is the cost 
+    # per duration unit for small durations (e.g. within shift duration).
+    # It is used in the `compute_proximity_matrix()` function in `pyvrp.search.neighbourhood` and `init_from()` in 
+    # `pyvrp.PenaltyManager` instead of the previous `unit_duration_cost`.
+    duration_cost_slope: int 
     max_duration: int
     name: str
     def __init__(
@@ -155,6 +220,7 @@ class VehicleType:
         max_reloads: int = ...,
         max_overtime: int = 0,
         unit_overtime_cost: int = 0,
+        duration_cost_function: DurationCostFunction | None = None,
         *,
         name: str = "",
     ) -> None: ...
@@ -180,6 +246,9 @@ class VehicleType:
         max_reloads: int | None = None,
         max_overtime: int | None = None,
         unit_overtime_cost: int | None = None,
+        duration_cost_function: DurationCostFunction | None = ..., 
+        #NOTE: default: not provided (...). This allows distinguishing between "not provided" and "explicitly set to None" for 
+        # the 'durationCostFunctionProvided' boolean in 'VehicleType.replace()'.
         *,
         name: str | None = None,
     ) -> VehicleType: ...

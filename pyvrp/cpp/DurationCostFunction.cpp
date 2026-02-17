@@ -1,6 +1,7 @@
 #include "DurationCostFunction.h"
 
 #include <algorithm>
+#include <cassert>
 #include <limits>
 #include <stdexcept>
 #include <vector>
@@ -176,4 +177,11 @@ std::vector<Cost> DurationCostFunction::values() const
         values.push_back(value);
 
     return values;
+}
+
+Cost DurationCostFunction::edgeCostSlope() const
+{
+    auto const &slopes = pwl_.slopes();
+    assert(!slopes.empty());
+    return slopes.front();
 }
