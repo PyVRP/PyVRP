@@ -108,6 +108,8 @@ DurationCostFunction DurationCostFunction::fromLinear(
 
     std::vector<Duration> breakpoints = {0};
     std::vector<Cost> slopes = {unitDurationCost};
+    
+    // NOTE: #925/1044-FormPup41:
     // fromLinear() always constructs a new function from the legacy scalar
     // parameters, so there are no pre-existing breakpoints to merge with. The
     // only possible inserted breakpoint is shiftDuration.

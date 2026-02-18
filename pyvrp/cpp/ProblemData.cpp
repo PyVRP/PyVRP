@@ -290,13 +290,19 @@ DurationCostFunction ProblemData::VehicleType::resolveDurationCostFunction(
     std::optional<DurationCostFunction> const &durationCostFn
 )
 {
+    // Check if a custom duration cost function is provided. 
+    // If not, we fall back to the legacy linear/overtime cost construction.
     if (!durationCostFn.has_value())
         return DurationCostFunction::fromLinear(
             shiftDuration, unitDurationCost, unitOvertimeCost);
 
     auto const hasLegacyDurationCosts
         = unitDurationCost != 0 || unitOvertimeCost != 0;
-
+    
+    // If a custom duration cost function is provided, and legacy duration/overtime costs are also provided, we throw an error. 
+    // This is to prevent confusion and ensure clear API usage. Users should provide either a custom duration cost function or 
+    // legacy scalar duration/overtime costs, but not both. If we allowed both, it could lead to ambiguity about which costs 
+    // take precedence and make the API harder to understand and maintain.
     if (hasLegacyDurationCosts)
     {
         // Strict API clarity by default: a custom duration cost function and

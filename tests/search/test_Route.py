@@ -1061,10 +1061,23 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
         (VehicleType(tw_late=5), Depot(0, 0), True),  # constraint (vehicle)
         (VehicleType(shift_duration=0), Depot(0, 0), True),  # constraint (veh)
         (VehicleType(unit_duration_cost=1), Depot(0, 0), True),  # unit cost (legacy)
-        # unit cost but no max_overtime, so never relevant
+        # Overtime-only legacy cost is inactive with default shift_duration
+        # (int64_max): max(0, d - shift_duration) is always 0.
         (VehicleType(unit_overtime_cost=1), Depot(0, 0), False),
-        # unit cost and overtime, so could be relevant
-        (VehicleType(unit_overtime_cost=1, max_overtime=1), Depot(0, 0), True),
+
+        # Regression note: #925/1044-FormPup41:
+        # This case used to expect True ("unit cost + overtime could matter").
+        # Now, it is False because, with default shift_duration=int64_max, the
+        # legacy overtime term never activates for representable durations.
+        # So fromLinear() builds a zero duration-cost function here
+        # (unit_duration_cost=0), and has_duration_cost() stays False unless
+        # a duration constraint is active.
+        # Relevant symbols for behavior changes:
+        # - DurationCostFunction::fromLinear in pyvrp/cpp/DurationCostFunction.cpp
+        # - ProblemData::VehicleType::maxDuration in pyvrp/cpp/ProblemData.cpp
+        # - Route::hasDurationCost in pyvrp/cpp/search/Route.h
+        (VehicleType(unit_overtime_cost=1, max_overtime=1), Depot(0, 0), False),
+
         (VehicleType(max_overtime=5), Depot(0, 0), False),  # not constrained
         (
             VehicleType(duration_cost_function=DurationCostFunction([0], [1])),
