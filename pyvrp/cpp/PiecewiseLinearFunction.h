@@ -60,11 +60,9 @@ private:
     Scalar intercept_ = 0;
 
 public:
-    PiecewiseLinearFunction(
-        std::vector<Scalar> breakpoints = {0},
-        std::vector<Scalar> slopes = {0},
-        Scalar intercept = 0
-    );
+    PiecewiseLinearFunction(std::vector<Scalar> breakpoints = {0},
+                            std::vector<Scalar> slopes = {0},
+                            Scalar intercept = 0);
 
     /**
      * Evaluates the cumulative function value at ``x``.
@@ -123,7 +121,8 @@ PiecewiseLinearFunction::values() const
     return values_;
 }
 
-inline PiecewiseLinearFunction::Scalar PiecewiseLinearFunction::intercept() const
+inline PiecewiseLinearFunction::Scalar
+PiecewiseLinearFunction::intercept() const
 {
     return intercept_;
 }

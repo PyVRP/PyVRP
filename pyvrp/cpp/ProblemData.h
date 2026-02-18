@@ -444,10 +444,9 @@ public:
      *     with non-zero :py:attr:`~unit_duration_cost` and
      *     :py:attr:`~unit_overtime_cost`. In :meth:`replace`, set
      *     ``duration_cost_function=None`` explicitly to switch from custom
-     *     duration costs back to legacy linear/overtime costs or pass the 
-     *     :py:attr:`~DurationCostFunction` instance to use the default duration costs.
-     * name
-     *     Free-form name field for this vehicle type. Default empty.
+     *     duration costs back to legacy linear/overtime costs or pass the
+     *     :py:attr:`~DurationCostFunction` instance to use the default duration
+     * costs. name Free-form name field for this vehicle type. Default empty.
      *
      * Attributes
      * ----------
@@ -546,7 +545,8 @@ public:
                     size_t maxReloads = std::numeric_limits<size_t>::max(),
                     Duration maxOvertime = 0,
                     Cost unitOvertimeCost = 0,
-                    std::optional<DurationCostFunction> durationCostFunction = std::nullopt,
+                    std::optional<DurationCostFunction> durationCostFunction
+                    = std::nullopt,
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -560,46 +560,51 @@ public:
         ~VehicleType();
 
         /**
-        * Returns a new ``VehicleType`` with the same data as this one, except 
-        * for the given parameters, which are used instead.
-        *
-        * Duration-cost update semantics:
-        * - ``durationCostFunctionProvided == false``: keep current duration cost mode.
-        * - ``durationCostFunctionProvided == true`` and ``durationCostFunction`` set:
-        *   use the provided custom duration cost function.
-        * - ``durationCostFunctionProvided == true`` and ``durationCostFunction`` empty:
-        *   clear custom duration cost and use legacy linear/overtime costs via the 
-        *   ``unitDurationCost`` and ``unitOvertimeCost`` parameters.
-        *
-        * A custom duration cost function is mutually exclusive with updating
-        * ``unitDurationCost`` / ``unitOvertimeCost`` in the same call.
-        */
-        VehicleType replace(std::optional<size_t> numAvailable,
-                            std::optional<std::vector<Load>> capacity,
-                            std::optional<size_t> startDepot,
-                            std::optional<size_t> endDepot,
-                            std::optional<Cost> fixedCost,
-                            std::optional<Duration> twEarly,
-                            std::optional<Duration> twLate,
-                            std::optional<Duration> shiftDuration,
-                            std::optional<Distance> maxDistance,
-                            std::optional<Cost> unitDistanceCost,
-                            std::optional<Cost> unitDurationCost,
-                            std::optional<size_t> profile,
-                            std::optional<Duration> startLate,
-                            std::optional<std::vector<Load>> initialLoad,
-                            std::optional<std::vector<size_t>> reloadDepots,
-                            std::optional<size_t> maxReloads,
-                            std::optional<Duration> maxOvertime,
-                            std::optional<Cost> unitOvertimeCost,
-                            std::optional<DurationCostFunction> durationCostFunction,
-                            std::optional<std::string> name,
-                            bool durationCostFunctionProvided = false) const; 
-                            // FIXME: #925/1044-FormPup41:
-                            // This bool might be a bit of an awkward API, but it allows us to distinguish between 
-                            // "no update to duration cost function" and "update duration cost function to the 
-                            // provided value, which may be empty to switch back to legacy duration costs".
-                            // However, we may want to refactor this in the future to a more intuitive API.
+         * Returns a new ``VehicleType`` with the same data as this one, except
+         * for the given parameters, which are used instead.
+         *
+         * Duration-cost update semantics:
+         * - ``durationCostFunctionProvided == false``: keep current duration
+         * cost mode.
+         * - ``durationCostFunctionProvided == true`` and
+         * ``durationCostFunction`` set: use the provided custom duration cost
+         * function.
+         * - ``durationCostFunctionProvided == true`` and
+         * ``durationCostFunction`` empty: clear custom duration cost and use
+         * legacy linear/overtime costs via the
+         *   ``unitDurationCost`` and ``unitOvertimeCost`` parameters.
+         *
+         * A custom duration cost function is mutually exclusive with updating
+         * ``unitDurationCost`` / ``unitOvertimeCost`` in the same call.
+         */
+        VehicleType
+        replace(std::optional<size_t> numAvailable,
+                std::optional<std::vector<Load>> capacity,
+                std::optional<size_t> startDepot,
+                std::optional<size_t> endDepot,
+                std::optional<Cost> fixedCost,
+                std::optional<Duration> twEarly,
+                std::optional<Duration> twLate,
+                std::optional<Duration> shiftDuration,
+                std::optional<Distance> maxDistance,
+                std::optional<Cost> unitDistanceCost,
+                std::optional<Cost> unitDurationCost,
+                std::optional<size_t> profile,
+                std::optional<Duration> startLate,
+                std::optional<std::vector<Load>> initialLoad,
+                std::optional<std::vector<size_t>> reloadDepots,
+                std::optional<size_t> maxReloads,
+                std::optional<Duration> maxOvertime,
+                std::optional<Cost> unitOvertimeCost,
+                std::optional<DurationCostFunction> durationCostFunction,
+                std::optional<std::string> name,
+                bool durationCostFunctionProvided = false) const;
+        // FIXME: #925/1044-FormPup41:
+        // This bool might be a bit of an awkward API, but it allows us to
+        // distinguish between "no update to duration cost function" and "update
+        // duration cost function to the provided value, which may be empty to
+        // switch back to legacy duration costs". However, we may want to
+        // refactor this in the future to a more intuitive API.
 
         /**
          * Returns the maximum number of trips these vehicle can execute.
@@ -623,8 +628,7 @@ public:
          * provide either a custom duration cost function or legacy unit
          * duration/overtime costs.
          */
-        static DurationCostFunction
-        resolveDurationCostFunction(
+        static DurationCostFunction resolveDurationCostFunction(
             Duration shiftDuration,
             Cost unitDurationCost,
             Cost unitOvertimeCost,

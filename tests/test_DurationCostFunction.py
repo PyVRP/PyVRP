@@ -16,23 +16,26 @@ from pyvrp import (
 def test_piecewise_linear_function_evaluates_segments():
     fn = PiecewiseLinearFunction([0, 5, 10], [2, 3, 4], intercept=1)
 
-    assert_equal(fn(0), 1)      # 0 * 2 + 1
-    assert_equal(fn(4), 9)      # 4 * 2 + 1
-    assert_equal(fn(5), 11)     # 5 * 2 + 1
-    assert_equal(fn(9), 23)     # 5 * 2 + 4 * 3 + 1
-    assert_equal(fn(10), 26)    # 5 * 2 + 5 * 3 + 1
-    assert_equal(fn(13), 38)    # 5 * 2 + 5 * 3 + 3 * 4 + 1
+    assert_equal(fn(0), 1)  # 0 * 2 + 1
+    assert_equal(fn(4), 9)  # 4 * 2 + 1
+    assert_equal(fn(5), 11)  # 5 * 2 + 1
+    assert_equal(fn(9), 23)  # 5 * 2 + 4 * 3 + 1
+    assert_equal(fn(10), 26)  # 5 * 2 + 5 * 3 + 1
+    assert_equal(fn(13), 38)  # 5 * 2 + 5 * 3 + 3 * 4 + 1
 
 
 def test_piecewise_linear_function_raises_invalid_data():
     with assert_raises(ValueError):
-        PiecewiseLinearFunction([], []) # at least one breakpoint and slope required
+        # At least one breakpoint and slope required.
+        PiecewiseLinearFunction([], [])
 
     with assert_raises(ValueError):
-        PiecewiseLinearFunction([0, 1], [0]) # different number of breakpoints and slopes
+        # Different number of breakpoints and slopes.
+        PiecewiseLinearFunction([0, 1], [0])
 
     with assert_raises(ValueError):
-        PiecewiseLinearFunction([0, 1, 1], [0, 0, 0]) # duplicate breakpoints
+        # Duplicate breakpoints.
+        PiecewiseLinearFunction([0, 1, 1], [0, 0, 0])
 
 
 def test_piecewise_linear_function_raises_for_left_of_domain_query():
@@ -44,16 +47,19 @@ def test_piecewise_linear_function_raises_for_left_of_domain_query():
 
 def test_duration_cost_function_raises_invalid_data():
     with assert_raises(ValueError):
-        DurationCostFunction([1], [0]) # first breakpoint must be 0
+        # First breakpoint must be 0.
+        DurationCostFunction([1], [0])
 
     with assert_raises(ValueError):
-        DurationCostFunction([0], [-1]) # negative slope
+        # Negative slope.
+        DurationCostFunction([0], [-1])
 
     with assert_raises(ValueError):
         DurationCostFunction([0, 5], [2, 1])  # non-convex
 
     with assert_raises(ValueError):
-        DurationCostFunction(PiecewiseLinearFunction([0], [0], intercept=1)) # non-zero intercept
+        # Non-zero intercept.
+        DurationCostFunction(PiecewiseLinearFunction([0], [0], intercept=1))
 
 
 def test_duration_cost_function_legacy_mapping_matches_definition():
@@ -65,8 +71,8 @@ def test_duration_cost_function_legacy_mapping_matches_definition():
     duration_cost = vehicle_type.duration_cost_function
 
     assert_equal(duration_cost(6), 12)  # 6 * 2 + 0 * 5
-    assert_equal(duration_cost(10), 20) # 10 * 2 + 0 * 5
-    assert_equal(duration_cost(13), 41) # 10 * 2 + 3 * (2 + 5) = 20 + 21
+    assert_equal(duration_cost(10), 20)  # 10 * 2 + 0 * 5
+    assert_equal(duration_cost(13), 41)  # 10 * 2 + 3 * (2 + 5) = 20 + 21
     assert_equal(duration_cost.edge_cost_slope, 2)
 
 
@@ -78,12 +84,15 @@ def test_duration_cost_function_legacy_mapping_with_zero_shift():
     )
     duration_cost = vehicle_type.duration_cost_function
 
-    assert_equal(duration_cost.breakpoints, [0])        # shift_duration is zero, so no new breakpoint is added
-    assert_equal(duration_cost.slopes, [7])             # unit_duration_cost + unit_overtime_cost since overtime applies from the start
-    assert_equal(duration_cost(13), 2 * 13 + 5 * 13)    # all duration is overtime
+    # shift_duration is zero, so no new breakpoint is added.
+    assert_equal(duration_cost.breakpoints, [0])
+    # Overtime applies from the start: 2 + 5 = 7.
+    assert_equal(duration_cost.slopes, [7])
+    # All duration is overtime.
+    assert_equal(duration_cost(13), 2 * 13 + 5 * 13)
 
 
-def test_duration_cost_function_legacy_mapping_with_max_shift_has_no_overtime_segment():
+def test_duration_cost_fn_max_shift_has_no_overtime_segment():
     vehicle_type = VehicleType(
         shift_duration=np.iinfo(np.int64).max,
         unit_duration_cost=2,
@@ -91,14 +100,18 @@ def test_duration_cost_function_legacy_mapping_with_max_shift_has_no_overtime_se
     )
     duration_cost = vehicle_type.duration_cost_function
 
-    assert_equal(duration_cost.breakpoints, [0])        # shift_duration is max int64, so no new breakpoint is added within the domain of int64
-    assert_equal(duration_cost.slopes, [2])             # unit_duration_cost only, since overtime would only apply after shift_duration which is beyond the int64 domain
-    assert_equal(duration_cost(13), 26)                 # all duration is regular time, no overtime
+    # shift_duration is int64 max, so overtime never activates in int64 domain.
+    assert_equal(duration_cost.breakpoints, [0])
+    # Only the regular duration slope remains.
+    assert_equal(duration_cost.slopes, [2])
+    # All duration is regular time, no overtime.
+    assert_equal(duration_cost(13), 26)
 
 
 def test_duration_cost_function_legacy_mapping_raises_on_slope_sum_overflow():
     with assert_raises(
-        OverflowError, match="unit_duration_cost \\+ unit_overtime_cost overflows."
+        OverflowError,
+        match="unit_duration_cost \\+ unit_overtime_cost overflows.",
     ):
         VehicleType(
             shift_duration=0,
@@ -124,15 +137,17 @@ def test_route_duration_cost_matches_vehicle_duration_cost_function():
     route = Route(data, visits=[1], vehicle_type=0)
     duration = route.duration()
 
-    assert_equal(duration, 8)                   # 4 from depot to client and 4 back
-    assert_equal(route.duration_cost(), 35)     # 1 * 5 + 10 * 3 = 35 for duration 8 with breakpoints [0, 5] and slopes [1, 10].
+    # 4 from depot to client and 4 back.
+    assert_equal(duration, 8)
+    # 1 * 5 + 10 * 3 = 35 for duration 8 with breakpoints [0, 5].
+    assert_equal(route.duration_cost(), 35)
     assert_equal(
         route.duration_cost(),
         data.vehicle_type(0).duration_cost_function(duration),
-    ) # the route's duration cost should match the vehicle type's duration cost function evaluated at the route duration
+    )
 
 
-def test_vehicle_type_raises_for_mixed_custom_and_legacy_duration_cost_inputs():
+def test_vehicle_type_raises_for_mixed_duration_cost_inputs():
     with assert_raises(
         ValueError,
         match=(
@@ -156,24 +171,26 @@ def test_vehicle_type_replace_updates_legacy_duration_cost_function():
     )
 
     replaced = vehicle_type.replace(unit_duration_cost=4)
-    assert_equal(replaced.duration_cost_function(8), 4 * 8 + 3 * 3) # 4 * 8 + 3 * (8 - 5) = 32 + 9 = 41 because the new unit_duration_cost is 4 and the overtime cost applies to the duration beyond the shift_duration of 5
+    # 4 * 8 + 3 * (8 - 5) = 32 + 9 = 41.
+    assert_equal(replaced.duration_cost_function(8), 4 * 8 + 3 * 3)
 
 
-def test_vehicle_type_replace_raises_when_updating_legacy_cost_for_custom_function():
+def test_vehicle_type_replace_rejects_legacy_update_for_custom_function():
     custom = DurationCostFunction([0, 5], [1, 10])
     vehicle_type = VehicleType(duration_cost_function=custom)
 
     with assert_raises(
         ValueError,
         match=(
-            "Cannot update unit_duration_cost or unit_overtime_cost when using "
+            "Cannot update unit_duration_cost or unit_overtime_cost "
+            "when using "
             "a custom duration_cost_function."
         ),
     ):
         vehicle_type.replace(unit_duration_cost=7)
 
 
-def test_vehicle_type_replace_switches_to_legacy_when_duration_cost_is_cleared():
+def test_vehicle_type_replace_switches_to_legacy_after_clearing_custom():
     custom = DurationCostFunction([0, 5], [1, 10])
     vehicle_type = VehicleType(
         shift_duration=5,
@@ -189,7 +206,7 @@ def test_vehicle_type_replace_switches_to_legacy_when_duration_cost_is_cleared()
     assert_equal(replaced.duration_cost_function(8), 4 * 8 + 3 * 3)
 
 
-def test_vehicle_type_duration_cost_slope_delegates_to_duration_cost_function():
+def test_vehicle_type_duration_cost_slope_delegates_to_duration_fn():
     custom = DurationCostFunction([0, 5], [3, 10])
     vehicle_type = VehicleType(duration_cost_function=custom)
     assert_equal(vehicle_type.duration_cost_slope, 3)

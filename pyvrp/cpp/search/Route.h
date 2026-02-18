@@ -468,7 +468,8 @@ public:
     /**
      * @return Duration cost function used by this route.
      */
-    [[nodiscard]] inline DurationCostFunction const &durationCostFunction() const;
+    [[nodiscard]] inline DurationCostFunction const &
+    durationCostFunction() const;
 
     /**
      * Returns true if this route has duration-related cost components, either
@@ -1143,8 +1144,8 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
 
         auto const duration = ds.duration();
         // OLD CODE:
-        //auto const overtime = std::max<Duration>(duration - shiftDuration, 0);
-        //auto const cost = unitDurationCost * static_cast<Cost>(duration)
+        // auto const overtime = std::max<Duration>(duration - shiftDuration,
+        // 0); auto const cost = unitDurationCost * static_cast<Cost>(duration)
         //                  + unitOvertimeCost * static_cast<Cost>(overtime);
         auto const cost = durationCostFunction(duration);
         auto const timeWarp = ds.timeWarp(maxDuration);

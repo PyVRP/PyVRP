@@ -14,7 +14,8 @@ using pyvrp::PiecewiseLinearFunction;
 namespace
 {
 template <typename Measure>
-std::vector<PiecewiseLinearFunction::Scalar> toRaw(std::vector<Measure> const &vec)
+std::vector<PiecewiseLinearFunction::Scalar>
+toRaw(std::vector<Measure> const &vec)
 {
     std::vector<PiecewiseLinearFunction::Scalar> raw;
     raw.reserve(vec.size());
@@ -51,18 +52,20 @@ void validateDurationPwl(PiecewiseLinearFunction const &pwl)
 
     // NOTE: #925/1044-FormPup41:
     // It is possible to allow a non-zero first breakpoint, but then the
-    // duration cost function must also define behavior on [0, first_breakpoint),
-    // for example via extrapolation or clamping. For now, we require that
-    // duration costs are directly defined from duration 0 onward.
+    // duration cost function must also define behavior on [0,
+    // first_breakpoint), for example via extrapolation or clamping. For now, we
+    // require that duration costs are directly defined from duration 0 onward.
     if (breakpoints.front() != 0)
         throw std::invalid_argument("breakpoints must start at 0.");
 
-    if (std::any_of(breakpoints.begin(), breakpoints.end(), [](auto const bp)
-                    { return bp < 0; }))
+    if (std::any_of(breakpoints.begin(),
+                    breakpoints.end(),
+                    [](auto const bp) { return bp < 0; }))
         throw std::invalid_argument("breakpoints must be >= 0.");
 
-    if (std::any_of(slopes.begin(), slopes.end(), [](auto const slope)
-                    { return slope < 0; }))
+    if (std::any_of(slopes.begin(),
+                    slopes.end(),
+                    [](auto const slope) { return slope < 0; }))
         throw std::invalid_argument("slopes must be >= 0.");
 
     // Non-decreasing slopes ensure convexity: each additional duration unit is
@@ -76,10 +79,8 @@ void validateDurationPwl(PiecewiseLinearFunction const &pwl)
 }
 }  // namespace
 
-DurationCostFunction::DurationCostFunction(
-    std::vector<Duration> breakpoints,
-    std::vector<Cost> slopes
-)
+DurationCostFunction::DurationCostFunction(std::vector<Duration> breakpoints,
+                                           std::vector<Cost> slopes)
     : pwl_(toRaw(breakpoints), toRaw(slopes), 0)
 {
     validateDurationPwl(pwl_);
@@ -91,11 +92,9 @@ DurationCostFunction::DurationCostFunction(PiecewiseLinearFunction pwl)
     validateDurationPwl(pwl_);
 }
 
-DurationCostFunction DurationCostFunction::fromLinear(
-    Duration shiftDuration,
-    Cost unitDurationCost,
-    Cost unitOvertimeCost
-)
+DurationCostFunction DurationCostFunction::fromLinear(Duration shiftDuration,
+                                                      Cost unitDurationCost,
+                                                      Cost unitOvertimeCost)
 {
     if (shiftDuration < 0)
         throw std::invalid_argument("shift_duration must be >= 0.");
@@ -108,7 +107,7 @@ DurationCostFunction DurationCostFunction::fromLinear(
 
     std::vector<Duration> breakpoints = {0};
     std::vector<Cost> slopes = {unitDurationCost};
-    
+
     // NOTE: #925/1044-FormPup41:
     // fromLinear() always constructs a new function from the legacy scalar
     // parameters, so there are no pre-existing breakpoints to merge with. The
@@ -122,7 +121,8 @@ DurationCostFunction DurationCostFunction::fromLinear(
     // max(0, d - shiftDuration) is always 0 for representable durations d, so
     // overtime never activates and a second segment is unnecessary.
     auto const hasFiniteOvertimeThreshold
-        = shiftDuration > 0 && shiftDuration < std::numeric_limits<Duration>::max();
+        = shiftDuration > 0
+          && shiftDuration < std::numeric_limits<Duration>::max();
 
     if (unitOvertimeCost != 0 && hasFiniteOvertimeThreshold)
     {

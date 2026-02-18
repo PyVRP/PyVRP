@@ -345,8 +345,8 @@ void Route::update()
     timeWarp_ = durAfter[0].timeWarp(maxDuration());
 
     // OLD CODE
-    //auto const overtime = std::max<Duration>(duration_ - shiftDuration(), 0);
-    //durationCost_ = unitDurationCost() * static_cast<Cost>(duration_)
+    // auto const overtime = std::max<Duration>(duration_ - shiftDuration(), 0);
+    // durationCost_ = unitDurationCost() * static_cast<Cost>(duration_)
     //                + unitOvertimeCost() * static_cast<Cost>(overtime);
     durationCost_ = durationCostFunction()(duration_);
 

@@ -9,7 +9,8 @@
 // NOTE: #925/1044-FormPup41
 // We can later extend this class with other duration cost functions, e.g.
 // polynomial methods.
-// For now, it only wraps a piecewise linear function and validates duration-specific invariants.
+// For now, it only wraps a piecewise linear function and validates
+// duration-specific invariants.
 
 namespace pyvrp
 {
@@ -52,10 +53,8 @@ class DurationCostFunction
     PiecewiseLinearFunction pwl_;
 
 public:
-    DurationCostFunction(
-        std::vector<Duration> breakpoints = {0},
-        std::vector<Cost> slopes = {0}
-    );
+    DurationCostFunction(std::vector<Duration> breakpoints = {0},
+                         std::vector<Cost> slopes = {0});
 
     /**
      * Builds a duration cost function from the legacy linear and overtime
@@ -91,11 +90,9 @@ public:
      *     If ``unit_duration_cost + unit_overtime_cost`` cannot be represented
      *     as an ``int64`` cost.
      */
-    [[nodiscard]] static DurationCostFunction fromLinear(
-        Duration shiftDuration,
-        Cost unitDurationCost,
-        Cost unitOvertimeCost
-    );
+    [[nodiscard]] static DurationCostFunction fromLinear(Duration shiftDuration,
+                                                         Cost unitDurationCost,
+                                                         Cost unitOvertimeCost);
 
     /**
      * Builds a duration cost function from a generic piecewise linear
@@ -143,7 +140,8 @@ public:
     bool operator==(DurationCostFunction const &other) const = default;
 };
 
-inline PiecewiseLinearFunction const &DurationCostFunction::piecewiseLinear() const
+inline PiecewiseLinearFunction const &
+DurationCostFunction::piecewiseLinear() const
 {
     return pwl_;
 }

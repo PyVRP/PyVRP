@@ -15,10 +15,8 @@ namespace
 // utility.
 
 // Returns true if lhs + rhs would overflow int64_t.
-[[nodiscard]] bool addOverflows(
-    PiecewiseLinearFunction::Scalar lhs,
-    PiecewiseLinearFunction::Scalar rhs
-)
+[[nodiscard]] bool addOverflows(PiecewiseLinearFunction::Scalar lhs,
+                                PiecewiseLinearFunction::Scalar rhs)
 {
     using Scalar = PiecewiseLinearFunction::Scalar;
     auto constexpr MAX = std::numeric_limits<Scalar>::max();
@@ -34,10 +32,8 @@ namespace
 }
 
 // Returns true if lhs * rhs would overflow int64_t.
-[[nodiscard]] bool mulOverflows(
-    PiecewiseLinearFunction::Scalar lhs,
-    PiecewiseLinearFunction::Scalar rhs
-)
+[[nodiscard]] bool mulOverflows(PiecewiseLinearFunction::Scalar lhs,
+                                PiecewiseLinearFunction::Scalar rhs)
 {
     using Scalar = PiecewiseLinearFunction::Scalar;
     auto constexpr MAX = std::numeric_limits<Scalar>::max();
@@ -66,11 +62,10 @@ namespace
     return lhs < MAX / rhs;
 }
 
-[[nodiscard]] PiecewiseLinearFunction::Scalar checkedMulAdd(
-    PiecewiseLinearFunction::Scalar lhs,
-    PiecewiseLinearFunction::Scalar rhs,
-    PiecewiseLinearFunction::Scalar addend
-)
+[[nodiscard]] PiecewiseLinearFunction::Scalar
+checkedMulAdd(PiecewiseLinearFunction::Scalar lhs,
+              PiecewiseLinearFunction::Scalar rhs,
+              PiecewiseLinearFunction::Scalar addend)
 {
     // Computes addend + lhs * rhs with explicit overflow checks.
     if (mulOverflows(lhs, rhs))
@@ -94,8 +89,7 @@ namespace
 PiecewiseLinearFunction::PiecewiseLinearFunction(
     std::vector<Scalar> breakpoints,
     std::vector<Scalar> slopes,
-    Scalar intercept
-)
+    Scalar intercept)
     : breakpoints_(std::move(breakpoints)),
       slopes_(std::move(slopes)),
       values_(breakpoints_.size(), 0),
@@ -115,7 +109,8 @@ PiecewiseLinearFunction::PiecewiseLinearFunction(
 
     for (size_t idx = 1; idx != breakpoints_.size(); ++idx)
         if (breakpoints_[idx - 1] >= breakpoints_[idx])
-            throw std::invalid_argument("breakpoints must be strictly increasing.");
+            throw std::invalid_argument(
+                "breakpoints must be strictly increasing.");
 
     // values_[i] stores f(breakpoints_[i]). We compute these cumulatively so
     // evaluating f(x) later only needs one segment lookup and one linear step.
@@ -129,7 +124,8 @@ PiecewiseLinearFunction::PiecewiseLinearFunction(
     }
 }
 
-PiecewiseLinearFunction::Scalar PiecewiseLinearFunction::operator()(Scalar x) const
+PiecewiseLinearFunction::Scalar
+PiecewiseLinearFunction::operator()(Scalar x) const
 {
     if (x < breakpoints_.front())
     {
@@ -138,13 +134,16 @@ PiecewiseLinearFunction::Scalar PiecewiseLinearFunction::operator()(Scalar x) co
         // in the constructor to specify behavior for out-of-domain inputs, for
         // example extrapolate with the first slope or clamp to the first
         // breakpoint, adding more flexibility.
-        // For now, we keep it strict to avoid confusion about the function domain.
+        // For now, we keep it strict to avoid confusion about the function
+        // domain.
         auto const *msg = "x must be >= first breakpoint.";
         throw std::invalid_argument(msg);
     }
 
-    auto const ub = std::upper_bound(breakpoints_.begin(), breakpoints_.end(), x);
-    auto const idx = static_cast<size_t>(std::distance(breakpoints_.begin(), ub)) - 1;
+    auto const ub
+        = std::upper_bound(breakpoints_.begin(), breakpoints_.end(), x);
+    auto const idx
+        = static_cast<size_t>(std::distance(breakpoints_.begin(), ub)) - 1;
 
     // x lies in segment idx, so reconstruct f(x) from the precomputed value at
     // the segment start.
@@ -157,6 +156,7 @@ bool PiecewiseLinearFunction::isZero() const
     if (intercept_ != 0)
         return false;
 
-    return std::all_of(
-        slopes_.begin(), slopes_.end(), [](auto const slope) { return slope == 0; });
+    return std::all_of(slopes_.begin(),
+                       slopes_.end(),
+                       [](auto const slope) { return slope == 0; });
 }

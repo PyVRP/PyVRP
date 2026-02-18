@@ -97,9 +97,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("breakpoints") = std::vector<int64_t>{0},
              py::arg("slopes") = std::vector<int64_t>{0},
              py::arg("intercept") = 0)
-        .def("__call__",
-             &PiecewiseLinearFunction::operator(),
-             py::arg("x"))
+        .def("__call__", &PiecewiseLinearFunction::operator(), py::arg("x"))
         .def_property_readonly("breakpoints",
                                &PiecewiseLinearFunction::breakpoints,
                                py::return_value_policy::reference_internal)
@@ -117,8 +115,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::pickle(
             [](PiecewiseLinearFunction const &function)  // __getstate__
             {
-                return py::make_tuple(
-                    function.breakpoints(), function.slopes(), function.intercept());
+                return py::make_tuple(function.breakpoints(),
+                                      function.slopes(),
+                                      function.intercept());
             },
             [](py::tuple t)  // __setstate__
             {
@@ -140,9 +139,7 @@ PYBIND11_MODULE(_pyvrp, m)
         // scalar duration/overtime costs to a duration cost function. Exposing
         // it publicly would make deprecating or removing legacy scalar inputs
         // harder once users depend on the helper directly.
-        .def("__call__",
-             &DurationCostFunction::operator(),
-             py::arg("duration"))
+        .def("__call__", &DurationCostFunction::operator(), py::arg("duration"))
         .def_property_readonly("breakpoints",
                                &DurationCostFunction::breakpoints,
                                DOC(pyvrp, DurationCostFunction, breakpoints))
@@ -152,12 +149,11 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("values",
                                &DurationCostFunction::values,
                                DOC(pyvrp, DurationCostFunction, values))
-        .def_property_readonly("piecewise_linear",
-                               &DurationCostFunction::piecewiseLinear,
-                               py::return_value_policy::reference_internal,
-                               DOC(pyvrp,
-                                   DurationCostFunction,
-                                   piecewiseLinear))
+        .def_property_readonly(
+            "piecewise_linear",
+            &DurationCostFunction::piecewiseLinear,
+            py::return_value_policy::reference_internal,
+            DOC(pyvrp, DurationCostFunction, piecewiseLinear))
         .def_property_readonly("edge_cost_slope",
                                &DurationCostFunction::edgeCostSlope)
         .def("is_zero",
@@ -167,15 +163,17 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::pickle(
             [](DurationCostFunction const &function)  // __getstate__
             {
-                return py::make_tuple(function.breakpoints(), function.slopes());
+                return py::make_tuple(function.breakpoints(),
+                                      function.slopes());
             },
             [](py::tuple t)  // __setstate__
             {
                 if (t.size() == 2)
                 {
                     return DurationCostFunction(
-                        t[0].cast<std::vector<pyvrp::Duration>>(),  // breakpoints
-                        t[1].cast<std::vector<pyvrp::Cost>>());     // slopes
+                        t[0].cast<
+                            std::vector<pyvrp::Duration>>(),     // breakpoints
+                        t[1].cast<std::vector<pyvrp::Cost>>());  // slopes
                 }
 
                 throw std::runtime_error("Invalid DurationCostFunction state.");
@@ -475,14 +473,18 @@ PYBIND11_MODULE(_pyvrp, m)
                std::optional<std::string> name)
             {
                 // Ellipsis means: not provided from Python.
-                auto const durationCostFunctionProvided = !durationCostFunction.is(py::ellipsis());
+                auto const durationCostFunctionProvided
+                    = !durationCostFunction.is(py::ellipsis());
 
                 // Keep nullopt both when the argument is omitted and when it is
                 // explicitly None; durationCostFunctionProvided disambiguates.
-                std::optional<DurationCostFunction> parsedDurationCostFunction = std::nullopt;
-                if (durationCostFunctionProvided && !durationCostFunction.is_none())
+                std::optional<DurationCostFunction> parsedDurationCostFunction
+                    = std::nullopt;
+                if (durationCostFunctionProvided
+                    && !durationCostFunction.is_none())
                 {
-                    parsedDurationCostFunction = durationCostFunction.cast<DurationCostFunction>();
+                    parsedDurationCostFunction
+                        = durationCostFunction.cast<DurationCostFunction>();
                 }
 
                 return vehicleType.replace(numAvailable,
@@ -535,10 +537,11 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::pickle(
             [](ProblemData::VehicleType const &vehicleType) {  // __getstate__
                 // NOTE:
-                // We currently serialise both legacy scalar duration-cost fields
-                // (unitDurationCost/unitOvertimeCost/shiftDuration) and the
-                // resolved durationCostFunction. This keeps the pickle payload
-                // explicit and deterministic across legacy and custom modes.
+                // We currently serialise both legacy scalar duration-cost
+                // fields (unitDurationCost/unitOvertimeCost/shiftDuration) and
+                // the resolved durationCostFunction. This keeps the pickle
+                // payload explicit and deterministic across legacy and custom
+                // modes.
                 return py::make_tuple(vehicleType.numAvailable,
                                       vehicleType.capacity,
                                       vehicleType.startDepot,
@@ -572,10 +575,12 @@ PYBIND11_MODULE(_pyvrp, m)
                 auto const shiftDuration = t[7].cast<pyvrp::Duration>();
                 auto const unitDurationCost = t[10].cast<pyvrp::Cost>();
                 auto const unitOvertimeCost = t[17].cast<pyvrp::Cost>();
-                auto const durationCostFunction = t[18].cast<DurationCostFunction>();
+                auto const durationCostFunction
+                    = t[18].cast<DurationCostFunction>();
 
                 auto const legacyDurationCostFunction
-                    = DurationCostFunction::fromLinear(shiftDuration, unitDurationCost, unitOvertimeCost);
+                    = DurationCostFunction::fromLinear(
+                        shiftDuration, unitDurationCost, unitOvertimeCost);
 
                 // If the serialized function is exactly the legacy equivalent,
                 // pass nullopt so VehicleType resolves from legacy scalars.
@@ -605,9 +610,9 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[14].cast<std::vector<size_t>>(),       // reload depots
                     t[15].cast<size_t>(),                    // max reloads
                     t[16].cast<pyvrp::Duration>(),           // max overtime
-                    unitOvertimeCost,               // unit overtime
-                    maybeDurationCostFunction,      // duration cost fn
-                    t[19].cast<std::string>());             // name
+                    unitOvertimeCost,                        // unit overtime
+                    maybeDurationCostFunction,               // duration cost fn
+                    t[19].cast<std::string>());              // name
 
                 return vehicleType;
             }))

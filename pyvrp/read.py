@@ -355,7 +355,7 @@ class _ProblemDataBuilder:
         clients = self._clients()
         depots = self._depots()
         vehicle_types = self._vehicle_types()
-        distance_matrices = cast(list[Any], self._distance_matrices())
+        distance_matrices = cast("list[Any]", self._distance_matrices())
         groups = self._groups()
 
         return ProblemData(
