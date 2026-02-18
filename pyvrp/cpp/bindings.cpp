@@ -134,11 +134,12 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("breakpoints") = std::vector<pyvrp::Duration>{0},
              py::arg("slopes") = std::vector<pyvrp::Cost>{0})
         .def(py::init<PiecewiseLinearFunction>(), py::arg("piecewise_linear"))
-        .def_static("from_linear",
-                    &DurationCostFunction::fromLinear,
-                    py::arg("shift_duration"),
-                    py::arg("unit_duration_cost"),
-                    py::arg("unit_overtime_cost"))
+        // NOTE: #925/1044-FormPup41: Could be removed once agreed upon.
+        // We intentionally do not expose DurationCostFunction::fromLinear() to
+        // Python. It is an internal compatibility helper used to map legacy
+        // scalar duration/overtime costs to a duration cost function. Exposing
+        // it publicly would make deprecating or removing legacy scalar inputs
+        // harder once users depend on the helper directly.
         .def("__call__",
              &DurationCostFunction::operator(),
              py::arg("duration"))

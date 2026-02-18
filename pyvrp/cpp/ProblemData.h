@@ -595,8 +595,8 @@ public:
                             std::optional<DurationCostFunction> durationCostFunction,
                             std::optional<std::string> name,
                             bool durationCostFunctionProvided = false) const; 
-                            //FIXME: #925/1044-FormPup41:
-                            // This bool is a bit of an awkward API, but it allows us to distinguish between 
+                            // FIXME: #925/1044-FormPup41:
+                            // This bool might be a bit of an awkward API, but it allows us to distinguish between 
                             // "no update to duration cost function" and "update duration cost function to the 
                             // provided value, which may be empty to switch back to legacy duration costs".
                             // However, we may want to refactor this in the future to a more intuitive API.

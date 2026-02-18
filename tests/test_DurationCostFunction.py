@@ -56,12 +56,13 @@ def test_duration_cost_function_raises_invalid_data():
         DurationCostFunction(PiecewiseLinearFunction([0], [0], intercept=1)) # non-zero intercept
 
 
-def test_duration_cost_function_from_linear_matches_legacy_definition():
-    duration_cost = DurationCostFunction.from_linear(
+def test_duration_cost_function_legacy_mapping_matches_definition():
+    vehicle_type = VehicleType(
         shift_duration=10,
         unit_duration_cost=2,
         unit_overtime_cost=5,
     )
+    duration_cost = vehicle_type.duration_cost_function
 
     assert_equal(duration_cost(6), 12)  # 6 * 2 + 0 * 5
     assert_equal(duration_cost(10), 20) # 10 * 2 + 0 * 5
@@ -69,35 +70,37 @@ def test_duration_cost_function_from_linear_matches_legacy_definition():
     assert_equal(duration_cost.edge_cost_slope, 2)
 
 
-def test_duration_cost_function_from_linear_with_zero_shift():
-    duration_cost = DurationCostFunction.from_linear(
+def test_duration_cost_function_legacy_mapping_with_zero_shift():
+    vehicle_type = VehicleType(
         shift_duration=0,
         unit_duration_cost=2,
         unit_overtime_cost=5,
     )
+    duration_cost = vehicle_type.duration_cost_function
 
     assert_equal(duration_cost.breakpoints, [0])        # shift_duration is zero, so no new breakpoint is added
     assert_equal(duration_cost.slopes, [7])             # unit_duration_cost + unit_overtime_cost since overtime applies from the start
     assert_equal(duration_cost(13), 2 * 13 + 5 * 13)    # all duration is overtime
 
 
-def test_duration_cost_function_from_linear_with_max_shift_has_no_overtime_segment():
-    duration_cost = DurationCostFunction.from_linear(
+def test_duration_cost_function_legacy_mapping_with_max_shift_has_no_overtime_segment():
+    vehicle_type = VehicleType(
         shift_duration=np.iinfo(np.int64).max,
         unit_duration_cost=2,
         unit_overtime_cost=5,
     )
+    duration_cost = vehicle_type.duration_cost_function
 
     assert_equal(duration_cost.breakpoints, [0])        # shift_duration is max int64, so no new breakpoint is added within the domain of int64
     assert_equal(duration_cost.slopes, [2])             # unit_duration_cost only, since overtime would only apply after shift_duration which is beyond the int64 domain
     assert_equal(duration_cost(13), 26)                 # all duration is regular time, no overtime
 
 
-def test_duration_cost_function_from_linear_raises_on_slope_sum_overflow():
+def test_duration_cost_function_legacy_mapping_raises_on_slope_sum_overflow():
     with assert_raises(
         OverflowError, match="unit_duration_cost \\+ unit_overtime_cost overflows."
     ):
-        DurationCostFunction.from_linear(
+        VehicleType(
             shift_duration=0,
             unit_duration_cost=np.iinfo(np.int64).max,
             unit_overtime_cost=1,

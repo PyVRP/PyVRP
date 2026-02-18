@@ -60,12 +60,6 @@ class PiecewiseLinearFunction:
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
 
-#FIXME: #925/1044-FormPup41: 
-# Should we not include docs to explain what the input requirements are for the breakpoints and slopes of the PWL function? 
-# Or is this automatically imported from the cpp docstrings? Or should we add it to the docstring of '.add_vehicle_type()' in the Model class?
-#FIXME: #925/1044-FormPup41:
-# Perhaps it is best not to expose '.from_linear()' as a public method of DurationCostFunction, since it is really just a helper to convert the legacy linear duration cost parameters to the new PWL format. 
-# Including them would require more effort in removing the method if unit_costs would be outphased.
 class DurationCostFunction:
     @overload
     def __init__(
@@ -75,12 +69,19 @@ class DurationCostFunction:
     ) -> None: ...
     @overload
     def __init__(self, piecewise_linear: PiecewiseLinearFunction) -> None: ...
-    @staticmethod
-    def from_linear(
-        shift_duration: int,
-        unit_duration_cost: int,
-        unit_overtime_cost: int,
-    ) -> DurationCostFunction: ...
+    # NOTE: #925/1044-FormPup41: Could be removed once agreed upon.
+    # We intentionally do not expose ``DurationCostFunction.from_linear()`` in the
+    # public Python API. The conversion from legacy scalar duration/overtime costs
+    # to a duration cost function is an internal compatibility helper.
+    # Exposing it publicly would make future legacy API phase-out harder once users
+    # start depending on that helper directly.
+
+    # @staticmethod
+    # def from_linear(
+    #     shift_duration: int,
+    #     unit_duration_cost: int,
+    #     unit_overtime_cost: int,
+    # ) -> DurationCostFunction: ...
     def __call__(self, duration: int) -> int: ...
     @property
     def breakpoints(self) -> list[int]: ...
