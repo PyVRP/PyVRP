@@ -635,7 +635,6 @@ public:
             std::optional<DurationCostFunction> const &durationCostFunction);
     };
 
-    
 private:
     /**
      * Simple union type that distinguishes between client and depot locations.
