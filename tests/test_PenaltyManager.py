@@ -331,16 +331,16 @@ def test_warns_max_penalty_value(ok_small):
 def test_init_from_starts_from_midpoint(ok_small):
     """
     Tests that ``init_from()`` initialises all penalty values to
-    (max_penalty - min_penalty) / 2.
+    (min_penalty + max_penalty) / 2.
     """
     params = PenaltyParams(min_penalty=0.1, max_penalty=100_000)
     pm = PenaltyManager.init_from(ok_small, params)
     cost_eval = pm.cost_evaluator()
 
-    expected = (params.max_penalty - params.min_penalty) / 2
-    assert_equal(cost_eval.load_penalty(1, 0, 0), int(expected))
-    assert_equal(cost_eval.tw_penalty(1), int(expected))
-    assert_equal(cost_eval.dist_penalty(1, 0), int(expected))
+    expected = (params.min_penalty + params.max_penalty) / 2
+    assert_equal(cost_eval.load_penalty(1, 0, 0), round(expected))
+    assert_equal(cost_eval.tw_penalty(1), round(expected))
+    assert_equal(cost_eval.dist_penalty(1, 0), round(expected))
 
 
 def test_init_clips_penalties():
@@ -364,7 +364,7 @@ def test_init_clips_penalties():
 def test_init_from_multiple_load_penalties(ok_small_multiple_load):
     """
     Tests that init_from sets all load penalties to the midpoint of the penalty
-    range (max_penalty - min_penalty) / 2, one for each load dimension.
+    range (min_penalty + max_penalty) / 2, one for each load dimension.
     """
     params = PenaltyParams(min_penalty=0.1, max_penalty=100_000)
     pm = PenaltyManager.init_from(ok_small_multiple_load, params)
@@ -374,7 +374,7 @@ def test_init_from_multiple_load_penalties(ok_small_multiple_load):
         ok_small_multiple_load.num_load_dimensions,
     )
 
-    expected = (params.max_penalty - params.min_penalty) / 2
+    expected = (params.min_penalty + params.max_penalty) / 2
     for penalty in load_penalties:
         assert_equal(penalty, expected)
 

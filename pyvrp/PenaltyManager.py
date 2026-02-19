@@ -178,7 +178,7 @@ class PenaltyManager:
         params
             PenaltyManager parameters. If not provided, a default will be used.
         """
-        val = (params.max_penalty - params.min_penalty) / 2
+        val = (params.min_penalty + params.max_penalty) / 2
         return cls(([val] * data.num_load_dimensions, val, val), params)
 
     def _compute(self, penalty: float, feas_percentage: float) -> float:
