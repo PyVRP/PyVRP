@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 from numpy.testing import (
     assert_,
@@ -329,54 +328,19 @@ def test_warns_max_penalty_value(ok_small):
         pm.register(infeas)
 
 
-def test_init_from_load_penalty_value(ok_small):
+def test_init_from_starts_from_midpoint(ok_small):
     """
-    Tests that ``init_from()`` computes the correct initial load penalty value
-    for the OkSmall instance.
+    Tests that ``init_from()`` initialises all penalty values to
+    (max_penalty - min_penalty) / 2.
     """
-    pm = PenaltyManager.init_from(ok_small)
+    params = PenaltyParams(min_penalty=0.1, max_penalty=100_000)
+    pm = PenaltyManager.init_from(ok_small, params)
     cost_eval = pm.cost_evaluator()
 
-    avg_cost = ok_small.distance_matrix(0).mean()
-    avg_load = np.mean([c.delivery for c in ok_small.clients()])
-    assert_equal(cost_eval.load_penalty(1, 0, 0), int(avg_cost / avg_load))
-
-
-def test_init_from_tw_penalty_value(ok_small):
-    """
-    Tests that ``init_from()`` computes the correct initial time warp penalty
-    value for a slightly modified OkSmall instance.
-    """
-    distances = ok_small.distance_matrix(0)
-    data = ok_small.replace(distance_matrices=[2 * distances])
-
-    pm = PenaltyManager.init_from(data)
-    cost_eval = pm.cost_evaluator()
-
-    avg_distance = data.distance_matrix(0).mean()
-    avg_duration = data.duration_matrix(0).mean()
-    assert_equal(cost_eval.tw_penalty(1), round(avg_distance / avg_duration))
-
-
-def test_init_from_different_unit_costs(ok_small):
-    """
-    Tests that ``init_from()`` computes the correct initial time warp and
-    distance penalty values when the vehicles have a unit cost function that
-    involves both distance and duration.
-    """
-    orig_type = ok_small.vehicle_type(0)
-    veh_type = orig_type.replace(unit_distance_cost=1, unit_duration_cost=10)
-    data = ok_small.replace(vehicle_types=[veh_type])
-
-    pm = PenaltyManager.init_from(data)
-    cost_eval = pm.cost_evaluator()
-
-    avg_cost = np.mean(data.distance_matrix(0) + 10 * data.duration_matrix(0))
-    avg_distance = data.distance_matrix(0).mean()
-    avg_duration = data.duration_matrix(0).mean()
-
-    assert_equal(cost_eval.tw_penalty(1), round(avg_cost / avg_duration))
-    assert_equal(cost_eval.dist_penalty(1, 0), round(avg_cost / avg_distance))
+    expected = (params.max_penalty - params.min_penalty) / 2
+    assert_equal(cost_eval.load_penalty(1, 0, 0), round(expected))
+    assert_equal(cost_eval.tw_penalty(1), round(expected))
+    assert_equal(cost_eval.dist_penalty(1, 0), round(expected))
 
 
 def test_init_clips_penalties():
@@ -399,20 +363,20 @@ def test_init_clips_penalties():
 
 def test_init_from_multiple_load_penalties(ok_small_multiple_load):
     """
-    Tests that init_from correctly sets up multiple, different load penalties,
-    one for each load dimension.
+    Tests that init_from sets all load penalties to (max_penalty - min_penalty)
+    / 2, one for each load dimension.
     """
-    pm = PenaltyManager.init_from(ok_small_multiple_load)
+    params = PenaltyParams(min_penalty=0.1, max_penalty=100_000)
+    pm = PenaltyManager.init_from(ok_small_multiple_load, params)
     load_penalties, *_ = pm.penalties()
     assert_equal(
         len(load_penalties),
         ok_small_multiple_load.num_load_dimensions,
     )
 
-    # The first load dimension has 18 total demand. The second 5. The ratio of
-    # the load penalties should reflect this difference.
-    load_penalty1, load_penalty2 = load_penalties
-    assert_allclose(load_penalty1 / load_penalty2, 5 / 18)
+    expected = (params.max_penalty - params.min_penalty) / 2
+    for penalty in load_penalties:
+        assert_equal(penalty, expected)
 
 
 def test_max_cost_evaluator(ok_small_multiple_load):

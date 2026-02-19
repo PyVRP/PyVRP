@@ -169,8 +169,7 @@ class PenaltyManager:
         params: PenaltyParams = PenaltyParams(),
     ) -> PenaltyManager:
         """
-        Initialises from the given data instance and parameter object. The
-        initial penalty values are computed from the problem data.
+        Initialises penalty values from the midpoint of the penalty range.
 
         Parameters
         ----------
@@ -179,7 +178,7 @@ class PenaltyManager:
         params
             PenaltyManager parameters. If not provided, a default will be used.
         """
-        val = params.max_penalty
+        val = (params.max_penalty - params.min_penalty) / 2
         return cls(([val] * data.num_load_dimensions, val, val), params)
 
     def _compute(self, penalty: float, feas_percentage: float) -> float:
