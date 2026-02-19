@@ -363,8 +363,8 @@ def test_init_clips_penalties():
 
 def test_init_from_multiple_load_penalties(ok_small_multiple_load):
     """
-    Tests that init_from sets all load penalties to (max_penalty - min_penalty)
-    / 2, one for each load dimension.
+    Tests that init_from sets all load penalties to the midpoint of the penalty
+    range (max_penalty - min_penalty) / 2, one for each load dimension.
     """
     params = PenaltyParams(min_penalty=0.1, max_penalty=100_000)
     pm = PenaltyManager.init_from(ok_small_multiple_load, params)
