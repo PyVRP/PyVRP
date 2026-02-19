@@ -338,9 +338,9 @@ def test_init_from_starts_from_midpoint(ok_small):
     cost_eval = pm.cost_evaluator()
 
     expected = (params.max_penalty - params.min_penalty) / 2
-    assert_equal(cost_eval.load_penalty(1, 0, 0), round(expected))
-    assert_equal(cost_eval.tw_penalty(1), round(expected))
-    assert_equal(cost_eval.dist_penalty(1, 0), round(expected))
+    assert_equal(cost_eval.load_penalty(1, 0, 0), int(expected))
+    assert_equal(cost_eval.tw_penalty(1), int(expected))
+    assert_equal(cost_eval.dist_penalty(1, 0), int(expected))
 
 
 def test_init_clips_penalties():
