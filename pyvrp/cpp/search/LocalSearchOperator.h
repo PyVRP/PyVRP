@@ -1,11 +1,13 @@
 #ifndef PYVRP_SEARCH_LOCALSEARCHOPERATOR_H
 #define PYVRP_SEARCH_LOCALSEARCHOPERATOR_H
 
-#include "../Solution.h"  // pyvrp::Solution
 #include "CostEvaluator.h"
 #include "Measure.h"
 #include "ProblemData.h"
 #include "Route.h"
+#include "Solution.h"  // pyvrp::search::Solution
+
+#include <utility>
 
 namespace pyvrp::search
 {
@@ -26,44 +28,40 @@ struct OperatorStatistics
     size_t numApplications = 0;
 };
 
-template <typename Arg> class LocalSearchOperator
+template <std::same_as<Route::Node *>... Args> class LocalSearchOperator
 {
-    // Can only be specialised into either a Node or Route operator; there
-    // are no other types that are expected to work.
-    static_assert(std::is_same<Arg, Route::Node>::value
-                  || std::is_same<Arg, Route>::value);
-
 protected:
     ProblemData const &data;
     mutable OperatorStatistics stats_;
 
 public:
     /**
-     * Determines the cost delta of applying this operator to the arguments.
-     * If the cost delta is negative, this is an improving move.
-     * <br />
-     * The contract is as follows: if the cost delta is negative, that is the
-     * true cost delta of this move. As such, improving moves are fully
+     * Determines the cost delta of applying this move to the arguments. If the
+     * cost delta is negative, this is an improving move. The second, boolean
+     * return value indicates whether the operator believes the move should be
+     * applied (i.e., improves the solution).
+     *
+     * Moves that the operator believes should be applied must be fully
      * evaluated. The operator, however, is free to return early if it knows
      * the move will never be good: that is, when it determines the cost delta
      * cannot become negative at all. In that case, the returned (non-negative)
-     * cost delta does not constitute a full evaluation.
+     * cost delta may not be a complete evaluation.
      */
-    virtual Cost evaluate(Arg *U, Arg *V, CostEvaluator const &costEvaluator)
+    virtual std::pair<Cost, bool> evaluate(Args... args,
+                                           CostEvaluator const &costEvaluator)
         = 0;
 
     /**
-     * Applies this operator to the given arguments. For improvements, should
-     * only be called if <code>evaluate()</code> returns a negative delta cost.
+     * Applies this move to the given arguments. Should only be called
+     * when ``evaluate()`` suggests applying the move.
      */
-    // TODO remove arguments - always applies to most recently evaluated pair.
-    virtual void apply(Arg *U, Arg *V) const = 0;
+    virtual void apply(Args... args) const = 0;
 
     /**
      * Called once after loading the solution to improve. This can be used to
      * e.g. update local operator state.
      */
-    virtual void init([[maybe_unused]] pyvrp::Solution const &solution)
+    virtual void init([[maybe_unused]] Solution &solution)
     {
         stats_ = {};  // reset call statistics
     };
@@ -78,26 +76,8 @@ public:
     virtual ~LocalSearchOperator() = default;
 };
 
-/**
- * Node operator base class.
- */
-using NodeOperator = LocalSearchOperator<Route::Node>;
-
-/**
- * Route operator base class.
- */
-class RouteOperator : public LocalSearchOperator<Route>
-{
-    using LocalSearchOperator::LocalSearchOperator;
-
-public:
-    /**
-     * Called when a route has been changed. Can be used to update caches, but
-     * the implementation should be fast: this is called every time something
-     * changes!
-     */
-    virtual void update([[maybe_unused]] Route *U) {};
-};
+using UnaryOperator = LocalSearchOperator<Route::Node *>;
+using BinaryOperator = LocalSearchOperator<Route::Node *, Route::Node *>;
 
 /**
  * Helper template function that may be specialised to determine if an operator

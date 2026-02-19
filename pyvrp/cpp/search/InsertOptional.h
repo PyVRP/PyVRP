@@ -1,0 +1,32 @@
+#ifndef PYVRP_SEARCH_INSERTOPTIONAL_H
+#define PYVRP_SEARCH_INSERTOPTIONAL_H
+
+#include "LocalSearchOperator.h"
+
+namespace pyvrp::search
+{
+/**
+ * InsertOptional(data: ProblemData)
+ *
+ * Evaluates inserting an optional client node :math:`U` after :math:`V`.
+ */
+class InsertOptional : public BinaryOperator
+{
+    using BinaryOperator::BinaryOperator;
+
+    Solution const *solution_ = nullptr;
+
+public:
+    std::pair<Cost, bool> evaluate(Route::Node *U,
+                                   Route::Node *V,
+                                   CostEvaluator const &costEvaluator) override;
+
+    void apply(Route::Node *U, Route::Node *V) const override;
+
+    void init(Solution &solution) override;
+};
+
+template <> bool supports<InsertOptional>(ProblemData const &data);
+}  // namespace pyvrp::search
+
+#endif  // PYVRP_SEARCH_INSERTOPTIONAL_H

@@ -1,7 +1,5 @@
 #include "Route.h"
 
-#include <cmath>
-#include <numbers>
 #include <ostream>
 #include <utility>
 
@@ -60,10 +58,9 @@ Route::Iterator &Route::Iterator::operator++()
     return *this;
 }
 
-Route::Route(ProblemData const &data, size_t idx, size_t vehicleType)
+Route::Route(ProblemData const &data, size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
-      idx_(idx),
       loadAt(data.numLoadDimensions()),
       loadAfter(data.numLoadDimensions()),
       loadBefore(data.numLoadDimensions()),
@@ -79,35 +76,10 @@ Route::Iterator Route::begin() const { return Iterator(nodes, 1); }
 
 Route::Iterator Route::end() const { return Iterator(nodes, nodes.size() - 1); }
 
-std::pair<pyvrp::Coordinate, pyvrp::Coordinate> const &Route::centroid() const
-{
-    assert(!dirty);
-    return centroid_;
-}
-
 size_t Route::vehicleType() const
 {
     auto const &vehicleTypes = data.vehicleTypes();
     return std::distance(&vehicleTypes[0], &vehicleType_);
-}
-
-bool Route::overlapsWith(Route const &other, double tolerance) const
-{
-    assert(!dirty && !other.dirty);
-
-    auto const [dX, dY] = data.centroid();
-    auto const [tX, tY] = this->centroid_;
-    auto const [oX, oY] = other.centroid_;
-
-    // Each angle is in [-pi, pi], so the absolute difference is in [0, tau].
-    auto const thisAngle = std::atan2((tY - dY).get(), (tX - dX).get());
-    auto const otherAngle = std::atan2((oY - dY).get(), (oX - dX).get());
-    auto const absDiff = std::abs(thisAngle - otherAngle);
-
-    // First case is obvious. Second case exists because tau and 0 are also
-    // close together but separated by one period.
-    auto constexpr tau = 2 * std::numbers::pi;
-    return absDiff <= tolerance * tau || absDiff >= (1 - tolerance) * tau;
 }
 
 void Route::clear()
@@ -231,17 +203,6 @@ void Route::update()
     visits.clear();
     for (auto const *node : nodes)
         visits.emplace_back(node->client());
-
-    centroid_ = {0, 0};
-    for (auto const *node : nodes)
-    {
-        if (node->isDepot())
-            continue;
-
-        ProblemData::Client const &clientData = data.location(node->client());
-        centroid_.first += static_cast<double>(clientData.x) / numClients();
-        centroid_.second += static_cast<double>(clientData.y) / numClients();
-    }
 
     // Distance.
     auto const &distMat = data.distanceMatrix(profile());
@@ -456,4 +417,21 @@ std::ostream &operator<<(std::ostream &out, Route const &route)
 std::ostream &operator<<(std::ostream &out, Route::Node const &node)
 {
     return out << node.client();
+}
+
+template <>
+pyvrp::Cost
+pyvrp::CostEvaluator::penalisedCost(pyvrp::search::Route const &route) const
+{
+    if (route.empty())
+        return 0;
+
+    // clang-format off
+    return route.distanceCost()
+         + route.durationCost()
+         + route.fixedVehicleCost()
+         + excessLoadPenalties(route.excessLoad())
+         + twPenalty(route.timeWarp())
+         + distPenalty(route.excessDistance(), 0);
+    // clang-format on
 }

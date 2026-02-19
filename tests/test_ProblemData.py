@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 import pytest
 from numpy.random import default_rng
-from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
 
@@ -392,18 +392,6 @@ def test_problem_data_replace_raises_mismatched_argument_shapes():
             distance_matrices=[np.where(np.eye(3), 0, 1)],
             duration_matrices=[np.where(np.eye(3), 0, 1)],
         )
-
-
-def test_centroid(ok_small):
-    """
-    Tests the computation of the centroid of all clients in the data instance.
-    """
-    centroid = ok_small.centroid()
-    x = [client.x for client in ok_small.clients()]
-    y = [client.y for client in ok_small.clients()]
-
-    assert_allclose(centroid[0], np.mean(x))
-    assert_allclose(centroid[1], np.mean(y))
 
 
 def test_matrix_access():

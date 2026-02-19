@@ -2,19 +2,30 @@ import numpy as np
 from numpy.testing import assert_, assert_equal
 from pytest import mark
 
+import pyvrp
 from pyvrp import (
     Client,
     CostEvaluator,
     Depot,
     ProblemData,
     RandomNumberGenerator,
-    Solution,
     VehicleType,
 )
 from pyvrp import Route as SolRoute
 from pyvrp.search import LocalSearch, SwapTails
-from pyvrp.search._search import Node
-from tests.helpers import make_search_route
+from pyvrp.search._search import Node, Solution
+
+
+def make_search_solution(data: ProblemData, routes: list[SolRoute]):
+    """
+    Creates a pyvrp.search.Solution from the given routes. We need this because
+    SwapTails compares pointers to routes, which assumes a particular memory
+    layout that Python does not normally respect. Laying out the routes inside
+    a pyvrp.search.Solution does.
+    """
+    sol = Solution(data)
+    sol.load(pyvrp.Solution(data, routes))
+    return sol
 
 
 @mark.parametrize(
@@ -43,21 +54,21 @@ def test_OkSmall_multiple_vehicle_types(
 
     neighbours: list[list[int]] = [[], [2], [], [], []]  # only 1 -> 2
     ls = LocalSearch(data, rng, neighbours)
-    ls.add_node_operator(SwapTails(data))
+    ls.add_operator(SwapTails(data))
 
     routes1 = [SolRoute(data, [1, 3], 0), SolRoute(data, [2, 4], 1)]
-    sol1 = Solution(data, routes1)
+    sol1 = pyvrp.Solution(data, routes1)
 
     routes2 = [SolRoute(data, [1, 4], 0), SolRoute(data, [2, 3], 1)]
-    sol2 = Solution(data, routes2)
+    sol2 = pyvrp.Solution(data, routes2)
 
     cost1 = cost_evaluator.penalised_cost(sol1)
     cost2 = cost_evaluator.penalised_cost(sol2)
     assert_(not np.allclose(cost1, cost2))
 
     # Using the local search, the result should not get worse.
-    improved_sol1 = ls.search(sol1, cost_evaluator)
-    improved_sol2 = ls.search(sol2, cost_evaluator)
+    improved_sol1 = ls(sol1, cost_evaluator, exhaustive=True)
+    improved_sol2 = ls(sol2, cost_evaluator, exhaustive=True)
 
     expected_sol = sol1 if cost1 < cost2 else sol2
     assert_equal(improved_sol1, expected_sol)
@@ -80,23 +91,24 @@ def test_move_involving_empty_routes():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    route1 = make_search_route(data, [1, 2], idx=0, vehicle_type=0)
-    route2 = make_search_route(data, [], idx=1, vehicle_type=1)
+    # First route is [1, 2], second route is empty.
+    sol = make_search_solution(data, [SolRoute(data, [1, 2], 0)])
+    route1, route2 = sol.routes
 
     op = SwapTails(data)
     cost_eval = CostEvaluator([], 0, 0)
 
     # This move does not change the route structure, so the delta cost is 0.
-    assert_equal(op.evaluate(route1[2], route2[0], cost_eval), 0)
+    assert_equal(op.evaluate(route1[2], route2[0], cost_eval), (0, False))
 
     # This move creates routes (depot -> 1 -> depot) and (depot -> 2 -> depot),
     # making route 2 non-empty and thus incurring its fixed cost of 100.
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 100)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (100, False))
 
     # This move creates routes (depot -> depot) and (depot -> 1 -> 2 -> depot),
     # making route 1 empty, while making route 2 non-empty. The total fixed
     # cost incurred is thus -10 + 100 = 90.
-    assert_equal(op.evaluate(route1[0], route2[0], cost_eval), 90)
+    assert_equal(op.evaluate(route1[0], route2[0], cost_eval), (90, False))
 
     # Now we reverse the visits of route 1 and 2, so that we can hit the cases
     # where route 1 is empty.
@@ -109,19 +121,19 @@ def test_move_involving_empty_routes():
     route2.update()  # depot -> 1 -> 2 -> depot
 
     # This move does not change the route structure, so the delta cost is 0.
-    assert_equal(op.evaluate(route1[0], route2[2], cost_eval), 0)
-    assert_equal(op.evaluate(route2[2], route1[0], cost_eval), 0)
+    assert_equal(op.evaluate(route1[0], route2[2], cost_eval), (0, False))
+    assert_equal(op.evaluate(route2[2], route1[0], cost_eval), (0, False))
 
     # This move creates routes (depot -> 2 -> depot) and (depot -> 1 -> depot),
     # making route 1 non-empty and thus incurring its fixed cost of 10.
-    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), 10)
-    assert_equal(op.evaluate(route2[1], route1[0], cost_eval), 10)
+    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), (10, False))
+    assert_equal(op.evaluate(route2[1], route1[0], cost_eval), (10, False))
 
     # This move creates routes (depot -> 1 -> 2 -> depot) and (depot -> depot),
     # making route 1 non-empty, while making route 2 empty. The total fixed
     # cost incurred is thus 10 - 100 = -90.
-    assert_equal(op.evaluate(route1[0], route2[0], cost_eval), -90)
-    assert_equal(op.evaluate(route2[0], route1[0], cost_eval), -90)
+    assert_equal(op.evaluate(route1[0], route2[0], cost_eval), (-90, True))
+    assert_equal(op.evaluate(route2[0], route1[0], cost_eval), (-90, True))
 
 
 def test_move_involving_multiple_depots():
@@ -148,8 +160,9 @@ def test_move_involving_multiple_depots():
         duration_matrices=[np.zeros((4, 4), dtype=int)],
     )
 
-    route1 = make_search_route(data, [3], idx=0, vehicle_type=0)
-    route2 = make_search_route(data, [2], idx=1, vehicle_type=1)
+    routes = [SolRoute(data, [3], 0), SolRoute(data, [2], 1)]
+    sol = make_search_solution(data, routes)
+    route1, route2 = sol.routes
 
     assert_equal(route1.distance(), 16)
     assert_equal(route2.distance(), 16)
@@ -157,15 +170,16 @@ def test_move_involving_multiple_depots():
     op = SwapTails(data)
     cost_eval = CostEvaluator([], 1, 0)
 
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), 0)  # no-op
+    # This is a no-op, and should be ignored.
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
 
     # First would be 0 -> 3 -> 2 -> 0, second 1 -> 1. Distance on route2 would
     # be zero, and on route1 16. Thus delta cost is -16.
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), -16)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (-16, True))
 
     # First would be 0 -> 0, second 1 -> 2 -> 3 -> 1. Distance on route1 would
     # be zero, and on route2 16. Thus delta cost is -16.
-    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), -16)
+    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), (-16, True))
 
 
 def test_move_with_different_profiles(ok_small_two_profiles):
@@ -176,8 +190,9 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     data = ok_small_two_profiles
     dist1, dist2 = data.distance_matrices()
 
-    route1 = make_search_route(data, [3], idx=0, vehicle_type=0)
-    route2 = make_search_route(data, [2], idx=1, vehicle_type=1)
+    routes = [SolRoute(data, [3], 0), SolRoute(data, [2], 1)]
+    sol = make_search_solution(data, routes)
+    route1, route2 = sol.routes[0], sol.routes[3]
 
     op = SwapTails(data)
     cost_eval = CostEvaluator([0], 0, 0)  # all zero so no costs from penalties
@@ -195,12 +210,12 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     # This move evaluates the setting where the second route would be empty,
     # and the first becomes 0 -> 3 -> 2 -> 0.
     delta = dist1[3, 2] + dist1[2, 0] - dist1[3, 0] - route2.distance()
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), delta)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (delta, True))
 
     # This move evaluates the setting where the first route would be empty, and
     # the second becomes 0 -> 2 -> 3 -> 0.
     delta = dist2[2, 3] + dist2[3, 0] - dist2[2, 0] - route1.distance()
-    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), delta)
+    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), (delta, True))
 
 
 def test_supports(ok_small, pr107):

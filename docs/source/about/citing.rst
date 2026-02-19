@@ -1,5 +1,5 @@
-Citing PyVRP
-============
+Citing
+======
 
 If you use PyVRP in your research, please consider citing the following paper:
 

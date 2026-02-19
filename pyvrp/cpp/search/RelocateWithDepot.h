@@ -19,9 +19,9 @@ namespace pyvrp::search
  *        *Transportation Science*, 53(6): 1706 - 1730.
  *        https://doi.org/10.1287/trsc.2019.0909.
  */
-class RelocateWithDepot : public NodeOperator
+class RelocateWithDepot : public BinaryOperator
 {
-    using NodeOperator::NodeOperator;
+    using BinaryOperator::BinaryOperator;
 
     enum class MoveType
     {
@@ -53,9 +53,9 @@ class RelocateWithDepot : public NodeOperator
                         CostEvaluator const &costEvaluator);
 
 public:
-    Cost evaluate(Route::Node *U,
-                  Route::Node *V,
-                  CostEvaluator const &costEvaluator) override;
+    std::pair<Cost, bool> evaluate(Route::Node *U,
+                                   Route::Node *V,
+                                   CostEvaluator const &costEvaluator) override;
 
     void apply(Route::Node *U, Route::Node *V) const override;
 };

@@ -31,6 +31,8 @@ class Solution
 {
     ProblemData const &data_;
 
+    friend class pyvrp::CostEvaluator;
+
 public:
     std::vector<Route::Node> nodes;  // size numLocations()
     std::vector<Route> routes;       // size numVehicles(), ordered by type
@@ -53,5 +55,9 @@ public:
                 bool required);
 };
 }  // namespace pyvrp::search
+
+template <>  // specialisation for pyvrp::search::Solution
+pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
+    pyvrp::search::Solution const &solution) const;
 
 #endif  // PYVRP_SEARCH_SOLUTION_H

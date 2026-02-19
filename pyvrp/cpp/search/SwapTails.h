@@ -17,14 +17,14 @@ namespace pyvrp::search
  *
  *    This operator is also known as 2-OPT* in the VRP literature.
  */
-class SwapTails : public NodeOperator
+class SwapTails : public BinaryOperator
 {
-    using NodeOperator::NodeOperator;
+    using BinaryOperator::BinaryOperator;
 
 public:
-    Cost evaluate(Route::Node *U,
-                  Route::Node *V,
-                  CostEvaluator const &costEvaluator) override;
+    std::pair<Cost, bool> evaluate(Route::Node *U,
+                                   Route::Node *V,
+                                   CostEvaluator const &costEvaluator) override;
 
     void apply(Route::Node *U, Route::Node *V) const override;
 };

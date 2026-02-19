@@ -135,7 +135,7 @@ def plot_route_schedule(
     ax.add_collection(lc_timewarps)
     ax.set_ylim(
         bottom=vehicle_type.tw_early,
-        top=max(vehicle_type.tw_late, max(t for _, t in trace_time)),
+        top=max((t for _, t in trace_time), default=vehicle_type.tw_late),
     )
 
     # Plot remaining load on second axis

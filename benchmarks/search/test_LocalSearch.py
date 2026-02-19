@@ -1,12 +1,7 @@
 import pytest
 
 from pyvrp import CostEvaluator, RandomNumberGenerator, Solution
-from pyvrp.search import (
-    NODE_OPERATORS,
-    ROUTE_OPERATORS,
-    LocalSearch,
-    compute_neighbours,
-)
+from pyvrp.search import OPERATORS, LocalSearch, compute_neighbours
 
 
 @pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr"])
@@ -19,13 +14,9 @@ def test_all_operators(instance, benchmark, request):
     rng = RandomNumberGenerator(seed=0)
     ls = LocalSearch(data, rng, compute_neighbours(data))
 
-    for node_op in NODE_OPERATORS:
-        if node_op.supports(data):
-            ls.add_node_operator(node_op(data))
-
-    for route_op in ROUTE_OPERATORS:
-        if route_op.supports(data):
-            ls.add_route_operator(route_op(data))
+    for op in OPERATORS:
+        if op.supports(data):
+            ls.add_operator(op(data))
 
     sol = Solution.make_random(data, rng)
     cost_evaluator = CostEvaluator([20], 6, 6)
@@ -40,44 +31,24 @@ def test_all_operators_on_vrptw_from_bks(benchmark, vrptw, vrptw_bks):
     rng = RandomNumberGenerator(seed=0)
     ls = LocalSearch(vrptw, rng, compute_neighbours(vrptw))
 
-    for node_op in NODE_OPERATORS:
-        if node_op.supports(vrptw):
-            ls.add_node_operator(node_op(vrptw))
-
-    for route_op in ROUTE_OPERATORS:
-        if route_op.supports(vrptw):
-            ls.add_route_operator(route_op(vrptw))
+    for op in OPERATORS:
+        if op.supports(vrptw):
+            ls.add_operator(op(vrptw))
 
     cost_evaluator = CostEvaluator([20], 6, 6)
     benchmark(ls, vrptw_bks, cost_evaluator)
 
 
-@pytest.mark.parametrize("node_op", NODE_OPERATORS)
+@pytest.mark.parametrize("op", OPERATORS)
 @pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr"])
-def test_each_node_operator(node_op, instance, benchmark, request):
+def test_each_operator(op, instance, benchmark, request):
     """
-    Tests performance of each node operator on a few instances.
+    Tests performance of each operator on a few instances.
     """
     data = request.getfixturevalue(instance)
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_node_operator(node_op(data))
-
-    sol = Solution.make_random(data, rng)
-    cost_evaluator = CostEvaluator([20], 6, 6)
-    benchmark(ls, sol, cost_evaluator)
-
-
-@pytest.mark.parametrize("route_op", ROUTE_OPERATORS)
-@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr"])
-def test_each_route_operator(route_op, instance, benchmark, request):
-    """
-    Tests performance of each route operator on a few instances.
-    """
-    data = request.getfixturevalue(instance)
-    rng = RandomNumberGenerator(seed=42)
-    ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_route_operator(route_op(data))
+    ls.add_operator(op(data))
 
     sol = Solution.make_random(data, rng)
     cost_evaluator = CostEvaluator([20], 6, 6)

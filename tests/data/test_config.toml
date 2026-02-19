@@ -1,13 +1,8 @@
 display_interval = 10.0
 
-node_ops = [
+operators = [
     "Exchange10",
     "SwapTails",
-]
-
-
-route_ops = [
-    "SwapStar",
 ]
 
 

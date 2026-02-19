@@ -25,7 +25,7 @@ def test_inserts_depot_single_route(ok_small_multiple_trips):
     # The route now is 1 2 3 4, proposal evaluates 1 3 | 2 4 and 1 3 2 | 4. Of
     # these two moves, the move resulting in 1 3 | 2 4 is better, with total
     # route cost 9_543 (compared to 10_450 now). The cost delta is thus -907.
-    assert_equal(op.evaluate(route[2], route[3], cost_eval), -907)
+    assert_equal(op.evaluate(route[2], route[3], cost_eval), (-907, True))
 
     op.apply(route[2], route[3])
     route.update()
@@ -45,8 +45,8 @@ def test_inserts_depot_across_routes(ok_small_multiple_trips):
     Tests that RelocateWithDepot inserts a reload depot along with the node
     relocation across routes.
     """
-    route1 = make_search_route(ok_small_multiple_trips, [3], idx=0)
-    route2 = make_search_route(ok_small_multiple_trips, [1, 2, 4], idx=1)
+    route1 = make_search_route(ok_small_multiple_trips, [3])
+    route2 = make_search_route(ok_small_multiple_trips, [1, 2, 4])
 
     assert_equal(str(route1), "3")
     assert_equal(str(route2), "1 2 4")
@@ -57,7 +57,7 @@ def test_inserts_depot_across_routes(ok_small_multiple_trips):
     # The proposal evaluates 1 | 3 2 4 and 1 3 | 2 4. Of these, the second is
     # better, with total cost 9_543 (compared to 3_994 + 8_601 now). The cost
     # delta is thus -3_052.
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), -3_052)
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (-3_052, True))
 
     op.apply(route1[1], route2[1])
     route1.update()
@@ -93,7 +93,8 @@ def test_reload_depot_before_or_after_relocate(
 
     op = RelocateWithDepot(ok_small_multiple_trips)
     cost_eval = CostEvaluator([load_penalty], 1, 0)
-    assert_equal(op.evaluate(route[1], route[2], cost_eval), exp_delta_cost)
+    actual_delta_cost, _ = op.evaluate(route[1], route[2], cost_eval)
+    assert_equal(actual_delta_cost, exp_delta_cost)
 
     op.apply(route[1], route[2])
     route.update()
@@ -133,7 +134,7 @@ def test_inserts_best_reload_depot():
     # 3 | 2 removes excess load. Then the depot choice: depot 0 incurs a small
     # routing costs, whereas 1 is fee. Thus, we should evaluate and apply the
     # move using depot 1, at delta cost -2_500.
-    assert_equal(op.evaluate(route[1], route[2], cost_eval), -2_500)
+    assert_equal(op.evaluate(route[1], route[2], cost_eval), (-2_500, True))
 
     op.apply(route[1], route[2])
     route.update()
@@ -164,15 +165,15 @@ def test_fixed_vehicle_cost():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    route1 = make_search_route(data, [1], idx=0)
-    route2 = make_search_route(data, [2], idx=1)
+    route1 = make_search_route(data, [1])
+    route2 = make_search_route(data, [2])
 
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([0], 0, 0)
 
     # After this move, route1 is empty, which results in a cost delta of -2000
     # because all other costs are zero.
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), -2_000)
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (-2_000, True))
 
 
 def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
@@ -191,7 +192,7 @@ def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
     # This move would result in either 3 | 2 | 1 4, or 3 | 2 1 | 4, both of
     # which would resolve any excess load. But that's more trips than the
     # vehicle can perform, so this move cannot be done.
-    assert_equal(op.evaluate(route[3], route[4], cost_eval), 0)
+    assert_equal(op.evaluate(route[3], route[4], cost_eval), (0, False))
     assert_equal(route.num_trips(), route.max_trips())
 
 
@@ -220,7 +221,7 @@ def test_bug_release_times(mtvrptw_release_times):
     # - Leave the depot at 4718.
     # - Visit 6 at 4970, leave at 5870.
     # - Return to depot at 6122.
-    route2 = make_search_route(mtvrptw_release_times, [6], idx=1)
+    route2 = make_search_route(mtvrptw_release_times, [6])
 
     assert_equal(route2.distance(), 504)
     assert_equal(route2.time_warp(), 0)
@@ -231,7 +232,7 @@ def test_bug_release_times(mtvrptw_release_times):
 
     op = RelocateWithDepot(mtvrptw_release_times)
     cost_eval = CostEvaluator([0], 1, 0)
-    delta_cost = op.evaluate(route1[3], route2[1], cost_eval)
+    delta_cost, _ = op.evaluate(route1[3], route2[1], cost_eval)
     assert_(delta_cost < 0)
 
     op.apply(route1[3], route2[1])
@@ -276,7 +277,7 @@ def test_can_insert_reload_after_start_depot():
     # initial load, and thus reduce excess load by 2.
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([1], 0, 0)
-    assert_equal(op.evaluate(route[2], route[0], cost_eval), -2)
+    assert_equal(op.evaluate(route[2], route[0], cost_eval), (-2, True))
 
     op.apply(route[2], route[0])
     assert_equal(str(route), "| 2 1")
@@ -308,7 +309,7 @@ def test_can_insert_reload_before_end_depot():
     # a route "2 3 |", with a reload depot visits to 1.
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([], 0, 0)
-    assert_equal(op.evaluate(route[1], route[2], cost_eval), -10)
+    assert_equal(op.evaluate(route[1], route[2], cost_eval), (-10, True))
 
     # Test if that is indeed the case: the route should be correct, and the
     # reload depot should be 1, not 0.
@@ -352,7 +353,7 @@ def test_depot_service_duration(ok_small_multiple_trips):
 
     # The reload depot removes excess load (improvement of -8_000) but adds 200
     # extra service duration at the depot. So the overall delta cost is -7_800.
-    assert_equal(op.evaluate(route[1], route[3], cost_eval), -7_800)
+    assert_equal(op.evaluate(route[1], route[3], cost_eval), (-7_800, True))
 
     op.apply(route[1], route[3])
     route.update()

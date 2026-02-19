@@ -778,8 +778,8 @@ def test_tsp_instance_with_mutually_exclusive_groups(gtsp):
     res = m.solve(stop=MaxIterations(5))
 
     assert_(res.best.is_feasible())
-    assert_(res.best.is_group_feasible())
     assert_equal(res.best.num_clients(), gtsp.num_groups)
+    assert_equal(res.best.num_missing_groups(), 0)
 
 
 def test_minimise_distance_or_duration(ok_small):
@@ -1130,3 +1130,24 @@ def test_model_solve_initial_solution(rc208):
     bks = read_solution("data/RC208.sol", rc208)
     res = m.solve(stop=MaxIterations(0), initial_solution=bks)
     assert_equal(res.best, bks)
+
+
+def test_solution_satisfies_group_constraints():
+    """
+    Tests that the solution returned after solving satisfies group feasibility
+    constraints.
+    """
+    m = Model()
+    m.add_depot(x=0, y=0)
+    m.add_vehicle_type()
+
+    group = m.add_client_group(required=False)
+    for _ in range(100):
+        m.add_client(x=0, y=0, prize=1000, required=False, group=group)
+
+    for frm in m.locations:
+        for to in m.locations:
+            m.add_edge(frm, to, 0, 0)
+
+    res = m.solve(stop=MaxIterations(1), seed=42)
+    assert_equal(res.best.num_missing_groups(), 0)

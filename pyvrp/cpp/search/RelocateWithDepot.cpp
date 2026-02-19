@@ -1,55 +1,10 @@
 #include "RelocateWithDepot.h"
 
-#include "Route.h"
+#include "DepotSegment.h"
 
 #include <cassert>
 
 using pyvrp::search::RelocateWithDepot;
-
-namespace
-{
-/**
- * Simple wrapper class that implements the required evaluation interface for
- * a single reload depot.
- */
-class ReloadDepotSegment
-{
-    pyvrp::ProblemData const &data_;
-    size_t depot_;
-
-public:
-    ReloadDepotSegment(pyvrp::ProblemData const &data, size_t depot)
-        : data_(data), depot_(depot)
-    {
-        assert(depot < data.numDepots());  // must be an actual depot
-    }
-
-    pyvrp::search::Route const *route() const { return nullptr; }
-
-    size_t first() const { return depot_; }
-    size_t last() const { return depot_; }
-    size_t size() const { return 1; }
-
-    bool startsAtReloadDepot() const { return true; }
-    bool endsAtReloadDepot() const { return true; }
-
-    pyvrp::Distance distance([[maybe_unused]] size_t profile) const
-    {
-        return 0;
-    }
-
-    pyvrp::DurationSegment duration([[maybe_unused]] size_t profile) const
-    {
-        pyvrp::ProblemData::Depot const &depot = data_.location(depot_);
-        return {depot, 0};  // service is handled while evaluating proposal
-    }
-
-    pyvrp::LoadSegment load([[maybe_unused]] size_t dimension) const
-    {
-        return {};
-    }
-};
-}  // namespace
 
 void RelocateWithDepot::evalDepotBefore(Cost fixedCost,
                                         Route::Node *U,
@@ -72,7 +27,7 @@ void RelocateWithDepot::evalDepotBefore(Cost fixedCost,
                 deltaCost,
                 uProposal,
                 Route::Proposal(vRoute->before(V->idx()),
-                                ReloadDepotSegment(data, depot),
+                                DepotSegment(data, depot),
                                 uRoute->at(U->idx()),
                                 vRoute->after(V->idx() + 1)));
 
@@ -91,14 +46,14 @@ void RelocateWithDepot::evalDepotBefore(Cost fixedCost,
                     deltaCost,
                     Route::Proposal(route->before(U->idx() - 1),
                                     route->between(U->idx() + 1, V->idx()),
-                                    ReloadDepotSegment(data, depot),
+                                    DepotSegment(data, depot),
                                     route->at(U->idx()),
                                     route->after(V->idx() + 1)));
             else
                 costEvaluator.deltaCost(
                     deltaCost,
                     Route::Proposal(route->before(V->idx()),
-                                    ReloadDepotSegment(data, depot),
+                                    DepotSegment(data, depot),
                                     route->at(U->idx()),
                                     route->between(V->idx() + 1, U->idx() - 1),
                                     route->after(U->idx() + 1)));
@@ -131,7 +86,7 @@ void RelocateWithDepot::evalDepotAfter(Cost fixedCost,
                 uProposal,
                 Route::Proposal(vRoute->before(V->idx()),
                                 uRoute->at(U->idx()),
-                                ReloadDepotSegment(data, depot),
+                                DepotSegment(data, depot),
                                 vRoute->after(V->idx() + 1)));
 
             if (deltaCost < move_.cost)
@@ -150,14 +105,14 @@ void RelocateWithDepot::evalDepotAfter(Cost fixedCost,
                     Route::Proposal(route->before(U->idx() - 1),
                                     route->between(U->idx() + 1, V->idx()),
                                     route->at(U->idx()),
-                                    ReloadDepotSegment(data, depot),
+                                    DepotSegment(data, depot),
                                     route->after(V->idx() + 1)));
             else
                 costEvaluator.deltaCost(
                     deltaCost,
                     Route::Proposal(route->before(V->idx()),
                                     route->at(U->idx()),
-                                    ReloadDepotSegment(data, depot),
+                                    DepotSegment(data, depot),
                                     route->between(V->idx() + 1, U->idx() - 1),
                                     route->after(U->idx() + 1)));
 
@@ -167,9 +122,8 @@ void RelocateWithDepot::evalDepotAfter(Cost fixedCost,
     }
 }
 
-pyvrp::Cost RelocateWithDepot::evaluate(Route::Node *U,
-                                        Route::Node *V,
-                                        CostEvaluator const &costEvaluator)
+std::pair<pyvrp::Cost, bool> RelocateWithDepot::evaluate(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     assert(!U->isDepot() && !V->isEndDepot());
     stats_.numEvaluations++;
@@ -177,16 +131,16 @@ pyvrp::Cost RelocateWithDepot::evaluate(Route::Node *U,
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 
-    if (U == n(V) || vRoute->empty())  // if V's empty, Exchange<1, 0> suffices
-        return 0;
+    if (!uRoute || U == n(V) || vRoute->empty())
+        return std::make_pair(0, false);
 
     if (vRoute->numTrips() == vRoute->maxTrips())
-        return 0;
+        return std::make_pair(0, false);
 
     // Cannot evaluate this move because it requires a load segment to contain
     // a reload depot in the middle, which makes concatenation far more complex.
     if (uRoute == vRoute && U->trip() != V->trip())
-        return 0;
+        return std::make_pair(0, false);
 
     move_ = {};
 
@@ -206,7 +160,7 @@ pyvrp::Cost RelocateWithDepot::evaluate(Route::Node *U,
         // might be OK to ensure the vehicle returns empty.
         evalDepotAfter(fixedCost, U, V, costEvaluator);
 
-    return move_.cost;
+    return std::make_pair(move_.cost, move_.cost < 0);
 }
 
 void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const

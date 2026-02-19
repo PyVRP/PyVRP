@@ -31,22 +31,32 @@ Contents
    :maxdepth: 1
    :caption: Getting started
 
-   setup/introduction_to_vrp
-   setup/introduction_to_ils
+   notebooks/quick_start
+   setup/why_pyvrp
    setup/installation
    setup/getting_help
    setup/faq
    setup/concepts
    setup/benchmarks
-   setup/citing
 
 .. toctree::
    :maxdepth: 1
-   :caption: Examples
+   :caption: About us
 
-   examples/quick_tutorial
-   examples/basic_vrps
-   examples/using_pyvrp_components
+   about/about
+   about/funding
+   about/citing
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Tutorials
+
+   notebooks/load
+   notebooks/duration_constraints
+   notebooks/profiles
+   notebooks/optional_clients
+   notebooks/mutually_exclusive_groups
+   notebooks/reloading
 
 .. toctree::
    :maxdepth: 1
@@ -61,6 +71,8 @@ Contents
    :maxdepth: 1
    :caption: Developing PyVRP
 
+   dev/algorithm
+   notebooks/pyvrp_implementation
    dev/benchmarking
    dev/contributing
    dev/releasing

@@ -7,7 +7,6 @@
 #include <fstream>
 #include <numeric>
 
-using pyvrp::Coordinate;
 using pyvrp::Cost;
 using pyvrp::Distance;
 using pyvrp::Duration;
@@ -213,6 +212,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     auto const &vehData = data.vehicleType(vehType);
     startDepot_ = vehData.startDepot;
     endDepot_ = vehData.endDepot;
+    fixedVehicleCost_ = vehData.fixedCost;
 
     validate(data);
 
@@ -222,11 +222,6 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         service_ += trip.serviceDuration();
         travel_ += trip.travelDuration();
         prizes_ += trip.prizes();
-
-        auto const [x, y] = trip.centroid();
-        auto const numClients = empty() ? 1 : size();  // avoid division by zero
-        centroid_.first += (x.get() * trip.size()) / numClients;
-        centroid_.second += (y.get() * trip.size()) / numClients;
     }
 
     distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
@@ -313,7 +308,6 @@ Route::Route(Trips trips,
              Duration startTime,
              Duration slack,
              Cost prizes,
-             std::pair<Coordinate, Coordinate> centroid,
              size_t vehicleType,
              size_t startDepot,
              size_t endDepot,
@@ -335,7 +329,6 @@ Route::Route(Trips trips,
       startTime_(startTime),
       slack_(slack),
       prizes_(prizes),
-      centroid_(centroid),
       vehicleType_(vehicleType),
       startDepot_(startDepot),
       endDepot_(endDepot)
@@ -385,6 +378,8 @@ std::vector<Route::ScheduledVisit> const &Route::schedule() const
     return schedule_;
 }
 
+Cost Route::fixedVehicleCost() const { return fixedVehicleCost_; }
+
 Distance Route::distance() const { return distance_; }
 
 Cost Route::distanceCost() const { return distanceCost_; }
@@ -421,11 +416,6 @@ Duration Route::releaseTime() const { return trips_[0].releaseTime(); }
 
 Cost Route::prizes() const { return prizes_; }
 
-std::pair<Coordinate, Coordinate> const &Route::centroid() const
-{
-    return centroid_;
-}
-
 size_t Route::vehicleType() const { return vehicleType_; }
 
 size_t Route::startDepot() const { return startDepot_; }
@@ -458,6 +448,21 @@ bool Route::operator==(Route const &other) const
         && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
         && trips_ == other.trips_;
+    // clang-format on
+}
+
+template <> Cost pyvrp::CostEvaluator::penalisedCost(Route const &route) const
+{
+    if (route.empty())
+        return 0;
+
+    // clang-format off
+    return route.distanceCost()
+         + route.durationCost()
+         + route.fixedVehicleCost()
+         + excessLoadPenalties(route.excessLoad())
+         + twPenalty(route.timeWarp())
+         + distPenalty(route.excessDistance(), 0);
     // clang-format on
 }
 

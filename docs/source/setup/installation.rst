@@ -1,26 +1,19 @@
-Installation instructions
-=========================
+Installation
+============
 
-The most straightforward way to use the ``pyvrp`` package in your project is to install via *pip*, like so:
+The most straightforward way to obtain the ``pyvrp`` package is to install it directly from the Python package index, like so:
 
 .. code-block:: shell
 
    pip install pyvrp
 
-
-Installing from source
-----------------------
-
-To install the latest version of ``pyvrp`` directly from the GitHub repository, you can use *pip*, like so:
+Alternatively, PyVRP can also be installed directly from the source code on GitHub:
 
 .. code-block:: shell
 
    pip install 'pyvrp @ git+https://github.com/PyVRP/PyVRP'
 
 This can be useful to get updates that have not yet made it to the Python package index.
-
-
-.. _running-locally:
 
 Running the examples locally
 ----------------------------

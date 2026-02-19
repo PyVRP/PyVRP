@@ -1,6 +1,7 @@
 import pathlib
 import time
 from functools import lru_cache
+from typing import Iterable
 
 from pyvrp import ProblemData
 from pyvrp.read import read as _read
@@ -43,16 +44,15 @@ def sleep(duration, get_now=time.perf_counter):
 
 def make_search_route(
     data: ProblemData,
-    visits: list[int],
-    idx: int = 0,
+    visits: Iterable[int],
     vehicle_type: int = 0,
-):
+) -> Route:
     """
     Helper for a common test idiom: creating a ``pyvrp.search.Route``, adding
     nodes for the given visits to it, and then calling ``update()`` to populate
     the route's statistics.
     """
-    route = Route(data, idx, vehicle_type)
+    route = Route(data, vehicle_type)
     for visit in visits:
         route.append(Node(loc=visit))
     route.update()

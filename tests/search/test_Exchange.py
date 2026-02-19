@@ -52,11 +52,11 @@ def test_swap_single_route_stays_single_route(rc208, operator):
 
     nb_params = NeighbourhoodParams(num_neighbours=rc208.num_clients)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
-    ls.add_node_operator(operator(rc208))
+    ls.add_operator(operator(rc208))
 
     single_route = list(range(rc208.num_depots, rc208.num_locations))
     sol = Solution(rc208, [single_route])
-    improved_sol = ls.search(sol, cost_evaluator)
+    improved_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     # The new solution should strictly improve on our original solution.
     assert_equal(improved_sol.num_routes(), 1)
@@ -76,11 +76,11 @@ def test_relocate_uses_empty_routes(rc208, operator):
 
     nb_params = NeighbourhoodParams(num_neighbours=rc208.num_clients)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
-    ls.add_node_operator(operator(rc208))
+    ls.add_operator(operator(rc208))
 
     single_route = list(range(rc208.num_depots, rc208.num_locations))
     sol = Solution(rc208, [single_route])
-    improved_sol = ls.search(sol, cost_evaluator)
+    improved_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     # The new solution should strictly improve on our original solution, and
     # should use more routes.
@@ -112,10 +112,10 @@ def test_cannot_exchange_when_parts_overlap_with_depot(ok_small, operator):
 
     nb_params = NeighbourhoodParams(num_neighbours=ok_small.num_clients)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
-    ls.add_node_operator(operator(ok_small))
+    ls.add_operator(operator(ok_small))
 
     sol = Solution(ok_small, [[1, 2], [3], [4]])
-    new_sol = ls.search(sol, cost_evaluator)
+    new_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     assert_equal(new_sol, sol)
 
@@ -131,10 +131,10 @@ def test_cannot_exchange_when_segments_overlap(ok_small, operator):
 
     nb_params = NeighbourhoodParams(num_neighbours=ok_small.num_clients)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
-    ls.add_node_operator(operator(ok_small))
+    ls.add_operator(operator(ok_small))
 
     sol = Solution(ok_small, [[1, 2, 3, 4]])
-    new_sol = ls.search(sol, cost_evaluator)
+    new_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     assert_equal(new_sol, sol)
 
@@ -149,13 +149,13 @@ def test_cannot_swap_adjacent_segments(ok_small):
 
     nb_params = NeighbourhoodParams(num_neighbours=ok_small.num_clients)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
-    ls.add_node_operator(Exchange22(ok_small))
+    ls.add_operator(Exchange22(ok_small))
 
     # An adjacent swap by (2, 2)-exchange could have created the single-route
     # solution [3, 4, 1, 2], which has a much lower cost. But that's not
     # allowed because adjacent swaps are not allowed.
     sol = Solution(ok_small, [[1, 2, 3, 4]])
-    new_sol = ls.search(sol, cost_evaluator)
+    new_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     assert_equal(new_sol, sol)
 
@@ -170,10 +170,10 @@ def test_swap_between_routes_OkSmall(ok_small):
 
     nb_params = NeighbourhoodParams(num_neighbours=ok_small.num_clients)
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
-    ls.add_node_operator(Exchange21(ok_small))
+    ls.add_operator(Exchange21(ok_small))
 
     sol = Solution(ok_small, [[1, 2], [3, 4]])
-    improved_sol = ls.search(sol, cost_evaluator)
+    improved_sol = ls(sol, cost_evaluator, exhaustive=True)
     expected = Solution(ok_small, [[3, 4, 2], [1]])
     assert_equal(improved_sol, expected)
 
@@ -191,8 +191,8 @@ def test_relocate_after_depot_should_work(ok_small):
 
     # We create two routes: one with clients [1, 2, 3], and the other empty.
     # It is an improving move to insert client 3 into the empty route.
-    route1 = Route(ok_small, idx=0, vehicle_type=0)
-    route2 = Route(ok_small, idx=1, vehicle_type=0)
+    route1 = Route(ok_small, vehicle_type=0)
+    route2 = Route(ok_small, vehicle_type=0)
 
     nodes = [Node(loc=client) for client in [1, 2, 3]]
     for node in nodes:
@@ -204,7 +204,9 @@ def test_relocate_after_depot_should_work(ok_small):
     # (1, 0)-exchange never performed this move.
     cost_evaluator = CostEvaluator([20], 6, 0)
     assert_(route1[3] is nodes[-1])
-    assert_(op.evaluate(nodes[-1], route2[0], cost_evaluator) < 0)
+    cost, should_apply = op.evaluate(nodes[-1], route2[0], cost_evaluator)
+    assert_(cost < 0)
+    assert_(should_apply)
 
     assert_(nodes[-1].route is route1)
     assert_equal(route1.num_clients(), 3)
@@ -266,10 +268,10 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     cost_evaluator = CostEvaluator([], 1, 0)
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_node_operator(Exchange10(data))
+    ls.add_operator(Exchange10(data))
 
-    assert_equal(ls.search(duration_optimal, cost_evaluator), duration_optimal)
-    assert_equal(ls.search(distance_optimal, cost_evaluator), duration_optimal)
+    assert_equal(ls(duration_optimal, cost_evaluator), duration_optimal)
+    assert_equal(ls(distance_optimal, cost_evaluator), duration_optimal)
 
 
 def test_relocate_to_heterogeneous_empty_route(ok_small):
@@ -292,7 +294,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     neighbours[2].append(1)
 
     ls = LocalSearch(data, rng, neighbours)
-    ls.add_node_operator(Exchange10(data))
+    ls.add_operator(Exchange10(data))
 
     # The initial solution has routes with loads [13, 5, 0, 0]
     # with excess [1, 0, 0, 0]. Moving node 3 to route 4 will resolve all
@@ -309,7 +311,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
             SolRoute(data, [3], 3),
         ],
     )
-    assert_equal(ls.search(sol, cost_evaluator), expected)
+    assert_equal(ls(sol, cost_evaluator), expected)
 
 
 @pytest.mark.parametrize(
@@ -336,15 +338,15 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     op = op(data)
 
     route1 = make_search_route(data, [2, 4, 1, 3])
-    route2 = make_search_route(data, [], idx=1)
+    route2 = make_search_route(data, [])
 
     # First route is not empty, second route is. The operator evaluates moving
     # some nodes to the second route, which would use both of them. That should
     # add to the fixed vehicle cost.
     cost_eval = CostEvaluator([1], 1, 0)
-    assert_equal(
-        op.evaluate(route1[1], route2[0], cost_eval), base_cost + fixed_cost
-    )
+    actual, should_apply = op.evaluate(route1[1], route2[0], cost_eval)
+    assert_equal(actual, base_cost + fixed_cost)
+    assert_(not should_apply)  # all worse
 
 
 @pytest.mark.parametrize(
@@ -365,8 +367,8 @@ def test_exchange_with_duration_constraint(ok_small, op, max_dur, cost):
     data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 
-    route1 = make_search_route(data, [2, 4], idx=0)
-    route2 = make_search_route(data, [1, 3], idx=1)
+    route1 = make_search_route(data, [2, 4])
+    route2 = make_search_route(data, [1, 3])
 
     # Without duration constraint, route1 has a duration of 5_229 and no time
     # warp while route2 has a duration of 5_814 and timewarp 2_087, for a net
@@ -379,7 +381,9 @@ def test_exchange_with_duration_constraint(ok_small, op, max_dur, cost):
     assert_equal(route2.duration(), 5_814)
 
     cost_eval = CostEvaluator([1], 1, 0)
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), cost)
+    delta, should_apply = op.evaluate(route1[1], route2[1], cost_eval)
+    assert_equal(delta, cost)
+    assert_equal(should_apply, cost < 0)
 
 
 @pytest.mark.parametrize("operator", [Exchange10, Exchange11])
@@ -413,7 +417,7 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
     # before 1.
     op = operator(data)
     cost_eval = CostEvaluator([1], 1, 0)
-    assert_equal(op.evaluate(route[1], route[3], cost_eval), -5)
+    assert_equal(op.evaluate(route[1], route[3], cost_eval), (-5, True))
 
 
 @pytest.mark.parametrize(
@@ -433,8 +437,8 @@ def test_relocate_max_distance(ok_small, max_distance: int, expected: int):
     vehicle_type = VehicleType(2, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    route1 = make_search_route(data, [1, 2], idx=0)
-    route2 = make_search_route(data, [], idx=1)
+    route1 = make_search_route(data, [1, 2])
+    route2 = make_search_route(data, [])
 
     assert_equal(route1.distance(), 5_501)
     assert_equal(route1.excess_distance(), max(5_501 - max_distance, 0))
@@ -444,7 +448,9 @@ def test_relocate_max_distance(ok_small, max_distance: int, expected: int):
 
     # Moving client #2 from route1 to route2 does not improve the overall
     # distance, but can be helpful in reducing maximum distance violations.
-    assert_equal(op.evaluate(route1[2], route2[0], cost_eval), expected)
+    actual, should_apply = op.evaluate(route1[2], route2[0], cost_eval)
+    assert_equal(actual, expected)
+    assert_equal(should_apply, expected < 0)
     op.apply(route1[2], route2[0])
 
     route1.update()
@@ -483,8 +489,8 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
     vehicle_type = VehicleType(2, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    route1 = make_search_route(data, [1, 2], idx=0)
-    route2 = make_search_route(data, [3], idx=1)
+    route1 = make_search_route(data, [1, 2])
+    route2 = make_search_route(data, [3])
 
     assert_equal(route1.distance(), 5_501)
     assert_equal(route1.excess_distance(), max(5_501 - max_distance, 0))
@@ -497,7 +503,9 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
 
     # Swapping client #2 in route1 and client #3 in route2 improves the overall
     # distance and reduces the excess distance violations.
-    assert_equal(op.evaluate(route1[2], route2[1], cost_eval), expected)
+    actual, should_apply = op.evaluate(route1[2], route2[1], cost_eval)
+    assert_equal(actual, expected)
+    assert_(should_apply)
     op.apply(route1[2], route2[1])
 
     route1.update()
@@ -527,8 +535,8 @@ def test_swap_with_different_profiles(ok_small_two_profiles):
     """
     data = ok_small_two_profiles
 
-    route1 = make_search_route(data, [3], idx=0, vehicle_type=0)
-    route2 = make_search_route(data, [4], idx=1, vehicle_type=1)
+    route1 = make_search_route(data, [3], vehicle_type=0)
+    route2 = make_search_route(data, [4], vehicle_type=1)
 
     op = Exchange11(data)
     cost_eval = CostEvaluator([0], 0, 0)  # all zero so no costs from penalties
@@ -538,7 +546,7 @@ def test_swap_with_different_profiles(ok_small_two_profiles):
     dist1, dist2 = data.distance_matrices()
     delta = dist1[0, 4] + dist1[4, 0] + dist2[0, 3] + dist2[3, 0]
     delta -= route1.distance() + route2.distance()
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), delta)
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (delta, False))
 
 
 def test_swap_does_not_swap_depots(ok_small_multiple_trips):
@@ -553,7 +561,7 @@ def test_swap_does_not_swap_depots(ok_small_multiple_trips):
     cost_eval = CostEvaluator([0], 0, 0)
 
     # This move overlaps with reload depot at index 3, so cannot be evaluated.
-    assert_equal(op.evaluate(route[2], route[4], cost_eval), 0)
+    assert_equal(op.evaluate(route[2], route[4], cost_eval), (0, False))
 
 
 def test_bug_evaluating_move_with_initial_load():
@@ -576,12 +584,12 @@ def test_bug_evaluating_move_with_initial_load():
     op = Exchange21(data)
     cost_eval = CostEvaluator([1], 0, 0)
 
-    route1 = make_search_route(data, [2, 3], idx=0, vehicle_type=0)
-    route2 = make_search_route(data, [1], idx=1, vehicle_type=0)
+    route1 = make_search_route(data, [2, 3])
+    route2 = make_search_route(data, [1])
 
     # This move just permutes the solution, turning route1 into route2, and
     # vice versa. Thus, the delta cost of this move should be zero.
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), 0)
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
 
 
 @pytest.mark.parametrize("operator", [Exchange10, Exchange21, Exchange33])
@@ -610,21 +618,21 @@ def test_bug_release_time_shift_time_windows():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    route1 = make_search_route(data, [1], idx=0, vehicle_type=0)
+    route1 = make_search_route(data, [1], vehicle_type=0)
     assert_(route1.is_feasible())
 
     # Vehicle's time windows are constrained to [0, 1], but client 2 is not
     # released until 2. So there's a unit of time warp when we leave the depot.
     # Then we have to wait until 2 at the client, and have another unit of time
     # warp when we return to the depot.
-    route2 = make_search_route(data, [2], idx=1, vehicle_type=1)
+    route2 = make_search_route(data, [2], vehicle_type=1)
     assert_equal(route2.time_warp(), 2)
 
     # This move proposes inserting 1 before 2 in route2. That changes nothing
     # about route2's time warp, so the move should not affect costs.
     op = Exchange10(data)
     cost_eval = CostEvaluator([], 1, 0)
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (0, False))
 
 
 def test_empty_route_delta_cost_bug():
@@ -651,8 +659,8 @@ def test_empty_route_delta_cost_bug():
         distance_matrices=[mat],
     )
 
-    route1 = make_search_route(data, [2], 0, 0)
-    route2 = make_search_route(data, [], 1, 1)
+    route1 = make_search_route(data, [2], vehicle_type=0)
+    route2 = make_search_route(data, [], vehicle_type=1)
 
     # This move proposes inserting the client 2 in route2. Before fixing the
     # bug, route2's cost was included in the delta cost computation, claiming
@@ -660,7 +668,7 @@ def test_empty_route_delta_cost_bug():
     # included in the delta cost.
     op = Exchange10(data)
     cost_eval = CostEvaluator([], 1, 1)
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), 0)
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (0, False))
 
 
 def test_relocate_overtime(ok_small_overtime):
@@ -668,8 +676,8 @@ def test_relocate_overtime(ok_small_overtime):
     Tests a relocate move involving overtime correctly evaluates the resulting
     (duration-based) cost delta.
     """
-    route1 = make_search_route(ok_small_overtime, [1, 3], idx=0)
-    route2 = make_search_route(ok_small_overtime, [], idx=1)
+    route1 = make_search_route(ok_small_overtime, [1, 3])
+    route2 = make_search_route(ok_small_overtime, [])
 
     # First route takes 5'814, of which 814 is overtime. The cost structure
     # is 1x duration + 10x overtime.
@@ -688,5 +696,18 @@ def test_relocate_overtime(ok_small_overtime):
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(
         op.evaluate(route1[2], route2[0], cost_eval),
-        new_cost - old_cost,
+        (new_cost - old_cost, True),
     )
+
+
+@pytest.mark.parametrize("operator", [Exchange10, Exchange11])
+def test_skip_unassigned_clients(operator, ok_small):
+    """
+    Tests that the operators do not evaluate moves for unassigned clients.
+    """
+    route = make_search_route(ok_small, [1, 2])
+    node = Node(loc=3)  # unassigned
+
+    operator = Exchange10(ok_small)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(operator.evaluate(node, route[0], cost_eval), (0, False))

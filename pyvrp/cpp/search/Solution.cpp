@@ -1,10 +1,41 @@
 #include "Solution.h"
 
-#include "primitives.h"
+#include "ClientSegment.h"
 
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+
+using pyvrp::Cost;
+using pyvrp::Distance;
+using pyvrp::Duration;
+using pyvrp::Load;
+
+namespace
+{
+Cost insertCost(pyvrp::search::Route::Node *U,
+                pyvrp::search::Route::Node *V,
+                pyvrp::ProblemData const &data,
+                pyvrp::CostEvaluator const &costEvaluator)
+{
+    assert(V->route() && !U->isDepot());
+
+    auto *route = V->route();
+    pyvrp::ProblemData::Client const &client = data.location(U->client());
+
+    Cost deltaCost
+        = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
+
+    costEvaluator.deltaCost<true>(
+        deltaCost,
+        pyvrp::search::Route::Proposal(
+            route->before(V->idx()),
+            pyvrp::search::ClientSegment(data, U->client()),
+            route->after(V->idx() + 1)));
+
+    return deltaCost;
+}
+}  // namespace
 
 using pyvrp::search::Solution;
 
@@ -15,12 +46,11 @@ Solution::Solution(ProblemData const &data) : data_(data)
         nodes.emplace_back(loc);
 
     routes.reserve(data.numVehicles());
-    size_t rIdx = 0;
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
     {
         auto const numAvailable = data.vehicleType(vehType).numAvailable;
         for (size_t vehicle = 0; vehicle != numAvailable; ++vehicle)
-            routes.emplace_back(data, rIdx++, vehType);
+            routes.emplace_back(data, vehType);
     }
 }
 
@@ -136,6 +166,7 @@ bool Solution::insert(Route::Node *U,
                       CostEvaluator const &costEvaluator,
                       bool required)
 {
+    assert(!U->isDepot());
     assert(size_t(std::distance(nodes.data(), U)) < nodes.size());
 
     Route::Node *UAfter = routes[0][0];  // fallback option
@@ -187,4 +218,24 @@ bool Solution::insert(Route::Node *U,
     }
 
     return false;
+}
+
+template <>
+pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
+    pyvrp::search::Solution const &solution) const
+{
+    auto const &data = solution.data_;
+
+    Cost cost = 0;  // cost is route cost + uncollected prizes
+    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
+        if (!solution.nodes[idx].route())
+        {
+            ProblemData::Client const &client = data.location(idx);
+            cost += client.prize;
+        }
+
+    for (auto const &route : solution.routes)
+        cost += penalisedCost(route);
+
+    return cost;
 }

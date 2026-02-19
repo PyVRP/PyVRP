@@ -36,6 +36,8 @@ jobs:
     needs: [ build ]
     runs-on: ubuntu-22.04
     if: github.event_name == 'release' && github.event.action == 'created'
+    permissions:
+      id-token: write  # for trusted publishing
     steps:
       - uses: actions/checkout@v4
         with:

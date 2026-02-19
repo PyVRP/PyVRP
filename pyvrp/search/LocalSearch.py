@@ -4,20 +4,20 @@ from pyvrp._pyvrp import (
     RandomNumberGenerator,
     Solution,
 )
-from pyvrp.search._search import LocalSearch as _LocalSearch
 from pyvrp.search._search import (
+    BinaryOperator,
     LocalSearchStatistics,
-    NodeOperator,
     PerturbationManager,
-    RouteOperator,
+    UnaryOperator,
 )
+from pyvrp.search._search import LocalSearch as _LocalSearch
 
 
 class LocalSearch:
     """
     Local search method. This search method explores a granular neighbourhood
-    in a very efficient manner using user-provided node and route operators.
-    This quickly results in much improved solutions.
+    in a very efficient manner using user-provided operators. This quickly
+    results in much improved solutions.
 
     Parameters
     ----------
@@ -41,30 +41,17 @@ class LocalSearch:
         self._ls = _LocalSearch(data, neighbours, perturbation_manager)
         self._rng = rng
 
-    def add_node_operator(self, op: NodeOperator):
+    def add_operator(self, op: UnaryOperator | BinaryOperator):
         """
-        Adds a node operator to this local search object. The node operator
-        will be used by :meth:`~search` to improve a solution.
+        Adds an operator to this local search object. The operator will be used
+        to improve a solution.
 
         Parameters
         ----------
         op
-            The node operator to add to this local search object.
+            The operator to add to this local search object.
         """
-        self._ls.add_node_operator(op)
-
-    def add_route_operator(self, op: RouteOperator):
-        """
-        Adds a route operator to this local search object. The route operator
-        will be used by :meth:`~intensify` to improve a solution using more
-        expensive route operators.
-
-        Parameters
-        ----------
-        op
-            The route operator to add to this local search object.
-        """
-        self._ls.add_route_operator(op)
+        self._ls.add_operator(op)
 
     @property
     def neighbours(self) -> list[list[int]]:
@@ -82,18 +69,18 @@ class LocalSearch:
         self._ls.neighbours = neighbours
 
     @property
-    def node_operators(self) -> list[NodeOperator]:
+    def unary_operators(self) -> list[UnaryOperator]:
         """
-        Returns the node operators in use.
+        Returns the unary operators in use.
         """
-        return self._ls.node_operators
+        return self._ls.unary_operators
 
     @property
-    def route_operators(self) -> list[RouteOperator]:
+    def binary_operators(self) -> list[BinaryOperator]:
         """
-        Returns the route operators in use.
+        Returns the binary operators in use.
         """
-        return self._ls.route_operators
+        return self._ls.binary_operators
 
     @property
     def statistics(self) -> LocalSearchStatistics:
@@ -109,11 +96,8 @@ class LocalSearch:
         exhaustive: bool = False,
     ) -> Solution:
         """
-        This method uses the :meth:`~search` and :meth:`~intensify` methods to
-        iteratively improve the given solution. First, :meth:`~search` is
-        applied. Thereafter, :meth:`~intensify` is applied. This repeats until
-        no further improvements are found. Finally, the improved solution is
-        returned.
+        This method improves the given solution through a (default
+        non-exhaustive) local search.
 
         Parameters
         ----------
@@ -133,51 +117,3 @@ class LocalSearch:
         """
         self._ls.shuffle(self._rng)
         return self._ls(solution, cost_evaluator, exhaustive)
-
-    def intensify(
-        self,
-        solution: Solution,
-        cost_evaluator: CostEvaluator,
-    ) -> Solution:
-        """
-        This method uses the intensifying route operators on this local search
-        object to improve the given solution.
-
-        Parameters
-        ----------
-        solution
-            The solution to improve.
-        cost_evaluator
-            Cost evaluator to use.
-
-        Returns
-        -------
-        Solution
-            The improved solution. This is not the same object as the
-            solution that was passed in.
-        """
-        self._ls.shuffle(self._rng)
-        return self._ls.intensify(solution, cost_evaluator)
-
-    def search(
-        self, solution: Solution, cost_evaluator: CostEvaluator
-    ) -> Solution:
-        """
-        This method uses the node operators on this local search object to
-        improve the given solution.
-
-        Parameters
-        ----------
-        solution
-            The solution to improve.
-        cost_evaluator
-            Cost evaluator to use.
-
-        Returns
-        -------
-        Solution
-            The improved solution. This is not the same object as the
-            solution that was passed in.
-        """
-        self._ls.shuffle(self._rng)
-        return self._ls.search(solution, cost_evaluator)

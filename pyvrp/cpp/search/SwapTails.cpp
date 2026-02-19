@@ -15,9 +15,8 @@ bool onLastTrip(pyvrp::search::Route::Node *node)
 }
 }  // namespace
 
-pyvrp::Cost SwapTails::evaluate(Route::Node *U,
-                                Route::Node *V,
-                                CostEvaluator const &costEvaluator)
+std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     stats_.numEvaluations++;
     assert(!U->isEndDepot() && !U->isReloadDepot());
@@ -26,16 +25,16 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 
-    if (uRoute == vRoute)
-        return 0;  // same route
+    if (!uRoute || uRoute == vRoute)
+        return std::make_pair(0, false);  // unassigned, or same route
 
-    if (uRoute->idx() > vRoute->idx() && !uRoute->empty() && !vRoute->empty())
-        return 0;  // move will be tackled in a later iteration
+    if (uRoute > vRoute && !uRoute->empty() && !vRoute->empty())
+        return std::make_pair(0, false);  // move will be tackled later
 
     if (!onLastTrip(U) || !onLastTrip(V))
         // We cannot move reload depots, so we only evaluate a move if it does
         // not include a reload depot.
-        return 0;
+        return std::make_pair(0, false);
 
     Cost deltaCost = 0;
 
@@ -93,7 +92,7 @@ pyvrp::Cost SwapTails::evaluate(Route::Node *U,
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
 
-    return deltaCost;
+    return std::make_pair(deltaCost, deltaCost < 0);
 }
 
 void SwapTails::apply(Route::Node *U, Route::Node *V) const
