@@ -179,46 +179,8 @@ class PenaltyManager:
         params
             PenaltyManager parameters. If not provided, a default will be used.
         """
-        distances = data.distance_matrices()
-        durations = data.duration_matrices()
-
-        # We first determine the elementwise minimum cost across all vehicle
-        # types. This is the cheapest way any edge can be traversed.
-        unique_edge_costs = {
-            (
-                veh_type.unit_distance_cost,
-                veh_type.unit_duration_cost,
-                veh_type.profile,
-            )
-            for veh_type in data.vehicle_types()
-        }
-
-        first, *rest = unique_edge_costs
-        unit_dist, unit_dur, prof = first
-        edge_costs = unit_dist * distances[prof] + unit_dur * durations[prof]
-        for unit_dist, unit_dur, prof in rest:
-            mat = unit_dist * distances[prof] + unit_dur * durations[prof]
-            np.minimum(edge_costs, mat, out=edge_costs)
-
-        # Best edge cost/distance/duration over all vehicle types and profiles,
-        # and then average that for the entire matrix to obtain an "average
-        # best" edge cost/distance/duration.
-        avg_cost = edge_costs.mean()
-        avg_distance = np.minimum.reduce(distances).mean()
-        avg_duration = np.minimum.reduce(durations).mean()
-
-        avg_load = np.zeros((data.num_load_dimensions,))
-        if data.num_clients != 0 and data.num_load_dimensions != 0:
-            pickups = np.array([c.pickup for c in data.clients()])
-            deliveries = np.array([c.delivery for c in data.clients()])
-            avg_load = np.maximum(pickups, deliveries).mean(axis=0)
-
-        # Initial penalty parameters are meant to weigh an average increase
-        # in the relevant value by the same amount as the average edge cost.
-        init_load = avg_cost / np.maximum(avg_load, 1)
-        init_tw = avg_cost / max(avg_duration, 1)
-        init_dist = avg_cost / max(avg_distance, 1)
-        return cls((init_load.tolist(), init_tw, init_dist), params)
+        val = params.max_penalty
+        return cls(([val] * data.num_load_dimensions, val, val), params)
 
     def _compute(self, penalty: float, feas_percentage: float) -> float:
         # Computes and returns the new penalty value, given the current value
