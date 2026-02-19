@@ -50,7 +50,7 @@ void validateDurationPwl(PiecewiseLinearFunction const &pwl)
     auto const &breakpoints = pwl.breakpoints();
     auto const &slopes = pwl.slopes();
 
-    // NOTE: #925/1044-FormPup41:
+    // FIXME:: #925/1044-FormPup41:
     // It is possible to allow a non-zero first breakpoint, but then the
     // duration cost function must also define behavior on [0,
     // first_breakpoint), for example via extrapolation or clamping. For now, we
@@ -92,6 +92,9 @@ DurationCostFunction::DurationCostFunction(PiecewiseLinearFunction pwl)
     validateDurationPwl(pwl_);
 }
 
+// Internal compatibility helper for legacy scalar duration/overtime costs.
+// Intentionally not exposed in the public Python API to avoid confusion and 
+// encourage users to migrate to the more flexible duration cost function.
 DurationCostFunction DurationCostFunction::fromLinear(Duration shiftDuration,
                                                       Cost unitDurationCost,
                                                       Cost unitOvertimeCost)
@@ -108,18 +111,9 @@ DurationCostFunction DurationCostFunction::fromLinear(Duration shiftDuration,
     std::vector<Duration> breakpoints = {0};
     std::vector<Cost> slopes = {unitDurationCost};
 
-    // NOTE: #925/1044-FormPup41:
-    // fromLinear() always constructs a new function from the legacy scalar
-    // parameters, so there are no pre-existing breakpoints to merge with. The
-    // only possible inserted breakpoint is shiftDuration.
-
-    // Exactly matches legacy:
+    // Matches legacy:
     // cost(d) = unitDurationCost * d
     //         + unitOvertimeCost * max(0, d - shiftDuration).
-    //
-    // If shiftDuration is the maximum representable int64 duration, then
-    // max(0, d - shiftDuration) is always 0 for representable durations d, so
-    // overtime never activates and a second segment is unnecessary.
     auto const hasFiniteOvertimeThreshold
         = shiftDuration > 0
           && shiftDuration < std::numeric_limits<Duration>::max();

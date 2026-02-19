@@ -69,19 +69,6 @@ class DurationCostFunction:
     ) -> None: ...
     @overload
     def __init__(self, piecewise_linear: PiecewiseLinearFunction) -> None: ...
-    # NOTE: #925/1044-FormPup41: Could be removed once agreed upon.
-    # We intentionally do not expose
-    # ``DurationCostFunction.from_linear()`` in the public Python API.
-    # The conversion from legacy scalar duration/overtime costs to a duration
-    # cost function is an internal compatibility helper.
-    # Exposing it publicly would make future legacy API phase-out harder once
-    # users start depending on that helper directly.
-    # @staticmethod
-    # def from_linear(
-    #     shift_duration: int,
-    #     unit_duration_cost: int,
-    #     unit_overtime_cost: int,
-    # ) -> DurationCostFunction: ...
     def __call__(self, duration: int) -> int: ...
     @property
     def breakpoints(self) -> list[int]: ...
@@ -193,14 +180,6 @@ class VehicleType:
     max_overtime: int
     unit_overtime_cost: int
     duration_cost_function: DurationCostFunction
-    # `duration_cost_slope` is derived from `duration_cost_function` and used
-    # for edge-based heuristics.
-    # It returns the slope of the first segment of the piecewise linear
-    # duration cost function. This is the per-duration-unit cost for small
-    # durations (e.g. within shift duration).
-    # It is used in `compute_proximity_matrix()` in
-    # `pyvrp.search.neighbourhood` and in `init_from()` in
-    # `pyvrp.PenaltyManager` instead of the previous `unit_duration_cost`.
     duration_cost_slope: int
     max_duration: int
     name: str
@@ -251,9 +230,6 @@ class VehicleType:
         max_overtime: int | None = None,
         unit_overtime_cost: int | None = None,
         duration_cost_function: DurationCostFunction | None = ...,
-        # NOTE: default is "not provided" (...). This distinguishes
-        # "not provided" from "explicitly set to None" for the
-        # durationCostFunctionProvided boolean in VehicleType.replace().
         *,
         name: str | None = None,
     ) -> VehicleType: ...

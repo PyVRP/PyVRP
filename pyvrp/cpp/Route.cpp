@@ -284,9 +284,6 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     duration_ = ds.duration();
     overtime_ = std::max<Duration>(duration_ - vehData.shiftDuration, 0);
 
-    // Old code: FIXME: #925/1044-FormPup41:
-    // durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_)
-    //                + vehData.unitOvertimeCost * static_cast<Cost>(overtime_);
     durationCost_ = vehData.durationCostFunction(duration_);
     startTime_ = ds.startEarly();
     slack_ = ds.slack();

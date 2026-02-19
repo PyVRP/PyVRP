@@ -437,16 +437,23 @@ public:
      *     Cost of a unit of overtime. This is in addition to the regular
      *     :py:attr:`~unit_duration_cost` of route durations. Default 0.
      * duration_cost_function
-     *     Optional piecewise linear duration cost function. If not provided,
-     *     this defaults to the legacy linear/overtime cost based on
-     *     :py:attr:`~unit_duration_cost`, :py:attr:`~shift_duration`, and
-     *     :py:attr:`~unit_overtime_cost`. This argument is mutually exclusive
-     *     with non-zero :py:attr:`~unit_duration_cost` and
-     *     :py:attr:`~unit_overtime_cost`. In :meth:`replace`, set
-     *     ``duration_cost_function=None`` explicitly to switch from custom
-     *     duration costs back to legacy linear/overtime costs or pass the
-     *     :py:attr:`~DurationCostFunction` instance to use the default duration
-     * costs. name Free-form name field for this vehicle type. Default empty.
+     *     Optional piecewise linear duration cost function. In the
+     *     constructor, ``None`` selects the legacy linear/overtime cost based
+     *     on :py:attr:`~unit_duration_cost`, :py:attr:`~shift_duration`, and
+     *     :py:attr:`~unit_overtime_cost`.
+     *
+     *     In :meth:`replace`, this argument has tri-state semantics:
+     *     - omitted: keep the current duration-cost mode;
+     *     - ``None``: clear a custom function and switch to legacy
+     *       linear/overtime costs;
+     *     - :py:class:`~DurationCostFunction`: set or replace the custom
+     *       function.
+     *
+     *     A custom duration cost function is mutually exclusive with updating
+     *     :py:attr:`~unit_duration_cost` or :py:attr:`~unit_overtime_cost` in
+     *     the same call.
+     * name
+     *     Free-form name field for this vehicle type. Default empty.
      *
      * Attributes
      * ----------
@@ -495,7 +502,10 @@ public:
      *     Additional cost of a unit of overtime.
      * duration_cost_function
      *     Piecewise linear duration cost function used to evaluate route
-     *     duration costs for this vehicle type.
+     *     duration costs for this vehicle type. If not set, the duration 
+     *     cost is computed using the legacy linear/overtime cost based on 
+     *     :py:attr:`~unit_duration_cost`, :py:attr:`~shift_duration`, and 
+     *     :py:attr:`~unit_overtime_cost`.
      * max_duration
      *     Hard maximum route duration constraint, computed as the sum of
      *     :py:attr:`~shift_duration` and :py:attr:`~max_overtime`.
@@ -563,19 +573,20 @@ public:
          * Returns a new ``VehicleType`` with the same data as this one, except
          * for the given parameters, which are used instead.
          *
-         * Duration-cost update semantics:
-         * - ``durationCostFunctionProvided == false``: keep current duration
-         * cost mode.
-         * - ``durationCostFunctionProvided == true`` and
-         * ``durationCostFunction`` set: use the provided custom duration cost
-         * function.
-         * - ``durationCostFunctionProvided == true`` and
-         * ``durationCostFunction`` empty: clear custom duration cost and use
-         * legacy linear/overtime costs via the
-         *   ``unitDurationCost`` and ``unitOvertimeCost`` parameters.
+         * In :meth:`replace`, ``duration_cost_function`` behaves as follows:
+         * - Omitted: keep the current duration-cost mode.
+         * - ``None``: clear custom duration costs and switch to legacy
+         *   linear/overtime costs.
+         * - :py:class:`~DurationCostFunction`: use that custom function.
          *
-         * A custom duration cost function is mutually exclusive with updating
-         * ``unitDurationCost`` / ``unitOvertimeCost`` in the same call.
+         * Validation rules:
+         * - ``duration_cost_function`` cannot be set to a custom function
+         *   together with ``unit_duration_cost`` or ``unit_overtime_cost`` in
+         *   the same call.
+         * - If this vehicle type currently uses a custom duration cost
+         *   function, ``unit_duration_cost`` and ``unit_overtime_cost`` can
+         *   only be updated when switching to legacy mode
+         *   (``duration_cost_function=None``) in the same call.
          */
         VehicleType
         replace(std::optional<size_t> numAvailable,
@@ -599,12 +610,6 @@ public:
                 std::optional<DurationCostFunction> durationCostFunction,
                 std::optional<std::string> name,
                 bool durationCostFunctionProvided = false) const;
-        // FIXME: #925/1044-FormPup41:
-        // This bool might be a bit of an awkward API, but it allows us to
-        // distinguish between "no update to duration cost function" and "update
-        // duration cost function to the provided value, which may be empty to
-        // switch back to legacy duration costs". However, we may want to
-        // refactor this in the future to a more intuitive API.
 
         /**
          * Returns the maximum number of trips these vehicle can execute.
