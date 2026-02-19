@@ -6,7 +6,7 @@ from warnings import warn
 
 import numpy as np
 
-from pyvrp._pyvrp import CostEvaluator, ProblemData, Solution
+from pyvrp._pyvrp import CostEvaluator, Solution
 from pyvrp.exceptions import PenaltyBoundWarning
 
 
@@ -119,11 +119,6 @@ class PenaltyManager:
     for given time warp and load values. It updates these penalties based on
     recent history.
 
-    .. note::
-
-       Consider initialising using :meth:`~init_from` to compute initial
-       penalty values that are scaled according to the data instance.
-
     Parameters
     ----------
     initial_penalties
@@ -161,25 +156,6 @@ class PenaltyManager:
             self._penalties[-2],  # duration
             self._penalties[-1],  # distance
         )
-
-    @classmethod
-    def init_from(
-        cls,
-        data: ProblemData,
-        params: PenaltyParams = PenaltyParams(),
-    ) -> PenaltyManager:
-        """
-        Initialises penalty values from the midpoint of the penalty range.
-
-        Parameters
-        ----------
-        data
-            Data instance to use when computing penalty values.
-        params
-            PenaltyManager parameters. If not provided, a default will be used.
-        """
-        val = (params.min_penalty + params.max_penalty) / 2
-        return cls(([val] * data.num_load_dimensions, val, val), params)
 
     def _compute(self, penalty: float, feas_percentage: float) -> float:
         # Computes and returns the new penalty value, given the current value

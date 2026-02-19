@@ -328,21 +328,6 @@ def test_warns_max_penalty_value(ok_small):
         pm.register(infeas)
 
 
-def test_init_from_starts_from_midpoint(ok_small):
-    """
-    Tests that ``init_from()`` initialises all penalty values to
-    (min_penalty + max_penalty) / 2.
-    """
-    params = PenaltyParams(min_penalty=0.1, max_penalty=100_000)
-    pm = PenaltyManager.init_from(ok_small, params)
-    cost_eval = pm.cost_evaluator()
-
-    expected = (params.min_penalty + params.max_penalty) / 2
-    assert_equal(cost_eval.load_penalty(1, 0, 0), round(expected))
-    assert_equal(cost_eval.tw_penalty(1), round(expected))
-    assert_equal(cost_eval.dist_penalty(1, 0), round(expected))
-
-
 def test_init_clips_penalties():
     """
     Tests that the initial penalty values are clipped to the [min_penalty,
@@ -361,24 +346,6 @@ def test_init_clips_penalties():
     assert_equal(cost_eval.dist_penalty(1, 0), 2)  # already OK, so unchanged
 
 
-def test_init_from_multiple_load_penalties(ok_small_multiple_load):
-    """
-    Tests that init_from sets all load penalties to the midpoint of the penalty
-    range (min_penalty + max_penalty) / 2, one for each load dimension.
-    """
-    params = PenaltyParams(min_penalty=0.1, max_penalty=100_000)
-    pm = PenaltyManager.init_from(ok_small_multiple_load, params)
-    load_penalties, *_ = pm.penalties()
-    assert_equal(
-        len(load_penalties),
-        ok_small_multiple_load.num_load_dimensions,
-    )
-
-    expected = (params.min_penalty + params.max_penalty) / 2
-    for penalty in load_penalties:
-        assert_equal(penalty, expected)
-
-
 def test_max_cost_evaluator(ok_small_multiple_load):
     """
     Tests that ``max_cost_evaluator()`` returns a CostEvaluator with the
@@ -386,7 +353,7 @@ def test_max_cost_evaluator(ok_small_multiple_load):
     """
     max_penalty = 100
     params = PenaltyParams(max_penalty=max_penalty)
-    pm = PenaltyManager.init_from(ok_small_multiple_load, params)
+    pm = PenaltyManager(([20, 20], 6, 6), params=params)
     cost_eval = pm.max_cost_evaluator()
 
     for idx in range(ok_small_multiple_load.num_load_dimensions):

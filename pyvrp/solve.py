@@ -169,7 +169,10 @@ def solve(
         if op.supports(data):
             ls.add_operator(op(data))
 
-    pm = PenaltyManager.init_from(data, params.penalty)
+    # Start all penalties from the middle of the penalty range.
+    penalty = (params.penalty.min_penalty + params.penalty.max_penalty) / 2
+    penalties = ([penalty] * data.num_load_dimensions, penalty, penalty)
+    pm = PenaltyManager(penalties, params.penalty)
 
     init = initial_solution
     if init is None:
