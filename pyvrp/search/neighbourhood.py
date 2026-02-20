@@ -158,7 +158,7 @@ def _compute_proximity(
     unique_edge_costs = {
         (
             veh_type.unit_distance_cost,
-            veh_type.duration_cost_slope,
+            veh_type.unit_duration_cost,
             veh_type.profile,
         )
         for veh_type in data.vehicle_types()

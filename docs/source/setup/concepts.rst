@@ -40,12 +40,7 @@ Vehicles modelled using the :class:`~pyvrp._pyvrp.VehicleType` object support se
 In particular, vehicles are equipped with time window attributes limiting the earliest start and latest completion times of a vehicle's assigned route.
 Between these two times, a vehicle may execute a route of a given maximum duration.
 Additionally, the starting time of the vehicle's assigned route may be further constrained to happen during the beginning of the time window. 
-Besides linear duration and overtime costs, vehicle types can also define a
-custom :attr:`~pyvrp._pyvrp.VehicleType.duration_cost_function` for
-non-linear duration cost modelling. 
 The following figure explains this graphically.
-
-FIXME: #925/1044 - FormPup41: Should we not also include a figure explaining the PWL function here? It might be a bit abstract to understand how the duration cost function works without a visual aid for some users right?
 
 .. figure:: ../assets/images/duration-vehicletype.svg
    :alt: Duration attributes of ``VehicleType`` objects.

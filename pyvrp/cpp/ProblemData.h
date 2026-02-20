@@ -1,7 +1,7 @@
+
 #ifndef PYVRP_PROBLEMDATA_H
 #define PYVRP_PROBLEMDATA_H
 
-#include "DurationCostFunction.h"
 #include "Matrix.h"
 #include "Measure.h"
 
@@ -372,7 +372,6 @@ public:
      *     max_reloads: int = np.iinfo(np.uint64).max,
      *     max_overtime: int = 0,
      *     unit_overtime_cost: int = 0,
-     *     duration_cost_function: DurationCostFunction | None = None,
      *     *,
      *     name: str = "",
      * )
@@ -436,22 +435,6 @@ public:
      * unit_overtime_cost
      *     Cost of a unit of overtime. This is in addition to the regular
      *     :py:attr:`~unit_duration_cost` of route durations. Default 0.
-     * duration_cost_function
-     *     Optional piecewise linear duration cost function. In the
-     *     constructor, ``None`` selects the legacy linear/overtime cost based
-     *     on :py:attr:`~unit_duration_cost`, :py:attr:`~shift_duration`, and
-     *     :py:attr:`~unit_overtime_cost`.
-     *
-     *     In :meth:`replace`, this argument has tri-state semantics:
-     *     - omitted: keep the current duration-cost mode;
-     *     - ``None``: clear a custom function and switch to legacy
-     *       linear/overtime costs;
-     *     - :py:class:`~DurationCostFunction`: set or replace the custom
-     *       function.
-     *
-     *     A custom duration cost function is mutually exclusive with updating
-     *     :py:attr:`~unit_duration_cost` or :py:attr:`~unit_overtime_cost` in
-     *     the same call.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -500,12 +483,6 @@ public:
      *     :py:attr:`~shift_duration`.
      * unit_overtime_cost
      *     Additional cost of a unit of overtime.
-     * duration_cost_function
-     *     Piecewise linear duration cost function used to evaluate route
-     *     duration costs for this vehicle type. If not set, the duration 
-     *     cost is computed using the legacy linear/overtime cost based on 
-     *     :py:attr:`~unit_duration_cost`, :py:attr:`~shift_duration`, and 
-     *     :py:attr:`~unit_overtime_cost`.
      * max_duration
      *     Hard maximum route duration constraint, computed as the sum of
      *     :py:attr:`~shift_duration` and :py:attr:`~max_overtime`.
@@ -532,7 +509,6 @@ public:
         size_t const maxReloads;                 // Maximum number of reloads
         Duration const maxOvertime;              // Maximum allowed overtime
         Cost const unitOvertimeCost;             // Cost per unit of overtime
-        DurationCostFunction const durationCostFunction;  // Duration cost fn
         Duration const maxDuration;  // Maximum route duration, incl. overtime
         char const *name;            // Type name (for reference)
 
@@ -555,8 +531,6 @@ public:
                     size_t maxReloads = std::numeric_limits<size_t>::max(),
                     Duration maxOvertime = 0,
                     Cost unitOvertimeCost = 0,
-                    std::optional<DurationCostFunction> durationCostFunction
-                    = std::nullopt,
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -572,72 +546,31 @@ public:
         /**
          * Returns a new ``VehicleType`` with the same data as this one, except
          * for the given parameters, which are used instead.
-         *
-         * In :meth:`replace`, ``duration_cost_function`` behaves as follows:
-         * - Omitted: keep the current duration-cost mode.
-         * - ``None``: clear custom duration costs and switch to legacy
-         *   linear/overtime costs.
-         * - :py:class:`~DurationCostFunction`: use that custom function.
-         *
-         * Validation rules:
-         * - ``duration_cost_function`` cannot be set to a *custom* function
-         *   together with ``unit_duration_cost`` or ``unit_overtime_cost`` in
-         *   the same call.
-         * - If this vehicle type currently uses a custom duration cost
-         *   function, ``unit_duration_cost`` and ``unit_overtime_cost`` can
-         *   only be updated when switching to legacy mode
-         *   (``duration_cost_function=None``) in the same call.
          */
-        VehicleType
-        replace(std::optional<size_t> numAvailable,
-                std::optional<std::vector<Load>> capacity,
-                std::optional<size_t> startDepot,
-                std::optional<size_t> endDepot,
-                std::optional<Cost> fixedCost,
-                std::optional<Duration> twEarly,
-                std::optional<Duration> twLate,
-                std::optional<Duration> shiftDuration,
-                std::optional<Distance> maxDistance,
-                std::optional<Cost> unitDistanceCost,
-                std::optional<Cost> unitDurationCost,
-                std::optional<size_t> profile,
-                std::optional<Duration> startLate,
-                std::optional<std::vector<Load>> initialLoad,
-                std::optional<std::vector<size_t>> reloadDepots,
-                std::optional<size_t> maxReloads,
-                std::optional<Duration> maxOvertime,
-                std::optional<Cost> unitOvertimeCost,
-                std::optional<DurationCostFunction> durationCostFunction,
-                std::optional<std::string> name,
-                bool durationCostFunctionProvided = false) const;
+        VehicleType replace(std::optional<size_t> numAvailable,
+                            std::optional<std::vector<Load>> capacity,
+                            std::optional<size_t> startDepot,
+                            std::optional<size_t> endDepot,
+                            std::optional<Cost> fixedCost,
+                            std::optional<Duration> twEarly,
+                            std::optional<Duration> twLate,
+                            std::optional<Duration> shiftDuration,
+                            std::optional<Distance> maxDistance,
+                            std::optional<Cost> unitDistanceCost,
+                            std::optional<Cost> unitDurationCost,
+                            std::optional<size_t> profile,
+                            std::optional<Duration> startLate,
+                            std::optional<std::vector<Load>> initialLoad,
+                            std::optional<std::vector<size_t>> reloadDepots,
+                            std::optional<size_t> maxReloads,
+                            std::optional<Duration> maxOvertime,
+                            std::optional<Cost> unitOvertimeCost,
+                            std::optional<std::string> name) const;
 
         /**
          * Returns the maximum number of trips these vehicle can execute.
          */
         size_t maxTrips() const;
-
-        /**
-         * Returns a linear proxy slope for duration edge costs used by
-         * neighbourhood and penalty initialisation heuristics.
-         *
-         * This delegates to :py:attr:`~duration_cost_function` and currently
-         * equals the slope of its first segment.
-         */
-        Cost durationCostSlope() const;
-
-    private:
-        /**
-         * Resolves the duration cost function from constructor inputs.
-         *
-         * This helper is specific to ``VehicleType`` input policy: users must
-         * provide either a custom duration cost function or legacy unit
-         * duration/overtime costs.
-         */
-        static DurationCostFunction resolveDurationCostFunction(
-            Duration shiftDuration,
-            Cost unitDurationCost,
-            Cost unitOvertimeCost,
-            std::optional<DurationCostFunction> const &durationCostFunction);
     };
 
 private:

@@ -5,10 +5,8 @@
 #include <numeric>
 #include <stdexcept>
 
-using pyvrp::Cost;
 using pyvrp::Distance;
 using pyvrp::Duration;
-using pyvrp::DurationCostFunction;
 using pyvrp::Load;
 using pyvrp::Matrix;
 using pyvrp::ProblemData;
@@ -283,71 +281,25 @@ bool ProblemData::Depot::operator==(Depot const &other) const
     // clang-format on
 }
 
-DurationCostFunction ProblemData::VehicleType::resolveDurationCostFunction(
-    Duration shiftDuration,
-    Cost unitDurationCost,
-    Cost unitOvertimeCost,
-    std::optional<DurationCostFunction> const &durationCostFn)
-{
-    // Check if a custom duration cost function is provided.
-    // If not, we fall back to the legacy linear/overtime cost construction.
-    if (!durationCostFn.has_value())
-        return DurationCostFunction::fromLinear(
-            shiftDuration, unitDurationCost, unitOvertimeCost);
-
-    auto const hasLegacyDurationCosts
-        = unitDurationCost != 0 || unitOvertimeCost != 0;
-
-    // If a custom duration cost function is provided, and legacy
-    // duration/overtime costs are also provided, we throw an error. This is to
-    // prevent confusion and ensure clear API usage. Users should provide either
-    // a custom duration cost function or legacy scalar duration/overtime costs,
-    // but not both. If we allowed both, it could lead to ambiguity about which
-    // costs take precedence and make the API harder to understand and maintain.
-    if (hasLegacyDurationCosts)
-    {
-        // Strict API clarity by default: a custom duration cost function and
-        // legacy duration/overtime unit costs are mutually exclusive.
-        auto const *msg = "Provide either duration_cost_function or legacy "
-                          "unit_duration_cost/unit_overtime_cost, not both.";
-        throw std::invalid_argument(msg);
-
-        // NOTE: Can be removed once agreed upon to use the strict policy.
-        // 
-        // Possible relaxed policy:
-        // Allow mixed inputs only when the custom function equals the legacy
-        // linear/overtime construction.
-        //
-        // auto const legacyDurationCostFn = DurationCostFunction::fromLinear(
-        //     shiftDuration, unitDurationCost, unitOvertimeCost);
-        // if (durationCostFn != legacyDurationCostFn)
-        //     throw std::invalid_argument(msg);
-    }
-
-    return *durationCostFn;
-}
-
-ProblemData::VehicleType::VehicleType(
-    size_t numAvailable,
-    std::vector<Load> capacity,
-    size_t startDepot,
-    size_t endDepot,
-    Cost fixedCost,
-    Duration twEarly,
-    Duration twLate,
-    Duration shiftDuration,
-    Distance maxDistance,
-    Cost unitDistanceCost,
-    Cost unitDurationCost,
-    size_t profile,
-    std::optional<Duration> startLate,
-    std::vector<Load> initialLoad,
-    std::vector<size_t> reloadDepots,
-    size_t maxReloads,
-    Duration maxOvertime,
-    Cost unitOvertimeCost,
-    std::optional<DurationCostFunction> durationCostFn,
-    std::string name)
+ProblemData::VehicleType::VehicleType(size_t numAvailable,
+                                      std::vector<Load> capacity,
+                                      size_t startDepot,
+                                      size_t endDepot,
+                                      Cost fixedCost,
+                                      Duration twEarly,
+                                      Duration twLate,
+                                      Duration shiftDuration,
+                                      Distance maxDistance,
+                                      Cost unitDistanceCost,
+                                      Cost unitDurationCost,
+                                      size_t profile,
+                                      std::optional<Duration> startLate,
+                                      std::vector<Load> initialLoad,
+                                      std::vector<size_t> reloadDepots,
+                                      size_t maxReloads,
+                                      Duration maxOvertime,
+                                      Cost unitOvertimeCost,
+                                      std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
       endDepot(endDepot),
@@ -366,8 +318,6 @@ ProblemData::VehicleType::VehicleType(
       maxReloads(maxReloads),
       maxOvertime(maxOvertime),
       unitOvertimeCost(unitOvertimeCost),
-      durationCostFunction(VehicleType::resolveDurationCostFunction(
-          shiftDuration, unitDurationCost, unitOvertimeCost, durationCostFn)),
       // We need to check >= 0 here to avoid overflow. If the arguments are
       // negative the validation checks further below will raise, so it doesn't
       // matter what we set as long as we get to those checks.
@@ -441,7 +391,6 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       maxReloads(vehicleType.maxReloads),
       maxOvertime(vehicleType.maxOvertime),
       unitOvertimeCost(vehicleType.unitOvertimeCost),
-      durationCostFunction(vehicleType.durationCostFunction),
       maxDuration(vehicleType.maxDuration),
       name(duplicate(vehicleType.name))
 {
@@ -466,7 +415,6 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       maxReloads(vehicleType.maxReloads),
       maxOvertime(vehicleType.maxOvertime),
       unitOvertimeCost(vehicleType.unitOvertimeCost),
-      durationCostFunction(std::move(vehicleType.durationCostFunction)),
       maxDuration(vehicleType.maxDuration),
       name(vehicleType.name)  // we can steal
 {
@@ -494,59 +442,8 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
     std::optional<size_t> maxReloads,
     std::optional<Duration> maxOvertime,
     std::optional<Cost> unitOvertimeCost,
-    std::optional<DurationCostFunction> durationCostFunction,
-    std::optional<std::string> name,
-    bool durationCostFunctionProvided) const
+    std::optional<std::string> name) const
 {
-    auto const updatesLegacyDurationCosts
-        = unitDurationCost.has_value() || unitOvertimeCost.has_value();
-    auto const setsCustomDurationCost
-        = durationCostFunctionProvided && durationCostFunction.has_value();
-    auto const clearsDurationCostFunction
-        = durationCostFunctionProvided && !durationCostFunction.has_value();
-
-    if (setsCustomDurationCost && updatesLegacyDurationCosts)
-    {
-        auto const *msg = "Cannot update duration_cost_function together with "
-                          "unit_duration_cost/unit_overtime_cost.";
-        throw std::invalid_argument(msg);
-    }
-
-    auto const newShiftDuration = shiftDuration.value_or(this->shiftDuration);
-    auto const newUnitDurationCost
-        = unitDurationCost.value_or(this->unitDurationCost);
-    auto const newUnitOvertimeCost
-        = unitOvertimeCost.value_or(this->unitOvertimeCost);
-
-    auto const legacyDurationCostFunction = DurationCostFunction::fromLinear(
-        this->shiftDuration, this->unitDurationCost, this->unitOvertimeCost);
-
-    auto const usesLegacyDurationCost
-        = this->durationCostFunction == legacyDurationCostFunction;
-
-    if (!usesLegacyDurationCost && updatesLegacyDurationCosts
-        && !clearsDurationCostFunction)
-    {
-        auto const *msg = "Cannot update unit_duration_cost or "
-                          "unit_overtime_cost when using a custom "
-                          "duration_cost_function. Set "
-                          "duration_cost_function=None in this call to switch "
-                          "to legacy duration costs.";
-        throw std::invalid_argument(msg);
-    }
-
-    auto const targetUsesLegacyDurationCost
-        = clearsDurationCostFunction
-              ? true
-              : (setsCustomDurationCost ? false : usesLegacyDurationCost);
-
-    auto const updatedDurationCostFunction
-        = targetUsesLegacyDurationCost
-              ? std::nullopt
-              : (setsCustomDurationCost ? durationCostFunction
-                                        : std::optional<DurationCostFunction>(
-                                              this->durationCostFunction));
-
     return {numAvailable.value_or(this->numAvailable),
             capacity.value_or(this->capacity),
             startDepot.value_or(this->startDepot),
@@ -554,18 +451,17 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
             fixedCost.value_or(this->fixedCost),
             twEarly.value_or(this->twEarly),
             twLate.value_or(this->twLate),
-            newShiftDuration,
+            shiftDuration.value_or(this->shiftDuration),
             maxDistance.value_or(this->maxDistance),
             unitDistanceCost.value_or(this->unitDistanceCost),
-            newUnitDurationCost,
+            unitDurationCost.value_or(this->unitDurationCost),
             profile.value_or(this->profile),
             startLate.value_or(this->startLate),
             initialLoad.value_or(this->initialLoad),
             reloadDepots.value_or(this->reloadDepots),
             maxReloads.value_or(this->maxReloads),
             maxOvertime.value_or(this->maxOvertime),
-            newUnitOvertimeCost,
-            updatedDurationCostFunction,
+            unitOvertimeCost.value_or(this->unitOvertimeCost),
             name.value_or(this->name)};
 }
 
@@ -574,11 +470,6 @@ size_t ProblemData::VehicleType::maxTrips() const
     // When maxReloads is at its maximum size, maxReloads + 1 wraps around to 0,
     // and then std::max() ensures we still return a reasonable value.
     return reloadDepots.empty() ? 1 : std::max(maxReloads, maxReloads + 1);
-}
-
-Cost ProblemData::VehicleType::durationCostSlope() const
-{
-    return durationCostFunction.edgeCostSlope();
 }
 
 bool ProblemData::VehicleType::operator==(VehicleType const &other) const
@@ -602,7 +493,6 @@ bool ProblemData::VehicleType::operator==(VehicleType const &other) const
         && maxReloads == other.maxReloads
         && maxOvertime == other.maxOvertime
         && unitOvertimeCost == other.unitOvertimeCost
-        && durationCostFunction == other.durationCostFunction
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }

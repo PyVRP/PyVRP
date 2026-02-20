@@ -374,7 +374,6 @@ class Model:
         max_reloads: int = np.iinfo(np.uint64).max,
         max_overtime: int = 0,
         unit_overtime_cost: int = 0,
-        duration_cost_function: DurationCostFunction | None = None,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -446,7 +445,6 @@ class Model:
             max_reloads=max_reloads,
             max_overtime=max_overtime,
             unit_overtime_cost=unit_overtime_cost,
-            duration_cost_function=duration_cost_function,
             name=name,
         )
 
