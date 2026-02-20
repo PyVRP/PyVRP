@@ -89,9 +89,9 @@ def test_midpoint_penalties(
     params = PenaltyParams(min_penalty=min_penalty, max_penalty=max_penalty)
     penalties = params.midpoint_penalties(ok_small)
 
-    assert_equal(penalties[0], [expected])
-    assert_equal(penalties[1], expected)
-    assert_equal(penalties[2], expected)
+    assert_allclose(penalties[0], [expected])
+    assert_allclose(penalties[1], expected)
+    assert_allclose(penalties[2], expected)
 
 
 def test_load_penalty_update_increase(ok_small):

@@ -128,7 +128,7 @@ class PenaltyParams:
             The initial penalty values for units of load (idx 0), duration (1),
             and distance (2) violations.
         """
-        midpoint = self.min_penalty / 2 + self.max_penalty / 2
+        midpoint = self.min_penalty + (self.max_penalty - self.min_penalty) / 2
         return ([midpoint] * data.num_load_dimensions, midpoint, midpoint)
 
 
