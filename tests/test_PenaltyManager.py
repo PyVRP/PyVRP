@@ -64,7 +64,8 @@ def test_midpoint_penalty():
     Tests that the midpoint penalty is correctly computed.
     """
     params = PenaltyParams(min_penalty=1, max_penalty=100_000)
-    assert_equal(params.midpoint_penalty, (1 + 100_000) / 2)
+    expected = (params.min_penalty + params.max_penalty) / 2
+    assert_equal(params.midpoint_penalty, expected)
 
 
 def test_load_penalty_update_increase(ok_small):
