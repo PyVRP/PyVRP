@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Sequence
 from warnings import warn
 
 import numpy as np
-import numpy.typing as npt
 
 from pyvrp._pyvrp import (
     Client,
@@ -485,8 +484,8 @@ class Model:
 
         # Now we create the profile-specific distance and duration matrices.
         # These are based on the base matrices.
-        distances: list[npt.NDArray[np.int64]] = []
-        durations: list[npt.NDArray[np.int64]] = []
+        distances = []
+        durations = []
         for profile in self._profiles:
             prof_distance = base_distance.copy()
             prof_duration = base_duration.copy()

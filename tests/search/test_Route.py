@@ -937,14 +937,13 @@ def test_multi_trip_with_release_times():
     Test a small example with multiple trips and (binding) release times. See
     the test of the same name for ``pyvrp::Route`` for further details.
     """
-    raw_matrix = [
+    matrix = [
         [0, 30, 20, 40],
         [0, 0, 10, 0],
         [5, 0, 0, 0],
         [10, 0, 0, 0],
     ]
-    matrix = np.asarray(raw_matrix, dtype=np.int64)
-
+    
     data = ProblemData(
         clients=[
             Client(0, 0, tw_early=60, tw_late=100, release_time=40),
@@ -1060,15 +1059,12 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
         (VehicleType(tw_early=5), Depot(0, 0), True),  # constraint (vehicle)
         (VehicleType(tw_late=5), Depot(0, 0), True),  # constraint (vehicle)
         (VehicleType(shift_duration=0), Depot(0, 0), True),  # constraint (veh)
-        (
-            VehicleType(unit_duration_cost=1),
-            Depot(0, 0),
-            True,
-        ),  # unit cost (legacy)
+        (VehicleType(unit_duration_cost=1), Depot(0, 0), True), # unit cost (legacy)
+
         # Overtime-only legacy cost is inactive with default shift_duration
         # (int64_max): max(0, d - shift_duration) is always 0.
         (VehicleType(unit_overtime_cost=1), Depot(0, 0), False),
-        # Regression note: #925/1044-FormPup41:
+        # NOTE: #925/1044-FormPup41:
         # This case used to expect True ("unit cost + overtime could matter").
         # Now, it is False because, with default shift_duration=int64_max, the
         # legacy overtime term never activates for representable durations.
@@ -1080,11 +1076,7 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
         #   pyvrp/cpp/DurationCostFunction.cpp
         # - ProblemData::VehicleType::maxDuration in pyvrp/cpp/ProblemData.cpp
         # - Route::hasDurationCost in pyvrp/cpp/search/Route.h
-        (
-            VehicleType(unit_overtime_cost=1, max_overtime=1),
-            Depot(0, 0),
-            False,
-        ),
+        (VehicleType(unit_overtime_cost=1, max_overtime=1), Depot(0, 0), False),
         (VehicleType(max_overtime=5), Depot(0, 0), False),  # not constrained
         (
             VehicleType(duration_cost_function=DurationCostFunction([0], [1])),
@@ -1093,11 +1085,7 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
         ),  # custom cost
         # Finite shift duration and non-zero overtime cost can activate
         # duration cost once the shift threshold is exceeded.
-        (
-            VehicleType(shift_duration=5, unit_overtime_cost=1),
-            Depot(0, 0),
-            True,
-        ),
+        (VehicleType(shift_duration=5, unit_overtime_cost=1), Depot(0, 0), True),
     ],
 )
 def test_has_duration_cost(veh_type: VehicleType, depot: Depot, exp: bool):

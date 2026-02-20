@@ -312,7 +312,9 @@ DurationCostFunction ProblemData::VehicleType::resolveDurationCostFunction(
                           "unit_duration_cost/unit_overtime_cost, not both.";
         throw std::invalid_argument(msg);
 
-        // Optional relaxed policy:
+        // NOTE: Can be removed once agreed upon to use the strict policy.
+        // 
+        // Possible relaxed policy:
         // Allow mixed inputs only when the custom function equals the legacy
         // linear/overtime construction.
         //

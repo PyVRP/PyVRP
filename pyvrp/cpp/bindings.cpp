@@ -571,7 +571,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[15].cast<size_t>(),                    // max reloads
                     t[16].cast<pyvrp::Duration>(),           // max overtime
                     unitOvertimeCost,                        // unit overtime
-                    maybeDurationCostFunction,               // duration cost fn
+                    maybeDurationCostFunction,   // duration cost fn
                     t[19].cast<std::string>());              // name
 
                 return vehicleType;
