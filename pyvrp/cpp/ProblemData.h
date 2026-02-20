@@ -580,7 +580,7 @@ public:
          * - :py:class:`~DurationCostFunction`: use that custom function.
          *
          * Validation rules:
-         * - ``duration_cost_function`` cannot be set to a custom function
+         * - ``duration_cost_function`` cannot be set to a *custom* function
          *   together with ``unit_duration_cost`` or ``unit_overtime_cost`` in
          *   the same call.
          * - If this vehicle type currently uses a custom duration cost

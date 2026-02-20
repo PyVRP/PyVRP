@@ -2,7 +2,7 @@ import pathlib
 from collections import defaultdict
 from itertools import count, pairwise
 from numbers import Number
-from typing import Any, Callable, cast
+from typing import Callable
 from warnings import warn
 
 import numpy as np
@@ -129,28 +129,27 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         route_visits = np.array(route, dtype=int)
         depot_idcs = np.flatnonzero(route_visits < data.num_depots)
 
-        split_visits = np.split(route_visits, depot_idcs)
+        trip_visits = np.split(route_visits, depot_idcs)
         trip_visits = [
             # These visits include the reload depots for later trips as the
             # first trip visit, which we need to skip.
-            [int(visit) for visit in visits[trip_idx > 0 :]]
-            for trip_idx, visits in enumerate(split_visits)
+            trip_visits[trip_idx > 0 :]
+            for trip_idx, trip_visits in enumerate(trip_visits)
         ]
 
-        vehicle_type = int(veh2type[idx])
-        veh_type = data.vehicle_type(vehicle_type)
+        veh_type = data.vehicle_type(veh2type[idx])
         depots = [
             veh_type.start_depot,
-            *(int(depot) for depot in route_visits[depot_idcs]),
+            *route_visits[depot_idcs],
             veh_type.end_depot,
         ]
 
         trips = [
-            Trip(data, visits, vehicle_type, int(start), int(end))
+            Trip(data, visits, veh2type[idx], start, end)
             for visits, (start, end) in zip(trip_visits, pairwise(depots))
         ]
 
-        routes.append(Route(data, trips, vehicle_type))
+        routes.append(Route(data, trips, veh2type[idx]))
 
     return Solution(data, routes)
 
@@ -200,11 +199,9 @@ class _InstanceParser:
         if "demand" not in self.instance and "linehaul" not in self.instance:
             return np.zeros((self.num_locations, 1), dtype=np.int64)
 
-        demand = self.instance.get("demand", self.instance.get("linehaul"))
-        if demand is None:  # for static type checkers
-            return np.zeros((self.num_locations, 1), dtype=np.int64)
-
-        return self.round_func(demand)
+        return self.round_func(
+            self.instance.get("demand", self.instance.get("linehaul"))
+        )
 
     def coords(self) -> np.ndarray:
         if "node_coord" not in self.instance:
@@ -355,7 +352,7 @@ class _ProblemDataBuilder:
         clients = self._clients()
         depots = self._depots()
         vehicle_types = self._vehicle_types()
-        distance_matrices = cast("list[Any]", self._distance_matrices())
+        distance_matrices = self._distance_matrices()
         groups = self._groups()
 
         return ProblemData(
@@ -409,13 +406,8 @@ class _ProblemDataBuilder:
             Client(
                 x=coords[idx][0],
                 y=coords[idx][1],
-                delivery=[
-                    int(load) for load in np.atleast_1d(demands[idx]).tolist()
-                ],
-                pickup=[
-                    int(load)
-                    for load in np.atleast_1d(backhauls[idx]).tolist()
-                ],
+                delivery=np.atleast_1d(demands[idx]),
+                pickup=np.atleast_1d(backhauls[idx]),
                 service_duration=service_duration[idx],
                 tw_early=time_windows[idx][0],
                 tw_late=time_windows[idx][1],
@@ -474,7 +466,7 @@ class _ProblemDataBuilder:
 
             vehicle_type = VehicleType(
                 num_available=len(vehicles),
-                capacity=list(capacity),
+                capacity=capacity,
                 start_depot=depot,
                 end_depot=depot,
                 fixed_cost=fixed_cost,
@@ -486,7 +478,7 @@ class _ProblemDataBuilder:
                 max_distance=max_distance,
                 unit_distance_cost=unit_distance_cost,
                 profile=client2profile[clients],
-                reload_depots=list(reloads),
+                reload_depots=reloads,
                 max_reloads=max_reloads,
                 # A bit hacky, but this csv-like name is really useful to track
                 # the actual vehicles that make up this vehicle type.

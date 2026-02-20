@@ -133,12 +133,6 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("breakpoints") = std::vector<pyvrp::Duration>{0},
              py::arg("slopes") = std::vector<pyvrp::Cost>{0})
         .def(py::init<PiecewiseLinearFunction>(), py::arg("piecewise_linear"))
-        // NOTE: #925/1044-FormPup41: Could be removed once agreed upon.
-        // We intentionally do not expose DurationCostFunction::fromLinear() to
-        // Python. It is an internal compatibility helper used to map legacy
-        // scalar duration/overtime costs to a duration cost function. Exposing
-        // it publicly would make deprecating or removing legacy scalar inputs
-        // harder once users depend on the helper directly.
         .def("__call__", &DurationCostFunction::operator(), py::arg("duration"))
         .def_property_readonly("breakpoints",
                                &DurationCostFunction::breakpoints,
@@ -437,17 +431,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("name",
                       &ProblemData::VehicleType::name,
                       py::return_value_policy::reference_internal)
-        // NOTE:
-        // We bind replace() through a lambda instead of directly binding the
-        // C++ method pointer. The Python API needs tri-state semantics for
-        // duration_cost_function:
-        //   1) argument omitted  -> keep current duration cost mode;
-        //   2) explicitly None   -> clear custom function and switch to legacy;
-        //   3) concrete function -> set/replace custom duration cost function.
-        //
-        // Pybind's regular optional binding cannot reliably distinguish (1)
-        // from (2), so we parse a raw py::object and pass the explicit
-        // durationCostFunctionProvided flag to VehicleType::replace().
         .def(
             "replace",
             [](ProblemData::VehicleType const &vehicleType,
@@ -472,12 +455,9 @@ PYBIND11_MODULE(_pyvrp, m)
                py::object durationCostFunction,
                std::optional<std::string> name)
             {
-                // Ellipsis means: not provided from Python.
                 auto const durationCostFunctionProvided
                     = !durationCostFunction.is(py::ellipsis());
 
-                // Keep nullopt both when the argument is omitted and when it is
-                // explicitly None; durationCostFunctionProvided disambiguates.
                 std::optional<DurationCostFunction> parsedDurationCostFunction
                     = std::nullopt;
                 if (durationCostFunctionProvided
@@ -527,8 +507,6 @@ PYBIND11_MODULE(_pyvrp, m)
             py::arg("max_reloads") = py::none(),
             py::arg("max_overtime") = py::none(),
             py::arg("unit_overtime_cost") = py::none(),
-            // Default is ellipsis, not None, so we can distinguish omitted from
-            // explicit None in the lambda above.
             py::arg("duration_cost_function") = py::ellipsis(),
             py::kw_only(),
             py::arg("name") = py::none(),
@@ -536,12 +514,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::VehicleType const &vehicleType) {  // __getstate__
-                // NOTE:
-                // We currently serialise both legacy scalar duration-cost
-                // fields (unitDurationCost/unitOvertimeCost/shiftDuration) and
-                // the resolved durationCostFunction. This keeps the pickle
-                // payload explicit and deterministic across legacy and custom
-                // modes.
                 return py::make_tuple(vehicleType.numAvailable,
                                       vehicleType.capacity,
                                       vehicleType.startDepot,
@@ -564,14 +536,6 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
-                // NOTE:
-                // VehicleType construction is strict: custom duration function
-                // and non-zero legacy duration/overtime costs are mutually
-                // exclusive. But the pickle schema stores both representations.
-                // During load we therefore normalise equivalent mixed state
-                // (function equals legacy fromLinear form) back to legacy mode.
-                // This preserves strict runtime semantics without breaking
-                // round-trip deserialisation.
                 auto const shiftDuration = t[7].cast<pyvrp::Duration>();
                 auto const unitDurationCost = t[10].cast<pyvrp::Cost>();
                 auto const unitOvertimeCost = t[17].cast<pyvrp::Cost>();
@@ -582,10 +546,6 @@ PYBIND11_MODULE(_pyvrp, m)
                     = DurationCostFunction::fromLinear(
                         shiftDuration, unitDurationCost, unitOvertimeCost);
 
-                // If the serialized function is exactly the legacy equivalent,
-                // pass nullopt so VehicleType resolves from legacy scalars.
-                // Otherwise keep the custom function and let strict validation
-                // reject incompatible mixed inputs.
                 auto const maybeDurationCostFunction
                     = durationCostFunction == legacyDurationCostFunction
                           ? std::optional<DurationCostFunction>{}
