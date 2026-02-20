@@ -6,7 +6,7 @@ from warnings import warn
 
 import numpy as np
 
-from pyvrp._pyvrp import CostEvaluator, Solution
+from pyvrp._pyvrp import CostEvaluator, ProblemData, Solution
 from pyvrp.exceptions import PenaltyBoundWarning
 
 
@@ -110,13 +110,26 @@ class PenaltyParams:
         if self.max_penalty < self.min_penalty:
             raise ValueError("Expected max_penalty >= min_penalty.")
 
-    @property
-    def midpoint_penalty(self) -> float:
+    def midpoint_penalties(
+        self, data: ProblemData
+    ) -> tuple[list[float], float, float]:
         """
-        Returns the midpoint penalty value, which is the average of the minimum
-        and maximum penalty values.
+        Returns initial penalty values at the midpoint between ``min_penalty``
+        and ``max_penalty``.
+
+        Parameters
+        ----------
+        data
+            The problem data instance.
+
+        Returns
+        -------
+        tuple[list[float], float, float]
+            The initial penalty values for units of load (idx 0), duration (1),
+            and distance (2) violations.
         """
-        return (self.min_penalty + self.max_penalty) / 2
+        midpoint = (self.min_penalty + self.max_penalty) / 2
+        return ([midpoint] * data.num_load_dimensions, midpoint, midpoint)
 
 
 class PenaltyManager:

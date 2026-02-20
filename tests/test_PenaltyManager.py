@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 from numpy.testing import (
     assert_,
@@ -59,13 +61,36 @@ def test_constructor_throws_when_arguments_invalid(
         )
 
 
-def test_midpoint_penalty():
+def test_midpoint_penalties_multiple_load_dimensions(ok_small_multiple_load):
     """
-    Tests that the midpoint penalty is correctly computed.
+    Tests that the midpoint penalties have the correct length when there are
+    multiple load dimensions.
     """
-    params = PenaltyParams(min_penalty=1, max_penalty=100_000)
+    params = PenaltyParams()
+    penalties = params.midpoint_penalties(ok_small_multiple_load)
+    assert_equal(len(penalties[0]), ok_small_multiple_load.num_load_dimensions)
+
+
+@pytest.mark.parametrize(
+    ("min_penalty", "max_penalty"),
+    [
+        (0, 0),
+        (0.1, 100_000),
+        (0, sys.float_info.max),
+        (sys.float_info.max, sys.float_info.max),
+    ],
+)
+def test_midpoint_penalties(ok_small, min_penalty: float, max_penalty: float):
+    """
+    Tests that the midpoint penalties are correctly computed.
+    """
+    params = PenaltyParams(min_penalty=min_penalty, max_penalty=max_penalty)
+    penalties = params.midpoint_penalties(ok_small)
+
     expected = (params.min_penalty + params.max_penalty) / 2
-    assert_equal(params.midpoint_penalty, expected)
+    assert_equal(penalties[0], [expected])
+    assert_equal(penalties[1], expected)
+    assert_equal(penalties[2], expected)
 
 
 def test_load_penalty_update_increase(ok_small):
