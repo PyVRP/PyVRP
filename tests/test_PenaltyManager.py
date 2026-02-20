@@ -59,6 +59,14 @@ def test_constructor_throws_when_arguments_invalid(
         )
 
 
+def test_midpoint_penalty():
+    """
+    Tests that the midpoint penalty is correctly computed.
+    """
+    params = PenaltyParams(min_penalty=1, max_penalty=100_000)
+    assert_equal(params.midpoint_penalty, (1 + 100_000) / 2)
+
+
 def test_load_penalty_update_increase(ok_small):
     """
     Tests that the load violation penalty is increased when too many load
