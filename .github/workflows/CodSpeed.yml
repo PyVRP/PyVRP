@@ -30,6 +30,7 @@ jobs:
         run: uv sync --no-install-project
       - name: Set up GCC
         run: |
+          sudo apt-get update
           sudo apt-get install -y gcc-14 g++-14
 
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 10
