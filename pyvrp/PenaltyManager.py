@@ -110,6 +110,14 @@ class PenaltyParams:
         if self.max_penalty < self.min_penalty:
             raise ValueError("Expected max_penalty >= min_penalty.")
 
+    @property
+    def midpoint_penalty(self) -> float:
+        """
+        Returns the midpoint penalty value, which is the average of the minimum
+        and maximum penalty values.
+        """
+        return (self.min_penalty + self.max_penalty) / 2
+
 
 class PenaltyManager:
     """
