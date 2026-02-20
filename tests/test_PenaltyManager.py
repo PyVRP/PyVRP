@@ -72,22 +72,23 @@ def test_midpoint_penalties_multiple_load_dimensions(ok_small_multiple_load):
 
 
 @pytest.mark.parametrize(
-    ("min_penalty", "max_penalty"),
+    ("min_penalty", "max_penalty", "expected"),
     [
-        (0, 0),
-        (0.1, 100_000),
-        (0, sys.float_info.max),
-        (sys.float_info.max, sys.float_info.max),
+        (0, 0, 0),
+        (0.1, 100_000, 50_000.05),
+        (0, sys.float_info.max, sys.float_info.max / 2),
+        (sys.float_info.max, sys.float_info.max, sys.float_info.max),
     ],
 )
-def test_midpoint_penalties(ok_small, min_penalty: float, max_penalty: float):
+def test_midpoint_penalties(
+    ok_small, min_penalty: float, max_penalty: float, expected: float
+):
     """
     Tests that the midpoint penalties are correctly computed.
     """
     params = PenaltyParams(min_penalty=min_penalty, max_penalty=max_penalty)
     penalties = params.midpoint_penalties(ok_small)
 
-    expected = (params.min_penalty + params.max_penalty) / 2
     assert_equal(penalties[0], [expected])
     assert_equal(penalties[1], expected)
     assert_equal(penalties[2], expected)
