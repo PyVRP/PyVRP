@@ -31,6 +31,9 @@ This object stores the best observed solution and detailed runtime statistics.
    .. autoclass:: IteratedLocalSearchParams
       :members:
 
+   .. autoclass:: IteratedLocalSearchCallbacks
+      :members:
+
    .. autoclass:: IteratedLocalSearch
       :members:
 

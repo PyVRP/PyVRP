@@ -3,6 +3,9 @@ import sys
 
 from .IteratedLocalSearch import IteratedLocalSearch as IteratedLocalSearch
 from .IteratedLocalSearch import (
+    IteratedLocalSearchCallbacks as IteratedLocalSearchCallbacks,
+)
+from .IteratedLocalSearch import (
     IteratedLocalSearchParams as IteratedLocalSearchParams,
 )
 from .Model import Edge as Edge
