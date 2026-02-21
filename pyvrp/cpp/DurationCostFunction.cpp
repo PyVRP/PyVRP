@@ -119,7 +119,7 @@ DurationCostFunction DurationCostFunction::fromLinear(Duration shiftDuration,
 
     std::vector<Duration> breakpoints = {0};
     std::vector<Cost> slopes = {unitDurationCost};
-    
+
     auto const hasFiniteOvertimeThreshold
         = shiftDuration > 0
           && shiftDuration < std::numeric_limits<Duration>::max();

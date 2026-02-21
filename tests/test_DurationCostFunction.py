@@ -201,4 +201,3 @@ def test_duration_cost_function_raises_for_negative_duration():
 
     with assert_raises(ValueError, match="duration must be >= 0."):
         duration_cost(-1)
-
