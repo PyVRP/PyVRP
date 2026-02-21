@@ -60,6 +60,12 @@ class IteratedLocalSearchCallbacks:
         """
         pass
 
+    def on_best(self, best: Solution):
+        """
+        Called when the search finds a new best solution.
+        """
+        pass
+
 
 @dataclass
 class IteratedLocalSearchParams:
@@ -217,6 +223,8 @@ class IteratedLocalSearch:
                     cand = self._search(cand, cost_eval, exhaustive=True)
                     if cand.is_feasible():
                         best = cand
+
+                callbacks.on_best(best)
 
             cand_cost = cost_eval.penalised_cost(cand)
             curr_cost = cost_eval.penalised_cost(curr)
