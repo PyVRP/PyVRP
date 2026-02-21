@@ -85,6 +85,7 @@ class IteratedLocalSearchParams:
     exhaustive_on_best: bool = True
     callbacks: IteratedLocalSearchCallbacks = field(
         default_factory=IteratedLocalSearchCallbacks,
+        compare=False,  # this doesn't influence parameter configurations
     )
 
     def __post_init__(self):
