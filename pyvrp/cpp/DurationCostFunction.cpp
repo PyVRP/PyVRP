@@ -93,7 +93,7 @@ DurationCostFunction::DurationCostFunction(PiecewiseLinearFunction pwl)
 }
 
 // Internal compatibility helper for legacy scalar duration/overtime costs.
-// Intentionally not exposed in the public Python API to avoid confusion and 
+// Intentionally not exposed in the public Python API to avoid confusion and
 // encourage users to migrate to the more flexible duration cost function.
 DurationCostFunction DurationCostFunction::fromLinear(Duration shiftDuration,
                                                       Cost unitDurationCost,

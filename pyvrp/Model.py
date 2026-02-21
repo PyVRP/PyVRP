@@ -9,7 +9,6 @@ from pyvrp._pyvrp import (
     Client,
     ClientGroup,
     Depot,
-    DurationCostFunction,
     ProblemData,
     Solution,
     VehicleType,

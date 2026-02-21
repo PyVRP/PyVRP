@@ -1,15 +1,9 @@
-import numpy as np
 from numpy.testing import assert_equal
 from pytest import raises as assert_raises
 
 from pyvrp import (
-    Client,
-    Depot,
     DurationCostFunction,
     PiecewiseLinearFunction,
-    ProblemData,
-    Route,
-    VehicleType,
 )
 
 
@@ -100,7 +94,8 @@ def test_duration_cost_function_raises_invalid_data():
 #     )
 #     duration_cost = vehicle_type.duration_cost_function
 
-#     # shift_duration is int64 max, so overtime never activates in int64 domain.
+#     # shift_duration is int64 max, so overtime never activates in
+#     # int64 domain.
 #     assert_equal(duration_cost.breakpoints, [0])
 #     # Only the regular duration slope remains.
 #     assert_equal(duration_cost.slopes, [2])
@@ -108,7 +103,7 @@ def test_duration_cost_function_raises_invalid_data():
 #     assert_equal(duration_cost(13), 26)
 
 
-# def test_duration_cost_function_legacy_mapping_raises_on_slope_sum_overflow():
+# def test_duration_cost_fn_legacy_mapping_raises_on_slope_sum_overflow():
 #     with assert_raises(
 #         OverflowError,
 #         match="unit_duration_cost \\+ unit_overtime_cost overflows.",

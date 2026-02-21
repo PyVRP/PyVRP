@@ -945,7 +945,7 @@ Cost Route::unitDurationCost() const { return vehicleType_.unitDurationCost; }
 Cost Route::unitOvertimeCost() const { return vehicleType_.unitOvertimeCost; }
 
 bool Route::hasDurationCost() const
-{   
+{
     // clang-format off
     return data.hasTimeWindows()
         || unitDurationCost() != 0
@@ -1135,7 +1135,7 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
         merge(merge, std::forward<decltype(args)>(args)...);
 
         auto const duration = ds.duration();
-       auto const overtime = std::max<Duration>(duration - shiftDuration, 0);
+        auto const overtime = std::max<Duration>(duration - shiftDuration, 0);
         auto const cost = unitDurationCost * static_cast<Cost>(duration)
                           + unitOvertimeCost * static_cast<Cost>(overtime);
         auto const timeWarp = ds.timeWarp(maxDuration);
