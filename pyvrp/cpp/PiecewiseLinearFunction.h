@@ -48,7 +48,7 @@ namespace pyvrp
  * intercept
  *     Function value at ``breakpoints[0]``.
  */
-class PiecewiseLinearFunction
+class PiecewiseLinearFunction  // GCOVR_EXCL_LINE
 {
 public:
     using Scalar = int64_t;

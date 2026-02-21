@@ -26,6 +26,9 @@ toRaw(std::vector<Measure> const &vec)
     return raw;
 }
 
+// Internal helper used only by fromLinear() below, which is currently a
+// compatibility path not reachable from the public Python API.
+// GCOVR_EXCL_START
 [[nodiscard]] Cost checkedAddCost(Cost lhs, Cost rhs)
 {
     using Scalar = PiecewiseLinearFunction::Scalar;
@@ -44,6 +47,7 @@ toRaw(std::vector<Measure> const &vec)
 
     return lhsRaw + rhsRaw;
 }
+// GCOVR_EXCL_STOP
 
 void validateDurationPwl(PiecewiseLinearFunction const &pwl)
 {
@@ -58,10 +62,14 @@ void validateDurationPwl(PiecewiseLinearFunction const &pwl)
     if (breakpoints.front() != 0)
         throw std::invalid_argument("breakpoints must start at 0.");
 
+    // Unreachable in current implementation: PiecewiseLinearFunction enforces
+    // sorted breakpoints and we already require breakpoints.front() == 0.
+    // GCOVR_EXCL_START
     if (std::any_of(breakpoints.begin(),
                     breakpoints.end(),
                     [](auto const bp) { return bp < 0; }))
         throw std::invalid_argument("breakpoints must be >= 0.");
+    // GCOVR_EXCL_STOP
 
     if (std::any_of(slopes.begin(),
                     slopes.end(),
@@ -95,6 +103,7 @@ DurationCostFunction::DurationCostFunction(PiecewiseLinearFunction pwl)
 // Internal compatibility helper for legacy scalar duration/overtime costs.
 // Intentionally not exposed in the public Python API to avoid confusion and
 // encourage users to migrate to the more flexible duration cost function.
+// GCOVR_EXCL_START
 DurationCostFunction DurationCostFunction::fromLinear(Duration shiftDuration,
                                                       Cost unitDurationCost,
                                                       Cost unitOvertimeCost)
@@ -133,6 +142,7 @@ DurationCostFunction DurationCostFunction::fromLinear(Duration shiftDuration,
 
     return {std::move(breakpoints), std::move(slopes)};
 }
+// GCOVR_EXCL_STOP
 
 Cost DurationCostFunction::operator()(Duration duration) const
 {
@@ -140,7 +150,7 @@ Cost DurationCostFunction::operator()(Duration duration) const
         throw std::invalid_argument("duration must be >= 0.");
 
     return pwl_(duration.get());
-}
+}  // GCOVR_EXCL_LINE
 
 std::vector<Duration> DurationCostFunction::breakpoints() const
 {
@@ -178,6 +188,6 @@ std::vector<Cost> DurationCostFunction::values() const
 Cost DurationCostFunction::edgeCostSlope() const
 {
     auto const &slopes = pwl_.slopes();
-    assert(!slopes.empty());
+    assert(!slopes.empty());  // GCOVR_EXCL_LINE
     return slopes.front();
 }

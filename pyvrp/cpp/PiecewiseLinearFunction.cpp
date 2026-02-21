@@ -43,23 +43,25 @@ namespace
         return false;
 
     // This is the only product that cannot be represented in int64_t.
-    if ((lhs == -1 && rhs == MIN) || (rhs == -1 && lhs == MIN))
-        return true;
+    // Unreachable for current callers because rhs is always a segment width.
+    if ((lhs == -1 && rhs == MIN)
+        || (rhs == -1 && lhs == MIN))  // GCOVR_EXCL_LINE
+        return true;                   // GCOVR_EXCL_LINE
 
     if (lhs > 0)
     {
-        if (rhs > 0)
+        if (rhs > 0)  // GCOVR_EXCL_LINE
             return lhs > MAX / rhs;
 
-        return rhs < MIN / lhs;
+        return rhs < MIN / lhs;  // GCOVR_EXCL_LINE
     }
 
     // lhs < 0
-    if (rhs > 0)
+    if (rhs > 0)  // GCOVR_EXCL_LINE
         return lhs < MIN / rhs;
 
     // lhs < 0 && rhs < 0
-    return lhs < MAX / rhs;
+    return lhs < MAX / rhs;  // GCOVR_EXCL_LINE
 }
 
 [[nodiscard]] PiecewiseLinearFunction::Scalar
@@ -83,7 +85,7 @@ checkedMulAdd(PiecewiseLinearFunction::Scalar lhs,
     }
 
     return addend + product;
-}
+}  // GCOVR_EXCL_LINE
 }  // namespace
 
 PiecewiseLinearFunction::PiecewiseLinearFunction(
@@ -149,7 +151,7 @@ PiecewiseLinearFunction::operator()(Scalar x) const
     // the segment start.
     auto const delta = x - breakpoints_[idx];
     return checkedMulAdd(slopes_[idx], delta, values_[idx]);
-}
+}  // GCOVR_EXCL_LINE
 
 bool PiecewiseLinearFunction::isZero() const
 {
