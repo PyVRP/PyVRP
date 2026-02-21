@@ -82,7 +82,7 @@ class PenaltyParams:
 
     solutions_between_updates: int = 500
     penalty_increase: float = 1.50
-    penalty_decrease: float = 0.95
+    penalty_decrease: float = 0.90
     target_feasible: float = 0.65
     feas_tolerance: float = 0.05
     min_penalty: float = 0.1
@@ -110,6 +110,27 @@ class PenaltyParams:
         if self.max_penalty < self.min_penalty:
             raise ValueError("Expected max_penalty >= min_penalty.")
 
+    def midpoint_penalties(
+        self, data: ProblemData
+    ) -> tuple[list[float], float, float]:
+        """
+        Returns initial penalty values at the midpoint between ``min_penalty``
+        and ``max_penalty``.
+
+        Parameters
+        ----------
+        data
+            The problem data instance.
+
+        Returns
+        -------
+        tuple[list[float], float, float]
+            The initial penalty values for units of load (idx 0), duration (1),
+            and distance (2) violations.
+        """
+        midpoint = self.min_penalty + (self.max_penalty - self.min_penalty) / 2
+        return ([midpoint] * data.num_load_dimensions, midpoint, midpoint)
+
 
 class PenaltyManager:
     """
@@ -118,11 +139,6 @@ class PenaltyManager:
     This class manages time warp and load penalties, and provides penalty terms
     for given time warp and load values. It updates these penalties based on
     recent history.
-
-    .. note::
-
-       Consider initialising using :meth:`~init_from` to compute initial
-       penalty values that are scaled according to the data instance.
 
     Parameters
     ----------
@@ -161,64 +177,6 @@ class PenaltyManager:
             self._penalties[-2],  # duration
             self._penalties[-1],  # distance
         )
-
-    @classmethod
-    def init_from(
-        cls,
-        data: ProblemData,
-        params: PenaltyParams = PenaltyParams(),
-    ) -> PenaltyManager:
-        """
-        Initialises from the given data instance and parameter object. The
-        initial penalty values are computed from the problem data.
-
-        Parameters
-        ----------
-        data
-            Data instance to use when computing penalty values.
-        params
-            PenaltyManager parameters. If not provided, a default will be used.
-        """
-        distances = data.distance_matrices()
-        durations = data.duration_matrices()
-
-        # We first determine the elementwise minimum cost across all vehicle
-        # types. This is the cheapest way any edge can be traversed.
-        unique_edge_costs = {
-            (
-                veh_type.unit_distance_cost,
-                veh_type.unit_duration_cost,
-                veh_type.profile,
-            )
-            for veh_type in data.vehicle_types()
-        }
-
-        first, *rest = unique_edge_costs
-        unit_dist, unit_dur, prof = first
-        edge_costs = unit_dist * distances[prof] + unit_dur * durations[prof]
-        for unit_dist, unit_dur, prof in rest:
-            mat = unit_dist * distances[prof] + unit_dur * durations[prof]
-            np.minimum(edge_costs, mat, out=edge_costs)
-
-        # Best edge cost/distance/duration over all vehicle types and profiles,
-        # and then average that for the entire matrix to obtain an "average
-        # best" edge cost/distance/duration.
-        avg_cost = edge_costs.mean()
-        avg_distance = np.minimum.reduce(distances).mean()
-        avg_duration = np.minimum.reduce(durations).mean()
-
-        avg_load = np.zeros((data.num_load_dimensions,))
-        if data.num_clients != 0 and data.num_load_dimensions != 0:
-            pickups = np.array([c.pickup for c in data.clients()])
-            deliveries = np.array([c.delivery for c in data.clients()])
-            avg_load = np.maximum(pickups, deliveries).mean(axis=0)
-
-        # Initial penalty parameters are meant to weigh an average increase
-        # in the relevant value by the same amount as the average edge cost.
-        init_load = avg_cost / np.maximum(avg_load, 1)
-        init_tw = avg_cost / max(avg_duration, 1)
-        init_dist = avg_cost / max(avg_distance, 1)
-        return cls((init_load.tolist(), init_tw, init_dist), params)
 
     def _compute(self, penalty: float, feas_percentage: float) -> float:
         # Computes and returns the new penalty value, given the current value
