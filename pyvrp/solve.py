@@ -169,7 +169,8 @@ def solve(
         if op.supports(data):
             ls.add_operator(op(data))
 
-    pm = PenaltyManager.init_from(data, params.penalty)
+    penalties = params.penalty.midpoint_penalties(data)
+    pm = PenaltyManager(penalties, params.penalty)
 
     init = initial_solution
     if init is None:
