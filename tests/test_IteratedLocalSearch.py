@@ -305,20 +305,21 @@ def test_callback_on_start_and_end(ok_small):
 
 def test_callback_on_iteration():
     """
-    TODO
+    Tests that ILS calls the provided callback at the end of each iteration.
     """
     pass
 
 
 def test_callback_on_restart():
     """
-    TODO
+    Tests that ILS calls the provided callback when restarting the search.
     """
     pass
 
 
 def test_callback_on_best():
     """
-    TODO
+    Tests that ILS calls the provided callback whenever a new best solution is
+    obtained.
     """
     pass
