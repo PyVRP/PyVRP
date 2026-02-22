@@ -50,7 +50,7 @@ namespace pyvrp
  */
 class DurationCostFunction
 {
-    PiecewiseLinearFunction pwl_;  // GCOVR_EXCL_LINE
+    PiecewiseLinearFunction pwl_;
 
 public:
     DurationCostFunction(std::vector<Duration> breakpoints = {0},
@@ -138,7 +138,7 @@ public:
     [[nodiscard]] Cost edgeCostSlope() const;
 
     bool operator==(DurationCostFunction const &other) const
-        = default;  // GCOVR_EXCL_LINE
+        = default;
 };
 
 inline PiecewiseLinearFunction const &
