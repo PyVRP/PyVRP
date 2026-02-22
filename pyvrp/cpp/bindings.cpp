@@ -1,9 +1,11 @@
 #include "bindings.h"
 #include "CostEvaluator.h"
+#include "DurationCostFunction.h"
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
 #include "LoadSegment.h"
 #include "Matrix.h"
+#include "PiecewiseLinearFunction.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
@@ -17,18 +19,22 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <cstdint>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <variant>
 
 namespace py = pybind11;
 
 using pyvrp::CostEvaluator;
+using pyvrp::DurationCostFunction;
 using pyvrp::DurationSegment;
 using pyvrp::DynamicBitset;
 using pyvrp::LoadSegment;
 using pyvrp::Matrix;
+using pyvrp::PiecewiseLinearFunction;
 using pyvrp::ProblemData;
 using pyvrp::RandomNumberGenerator;
 using pyvrp::Route;
@@ -83,6 +89,88 @@ PYBIND11_MODULE(_pyvrp, m)
                     = t[0].cast<std::vector<unsigned long long>>();
                 return std::vector<DynamicBitset::Block>(blocks.begin(),
                                                          blocks.end());
+            }));
+
+    py::class_<PiecewiseLinearFunction>(
+        m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
+        .def(py::init<std::vector<int64_t>, std::vector<int64_t>, int64_t>(),
+             py::arg("breakpoints") = std::vector<int64_t>{0},
+             py::arg("slopes") = std::vector<int64_t>{0},
+             py::arg("intercept") = 0)
+        .def("__call__", &PiecewiseLinearFunction::operator(), py::arg("x"))
+        .def_property_readonly("breakpoints",
+                               &PiecewiseLinearFunction::breakpoints,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("slopes",
+                               &PiecewiseLinearFunction::slopes,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("values",
+                               &PiecewiseLinearFunction::values,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("intercept", &PiecewiseLinearFunction::intercept)
+        .def("is_zero",
+             &PiecewiseLinearFunction::isZero,
+             DOC(pyvrp, PiecewiseLinearFunction, isZero))
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](PiecewiseLinearFunction const &function)  // __getstate__
+            {
+                return py::make_tuple(function.breakpoints(),
+                                      function.slopes(),
+                                      function.intercept());
+            },
+            [](py::tuple t)  // __setstate__
+            {
+                return PiecewiseLinearFunction(
+                    t[0].cast<std::vector<int64_t>>(),  // breakpoints
+                    t[1].cast<std::vector<int64_t>>(),  // slopes
+                    t[2].cast<int64_t>());              // intercept
+            }));
+
+    py::class_<DurationCostFunction>(
+        m, "DurationCostFunction", DOC(pyvrp, DurationCostFunction))
+        .def(py::init<std::vector<pyvrp::Duration>, std::vector<pyvrp::Cost>>(),
+             py::arg("breakpoints") = std::vector<pyvrp::Duration>{0},
+             py::arg("slopes") = std::vector<pyvrp::Cost>{0})
+        .def(py::init<PiecewiseLinearFunction>(), py::arg("piecewise_linear"))
+        .def("__call__", &DurationCostFunction::operator(), py::arg("duration"))
+        .def_property_readonly("breakpoints",
+                               &DurationCostFunction::breakpoints,
+                               DOC(pyvrp, DurationCostFunction, breakpoints))
+        .def_property_readonly("slopes",
+                               &DurationCostFunction::slopes,
+                               DOC(pyvrp, DurationCostFunction, slopes))
+        .def_property_readonly("values",
+                               &DurationCostFunction::values,
+                               DOC(pyvrp, DurationCostFunction, values))
+        .def_property_readonly(
+            "piecewise_linear",
+            &DurationCostFunction::piecewiseLinear,
+            py::return_value_policy::reference_internal,
+            DOC(pyvrp, DurationCostFunction, piecewiseLinear))
+        .def_property_readonly("edge_cost_slope",
+                               &DurationCostFunction::edgeCostSlope)
+        .def("is_zero",
+             &DurationCostFunction::isZero,
+             DOC(pyvrp, DurationCostFunction, isZero))
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](DurationCostFunction const &function)  // __getstate__
+            {
+                return py::make_tuple(function.breakpoints(),
+                                      function.slopes());
+            },
+            [](py::tuple t)  // __setstate__
+            {
+                if (t.size() == 2)
+                {
+                    return DurationCostFunction(
+                        t[0].cast<
+                            std::vector<pyvrp::Duration>>(),     // breakpoints
+                        t[1].cast<std::vector<pyvrp::Cost>>());  // slopes
+                }
+
+                throw std::runtime_error("Invalid DurationCostFunction state.");
             }));
 
     py::class_<ProblemData::Client>(

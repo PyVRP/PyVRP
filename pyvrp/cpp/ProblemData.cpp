@@ -272,7 +272,7 @@ ProblemData::Depot::~Depot() { delete[] name; }
 bool ProblemData::Depot::operator==(Depot const &other) const
 {
     // clang-format off
-    return x == other.x 
+    return x == other.x
         && y == other.y
         && twEarly == other.twEarly
         && twLate == other.twLate
