@@ -3,9 +3,11 @@ from pytest import mark
 
 from pyvrp import (
     IteratedLocalSearch,
+    IteratedLocalSearchCallbacks,
     IteratedLocalSearchParams,
     PenaltyManager,
     RandomNumberGenerator,
+    Result,
     Solution,
 )
 from pyvrp.search import (
@@ -257,3 +259,66 @@ def test_exhaustive_search_on_new_best_solution(ok_small):
     res = ils.run(MaxIterations(2))
     assert_equal(len(sols), 0)
     assert_equal(res.cost(), 9_240)
+
+
+def test_callback_on_start_and_end(ok_small):
+    """
+    Tests that ILS calls the provided callbacks at search start and end.
+    """
+
+    class Callbacks(IteratedLocalSearchCallbacks):
+        def __init__(self):
+            self.start_cnt = 0
+            self.end_cnt = 0
+
+            self.init: Solution | None = None
+            self.res: Result | None = None
+
+        def on_start(self, initial):
+            self.start_cnt += 1
+            self.init = initial
+
+        def on_end(self, result):
+            self.end_cnt += 1
+            self.res = result
+
+    rng = RandomNumberGenerator(seed=42)
+    init = Solution.make_random(ok_small, rng)
+    callbacks = Callbacks()
+    ils = IteratedLocalSearch(
+        ok_small,
+        PenaltyManager(initial_penalties=([20], 6, 6)),
+        rng,
+        lambda sol, *args, **kwargs: sol,
+        init,
+        IteratedLocalSearchParams(callbacks=callbacks),
+    )
+
+    # Run the ILS and test that the start and end callbacks were each called
+    # once, with the proper arguments.
+    res = ils.run(stop=MaxIterations(10))
+    assert_equal(callbacks.start_cnt, 1)
+    assert_equal(callbacks.end_cnt, 1)
+    assert_equal(callbacks.init, init)
+    assert_equal(callbacks.res, res)
+
+
+def test_callback_on_iteration():
+    """
+    TODO
+    """
+    pass
+
+
+def test_callback_on_restart():
+    """
+    TODO
+    """
+    pass
+
+
+def test_callback_on_best():
+    """
+    TODO
+    """
+    pass
