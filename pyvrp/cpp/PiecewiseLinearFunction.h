@@ -1,6 +1,7 @@
 #ifndef PYVRP_PIECEWISELINEARFUNCTION_H
 #define PYVRP_PIECEWISELINEARFUNCTION_H
 
+#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
@@ -117,13 +118,13 @@ Codomain PiecewiseLinearFunction<Domain, Codomain>::operator()(Domain x) const
     if (x < breakpoints_.front() || x > breakpoints_.back())
         throw std::domain_error("x must be within function domain.");
 
-    size_t idx = 0;
-    for (; idx + 1 != breakpoints_.size(); ++idx)
-        if (x < breakpoints_[idx + 1])
-            break;
-
-    if (idx == segments_.size())  // x == breakpoints_.back()
-        idx = segments_.size() - 1;
+    // Binary Search for the right segment. We can skip the first and last
+    // breakpoint, as they are only used for bounds checking and not for segment
+    // selection. Intervals are [b[i], b[i + 1]), except the final interval is
+    // right-closed.
+    auto const it
+        = std::upper_bound(breakpoints_.begin() + 1, breakpoints_.end() - 1, x);
+    auto const idx = static_cast<size_t>(it - breakpoints_.begin() - 1);
 
     auto const &[intercept, slope] = segments_[idx];
     if (slope == Domain{0})
