@@ -19,7 +19,6 @@
 #include <pybind11/stl.h>
 
 #include <cstdint>
-#include <limits>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -95,18 +94,20 @@ PYBIND11_MODULE(_pyvrp, m)
         m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
         .def(py::init<std::vector<int64_t>,
                       std::vector<PiecewiseLinearFunction::Segment>>(),
-             py::arg("breakpoints")
-             = std::vector<int64_t>{std::numeric_limits<int64_t>::min(),
-                                    std::numeric_limits<int64_t>::max()},
-             py::arg("segments")
-             = std::vector<PiecewiseLinearFunction::Segment>{{0, 0}})
-        .def("__call__", &PiecewiseLinearFunction::operator(), py::arg("x"))
+             py::arg("breakpoints"),
+             py::arg("segments"))
+        .def("__call__",
+             &PiecewiseLinearFunction::operator(),
+             py::arg("x"),
+             DOC(pyvrp, PiecewiseLinearFunction, __call__))
         .def_property_readonly("breakpoints",
                                &PiecewiseLinearFunction::breakpoints,
-                               py::return_value_policy::reference_internal)
+                               py::return_value_policy::reference_internal,
+                               DOC(pyvrp, PiecewiseLinearFunction, breakpoints))
         .def_property_readonly("segments",
                                &PiecewiseLinearFunction::segments,
-                               py::return_value_policy::reference_internal)
+                               py::return_value_policy::reference_internal,
+                               DOC(pyvrp, PiecewiseLinearFunction, segments))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](PiecewiseLinearFunction const &function)  // __getstate__
@@ -116,10 +117,11 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t)  // __setstate__
             {
+                using Breakpoints = std::vector<int64_t>;
+                using Segments = std::vector<PiecewiseLinearFunction::Segment>;
                 return PiecewiseLinearFunction(
-                    t[0].cast<std::vector<int64_t>>(),  // breakpoints
-                    t[1].cast<std::vector<
-                        PiecewiseLinearFunction::Segment>>());  // segments
+                    t[0].cast<Breakpoints>(),  // breakpoints
+                    t[1].cast<Segments>());    // segments
             }));
 
     py::class_<ProblemData::Client>(

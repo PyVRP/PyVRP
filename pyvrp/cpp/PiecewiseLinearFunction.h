@@ -1,8 +1,8 @@
 #ifndef PYVRP_PIECEWISELINEARFUNCTION_H
 #define PYVRP_PIECEWISELINEARFUNCTION_H
 
-#include <algorithm>
-#include <cstdint>
+#include <cassert>
+#include <fstream>
 #include <limits>
 #include <stdexcept>
 #include <utility>
@@ -12,139 +12,110 @@ namespace pyvrp
 {
 /**
  * PiecewiseLinearFunction(
- *     breakpoints: list[int] = [min_int64, max_int64],
- *     segments: list[tuple[int, int]] = [(0, 0)],
+ *     breakpoints: list[np.int64],
+ *     segments: list[tuple[np.int64, np.int64]],
  * )
  *
- * Creates a piecewise linear function.
+ * Creates a piecewise linear function :math:`f`. TODO
  *
- * The given ``breakpoints`` define segment intervals. Segment ``i`` applies to
- * ``[breakpoints[i], breakpoints[i + 1])`` and uses
- * ``segments[i] = (intercept, slope)``:
- *
- * ``f(x) = intercept + slope * (x - breakpoints[i])``.
- *
- * The final interval is right-closed to include ``breakpoints[-1]``.
- *
- * Bounds behaviour
- * ----------------
- * This implementation throws a ``std::domain_error`` if ``x`` is outside the
- * function domain ``[breakpoints.front(), breakpoints.back()]``.
- *
- * Example:
- *
- * - ``breakpoints = [0, 5, 10]``
- * - ``segments = [(1, 2), (11, 3)]``
- *
- * Then:
- *
- * - ``f(2) = 1 + 2 * (2 - 0) = 5``
- * - ``f(7) = 11 + 3 * (7 - 5) = 17``
+ * Segment :math:`f_i`, breakpoints :math:`b_i`. TODO
  *
  * Parameters
  * ----------
  * breakpoints
- *     Strictly increasing breakpoints. Must contain at least two elements.
+ *     TODO
  * segments
- *     Segment definitions ``(intercept, slope)`` for each interval. Must have
- *     size ``len(breakpoints) - 1``.
+ *     TODO
  */
-template <typename Domain, typename Codomain> class PiecewiseLinearFunction
+template <typename Dom, typename Co> class PiecewiseLinearFunction
 {
 public:
-    using Segment = std::pair<Domain, Domain>;
+    using Segment = std::pair<Dom, Dom>;
 
 private:
-    std::vector<Domain> breakpoints_;
+    std::vector<Dom> breakpoints_;
     std::vector<Segment> segments_;
 
 public:
-    PiecewiseLinearFunction();
-    PiecewiseLinearFunction(std::vector<Domain> breakpoints,
+    PiecewiseLinearFunction(std::vector<Dom> breakpoints,
                             std::vector<Segment> segments);
 
     /**
-     * Evaluates the function at ``x``.
+     * Evaluates :math:`f(x)`.
      */
-    [[nodiscard]] inline Codomain operator()(Domain x) const;
+    [[nodiscard]] inline Co operator()(Dom x) const;
 
     /**
-     * Segment breakpoints of this function.
+     * Breakpoints :math:`b_i`.
      */
-    [[nodiscard]] std::vector<Domain> const &breakpoints() const;
+    [[nodiscard]] std::vector<Dom> const &breakpoints() const;
 
     /**
-     * Segment intercept/slope pairs.
+     * Intercept and slope pairs for each segment :math:`f_i`.
      */
     [[nodiscard]] std::vector<Segment> const &segments() const;
 
     bool operator==(PiecewiseLinearFunction const &other) const = default;
 };
 
-template <typename Domain, typename Codomain>
-PiecewiseLinearFunction<Domain, Codomain>::PiecewiseLinearFunction()
-    : PiecewiseLinearFunction({std::numeric_limits<Domain>::min(),
-                               std::numeric_limits<Domain>::max()},
-                              {{Domain{0}, Domain{0}}})
-{
-}
-
-template <typename Domain, typename Codomain>
-PiecewiseLinearFunction<Domain, Codomain>::PiecewiseLinearFunction(
-    std::vector<Domain> breakpoints, std::vector<Segment> segments)
+template <typename Dom, typename Co>
+PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
+    std::vector<Dom> breakpoints, std::vector<Segment> segments)
     : breakpoints_(std::move(breakpoints)), segments_(std::move(segments))
 {
     if (breakpoints_.size() < 2)
-    {
-        auto const *msg = "breakpoints must contain at least two values.";
-        throw std::invalid_argument(msg);
-    }
+        throw std::invalid_argument("Need at least two breakpoints.");
 
-    if (segments_.size() != breakpoints_.size() - 1)
-    {
-        auto const *msg = "segments must have size breakpoints.size() - 1.";
-        throw std::invalid_argument(msg);
-    }
+    if (breakpoints_.size() - 1 != segments.size())
+        throw std::invalid_argument(
+            "There must be one more breakpoint than the number of segments.");
 
-    for (size_t idx = 1; idx != breakpoints_.size(); ++idx)
-        if (breakpoints_[idx - 1] >= breakpoints_[idx])
+    for (size_t idx = 0; idx != breakpoints_.size() - 1; ++idx)
+        if (breakpoints_[idx] >= breakpoints_[idx + 1])
             throw std::invalid_argument(
-                "breakpoints must be strictly increasing.");
+                "Breakpoints must be strictly increasing.");
+
+    auto const min = std::numeric_limits<Dom>::min();
+    auto const max = std::numeric_limits<Dom>::max();
+    if (breakpoints_.front() != min || breakpoints_.back() != max)
+    {
+        std::ostringstream msg;
+        msg << "Breakpoints must cover full domain range [min, max]:" << " ["
+            << breakpoints_[0] << ", " << breakpoints_.back() << ']'
+            << " does not cover [ " << min << ", " << max << "].";
+        throw std::invalid_argument(msg.str());
+    }
 }
 
-template <typename Domain, typename Codomain>
-Codomain PiecewiseLinearFunction<Domain, Codomain>::operator()(Domain x) const
+template <typename Dom, typename Co>
+Co PiecewiseLinearFunction<Dom, Co>::operator()(Dom x) const
 {
-    if (x < breakpoints_.front() || x > breakpoints_.back())
-        throw std::domain_error("x must be within function domain.");
+    for (size_t idx = 0; idx != breakpoints_.size() - 1; ++idx)
+    {
+        auto const leftBreakpoint = breakpoints_[idx];
+        auto const rightBreakpoint = breakpoints_[idx + 1];
 
-    // Binary Search for the right segment. We can skip the first and last
-    // breakpoint, as they are only used for bounds checking and not for segment
-    // selection. Intervals are [b[i], b[i + 1]), except the final interval is
-    // right-closed.
-    auto const it
-        = std::upper_bound(breakpoints_.begin() + 1, breakpoints_.end() - 1, x);
-    auto const idx = static_cast<size_t>(it - breakpoints_.begin() - 1);
+        if (leftBreakpoint <= x && x < rightBreakpoint)
+        {
+            auto const [intercept, slope] = segments_[idx];
+            return static_cast<Co>(intercept + slope * x);
+        }
+    }
 
-    auto const &[intercept, slope] = segments_[idx];
-    if (slope == Domain{0})
-        return static_cast<Codomain>(intercept);
-
-    auto const delta = x - breakpoints_[idx];
-    auto const value = intercept + slope * delta;
-    return static_cast<Codomain>(value);
+    assert(x == std::numeric_limits<Dom>::max());  // rare edge case
+    auto const [intercept, slope] = segments_.back();
+    return static_cast<Co>(intercept + slope * x);
 }
 
-template <typename Domain, typename Codomain>
-std::vector<Domain> const &
-PiecewiseLinearFunction<Domain, Codomain>::breakpoints() const
+template <typename Dom, typename Co>
+std::vector<Dom> const &PiecewiseLinearFunction<Dom, Co>::breakpoints() const
 {
     return breakpoints_;
 }
 
-template <typename Domain, typename Codomain>
-std::vector<typename PiecewiseLinearFunction<Domain, Codomain>::Segment> const &
-PiecewiseLinearFunction<Domain, Codomain>::segments() const
+template <typename Dom, typename Co>
+std::vector<typename PiecewiseLinearFunction<Dom, Co>::Segment> const &
+PiecewiseLinearFunction<Dom, Co>::segments() const
 {
     return segments_;
 }
