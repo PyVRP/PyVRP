@@ -1,3 +1,4 @@
+import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
@@ -303,23 +304,86 @@ def test_callback_on_start_and_end(ok_small):
     assert_equal(callbacks.res, res)
 
 
-def test_callback_on_iteration():
+@pytest.mark.parametrize("max_iterations", (1, 10, 100))
+def test_callback_on_iteration_and_restart(ok_small, max_iterations):
     """
-    Tests that ILS calls the provided callback at the end of each iteration.
+    Tests that ILS calls the provided callback at the end of each iteration,
+    and when restarting the search.
     """
-    pass
+    rng = RandomNumberGenerator(seed=42)
+    init = Solution.make_random(ok_small, rng)
+
+    class Callbacks(IteratedLocalSearchCallbacks):
+        def __init__(self):
+            self.iter_cnt = 0
+            self.restart_cnt = 0
+
+        def on_iteration(self, current, candidate, best, cost_evaluator):
+            assert_equal(current, init)
+            assert_equal(candidate, init)
+            assert_equal(best, init)
+            self.iter_cnt += 1
+
+        def on_restart(self, best):
+            assert_equal(best, init)
+            self.restart_cnt += 1
+
+    callbacks = Callbacks()
+    ils = IteratedLocalSearch(
+        ok_small,
+        PenaltyManager(initial_penalties=([20], 6, 6)),
+        rng,
+        lambda sol, *args, **kwargs: sol,
+        init,
+        IteratedLocalSearchParams(
+            # Restart after every iteration without improvement.
+            num_iters_no_improvement=1,
+            callbacks=callbacks,
+        ),
+    )
+
+    # The ILS should call our callback at the end of every iteration, and every
+    # time a restart occurs. Restarting happens every iteration, except in the
+    # very first.
+    ils.run(stop=MaxIterations(max_iterations))
+    assert_equal(callbacks.iter_cnt, max_iterations)
+    assert_equal(callbacks.restart_cnt, max_iterations - 1)
 
 
-def test_callback_on_restart():
-    """
-    Tests that ILS calls the provided callback when restarting the search.
-    """
-    pass
-
-
-def test_callback_on_best():
+def test_callback_on_best(ok_small):
     """
     Tests that ILS calls the provided callback whenever a new best solution is
     obtained.
     """
-    pass
+
+    class Callbacks(IteratedLocalSearchCallbacks):
+        def __init__(self):
+            self.best_cnt = 0
+            self.best: Solution | None = None
+
+        def on_best(self, best):
+            self.best_cnt += 1
+            self.best = best
+
+    sols = [
+        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868, init
+        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725 - new best
+        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240 - after exhaustive search
+    ]
+
+    callbacks = Callbacks()
+    ils = IteratedLocalSearch(
+        ok_small,
+        PenaltyManager(initial_penalties=([20], 6, 6)),
+        RandomNumberGenerator(42),
+        lambda *args, **kwargs: sols.pop(0),
+        sols[0],
+        IteratedLocalSearchParams(callbacks=callbacks),
+    )
+
+    # The first solution in sols is the initial solution, so not a new best.
+    # The second solution is a new best, that then gets improved via an
+    # exhaustive search. The callback sees the improved solution.
+    res = ils.run(MaxIterations(2))
+    assert_equal(res.best, callbacks.best)
+    assert_equal(callbacks.best_cnt, 1)
