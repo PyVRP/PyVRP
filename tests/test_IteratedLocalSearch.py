@@ -1,11 +1,14 @@
+import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import (
     IteratedLocalSearch,
+    IteratedLocalSearchCallbacks,
     IteratedLocalSearchParams,
     PenaltyManager,
     RandomNumberGenerator,
+    Result,
     Solution,
 )
 from pyvrp.search import (
@@ -257,3 +260,128 @@ def test_exhaustive_search_on_new_best_solution(ok_small):
     res = ils.run(MaxIterations(2))
     assert_equal(len(sols), 0)
     assert_equal(res.cost(), 9_240)
+
+
+def test_callback_on_start_and_end(ok_small):
+    """
+    Tests that ILS calls the provided callbacks at search start and end.
+    """
+
+    class Callbacks(IteratedLocalSearchCallbacks):
+        def __init__(self):
+            self.start_cnt = 0
+            self.end_cnt = 0
+
+            self.init: Solution | None = None
+            self.res: Result | None = None
+
+        def on_start(self, initial):
+            self.start_cnt += 1
+            self.init = initial
+
+        def on_end(self, result):
+            self.end_cnt += 1
+            self.res = result
+
+    rng = RandomNumberGenerator(seed=42)
+    init = Solution.make_random(ok_small, rng)
+    callbacks = Callbacks()
+    ils = IteratedLocalSearch(
+        ok_small,
+        PenaltyManager(initial_penalties=([20], 6, 6)),
+        rng,
+        lambda sol, *args, **kwargs: sol,
+        init,
+        IteratedLocalSearchParams(callbacks=callbacks),
+    )
+
+    # Run the ILS and test that the start and end callbacks were each called
+    # once, with the proper arguments.
+    res = ils.run(stop=MaxIterations(10))
+    assert_equal(callbacks.start_cnt, 1)
+    assert_equal(callbacks.end_cnt, 1)
+    assert_equal(callbacks.init, init)
+    assert_equal(callbacks.res, res)
+
+
+@pytest.mark.parametrize("max_iterations", (1, 10, 100))
+def test_callback_on_iteration_and_restart(ok_small, max_iterations):
+    """
+    Tests that ILS calls the provided callback at the end of each iteration,
+    and when restarting the search.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    init = Solution.make_random(ok_small, rng)
+
+    class Callbacks(IteratedLocalSearchCallbacks):
+        def __init__(self):
+            self.iter_cnt = 0
+            self.restart_cnt = 0
+
+        def on_iteration(self, current, candidate, best, cost_evaluator):
+            assert_equal(current, init)
+            assert_equal(candidate, init)
+            assert_equal(best, init)
+            self.iter_cnt += 1
+
+        def on_restart(self, best):
+            assert_equal(best, init)
+            self.restart_cnt += 1
+
+    callbacks = Callbacks()
+    ils = IteratedLocalSearch(
+        ok_small,
+        PenaltyManager(initial_penalties=([20], 6, 6)),
+        rng,
+        lambda sol, *args, **kwargs: sol,
+        init,
+        IteratedLocalSearchParams(
+            # Restart after every iteration without improvement.
+            num_iters_no_improvement=1,
+            callbacks=callbacks,
+        ),
+    )
+
+    # The ILS should call our callback at the end of every iteration, and every
+    # time a restart occurs. Restarting happens every iteration, except in the
+    # very first.
+    ils.run(stop=MaxIterations(max_iterations))
+    assert_equal(callbacks.iter_cnt, max_iterations)
+    assert_equal(callbacks.restart_cnt, max_iterations - 1)
+
+
+def test_callback_on_best(ok_small):
+    """
+    Tests that ILS calls the provided callback whenever a new best solution is
+    obtained.
+    """
+    sols = [
+        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868, init
+        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725 - new best
+        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240 - after exhaustive search
+    ]
+
+    class Callbacks(IteratedLocalSearchCallbacks):
+        def __init__(self):
+            self.best_cnt = 0
+
+        def on_best(self, best):
+            assert_equal(best, sols[-1])
+            self.best_cnt += 1
+
+    callbacks = Callbacks()
+    idx = iter(range(len(sols)))
+    ils = IteratedLocalSearch(
+        ok_small,
+        PenaltyManager(initial_penalties=([20], 6, 6)),
+        RandomNumberGenerator(42),
+        lambda *args, **kwargs: sols[next(idx)],
+        sols[0],
+        IteratedLocalSearchParams(callbacks=callbacks),
+    )
+
+    # The first solution in sols is the initial solution, so not a new best.
+    # The second solution is a new best, that gets improved via an exhaustive
+    # search. The callback is called once with the improved solution.
+    ils.run(MaxIterations(2))
+    assert_equal(callbacks.best_cnt, 1)
