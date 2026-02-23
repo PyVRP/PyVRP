@@ -22,7 +22,6 @@
 #include <limits>
 #include <memory>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <variant>
 
@@ -40,7 +39,7 @@ using pyvrp::Solution;
 using pyvrp::Trip;
 
 using PiecewiseLinearFunction
-    = pyvrp::PiecewiseLinearFunction<pyvrp::Duration, pyvrp::Cost>;
+    = pyvrp::PiecewiseLinearFunction<int64_t, int64_t>;
 
 PYBIND11_MODULE(_pyvrp, m)
 {
@@ -94,11 +93,11 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<PiecewiseLinearFunction>(
         m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
-        .def(py::init<std::vector<pyvrp::Duration>,
+        .def(py::init<std::vector<int64_t>,
                       std::vector<PiecewiseLinearFunction::Segment>>(),
-             py::arg("breakpoints") = std::vector<
-                 pyvrp::Duration>{std::numeric_limits<pyvrp::Duration>::min(),
-                                  std::numeric_limits<pyvrp::Duration>::max()},
+             py::arg("breakpoints")
+             = std::vector<int64_t>{std::numeric_limits<int64_t>::min(),
+                                    std::numeric_limits<int64_t>::max()},
              py::arg("segments")
              = std::vector<PiecewiseLinearFunction::Segment>{{0, 0}})
         .def("__call__", &PiecewiseLinearFunction::operator(), py::arg("x"))
@@ -108,9 +107,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("segments",
                                &PiecewiseLinearFunction::segments,
                                py::return_value_policy::reference_internal)
-        .def("is_zero",
-             &PiecewiseLinearFunction::isZero,
-             DOC(pyvrp, PiecewiseLinearFunction, isZero))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](PiecewiseLinearFunction const &function)  // __getstate__
@@ -121,7 +117,7 @@ PYBIND11_MODULE(_pyvrp, m)
             [](py::tuple t)  // __setstate__
             {
                 return PiecewiseLinearFunction(
-                    t[0].cast<std::vector<pyvrp::Duration>>(),  // breakpoints
+                    t[0].cast<std::vector<int64_t>>(),  // breakpoints
                     t[1].cast<std::vector<
                         PiecewiseLinearFunction::Segment>>());  // segments
             }));

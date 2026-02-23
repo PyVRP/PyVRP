@@ -49,13 +49,6 @@ def test_piecewise_linear_function_exposes_breakpoints_and_segments():
     assert_equal(fn.segments, [(1, 2), (11, 3)])
 
 
-def test_piecewise_linear_function_is_zero():
-    assert PiecewiseLinearFunction().is_zero()
-    assert PiecewiseLinearFunction([0, 1], [(0, 0)]).is_zero()
-    assert not PiecewiseLinearFunction([0, 1], [(0, 1)]).is_zero()
-    assert not PiecewiseLinearFunction([0, 1], [(1, 0)]).is_zero()
-
-
 def test_piecewise_linear_function_equality():
     fn1 = PiecewiseLinearFunction([0, 5], [(1, 2)])
     fn2 = PiecewiseLinearFunction([0, 5], [(1, 2)])

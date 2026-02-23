@@ -1,11 +1,9 @@
 #ifndef PYVRP_PIECEWISELINEARFUNCTION_H
 #define PYVRP_PIECEWISELINEARFUNCTION_H
 
-#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -50,31 +48,14 @@ namespace pyvrp
  *     Segment definitions ``(intercept, slope)`` for each interval. Must have
  *     size ``len(breakpoints) - 1``.
  */
-template <typename Domain = int64_t, typename Codomain = int64_t>
-class PiecewiseLinearFunction
+template <typename Domain, typename Codomain> class PiecewiseLinearFunction
 {
 public:
-    using Segment = std::pair<Codomain, Codomain>;
+    using Segment = std::pair<Domain, Domain>;
 
 private:
     std::vector<Domain> breakpoints_;
     std::vector<Segment> segments_;
-
-    template <typename Value>
-        requires requires(Value const value) { value.get(); }
-    [[nodiscard]] static auto toRaw(Value const value);
-
-    template <typename Value>
-        requires(!requires(Value const value) { value.get(); })
-    [[nodiscard]] static Value toRaw(Value const value);
-
-    template <typename Value, typename Raw>
-        requires std::is_arithmetic_v<Value>
-    [[nodiscard]] static Value fromRaw(Raw const value);
-
-    template <typename Value, typename Raw>
-        requires(!std::is_arithmetic_v<Value>)
-    [[nodiscard]] static Value fromRaw(Raw const value);
 
 public:
     PiecewiseLinearFunction();
@@ -84,7 +65,7 @@ public:
     /**
      * Evaluates the function at ``x``.
      */
-    [[nodiscard]] Codomain operator()(Domain x) const;
+    [[nodiscard]] inline Codomain operator()(Domain x) const;
 
     /**
      * Segment breakpoints of this function.
@@ -96,51 +77,14 @@ public:
      */
     [[nodiscard]] std::vector<Segment> const &segments() const;
 
-    /**
-     * Tests whether this function is the zero function.
-     */
-    [[nodiscard]] bool isZero() const;
-
     bool operator==(PiecewiseLinearFunction const &other) const = default;
 };
-
-template <typename Domain, typename Codomain>
-template <typename Value>
-    requires requires(Value const value) { value.get(); }
-auto PiecewiseLinearFunction<Domain, Codomain>::toRaw(Value const value)
-{
-    return value.get();
-}
-
-template <typename Domain, typename Codomain>
-template <typename Value>
-    requires(!requires(Value const value) { value.get(); })
-Value PiecewiseLinearFunction<Domain, Codomain>::toRaw(Value const value)
-{
-    return value;
-}
-
-template <typename Domain, typename Codomain>
-template <typename Value, typename Raw>
-    requires std::is_arithmetic_v<Value>
-Value PiecewiseLinearFunction<Domain, Codomain>::fromRaw(Raw const value)
-{
-    return static_cast<Value>(value);
-}
-
-template <typename Domain, typename Codomain>
-template <typename Value, typename Raw>
-    requires(!std::is_arithmetic_v<Value>)
-Value PiecewiseLinearFunction<Domain, Codomain>::fromRaw(Raw const value)
-{
-    return Value(value);
-}
 
 template <typename Domain, typename Codomain>
 PiecewiseLinearFunction<Domain, Codomain>::PiecewiseLinearFunction()
     : PiecewiseLinearFunction({std::numeric_limits<Domain>::min(),
                                std::numeric_limits<Domain>::max()},
-                              {{fromRaw<Codomain>(0), fromRaw<Codomain>(0)}})
+                              {{Domain{0}, Domain{0}}})
 {
 }
 
@@ -155,14 +99,14 @@ PiecewiseLinearFunction<Domain, Codomain>::PiecewiseLinearFunction(
         throw std::invalid_argument(msg);
     }
 
-    if (segments_.size() + 1 != breakpoints_.size())
+    if (segments_.size() != breakpoints_.size() - 1)
     {
         auto const *msg = "segments must have size breakpoints.size() - 1.";
         throw std::invalid_argument(msg);
     }
 
     for (size_t idx = 1; idx != breakpoints_.size(); ++idx)
-        if (!(breakpoints_[idx - 1] < breakpoints_[idx]))
+        if (breakpoints_[idx - 1] >= breakpoints_[idx])
             throw std::invalid_argument(
                 "breakpoints must be strictly increasing.");
 }
@@ -182,35 +126,26 @@ Codomain PiecewiseLinearFunction<Domain, Codomain>::operator()(Domain x) const
         idx = segments_.size() - 1;
 
     auto const &[intercept, slope] = segments_[idx];
-    auto const delta = toRaw(x - breakpoints_[idx]);
-    auto const value = toRaw(intercept) + toRaw(slope) * delta;
-    return fromRaw<Codomain>(value);
+    if (slope == Domain{0})
+        return static_cast<Codomain>(intercept);
+
+    auto const delta = x - breakpoints_[idx];
+    auto const value = intercept + slope * delta;
+    return static_cast<Codomain>(value);
 }
 
 template <typename Domain, typename Codomain>
-inline std::vector<Domain> const &
+std::vector<Domain> const &
 PiecewiseLinearFunction<Domain, Codomain>::breakpoints() const
 {
     return breakpoints_;
 }
 
 template <typename Domain, typename Codomain>
-inline auto PiecewiseLinearFunction<Domain, Codomain>::segments() const
-    -> std::vector<Segment> const &
+std::vector<typename PiecewiseLinearFunction<Domain, Codomain>::Segment> const &
+PiecewiseLinearFunction<Domain, Codomain>::segments() const
 {
     return segments_;
-}
-
-template <typename Domain, typename Codomain>
-bool PiecewiseLinearFunction<Domain, Codomain>::isZero() const
-{
-    auto const zero = fromRaw<Codomain>(0);
-    return std::all_of(segments_.begin(),
-                       segments_.end(),
-                       [&](Segment const &segment) {
-                           return segment.first == zero
-                                  && segment.second == zero;
-                       });
 }
 }  // namespace pyvrp
 
