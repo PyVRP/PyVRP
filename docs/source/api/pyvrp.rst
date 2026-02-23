@@ -102,7 +102,7 @@ This object stores the best observed solution and detailed runtime statistics.
 
    .. autoclass:: PiecewiseLinearFunction
       :members:
-      :special-members: __call__, __eq__
+      :special-members: __call__
 
    .. autoclass:: DynamicBitset
       :members:
