@@ -16,6 +16,14 @@ def test_piecewise_linear_function_evaluates_segments():
     assert_equal(fn(20), 66)
 
 
+def test_piecewise_linear_function_evaluates_zero_slope_segment():
+    fn = PiecewiseLinearFunction([0, 10], [(7, 0)])
+
+    assert_equal(fn(0), 7)
+    assert_equal(fn(5), 7)
+    assert_equal(fn(10), 7)
+
+
 def test_piecewise_linear_function_raises_invalid_data():
     with assert_raises(ValueError):
         PiecewiseLinearFunction([], [])
