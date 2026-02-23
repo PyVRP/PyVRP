@@ -89,12 +89,15 @@ class IteratedLocalSearchParams:
     num_iters_no_improvement: int = 150_000
     history_length: int = 300
     exhaustive_on_best: bool = True
-    callbacks: IteratedLocalSearchCallbacks = field(
-        default_factory=IteratedLocalSearchCallbacks,
+    callbacks: IteratedLocalSearchCallbacks = field(  # type: ignore[assignment]
+        default=None,
         compare=False,  # this doesn't influence parameter configurations
     )
 
     def __post_init__(self):
+        if self.callbacks is None:
+            self.callbacks = IteratedLocalSearchCallbacks()
+
         if self.num_iters_no_improvement < 0:
             raise ValueError("num_iters_no_improvement < 0 not understood.")
 
