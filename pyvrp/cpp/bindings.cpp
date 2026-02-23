@@ -4,6 +4,7 @@
 #include "DynamicBitset.h"
 #include "LoadSegment.h"
 #include "Matrix.h"
+#include "PiecewiseLinearFunction.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
@@ -17,6 +18,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <cstdint>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -34,6 +36,9 @@ using pyvrp::RandomNumberGenerator;
 using pyvrp::Route;
 using pyvrp::Solution;
 using pyvrp::Trip;
+
+using PiecewiseLinearFunction
+    = pyvrp::PiecewiseLinearFunction<int64_t, int64_t>;
 
 PYBIND11_MODULE(_pyvrp, m)
 {
@@ -83,6 +88,40 @@ PYBIND11_MODULE(_pyvrp, m)
                     = t[0].cast<std::vector<unsigned long long>>();
                 return std::vector<DynamicBitset::Block>(blocks.begin(),
                                                          blocks.end());
+            }));
+
+    py::class_<PiecewiseLinearFunction>(
+        m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
+        .def(py::init<std::vector<int64_t>,
+                      std::vector<PiecewiseLinearFunction::Segment>>(),
+             py::arg("breakpoints"),
+             py::arg("segments"))
+        .def("__call__",
+             &PiecewiseLinearFunction::operator(),
+             py::arg("x"),
+             DOC(pyvrp, PiecewiseLinearFunction, __call__))
+        .def_property_readonly("breakpoints",
+                               &PiecewiseLinearFunction::breakpoints,
+                               py::return_value_policy::reference_internal,
+                               DOC(pyvrp, PiecewiseLinearFunction, breakpoints))
+        .def_property_readonly("segments",
+                               &PiecewiseLinearFunction::segments,
+                               py::return_value_policy::reference_internal,
+                               DOC(pyvrp, PiecewiseLinearFunction, segments))
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](PiecewiseLinearFunction const &function)  // __getstate__
+            {
+                return py::make_tuple(function.breakpoints(),
+                                      function.segments());
+            },
+            [](py::tuple t)  // __setstate__
+            {
+                using Breakpoints = std::vector<int64_t>;
+                using Segments = std::vector<PiecewiseLinearFunction::Segment>;
+                return PiecewiseLinearFunction(
+                    t[0].cast<Breakpoints>(),  // breakpoints
+                    t[1].cast<Segments>());    // segments
             }));
 
     py::class_<ProblemData::Client>(
