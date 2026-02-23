@@ -355,35 +355,33 @@ def test_callback_on_best(ok_small):
     Tests that ILS calls the provided callback whenever a new best solution is
     obtained.
     """
-
-    class Callbacks(IteratedLocalSearchCallbacks):
-        def __init__(self):
-            self.best_cnt = 0
-            self.best: Solution | None = None
-
-        def on_best(self, best):
-            self.best_cnt += 1
-            self.best = best
-
     sols = [
         Solution(ok_small, [[1, 2], [4, 3]]),  # 9868, init
         Solution(ok_small, [[1, 2], [3, 4]]),  # 9725 - new best
         Solution(ok_small, [[1, 4], [2, 3]]),  # 9240 - after exhaustive search
     ]
 
+    class Callbacks(IteratedLocalSearchCallbacks):
+        def __init__(self):
+            self.best_cnt = 0
+
+        def on_best(self, best):
+            assert_equal(best, sols[-1])
+            self.best_cnt += 1
+
     callbacks = Callbacks()
+    idx = iter(range(len(sols)))
     ils = IteratedLocalSearch(
         ok_small,
         PenaltyManager(initial_penalties=([20], 6, 6)),
         RandomNumberGenerator(42),
-        lambda *args, **kwargs: sols.pop(0),
+        lambda *args, **kwargs: sols[next(idx)],
         sols[0],
         IteratedLocalSearchParams(callbacks=callbacks),
     )
 
     # The first solution in sols is the initial solution, so not a new best.
-    # The second solution is a new best, that then gets improved via an
-    # exhaustive search. The callback sees the improved solution.
-    res = ils.run(MaxIterations(2))
-    assert_equal(res.best, callbacks.best)
+    # The second solution is a new best, that gets improved via an exhaustive
+    # search. The callback is called once with the improved solution.
+    ils.run(MaxIterations(2))
     assert_equal(callbacks.best_cnt, 1)
