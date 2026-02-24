@@ -24,12 +24,16 @@ jobs:
           version: "0.7.5"
           enable-cache: true
           python-version: "3.13"
-      - name: Install pandoc
-        run: sudo apt install pandoc
-      - name: Set up GCC
+      - name: Update package index
         run: |
+          # Change mirror priorities because Azure can be really slow - https://github.com/actions/runner-images/issues/7048.
+          sudo sed -i '/archive.ubuntu.com\/ubuntu\/\tpriority/ s/priority:2/priority:0/' /etc/apt/apt-mirrors.txt
+          sudo sed -i '/azure.archive.ubuntu.com\/ubuntu\/\tpriority/ s/priority:0/priority:1/' /etc/apt/apt-mirrors.txt
+          sudo sed -i '/security.ubuntu.com\/ubuntu\/\tpriority/ s/priority:3/priority:2/' /etc/apt/apt-mirrors.txt
           sudo apt-get update
-          sudo apt-get install -y gcc-11 g++-11
+      - name: Set up GCC and pandoc
+        run: |
+          sudo apt-get install -y gcc-11 g++-11 pandoc
           echo "CC=gcc-11" >> $GITHUB_ENV
           echo "CXX=g++-11" >> $GITHUB_ENV
       - name: Build PyVRP
