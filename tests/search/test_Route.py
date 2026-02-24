@@ -3,7 +3,13 @@ import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
 import pyvrp
-from pyvrp import Client, Depot, PiecewiseLinearFunction, ProblemData, VehicleType
+from pyvrp import (
+    Client,
+    Depot,
+    PiecewiseLinearFunction,
+    ProblemData,
+    VehicleType,
+)
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
 

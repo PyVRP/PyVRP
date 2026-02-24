@@ -100,8 +100,9 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
 
     isZero_ = std::all_of(segments_.begin(),
                           segments_.end(),
-                          [](Segment const &segment)
-                          { return segment.first == 0 && segment.second == 0; });
+                          [](Segment const &segment) {
+                              return segment.first == 0 && segment.second == 0;
+                          });
 }
 
 template <typename Dom, typename Co>
