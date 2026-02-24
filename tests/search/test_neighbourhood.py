@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import VehicleType
+from pyvrp import PiecewiseLinearFunction, VehicleType
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 
 
@@ -218,8 +218,20 @@ def test_different_routing_costs(ok_small):
     orig_type = ok_small.vehicle_type(0)
     different_cost_data = new_data.replace(
         vehicle_types=[
-            orig_type.replace(unit_distance_cost=1, unit_duration_cost=0),
-            orig_type.replace(unit_distance_cost=0, unit_duration_cost=1),
+            orig_type.replace(
+                unit_distance_cost=1,
+                duration_cost_function=PiecewiseLinearFunction(
+                    [0],
+                    [(0, 0)],
+                ),
+            ),
+            orig_type.replace(
+                unit_distance_cost=0,
+                duration_cost_function=PiecewiseLinearFunction(
+                    [0],
+                    [(0, 1)],
+                ),
+            ),
         ],
     )
     different_cost_neighbours = compute_neighbours(different_cost_data)

@@ -1,7 +1,10 @@
+import numpy as np
 import pytest
 
-from pyvrp import VehicleType
+from pyvrp import PiecewiseLinearFunction, VehicleType
 from tests.helpers import read
+
+_INT_MAX = int(np.iinfo(np.int64).max)
 
 
 @pytest.fixture(scope="session")
@@ -145,8 +148,10 @@ def ok_small_overtime(ok_small):
         shift_duration=5_000,
         max_overtime=1_000,
         unit_distance_cost=0,
-        unit_duration_cost=1,
-        unit_overtime_cost=10,
+        duration_cost_function=PiecewiseLinearFunction(
+            [5_000, _INT_MAX],
+            [(0, 1), (-50_000, 11)],
+        ),
     )
 
     return ok_small.replace(vehicle_types=[veh_type])

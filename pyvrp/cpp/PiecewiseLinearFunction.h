@@ -1,6 +1,7 @@
 #ifndef PYVRP_PIECEWISELINEARFUNCTION_H
 #define PYVRP_PIECEWISELINEARFUNCTION_H
 
+#include <algorithm>
 #include <cassert>
 #include <limits>
 #include <stdexcept>
@@ -43,8 +44,11 @@ public:
 private:
     std::vector<Dom> breakpoints_;
     std::vector<Segment> segments_;
+    bool isZero_ = false;
 
 public:
+    PiecewiseLinearFunction();
+
     PiecewiseLinearFunction(std::vector<Dom> breakpoints,
                             std::vector<Segment> segments);
 
@@ -63,8 +67,19 @@ public:
      */
     [[nodiscard]] std::vector<Segment> const &segments() const;
 
+    /**
+     * Returns whether this function is identically zero.
+     */
+    [[nodiscard]] bool isZero() const;
+
     bool operator==(PiecewiseLinearFunction const &other) const = default;
 };
+
+template <typename Dom, typename Co>
+PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction()
+    : PiecewiseLinearFunction({std::numeric_limits<Dom>::min()}, {{0, 0}})
+{
+}
 
 template <typename Dom, typename Co>
 PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
@@ -82,6 +97,11 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
         if (breakpoints_[idx] >= breakpoints_[idx + 1])
             throw std::invalid_argument(
                 "Breakpoints must be strictly increasing.");
+
+    isZero_ = std::all_of(segments_.begin(),
+                          segments_.end(),
+                          [](Segment const &segment)
+                          { return segment.first == 0 && segment.second == 0; });
 }
 
 template <typename Dom, typename Co>
@@ -109,6 +129,12 @@ std::vector<typename PiecewiseLinearFunction<Dom, Co>::Segment> const &
 PiecewiseLinearFunction<Dom, Co>::segments() const
 {
     return segments_;
+}
+
+template <typename Dom, typename Co>
+bool PiecewiseLinearFunction<Dom, Co>::isZero() const
+{
+    return isZero_;
 }
 }  // namespace pyvrp
 

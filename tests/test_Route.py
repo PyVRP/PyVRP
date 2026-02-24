@@ -7,6 +7,7 @@ from numpy.testing import assert_, assert_equal, assert_raises
 from pyvrp import (
     Client,
     Depot,
+    PiecewiseLinearFunction,
     ProblemData,
     RandomNumberGenerator,
     Route,
@@ -352,8 +353,22 @@ def test_distance_duration_cost_calculations(ok_small):
     Tests route-level distance and duration cost calculations.
     """
     vehicle_types = [
-        VehicleType(capacity=[10], unit_distance_cost=5, unit_duration_cost=1),
-        VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=5),
+        VehicleType(
+            capacity=[10],
+            unit_distance_cost=5,
+            duration_cost_function=PiecewiseLinearFunction(
+                [0],
+                [(0, 1)],
+            ),
+        ),
+        VehicleType(
+            capacity=[10],
+            unit_distance_cost=1,
+            duration_cost_function=PiecewiseLinearFunction(
+                [0],
+                [(0, 5)],
+            ),
+        ),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
 

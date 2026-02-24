@@ -5,7 +5,14 @@ import pytest
 from numpy.random import default_rng
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
+from pyvrp import (
+    Client,
+    ClientGroup,
+    Depot,
+    PiecewiseLinearFunction,
+    ProblemData,
+    VehicleType,
+)
 
 _INT_MAX = np.iinfo(np.int64).max
 _MAX_SIZE = np.iinfo(np.uint64).max
@@ -489,26 +496,24 @@ def test_matrices_are_not_copies():
         "max_distance",
         "fixed_cost",
         "unit_distance_cost",
-        "unit_duration_cost",
         "start_late",
         "initial_load",
     ),
     [
-        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
-        (-1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0),  # capacity cannot be negative
-        (-100, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
-        (0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0),  # early > start late
-        (0, 1, 1, 1, 0, 0, 0, 0, 0, 2, 0),  # start late > late
-        (0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0),  # negative early
-        (0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0),  # negative late
-        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0),  # negative shift_duration
-        (0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0),  # negative max_distance
-        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0),  # negative fixed_cost
-        (0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 0),  # negative unit_distance_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, -1, 0, 0),  # negative unit_duration_cost
-        (0, 1, 0, 0, 0, 0, 0, 0, 0, -1, 0),  # negative start late
-        (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, -1),  # negative initial load
-        (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2),  # initial load exceeds capacity
+        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  # num_available must be positive
+        (-1, 1, 0, 0, 0, 0, 1, 0, 0, 0),  # capacity cannot be negative
+        (-100, 1, 0, 0, 0, 0, 0, 0, 0, 0),  # this is just wrong
+        (0, 1, 1, 1, 0, 0, 0, 0, 0, 0),  # early > start late
+        (0, 1, 1, 1, 0, 0, 0, 0, 2, 0),  # start late > late
+        (0, 1, -1, 0, 0, 0, 0, 0, 0, 0),  # negative early
+        (0, 1, 0, -1, 0, 0, 0, 0, 0, 0),  # negative late
+        (0, 1, 0, 0, -1, 0, 0, 0, 0, 0),  # negative shift_duration
+        (0, 1, 0, 0, 0, -1, 0, 0, 0, 0),  # negative max_distance
+        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0),  # negative fixed_cost
+        (0, 1, 0, 0, 0, 0, 0, -1, 0, 0),  # negative unit_distance_cost
+        (0, 1, 0, 0, 0, 0, 0, 0, -1, 0),  # negative start late
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, -1),  # negative initial load
+        (0, 1, 0, 0, 0, 0, 0, 0, 0, 2),  # initial load exceeds capacity
     ],
 )
 def test_vehicle_type_raises_invalid_data(
@@ -520,7 +525,6 @@ def test_vehicle_type_raises_invalid_data(
     max_distance: int,
     fixed_cost: int,
     unit_distance_cost: int,
-    unit_duration_cost: int,
     start_late: int,
     initial_load: int,
 ):
@@ -538,25 +542,15 @@ def test_vehicle_type_raises_invalid_data(
             shift_duration=shift_duration,
             max_distance=max_distance,
             unit_distance_cost=unit_distance_cost,
-            unit_duration_cost=unit_duration_cost,
             start_late=start_late,
             initial_load=[initial_load],
         )
 
 
-@pytest.mark.parametrize(
-    ("max_overtime", "unit_overtime_cost"),
-    [(-1, 0), (0, -1)],
-)
-def test_vehicle_type_raises_negative_overtime_data(
-    max_overtime: int,
-    unit_overtime_cost: int,
-):
+@pytest.mark.parametrize("max_overtime", [-1])
+def test_vehicle_type_raises_negative_overtime_data(max_overtime: int):
     with assert_raises(ValueError):
-        VehicleType(
-            max_overtime=max_overtime,
-            unit_overtime_cost=unit_overtime_cost,
-        )
+        VehicleType(max_overtime=max_overtime)
 
 
 def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
@@ -575,7 +569,6 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
         shift_duration=0,
         max_distance=0,
         unit_distance_cost=0,
-        unit_duration_cost=0,
         start_late=0,
     )
 
@@ -589,7 +582,6 @@ def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     assert_equal(vehicle_type.shift_duration, 0)
     assert_equal(vehicle_type.max_distance, 0)
     assert_equal(vehicle_type.unit_distance_cost, 0)
-    assert_equal(vehicle_type.unit_duration_cost, 0)
     assert_equal(vehicle_type.start_late, 0)
 
 
@@ -606,8 +598,7 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.unit_distance_cost, 1)
-    assert_equal(vehicle_type.unit_duration_cost, 0)
-    assert_equal(vehicle_type.unit_overtime_cost, 0)
+    assert_(vehicle_type.duration_cost_function.is_zero())
     assert_equal(vehicle_type.name, "")
 
     # The default value for the following fields is the largest representable
@@ -637,9 +628,12 @@ def test_vehicle_type_attribute_access():
         shift_duration=23,
         max_distance=31,
         unit_distance_cost=37,
-        unit_duration_cost=41,
         start_late=18,
         max_overtime=43,
+        duration_cost_function=PiecewiseLinearFunction(
+            [0],
+            [(0, 41)],
+        ),
         name="vehicle_type name",
     )
 
@@ -653,9 +647,13 @@ def test_vehicle_type_attribute_access():
     assert_equal(vehicle_type.shift_duration, 23)
     assert_equal(vehicle_type.max_distance, 31)
     assert_equal(vehicle_type.unit_distance_cost, 37)
-    assert_equal(vehicle_type.unit_duration_cost, 41)
     assert_equal(vehicle_type.start_late, 18)
     assert_equal(vehicle_type.max_overtime, 43)
+    assert_equal(
+        vehicle_type.duration_cost_function,
+        PiecewiseLinearFunction([0], [(0, 41)]),
+    )
+    assert_equal(vehicle_type.duration_cost_slope, 41)
 
     assert_equal(vehicle_type.name, "vehicle_type name")
     assert_equal(str(vehicle_type), "vehicle_type name")

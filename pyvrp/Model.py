@@ -9,6 +9,7 @@ from pyvrp._pyvrp import (
     Client,
     ClientGroup,
     Depot,
+    PiecewiseLinearFunction,
     ProblemData,
     Solution,
     VehicleType,
@@ -365,14 +366,15 @@ class Model:
         shift_duration: int = np.iinfo(np.int64).max,
         max_distance: int = np.iinfo(np.int64).max,
         unit_distance_cost: int = 1,
-        unit_duration_cost: int = 0,
         profile: Profile | None = None,
         start_late: int | None = None,
         initial_load: int | list[int] = [],
         reload_depots: list[Depot] = [],
         max_reloads: int = np.iinfo(np.uint64).max,
         max_overtime: int = 0,
-        unit_overtime_cost: int = 0,
+        duration_cost_function: PiecewiseLinearFunction = (
+            PiecewiseLinearFunction()
+        ),
         *,
         name: str = "",
     ) -> VehicleType:
@@ -436,14 +438,13 @@ class Model:
             shift_duration=shift_duration,
             max_distance=max_distance,
             unit_distance_cost=unit_distance_cost,
-            unit_duration_cost=unit_duration_cost,
             profile=profile_idx,
             start_late=start_late,
             initial_load=init_load,
             reload_depots=reloads,
             max_reloads=max_reloads,
             max_overtime=max_overtime,
-            unit_overtime_cost=unit_overtime_cost,
+            duration_cost_function=duration_cost_function,
             name=name,
         )
 
