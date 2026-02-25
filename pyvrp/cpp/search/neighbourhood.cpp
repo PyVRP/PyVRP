@@ -85,7 +85,7 @@ void computeProximity(pyvrp::Matrix<double> &proximity,
             proximity(i, j) += weightTimeWarp * std::max(minTw, 0.0);
         }
     }
-};
+}
 }  // namespace
 
 NeighbourhoodParams::NeighbourhoodParams(double weightWaitTime,
