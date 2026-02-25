@@ -547,10 +547,27 @@ def test_vehicle_type_raises_invalid_data(
         )
 
 
-@pytest.mark.parametrize("max_overtime", [-1])
-def test_vehicle_type_raises_negative_overtime_data(max_overtime: int):
+def test_vehicle_type_raises_negative_overtime_data():
     with assert_raises(ValueError):
-        VehicleType(max_overtime=max_overtime)
+        VehicleType(max_overtime=-1)
+
+
+def test_vehicle_type_raises_non_monotonic_duration_cost():
+    with assert_raises(ValueError):
+        VehicleType(
+            duration_cost_function=PiecewiseLinearFunction(
+                [5, _INT_MAX],
+                [(0, 2), (-1, 1)],
+            )
+        )
+
+    with assert_raises(ValueError):
+        VehicleType(
+            duration_cost_function=PiecewiseLinearFunction(
+                [5, _INT_MAX],
+                [(0, 1), (0, -1)],
+            )
+        )
 
 
 def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
@@ -598,7 +615,9 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.unit_distance_cost, 1)
-    assert_(vehicle_type.duration_cost_function.is_zero())
+    assert_equal(vehicle_type.duration_cost_function(-1), 0)
+    assert_equal(vehicle_type.duration_cost_function(0), 0)
+    assert_equal(vehicle_type.duration_cost_function(1), 0)
     assert_equal(vehicle_type.name, "")
 
     # The default value for the following fields is the largest representable
@@ -653,10 +672,28 @@ def test_vehicle_type_attribute_access():
         vehicle_type.duration_cost_function,
         PiecewiseLinearFunction([0], [(0, 41)]),
     )
-    assert_equal(vehicle_type.duration_cost_slope, 41)
 
     assert_equal(vehicle_type.name, "vehicle_type name")
     assert_equal(str(vehicle_type), "vehicle_type name")
+
+
+def test_vehicle_type_uses_provided_duration_cost_function():
+    duration_cost = PiecewiseLinearFunction([5, _INT_MAX], [(0, 1), (-45, 10)])
+    vehicle_type = VehicleType(duration_cost_function=duration_cost)
+
+    assert_equal(vehicle_type.duration_cost_function, duration_cost)
+
+
+def test_vehicle_type_replace_updates_duration_cost_function():
+    original = PiecewiseLinearFunction([0], [(0, 1)])
+    updated = PiecewiseLinearFunction([5, _INT_MAX], [(0, 1), (-45, 10)])
+    vehicle_type = VehicleType(duration_cost_function=original)
+
+    replaced = vehicle_type.replace(duration_cost_function=updated)
+    unchanged = vehicle_type.replace()
+
+    assert_equal(replaced.duration_cost_function, updated)
+    assert_equal(unchanged.duration_cost_function, original)
 
 
 @pytest.mark.parametrize(

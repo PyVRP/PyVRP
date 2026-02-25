@@ -310,6 +310,7 @@ private:
     Duration duration_;
     Cost durationCost_;
     Duration timeWarp_;
+    bool hasDurationCost_;
 
     std::vector<Node> depots_;  // start, end, and reload depots (in that order)
 
@@ -939,19 +940,10 @@ Cost Route::durationCost() const
 ProblemData::VehicleType::DurationCost const &
 Route::durationCostFunction() const
 {
-    return vehicleType_.durationCostFunction;
+    return vehicleType_.durationCost;
 }
 
-bool Route::hasDurationCost() const
-{
-    // clang-format off
-    auto const hasDurationConstraint
-        = data.hasTimeWindows()
-          || maxDuration() != std::numeric_limits<Duration>::max();
-
-    return hasDurationConstraint || !durationCostFunction().isZero();
-    // clang-format on
-}
+bool Route::hasDurationCost() const { return hasDurationCost_; }
 
 Duration Route::shiftDuration() const { return vehicleType_.shiftDuration; }
 

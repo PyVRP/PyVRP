@@ -38,7 +38,44 @@ using pyvrp::Solution;
 using pyvrp::Trip;
 
 using PiecewiseLinearFunction
-    = pyvrp::PiecewiseLinearFunction<pyvrp::Duration, pyvrp::Cost>;
+    = pyvrp::PiecewiseLinearFunction<int64_t, int64_t>;
+using DurationCostFunction = ProblemData::VehicleType::DurationCost;
+
+namespace
+{
+DurationCostFunction asDurationCost(PiecewiseLinearFunction const &function)
+{
+    std::vector<pyvrp::Duration> breakpoints;
+    breakpoints.reserve(function.breakpoints().size());
+    for (auto const breakpoint : function.breakpoints())
+        breakpoints.emplace_back(breakpoint);
+
+    std::vector<DurationCostFunction::Segment> segments;
+    segments.reserve(function.segments().size());
+    for (auto const &[intercept, slope] : function.segments())
+        segments.emplace_back(pyvrp::Duration(intercept),
+                              pyvrp::Duration(slope));
+
+    return {std::move(breakpoints), std::move(segments)};
+}
+
+PiecewiseLinearFunction
+asPiecewiseLinearFunction(DurationCostFunction const &function)
+{
+    std::vector<int64_t> breakpoints;
+    breakpoints.reserve(function.breakpoints().size());
+    for (auto const breakpoint : function.breakpoints())
+        breakpoints.emplace_back(static_cast<int64_t>(breakpoint));
+
+    std::vector<PiecewiseLinearFunction::Segment> segments;
+    segments.reserve(function.segments().size());
+    for (auto const &[intercept, slope] : function.segments())
+        segments.emplace_back(static_cast<int64_t>(intercept),
+                              static_cast<int64_t>(slope));
+
+    return {std::move(breakpoints), std::move(segments)};
+}
+}  // namespace
 
 PYBIND11_MODULE(_pyvrp, m)
 {
@@ -93,7 +130,7 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<PiecewiseLinearFunction>(
         m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
         .def(py::init<>())
-        .def(py::init<std::vector<pyvrp::Duration>,
+        .def(py::init<std::vector<int64_t>,
                       std::vector<PiecewiseLinearFunction::Segment>>(),
              py::arg("breakpoints"),
              py::arg("segments"))
@@ -109,7 +146,6 @@ PYBIND11_MODULE(_pyvrp, m)
                                &PiecewiseLinearFunction::segments,
                                py::return_value_policy::reference_internal,
                                DOC(pyvrp, PiecewiseLinearFunction, segments))
-        .def("is_zero", &PiecewiseLinearFunction::isZero)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](PiecewiseLinearFunction const &function)  // __getstate__
@@ -119,10 +155,11 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t)  // __setstate__
             {
+                using Breakpoints = std::vector<int64_t>;
+                using Segments = std::vector<PiecewiseLinearFunction::Segment>;
                 return PiecewiseLinearFunction(
-                    t[0].cast<std::vector<pyvrp::Duration>>(),  // breakpoints
-                    t[1].cast<std::vector<
-                        PiecewiseLinearFunction::Segment>>());  // segments
+                    t[0].cast<Breakpoints>(),  // breakpoints
+                    t[1].cast<Segments>());    // segments
             }));
 
     py::class_<ProblemData::Client>(
@@ -303,24 +340,46 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<ProblemData::VehicleType>(
         m, "VehicleType", DOC(pyvrp, ProblemData, VehicleType))
-        .def(py::init<size_t,
-                      std::vector<pyvrp::Load>,
-                      size_t,
-                      size_t,
-                      pyvrp::Cost,
-                      pyvrp::Duration,
-                      pyvrp::Duration,
-                      pyvrp::Duration,
-                      pyvrp::Distance,
-                      pyvrp::Cost,
-                      size_t,
-                      std::optional<pyvrp::Duration>,
-                      std::vector<pyvrp::Load>,
-                      std::vector<size_t>,
-                      size_t,
-                      pyvrp::Duration,
-                      PiecewiseLinearFunction,
-                      char const *>(),
+        .def(py::init(
+                 [](size_t numAvailable,
+                    std::vector<pyvrp::Load> capacity,
+                    size_t startDepot,
+                    size_t endDepot,
+                    pyvrp::Cost fixedCost,
+                    pyvrp::Duration twEarly,
+                    pyvrp::Duration twLate,
+                    pyvrp::Duration shiftDuration,
+                    pyvrp::Distance maxDistance,
+                    pyvrp::Cost unitDistanceCost,
+                    size_t profile,
+                    std::optional<pyvrp::Duration> startLate,
+                    std::vector<pyvrp::Load> initialLoad,
+                    std::vector<size_t> reloadDepots,
+                    size_t maxReloads,
+                    pyvrp::Duration maxOvertime,
+                    PiecewiseLinearFunction durationCostFunction,
+                    char const *name)
+                 {
+                     return ProblemData::VehicleType(
+                         numAvailable,
+                         std::move(capacity),
+                         startDepot,
+                         endDepot,
+                         fixedCost,
+                         twEarly,
+                         twLate,
+                         shiftDuration,
+                         maxDistance,
+                         unitDistanceCost,
+                         profile,
+                         startLate,
+                         std::move(initialLoad),
+                         std::move(reloadDepots),
+                         maxReloads,
+                         maxOvertime,
+                         asDurationCost(durationCostFunction),
+                         name);
+                 }),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
              py::arg("start_depot") = 0,
@@ -366,10 +425,10 @@ PYBIND11_MODULE(_pyvrp, m)
                       py::return_value_policy::reference_internal)
         .def_readonly("max_reloads", &ProblemData::VehicleType::maxReloads)
         .def_readonly("max_overtime", &ProblemData::VehicleType::maxOvertime)
-        .def_readonly("duration_cost_function",
-                      &ProblemData::VehicleType::durationCostFunction)
-        .def_property_readonly("duration_cost_slope",
-                               &ProblemData::VehicleType::durationCostSlope)
+        .def_property_readonly(
+            "duration_cost_function",
+            [](ProblemData::VehicleType const &vehicleType)
+            { return asPiecewiseLinearFunction(vehicleType.durationCost); })
         .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration)
         .def_property_readonly("max_trips", &ProblemData::VehicleType::maxTrips)
         .def_readonly("name",
@@ -397,6 +456,10 @@ PYBIND11_MODULE(_pyvrp, m)
                std::optional<PiecewiseLinearFunction> durationCostFunction,
                std::optional<std::string> name)
             {
+                std::optional<DurationCostFunction> durationCost = std::nullopt;
+                if (durationCostFunction.has_value())
+                    durationCost = asDurationCost(*durationCostFunction);
+
                 return vehicleType.replace(numAvailable,
                                            capacity,
                                            startDepot,
@@ -413,7 +476,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                            reloadDepots,
                                            maxReloads,
                                            maxOvertime,
-                                           durationCostFunction,
+                                           durationCost,
                                            name);
             },
             py::arg("num_available") = py::none(),
@@ -439,24 +502,25 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::VehicleType const &vehicleType) {  // __getstate__
-                return py::make_tuple(vehicleType.numAvailable,
-                                      vehicleType.capacity,
-                                      vehicleType.startDepot,
-                                      vehicleType.endDepot,
-                                      vehicleType.fixedCost,
-                                      vehicleType.twEarly,
-                                      vehicleType.twLate,
-                                      vehicleType.shiftDuration,
-                                      vehicleType.maxDistance,
-                                      vehicleType.unitDistanceCost,
-                                      vehicleType.profile,
-                                      vehicleType.startLate,
-                                      vehicleType.initialLoad,
-                                      vehicleType.reloadDepots,
-                                      vehicleType.maxReloads,
-                                      vehicleType.maxOvertime,
-                                      vehicleType.durationCostFunction,
-                                      vehicleType.name);
+                return py::make_tuple(
+                    vehicleType.numAvailable,
+                    vehicleType.capacity,
+                    vehicleType.startDepot,
+                    vehicleType.endDepot,
+                    vehicleType.fixedCost,
+                    vehicleType.twEarly,
+                    vehicleType.twLate,
+                    vehicleType.shiftDuration,
+                    vehicleType.maxDistance,
+                    vehicleType.unitDistanceCost,
+                    vehicleType.profile,
+                    vehicleType.startLate,
+                    vehicleType.initialLoad,
+                    vehicleType.reloadDepots,
+                    vehicleType.maxReloads,
+                    vehicleType.maxOvertime,
+                    asPiecewiseLinearFunction(vehicleType.durationCost),
+                    vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
                 ProblemData::VehicleType vehicleType(
@@ -476,8 +540,9 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[13].cast<std::vector<size_t>>(),       // reload depots
                     t[14].cast<size_t>(),                    // max reloads
                     t[15].cast<pyvrp::Duration>(),           // max overtime
-                    t[16].cast<PiecewiseLinearFunction>(),   // duration cost fn
-                    t[17].cast<std::string>());              // name
+                    asDurationCost(t[16].cast<PiecewiseLinearFunction>()),
+                    // duration cost fn
+                    t[17].cast<std::string>());  // name
                 return vehicleType;
             }))
         .def(

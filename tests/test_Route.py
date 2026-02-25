@@ -1,6 +1,7 @@
 import pickle
 from itertools import pairwise
 
+import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
@@ -16,6 +17,8 @@ from pyvrp import (
     VehicleType,
 )
 from tests.helpers import read
+
+_INT_MAX = np.iinfo(np.int64).max
 
 
 def test_route_depot_accessors(ok_small_multi_depot):
@@ -377,6 +380,22 @@ def test_distance_duration_cost_calculations(ok_small):
     assert_equal(routes[0].duration_cost(), 1 * routes[0].duration())
     assert_equal(routes[1].distance_cost(), 1 * routes[1].distance())
     assert_equal(routes[1].duration_cost(), 5 * routes[1].duration())
+
+
+def test_route_duration_cost_matches_vehicle_duration_cost_function():
+    duration_cost = PiecewiseLinearFunction([5, _INT_MAX], [(0, 1), (-45, 10)])
+
+    data = ProblemData(
+        clients=[Client(x=0, y=1)],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(duration_cost_function=duration_cost)],
+        distance_matrices=[np.array([[0, 0], [0, 0]], dtype=np.int64)],
+        duration_matrices=[np.array([[0, 4], [4, 0]], dtype=np.int64)],
+    )
+
+    route = Route(data, visits=[1], vehicle_type=0)
+    assert_equal(route.duration(), 8)  # 4 from depot to client and 4 back.
+    assert_equal(route.duration_cost(), duration_cost(route.duration()))
 
 
 def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):

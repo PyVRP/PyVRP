@@ -283,7 +283,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
 
     duration_ = ds.duration();
     overtime_ = std::max<Duration>(duration_ - vehData.shiftDuration, 0);
-    durationCost_ = vehData.durationCostFunction(duration_);
+    durationCost_ = vehData.durationCost(duration_);
     startTime_ = ds.startEarly();
     slack_ = ds.slack();
     timeWarp_ = ds.timeWarp(vehData.maxDuration);

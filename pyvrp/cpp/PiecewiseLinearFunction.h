@@ -1,7 +1,6 @@
 #ifndef PYVRP_PIECEWISELINEARFUNCTION_H
 #define PYVRP_PIECEWISELINEARFUNCTION_H
 
-#include <algorithm>
 #include <cassert>
 #include <limits>
 #include <stdexcept>
@@ -44,7 +43,6 @@ public:
 private:
     std::vector<Dom> breakpoints_;
     std::vector<Segment> segments_;
-    bool isZero_ = false;
 
 public:
     PiecewiseLinearFunction();
@@ -68,9 +66,9 @@ public:
     [[nodiscard]] std::vector<Segment> const &segments() const;
 
     /**
-     * Returns whether this function is identically zero.
+     * Returns whether this function is monotonically increasing.
      */
-    [[nodiscard]] bool isZero() const;
+    [[nodiscard]] bool isMonotonicallyIncreasing() const;
 
     bool operator==(PiecewiseLinearFunction const &other) const = default;
 };
@@ -97,12 +95,6 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
         if (breakpoints_[idx] >= breakpoints_[idx + 1])
             throw std::invalid_argument(
                 "Breakpoints must be strictly increasing.");
-
-    isZero_ = std::all_of(segments_.begin(),
-                          segments_.end(),
-                          [](Segment const &segment) {
-                              return segment.first == 0 && segment.second == 0;
-                          });
 }
 
 template <typename Dom, typename Co>
@@ -133,9 +125,31 @@ PiecewiseLinearFunction<Dom, Co>::segments() const
 }
 
 template <typename Dom, typename Co>
-bool PiecewiseLinearFunction<Dom, Co>::isZero() const
+bool PiecewiseLinearFunction<Dom, Co>::isMonotonicallyIncreasing() const
 {
-    return isZero_;
+    for (auto const &segment : segments_)
+    {
+        auto const slope = segment.second;
+        if (slope < 0)
+            return false;
+    }
+
+    for (size_t idx = 1; idx != segments_.size(); ++idx)
+    {
+        auto const breakpoint = static_cast<long double>(breakpoints_[idx - 1]);
+        auto const [prevIntercept, prevSlope] = segments_[idx - 1];
+        auto const [nextIntercept, nextSlope] = segments_[idx];
+
+        auto const left = static_cast<long double>(prevIntercept)
+                          + static_cast<long double>(prevSlope) * breakpoint;
+        auto const right = static_cast<long double>(nextIntercept)
+                           + static_cast<long double>(nextSlope) * breakpoint;
+
+        if (right < left)
+            return false;
+    }
+
+    return true;
 }
 }  // namespace pyvrp
 

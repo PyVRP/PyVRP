@@ -501,11 +501,11 @@ public:
         Cost const unitDistanceCost;  // Variable cost per unit of distance
         size_t const profile;         // Distance and duration profile
         Duration const startLate;     // Latest start of shift
-        std::vector<Load> const initialLoad;      // Initially used capacity
-        std::vector<size_t> const reloadDepots;   // Reload locations
-        size_t const maxReloads;                  // Maximum number of reloads
-        Duration const maxOvertime;               // Maximum allowed overtime
-        DurationCost const durationCostFunction;  // Duration cost fn
+        std::vector<Load> const initialLoad;     // Initially used capacity
+        std::vector<size_t> const reloadDepots;  // Reload locations
+        size_t const maxReloads;                 // Maximum number of reloads
+        Duration const maxOvertime;              // Maximum allowed overtime
+        DurationCost const durationCost;         // Duration cost fn
         Duration const maxDuration;  // Maximum route duration, incl. overtime
         char const *name;            // Type name (for reference)
 
@@ -526,7 +526,7 @@ public:
                     std::vector<size_t> reloadDepots = {},
                     size_t maxReloads = std::numeric_limits<size_t>::max(),
                     Duration maxOvertime = 0,
-                    DurationCost durationCostFunction = DurationCost(),
+                    DurationCost durationCost = DurationCost(),
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -559,22 +559,13 @@ public:
                             std::optional<std::vector<size_t>> reloadDepots,
                             std::optional<size_t> maxReloads,
                             std::optional<Duration> maxOvertime,
-                            std::optional<DurationCost> durationCostFunction,
+                            std::optional<DurationCost> durationCost,
                             std::optional<std::string> name) const;
 
         /**
          * Returns the maximum number of trips these vehicle can execute.
          */
         size_t maxTrips() const;
-
-        /**
-         * Returns a linear proxy slope for duration edge costs used by
-         * neighbourhood and penalty initialisation heuristics.
-         *
-         * This delegates to :py:attr:`~duration_cost_function` and currently
-         * returns the slope of its first segment.
-         */
-        Cost durationCostSlope() const;
     };
 
 private:

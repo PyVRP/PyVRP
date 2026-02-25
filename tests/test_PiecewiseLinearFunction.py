@@ -1,16 +1,6 @@
-import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import (
-    Client,
-    Depot,
-    PiecewiseLinearFunction,
-    ProblemData,
-    Route,
-    VehicleType,
-)
-
-_INT_MAX = int(np.iinfo(np.int64).max)
+from pyvrp import PiecewiseLinearFunction
 
 
 def test_call():
@@ -106,52 +96,3 @@ def test_raises_unsorted_breakpoints():
 
     with assert_raises(ValueError):  # not strictly increasing
         PiecewiseLinearFunction([1, 1], [(1, 1), (2, 2)])
-
-
-def test_vehicle_type_uses_provided_duration_cost_function():
-    duration_fn = PiecewiseLinearFunction(
-        [5, _INT_MAX],
-        [(0, 1), (-45, 10)],
-    )
-    vehicle_type = VehicleType(duration_cost_function=duration_fn)
-
-    assert_equal(vehicle_type.duration_cost_function, duration_fn)
-    assert_equal(vehicle_type.duration_cost_slope, 1)
-
-
-def test_vehicle_type_defaults_to_zero_duration_cost_function():
-    vehicle_type = VehicleType()
-    assert vehicle_type.duration_cost_function.is_zero()
-
-
-def test_route_duration_cost_matches_vehicle_duration_cost_function():
-    duration_fn = PiecewiseLinearFunction([5, _INT_MAX], [(0, 1), (-45, 10)])
-
-    data = ProblemData(
-        clients=[Client(x=0, y=1)],
-        depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(duration_cost_function=duration_fn)],
-        distance_matrices=[np.array([[0, 0], [0, 0]], dtype=np.int64)],
-        duration_matrices=[np.array([[0, 4], [4, 0]], dtype=np.int64)],
-    )
-
-    route = Route(data, visits=[1], vehicle_type=0)
-    duration = route.duration()
-
-    assert_equal(duration, 8)  # 4 from depot to client and 4 back.
-    assert_equal(route.duration_cost(), 35)  # 5 + 10 * (8 - 5)
-    assert_equal(
-        route.duration_cost(), data.vehicle_type(0).duration_cost_function(8)
-    )
-
-
-def test_vehicle_type_replace_updates_duration_cost_function():
-    original = PiecewiseLinearFunction([0], [(0, 1)])
-    updated = PiecewiseLinearFunction([5, _INT_MAX], [(0, 1), (-45, 10)])
-    vehicle_type = VehicleType(duration_cost_function=original)
-
-    replaced = vehicle_type.replace(duration_cost_function=updated)
-    unchanged = vehicle_type.replace()
-
-    assert_equal(replaced.duration_cost_function, updated)
-    assert_equal(unchanged.duration_cost_function, original)

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    from pyvrp import ProblemData
+    from pyvrp import PiecewiseLinearFunction, ProblemData
 
 
 @dataclass
@@ -155,20 +155,33 @@ def _compute_proximity(
     # This is the cheapest way any edge can be traversed.
     distances = data.distance_matrices()
     durations = data.duration_matrices()
-    unique_edge_costs = {
-        (
+    unique_edge_costs: dict[
+        tuple[int, int, tuple[object, ...], tuple[tuple[object, object], ...]],
+        tuple[int, int, PiecewiseLinearFunction],
+    ] = {}
+    for veh_type in data.vehicle_types():
+        duration_cost = veh_type.duration_cost_function
+        key = (
             veh_type.unit_distance_cost,
-            veh_type.duration_cost_slope,
             veh_type.profile,
+            tuple(duration_cost.breakpoints),
+            tuple(duration_cost.segments),
         )
-        for veh_type in data.vehicle_types()
-    }
+        unique_edge_costs.setdefault(
+            key,
+            (veh_type.unit_distance_cost, veh_type.profile, duration_cost),
+        )
 
-    first, *rest = unique_edge_costs
-    unit_dist, unit_dur, prof = first
-    edge_costs = unit_dist * distances[prof] + unit_dur * durations[prof]
-    for unit_dist, unit_dur, prof in rest:
-        mat = unit_dist * distances[prof] + unit_dur * durations[prof]
+    first, *rest = unique_edge_costs.values()
+    unit_dist, prof, duration_cost = first
+    edge_costs = unit_dist * distances[prof] + np.frompyfunc(
+        duration_cost, 1, 1
+    )(durations[prof]).astype(np.int64)
+
+    for unit_dist, prof, duration_cost in rest:
+        mat = unit_dist * distances[prof] + np.frompyfunc(duration_cost, 1, 1)(
+            durations[prof]
+        ).astype(np.int64)
         np.minimum(edge_costs, mat, out=edge_costs)
 
     # Minimum wait time and time warp of visiting j directly after i.
