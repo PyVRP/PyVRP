@@ -112,22 +112,17 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
     auto prox = computeProximity(data, params);
 
     if (params.symmetricProximity)
-    {
         for (size_t i = 0; i != data.numLocations(); ++i)
             for (size_t j = i; j != data.numLocations(); ++j)
-            {
-                prox(i, j) = std::min(prox(i, j), prox(j, i));
-                prox(j, i) = prox(i, j);
-            }
-    }
+                prox(i, j) = prox(j, i) = std::min(prox(i, j), prox(j, i));
 
     for (auto const &group : data.groups())
         for (auto const iClient : group)
             for (auto const jClient : group)
                 prox(iClient, jClient) = std::numeric_limits<double>::max();
 
-    for (size_t i = 0; i != data.numLocations(); ++i)
-        prox(i, i) = std::numeric_limits<double>::infinity();
+    for (size_t depot = 0; depot != data.numLocations(); ++depot)
+        prox(depot, depot) = std::numeric_limits<double>::infinity();
 
     size_t const numClients = std::max(data.numClients(), 1UL);
     size_t const k = std::min(params.numNeighbours, numClients - 1);
