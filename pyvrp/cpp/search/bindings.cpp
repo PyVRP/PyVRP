@@ -12,6 +12,7 @@
 #include "SearchSpace.h"
 #include "Solution.h"
 #include "SwapTails.h"
+#include "neighbourhood.h"
 #include "search_docs.h"
 
 #include <pybind11/operators.h>
@@ -26,6 +27,7 @@ using pyvrp::search::BinaryOperator;
 using pyvrp::search::Exchange;
 using pyvrp::search::InsertOptional;
 using pyvrp::search::LocalSearch;
+using pyvrp::search::NeighbourhoodParams;
 using pyvrp::search::OperatorStatistics;
 using pyvrp::search::PerturbationManager;
 using pyvrp::search::PerturbationParams;
@@ -629,4 +631,27 @@ PYBIND11_MODULE(_search, m)
                  stream << node;
                  return stream.str();
              });
+
+    py::class_<NeighbourhoodParams>(
+        m, "NeighbourhoodParams", DOC(pyvrp, search, NeighbourhoodParams))
+        .def(py::init<double, double, size_t, bool, bool>(),
+             py::arg("weight_wait_time") = 0.2,
+             py::arg("weight_time_warp") = 1.0,
+             py::arg("num_neighbours") = 50,
+             py::arg("symmetric_proximity") = true,
+             py::arg("symmetric_neighbours") = false)
+        .def(py::self == py::self, py::arg("other"))  // this is __eq__
+        .def_readonly("weight_wait_time", &NeighbourhoodParams::weightWaitTime)
+        .def_readonly("weight_time_warp", &NeighbourhoodParams::weightTimeWarp)
+        .def_readonly("num_neighbours", &NeighbourhoodParams::numNeighbours)
+        .def_readonly("symmetric_proximity",
+                      &NeighbourhoodParams::symmetricProximity)
+        .def_readonly("symmetric_neighbours",
+                      &NeighbourhoodParams::symmetricNeighbours);
+
+    m.def("compute_neighbours",
+          &pyvrp::search::computeNeighbours,
+          py::arg("data"),
+          py::arg("params") = NeighbourhoodParams(),
+          DOC(pyvrp, search, computeNeighbours));
 }

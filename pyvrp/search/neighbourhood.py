@@ -1,56 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import numpy as np
 
+from pyvrp.search._search import NeighbourhoodParams
+
 if TYPE_CHECKING:
     from pyvrp import ProblemData
-
-
-@dataclass
-class NeighbourhoodParams:
-    """
-    Configuration for calculating a granular neighbourhood.
-
-    Attributes
-    ----------
-    weight_wait_time
-        Penalty weight given to the minimum wait time aspect of the proximity
-        calculation. A large wait time indicates the clients are far apart
-        in duration/time.
-    weight_time_warp
-        Penalty weight given to the minimum time warp aspect of the proximity
-        calculation. A large time warp indicates the clients are far apart in
-        duration/time.
-    num_neighbours
-        Number of other clients that are in each client's granular
-        neighbourhood. This parameter determines the size of the overall
-        neighbourhood.
-    symmetric_proximity
-        Whether to calculate a symmetric proximity matrix. This ensures edge
-        :math:`(i, j)` is given the same weight as :math:`(j, i)`.
-    symmetric_neighbours
-        Whether to symmetrise the neighbourhood structure. This ensures that
-        when edge :math:`(i, j)` is in, then so is :math:`(j, i)`. Note that
-        this is *not* the same as ``symmetric_proximity``.
-
-    Raises
-    ------
-    ValueError
-        When ``num_neighbours`` is non-positive.
-    """
-
-    weight_wait_time: float = 0.2
-    weight_time_warp: float = 1.0
-    num_neighbours: int = 50
-    symmetric_proximity: bool = True
-    symmetric_neighbours: bool = False
-
-    def __post_init__(self):
-        if self.num_neighbours <= 0:
-            raise ValueError("num_neighbours <= 0 not understood.")
 
 
 def compute_neighbours(

@@ -13,6 +13,7 @@ from ._search import Exchange31 as Exchange31
 from ._search import Exchange32 as Exchange32
 from ._search import Exchange33 as Exchange33
 from ._search import InsertOptional as InsertOptional
+from ._search import NeighbourhoodParams as NeighbourhoodParams
 from ._search import PerturbationManager as PerturbationManager
 from ._search import PerturbationParams as PerturbationParams
 from ._search import RelocateWithDepot as RelocateWithDepot
@@ -22,7 +23,6 @@ from ._search import ReplaceGroup as ReplaceGroup
 from ._search import ReplaceOptional as ReplaceOptional
 from ._search import SwapTails as SwapTails
 from ._search import UnaryOperator as UnaryOperator
-from .neighbourhood import NeighbourhoodParams as NeighbourhoodParams
 from .neighbourhood import compute_neighbours as compute_neighbours
 
 OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
