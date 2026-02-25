@@ -83,14 +83,9 @@ Matrix<double> computeProximity(ProblemData const &data)
 }
 }  // namespace
 
-NeighbourhoodParams::NeighbourhoodParams(double weightWaitTime,
-                                         double weightTimeWarp,
-                                         size_t numNeighbours,
+NeighbourhoodParams::NeighbourhoodParams(size_t numNeighbours,
                                          bool symmetricProximity)
-    : weightWaitTime(weightWaitTime),
-      weightTimeWarp(weightTimeWarp),
-      numNeighbours(numNeighbours),
-      symmetricProximity(symmetricProximity)
+    : numNeighbours(numNeighbours), symmetricProximity(symmetricProximity)
 {
     if (numNeighbours == 0)
         throw std::invalid_argument("num_neighbours == 0 not understood.");

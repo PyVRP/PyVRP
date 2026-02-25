@@ -14,55 +14,22 @@ def test_neighbourhood_params_raises_for_empty_neighbourhoods():
         NeighbourhoodParams(num_neighbours=0)
 
 
-@mark.parametrize(
-    (
-        "weight_wait_time",
-        "weight_time_warp",
-        "num_neighbours",
-        "symmetric_proximity",
-    ),
-    [
-        # non-empty neighbourhood structure (num_neighbours > 0)
-        (20, 20, 1, True),
-        # no weights for wait time or time warp should be OK
-        (0, 0, 1, True),
-    ],
-)
-def test_neighbourhood_params_does_not_raise_for_valid_arguments(
-    weight_wait_time: int,
-    weight_time_warp: int,
-    num_neighbours: int,
-    symmetric_proximity: bool,
-):
-    """
-    Tests that ``NeighbourhoodParams`` allows valid arguments and edge cases.
-    """
-    NeighbourhoodParams(
-        weight_wait_time,
-        weight_time_warp,
-        num_neighbours,
-        symmetric_proximity,
-    )
-
-
 # fmt: off
 @mark.parametrize(
     (
-        "weight_wait_time",
-        "weight_time_warp",
         "num_neighbours",
         "symmetric_proximity",
         "idx_check",
         "expected_neighbours_check",
     ),
     [
-        (20, 20, 10, True, 2,
+        (10, True, 2,
          {1, 3, 4, 5, 6, 7, 8, 45, 46, 100}),
         # From original C++ implementation
-        (18, 20, 34, True, 1,
+        (34, True, 1,
          {2, 3, 4, 5, 6, 7, 8, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 53,
           54, 55, 60, 61, 68, 69, 70, 73, 78, 79, 81, 88, 90, 98, 100}),
-        (18, 20, 34, True, 99,
+        (34, True, 99,
          {9, 10, 11, 12, 13, 14, 15, 16, 20, 22, 24, 47, 52, 53, 55, 56, 57,
           58, 59, 60, 64, 65, 66, 69, 74, 80, 82, 83, 86, 87, 88, 90, 91, 98}),
     ],
@@ -70,8 +37,6 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
 # fmt: on
 def test_compute_neighbours(
     rc208,
-    weight_wait_time: int,
-    weight_time_warp: int,
     num_neighbours: int,
     symmetric_proximity: bool,
     idx_check: int,
@@ -80,12 +45,7 @@ def test_compute_neighbours(
     """
     Tests ``compute_neighbours`` on several well-understood cases.
     """
-    params = NeighbourhoodParams(
-        weight_wait_time,
-        weight_time_warp,
-        num_neighbours,
-        symmetric_proximity,
-    )
+    params = NeighbourhoodParams(num_neighbours, symmetric_proximity)
     neighbours = compute_neighbours(rc208, params)
 
     assert_equal(len(neighbours), rc208.num_locations)
@@ -103,7 +63,7 @@ def test_neighbours_are_sorted_by_proximity(small_cvrp):
     """
     Tests that the neighbourhood lists sort by their proximity: closest first.
     """
-    params = NeighbourhoodParams(0, 0, small_cvrp.num_clients)
+    params = NeighbourhoodParams(small_cvrp.num_clients)
     neighbours = compute_neighbours(small_cvrp, params)
     clients = list(range(small_cvrp.num_depots, small_cvrp.num_locations))
     distances = small_cvrp.distance_matrix(profile=0)
@@ -135,7 +95,7 @@ def test_proximity_with_prizes(prize_collecting):
     Tests that prizes factor into the neighbourhood structure, and offset
     travel costs somewhat.
     """
-    params = NeighbourhoodParams(0, 0, num_neighbours=10)
+    params = NeighbourhoodParams(num_neighbours=10)
     neighbours = compute_neighbours(prize_collecting, params)
 
     # We compare the number of times clients 20 and 36 are in other clients'
@@ -156,7 +116,7 @@ def test_proximity_with_mutually_exclusive_groups(
     Tests that clients that are a member of a mutually exclusive client group
     are not in each other's neighbourhood.
     """
-    params = NeighbourhoodParams(0, 0, num_neighbours=1)
+    params = NeighbourhoodParams(num_neighbours=1)
     neighbours = compute_neighbours(ok_small_mutually_exclusive_groups, params)
 
     group = ok_small_mutually_exclusive_groups.group(0)
