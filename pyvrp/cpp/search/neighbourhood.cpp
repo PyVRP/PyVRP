@@ -128,15 +128,15 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
     size_t const k = std::min(params.numNeighbours, numClients - 1);
 
     std::vector<std::vector<size_t>> result(data.numLocations());
+
+    std::vector<size_t> indices(data.numClients());
     for (size_t client = data.numDepots(); client != data.numLocations();
          ++client)
     {
-        std::vector<size_t> indices(data.numClients());
-        std::iota(indices.begin(), indices.end(), data.numDepots());
-
         auto const comp = [&](auto const a, auto const b)
         { return prox(client, a) < prox(client, b); };
 
+        std::iota(indices.begin(), indices.end(), data.numDepots());
         std::stable_sort(indices.begin(), indices.end(), comp);
 
         result[client] = {indices.begin(), indices.begin() + k};
