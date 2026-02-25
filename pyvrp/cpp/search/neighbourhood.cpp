@@ -4,10 +4,11 @@
 
 #include <limits>
 #include <numeric>
+#include <set>
 #include <stdexcept>
 #include <tuple>
-#include <unordered_set>
 
+using pyvrp::Matrix;
 using pyvrp::ProblemData;
 using pyvrp::search::NeighbourhoodParams;
 
@@ -24,24 +25,25 @@ namespace
  *        large class of vehicle routing problems with time-windows.
  *        *Computers & Operations Research*, 40(1), 475 - 489.
  */
-void computeProximity(pyvrp::Matrix<double> &proximity,
-                      ProblemData const &data,
-                      double const weightWaitTime,
-                      double const weightTimeWarp)
+Matrix<double> computeProximity(ProblemData const &data,
+                                NeighbourhoodParams const &params)
 {
-    // std::unordered_set<std::tuple<pyvrp::Cost, pyvrp::Cost, size_t>> seen =
-    // {};
+    Matrix<double> prox(data.numLocations(),
+                        data.numLocations(),
+                        std::numeric_limits<double>::max());
+
+    std::set<std::tuple<pyvrp::Cost, pyvrp::Cost, size_t>> seen = {};
 
     for (auto const &vehType : data.vehicleTypes())
     {
-        // auto const key = std::make_tuple(vehType.unitDistanceCost,
-        //                                  vehType.unitDurationCost,
-        //                                  vehType.profile);
+        auto const key = std::make_tuple(vehType.unitDistanceCost,
+                                         vehType.unitDurationCost,
+                                         vehType.profile);
 
-        // if (seen.contains(key))
-        //     continue;
+        if (seen.contains(key))
+            continue;
 
-        // seen.insert(key);
+        seen.insert(key);
         auto const &distMat = data.distanceMatrix(vehType.profile);
         auto const &durMat = data.durationMatrix(vehType.profile);
 
@@ -54,7 +56,7 @@ void computeProximity(pyvrp::Matrix<double> &proximity,
                     = static_cast<double>(vehType.unitDistanceCost * dist)
                       + static_cast<double>(vehType.unitDurationCost * dur);
 
-                proximity(i, j) = std::min(value, proximity(i, j));
+                prox(i, j) = std::min(value, prox(i, j));
             }
     }
 
@@ -80,11 +82,13 @@ void computeProximity(pyvrp::Matrix<double> &proximity,
             auto const minWait = jEarly - minDur - iService - iLate;
             auto const minTw = iEarly + iService + minDur - jLate;
 
-            proximity(i, j) -= static_cast<double>(jData.prize);
-            proximity(i, j) += weightWaitTime * std::max(minWait, 0.0);
-            proximity(i, j) += weightTimeWarp * std::max(minTw, 0.0);
+            prox(i, j) -= static_cast<double>(jData.prize);
+            prox(i, j) += params.weightWaitTime * std::max(minWait, 0.0);
+            prox(i, j) += params.weightTimeWarp * std::max(minTw, 0.0);
         }
     }
+
+    return prox;
 }
 }  // namespace
 
@@ -105,38 +109,30 @@ std::vector<std::vector<size_t>>
 pyvrp::search::computeNeighbours(ProblemData const &data,
                                  NeighbourhoodParams const &params)
 {
-    Matrix<double> proximities(data.numLocations(),
-                               data.numLocations(),
-                               std::numeric_limits<double>::max());
-
-    computeProximity(
-        proximities, data, params.weightWaitTime, params.weightTimeWarp);
+    auto prox = computeProximity(data, params);
 
     if (params.symmetricProximity)
     {
         for (size_t i = 0; i != data.numLocations(); ++i)
             for (size_t j = i; j != data.numLocations(); ++j)
             {
-                proximities(i, j)
-                    = std::min(proximities(i, j), proximities(j, i));
-                proximities(j, i) = proximities(i, j);
+                prox(i, j) = std::min(prox(i, j), prox(j, i));
+                prox(j, i) = prox(i, j);
             }
     }
 
     for (auto const &group : data.groups())
         for (auto const iClient : group)
             for (auto const jClient : group)
-                proximities(iClient, jClient)
-                    = std::numeric_limits<double>::max();
+                prox(iClient, jClient) = std::numeric_limits<double>::max();
 
     for (size_t i = 0; i != data.numLocations(); ++i)
-        proximities(i, i) = std::numeric_limits<double>::infinity();
+        prox(i, i) = std::numeric_limits<double>::infinity();
 
-    size_t const k
-        = std::min(params.numNeighbours, std::max(data.numClients(), 1UL) - 1);
+    size_t const numClients = std::max(data.numClients(), 1UL);
+    size_t const k = std::min(params.numNeighbours, numClients - 1);
 
     std::vector<std::vector<size_t>> result(data.numLocations());
-
     for (size_t client = data.numDepots(); client != data.numLocations();
          ++client)
     {
@@ -144,7 +140,7 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
         std::iota(indices.begin(), indices.end(), data.numDepots());
 
         auto const comp = [&](auto const a, auto const b)
-        { return proximities(client, a) < proximities(client, b); };
+        { return prox(client, a) < prox(client, b); };
 
         std::stable_sort(indices.begin(), indices.end(), comp);
 
