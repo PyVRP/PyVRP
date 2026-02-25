@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from pyvrp.search._search import NeighbourhoodParams
+from pyvrp.search._search import compute_neighbours as _compute_neighbours
 
 if TYPE_CHECKING:
     from pyvrp import ProblemData
@@ -30,6 +31,8 @@ def compute_neighbours(
         The first lists in the lower indices are associated with the depots and
         are all empty.
     """
+    return _compute_neighbours(data, params)
+
     proximity = _compute_proximity(
         data,
         params.weight_wait_time,
@@ -56,17 +59,7 @@ def compute_neighbours(
     k = min(params.num_neighbours, data.num_clients - 1)  # excl. self
     top_k = np.argsort(proximity, axis=1, kind="stable")[data.num_depots :, :k]
 
-    if not params.symmetric_neighbours:
-        return [[] for _ in range(data.num_depots)] + top_k.tolist()
-
-    # Construct a symmetric adjacency matrix and return the adjacent clients
-    # as the neighbourhood structure.
-    adj = np.zeros_like(proximity, dtype=bool)
-    rows = np.expand_dims(np.arange(data.num_depots, len(proximity)), axis=1)
-    adj[rows, top_k] = True
-    adj = adj | adj.transpose()
-
-    return [np.flatnonzero(row).tolist() for row in adj]
+    return [[] for _ in range(data.num_depots)] + top_k.tolist()
 
 
 def _compute_proximity(

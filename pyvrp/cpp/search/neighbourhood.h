@@ -13,7 +13,6 @@ namespace pyvrp::search
  *    weight_time_warp: float = 1.0,
  *    num_neighbours: int = 50,
  *    symmetric_proximity: bool = True,
- *    symmetric_neighbours: bool = False,
  * )
  *
  * Configuration for calculating a granular neighbourhood.
@@ -35,10 +34,6 @@ namespace pyvrp::search
  * symmetric_proximity
  *     Whether to calculate a symmetric proximity matrix. This ensures edge
  *     :math:`(i, j)` is given the same weight as :math:`(j, i)`.
- * symmetric_neighbours
- *     Whether to symmetrise the neighbourhood structure. This ensures that
- *     when edge :math:`(i, j)` is in, then so is :math:`(j, i)`. Note that
- *     this is *not* the same as ``symmetric_proximity``.
  *
  * Raises
  * ------
@@ -51,13 +46,11 @@ struct NeighbourhoodParams
     double const weightTimeWarp;
     size_t const numNeighbours;
     bool const symmetricProximity;
-    bool const symmetricNeighbours;
 
     NeighbourhoodParams(double weightWaitTime = 0.2,
                         double weightTimeWarp = 1.0,
                         size_t numNeighbours = 50,
-                        bool symmetricProximity = true,
-                        bool symmetricNeighbours = false);
+                        bool symmetricProximity = true);
 
     bool operator==(NeighbourhoodParams const &other) const = default;
 };

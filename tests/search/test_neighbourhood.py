@@ -20,13 +20,12 @@ def test_neighbourhood_params_raises_for_empty_neighbourhoods():
         "weight_time_warp",
         "num_neighbours",
         "symmetric_proximity",
-        "symmetric_neighbours",
     ),
     [
         # non-empty neighbourhood structure (num_neighbours > 0)
-        (20, 20, 1, True, False),
+        (20, 20, 1, True),
         # no weights for wait time or time warp should be OK
-        (0, 0, 1, True, False),
+        (0, 0, 1, True),
     ],
 )
 def test_neighbourhood_params_does_not_raise_for_valid_arguments(
@@ -34,7 +33,6 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
     weight_time_warp: int,
     num_neighbours: int,
     symmetric_proximity: bool,
-    symmetric_neighbours: bool,
 ):
     """
     Tests that ``NeighbourhoodParams`` allows valid arguments and edge cases.
@@ -44,7 +42,6 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
         weight_time_warp,
         num_neighbours,
         symmetric_proximity,
-        symmetric_neighbours,
     )
 
 
@@ -55,20 +52,17 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
         "weight_time_warp",
         "num_neighbours",
         "symmetric_proximity",
-        "symmetric_neighbours",
         "idx_check",
         "expected_neighbours_check",
     ),
     [
-        (20, 20, 10, True, False, 2,
+        (20, 20, 10, True, 2,
          {1, 3, 4, 5, 6, 7, 8, 45, 46, 100}),
-        (20, 20, 10, True, True, 2,
-         {1, 3, 4, 5, 6, 7, 8, 45, 46, 60, 70, 79, 100}),
         # From original C++ implementation
-        (18, 20, 34, True, False, 1,
+        (18, 20, 34, True, 1,
          {2, 3, 4, 5, 6, 7, 8, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 53,
           54, 55, 60, 61, 68, 69, 70, 73, 78, 79, 81, 88, 90, 98, 100}),
-        (18, 20, 34, True, False, 99,
+        (18, 20, 34, True, 99,
          {9, 10, 11, 12, 13, 14, 15, 16, 20, 22, 24, 47, 52, 53, 55, 56, 57,
           58, 59, 60, 64, 65, 66, 69, 74, 80, 82, 83, 86, 87, 88, 90, 91, 98}),
     ],
@@ -80,7 +74,6 @@ def test_compute_neighbours(
     weight_time_warp: int,
     num_neighbours: int,
     symmetric_proximity: bool,
-    symmetric_neighbours: bool,
     idx_check: int,
     expected_neighbours_check: set[int],
 ):
@@ -92,7 +85,6 @@ def test_compute_neighbours(
         weight_time_warp,
         num_neighbours,
         symmetric_proximity,
-        symmetric_neighbours,
     )
     neighbours = compute_neighbours(rc208, params)
 
@@ -104,10 +96,7 @@ def test_compute_neighbours(
     assert_equal(set(neighbours[idx_check]), expected_neighbours_check)
 
     for neighb in neighbours[1:]:
-        if symmetric_neighbours:
-            assert_(len(neighb) >= num_neighbours)
-        else:
-            assert_equal(len(neighb), num_neighbours)
+        assert_equal(len(neighb), num_neighbours)
 
 
 def test_neighbours_are_sorted_by_proximity(small_cvrp):
@@ -127,25 +116,6 @@ def test_neighbours_are_sorted_by_proximity(small_cvrp):
         dists = distances[client, valid]
         by_proximity = valid[np.argsort(dists, kind="stable")]
         assert_equal(by_proximity, neighbours[client])
-
-
-def test_symmetric_neighbours(rc208):
-    """
-    Tests that when ``symmetric_neighbours`` is true, if an edge (i, j) is
-    in the granular neighbourhood, then so is (j, i).
-    """
-    # Symmetric neighbourhood structure: if (i, j) is in, then so is (j, i).
-    params = NeighbourhoodParams(symmetric_neighbours=True)
-    sym_neighbours = [set(n) for n in compute_neighbours(rc208, params)]
-
-    for client in range(rc208.num_locations):
-        for neighbour in sym_neighbours[client]:
-            assert_(client in sym_neighbours[neighbour])
-
-    # But when neighbours are not symmetrised, this is typically not the case.
-    params = NeighbourhoodParams(symmetric_neighbours=False)
-    asym_neighbours = [set(n) for n in compute_neighbours(rc208, params)]
-    assert_(sym_neighbours != asym_neighbours)
 
 
 def test_more_neighbours_than_instance_size(rc208):

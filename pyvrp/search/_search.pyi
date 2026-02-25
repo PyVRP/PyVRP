@@ -231,14 +231,12 @@ class NeighbourhoodParams:
     weight_time_warp: float
     num_neighbours: int
     symmetric_proximity: bool
-    symmetric_neighbours: bool
     def __init__(
         self,
         weight_wait_time: float = 0.2,
         weight_time_warp: float = 1.0,
         num_neighbours: int = 50,
         symmetric_proximity: bool = True,
-        symmetric_neighbours: bool = False,
     ) -> None: ...
     def __eq__(self, other: object) -> bool: ...
 

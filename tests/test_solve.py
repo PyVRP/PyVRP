@@ -37,7 +37,7 @@ def test_solve_params_from_file():
 
     ils = IteratedLocalSearchParams(10, 1)
     penalty = PenaltyParams(100, 1.25, 0.85, 0.43)
-    neighbourhood = NeighbourhoodParams(0, 0, 20, True, True)
+    neighbourhood = NeighbourhoodParams(0, 0, 20, True)
     operators = [Exchange10, SwapTails]
     perturbation = PerturbationParams(1, 10)
 

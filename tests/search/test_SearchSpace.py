@@ -43,14 +43,11 @@ def test_raises_when_neighbourhood_contains_self_or_depot(ok_small):
         "weight_time_warp",
         "num_neighbours",
         "symmetric_proximity",
-        "symmetric_neighbours",
     ),
     [
-        (20, 20, 10, True, False),
-        (20, 20, 10, True, True),
+        (20, 20, 10, True),
         # From original c++ implementation
-        # (18, 20, 34, False),
-        (18, 20, 34, True, True),
+        (18, 20, 34, False),
     ],
 )
 def test_set_get_neighbours(
@@ -59,7 +56,6 @@ def test_set_get_neighbours(
     weight_time_warp: int,
     num_neighbours: int,
     symmetric_proximity: bool,
-    symmetric_neighbours: bool,
 ):
     """
     Tests setting and getting neighbours.
@@ -73,7 +69,6 @@ def test_set_get_neighbours(
         weight_time_warp,
         num_neighbours,
         symmetric_proximity,
-        symmetric_neighbours,
     )
     neighbours = compute_neighbours(rc208, params)
 
