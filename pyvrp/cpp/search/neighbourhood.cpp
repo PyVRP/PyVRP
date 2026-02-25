@@ -16,7 +16,7 @@ NeighbourhoodParams::NeighbourhoodParams(double weightWaitTime,
       symmetricNeighbours(symmetricNeighbours)
 {
     if (numNeighbours == 0)
-        throw std::invalid_argument("num_neighbours <= 0 not understood.");
+        throw std::invalid_argument("num_neighbours == 0 not understood.");
 }
 
 std::vector<std::vector<size_t>> pyvrp::search::computeNeighbours(
