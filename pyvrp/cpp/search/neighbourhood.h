@@ -67,6 +67,6 @@ struct NeighbourhoodParams
  */
 std::vector<std::vector<size_t>>
 computeNeighbours(ProblemData const &data, NeighbourhoodParams const &params);
-};  // namespace pyvrp::search
+}  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_NEIGHBOURHOOD_H
