@@ -65,9 +65,8 @@ Matrix<double> computeProximity(ProblemData const &data)
                     = static_cast<double>(vehType.unitDurationCost)
                       * (dur + wait);
 
-                auto const timeWarp = iEarly + iService + dur - jLate;
-                if (timeWarp > 0)
-                    continue;
+                if (iEarly + iService + dur > jLate)  // then this arc is never
+                    continue;                         // feasible
 
                 auto const dist = static_cast<double>(dists(i, j));
                 auto const distCost
