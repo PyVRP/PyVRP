@@ -25,15 +25,13 @@ namespace
  *        large class of vehicle routing problems with time-windows.
  *        *Computers & Operations Research*, 40(1), 475 - 489.
  */
-Matrix<double> computeProximity(ProblemData const &data,
-                                NeighbourhoodParams const &params)
+Matrix<double> computeProximity(ProblemData const &data)
 {
     Matrix<double> prox(data.numLocations(),
                         data.numLocations(),
                         std::numeric_limits<double>::max());
 
     std::set<std::tuple<pyvrp::Cost, pyvrp::Cost, size_t>> seen = {};
-
     for (auto const &vehType : data.vehicleTypes())
     {
         auto const key = std::make_tuple(vehType.unitDistanceCost,
@@ -44,47 +42,41 @@ Matrix<double> computeProximity(ProblemData const &data,
             continue;
 
         seen.insert(key);
-        auto const &distMat = data.distanceMatrix(vehType.profile);
-        auto const &durMat = data.durationMatrix(vehType.profile);
+        auto const &dists = data.distanceMatrix(vehType.profile);
+        auto const &durs = data.durationMatrix(vehType.profile);
 
-        for (size_t i = 0; i != data.numLocations(); ++i)
-            for (size_t j = 0; j != data.numLocations(); ++j)
-            {
-                auto const dist = static_cast<pyvrp::Cost>(distMat(i, j));
-                auto const dur = static_cast<pyvrp::Cost>(durMat(i, j));
-                auto const value
-                    = static_cast<double>(vehType.unitDistanceCost * dist)
-                      + static_cast<double>(vehType.unitDurationCost * dur);
-
-                prox(i, j) = std::min(value, prox(i, j));
-            }
-    }
-
-    for (size_t i = data.numDepots(); i != data.numLocations(); ++i)
-    {
-        ProblemData::Client const &iData = data.location(i);
-        auto const iService = static_cast<double>(iData.serviceDuration);
-        auto const iEarly = static_cast<double>(iData.twEarly);
-        auto const iLate = static_cast<double>(iData.twLate);
-
-        for (size_t j = data.numDepots(); j != data.numLocations(); ++j)
+        for (size_t i = data.numDepots(); i != data.numLocations(); ++i)
         {
-            auto minDuration = std::numeric_limits<pyvrp::Duration>::max();
-            for (auto const &mat : data.durationMatrices())
-                if (mat(i, j) < minDuration)
-                    minDuration = mat(i, j);
+            ProblemData::Client const &iData = data.location(i);
+            auto const iService = static_cast<double>(iData.serviceDuration);
+            auto const iEarly = static_cast<double>(iData.twEarly);
+            auto const iLate = static_cast<double>(iData.twLate);
 
-            ProblemData::Client const &jData = data.location(j);
-            auto const jEarly = static_cast<double>(jData.twEarly);
-            auto const jLate = static_cast<double>(jData.twLate);
+            for (size_t j = data.numDepots(); j != data.numLocations(); ++j)
+            {
+                ProblemData::Client const &jData = data.location(j);
+                auto const jEarly = static_cast<double>(jData.twEarly);
+                auto const jLate = static_cast<double>(jData.twLate);
 
-            auto const minDur = static_cast<double>(minDuration);
-            auto const minWait = jEarly - minDur - iService - iLate;
-            auto const minTw = iEarly + iService + minDur - jLate;
+                auto const dur = static_cast<double>(durs(i, j));
+                auto const wait
+                    = std::max(jEarly - dur - iService - iLate, 0.0);
+                auto const durCost
+                    = static_cast<double>(vehType.unitDurationCost)
+                      * (dur + wait);
 
-            prox(i, j) -= static_cast<double>(jData.prize);
-            prox(i, j) += params.weightWaitTime * std::max(minWait, 0.0);
-            prox(i, j) += params.weightTimeWarp * std::max(minTw, 0.0);
+                auto const timeWarp = iEarly + iService + dur - jLate;
+                if (timeWarp > 0)
+                    continue;
+
+                auto const dist = static_cast<double>(dists(i, j));
+                auto const distCost
+                    = static_cast<double>(vehType.unitDistanceCost) * dist;
+
+                auto const cost
+                    = distCost + durCost - static_cast<double>(jData.prize);
+                prox(i, j) = std::min(cost, prox(i, j));
+            }
         }
     }
 
@@ -109,7 +101,7 @@ std::vector<std::vector<size_t>>
 pyvrp::search::computeNeighbours(ProblemData const &data,
                                  NeighbourhoodParams const &params)
 {
-    auto prox = computeProximity(data, params);
+    auto prox = computeProximity(data);
 
     if (params.symmetricProximity)
         for (size_t i = 0; i != data.numLocations(); ++i)
@@ -121,8 +113,8 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
             for (auto const jClient : group)
                 prox(iClient, jClient) = std::numeric_limits<double>::max();
 
-    for (size_t depot = 0; depot != data.numLocations(); ++depot)
-        prox(depot, depot) = std::numeric_limits<double>::infinity();
+    for (size_t idx = 0; idx != data.numLocations(); ++idx)
+        prox(idx, idx) = std::numeric_limits<double>::infinity();
 
     size_t const numClients = std::max(data.numClients(), 1UL);
     size_t const k = std::min(params.numNeighbours, numClients - 1);
