@@ -13,6 +13,17 @@ using pyvrp::search::NeighbourhoodParams;
 
 namespace
 {
+/**
+ * Computes proximity for neighbourhood. Proximity is based on [1]_, with
+ * modification for additional VRP variants.
+ *
+ * References
+ * ----------
+ * .. [1] Vidal, T., Crainic, T. G., Gendreau, M., and Prins, C. (2013). A
+ *        hybrid genetic algorithm with adaptive diversity management for a
+ *        large class of vehicle routing problems with time-windows.
+ *        *Computers & Operations Research*, 40(1), 475 - 489.
+ */
 void computeProximity(pyvrp::Matrix<double> &proximity,
                       ProblemData const &data,
                       double const weightWaitTime,

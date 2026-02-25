@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 from pyvrp.search._search import NeighbourhoodParams
 from pyvrp.search._search import compute_neighbours as _compute_neighbours
 
@@ -31,106 +29,4 @@ def compute_neighbours(
         The first lists in the lower indices are associated with the depots and
         are all empty.
     """
-    return _compute_neighbours(data, params)
-
-    proximity = _compute_proximity(
-        data,
-        params.weight_wait_time,
-        params.weight_time_warp,
-    )
-
-    if params.symmetric_proximity:
-        proximity = np.minimum(proximity, proximity.T)
-
-    for group in data.groups():
-        if group.mutually_exclusive:
-            # Clients in mutually exclusive groups cannot neighbour each other,
-            # since only one of them can be in the solution at any given time.
-            # We use max float, not infty, to ensure these clients are ordered
-            # before the depots: we want to avoid same group neighbours, but it
-            # is not problematic if we need to have them.
-            idcs = np.ix_(group.clients, group.clients)
-            proximity[idcs] = np.finfo(np.float64).max
-
-    np.fill_diagonal(proximity, np.inf)  # cannot be in own neighbourhood
-    proximity[: data.num_depots, :] = np.inf  # depots have no neighbours
-    proximity[:, : data.num_depots] = np.inf  # clients do not neighbour depots
-
-    k = min(params.num_neighbours, data.num_clients - 1)  # excl. self
-    top_k = np.argsort(proximity, axis=1, kind="stable")[data.num_depots :, :k]
-
-    return [[] for _ in range(data.num_depots)] + top_k.tolist()
-
-
-def _compute_proximity(
-    data: ProblemData, weight_wait_time: float, weight_time_warp: float
-) -> np.ndarray[float]:
-    """
-    Computes proximity for neighbourhood. Proximity is based on [1]_, with
-    modification for additional VRP variants.
-
-    Parameters
-    ----------
-    data
-        ProblemData for which to compute proximity.
-    params
-        NeighbourhoodParams that define how proximity is computed.
-
-    Returns
-    -------
-    np.ndarray[float]
-        An array of size :py:attr:`~pyvrp._pyvrp.ProblemData.num_locations`
-        by :py:attr:`~pyvrp._pyvrp.ProblemData.num_locations`.
-
-    References
-    ----------
-    .. [1] Vidal, T., Crainic, T. G., Gendreau, M., and Prins, C. (2013). A
-           hybrid genetic algorithm with adaptive diversity management for a
-           large class of vehicle routing problems with time-windows.
-           *Computers & Operations Research*, 40(1), 475 - 489.
-    """
-    early = np.zeros((data.num_locations,), dtype=float)  # avoids overflows
-    early[data.num_depots :] = np.asarray([c.tw_early for c in data.clients()])
-
-    late = np.zeros_like(early)
-    late[data.num_depots :] = np.asarray([c.tw_late for c in data.clients()])
-
-    service = np.zeros_like(early)
-    service[data.num_depots :] = [c.service_duration for c in data.clients()]
-
-    prize = np.zeros_like(early)
-    prize[data.num_depots :] = [client.prize for client in data.clients()]
-
-    # We first determine the elementwise minimum cost across all vehicle types.
-    # This is the cheapest way any edge can be traversed.
-    distances = data.distance_matrices()
-    durations = data.duration_matrices()
-    unique_edge_costs = {
-        (
-            veh_type.unit_distance_cost,
-            veh_type.unit_duration_cost,
-            veh_type.profile,
-        )
-        for veh_type in data.vehicle_types()
-    }
-
-    first, *rest = unique_edge_costs
-    unit_dist, unit_dur, prof = first
-    edge_costs = unit_dist * distances[prof] + unit_dur * durations[prof]
-    for unit_dist, unit_dur, prof in rest:
-        mat = unit_dist * distances[prof] + unit_dur * durations[prof]
-        np.minimum(edge_costs, mat, out=edge_costs)
-
-    # Minimum wait time and time warp of visiting j directly after i.
-    min_duration = np.minimum.reduce(durations)
-    min_wait = early[None, :] - min_duration - service[:, None] - late[:, None]
-    min_tw = early[:, None] + service[:, None] + min_duration - late[None, :]
-
-    # Proximity is based on edge costs (and rewards) and penalties for known
-    # time-related violations.
-    edge_costs = edge_costs.astype(float)
-    edge_costs -= prize[None, :]
-    edge_costs += weight_wait_time * np.maximum(min_wait, 0)
-    edge_costs += weight_time_warp * np.maximum(min_tw, 0)
-
-    return edge_costs
+    return _compute_neighbours(data, params)  # delegate to C++ implementation
