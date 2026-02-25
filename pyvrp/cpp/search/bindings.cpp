@@ -652,6 +652,5 @@ PYBIND11_MODULE(_search, m)
     m.def("compute_neighbours",
           &pyvrp::search::computeNeighbours,
           py::arg("data"),
-          py::arg("params") = NeighbourhoodParams(),
-          DOC(pyvrp, search, computeNeighbours));
+          py::arg("params"));
 }

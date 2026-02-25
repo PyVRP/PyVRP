@@ -244,5 +244,5 @@ class NeighbourhoodParams:
 
 def compute_neighbours(
     data: ProblemData,
-    params: NeighbourhoodParams = ...,
+    params: NeighbourhoodParams,
 ) -> list[list[int]]: ...
