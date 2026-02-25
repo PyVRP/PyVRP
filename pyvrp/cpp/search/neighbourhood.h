@@ -43,7 +43,7 @@ namespace pyvrp::search
  * Raises
  * ------
  * ValueError
- *     When ``num_neighbours`` is non-positive.
+ *     When ``num_neighbours`` is not strictly positive.
  */
 struct NeighbourhoodParams
 {
