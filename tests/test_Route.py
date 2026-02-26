@@ -18,8 +18,6 @@ from pyvrp import (
 )
 from tests.helpers import read
 
-_INT_MAX = np.iinfo(np.int64).max
-
 
 def test_route_depot_accessors(ok_small_multi_depot):
     """
@@ -360,16 +358,14 @@ def test_distance_duration_cost_calculations(ok_small):
             capacity=[10],
             unit_distance_cost=5,
             duration_cost_function=PiecewiseLinearFunction(
-                [0],
-                [(0, 1)],
+                [(0, 0), (1, 1)],
             ),
         ),
         VehicleType(
             capacity=[10],
             unit_distance_cost=1,
             duration_cost_function=PiecewiseLinearFunction(
-                [0],
-                [(0, 5)],
+                [(0, 0), (1, 5)],
             ),
         ),
     ]
@@ -383,7 +379,7 @@ def test_distance_duration_cost_calculations(ok_small):
 
 
 def test_route_duration_cost_matches_vehicle_duration_cost_function():
-    duration_cost = PiecewiseLinearFunction([5, _INT_MAX], [(0, 1), (-45, 10)])
+    duration_cost = PiecewiseLinearFunction([(0, 0), (5, 5), (6, 15)])
 
     data = ProblemData(
         clients=[Client(x=0, y=1)],

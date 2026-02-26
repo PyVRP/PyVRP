@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <variant>
 
@@ -43,6 +44,113 @@ using DurationCostFunction = ProblemData::VehicleType::DurationCost;
 
 namespace
 {
+int64_t safeSubtract(int64_t lhs, int64_t rhs, char const *message)
+{
+    int64_t result = 0;
+    if (__builtin_sub_overflow(lhs, rhs, &result))
+        throw std::invalid_argument(message);
+
+    return result;
+}
+
+PiecewiseLinearFunction::Segment
+segmentFromAnchorAndSlope(int64_t x, int64_t y, int64_t slope)
+{
+    int64_t product = 0;
+    int64_t intercept = 0;
+    if (__builtin_mul_overflow(slope, x, &product)
+        || __builtin_sub_overflow(y, product, &intercept))
+        throw std::invalid_argument("Point coordinates result in overflow.");
+
+    return {intercept, slope};
+}
+
+int64_t integerSlopeBetween(int64_t x1, int64_t y1, int64_t x2, int64_t y2)
+{
+    auto const dx
+        = safeSubtract(x2, x1, "Point coordinates differ by too much.");
+    auto const dy
+        = safeSubtract(y2, y1, "Point coordinates differ by too much.");
+
+    if (dx <= 0)
+        throw std::invalid_argument("Points must be strictly increasing in x.");
+
+    if (dy % dx != 0)
+        throw std::invalid_argument(
+            "Points must define integer-valued slopes.");
+
+    return dy / dx;
+}
+
+PiecewiseLinearFunction
+piecewiseLinearFromPoints(std::vector<PiecewiseLinearFunction::Segment> points)
+{
+    if (points.empty())
+        throw std::invalid_argument("Need at least one point.");
+
+    for (size_t idx = 0; idx + 1 != points.size(); ++idx)
+        if (points[idx].first > points[idx + 1].first)
+            throw std::invalid_argument("Points must be non-decreasing in x.");
+
+    struct PointGroup
+    {
+        int64_t x;
+        int64_t firstY;
+        int64_t lastY;
+    };
+
+    std::vector<PointGroup> groups;
+    groups.reserve(points.size());
+
+    for (auto const &[x, y] : points)
+    {
+        if (groups.empty() || groups.back().x != x)
+            groups.push_back({x, y, y});
+        else
+            groups.back().lastY = y;
+    }
+
+    if (groups.size() == 1)
+    {
+        auto const &group = groups.front();
+        if (group.firstY == group.lastY)
+            return PiecewiseLinearFunction({group.x}, {{group.firstY, 0}});
+
+        return PiecewiseLinearFunction({group.x, group.x},
+                                       {{group.firstY, 0}, {group.lastY, 0}});
+    }
+
+    std::vector<int64_t> intervalSlopes;
+    intervalSlopes.reserve(groups.size() - 1);
+    for (size_t idx = 0; idx + 1 != groups.size(); ++idx)
+        intervalSlopes.push_back(integerSlopeBetween(groups[idx].x,
+                                                     groups[idx].lastY,
+                                                     groups[idx + 1].x,
+                                                     groups[idx + 1].firstY));
+
+    std::vector<int64_t> breakpoints;
+    breakpoints.reserve(groups.size() + 1);
+    for (auto const &group : groups)
+        breakpoints.push_back(group.x);
+
+    // Duplicate final breakpoint so we can model a jump at the final x-value.
+    breakpoints.push_back(groups.back().x);
+
+    std::vector<PiecewiseLinearFunction::Segment> segments;
+    segments.reserve(groups.size() + 1);
+    segments.push_back(segmentFromAnchorAndSlope(
+        groups.front().x, groups.front().firstY, intervalSlopes.front()));
+
+    for (size_t idx = 0; idx + 1 != groups.size(); ++idx)
+        segments.push_back(segmentFromAnchorAndSlope(
+            groups[idx].x, groups[idx].lastY, intervalSlopes[idx]));
+
+    segments.push_back(segmentFromAnchorAndSlope(
+        groups.back().x, groups.back().lastY, intervalSlopes.back()));
+
+    return PiecewiseLinearFunction(std::move(breakpoints), std::move(segments));
+}
+
 DurationCostFunction asDurationCost(PiecewiseLinearFunction const &function)
 {
     std::vector<pyvrp::Duration> breakpoints;
@@ -130,22 +238,13 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<PiecewiseLinearFunction>(
         m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
         .def(py::init<>())
-        .def(py::init<std::vector<int64_t>,
-                      std::vector<PiecewiseLinearFunction::Segment>>(),
-             py::arg("breakpoints"),
-             py::arg("segments"))
+        .def(py::init([](std::vector<PiecewiseLinearFunction::Segment> points)
+                      { return piecewiseLinearFromPoints(std::move(points)); }),
+             py::arg("points"))
         .def("__call__",
              &PiecewiseLinearFunction::operator(),
              py::arg("x"),
              DOC(pyvrp, PiecewiseLinearFunction, __call__))
-        .def_property_readonly("breakpoints",
-                               &PiecewiseLinearFunction::breakpoints,
-                               py::return_value_policy::reference_internal,
-                               DOC(pyvrp, PiecewiseLinearFunction, breakpoints))
-        .def_property_readonly("segments",
-                               &PiecewiseLinearFunction::segments,
-                               py::return_value_policy::reference_internal,
-                               DOC(pyvrp, PiecewiseLinearFunction, segments))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](PiecewiseLinearFunction const &function)  // __getstate__

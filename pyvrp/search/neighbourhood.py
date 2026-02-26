@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
@@ -156,16 +156,19 @@ def _compute_proximity(
     distances = data.distance_matrices()
     durations = data.duration_matrices()
     unique_edge_costs: dict[
-        tuple[int, int, tuple[object, ...], tuple[tuple[object, object], ...]],
+        tuple[int, int, tuple[int, ...], tuple[tuple[int, int], ...]],
         tuple[int, int, PiecewiseLinearFunction],
     ] = {}
     for veh_type in data.vehicle_types():
         duration_cost = veh_type.duration_cost_function
+        state = duration_cost.__getstate__()
+        breakpoints = cast("list[int]", state[0])
+        segments = cast("list[tuple[int, int]]", state[1])
         key = (
             veh_type.unit_distance_cost,
             veh_type.profile,
-            tuple(duration_cost.breakpoints),
-            tuple(duration_cost.segments),
+            tuple(breakpoints),
+            tuple(segments),
         )
         unique_edge_costs.setdefault(
             key,

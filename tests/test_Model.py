@@ -795,7 +795,6 @@ def test_minimise_distance_or_duration(ok_small):
             capacity=[10],
             unit_distance_cost=1,
             duration_cost_function=PiecewiseLinearFunction(
-                [0],
                 [(0, 0)],
             ),
         ),
@@ -803,8 +802,7 @@ def test_minimise_distance_or_duration(ok_small):
             capacity=[10],
             unit_distance_cost=0,
             duration_cost_function=PiecewiseLinearFunction(
-                [0],
-                [(0, 1)],
+                [(0, 0), (1, 1)],
             ),
         ),
     ]

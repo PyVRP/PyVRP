@@ -556,16 +556,14 @@ def test_vehicle_type_raises_non_monotonic_duration_cost():
     with assert_raises(ValueError):
         VehicleType(
             duration_cost_function=PiecewiseLinearFunction(
-                [5, _INT_MAX],
-                [(0, 2), (-1, 1)],
+                [(0, 0), (5, 10), (5, 4), (6, 5)],
             )
         )
 
     with assert_raises(ValueError):
         VehicleType(
             duration_cost_function=PiecewiseLinearFunction(
-                [5, _INT_MAX],
-                [(0, 1), (0, -1)],
+                [(0, 0), (5, 5), (5, -5), (6, -6)],
             )
         )
 
@@ -650,8 +648,7 @@ def test_vehicle_type_attribute_access():
         start_late=18,
         max_overtime=43,
         duration_cost_function=PiecewiseLinearFunction(
-            [0],
-            [(0, 41)],
+            [(0, 0), (1, 41)],
         ),
         name="vehicle_type name",
     )
@@ -670,7 +667,7 @@ def test_vehicle_type_attribute_access():
     assert_equal(vehicle_type.max_overtime, 43)
     assert_equal(
         vehicle_type.duration_cost_function,
-        PiecewiseLinearFunction([0], [(0, 41)]),
+        PiecewiseLinearFunction([(0, 0), (1, 41)]),
     )
 
     assert_equal(vehicle_type.name, "vehicle_type name")
@@ -678,15 +675,15 @@ def test_vehicle_type_attribute_access():
 
 
 def test_vehicle_type_uses_provided_duration_cost_function():
-    duration_cost = PiecewiseLinearFunction([5, _INT_MAX], [(0, 1), (-45, 10)])
+    duration_cost = PiecewiseLinearFunction([(0, 0), (5, 5), (6, 15)])
     vehicle_type = VehicleType(duration_cost_function=duration_cost)
 
     assert_equal(vehicle_type.duration_cost_function, duration_cost)
 
 
 def test_vehicle_type_replace_updates_duration_cost_function():
-    original = PiecewiseLinearFunction([0], [(0, 1)])
-    updated = PiecewiseLinearFunction([5, _INT_MAX], [(0, 1), (-45, 10)])
+    original = PiecewiseLinearFunction([(0, 0), (1, 1)])
+    updated = PiecewiseLinearFunction([(0, 0), (5, 5), (6, 15)])
     vehicle_type = VehicleType(duration_cost_function=original)
 
     replaced = vehicle_type.replace(duration_cost_function=updated)

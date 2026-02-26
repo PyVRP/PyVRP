@@ -346,8 +346,7 @@ def test_depot_service_duration(ok_small_multiple_trips):
         vehicle_types=[
             veh_type.replace(
                 duration_cost_function=PiecewiseLinearFunction(
-                    [0],
-                    [(0, 1)],
+                    [(0, 0), (1, 1)],
                 ),
             )
         ],

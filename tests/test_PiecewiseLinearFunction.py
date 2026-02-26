@@ -3,11 +3,20 @@ from numpy.testing import assert_, assert_equal, assert_raises
 from pyvrp import PiecewiseLinearFunction
 
 
-def test_call():
+def test_call_from_points():
     """
     Tests calling the piecewise linear function on various segments.
     """
-    fn = PiecewiseLinearFunction([5, 10, 20], [(1, 2), (11, 3), (26, 4)])
+    fn = PiecewiseLinearFunction(
+        [
+            (0, 1),
+            (5, 11),
+            (5, 26),
+            (10, 41),
+            (10, 66),
+            (11, 70),
+        ]
+    )
 
     # 1st segment, defined for values < 5.
     assert_equal(fn(-100), 1 + 2 * -100)
@@ -24,75 +33,139 @@ def test_call():
     assert_equal(fn(100), 26 + 4 * 100)
 
 
+def test_call_from_single_point():
+    """
+    Tests constructing from a single point, yielding a constant function.
+    """
+    fn = PiecewiseLinearFunction([(3, 7)])
+    assert_equal(fn(-10), 7)
+    assert_equal(fn(3), 7)
+    assert_equal(fn(100), 7)
+
+
+def test_call_from_single_x_with_jump():
+    """
+    Tests repeated x-values, which define jumps.
+    """
+    fn = PiecewiseLinearFunction([(3, 7), (3, 9)])
+    assert_equal(fn(2), 7)
+    assert_equal(fn(3), 9)
+    assert_equal(fn(100), 9)
+
+
+def test_jump_prefers_left_side_value_before_repeated_x():
+    """
+    Tests that values immediately left of a repeated x use the left side.
+    """
+    fn = PiecewiseLinearFunction([(0, 0), (5, 5), (5, 7), (5, 9), (10, 14)])
+
+    # Left of x = 5, we are still on the left-hand segment.
+    assert_equal(fn(4), 4)
+
+    # At and right of x = 5, we use the last value at that x.
+    assert_equal(fn(5), 9)
+    assert_equal(fn(6), 10)
+
+
+def test_multiple_jumps_prefer_left_side_values():
+    """
+    Tests left-side behaviour for multiple repeated x-value jumps.
+    """
+    fn = PiecewiseLinearFunction(
+        [(0, 0), (2, 2), (2, 10), (4, 12), (4, 20), (6, 22)]
+    )
+
+    # First jump at x = 2.
+    assert_equal(fn(1), 1)  # left side
+    assert_equal(fn(2), 10)  # right side
+
+    # Second jump at x = 4.
+    assert_equal(fn(3), 11)  # left side
+    assert_equal(fn(4), 20)  # right side
+
+
+def test_repeated_x_jumps_use_left_value_before_and_last_value_at_x():
+    """
+    Tests left-of-jump and at-jump values for repeated x-groups.
+    """
+    fn = PiecewiseLinearFunction(
+        [(0, 0), (3, 3), (3, 8), (3, 10), (6, 16), (6, 20)]
+    )
+
+    # First jump at x = 3.
+    assert_equal(fn(2), 2)  # left side
+    assert_equal(fn(3), 10)  # right side (last y at x = 3)
+
+    # Second jump at x = 6.
+    assert_equal(fn(5), 14)  # left side
+    assert_equal(fn(6), 20)  # right side (last y at x = 6)
+
+
 def test_zero():
     """
     Tests the piecewise linear function with zero slope and/or intercept.
     """
-    fn = PiecewiseLinearFunction([0], [(0, 7)])  # zero intercept
+    fn = PiecewiseLinearFunction([(0, 0), (1, 7)])  # zero intercept
     assert_equal(fn(-1), -7)
     assert_equal(fn(0), 0)
     assert_equal(fn(1), 7)
 
-    fn = PiecewiseLinearFunction([0], [(7, 0)])  # zero slope (constant)
+    fn = PiecewiseLinearFunction([(0, 7)])  # zero slope (constant)
     assert_equal(fn(-5), 7)
     assert_equal(fn(0), 7)
     assert_equal(fn(5), 7)
 
-    fn = PiecewiseLinearFunction([0], [(0, 0)])  # all zero
+    fn = PiecewiseLinearFunction([(0, 0)])  # all zero
     assert_equal(fn(-100), 0)
     assert_equal(fn(0), 0)
     assert_equal(fn(100), 0)
 
 
-def test_piecewise_linear_function_raises_inconsisten_argument_sizes():
+def test_default_constructor():
     """
-    Tests that the piecewise linear function cannot be constructed with
-    inconsistently sized arguments.
+    Tests the default constructor, which should be the zero function.
     """
-    with assert_raises(ValueError):  # need at least one segment
-        PiecewiseLinearFunction([], [])
-
-    with assert_raises(ValueError):  # argument sizes must match
-        PiecewiseLinearFunction([0], [])
-
-    with assert_raises(ValueError):  # argument sizes must match
-        PiecewiseLinearFunction([], [(0, 0)])
-
-    with assert_raises(ValueError):  # also when both arguments are not empty
-        PiecewiseLinearFunction([0, 1, 2], [(0, 0), (0, 0)])
+    fn = PiecewiseLinearFunction()
+    assert_equal(fn(-5), 0)
+    assert_equal(fn(0), 0)
+    assert_equal(fn(5), 0)
 
 
-def test_breakpoints_and_segments_properties():
+def test_raises_invalid_points():
     """
-    Tests getting the breakpoints and segments.
+    Tests invalid (x, y) points input.
     """
-    fn = PiecewiseLinearFunction([0, 5], [(1, 2), (11, 3)])
-    assert_equal(fn.breakpoints, [0, 5])
-    assert_equal(fn.segments, [(1, 2), (11, 3)])
+    with assert_raises(ValueError):  # at least one point is needed
+        PiecewiseLinearFunction([])
+
+    with assert_raises(ValueError):  # x must be non-decreasing
+        PiecewiseLinearFunction([(1, 2), (0, 3)])
+
+    with assert_raises(ValueError):  # slopes must be integer-valued
+        PiecewiseLinearFunction([(0, 0), (2, 3)])
+
+
+def test_getstate_returns_internal_representation():
+    """
+    Tests getting the serialised internal representation.
+    """
+    fn = PiecewiseLinearFunction([(0, 0), (5, 5), (10, 55)])
+    assert_equal(
+        fn.__getstate__(),
+        ([0, 5, 10, 10], [(0, 1), (0, 1), (-45, 10), (-45, 10)]),
+    )
 
 
 def test_eq():
     """
     Tests equality comparisons between various functions.
     """
-    fn1 = PiecewiseLinearFunction([5], [(1, 2)])
-    fn2 = PiecewiseLinearFunction([5], [(1, 2)])
-    fn3 = PiecewiseLinearFunction([5], [(1, 3)])
-    fn4 = PiecewiseLinearFunction([6], [(1, 2)])
+    fn1 = PiecewiseLinearFunction([(0, 0), (1, 2)])
+    fn2 = PiecewiseLinearFunction([(0, 0), (1, 2)])
+    fn3 = PiecewiseLinearFunction([(0, 0), (1, 3)])
+    fn4 = PiecewiseLinearFunction([(1, 0), (2, 2)])
 
     assert_(fn1 == fn2)
     assert_(fn1 != fn3)
     assert_(fn1 != fn4)
     assert_(fn1 != "string")
-
-
-def test_raises_unsorted_breakpoints():
-    """
-    Tests that the piecewise linear function cannot be constructed with
-    unsorted breakpoints, or breakpoints that are not strictly increasing.
-    """
-    with assert_raises(ValueError):  # unsorted
-        PiecewiseLinearFunction([2, 1, 3], [(1, 1), (2, 2), (3, 3)])
-
-    with assert_raises(ValueError):  # not strictly increasing
-        PiecewiseLinearFunction([1, 1], [(1, 1), (2, 2)])

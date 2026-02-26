@@ -431,8 +431,11 @@ public:
      *     Default 0, that is, overtime is not allowed.
      * duration_cost_function
      *     Piecewise linear duration cost function used to evaluate route
-     *     duration costs for this vehicle type. Defaults to the zero function.
-     * name
+     *     duration costs for this vehicle type. This function is specified via
+     *     ``(x, y)`` points (see
+     * :class:`~pyvrp._pyvrp.PiecewiseLinearFunction`), where ``x`` values must
+     * be non-decreasing and repeated ``x`` values encode jumps (matching
+     * Gurobi-style PWL point semantics). Defaults to the zero function. name
      *     Free-form name field for this vehicle type. Default empty.
      *
      * Attributes

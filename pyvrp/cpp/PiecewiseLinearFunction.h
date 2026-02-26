@@ -11,13 +11,20 @@ namespace pyvrp
 {
 /**
  * PiecewiseLinearFunction(
- *     breakpoints: list[np.int64],
- *     segments: list[tuple[np.int64, np.int64]],
+ *     points: list[tuple[np.int64, np.int64]],
  * )
  *
- * Creates a piecewise linear function :math:`f`. The piecewise linear function
- * is defined via :math:`n` strictly increasing breakpoints and linear segments
- * :math:`(b_i, f_i)_{i = 1, \ldots, n}`. Given :math:`x`, define
+ * Creates a piecewise linear function :math:`f` from ordered ``(x, y)`` points.
+ * Consecutive points with different ``x`` are connected linearly, and the
+ * first/last slope is used to extrapolate to the left/right.
+ *
+ * Points are required to be non-decreasing in ``x``. Repeated ``x`` values are
+ * allowed and define jumps: when multiple points share the same ``x``, the
+ * first value is used on the left of that ``x`` and the last value is used at
+ * and to the right of that ``x``.
+ *
+ * Internally, the function is represented via :math:`n` breakpoints and linear
+ * segments :math:`(b_i, f_i)_{i = 1, \ldots, n}`. Given :math:`x`, define
  *
  * .. math::
  *    f(x) =
@@ -30,10 +37,8 @@ namespace pyvrp
  *
  * Parameters
  * ----------
- * breakpoints
- *     Ordered, strictly increasing breakpoints.
- * segments
- *     The (intercept, slope) pairs that define each linear segment.
+ * points
+ *     Ordered ``(x, y)`` points defining the piecewise linear function.
  */
 template <typename Dom, typename Co> class PiecewiseLinearFunction
 {
@@ -92,9 +97,8 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
             "Number of breakpoints and segments must match.");
 
     for (size_t idx = 0; idx != breakpoints_.size() - 1; ++idx)
-        if (breakpoints_[idx] >= breakpoints_[idx + 1])
-            throw std::invalid_argument(
-                "Breakpoints must be strictly increasing.");
+        if (breakpoints_[idx] > breakpoints_[idx + 1])
+            throw std::invalid_argument("Breakpoints must be non-decreasing.");
 }
 
 template <typename Dom, typename Co>

@@ -1068,8 +1068,7 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
         (
             VehicleType(
                 duration_cost_function=PiecewiseLinearFunction(
-                    [0],
-                    [(0, 1)],
+                    [(0, 0), (1, 1)],
                 )
             ),
             Depot(0, 0),
