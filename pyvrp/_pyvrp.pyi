@@ -42,7 +42,9 @@ class PiecewiseLinearFunction:
     @overload
     def __init__(
         self,
-        points: list[tuple[np.int64, np.int64]],
+        points: list[
+            tuple[np.int64, np.int64] | tuple[np.int64, np.int64, np.int64]
+        ],
     ) -> None: ...
     def __call__(self, x: np.int64) -> np.int64: ...
     def __eq__(self, other: object) -> bool: ...
@@ -141,7 +143,7 @@ class VehicleType:
     reload_depots: list[int]
     max_reloads: int
     max_overtime: int
-    duration_cost_function: PiecewiseLinearFunction
+    duration_cost: PiecewiseLinearFunction
     max_duration: int
     name: str
     def __init__(
@@ -162,7 +164,12 @@ class VehicleType:
         reload_depots: list[int] = [],
         max_reloads: int = ...,
         max_overtime: int = 0,
-        duration_cost_function: PiecewiseLinearFunction = ...,
+        duration_cost: (
+            PiecewiseLinearFunction
+            | list[
+                tuple[np.int64, np.int64] | tuple[np.int64, np.int64, np.int64]
+            ]
+        ) = ...,
         *,
         name: str = "",
     ) -> None: ...
@@ -186,7 +193,13 @@ class VehicleType:
         reload_depots: list[int] | None = None,
         max_reloads: int | None = None,
         max_overtime: int | None = None,
-        duration_cost_function: PiecewiseLinearFunction | None = None,
+        duration_cost: (
+            PiecewiseLinearFunction
+            | list[
+                tuple[np.int64, np.int64] | tuple[np.int64, np.int64, np.int64]
+            ]
+            | None
+        ) = None,
         *,
         name: str | None = None,
     ) -> VehicleType: ...

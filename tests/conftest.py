@@ -145,8 +145,8 @@ def ok_small_overtime(ok_small):
         shift_duration=5_000,
         max_overtime=1_000,
         unit_distance_cost=0,
-        duration_cost_function=PiecewiseLinearFunction(
-            [(0, 0), (5_000, 5_000), (5_001, 5_011)],
+        duration_cost=PiecewiseLinearFunction(
+            [(0, 1), (5_000, 11)],
         ),
     )
 

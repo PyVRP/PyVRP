@@ -107,8 +107,8 @@ def test_remove_reload_depots_service_duration(ok_small_multiple_trips):
         vehicle_types=[
             veh_type.replace(
                 max_reloads=2,
-                duration_cost_function=PiecewiseLinearFunction(
-                    [(0, 0), (1, 1)],
+                duration_cost=PiecewiseLinearFunction(
+                    [(0, 1)],
                 ),
             )
         ],

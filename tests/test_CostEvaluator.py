@@ -302,15 +302,15 @@ def test_unit_distance_duration_cost(ok_small):
         VehicleType(
             capacity=[10],
             unit_distance_cost=5,
-            duration_cost_function=PiecewiseLinearFunction(
-                [(0, 0), (1, 1)],
+            duration_cost=PiecewiseLinearFunction(
+                [(0, 1)],
             ),
         ),
         VehicleType(
             capacity=[10],
             unit_distance_cost=1,
-            duration_cost_function=PiecewiseLinearFunction(
-                [(0, 0), (1, 5)],
+            duration_cost=PiecewiseLinearFunction(
+                [(0, 5)],
             ),
         ),
     ]

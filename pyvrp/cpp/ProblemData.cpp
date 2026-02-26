@@ -366,8 +366,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
         throw std::invalid_argument("max_overtime must be >= 0.");
 
     if (!this->durationCost.isMonotonicallyIncreasing())
-        throw std::invalid_argument(
-            "duration_cost_function must be non-decreasing.");
+        throw std::invalid_argument("duration_cost must be non-decreasing.");
 }
 
 ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)

@@ -4,6 +4,7 @@
 #include <cassert>
 #include <limits>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -11,17 +12,21 @@ namespace pyvrp
 {
 /**
  * PiecewiseLinearFunction(
- *     points: list[tuple[np.int64, np.int64]],
+ *     points: list[tuple[np.int64, np.int64]
+ *                  | tuple[np.int64, np.int64, np.int64]],
  * )
  *
- * Creates a piecewise linear function :math:`f` from ordered ``(x, y)`` points.
- * Consecutive points with different ``x`` are connected linearly, and the
- * first/last slope is used to extrapolate to the left/right.
+ * Creates a piecewise linear function :math:`f` from ordered
+ * ``(breakpoint, slope[, jump])`` points.
  *
- * Points are required to be non-decreasing in ``x``. Repeated ``x`` values are
- * allowed and define jumps: when multiple points share the same ``x``, the
- * first value is used on the left of that ``x`` and the last value is used at
- * and to the right of that ``x``.
+ * Points are required to be strictly increasing in breakpoint. Each slope
+ * applies from that breakpoint onward. The optional ``jump`` value specifies
+ * an additional fixed cost that is applied at that breakpoint and to the
+ * right. When omitted, ``jump`` defaults to zero.
+ *
+ * The first point also defines extrapolation to the left. In particular, for
+ * a first point ``(x_0, s_0, z_0)``, we have ``f(x_0) = z_0`` and slope
+ * ``s_0`` for :math:`x < x_0`.
  *
  * Internally, the function is represented via :math:`n` breakpoints and linear
  * segments :math:`(b_i, f_i)_{i = 1, \ldots, n}`. Given :math:`x`, define
@@ -38,12 +43,20 @@ namespace pyvrp
  * Parameters
  * ----------
  * points
- *     Ordered ``(x, y)`` points defining the piecewise linear function.
+ *     Ordered ``(breakpoint, slope[, jump])`` points defining the function.
  */
 template <typename Dom, typename Co> class PiecewiseLinearFunction
 {
 public:
     using Segment = std::pair<Dom, Dom>;
+    struct Point
+    {
+        Dom breakpoint;
+        Dom slope;
+        Dom jump;
+
+        bool operator==(Point const &other) const = default;
+    };
 
 private:
     std::vector<Dom> breakpoints_;
@@ -51,6 +64,8 @@ private:
 
 public:
     PiecewiseLinearFunction();
+
+    PiecewiseLinearFunction(std::vector<Point> points);
 
     PiecewiseLinearFunction(std::vector<Dom> breakpoints,
                             std::vector<Segment> segments);
@@ -82,6 +97,90 @@ template <typename Dom, typename Co>
 PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction()
     : PiecewiseLinearFunction({std::numeric_limits<Dom>::min()}, {{0, 0}})
 {
+}
+
+template <typename Dom, typename Co>
+PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
+    std::vector<Point> points)
+{
+    static_assert(std::is_integral_v<Dom>,
+                  "PiecewiseLinearFunction expects an integral domain type.");
+
+    if (points.empty())
+        throw std::invalid_argument("Need at least one point.");
+
+    for (size_t idx = 0; idx + 1 != points.size(); ++idx)
+        if (points[idx].breakpoint >= points[idx + 1].breakpoint)
+            throw std::invalid_argument(
+                "Points must be strictly increasing in breakpoint.");
+
+    auto const safeAdd = [](Dom lhs, Dom rhs, char const *message)
+    {
+        Dom result = 0;
+        if (__builtin_add_overflow(lhs, rhs, &result))
+            throw std::invalid_argument(message);
+        return result;
+    };
+
+    auto const safeSubtract = [](Dom lhs, Dom rhs, char const *message)
+    {
+        Dom result = 0;
+        if (__builtin_sub_overflow(lhs, rhs, &result))
+            throw std::invalid_argument(message);
+        return result;
+    };
+
+    auto const safeMultiply = [](Dom lhs, Dom rhs, char const *message)
+    {
+        Dom result = 0;
+        if (__builtin_mul_overflow(lhs, rhs, &result))
+            throw std::invalid_argument(message);
+        return result;
+    };
+
+    std::vector<Dom> values(points.size());
+    values[0] = points[0].jump;  // f(x_0) equals the first jump value.
+
+    for (size_t idx = 1; idx != points.size(); ++idx)
+    {
+        auto const dx = safeSubtract(points[idx].breakpoint,
+                                     points[idx - 1].breakpoint,
+                                     "Point coordinates differ by too much.");
+        auto const delta = safeMultiply(
+            points[idx - 1].slope, dx, "Point coordinates result in overflow.");
+        auto const leftValue = safeAdd(
+            values[idx - 1], delta, "Point coordinates result in overflow.");
+
+        values[idx] = safeAdd(leftValue,
+                              points[idx].jump,
+                              "Point coordinates result in overflow.");
+    }
+
+    breakpoints_.reserve(points.size() + 1);
+    for (auto const &point : points)
+        breakpoints_.push_back(point.breakpoint);
+
+    // Duplicate the final breakpoint so jumps at the last point are modeled.
+    breakpoints_.push_back(points.back().breakpoint);
+
+    auto const segmentFromAnchor = [&](size_t idx)
+    {
+        auto const product
+            = safeMultiply(points[idx].slope,
+                           points[idx].breakpoint,
+                           "Point coordinates result in overflow.");
+        auto const intercept = safeSubtract(
+            values[idx], product, "Point coordinates result in overflow.");
+        return Segment{intercept, points[idx].slope};
+    };
+
+    segments_.reserve(points.size() + 1);
+    segments_.push_back(segmentFromAnchor(0));  // left-side extrapolation
+
+    for (size_t idx = 0; idx + 1 != points.size(); ++idx)
+        segments_.push_back(segmentFromAnchor(idx));
+
+    segments_.push_back(segmentFromAnchor(points.size() - 1));
 }
 
 template <typename Dom, typename Co>

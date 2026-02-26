@@ -370,7 +370,7 @@ public:
      *     reload_depots: list[int] = [],
      *     max_reloads: int = np.iinfo(np.uint64).max,
      *     max_overtime: int = 0,
-     *     duration_cost_function: PiecewiseLinearFunction =
+     *     duration_cost: PiecewiseLinearFunction =
      * PiecewiseLinearFunction(),
      *     *,
      *     name: str = "",
@@ -429,13 +429,14 @@ public:
      * max_overtime
      *     Maximum allowed overtime, on top of the :py:attr:`~shift_duration`.
      *     Default 0, that is, overtime is not allowed.
-     * duration_cost_function
+     * duration_cost
      *     Piecewise linear duration cost function used to evaluate route
      *     duration costs for this vehicle type. This function is specified via
-     *     ``(x, y)`` points (see
-     * :class:`~pyvrp._pyvrp.PiecewiseLinearFunction`), where ``x`` values must
-     * be non-decreasing and repeated ``x`` values encode jumps (matching
-     * Gurobi-style PWL point semantics). Defaults to the zero function. name
+     *     ``(breakpoint, slope[, jump])`` points (see
+     *     :class:`~pyvrp._pyvrp.PiecewiseLinearFunction`), where breakpoints
+     *     must be strictly increasing and ``jump`` adds extra fixed cost at
+     *     that breakpoint and to the right. Defaults to the zero function.
+     * name
      *     Free-form name field for this vehicle type. Default empty.
      *
      * Attributes
@@ -479,7 +480,7 @@ public:
      * max_overtime
      *     Maximum amount of allowed overtime, on top of the nominal
      *     :py:attr:`~shift_duration`.
-     * duration_cost_function
+     * duration_cost
      *     Piecewise linear duration cost function used to evaluate route
      *     duration costs for this vehicle type.
      * max_duration

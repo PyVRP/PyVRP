@@ -555,15 +555,15 @@ def test_vehicle_type_raises_negative_overtime_data():
 def test_vehicle_type_raises_non_monotonic_duration_cost():
     with assert_raises(ValueError):
         VehicleType(
-            duration_cost_function=PiecewiseLinearFunction(
-                [(0, 0), (5, 10), (5, 4), (6, 5)],
+            duration_cost=PiecewiseLinearFunction(
+                [(0, 2), (5, 2, -7)],
             )
         )
 
     with assert_raises(ValueError):
         VehicleType(
-            duration_cost_function=PiecewiseLinearFunction(
-                [(0, 0), (5, 5), (5, -5), (6, -6)],
+            duration_cost=PiecewiseLinearFunction(
+                [(0, 1), (5, -1)],
             )
         )
 
@@ -613,9 +613,9 @@ def test_vehicle_type_default_values():
     assert_equal(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.unit_distance_cost, 1)
-    assert_equal(vehicle_type.duration_cost_function(-1), 0)
-    assert_equal(vehicle_type.duration_cost_function(0), 0)
-    assert_equal(vehicle_type.duration_cost_function(1), 0)
+    assert_equal(vehicle_type.duration_cost(-1), 0)
+    assert_equal(vehicle_type.duration_cost(0), 0)
+    assert_equal(vehicle_type.duration_cost(1), 0)
     assert_equal(vehicle_type.name, "")
 
     # The default value for the following fields is the largest representable
@@ -647,8 +647,8 @@ def test_vehicle_type_attribute_access():
         unit_distance_cost=37,
         start_late=18,
         max_overtime=43,
-        duration_cost_function=PiecewiseLinearFunction(
-            [(0, 0), (1, 41)],
+        duration_cost=PiecewiseLinearFunction(
+            [(0, 41)],
         ),
         name="vehicle_type name",
     )
@@ -666,31 +666,49 @@ def test_vehicle_type_attribute_access():
     assert_equal(vehicle_type.start_late, 18)
     assert_equal(vehicle_type.max_overtime, 43)
     assert_equal(
-        vehicle_type.duration_cost_function,
-        PiecewiseLinearFunction([(0, 0), (1, 41)]),
+        vehicle_type.duration_cost,
+        PiecewiseLinearFunction([(0, 41)]),
     )
 
     assert_equal(vehicle_type.name, "vehicle_type name")
     assert_equal(str(vehicle_type), "vehicle_type name")
 
 
-def test_vehicle_type_uses_provided_duration_cost_function():
-    duration_cost = PiecewiseLinearFunction([(0, 0), (5, 5), (6, 15)])
-    vehicle_type = VehicleType(duration_cost_function=duration_cost)
+def test_vehicle_type_uses_provided_duration_cost():
+    duration_cost = PiecewiseLinearFunction([(0, 1), (5, 10)])
+    vehicle_type = VehicleType(duration_cost=duration_cost)
 
-    assert_equal(vehicle_type.duration_cost_function, duration_cost)
+    assert_equal(vehicle_type.duration_cost, duration_cost)
 
 
-def test_vehicle_type_replace_updates_duration_cost_function():
-    original = PiecewiseLinearFunction([(0, 0), (1, 1)])
-    updated = PiecewiseLinearFunction([(0, 0), (5, 5), (6, 15)])
-    vehicle_type = VehicleType(duration_cost_function=original)
+def test_vehicle_type_accepts_duration_cost_points():
+    points = [(0, 1), (5, 10, 3)]
+    vehicle_type = VehicleType(duration_cost=points)
 
-    replaced = vehicle_type.replace(duration_cost_function=updated)
+    assert_equal(vehicle_type.duration_cost, PiecewiseLinearFunction(points))
+
+
+def test_vehicle_type_replace_updates_duration_cost():
+    original = PiecewiseLinearFunction([(0, 1)])
+    updated = PiecewiseLinearFunction([(0, 1), (5, 10)])
+    vehicle_type = VehicleType(duration_cost=original)
+
+    replaced = vehicle_type.replace(duration_cost=updated)
     unchanged = vehicle_type.replace()
 
-    assert_equal(replaced.duration_cost_function, updated)
-    assert_equal(unchanged.duration_cost_function, original)
+    assert_equal(replaced.duration_cost, updated)
+    assert_equal(unchanged.duration_cost, original)
+
+
+def test_vehicle_type_replace_accepts_duration_cost_points():
+    vehicle_type = VehicleType(duration_cost=[(0, 1)])
+
+    replaced = vehicle_type.replace(duration_cost=[(0, 2), (5, 3, 4)])
+
+    assert_equal(
+        replaced.duration_cost,
+        PiecewiseLinearFunction([(0, 2), (5, 3, 4)]),
+    )
 
 
 @pytest.mark.parametrize(

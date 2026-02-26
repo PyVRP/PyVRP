@@ -372,9 +372,10 @@ class Model:
         reload_depots: list[Depot] = [],
         max_reloads: int = np.iinfo(np.uint64).max,
         max_overtime: int = 0,
-        duration_cost_function: PiecewiseLinearFunction = (
-            PiecewiseLinearFunction()
-        ),
+        duration_cost: PiecewiseLinearFunction
+        | list[
+            tuple[int, int] | tuple[int, int, int]
+        ] = PiecewiseLinearFunction(),
         *,
         name: str = "",
     ) -> VehicleType:
@@ -444,7 +445,7 @@ class Model:
             reload_depots=reloads,
             max_reloads=max_reloads,
             max_overtime=max_overtime,
-            duration_cost_function=duration_cost_function,
+            duration_cost=duration_cost,
             name=name,
         )
 

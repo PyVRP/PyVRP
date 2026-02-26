@@ -794,15 +794,15 @@ def test_minimise_distance_or_duration(ok_small):
         VehicleType(
             capacity=[10],
             unit_distance_cost=1,
-            duration_cost_function=PiecewiseLinearFunction(
+            duration_cost=PiecewiseLinearFunction(
                 [(0, 0)],
             ),
         ),
         VehicleType(
             capacity=[10],
             unit_distance_cost=0,
-            duration_cost_function=PiecewiseLinearFunction(
-                [(0, 0), (1, 1)],
+            duration_cost=PiecewiseLinearFunction(
+                [(0, 1)],
             ),
         ),
     ]

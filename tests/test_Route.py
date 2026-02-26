@@ -357,15 +357,15 @@ def test_distance_duration_cost_calculations(ok_small):
         VehicleType(
             capacity=[10],
             unit_distance_cost=5,
-            duration_cost_function=PiecewiseLinearFunction(
-                [(0, 0), (1, 1)],
+            duration_cost=PiecewiseLinearFunction(
+                [(0, 1)],
             ),
         ),
         VehicleType(
             capacity=[10],
             unit_distance_cost=1,
-            duration_cost_function=PiecewiseLinearFunction(
-                [(0, 0), (1, 5)],
+            duration_cost=PiecewiseLinearFunction(
+                [(0, 5)],
             ),
         ),
     ]
@@ -378,13 +378,13 @@ def test_distance_duration_cost_calculations(ok_small):
     assert_equal(routes[1].duration_cost(), 5 * routes[1].duration())
 
 
-def test_route_duration_cost_matches_vehicle_duration_cost_function():
-    duration_cost = PiecewiseLinearFunction([(0, 0), (5, 5), (6, 15)])
+def test_route_duration_cost_matches_vehicle_duration_cost():
+    duration_cost = PiecewiseLinearFunction([(0, 1), (5, 10)])
 
     data = ProblemData(
         clients=[Client(x=0, y=1)],
         depots=[Depot(x=0, y=0)],
-        vehicle_types=[VehicleType(duration_cost_function=duration_cost)],
+        vehicle_types=[VehicleType(duration_cost=duration_cost)],
         distance_matrices=[np.array([[0, 0], [0, 0]], dtype=np.int64)],
         duration_matrices=[np.array([[0, 4], [4, 0]], dtype=np.int64)],
     )

@@ -220,14 +220,14 @@ def test_different_routing_costs(ok_small):
         vehicle_types=[
             orig_type.replace(
                 unit_distance_cost=1,
-                duration_cost_function=PiecewiseLinearFunction(
+                duration_cost=PiecewiseLinearFunction(
                     [(0, 0)],
                 ),
             ),
             orig_type.replace(
                 unit_distance_cost=0,
-                duration_cost_function=PiecewiseLinearFunction(
-                    [(0, 0), (1, 1)],
+                duration_cost=PiecewiseLinearFunction(
+                    [(0, 1)],
                 ),
             ),
         ],

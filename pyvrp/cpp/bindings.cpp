@@ -44,111 +44,43 @@ using DurationCostFunction = ProblemData::VehicleType::DurationCost;
 
 namespace
 {
-int64_t safeSubtract(int64_t lhs, int64_t rhs, char const *message)
+std::vector<PiecewiseLinearFunction::Point>
+parseSlopePoints(py::iterable const &points)
 {
-    int64_t result = 0;
-    if (__builtin_sub_overflow(lhs, rhs, &result))
-        throw std::invalid_argument(message);
+    std::vector<PiecewiseLinearFunction::Point> slopePoints;
 
-    return result;
-}
-
-PiecewiseLinearFunction::Segment
-segmentFromAnchorAndSlope(int64_t x, int64_t y, int64_t slope)
-{
-    int64_t product = 0;
-    int64_t intercept = 0;
-    if (__builtin_mul_overflow(slope, x, &product)
-        || __builtin_sub_overflow(y, product, &intercept))
-        throw std::invalid_argument("Point coordinates result in overflow.");
-
-    return {intercept, slope};
-}
-
-int64_t integerSlopeBetween(int64_t x1, int64_t y1, int64_t x2, int64_t y2)
-{
-    auto const dx
-        = safeSubtract(x2, x1, "Point coordinates differ by too much.");
-    auto const dy
-        = safeSubtract(y2, y1, "Point coordinates differ by too much.");
-
-    if (dx <= 0)
-        throw std::invalid_argument("Points must be strictly increasing in x.");
-
-    if (dy % dx != 0)
-        throw std::invalid_argument(
-            "Points must define integer-valued slopes.");
-
-    return dy / dx;
-}
-
-PiecewiseLinearFunction
-piecewiseLinearFromPoints(std::vector<PiecewiseLinearFunction::Segment> points)
-{
-    if (points.empty())
-        throw std::invalid_argument("Need at least one point.");
-
-    for (size_t idx = 0; idx + 1 != points.size(); ++idx)
-        if (points[idx].first > points[idx + 1].first)
-            throw std::invalid_argument("Points must be non-decreasing in x.");
-
-    struct PointGroup
+    for (auto const &point : points)
     {
-        int64_t x;
-        int64_t firstY;
-        int64_t lastY;
-    };
+        auto const seq = py::cast<py::sequence>(point);
+        auto const size = seq.size();
+        if (size != 2 && size != 3)
+            throw std::invalid_argument(
+                "Each point must be (breakpoint, slope) or "
+                "(breakpoint, slope, jump).");
 
-    std::vector<PointGroup> groups;
-    groups.reserve(points.size());
-
-    for (auto const &[x, y] : points)
-    {
-        if (groups.empty() || groups.back().x != x)
-            groups.push_back({x, y, y});
-        else
-            groups.back().lastY = y;
+        slopePoints.push_back({seq[0].cast<int64_t>(),
+                               seq[1].cast<int64_t>(),
+                               size == 3 ? seq[2].cast<int64_t>() : 0});
     }
 
-    if (groups.size() == 1)
-    {
-        auto const &group = groups.front();
-        if (group.firstY == group.lastY)
-            return PiecewiseLinearFunction({group.x}, {{group.firstY, 0}});
+    return slopePoints;
+}
 
-        return PiecewiseLinearFunction({group.x, group.x},
-                                       {{group.firstY, 0}, {group.lastY, 0}});
-    }
+PiecewiseLinearFunction asPiecewiseLinear(py::object const &durationCost)
+{
+    if (durationCost.is_none())
+        return PiecewiseLinearFunction();
 
-    std::vector<int64_t> intervalSlopes;
-    intervalSlopes.reserve(groups.size() - 1);
-    for (size_t idx = 0; idx + 1 != groups.size(); ++idx)
-        intervalSlopes.push_back(integerSlopeBetween(groups[idx].x,
-                                                     groups[idx].lastY,
-                                                     groups[idx + 1].x,
-                                                     groups[idx + 1].firstY));
+    if (py::isinstance<PiecewiseLinearFunction>(durationCost))
+        return durationCost.cast<PiecewiseLinearFunction>();
 
-    std::vector<int64_t> breakpoints;
-    breakpoints.reserve(groups.size() + 1);
-    for (auto const &group : groups)
-        breakpoints.push_back(group.x);
+    if (py::isinstance<py::iterable>(durationCost))
+        return PiecewiseLinearFunction(
+            parseSlopePoints(durationCost.cast<py::iterable>()));
 
-    // Duplicate final breakpoint so we can model a jump at the final x-value.
-    breakpoints.push_back(groups.back().x);
-
-    std::vector<PiecewiseLinearFunction::Segment> segments;
-    segments.reserve(groups.size() + 1);
-    segments.push_back(segmentFromAnchorAndSlope(
-        groups.front().x, groups.front().firstY, intervalSlopes.front()));
-
-    for (size_t idx = 0; idx + 1 != groups.size(); ++idx)
-        segments.push_back(segmentFromAnchorAndSlope(
-            groups[idx].x, groups[idx].lastY, intervalSlopes[idx]));
-
-    segments.push_back(segmentFromAnchorAndSlope(
-        groups.back().x, groups.back().lastY, intervalSlopes.back()));
-
-    return PiecewiseLinearFunction(std::move(breakpoints), std::move(segments));
+    throw std::invalid_argument(
+        "duration_cost must be a PiecewiseLinearFunction or an iterable of "
+        "(breakpoint, slope[, jump]) tuples.");
 }
 
 DurationCostFunction asDurationCost(PiecewiseLinearFunction const &function)
@@ -238,8 +170,9 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<PiecewiseLinearFunction>(
         m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
         .def(py::init<>())
-        .def(py::init([](std::vector<PiecewiseLinearFunction::Segment> points)
-                      { return piecewiseLinearFromPoints(std::move(points)); }),
+        .def(py::init(
+                 [](py::iterable points)
+                 { return PiecewiseLinearFunction(parseSlopePoints(points)); }),
              py::arg("points"))
         .def("__call__",
              &PiecewiseLinearFunction::operator(),
@@ -456,7 +389,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     std::vector<size_t> reloadDepots,
                     size_t maxReloads,
                     pyvrp::Duration maxOvertime,
-                    PiecewiseLinearFunction durationCostFunction,
+                    py::object durationCost,
                     char const *name)
                  {
                      return ProblemData::VehicleType(
@@ -476,7 +409,7 @@ PYBIND11_MODULE(_pyvrp, m)
                          std::move(reloadDepots),
                          maxReloads,
                          maxOvertime,
-                         asDurationCost(durationCostFunction),
+                         asDurationCost(asPiecewiseLinear(durationCost)),
                          name);
                  }),
              py::arg("num_available") = 1,
@@ -497,7 +430,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("reload_depots") = py::list(),
              py::arg("max_reloads") = std::numeric_limits<size_t>::max(),
              py::arg("max_overtime") = 0,
-             py::arg("duration_cost_function") = PiecewiseLinearFunction(),
+             py::arg("duration_cost") = py::none(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -525,7 +458,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("max_reloads", &ProblemData::VehicleType::maxReloads)
         .def_readonly("max_overtime", &ProblemData::VehicleType::maxOvertime)
         .def_property_readonly(
-            "duration_cost_function",
+            "duration_cost",
             [](ProblemData::VehicleType const &vehicleType)
             { return asPiecewiseLinearFunction(vehicleType.durationCost); })
         .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration)
@@ -552,12 +485,13 @@ PYBIND11_MODULE(_pyvrp, m)
                std::optional<std::vector<size_t>> reloadDepots,
                std::optional<size_t> maxReloads,
                std::optional<pyvrp::Duration> maxOvertime,
-               std::optional<PiecewiseLinearFunction> durationCostFunction,
+               py::object durationCostArg,
                std::optional<std::string> name)
             {
                 std::optional<DurationCostFunction> durationCost = std::nullopt;
-                if (durationCostFunction.has_value())
-                    durationCost = asDurationCost(*durationCostFunction);
+                if (!durationCostArg.is_none())
+                    durationCost
+                        = asDurationCost(asPiecewiseLinear(durationCostArg));
 
                 return vehicleType.replace(numAvailable,
                                            capacity,
@@ -594,7 +528,7 @@ PYBIND11_MODULE(_pyvrp, m)
             py::arg("reload_depots") = py::none(),
             py::arg("max_reloads") = py::none(),
             py::arg("max_overtime") = py::none(),
-            py::arg("duration_cost_function") = py::none(),
+            py::arg("duration_cost") = py::none(),
             py::kw_only(),
             py::arg("name") = py::none(),
             DOC(pyvrp, ProblemData, VehicleType, replace))

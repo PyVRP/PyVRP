@@ -160,7 +160,7 @@ def _compute_proximity(
         tuple[int, int, PiecewiseLinearFunction],
     ] = {}
     for veh_type in data.vehicle_types():
-        duration_cost = veh_type.duration_cost_function
+        duration_cost = veh_type.duration_cost
         state = duration_cost.__getstate__()
         breakpoints = cast("list[int]", state[0])
         segments = cast("list[tuple[int, int]]", state[1])
