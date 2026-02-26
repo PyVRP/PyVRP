@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import VehicleType
+from pyvrp import Depot, ProblemData, VehicleType
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 
 
@@ -177,3 +177,19 @@ def test_multiple_routing_profiles(ok_small):
     # neighbourhood computations, resulting in the same neighbourhood as with
     # the original (unchanged) data.
     assert_equal(compute_neighbours(data), compute_neighbours(ok_small))
+
+
+def test_zero_clients():
+    """
+    Tests that the neighbourhood for an instance with zero clients is empty.
+    """
+    data = ProblemData(
+        clients=[],
+        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[np.zeros((2, 2), dtype=int)],
+        duration_matrices=[np.zeros((2, 2), dtype=int)],
+    )
+
+    # Two empty lists, one for each of the depots.
+    assert_equal(compute_neighbours(data), [[], []])
