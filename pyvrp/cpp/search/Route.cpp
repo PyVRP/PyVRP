@@ -61,14 +61,6 @@ Route::Iterator &Route::Iterator::operator++()
 Route::Route(ProblemData const &data, size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
-      hasDurationCost_(
-          data.hasTimeWindows()
-          || vehicleType_.maxDuration != std::numeric_limits<Duration>::max()
-          || std::any_of(vehicleType_.durationCost.segments().begin(),
-                         vehicleType_.durationCost.segments().end(),
-                         [](auto const &segment) {
-                             return segment.first != 0 || segment.second != 0;
-                         })),
       loadAt(data.numLoadDimensions()),
       loadAfter(data.numLoadDimensions()),
       loadBefore(data.numLoadDimensions()),
@@ -352,7 +344,9 @@ void Route::update()
     duration_ = durAfter[0].duration();
     timeWarp_ = durAfter[0].timeWarp(maxDuration());
 
-    durationCost_ = durationCostFunction()(duration_);
+    auto const overtime = std::max<Duration>(duration_ - shiftDuration(), 0);
+    durationCost_ = unitDurationCost() * static_cast<Cost>(duration_)
+                    + unitOvertimeCost() * static_cast<Cost>(overtime);
 
 #ifndef NDEBUG
     dirty = false;

@@ -1,6 +1,6 @@
 import pytest
 
-from pyvrp import PiecewiseLinearFunction, VehicleType
+from pyvrp import VehicleType
 from tests.helpers import read
 
 
@@ -145,9 +145,8 @@ def ok_small_overtime(ok_small):
         shift_duration=5_000,
         max_overtime=1_000,
         unit_distance_cost=0,
-        duration_cost=PiecewiseLinearFunction(
-            [(0, 1), (5_000, 11)],
-        ),
+        unit_duration_cost=1,
+        unit_overtime_cost=10,
     )
 
     return ok_small.replace(vehicle_types=[veh_type])

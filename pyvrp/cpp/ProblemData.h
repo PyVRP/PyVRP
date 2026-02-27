@@ -3,7 +3,6 @@
 
 #include "Matrix.h"
 #include "Measure.h"
-#include "PiecewiseLinearFunction.h"
 
 #include <cassert>
 #include <iosfwd>
@@ -364,14 +363,14 @@ public:
      *     shift_duration: int = np.iinfo(np.int64).max,
      *     max_distance: int = np.iinfo(np.int64).max,
      *     unit_distance_cost: int = 1,
+     *     unit_duration_cost: int = 0,
      *     profile: int = 0,
      *     start_late: int | None = None,
      *     initial_load: list[int] = [],
      *     reload_depots: list[int] = [],
      *     max_reloads: int = np.iinfo(np.uint64).max,
      *     max_overtime: int = 0,
-     *     duration_cost: PiecewiseLinearFunction =
-     * PiecewiseLinearFunction(),
+     *     unit_overtime_cost: int = 0,
      *     *,
      *     name: str = "",
      * )
@@ -409,6 +408,9 @@ public:
      * unit_distance_cost
      *     Cost per unit of distance travelled by vehicles of this type. Default
      *     1.
+     * unit_duration_cost
+     *     Cost per unit of duration on routes serviced by vehicles of this
+     *     type. Default 0.
      * profile
      *     This vehicle type's routing profile. Default 0, the first profile.
      * start_late
@@ -429,13 +431,9 @@ public:
      * max_overtime
      *     Maximum allowed overtime, on top of the :py:attr:`~shift_duration`.
      *     Default 0, that is, overtime is not allowed.
-     * duration_cost
-     *     Piecewise linear duration cost function used to evaluate route
-     *     duration costs for this vehicle type. This function is specified via
-     *     ``(breakpoint, slope[, jump])`` points (see
-     *     :class:`~pyvrp._pyvrp.PiecewiseLinearFunction`), where breakpoints
-     *     must be strictly increasing and ``jump`` adds extra fixed cost at
-     *     that breakpoint and to the right. Defaults to the zero function.
+     * unit_overtime_cost
+     *     Cost of a unit of overtime. This is in addition to the regular
+     *     :py:attr:`~unit_duration_cost` of route durations. Default 0.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -464,6 +462,8 @@ public:
      *     unconstrained.
      * unit_distance_cost
      *     Cost per unit of distance travelled by vehicles of this type.
+     * unit_duration_cost
+     *     Cost per unit of duration on routes using vehicles of this type.
      * profile
      *     This vehicle type's routing profile.
      * start_late
@@ -480,9 +480,8 @@ public:
      * max_overtime
      *     Maximum amount of allowed overtime, on top of the nominal
      *     :py:attr:`~shift_duration`.
-     * duration_cost
-     *     Piecewise linear duration cost function used to evaluate route
-     *     duration costs for this vehicle type.
+     * unit_overtime_cost
+     *     Additional cost of a unit of overtime.
      * max_duration
      *     Hard maximum route duration constraint, computed as the sum of
      *     :py:attr:`~shift_duration` and :py:attr:`~max_overtime`.
@@ -491,8 +490,6 @@ public:
      */
     struct VehicleType
     {
-        using DurationCost = PiecewiseLinearFunction<Duration, Cost>;
-
         size_t const numAvailable;         // Available vehicles of this type
         size_t const startDepot;           // Departure depot location
         size_t const endDepot;             // Return depot location
@@ -503,13 +500,14 @@ public:
         Distance const maxDistance;        // Maximum route distance
         Cost const fixedCost;         // Fixed cost of using this vehicle type
         Cost const unitDistanceCost;  // Variable cost per unit of distance
+        Cost const unitDurationCost;  // Variable cost per unit of duration
         size_t const profile;         // Distance and duration profile
         Duration const startLate;     // Latest start of shift
         std::vector<Load> const initialLoad;     // Initially used capacity
         std::vector<size_t> const reloadDepots;  // Reload locations
         size_t const maxReloads;                 // Maximum number of reloads
         Duration const maxOvertime;              // Maximum allowed overtime
-        DurationCost const durationCost;         // Duration cost fn
+        Cost const unitOvertimeCost;             // Cost per unit of overtime
         Duration const maxDuration;  // Maximum route duration, incl. overtime
         char const *name;            // Type name (for reference)
 
@@ -524,13 +522,14 @@ public:
                     = std::numeric_limits<Duration>::max(),
                     Distance maxDistance = std::numeric_limits<Distance>::max(),
                     Cost unitDistanceCost = 1,
+                    Cost unitDurationCost = 0,
                     size_t profile = 0,
                     std::optional<Duration> startLate = std::nullopt,
                     std::vector<Load> initialLoad = {},
                     std::vector<size_t> reloadDepots = {},
                     size_t maxReloads = std::numeric_limits<size_t>::max(),
                     Duration maxOvertime = 0,
-                    DurationCost durationCost = DurationCost(),
+                    Cost unitOvertimeCost = 0,
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -557,13 +556,14 @@ public:
                             std::optional<Duration> shiftDuration,
                             std::optional<Distance> maxDistance,
                             std::optional<Cost> unitDistanceCost,
+                            std::optional<Cost> unitDurationCost,
                             std::optional<size_t> profile,
                             std::optional<Duration> startLate,
                             std::optional<std::vector<Load>> initialLoad,
                             std::optional<std::vector<size_t>> reloadDepots,
                             std::optional<size_t> maxReloads,
                             std::optional<Duration> maxOvertime,
-                            std::optional<DurationCost> durationCost,
+                            std::optional<Cost> unitOvertimeCost,
                             std::optional<std::string> name) const;
 
         /**

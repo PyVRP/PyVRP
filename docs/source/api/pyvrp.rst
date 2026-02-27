@@ -107,13 +107,6 @@ This object stores the best observed solution and detailed runtime statistics.
       :members:
       :special-members: __call__
 
-      .. note::
-
-         The public constructor accepts ``(breakpoint, slope[, jump])`` points
-         only. Breakpoints must be strictly increasing. The optional ``jump``
-         (default ``0``) adds extra fixed cost at that breakpoint and to the
-         right.
-
    .. autoclass:: DynamicBitset
       :members:
       :special-members: __and__, __or__, __xor__, __getitem__, __setitem__,

@@ -3,13 +3,7 @@ import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
 import pyvrp
-from pyvrp import (
-    Client,
-    Depot,
-    PiecewiseLinearFunction,
-    ProblemData,
-    VehicleType,
-)
+from pyvrp import Client, Depot, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
 
@@ -1065,26 +1059,11 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
         (VehicleType(tw_early=5), Depot(0, 0), True),  # constraint (vehicle)
         (VehicleType(tw_late=5), Depot(0, 0), True),  # constraint (vehicle)
         (VehicleType(shift_duration=0), Depot(0, 0), True),  # constraint (veh)
-        (
-            VehicleType(
-                duration_cost=PiecewiseLinearFunction(
-                    [(0, 1)],
-                )
-            ),
-            Depot(0, 0),
-            True,
-        ),
-        (
-            VehicleType(
-                duration_cost=PiecewiseLinearFunction(
-                    [(0, 0, 7)],
-                )
-            ),
-            Depot(0, 0),
-            True,
-        ),
-        # Additional overtime allowance alone does not add objective cost.
-        (VehicleType(max_overtime=1), Depot(0, 0), False),
+        (VehicleType(unit_duration_cost=1), Depot(0, 0), True),  # unit cost
+        # unit cost but no max_overtime, so never relevant
+        (VehicleType(unit_overtime_cost=1), Depot(0, 0), False),
+        # unit cost and overtime, so could be relevant
+        (VehicleType(unit_overtime_cost=1, max_overtime=1), Depot(0, 0), True),
         (VehicleType(max_overtime=5), Depot(0, 0), False),  # not constrained
     ],
 )
@@ -1118,6 +1097,7 @@ def test_overtime(ok_small_overtime):
     assert_equal(route.shift_duration(), 5_000)
     assert_equal(route.max_overtime(), 1_000)
     assert_equal(route.max_duration(), 6_000)
+    assert_equal(route.unit_overtime_cost(), 10)
 
     # Route cost and feasibility attributes.
     assert_(not route.has_time_warp())

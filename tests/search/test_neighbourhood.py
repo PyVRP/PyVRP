@@ -2,9 +2,8 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import PiecewiseLinearFunction, VehicleType
+from pyvrp import VehicleType
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
-from pyvrp.search.neighbourhood import _compute_proximity
 
 
 def test_neighbourhood_params_raises_for_empty_neighbourhoods():
@@ -219,18 +218,8 @@ def test_different_routing_costs(ok_small):
     orig_type = ok_small.vehicle_type(0)
     different_cost_data = new_data.replace(
         vehicle_types=[
-            orig_type.replace(
-                unit_distance_cost=1,
-                duration_cost=PiecewiseLinearFunction(
-                    [(0, 0)],
-                ),
-            ),
-            orig_type.replace(
-                unit_distance_cost=0,
-                duration_cost=PiecewiseLinearFunction(
-                    [(0, 1)],
-                ),
-            ),
+            orig_type.replace(unit_distance_cost=1, unit_duration_cost=0),
+            orig_type.replace(unit_distance_cost=0, unit_duration_cost=1),
         ],
     )
     different_cost_neighbours = compute_neighbours(different_cost_data)
@@ -258,49 +247,3 @@ def test_multiple_routing_profiles(ok_small):
     # neighbourhood computations, resulting in the same neighbourhood as with
     # the original (unchanged) data.
     assert_equal(compute_neighbours(data), compute_neighbours(ok_small))
-
-
-def test_proximity_matches_reference_for_non_affine_duration_cost(ok_small):
-    """
-    Tests non-affine duration costs against the previous ufunc-based reference.
-    """
-    veh_type = ok_small.vehicle_type(0).replace(
-        unit_distance_cost=0,
-        duration_cost=PiecewiseLinearFunction([(0, 1), (5, 3)]),
-    )
-    data = ok_small.replace(vehicle_types=[veh_type])
-
-    observed = _compute_proximity(
-        data, weight_wait_time=0.2, weight_time_warp=1.0
-    )
-
-    # Reference implementation: evaluate duration costs elementwise via ufunc.
-    durations = data.duration_matrices()
-    duration_cost = veh_type.duration_cost
-    edge_costs = np.frompyfunc(duration_cost, 1, 1)(
-        durations[veh_type.profile]
-    )
-    edge_costs = edge_costs.astype(np.int64)
-
-    early = np.zeros((data.num_locations,), dtype=float)
-    early[data.num_depots :] = np.asarray([c.tw_early for c in data.clients()])
-
-    late = np.zeros_like(early)
-    late[data.num_depots :] = np.asarray([c.tw_late for c in data.clients()])
-
-    service = np.zeros_like(early)
-    service[data.num_depots :] = [c.service_duration for c in data.clients()]
-
-    prize = np.zeros_like(early)
-    prize[data.num_depots :] = [client.prize for client in data.clients()]
-
-    min_duration = np.minimum.reduce(durations)
-    min_wait = early[None, :] - min_duration - service[:, None] - late[:, None]
-    min_tw = early[:, None] + service[:, None] + min_duration - late[None, :]
-
-    expected = edge_costs.astype(float)
-    expected -= prize[None, :]
-    expected += 0.2 * np.maximum(min_wait, 0)
-    expected += 1.0 * np.maximum(min_tw, 0)
-
-    assert_equal(observed, expected)

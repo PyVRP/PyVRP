@@ -1,6 +1,6 @@
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import CostEvaluator, Depot, PiecewiseLinearFunction
+from pyvrp import CostEvaluator, Depot
 from pyvrp.search import RemoveAdjacentDepot
 from pyvrp.search._search import Node
 from tests.helpers import make_search_route
@@ -104,14 +104,7 @@ def test_remove_reload_depots_service_duration(ok_small_multiple_trips):
     veh_type = ok_small_multiple_trips.vehicle_type(0)
     data = ok_small_multiple_trips.replace(
         depots=[Depot(x=2334, y=726, service_duration=90)],
-        vehicle_types=[
-            veh_type.replace(
-                max_reloads=2,
-                duration_cost=PiecewiseLinearFunction(
-                    [(0, 1)],
-                ),
-            )
-        ],
+        vehicle_types=[veh_type.replace(max_reloads=2, unit_duration_cost=1)],
     )
 
     op = RemoveAdjacentDepot(data)
