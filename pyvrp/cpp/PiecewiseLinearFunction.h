@@ -61,9 +61,6 @@ public:
 
     PiecewiseLinearFunction(std::vector<Point> points);
 
-    PiecewiseLinearFunction(std::vector<Dom> breakpoints,
-                            std::vector<Segment> segments);
-
     /**
      * Evaluates :math:`f(x)`.
      */
@@ -89,7 +86,8 @@ public:
 
 template <typename Dom, typename Co>
 PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction()
-    : PiecewiseLinearFunction({std::numeric_limits<Dom>::min()}, {{0, 0}})
+    : PiecewiseLinearFunction(
+          std::vector<Point>{{std::numeric_limits<Dom>::min(), 0, 0}})
 {
 }
 

@@ -64,6 +64,41 @@ parseSlopePoints(py::iterable const &points)
 
     return slopePoints;
 }
+
+std::vector<PiecewiseLinearFunction::Point>
+asSlopePoints(PiecewiseLinearFunction const &function)
+{
+    auto const &breakpoints = function.breakpoints();
+    auto const &segments = function.segments();
+
+    if (breakpoints.size() < 2 || breakpoints.size() != segments.size()
+        || breakpoints.at(breakpoints.size() - 1)
+               != breakpoints.at(breakpoints.size() - 2))
+        throw std::invalid_argument(
+            "Cannot serialise PiecewiseLinearFunction state.");
+
+    std::vector<PiecewiseLinearFunction::Point> points;
+    points.reserve(breakpoints.size() - 1);
+
+    for (size_t idx = 0; idx + 1 != breakpoints.size(); ++idx)
+    {
+        auto const x = breakpoints[idx];
+        auto const [intercept, slope] = segments[idx + 1];
+        auto const value = intercept + slope * x;
+
+        auto jump = value;
+        if (idx != 0)
+        {
+            auto const [prevIntercept, prevSlope] = segments[idx];
+            auto const leftValue = prevIntercept + prevSlope * x;
+            jump = value - leftValue;
+        }
+
+        points.emplace_back(x, slope, jump);
+    }
+
+    return points;
+}
 }  // namespace
 
 PYBIND11_MODULE(_pyvrp, m)
@@ -138,17 +173,14 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](PiecewiseLinearFunction const &function)  // __getstate__
-            {
-                return py::make_tuple(function.breakpoints(),
-                                      function.segments());
-            },
+            { return py::make_tuple(asSlopePoints(function)); },
             [](py::tuple t)  // __setstate__
             {
-                using Breakpoints = std::vector<int64_t>;
-                using Segments = std::vector<PiecewiseLinearFunction::Segment>;
+                if (t.size() != 1)
+                    throw std::invalid_argument("Invalid state.");
+
                 return PiecewiseLinearFunction(
-                    t[0].cast<Breakpoints>(),  // breakpoints
-                    t[1].cast<Segments>());    // segments
+                    parseSlopePoints(t[0].cast<py::iterable>()));
             }));
 
     py::class_<ProblemData::Client>(

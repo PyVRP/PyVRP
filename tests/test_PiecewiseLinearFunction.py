@@ -129,31 +129,24 @@ def test_raises_invalid_points():
         PiecewiseLinearFunction([(0, 0, 1, 2)])
 
 
-def test_unpickle_raises_when_internal_breakpoints_decrease():
-    """
-    Tests validation of internal breakpoints during unpickling.
-    """
-    fn = PiecewiseLinearFunction([(0, 1), (5, 10, 3)])
-    blob = pickle.dumps(fn, protocol=4)
-
-    # Change breakpoints from [0, 5, 5] to [1, 0, 5].
-    old = b"]\x94(K\x00K\x05K\x05e"
-    new = b"]\x94(K\x01K\x00K\x05e"
-    assert_(old in blob)
-
-    with assert_raises(ValueError):
-        pickle.loads(blob.replace(old, new, 1))
-
-
 def test_getstate_returns_internal_representation():
     """
-    Tests getting the serialised internal representation.
+    Tests getting the serialised points representation.
     """
     fn = PiecewiseLinearFunction([(0, 1), (5, 10, 3)])
     assert_equal(
         fn.__getstate__(),
-        ([0, 5, 5], [(0, 1), (0, 1), (-42, 10)]),
+        ([(0, 1, 0), (5, 10, 3)],),
     )
+
+
+def test_pickle_roundtrip():
+    """
+    Tests round-trip serialisation and deserialisation.
+    """
+    fn = PiecewiseLinearFunction([(0, 1), (5, 10, 3)])
+    fn2 = pickle.loads(pickle.dumps(fn, protocol=4))
+    assert_equal(fn, fn2)
 
 
 def test_eq():
