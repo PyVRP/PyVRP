@@ -15,8 +15,8 @@ using pyvrp::search::NeighbourhoodParams;
 namespace
 {
 /**
- * Computes proximity for neighbourhood. Proximity is based on [1]_, with
- * modification for additional VRP variants.
+ * Computes proximity for neighbourhood. Proximity is based on [1]_, but
+ * generalised to additional VRP variants.
  *
  * References
  * ----------
@@ -38,43 +38,40 @@ Matrix<double> computeProximity(ProblemData const &data)
                                          vehType.unitDurationCost,
                                          vehType.profile);
 
-        if (seen.contains(key))
-            continue;
+        if (seen.contains(key))  // then proximity has already been updated
+            continue;            // based on this cost profile
 
         seen.insert(key);
         auto const &dists = data.distanceMatrix(vehType.profile);
         auto const &durs = data.durationMatrix(vehType.profile);
 
-        for (size_t i = data.numDepots(); i != data.numLocations(); ++i)
+        for (size_t frm = data.numDepots(); frm != data.numLocations(); ++frm)
         {
-            ProblemData::Client const &iData = data.location(i);
-            auto const iService = static_cast<double>(iData.serviceDuration);
-            auto const iEarly = static_cast<double>(iData.twEarly);
-            auto const iLate = static_cast<double>(iData.twLate);
+            ProblemData::Client const &frmData = data.location(frm);
+            auto const frmServ = static_cast<double>(frmData.serviceDuration);
+            auto const frmEarly = static_cast<double>(frmData.twEarly);
+            auto const frmLate = static_cast<double>(frmData.twLate);
 
-            for (size_t j = data.numDepots(); j != data.numLocations(); ++j)
+            for (size_t to = data.numDepots(); to != data.numLocations(); ++to)
             {
-                ProblemData::Client const &jData = data.location(j);
-                auto const jEarly = static_cast<double>(jData.twEarly);
-                auto const jLate = static_cast<double>(jData.twLate);
+                ProblemData::Client const &toData = data.location(to);
+                auto const toEarly = static_cast<double>(toData.twEarly);
+                auto const toLate = static_cast<double>(toData.twLate);
+                auto const edgeDur = static_cast<double>(durs(frm, to));
 
-                auto const dur = static_cast<double>(durs(i, j));
-                auto const wait
-                    = std::max(jEarly - dur - iService - iLate, 0.0);
-                auto const durCost
-                    = static_cast<double>(vehType.unitDurationCost)
-                      * (dur + wait);
+                if (frmEarly + frmServ + edgeDur > toLate)  // then this edge
+                    continue;                               // is not feasible
 
-                if (iEarly + iService + dur > jLate)  // then this arc is never
-                    continue;                         // feasible
+                auto const distance = static_cast<double>(dists(frm, to));
+                auto const minWait = toEarly - edgeDur - frmServ - frmLate;
+                auto const duration = edgeDur + std::max(minWait, 0.0);
 
-                auto const dist = static_cast<double>(dists(i, j));
-                auto const distCost
-                    = static_cast<double>(vehType.unitDistanceCost) * dist;
+                auto const cost  // minimum edge cost using this vehicle type
+                    = static_cast<double>(vehType.unitDistanceCost) * distance
+                      + static_cast<double>(vehType.unitDurationCost)
+                            * duration;
 
-                auto const cost
-                    = distCost + durCost - static_cast<double>(jData.prize);
-                prox(i, j) = std::min(cost, prox(i, j));
+                prox(frm, to) = std::min(cost, prox(frm, to));
             }
         }
     }
@@ -97,23 +94,31 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
 {
     auto prox = computeProximity(data);
 
-    if (params.symmetricProximity)
-        for (size_t i = 0; i != data.numLocations(); ++i)
-            for (size_t j = i; j != data.numLocations(); ++j)
-                prox(i, j) = prox(j, i) = std::min(prox(i, j), prox(j, i));
+    if (params.symmetricProximity)  // then we symmetrise the proximity matrix
+        for (size_t frm = 0; frm != data.numLocations(); ++frm)
+            for (size_t to = frm; to != data.numLocations(); ++to)
+                prox(frm, to) = prox(to, frm)
+                    = std::min(prox(frm, to), prox(to, frm));
 
     for (auto const &group : data.groups())
         for (auto const iClient : group)
             for (auto const jClient : group)
+                // Group members should not neighbour each other, as only one
+                // of them can be in the solution at a time. We use max float,
+                // not infty: we want to avoid same group neighbours, but it is
+                // not too problematic if we need to have them.
                 prox(iClient, jClient) = std::numeric_limits<double>::max();
 
-    for (size_t idx = 0; idx != data.numLocations(); ++idx)
+    for (size_t idx = 0; idx != data.numLocations(); ++idx)  // excl. self
         prox(idx, idx) = std::numeric_limits<double>::infinity();
 
-    size_t const numClients = std::max(data.numClients(), 1UL);
-    size_t const k = std::min(params.numNeighbours, numClients - 1);
+    // Adjust the neigbhourhood size to the minimum of the number of other
+    // clients and the default neighbourhood size. We need to make sure we do
+    // not wrap-around in case the there are no clients.
+    size_t const numClients = std::max<size_t>(data.numClients(), 1);
+    size_t const numNeighbours = std::min(params.numNeighbours, numClients - 1);
 
-    std::vector<std::vector<size_t>> result(data.numLocations());
+    std::vector<std::vector<size_t>> neighbours(data.numLocations());
 
     std::vector<size_t> indices(data.numClients());
     for (size_t client = data.numDepots(); client != data.numLocations();
@@ -122,11 +127,13 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
         auto const comp = [&](auto const a, auto const b)
         { return prox(client, a) < prox(client, b); };
 
+        // Reset the vector and then re-sort for this client.
         std::iota(indices.begin(), indices.end(), data.numDepots());
         std::stable_sort(indices.begin(), indices.end(), comp);
 
-        result[client] = {indices.begin(), indices.begin() + k};
+        // Neighbourhood of client is set to the first numNeighbours indices.
+        neighbours[client] = {indices.begin(), indices.begin() + numNeighbours};
     }
 
-    return result;
+    return neighbours;
 }
