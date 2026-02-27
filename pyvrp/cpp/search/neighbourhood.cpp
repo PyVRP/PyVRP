@@ -26,7 +26,8 @@ namespace
  *        large class of vehicle routing problems with time-windows.
  *        *Computers & Operations Research*, 40(1), 475 - 489.
  */
-Matrix<double> computeProximity(ProblemData const &data)
+Matrix<double> computeProximity(ProblemData const &data,
+                                NeighbourhoodParams const &params)
 {
     Matrix<double> prox(data.numLocations(),
                         data.numLocations(),
@@ -69,8 +70,8 @@ Matrix<double> computeProximity(ProblemData const &data)
 
                 auto const cost  // minimum edge cost using this vehicle type
                     = static_cast<double>(vehType.unitDistanceCost) * distance
-                      + static_cast<double>(vehType.unitDurationCost)
-                            * duration;
+                      + static_cast<double>(vehType.unitDurationCost) * duration
+                      + params.weightWaitTime * std::max(minWait, 0.0);
 
                 prox(frm, to) = std::min(cost, prox(frm, to));
             }
@@ -81,9 +82,12 @@ Matrix<double> computeProximity(ProblemData const &data)
 }
 }  // namespace
 
-NeighbourhoodParams::NeighbourhoodParams(size_t numNeighbours,
+NeighbourhoodParams::NeighbourhoodParams(double weightWaitTime,
+                                         size_t numNeighbours,
                                          bool symmetricProximity)
-    : numNeighbours(numNeighbours), symmetricProximity(symmetricProximity)
+    : weightWaitTime(weightWaitTime),
+      numNeighbours(numNeighbours),
+      symmetricProximity(symmetricProximity)
 {
     if (numNeighbours == 0)
         throw std::invalid_argument("num_neighbours == 0 not understood.");
@@ -93,7 +97,7 @@ std::vector<std::vector<size_t>>
 pyvrp::search::computeNeighbours(ProblemData const &data,
                                  NeighbourhoodParams const &params)
 {
-    auto prox = computeProximity(data);
+    auto prox = computeProximity(data, params);
 
     if (params.symmetricProximity)  // then we symmetrise the proximity matrix
         for (size_t frm = 0; frm != data.numLocations(); ++frm)

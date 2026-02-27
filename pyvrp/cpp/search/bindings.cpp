@@ -634,10 +634,12 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<NeighbourhoodParams>(
         m, "NeighbourhoodParams", DOC(pyvrp, search, NeighbourhoodParams))
-        .def(py::init<size_t, bool>(),
+        .def(py::init<double, size_t, bool>(),
+             py::arg("weight_wait_time") = 0.2,
              py::arg("num_neighbours") = 50,
              py::arg("symmetric_proximity") = true)
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
+        .def_readonly("weight_wait_time", &NeighbourhoodParams::weightWaitTime)
         .def_readonly("num_neighbours", &NeighbourhoodParams::numNeighbours)
         .def_readonly("symmetric_proximity",
                       &NeighbourhoodParams::symmetricProximity);

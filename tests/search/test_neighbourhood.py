@@ -17,19 +17,20 @@ def test_neighbourhood_params_raises_for_empty_neighbourhoods():
 # fmt: off
 @mark.parametrize(
     (
+        "weight_wait_time",
         "num_neighbours",
         "symmetric_proximity",
         "idx_check",
         "expected_neighbours_check",
     ),
     [
-        (10, True, 2,
+        (20, 10, True, 2,
          {1, 3, 4, 5, 6, 7, 8, 45, 46, 100}),
         # From original C++ implementation
-        (34, True, 1,
+        (18, 34, True, 1,
          {2, 3, 4, 5, 6, 7, 8, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 53,
           54, 55, 60, 61, 68, 69, 70, 73, 78, 79, 81, 88, 90, 98, 100}),
-        (34, True, 99,
+        (18, 34, True, 99,
          {9, 10, 11, 12, 13, 14, 15, 16, 20, 22, 24, 47, 52, 53, 55, 56, 57,
           58, 59, 60, 64, 65, 66, 69, 74, 80, 82, 83, 86, 87, 88, 90, 91, 98}),
     ],
@@ -37,6 +38,7 @@ def test_neighbourhood_params_raises_for_empty_neighbourhoods():
 # fmt: on
 def test_compute_neighbours(
     rc208,
+    weight_wait_time: int,
     num_neighbours: int,
     symmetric_proximity: bool,
     idx_check: int,
@@ -45,7 +47,11 @@ def test_compute_neighbours(
     """
     Tests ``compute_neighbours`` on several well-understood cases.
     """
-    params = NeighbourhoodParams(num_neighbours, symmetric_proximity)
+    params = NeighbourhoodParams(
+        weight_wait_time,
+        num_neighbours,
+        symmetric_proximity,
+    )
     neighbours = compute_neighbours(rc208, params)
 
     assert_equal(len(neighbours), rc208.num_locations)
@@ -63,7 +69,7 @@ def test_neighbours_are_sorted_by_proximity(small_cvrp):
     """
     Tests that the neighbourhood lists sort by their proximity: closest first.
     """
-    params = NeighbourhoodParams(small_cvrp.num_clients)
+    params = NeighbourhoodParams(0, small_cvrp.num_clients)
     neighbours = compute_neighbours(small_cvrp, params)
     clients = list(range(small_cvrp.num_depots, small_cvrp.num_locations))
     distances = small_cvrp.distance_matrix(profile=0)
@@ -95,7 +101,7 @@ def test_proximity_with_prizes(prize_collecting):
     Tests that prizes factor into the neighbourhood structure, and offset
     travel costs somewhat.
     """
-    params = NeighbourhoodParams(num_neighbours=10)
+    params = NeighbourhoodParams(0, num_neighbours=10)
     neighbours = compute_neighbours(prize_collecting, params)
 
     # We compare the number of times clients 20 and 36 are in other clients'
@@ -116,7 +122,7 @@ def test_proximity_with_mutually_exclusive_groups(
     Tests that clients that are a member of a mutually exclusive client group
     are not in each other's neighbourhood.
     """
-    params = NeighbourhoodParams(num_neighbours=1)
+    params = NeighbourhoodParams(0, num_neighbours=1)
     neighbours = compute_neighbours(ok_small_mutually_exclusive_groups, params)
 
     group = ok_small_mutually_exclusive_groups.group(0)

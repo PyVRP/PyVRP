@@ -57,7 +57,7 @@ def test_set_get_neighbours(
     prev_neighbours = compute_neighbours(rc208, params)
     search_space = SearchSpace(rc208, prev_neighbours)
 
-    params = NeighbourhoodParams(num_neighbours, symmetric_proximity)
+    params = NeighbourhoodParams(20, num_neighbours, symmetric_proximity)
     neighbours = compute_neighbours(rc208, params)
 
     # Test that before we set neighbours we don't have same

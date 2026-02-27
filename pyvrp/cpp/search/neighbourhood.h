@@ -9,14 +9,19 @@ namespace pyvrp::search
 {
 /**
  * NeighbourhoodParams(
+ *    weight_wait_time: float = 0.2,
  *    num_neighbours: int = 50,
  *    symmetric_proximity: bool = True,
  * )
  *
  * Configuration for calculating a granular neighbourhood.
  *
- * Attributes
+ * Parameters
  * ----------
+ * weight_wait_time
+ *     Penalty weight given to the minimum wait time aspect of the proximity
+ *     calculation. A large wait time indicates the clients are far apart
+ *     in duration/time.
  * num_neighbours
  *     Number of other clients that are in each client's granular
  *     neighbourhood. This parameter determines the size of the overall
@@ -32,10 +37,12 @@ namespace pyvrp::search
  */
 struct NeighbourhoodParams
 {
+    double const weightWaitTime;
     size_t const numNeighbours;
     bool const symmetricProximity;
 
-    NeighbourhoodParams(size_t numNeighbours = 50,
+    NeighbourhoodParams(double weightWaitTime = 0.2,
+                        size_t numNeighbours = 50,
                         bool symmetricProximity = true);
 
     bool operator==(NeighbourhoodParams const &other) const = default;
