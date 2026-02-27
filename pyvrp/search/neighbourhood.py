@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 
 if TYPE_CHECKING:
-    from pyvrp import PiecewiseLinearFunction, ProblemData
+    from pyvrp import ProblemData
 
 
 @dataclass
@@ -157,34 +157,30 @@ def _compute_proximity(
     durations = data.duration_matrices()
     unique_edge_costs: dict[
         tuple[int, int, tuple[int, ...], tuple[tuple[int, int], ...]],
-        tuple[int, int, PiecewiseLinearFunction],
+        tuple[int, int, tuple[int, ...], tuple[tuple[int, int], ...]],
     ] = {}
     for veh_type in data.vehicle_types():
-        duration_cost = veh_type.duration_cost
-        state = duration_cost.__getstate__()
-        breakpoints = cast("list[int]", state[0])
-        segments = cast("list[tuple[int, int]]", state[1])
+        state = veh_type.duration_cost.__getstate__()
+        breakpoints_list = cast("list[int]", state[0])
+        segments_list = cast("list[tuple[int, int]]", state[1])
         key = (
             veh_type.unit_distance_cost,
             veh_type.profile,
-            tuple(breakpoints),
-            tuple(segments),
+            tuple(breakpoints_list),
+            tuple(segments_list),
         )
-        unique_edge_costs.setdefault(
-            key,
-            (veh_type.unit_distance_cost, veh_type.profile, duration_cost),
-        )
+        unique_edge_costs.setdefault(key, key)
 
     first, *rest = unique_edge_costs.values()
-    unit_dist, prof, duration_cost = first
-    edge_costs = unit_dist * distances[prof] + np.frompyfunc(
-        duration_cost, 1, 1
-    )(durations[prof]).astype(np.int64)
+    unit_dist, prof, breakpoints_tuple, segments_tuple = first
+    edge_costs = unit_dist * distances[prof] + _duration_cost_values(
+        breakpoints_tuple, segments_tuple, durations[prof]
+    )
 
-    for unit_dist, prof, duration_cost in rest:
-        mat = unit_dist * distances[prof] + np.frompyfunc(duration_cost, 1, 1)(
-            durations[prof]
-        ).astype(np.int64)
+    for unit_dist, prof, breakpoints_tuple, segments_tuple in rest:
+        mat = unit_dist * distances[prof] + _duration_cost_values(
+            breakpoints_tuple, segments_tuple, durations[prof]
+        )
         np.minimum(edge_costs, mat, out=edge_costs)
 
     # Minimum wait time and time warp of visiting j directly after i.
@@ -200,3 +196,24 @@ def _compute_proximity(
     edge_costs += weight_time_warp * np.maximum(min_tw, 0)
 
     return edge_costs
+
+
+def _duration_cost_values(
+    breakpoints: tuple[int, ...],
+    segments: tuple[tuple[int, int], ...],
+    durations: np.ndarray,
+) -> np.ndarray:
+    """
+    Evaluates a piecewise linear duration cost function on a duration matrix.
+    """
+    segments_arr = np.asarray(segments, dtype=np.int64)
+
+    # Fast path for affine costs, by far the most common case.
+    if np.all(segments_arr == segments_arr[0]):
+        intercept, slope = segments_arr[0]
+        return intercept + slope * durations
+
+    breakpoints_arr = np.asarray(breakpoints, dtype=np.int64)
+    idx = np.searchsorted(breakpoints_arr, durations, side="right")
+    np.minimum(idx, len(breakpoints_arr) - 1, out=idx)
+    return segments_arr[idx, 0] + segments_arr[idx, 1] * durations

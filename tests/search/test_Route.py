@@ -1074,6 +1074,15 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
             Depot(0, 0),
             True,
         ),
+        (
+            VehicleType(
+                duration_cost=PiecewiseLinearFunction(
+                    [(0, 0, 7)],
+                )
+            ),
+            Depot(0, 0),
+            True,
+        ),
         # Additional overtime allowance alone does not add objective cost.
         (VehicleType(max_overtime=1), Depot(0, 0), False),
         (VehicleType(max_overtime=5), Depot(0, 0), False),  # not constrained
