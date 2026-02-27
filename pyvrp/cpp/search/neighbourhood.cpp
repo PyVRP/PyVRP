@@ -2,6 +2,7 @@
 
 #include "Matrix.h"
 
+#include <algorithm>
 #include <limits>
 #include <numeric>
 #include <set>
