@@ -62,6 +62,12 @@ private:
     std::vector<Dom> breakpoints_;
     std::vector<Segment> segments_;
 
+    [[nodiscard]] static Dom safeAdd(Dom lhs, Dom rhs, char const *message);
+    [[nodiscard]] static Dom
+    safeSubtract(Dom lhs, Dom rhs, char const *message);
+    [[nodiscard]] static Dom
+    safeMultiply(Dom lhs, Dom rhs, char const *message);
+
 public:
     PiecewiseLinearFunction();
 
@@ -114,30 +120,6 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
             throw std::invalid_argument(
                 "Points must be strictly increasing in breakpoint.");
 
-    auto const safeAdd = [](Dom lhs, Dom rhs, char const *message)
-    {
-        Dom result = 0;
-        if (__builtin_add_overflow(lhs, rhs, &result))
-            throw std::invalid_argument(message);
-        return result;
-    };
-
-    auto const safeSubtract = [](Dom lhs, Dom rhs, char const *message)
-    {
-        Dom result = 0;
-        if (__builtin_sub_overflow(lhs, rhs, &result))
-            throw std::invalid_argument(message);
-        return result;
-    };
-
-    auto const safeMultiply = [](Dom lhs, Dom rhs, char const *message)
-    {
-        Dom result = 0;
-        if (__builtin_mul_overflow(lhs, rhs, &result))
-            throw std::invalid_argument(message);
-        return result;
-    };
-
     std::vector<Dom> values(points.size());
     values[0] = points[0].jump;  // f(x_0) equals the first jump value.
 
@@ -181,6 +163,39 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
         segments_.push_back(segmentFromAnchor(idx));
 
     segments_.push_back(segmentFromAnchor(points.size() - 1));
+}
+
+template <typename Dom, typename Co>
+Dom PiecewiseLinearFunction<Dom, Co>::safeAdd(Dom lhs,
+                                              Dom rhs,
+                                              char const *message)
+{
+    Dom result = 0;
+    if (__builtin_add_overflow(lhs, rhs, &result))
+        throw std::invalid_argument(message);
+    return result;
+}
+
+template <typename Dom, typename Co>
+Dom PiecewiseLinearFunction<Dom, Co>::safeSubtract(Dom lhs,
+                                                   Dom rhs,
+                                                   char const *message)
+{
+    Dom result = 0;
+    if (__builtin_sub_overflow(lhs, rhs, &result))
+        throw std::invalid_argument(message);
+    return result;
+}
+
+template <typename Dom, typename Co>
+Dom PiecewiseLinearFunction<Dom, Co>::safeMultiply(Dom lhs,
+                                                   Dom rhs,
+                                                   char const *message)
+{
+    Dom result = 0;
+    if (__builtin_mul_overflow(lhs, rhs, &result))
+        throw std::invalid_argument(message);
+    return result;
 }
 
 template <typename Dom, typename Co>
