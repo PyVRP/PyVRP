@@ -4,6 +4,7 @@ from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import PiecewiseLinearFunction
 
+
 def test_call_from_slope_points():
     """
     Tests calling the piecewise linear function on various segments.
