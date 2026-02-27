@@ -4,6 +4,7 @@
 #include <cassert>
 #include <limits>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -49,24 +50,11 @@ template <typename Dom, typename Co> class PiecewiseLinearFunction
 {
 public:
     using Segment = std::pair<Dom, Dom>;
-    struct Point
-    {
-        Dom breakpoint;
-        Dom slope;
-        Dom jump;
-
-        bool operator==(Point const &other) const = default;
-    };
+    using Point = std::tuple<Dom, Dom, Dom>;
 
 private:
     std::vector<Dom> breakpoints_;
     std::vector<Segment> segments_;
-
-    [[nodiscard]] static Dom safeAdd(Dom lhs, Dom rhs, char const *message);
-    [[nodiscard]] static Dom
-    safeSubtract(Dom lhs, Dom rhs, char const *message);
-    [[nodiscard]] static Dom
-    safeMultiply(Dom lhs, Dom rhs, char const *message);
 
 public:
     PiecewiseLinearFunction();
@@ -115,104 +103,45 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
     if (points.empty())
         throw std::invalid_argument("Need at least one point.");
 
-    for (size_t idx = 0; idx + 1 != points.size(); ++idx)
-        if (points[idx].breakpoint >= points[idx + 1].breakpoint)
+    for (size_t idx = 0; idx != points.size() - 1; ++idx)
+        if (std::get<0>(points[idx]) >= std::get<0>(points[idx + 1]))
             throw std::invalid_argument(
                 "Points must be strictly increasing in breakpoint.");
 
     std::vector<Dom> values(points.size());
-    values[0] = points[0].jump;  // f(x_0) equals the first jump value.
+    values[0] = std::get<2>(points[0]);  // f(x_0) equals the first jump value.
 
     for (size_t idx = 1; idx != points.size(); ++idx)
     {
-        auto const dx = safeSubtract(points[idx].breakpoint,
-                                     points[idx - 1].breakpoint,
-                                     "Point coordinates differ by too much.");
-        auto const delta = safeMultiply(
-            points[idx - 1].slope, dx, "Point coordinates result in overflow.");
-        auto const leftValue = safeAdd(
-            values[idx - 1], delta, "Point coordinates result in overflow.");
-
-        values[idx] = safeAdd(leftValue,
-                              points[idx].jump,
-                              "Point coordinates result in overflow.");
+        auto const dx = std::get<0>(points[idx]) - std::get<0>(points[idx - 1]);
+        auto const delta = std::get<1>(points[idx - 1]) * dx;
+        auto const leftValue = values[idx - 1] + delta;
+        values[idx] = leftValue + std::get<2>(points[idx]);
     }
 
     breakpoints_.reserve(points.size() + 1);
     for (auto const &point : points)
-        breakpoints_.push_back(point.breakpoint);
+        breakpoints_.push_back(std::get<0>(point));
 
     // Duplicate the final breakpoint so jumps at the last point are modeled.
-    breakpoints_.push_back(points.back().breakpoint);
+    breakpoints_.push_back(std::get<0>(points.back()));
 
     auto const segmentFromAnchor = [&](size_t idx)
     {
-        auto const product
-            = safeMultiply(points[idx].slope,
-                           points[idx].breakpoint,
-                           "Point coordinates result in overflow.");
-        auto const intercept = safeSubtract(
-            values[idx], product, "Point coordinates result in overflow.");
-        return Segment{intercept, points[idx].slope};
+        auto const breakpoint = std::get<0>(points[idx]);
+        auto const slope = std::get<1>(points[idx]);
+        auto const product = slope * breakpoint;
+        auto const intercept = values[idx] - product;
+        return Segment{intercept, slope};
     };
 
     segments_.reserve(points.size() + 1);
     segments_.push_back(segmentFromAnchor(0));  // left-side extrapolation
 
-    for (size_t idx = 0; idx + 1 != points.size(); ++idx)
+    for (size_t idx = 0; idx != points.size() - 1; ++idx)
         segments_.push_back(segmentFromAnchor(idx));
 
     segments_.push_back(segmentFromAnchor(points.size() - 1));
-}
-
-template <typename Dom, typename Co>
-Dom PiecewiseLinearFunction<Dom, Co>::safeAdd(Dom lhs,
-                                              Dom rhs,
-                                              char const *message)
-{
-    Dom result = 0;
-    if (__builtin_add_overflow(lhs, rhs, &result))
-        throw std::invalid_argument(message);
-    return result;
-}
-
-template <typename Dom, typename Co>
-Dom PiecewiseLinearFunction<Dom, Co>::safeSubtract(Dom lhs,
-                                                   Dom rhs,
-                                                   char const *message)
-{
-    Dom result = 0;
-    if (__builtin_sub_overflow(lhs, rhs, &result))
-        throw std::invalid_argument(message);
-    return result;
-}
-
-template <typename Dom, typename Co>
-Dom PiecewiseLinearFunction<Dom, Co>::safeMultiply(Dom lhs,
-                                                   Dom rhs,
-                                                   char const *message)
-{
-    Dom result = 0;
-    if (__builtin_mul_overflow(lhs, rhs, &result))
-        throw std::invalid_argument(message);
-    return result;
-}
-
-template <typename Dom, typename Co>
-PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
-    std::vector<Dom> breakpoints, std::vector<Segment> segments)
-    : breakpoints_(std::move(breakpoints)), segments_(std::move(segments))
-{
-    if (segments_.empty())
-        throw std::invalid_argument("Need at least one segment.");
-
-    if (breakpoints_.size() != segments_.size())
-        throw std::invalid_argument(
-            "Number of breakpoints and segments must match.");
-
-    for (size_t idx = 0; idx != breakpoints_.size() - 1; ++idx)
-        if (breakpoints_[idx] > breakpoints_[idx + 1])
-            throw std::invalid_argument("Breakpoints must be non-decreasing.");
 }
 
 template <typename Dom, typename Co>
@@ -254,14 +183,14 @@ bool PiecewiseLinearFunction<Dom, Co>::isMonotonicallyIncreasing() const
 
     for (size_t idx = 1; idx != segments_.size(); ++idx)
     {
-        auto const breakpoint = static_cast<long double>(breakpoints_[idx - 1]);
+        auto const breakpoint = static_cast<Co>(breakpoints_[idx - 1]);
         auto const [prevIntercept, prevSlope] = segments_[idx - 1];
         auto const [nextIntercept, nextSlope] = segments_[idx];
 
-        auto const left = static_cast<long double>(prevIntercept)
-                          + static_cast<long double>(prevSlope) * breakpoint;
-        auto const right = static_cast<long double>(nextIntercept)
-                           + static_cast<long double>(nextSlope) * breakpoint;
+        auto const left = static_cast<Co>(prevIntercept)
+                          + static_cast<Co>(prevSlope) * breakpoint;
+        auto const right = static_cast<Co>(nextIntercept)
+                           + static_cast<Co>(nextSlope) * breakpoint;
 
         if (right < left)
             return false;

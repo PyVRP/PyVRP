@@ -1,13 +1,8 @@
 import pickle
 
-import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import PiecewiseLinearFunction
-
-_INT_MAX = int(np.iinfo(np.int64).max)
-_INT_MIN = int(np.iinfo(np.int64).min)
-
 
 def test_call_from_slope_points():
     """
@@ -131,20 +126,6 @@ def test_raises_invalid_points():
 
     with assert_raises(ValueError):  # wrong tuple length
         PiecewiseLinearFunction([(0, 0, 1, 2)])
-
-
-def test_raises_on_arithmetic_overflow():
-    """
-    Tests overflow checks in piecewise function construction.
-    """
-    with assert_raises(ValueError):  # dx = INT_MAX - INT_MIN overflows
-        PiecewiseLinearFunction([(_INT_MIN, 1), (_INT_MAX, 1)])
-
-    with assert_raises(ValueError):  # slope * dx overflows
-        PiecewiseLinearFunction([(0, _INT_MAX), (2, 0)])
-
-    with assert_raises(ValueError):  # previous value + segment delta overflows
-        PiecewiseLinearFunction([(0, 1, _INT_MAX), (1, 0)])
 
 
 def test_unpickle_raises_when_internal_breakpoints_decrease():
