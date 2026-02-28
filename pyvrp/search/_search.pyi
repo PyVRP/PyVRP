@@ -225,3 +225,20 @@ class Node:
     def is_start_depot(self) -> bool: ...
     def is_end_depot(self) -> bool: ...
     def is_reload_depot(self) -> bool: ...
+
+class NeighbourhoodParams:
+    weight_wait_time: float
+    num_neighbours: int
+    symmetric_proximity: bool
+    def __init__(
+        self,
+        weight_wait_time: float = 0.2,
+        num_neighbours: int = 50,
+        symmetric_proximity: bool = True,
+    ) -> None: ...
+    def __eq__(self, other: object) -> bool: ...
+
+def compute_neighbours(
+    data: ProblemData,
+    params: NeighbourhoodParams,
+) -> list[list[int]]: ...
