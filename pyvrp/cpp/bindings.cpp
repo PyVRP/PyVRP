@@ -139,6 +139,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                &PiecewiseLinearFunction::segments,
                                py::return_value_policy::reference_internal,
                                DOC(pyvrp, PiecewiseLinearFunction, segments))
+        .def("is_monotonically_increasing",
+             &PiecewiseLinearFunction::isMonotonicallyIncreasing)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](PiecewiseLinearFunction const &function)  // __getstate__
