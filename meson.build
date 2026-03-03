@@ -26,12 +26,12 @@ if compiler.has_argument('-Wno-dangling-reference')
 endif
 
 # Logging configuration and spdlog dependency.
-if get_option('buildtype') == 'release'
+if get_option('buildtype') == 'debug'
+    # Log everything in debug builds.
+    add_project_arguments('-DSPDLOG_ACTIVE_LEVEL=0', language: 'cpp')
+else
     # Only log INFO and up in release builds.
     add_project_arguments('-DSPDLOG_ACTIVE_LEVEL=2', language: 'cpp')
-else
-    # Else log everything in debug(optimized) builds.
-    add_project_arguments('-DSPDLOG_ACTIVE_LEVEL=0', language: 'cpp')
 endif
 
 spdlog = dependency(
