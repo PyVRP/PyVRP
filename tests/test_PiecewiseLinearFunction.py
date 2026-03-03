@@ -32,6 +32,28 @@ def test_call_from_slope_points():
     assert_equal(fn(100), 400)
 
 
+def test_call_from_breakpoints_and_segments():
+    """
+    Tests calling the piecewise linear function using the `breakpoints`
+    and `segments` constructor.
+    """
+    fn = PiecewiseLinearFunction([5, 10], [(1, 2), (11, 3), (26, 4)])
+
+    # 1st segment, defined for values < 5.
+    assert_equal(fn(-100), 1 + 2 * -100)
+    assert_equal(fn(0), 1 + 2 * 0)
+    assert_equal(fn(4), 1 + 2 * 4)
+
+    # 2nd segment, defined for values in [5, 10).
+    assert_equal(fn(5), 11 + 3 * 5)
+    assert_equal(fn(9), 11 + 3 * 9)
+
+    # 3rd segment, defined for values >= 10.
+    assert_equal(fn(10), 26 + 4 * 10)
+    assert_equal(fn(13), 26 + 4 * 13)
+    assert_equal(fn(100), 26 + 4 * 100)
+
+
 def test_call_from_single_point():
     """
     Tests constructing from a single point, yielding a constant function.
@@ -129,14 +151,37 @@ def test_raises_invalid_points():
         PiecewiseLinearFunction([(0, 0, 1, 2)])
 
 
+def test_raises_invalid_breakpoints_and_segments():
+    """
+    Tests invalid input for the legacy constructor.
+    """
+    with assert_raises(ValueError):  # need at least one segment
+        PiecewiseLinearFunction([], [])
+
+    with assert_raises(ValueError):  # argument sizes must match
+        PiecewiseLinearFunction([0], [])
+
+    with assert_raises(ValueError):  # need one more segment than breakpoints
+        PiecewiseLinearFunction([0], [(0, 0)])
+
+    with assert_raises(ValueError):  # need one more segment than breakpoints
+        PiecewiseLinearFunction([], [(0, 0), (0, 0)])
+
+    with assert_raises(ValueError):  # breakpoints must be strictly increasing
+        PiecewiseLinearFunction([1, 1], [(1, 1), (2, 2)])
+
+    with assert_raises(ValueError):  # breakpoints must be strictly increasing
+        PiecewiseLinearFunction([2, 1], [(1, 1), (2, 2)])
+
+
 def test_getstate_returns_internal_representation():
     """
-    Tests getting the serialised points representation.
+    Tests getting the serialised internal representation.
     """
     fn = PiecewiseLinearFunction([(0, 1), (5, 10, 3)])
     assert_equal(
         fn.__getstate__(),
-        ([(0, 1, 0), (5, 10, 3)],),
+        ([0, 5], [(0, 1), (0, 1), (-42, 10)]),
     )
 
 

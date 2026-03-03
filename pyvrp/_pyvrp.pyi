@@ -42,6 +42,12 @@ class PiecewiseLinearFunction:
     @overload
     def __init__(
         self,
+        breakpoints: list[np.int64],
+        segments: list[tuple[np.int64, np.int64]],
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
         points: list[
             tuple[np.int64, np.int64] | tuple[np.int64, np.int64, np.int64]
         ],
