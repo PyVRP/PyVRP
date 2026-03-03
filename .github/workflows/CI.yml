@@ -29,7 +29,7 @@ jobs:
             compiler-version: '16'
             python-version: '3.11'
           - compiler: clang  # recent clang version
-            compiler-version: '21'
+            compiler-version: '20'
             python-version: '3.14'
     steps:
       - uses: actions/checkout@v4
