@@ -86,7 +86,6 @@ def test_load_logs_debug_message(ok_small, caplog):
     assert len(caplog.records) == 1
     assert caplog.records[0].levelno == logging.DEBUG
     assert "Loading solution" in caplog.records[0].message
-    assert "2 routes" in caplog.records[0].message
 
 
 def test_unload_logs_debug_message(ok_small, caplog):
@@ -103,4 +102,3 @@ def test_unload_logs_debug_message(ok_small, caplog):
     assert len(caplog.records) == 1
     assert caplog.records[0].levelno == logging.DEBUG
     assert "Unloading solution" in caplog.records[0].message
-    assert "2 routes" in caplog.records[0].message

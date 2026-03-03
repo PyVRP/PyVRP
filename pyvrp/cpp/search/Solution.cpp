@@ -58,9 +58,7 @@ Solution::Solution(ProblemData const &data) : data_(data)
 
 void Solution::load(pyvrp::Solution const &solution)
 {
-    SPDLOG_LOGGER_DEBUG(spdlog::get("pyvrp.search"),
-                        "Loading solution ({} routes).",
-                        solution.numRoutes());
+    SPDLOG_LOGGER_DEBUG(spdlog::get("pyvrp.search"), "Loading solution.");
 
     // Determine offsets for vehicle types.
     std::vector<size_t> vehicleOffset(data_.numVehicleTypes(), 0);
@@ -123,15 +121,10 @@ void Solution::load(pyvrp::Solution const &solution)
 
 pyvrp::Solution Solution::unload() const
 {
-    auto const numRoutes = std::count_if(
-        routes.begin(), routes.end(), [](auto const &r) { return !r.empty(); });
-
-    SPDLOG_LOGGER_DEBUG(spdlog::get("pyvrp.search"),
-                        "Unloading solution ({} routes).",
-                        numRoutes);
+    SPDLOG_LOGGER_DEBUG(spdlog::get("pyvrp.search"), "Unloading solution.");
 
     std::vector<pyvrp::Route> solRoutes;
-    solRoutes.reserve(numRoutes);
+    solRoutes.reserve(data_.numVehicles());
 
     std::vector<size_t> visits;
 
