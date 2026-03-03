@@ -32,16 +32,11 @@ endif
 SRC_DIR = 'pyvrp' / 'cpp'
 INCLUDES = include_directories(SRC_DIR)
 
-# spdlog (with bundled fmt) as static libraries without LTO, so spdlog's
-# object files are not re-analysed by GCC's LTO pass under -Werror.
 spdlog_dep = dependency(
     'spdlog',
-    default_options: [
-        'default_library=static',
-        'fmt:default_library=static',
-        'b_lto=false',
-        'fmt:b_lto=false',
-    ],
+    default_options: ['std_format=enabled'],
+    required: true,
+    static: true,
 )
 
 libpyvrp = static_library(
@@ -57,6 +52,7 @@ libpyvrp = static_library(
         SRC_DIR / 'LoadSegment.cpp',
         SRC_DIR / 'DurationSegment.cpp',
     ],
+    dependencies: spdlog_dep,
     include_directories: INCLUDES,
 )
 
