@@ -3,7 +3,6 @@
 
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
-
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/spdlog.h>
 
@@ -149,7 +148,7 @@ struct type_caster<pyvrp::Measure<T, V>>
 namespace pyvrp
 {
 // A spdlog sink that forwards messages to a Python logger.
-template <typename Mutex> class LogSink : public spdlog::sinks::base_sink<Mutex>
+class LogSink : public spdlog::sinks::base_sink<std::mutex>
 {
     std::string const name_;
 
@@ -196,7 +195,7 @@ inline void init_logging(std::string const &name)
     if (spdlog::get(name) != nullptr)  // already registered
         return;
 
-    auto sink = std::make_shared<LogSink<std::mutex>>(name);
+    auto sink = std::make_shared<LogSink>(name);
     auto logger = std::make_shared<spdlog::logger>(name, std::move(sink));
     logger->set_level(spdlog::level::trace);  // Python does the filtering
     spdlog::register_logger(std::move(logger));
