@@ -25,18 +25,27 @@ if compiler.has_argument('-Wno-dangling-reference')
     add_project_arguments('-Wno-dangling-reference', language: 'cpp')
 endif
 
-# We first compile static libraries that contains all regular, C++ code, one
-# per extension module. These are linked against when we compile the actual
-# Python extension modules down below. We also define the top-level source
-# directory here, for convenience.
-SRC_DIR = 'pyvrp' / 'cpp'
-INCLUDES = include_directories(SRC_DIR)
+# Logging configuration and spdlog dependency.
+if get_option('buildtype') == 'release'
+    # Only log INFO and up in release builds.
+    add_project_arguments('-DSPDLOG_ACTIVE_LEVEL=2', language: 'cpp')
+else
+    # Else log everything in debug(optimized) builds.
+    add_project_arguments('-DSPDLOG_ACTIVE_LEVEL=0', language: 'cpp')
+endif
 
-spdlog_dep = dependency(
+spdlog = dependency(
     'spdlog',
     default_options: ['std_format=enabled'],
     static: true,
 )
+
+# We first compile static libraries that contains all regular, C++ code, one
+# per extension module. The C++ libraries depend on spdlog. They are linked
+# against when we compile the actual Python extension modules down below. We
+# also define the top-level source directory here, for convenience.
+SRC_DIR = 'pyvrp' / 'cpp'
+INCLUDES = include_directories(SRC_DIR)
 
 libpyvrp = static_library(
     'pyvrp',
@@ -51,7 +60,7 @@ libpyvrp = static_library(
         SRC_DIR / 'LoadSegment.cpp',
         SRC_DIR / 'DurationSegment.cpp',
     ],
-    dependencies: spdlog_dep,
+    dependencies: spdlog,
     include_directories: INCLUDES,
 )
 
@@ -72,7 +81,7 @@ libsearch = static_library(
         SRC_DIR / 'search' / 'Solution.cpp',
         SRC_DIR / 'search' / 'SwapTails.cpp',
     ],
-    dependencies: spdlog_dep,
+    dependencies: spdlog,
     include_directories: INCLUDES,
     link_with: libpyvrp,
 )
@@ -91,7 +100,7 @@ py = import('python').find_installation()
 dependencies = [
     py.dependency(),
     dependency('pybind11'),
-    spdlog_dep,
+    spdlog,
 ]
 
 foreach extension : extensions
