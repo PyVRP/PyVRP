@@ -23,7 +23,12 @@ from ._search import ReplaceGroup as ReplaceGroup
 from ._search import ReplaceOptional as ReplaceOptional
 from ._search import SwapTails as SwapTails
 from ._search import UnaryOperator as UnaryOperator
+from ._search import _init_logging as _init_logging_search
 from .neighbourhood import compute_neighbours as compute_neighbours
+
+_init_logging_search("pyvrp")
+_init_logging_search("pyvrp.search")
+del _init_logging_search
 
 OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     Exchange10,

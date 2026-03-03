@@ -26,11 +26,23 @@ if compiler.has_argument('-Wno-dangling-reference')
 endif
 
 # We first compile static libraries that contains all regular, C++ code, one
-# per extension module. These are linked against when we compile the actual 
-# Python extension modules down below. We also define the top-level source 
+# per extension module. These are linked against when we compile the actual
+# Python extension modules down below. We also define the top-level source
 # directory here, for convenience.
 SRC_DIR = 'pyvrp' / 'cpp'
 INCLUDES = include_directories(SRC_DIR)
+
+# spdlog (with bundled fmt) as static libraries without LTO, so spdlog's
+# object files are not re-analysed by GCC's LTO pass under -Werror.
+spdlog_dep = dependency(
+    'spdlog',
+    default_options: [
+        'default_library=static',
+        'fmt:default_library=static',
+        'b_lto=false',
+        'fmt:b_lto=false',
+    ],
+)
 
 libpyvrp = static_library(
     'pyvrp',
@@ -65,22 +77,23 @@ libsearch = static_library(
         SRC_DIR / 'search' / 'Solution.cpp',
         SRC_DIR / 'search' / 'SwapTails.cpp',
     ],
+    dependencies: spdlog_dep,
     include_directories: INCLUDES,
     link_with: libpyvrp,
 )
 
 # Extension as [extension name, subdirectory, core C++ library]. The extension
 # name names the eventual module name, subdirectory gives the source and
-# installation directories (relative to top-level directories), and the core 
+# installation directories (relative to top-level directories), and the core
 # C++ library is one of the static libraries we defined above.
 extensions = [
     ['pyvrp', '', libpyvrp],
     ['search', 'search', libsearch],
 ]
 
-# Extension dependencies: Python itself, and pybind11.
+# Extension dependencies: Python itself, pybind11, and spdlog.
 py = import('python').find_installation()
-dependencies = [py.dependency(), dependency('pybind11')]
+dependencies = [py.dependency(), dependency('pybind11'), spdlog_dep]
 
 foreach extension : extensions
     rawname = extension[0]

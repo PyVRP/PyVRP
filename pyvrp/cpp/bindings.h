@@ -140,3 +140,91 @@ struct type_caster<pyvrp::Measure<T, V>>
     }
 };
 }  // namespace pybind11::detail
+
+// --- spdlog → Python logging bridge ----------------------------------------
+
+#include <spdlog/sinks/base_sink.h>
+#include <spdlog/spdlog.h>
+
+#include <memory>
+#include <mutex>
+#include <string>
+
+namespace pyvrp
+{
+// Maps spdlog level enums to Python logging integer levels.
+inline int pythonLevel(spdlog::level::level_enum lvl)
+{
+    switch (lvl)
+    {
+    case spdlog::level::trace:
+        return 5;  // logging.TRACE (not standard)
+    case spdlog::level::debug:
+        return 10;  // logging.DEBUG
+    case spdlog::level::info:
+        return 20;  // logging.INFO
+    case spdlog::level::warn:
+        return 30;  // logging.WARNING
+    case spdlog::level::err:
+        return 40;  // logging.ERROR
+    case spdlog::level::critical:
+        return 50;  // logging.CRITICAL
+    default:
+        return 0;
+    }
+}
+
+// Custom spdlog sink that forwards messages to a named Python logger.
+template <typename Mutex>
+class PythonLoggingSink : public spdlog::sinks::base_sink<Mutex>
+{
+    pybind11::object pyLogger_ = pybind11::none();
+    std::string name_;
+
+protected:
+    void sink_it_(spdlog::details::log_msg const &msg) override
+    {
+        pybind11::gil_scoped_acquire gil;
+
+        if (pyLogger_.is_none())
+            pyLogger_
+                = pybind11::module_::import("logging").attr("getLogger")(name_);
+
+        int const level = pythonLevel(msg.level);
+        if (!pyLogger_.attr("isEnabledFor")(level).cast<bool>())
+            return;
+
+        std::string const filename
+            = msg.source.filename ? msg.source.filename : "";
+        std::string const payload(msg.payload.begin(), msg.payload.end());
+
+        auto record = pyLogger_.attr("makeRecord")(name_,
+                                                   level,
+                                                   filename,
+                                                   msg.source.line,
+                                                   payload,
+                                                   pybind11::none(),
+                                                   pybind11::none());
+        pyLogger_.attr("handle")(record);
+    }
+
+    void flush_() override {}
+
+public:
+    explicit PythonLoggingSink(std::string name) : name_(std::move(name)) {}
+};
+
+// Creates and registers a spdlog logger whose sink forwards to Python.
+// Safe to call once per logger name; silently skips already-registered names.
+inline void init_logging(std::string const &name)
+{
+    if (spdlog::get(name) != nullptr)
+        return;
+
+    auto sink = std::make_shared<PythonLoggingSink<std::mutex>>(name);
+    auto logger = std::make_shared<spdlog::logger>(name, std::move(sink));
+    logger->set_level(spdlog::level::trace);  // Python side does the filtering
+    spdlog::register_logger(std::move(logger));
+}
+
+}  // namespace pyvrp

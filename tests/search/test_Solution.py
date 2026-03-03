@@ -1,3 +1,5 @@
+import logging
+
 from numpy.testing import assert_, assert_equal
 
 import pyvrp
@@ -69,3 +71,36 @@ def test_insert_required(ok_small):
     sol = Solution(data)
     assert_(not sol.insert(sol.nodes[1], search_space, cost_eval, False))
     assert_(sol.insert(sol.nodes[1], search_space, cost_eval, True))
+
+
+def test_load_logs_debug_message(ok_small, caplog):
+    """
+    Solution.load() should emit a debug message to the pyvrp.search logger.
+    """
+    pyvrp_sol = pyvrp.Solution(ok_small, [[1, 2], [3, 4]])
+    search_sol = Solution(ok_small)
+
+    with caplog.at_level(logging.DEBUG, logger="pyvrp.search"):
+        search_sol.load(pyvrp_sol)
+
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelno == logging.DEBUG
+    assert "Loading solution" in caplog.records[0].message
+    assert "2 routes" in caplog.records[0].message
+
+
+def test_unload_logs_debug_message(ok_small, caplog):
+    """
+    Solution.unload() should emit a debug message to the pyvrp.search logger.
+    """
+    pyvrp_sol = pyvrp.Solution(ok_small, [[1, 2], [3, 4]])
+    search_sol = Solution(ok_small)
+    search_sol.load(pyvrp_sol)
+
+    with caplog.at_level(logging.DEBUG, logger="pyvrp.search"):
+        search_sol.unload()
+
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelno == logging.DEBUG
+    assert "Unloading solution" in caplog.records[0].message
+    assert "2 routes" in caplog.records[0].message

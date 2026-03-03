@@ -1172,4 +1172,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("rand", &RandomNumberGenerator::rand)
         .def("randint", &RandomNumberGenerator::randint<int>, py::arg("high"))
         .def("state", &RandomNumberGenerator::state);
+
+    m.def("_init_logging",
+          &pyvrp::init_logging,
+          py::arg("name"),
+          "Register a spdlog logger that routes to the named Python logger.");
 }
