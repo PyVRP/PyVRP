@@ -35,7 +35,6 @@ INCLUDES = include_directories(SRC_DIR)
 spdlog_dep = dependency(
     'spdlog',
     default_options: ['std_format=enabled'],
-    required: true,
     static: true,
 )
 
@@ -89,7 +88,11 @@ extensions = [
 
 # Extension dependencies: Python itself, pybind11, and spdlog.
 py = import('python').find_installation()
-dependencies = [py.dependency(), dependency('pybind11'), spdlog_dep]
+dependencies = [
+    py.dependency(),
+    dependency('pybind11'),
+    spdlog_dep,
+]
 
 foreach extension : extensions
     rawname = extension[0]

@@ -28,7 +28,6 @@ from ._pyvrp import ScheduledVisit as ScheduledVisit
 from ._pyvrp import Solution as Solution
 from ._pyvrp import Trip as Trip
 from ._pyvrp import VehicleType as VehicleType
-from ._pyvrp import _init_logging
 from .minimise_fleet import minimise_fleet as minimise_fleet
 from .read import read as read
 from .read import read_solution as read_solution
@@ -42,7 +41,3 @@ from .solve import solve as solve
 _logger = logging.getLogger("pyvrp")
 _logger.addHandler(logging.StreamHandler(stream=sys.stdout))
 _logger.setLevel(logging.INFO)
-
-_init_logging("pyvrp")
-_init_logging("pyvrp.search")
-del _init_logging

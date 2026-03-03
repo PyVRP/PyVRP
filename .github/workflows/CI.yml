@@ -23,7 +23,7 @@ jobs:
             compiler-version: '13'
             python-version: '3.11'
           - compiler: gcc  # recent gcc version
-            compiler-version: '15'
+            compiler-version: '14'
             python-version: '3.14'
           - compiler: clang  # minimum clang version
             compiler-version: '16'

@@ -129,7 +129,7 @@ pyvrp::Solution Solution::unload() const
         logger->debug("Unloading solution ({} routes).", numRoutes);
 
     std::vector<pyvrp::Route> solRoutes;
-    solRoutes.reserve(data_.numVehicles());
+    solRoutes.reserve(numRoutes);
 
     std::vector<size_t> visits;
 

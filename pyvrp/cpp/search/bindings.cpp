@@ -45,6 +45,8 @@ using pyvrp::search::UnaryOperator;
 
 PYBIND11_MODULE(_search, m)
 {
+    pyvrp::init_logging("pyvrp.search");
+
     py::class_<UnaryOperator>(m, "UnaryOperator");
     py::class_<BinaryOperator>(m, "BinaryOperator");
 
@@ -648,9 +650,4 @@ PYBIND11_MODULE(_search, m)
           &pyvrp::search::computeNeighbours,
           py::arg("data"),
           py::arg("params"));
-
-    m.def("_init_logging",
-          &pyvrp::init_logging,
-          py::arg("name"),
-          "Register a spdlog logger that routes to the named Python logger.");
 }

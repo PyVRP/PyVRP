@@ -42,6 +42,8 @@ using PiecewiseLinearFunction
 
 PYBIND11_MODULE(_pyvrp, m)
 {
+    pyvrp::init_logging("pyvrp");
+
     py::class_<DynamicBitset>(m, "DynamicBitset", DOC(pyvrp, DynamicBitset))
         .def(py::init<size_t>(), py::arg("num_bits"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
@@ -1172,9 +1174,4 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("rand", &RandomNumberGenerator::rand)
         .def("randint", &RandomNumberGenerator::randint<int>, py::arg("high"))
         .def("state", &RandomNumberGenerator::state);
-
-    m.def("_init_logging",
-          &pyvrp::init_logging,
-          py::arg("name"),
-          "Register a spdlog logger that routes to the named Python logger.");
 }
