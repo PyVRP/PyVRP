@@ -5,6 +5,7 @@ import pytest
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import (
+    ActivityType,
     Client,
     ClientGroup,
     CostEvaluator,
@@ -206,7 +207,10 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     ls.add_operator(Exchange11(data))
 
     # Update the improved (locally optimal) solution with vehicles of type 1.
-    routes = [Route(data, r.visits(), 1) for r in improved.routes()]
+    routes = [
+        Route(data, [a.index for a in r if a.type == ActivityType.CLIENT], 1)
+        for r in improved.routes()
+    ]
     improved = Solution(data, routes)
 
     # This should not find any further improvements and thus not change the
@@ -327,7 +331,9 @@ def test_swap_if_improving_mutually_exclusive_group(
 
     routes = improved.routes()
     assert_equal(improved.num_routes(), 1)
-    assert_equal(routes[0].visits(), [3, 4])
+    assert_equal(
+        [a.index for a in routes[0] if a.type == ActivityType.CLIENT], [3, 4]
+    )
 
 
 def test_no_op_multi_trip_instance(ok_small_multiple_trips):
@@ -507,7 +513,12 @@ def test_inserts_required_missing(instance, exp_clients: set[int], request):
     improved = ls(sol, cost_eval)
     assert_(improved.is_complete())
 
-    visits = {client for route in improved.routes() for client in route}
+    visits = {
+        a.index
+        for route in improved.routes()
+        for a in route
+        if a.type == ActivityType.CLIENT
+    }
     assert_equal(visits, exp_clients)
 
 

@@ -6,6 +6,7 @@ import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
+    ActivityType,
     Client,
     ClientGroup,
     Depot,
@@ -51,11 +52,15 @@ def test_route_constructor_with_different_vehicle_types(ok_small):
     routes = sol.routes()
     assert_equal(len(routes), 2)
 
-    assert_equal(routes[0].visits(), [3, 4])
+    assert_equal(
+        [a.index for a in routes[0] if a.type == ActivityType.CLIENT], [3, 4]
+    )
     assert_equal(routes[0].vehicle_type(), 0)
     assert_equal(routes[0], Route(data, [3, 4], 0))
 
-    assert_equal(routes[1].visits(), [1, 2])
+    assert_equal(
+        [a.index for a in routes[1] if a.type == ActivityType.CLIENT], [1, 2]
+    )
     assert_equal(routes[1].vehicle_type(), 1)
     assert_equal(routes[1], Route(data, [1, 2], 1))
 
@@ -750,8 +755,8 @@ def test_str_contains_routes(ok_small, vehicle_types):
         # Each line should contain a route, where each route should contain
         # every client that is in the route as returned by routes().
         for route, str_route in zip(routes, str_representation):
-            for client in route:
-                assert_(str(client) in str_route)
+            for act in route:
+                assert_(str(act.index) in str_route)
 
 
 def test_hash(ok_small):

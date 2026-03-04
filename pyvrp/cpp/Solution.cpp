@@ -259,8 +259,9 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
             throw std::runtime_error("Solution should not have empty routes.");
 
         usedVehicles[route.vehicleType()]++;
-        for (auto const client : route)
+        for (auto const act : route)
         {
+            auto const client = act.index;
             if (isVisited[client])  // client is also visited by an earlier
             {                       // route if this is true
                 std::ostringstream msg;

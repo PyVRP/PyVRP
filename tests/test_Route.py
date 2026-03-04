@@ -5,6 +5,7 @@ import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
+    ActivityType,
     Client,
     Depot,
     ProblemData,
@@ -68,8 +69,22 @@ def test_route_access_methods(ok_small):
     routes = [Route(ok_small, [1, 3], 0), Route(ok_small, [2, 4], 0)]
 
     # Test route access: getting the route plan should return a simple list.
-    assert_equal(routes[0].visits(), [1, 3])
-    assert_equal(routes[1].visits(), [2, 4])
+    assert_equal(
+        [
+            a.index
+            for a in routes[0].activities()
+            if a.type == ActivityType.CLIENT
+        ],
+        [1, 3],
+    )
+    assert_equal(
+        [
+            a.index
+            for a in routes[1].activities()
+            if a.type == ActivityType.CLIENT
+        ],
+        [2, 4],
+    )
 
     # There's no excess load, so all excess load should be zero.
     assert_equal(routes[0].excess_load(), [0])
@@ -97,21 +112,21 @@ def test_route_access_methods(ok_small):
 
 def test_access_multiple_trips(ok_small_multiple_trips):
     """
-    Tests that accessing the route's clients via visits(), iteration, or the
-    underlying trips works correctly for a multi-trip instance.
+    Tests that accessing the route's clients via activities(), iteration, or
+    the underlying trips works correctly for a multi-trip instance.
     """
     data = ok_small_multiple_trips
     trips = [Trip(data, [1, 2], 0), Trip(data, [3], 0)]
     route = Route(data, trips, 0)
 
-    assert_equal(route.visits(), [1, 2, 3])
-    assert_equal([client for client in route], [1, 2, 3])
+    assert_equal(
+        [a.index for a in route if a.type == ActivityType.CLIENT], [1, 2, 3]
+    )
+    assert_equal([a.index for a in route], [1, 2, 3])
 
-    assert_equal(trips[0].visits(), [1, 2])
-    assert_equal([client for client in trips[0]], [1, 2])
+    assert_equal([a.index for a in trips[0]], [1, 2])
 
-    assert_equal(trips[1].visits(), [3])
-    assert_equal([client for client in trips[1]], [3])
+    assert_equal([a.index for a in trips[1]], [3])
 
 
 def test_route_time_warp_calculations(ok_small):
@@ -605,7 +620,10 @@ def test_statistics_with_small_multi_trip_example(ok_small_multiple_trips):
     trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
     route2 = Route(ok_small_multiple_trips, [trip1, trip2], 0)
 
-    assert_equal(route2.visits(), route1.visits())
+    assert_equal(
+        [a.index for a in route2 if a.type == ActivityType.CLIENT],
+        [a.index for a in route1 if a.type == ActivityType.CLIENT],
+    )
     assert_equal(len(route2), len(route1))
     assert_equal(route1.num_trips(), 1)
     assert_equal(route2.num_trips(), 2)
@@ -644,6 +662,9 @@ def test_schedule_multi_trip_example(ok_small_multiple_trips):
     locations = [visit.location for visit in schedule]
     assert_equal(locations, [0, 1, 2, 0, 3, 4, 0])
 
+    # The fundamental invariant: activities and schedule have the same size.
+    assert_equal(len(route.activities()), len(schedule))
+
 
 def test_index_multiple_trips(ok_small_multiple_trips):
     """
@@ -678,7 +699,7 @@ def test_iter_empty_trips(ok_small_multiple_trips):
     route = Route(data, [trip1, trip2, trip3], 0)
     assert_equal(str(route), "1 2 |  | 3 4")
     assert_equal(route.num_trips(), 3)
-    assert_equal(list(route), [1, 2, 3, 4])
+    assert_equal([a.index for a in route], [1, 2, 3, 4])
 
 
 def test_small_example_from_cattaruzza_paper():
@@ -873,8 +894,11 @@ def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
     trip2 = Trip(ok_small_multiple_trips, [], 0)
 
     route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
-    assert_equal([client for client in route], [1, 2])
-    assert_equal(route.visits(), [1, 2])
+    assert_equal([a.index for a in route], [1, 2])
+    assert_equal(
+        [a.index for a in route.activities() if a.type == ActivityType.CLIENT],
+        [1, 2],
+    )
 
 
 def test_route_release_time_after_vehicle_start_late():

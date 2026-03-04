@@ -1,4 +1,5 @@
 #include "bindings.h"
+#include "Activity.h"
 #include "CostEvaluator.h"
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
@@ -26,6 +27,8 @@
 
 namespace py = pybind11;
 
+using pyvrp::Activity;
+using pyvrp::ActivityType;
 using pyvrp::CostEvaluator;
 using pyvrp::DurationSegment;
 using pyvrp::DynamicBitset;
@@ -599,6 +602,20 @@ PYBIND11_MODULE(_pyvrp, m)
                 return data;
             }));
 
+    py::enum_<ActivityType>(m, "ActivityType", DOC(pyvrp, ActivityType))
+        .value("DEPOT", ActivityType::Depot)
+        .value("CLIENT", ActivityType::Client);
+
+    py::class_<Activity>(m, "Activity", DOC(pyvrp, Activity))
+        .def_readonly("type", &Activity::type)
+        .def_readonly("index", &Activity::index)
+        .def(py::self == py::self)
+        .def(py::pickle(
+            [](Activity const &a) { return py::make_tuple(a.type, a.index); },
+            [](py::tuple t) {
+                return Activity{t[0].cast<ActivityType>(), t[1].cast<size_t>()};
+            }));
+
     py::class_<Trip>(m, "Trip", DOC(pyvrp, Trip))
         .def(py::init<ProblemData const &,
                       std::vector<size_t>,
@@ -610,10 +627,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("vehicle_type"),
              py::arg("start_depot") = py::none(),
              py::arg("end_depot") = py::none())
-        .def("visits",
-             &Trip::visits,
-             py::return_value_policy::reference_internal,
-             DOC(pyvrp, Trip, visits))
+        .def("activities", &Trip::activities, DOC(pyvrp, Trip, activities))
         .def("distance", &Trip::distance, DOC(pyvrp, Trip, distance))
         .def("delivery",
              &Trip::delivery,
@@ -647,11 +661,14 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, Trip, hasExcessLoad))
         .def(py::self == py::self)  // this is __eq__
         .def("__len__", &Trip::size, DOC(pyvrp, Trip, size))
-        .def(
-            "__iter__",
-            [](Trip const &trip)
-            { return py::make_iterator(trip.begin(), trip.end()); },
-            py::return_value_policy::reference_internal)
+        .def("__iter__",
+             [](Trip const &trip)
+             {
+                 py::list acts;
+                 for (auto const client : trip)
+                     acts.append(Activity{ActivityType::Client, client});
+                 return py::iter(acts);
+             })
         .def(
             "__getitem__",
             [](Trip const &trip, int idx)
@@ -666,7 +683,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::pickle(
             [](Trip const &trip) {  // __getstate__
                 // Returns a tuple that completely encodes the trip's state.
-                return py::make_tuple(trip.visits(),
+                Trip::Visits clients(trip.begin(), trip.end());
+                return py::make_tuple(clients,
                                       trip.distance(),
                                       trip.delivery(),
                                       trip.pickup(),
@@ -707,18 +725,18 @@ PYBIND11_MODULE(_pyvrp, m)
                  return stream.str();
              });
 
-    py::class_<Route::ScheduledVisit>(
-        m, "ScheduledVisit", DOC(pyvrp, Route, ScheduledVisit))
-        .def_readonly("location", &Route::ScheduledVisit::location)
-        .def_readonly("trip", &Route::ScheduledVisit::trip)
-        .def_readonly("start_service", &Route::ScheduledVisit::startService)
-        .def_readonly("end_service", &Route::ScheduledVisit::endService)
-        .def_readonly("wait_duration", &Route::ScheduledVisit::waitDuration)
-        .def_readonly("time_warp", &Route::ScheduledVisit::timeWarp)
+    py::class_<Route::ScheduledActivity>(
+        m, "ScheduledActivity", DOC(pyvrp, Route, ScheduledActivity))
+        .def_readonly("location", &Route::ScheduledActivity::location)
+        .def_readonly("trip", &Route::ScheduledActivity::trip)
+        .def_readonly("start_service", &Route::ScheduledActivity::startService)
+        .def_readonly("end_service", &Route::ScheduledActivity::endService)
+        .def_readonly("wait_duration", &Route::ScheduledActivity::waitDuration)
+        .def_readonly("time_warp", &Route::ScheduledActivity::timeWarp)
         .def_property_readonly("service_duration",
-                               &Route::ScheduledVisit::serviceDuration)
+                               &Route::ScheduledActivity::serviceDuration)
         .def(py::pickle(
-            [](Route::ScheduledVisit const &visit) {  // __getstate__
+            [](Route::ScheduledActivity const &visit) {  // __getstate__
                 return py::make_tuple(visit.location,
                                       visit.trip,
                                       visit.startService,
@@ -727,7 +745,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       visit.timeWarp);
             },
             [](py::tuple t) {  // __setstate__
-                Route::ScheduledVisit visit(
+                Route::ScheduledActivity visit(
                     t[0].cast<size_t>(),            // location
                     t[1].cast<size_t>(),            // trip
                     t[2].cast<pyvrp::Duration>(),   // start service
@@ -757,10 +775,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("idx"),
              py::return_value_policy::reference_internal,
              DOC(pyvrp, Route, trip))
-        .def("visits",
-             &Route::visits,
-             py::return_value_policy::reference_internal,
-             DOC(pyvrp, Route, visits))
+        .def("activities", &Route::activities, DOC(pyvrp, Route, activities))
         .def("fixed_vehicle_cost",
              &Route::fixedVehicleCost,
              DOC(pyvrp, Route, fixedVehicleCost))
@@ -860,7 +875,7 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t) {  // __setstate__
                 using Trips = std::vector<Trip>;
-                using Schedule = std::vector<Route::ScheduledVisit>;
+                using Schedule = std::vector<Route::ScheduledActivity>;
 
                 Route route(
                     t[0].cast<Trips>(),                     // trips

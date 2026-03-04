@@ -147,7 +147,16 @@ Trip::Visits::const_reverse_iterator Trip::rend() const
     return visits_.rend();
 }
 
-Trip::Visits const &Trip::visits() const { return visits_; }
+std::vector<pyvrp::Activity> Trip::activities() const
+{
+    std::vector<pyvrp::Activity> result;
+    result.reserve(2 + visits_.size());
+    result.push_back({pyvrp::ActivityType::Depot, startDepot_});
+    for (auto const client : visits_)
+        result.push_back({pyvrp::ActivityType::Client, client});
+    result.push_back({pyvrp::ActivityType::Depot, endDepot_});
+    return result;
+}
 
 Distance Trip::distance() const { return distance_; }
 

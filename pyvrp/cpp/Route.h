@@ -1,6 +1,7 @@
 #ifndef PYVRP_ROUTE_H
 #define PYVRP_ROUTE_H
 
+#include "Activity.h"
 #include "CostEvaluator.h"
 #include "Measure.h"
 #include "ProblemData.h"
@@ -46,7 +47,7 @@ public:
     public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = std::ptrdiff_t;
-        using value_type = Client;
+        using value_type = Activity;
 
         Iterator(Route const &route, size_t idx);
 
@@ -59,7 +60,7 @@ public:
 
         bool operator==(Iterator const &other) const;
 
-        Client operator*() const;
+        Activity operator*() const;
 
         Iterator operator++(int);
         Iterator &operator++();
@@ -88,7 +89,7 @@ public:
      *     back in time' to begin service. Non-zero time warp indicates an
      *     infeasible route.
      */
-    struct ScheduledVisit
+    struct ScheduledActivity
     {
         size_t const location = 0;
         size_t const trip = 0;
@@ -97,19 +98,19 @@ public:
         Duration const waitDuration = 0;
         Duration const timeWarp = 0;
 
-        ScheduledVisit(size_t location,
-                       size_t trip,
-                       Duration startService,
-                       Duration endService,
-                       Duration waitDuration,
-                       Duration timeWarp);
+        ScheduledActivity(size_t location,
+                          size_t trip,
+                          Duration startService,
+                          Duration endService,
+                          Duration waitDuration,
+                          Duration timeWarp);
 
         [[nodiscard]] Duration serviceDuration() const;
     };
 
 private:
     Trips trips_ = {};
-    std::vector<ScheduledVisit> schedule_ = {};  // Client visit schedule data
+    std::vector<ScheduledActivity> schedule_ = {};  // Activity schedule data
     Distance distance_ = 0;        // Total travel distance on this route
     Cost distanceCost_ = 0;        // Total cost of travel distance
     Distance excessDistance_ = 0;  // Excess travel distance
@@ -160,9 +161,10 @@ public:
     [[nodiscard]] Trip const &trip(size_t idx) const;
 
     /**
-     * Route visits, as a list of clients.
+     * All activities on this route, including all depot visits and client
+     * visits. The order matches that of :meth:`~schedule`.
      */
-    [[nodiscard]] Visits visits() const;
+    [[nodiscard]] std::vector<Activity> activities() const;
 
     /**
      * Statistics about each visit and the overall route schedule. This includes
@@ -173,7 +175,7 @@ public:
      *    The schedule assumes the route starts at :meth:`~start_time`. Starting
      *    later may be feasible, but shifts the schedule.
      */
-    [[nodiscard]] std::vector<ScheduledVisit> const &schedule() const;
+    [[nodiscard]] std::vector<ScheduledActivity> const &schedule() const;
 
     /**
      * The fixed cost of the vehicle servicing this route.
@@ -360,7 +362,7 @@ public:
           VehicleType vehicleType,
           Depot startDepot,
           Depot endDepot,
-          std::vector<ScheduledVisit> schedule);
+          std::vector<ScheduledActivity> schedule);
 };
 
 template <>  // specialisation for pyvrp::Route

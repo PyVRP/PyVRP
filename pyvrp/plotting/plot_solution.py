@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyvrp import ProblemData, Solution
+from pyvrp import ActivityType, ProblemData, Solution
 
 
 def plot_solution(
@@ -44,18 +44,24 @@ def plot_solution(
     in_solution = np.zeros(data.num_locations, dtype=bool)
     for idx, route in enumerate(solution.routes()):
         color = colors(idx % colors.N)
-        in_solution[route] = True
+        clients = [a.index for a in route if a.type == ActivityType.CLIENT]
+        in_solution[clients] = True
 
         if len(route) == 1 or plot_clients:  # explicit client coordinate plot
             kwargs = dict(label=f"Route {idx + 1}", zorder=3, s=75)
-            ax.scatter(x_coords[route], y_coords[route], **kwargs, color=color)
+            ax.scatter(
+                x_coords[clients], y_coords[clients], **kwargs, color=color
+            )
 
         for trip in route.trips():
             if len(trip) == 0:
                 continue
 
-            x = x_coords[trip]
-            y = y_coords[trip]
+            trip_clients = [
+                a.index for a in trip if a.type == ActivityType.CLIENT
+            ]
+            x = x_coords[trip_clients]
+            y = y_coords[trip_clients]
 
             # Clients visited by this trip, as a line segment or single dot (in
             # case of a singleton trip). Trips of the same route share colour.

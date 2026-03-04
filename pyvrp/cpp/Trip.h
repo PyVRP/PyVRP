@@ -1,6 +1,7 @@
 #ifndef PYVRP_TRIP_H
 #define PYVRP_TRIP_H
 
+#include "Activity.h"
 #include "ProblemData.h"
 
 #include <optional>
@@ -67,9 +68,11 @@ public:
     [[nodiscard]] Visits::const_reverse_iterator rend() const;
 
     /**
-     * Trip visits, as a list of clients.
+     * All activities on this trip, including the start and end depot visits.
+     * The first and last entries are always depot activities; all entries
+     * in between are client activities.
      */
-    [[nodiscard]] Visits const &visits() const;
+    [[nodiscard]] std::vector<Activity> activities() const;
 
     /**
      * Total distance travelled on this trip.

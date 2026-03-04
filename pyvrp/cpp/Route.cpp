@@ -40,13 +40,13 @@ bool Route::Iterator::operator==(Iterator const &other) const
     return route_ == other.route_ && trip_ == other.trip_ && idx_ == other.idx_;
 }
 
-Client Route::Iterator::operator*() const
+pyvrp::Activity Route::Iterator::operator*() const
 {
     auto const &trips = route_->trips();
     assert(trip_ < trips.size());
     assert(idx_ < trips[trip_].size());
 
-    return trips[trip_][idx_];
+    return {pyvrp::ActivityType::Client, trips[trip_][idx_]};
 }
 
 Route::Iterator Route::Iterator::operator++(int)
@@ -76,12 +76,12 @@ Route::Iterator &Route::Iterator::operator++()
     return *this;
 }
 
-Route::ScheduledVisit::ScheduledVisit(size_t location,
-                                      size_t trip,
-                                      Duration startService,
-                                      Duration endService,
-                                      Duration waitDuration,
-                                      Duration timeWarp)
+Route::ScheduledActivity::ScheduledActivity(size_t location,
+                                            size_t trip,
+                                            Duration startService,
+                                            Duration endService,
+                                            Duration waitDuration,
+                                            Duration timeWarp)
     : location(location),
       trip(trip),
       startService(startService),
@@ -92,7 +92,7 @@ Route::ScheduledVisit::ScheduledVisit(size_t location,
     assert(startService <= endService);
 }
 
-Duration Route::ScheduledVisit::serviceDuration() const
+Duration Route::ScheduledActivity::serviceDuration() const
 {
     return endService - startService;
 }
@@ -311,7 +311,7 @@ Route::Route(Trips trips,
              size_t vehicleType,
              size_t startDepot,
              size_t endDepot,
-             std::vector<ScheduledVisit> schedule)
+             std::vector<ScheduledActivity> schedule)
     : trips_(std::move(trips)),
       schedule_(std::move(schedule)),
       distance_(distance),
@@ -371,9 +371,21 @@ Trip const &Route::trip(size_t idx) const
     return trips_[idx];
 }
 
-Route::Visits Route::visits() const { return {begin(), end()}; }
+std::vector<pyvrp::Activity> Route::activities() const
+{
+    std::vector<pyvrp::Activity> result;
+    result.reserve(numTrips() + size() + 1);
+    for (auto const &trip : trips_)
+    {
+        result.push_back({pyvrp::ActivityType::Depot, trip.startDepot()});
+        for (auto const client : trip)
+            result.push_back({pyvrp::ActivityType::Client, client});
+    }
+    result.push_back({pyvrp::ActivityType::Depot, endDepot_});
+    return result;
+}
 
-std::vector<Route::ScheduledVisit> const &Route::schedule() const
+std::vector<Route::ScheduledActivity> const &Route::schedule() const
 {
     return schedule_;
 }

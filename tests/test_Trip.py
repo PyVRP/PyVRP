@@ -1,7 +1,7 @@
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import Route, Trip
+from pyvrp import ActivityType, Route, Trip
 
 
 @pytest.mark.parametrize(("start_idx", "end_idx"), [(1, 0), (0, 1)])
@@ -51,11 +51,15 @@ def test_trip_defaults_to_vehicle_start_end_depots(ok_small_multi_depot):
 def test_trip_length_and_visits(ok_small, visits: list[int]):
     """
     Tests that the trip length returns the number of client visits, and
-    visits() the actual visits.
+    activities() the actual activities including depots.
     """
     trip = Trip(ok_small, visits, 0, 0, 0)
     assert_equal(len(trip), len(visits))
-    assert_equal(trip.visits(), visits)
+    activities = trip.activities()
+    assert_equal(len(activities), len(visits) + 2)
+    assert_equal(activities[0].type, ActivityType.DEPOT)
+    assert_equal(activities[-1].type, ActivityType.DEPOT)
+    assert_equal([a.index for a in activities[1:-1]], visits)
 
 
 @pytest.mark.parametrize("visits", [[1, 2, 3], [4, 3], [4], [1, 2, 3, 4]])
@@ -73,7 +77,7 @@ def test_single_route_and_trip_same_statistics(ok_small, visits: list[int]):
     assert_equal(trip.vehicle_type(), route.vehicle_type())
     assert_equal(trip.start_depot(), route.start_depot())
     assert_equal(trip.end_depot(), route.end_depot())
-    assert_equal(trip.visits(), route.visits())
+    assert_equal(trip.activities(), route.activities())
 
     # Distance- and cost-related statistics.
     assert_equal(trip.distance(), route.distance())
@@ -135,8 +139,8 @@ def test_trip_iter_and_getitem(ok_small):
     with assert_raises(IndexError):
         trip[2]
 
-    # The trip is iterable, and iterating it returns the client visits.
-    assert_equal(trip.visits(), [client for client in trip])
+    # The trip is iterable, and iterating it returns Activity objects.
+    assert_equal([a.index for a in trip], [1, 2])
 
 
 def test_load(ok_small):
