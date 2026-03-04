@@ -2,6 +2,8 @@ from typing import Iterator, overload
 
 import numpy as np
 
+_BUILD_TYPE: str
+
 class CostEvaluator:
     def __init__(
         self,

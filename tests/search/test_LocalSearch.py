@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal
@@ -28,6 +30,8 @@ from pyvrp.search import (
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
+from tests.helpers import read_solution
+from tests.markers import skip_if_release
 
 
 def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
@@ -647,3 +651,29 @@ def test_insert_missing_groups_and_clients(ok_small_mutually_exclusive_groups):
     assert_(new.is_complete())
     assert_equal(new.num_missing_clients(), 0)
     assert_equal(new.num_missing_groups(), 0)
+
+
+@skip_if_release
+def test_debug_logs_on_bks(rc208, caplog):
+    """
+    Tests that the local search logs various relevant statements in debug mode.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
+    ls.add_operator(Exchange10(rc208))
+
+    bks = read_solution("data/RC208.sol", rc208)
+    cost_eval = CostEvaluator([1_000], 1_000, 0)
+
+    with caplog.at_level(logging.DEBUG, logger="pyvrp.search"):
+        ls(bks, cost_eval, exhaustive=False)
+
+    expected = [
+        "Applying local search (exhaustive=false)",
+        "Entering search loop (step=0).",
+        "Completed local search: improving=0",  # bks, so no improvements
+    ]
+
+    for record, exp_msg in zip(caplog.records, expected):
+        assert_equal(record.levelno, logging.DEBUG)
+        assert_(exp_msg in record.message)
