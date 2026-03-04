@@ -1,7 +1,7 @@
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import ActivityType, Route, Trip
+from pyvrp import Route, Trip
 
 
 @pytest.mark.parametrize(("start_idx", "end_idx"), [(1, 0), (0, 1)])
@@ -57,8 +57,8 @@ def test_trip_length_and_visits(ok_small, visits: list[int]):
     assert_equal(len(trip), len(visits))
     activities = trip.activities()
     assert_equal(len(activities), len(visits) + 2)
-    assert_equal(activities[0].type, ActivityType.DEPOT)
-    assert_equal(activities[-1].type, ActivityType.DEPOT)
+    assert_(activities[0].is_depot())
+    assert_(activities[-1].is_depot())
     assert_equal([a.index for a in activities[1:-1]], visits)
 
 

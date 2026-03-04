@@ -3,7 +3,6 @@ import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
-    ActivityType,
     Client,
     ClientGroup,
     Depot,
@@ -473,8 +472,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
     # Solve an instance with no clients.
     res = m.solve(stop=MaxIterations(1))
     solution = [
-        [a.index for a in r if a.type == ActivityType.CLIENT]
-        for r in res.best.routes()
+        [a.index for a in r if a.is_client()] for r in res.best.routes()
     ]
     assert_equal(solution, [])
 
@@ -485,8 +483,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
 
     res = m.solve(stop=MaxIterations(1))
     solution = [
-        [a.index for a in r if a.type == ActivityType.CLIENT]
-        for r in res.best.routes()
+        [a.index for a in r if a.is_client()] for r in res.best.routes()
     ]
     assert_equal(solution, [[1]])
 
@@ -601,12 +598,8 @@ def test_model_solves_line_instance_with_multiple_depots():
     # the second route. Route membership is compared using sets because the
     # optimal visit order is not unique.
     routes = res.best.routes()
-    assert_equal(
-        {a.index for a in routes[0] if a.type == ActivityType.CLIENT}, {2, 3}
-    )
-    assert_equal(
-        {a.index for a in routes[1] if a.type == ActivityType.CLIENT}, {4, 5}
-    )
+    assert_equal({a.index for a in routes[0] if a.is_client()}, {2, 3})
+    assert_equal({a.index for a in routes[1] if a.is_client()}, {4, 5})
 
 
 def test_client_depot_and_vehicle_type_name_fields():
@@ -949,12 +942,8 @@ def test_model_solves_instances_with_multiple_profiles():
     assert_equal(res.cost(), 0)
 
     route1, route2 = res.best.routes()
-    assert_equal(
-        [a.index for a in route1 if a.type == ActivityType.CLIENT], [1]
-    )
-    assert_equal(
-        [a.index for a in route2 if a.type == ActivityType.CLIENT], [2]
-    )
+    assert_equal([a.index for a in route1 if a.is_client()], [1])
+    assert_equal([a.index for a in route2 if a.is_client()], [2])
 
 
 def test_model_solves_instance_with_zero_load_dimensions():

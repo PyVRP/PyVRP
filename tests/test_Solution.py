@@ -6,7 +6,6 @@ import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
-    ActivityType,
     Client,
     ClientGroup,
     Depot,
@@ -52,15 +51,11 @@ def test_route_constructor_with_different_vehicle_types(ok_small):
     routes = sol.routes()
     assert_equal(len(routes), 2)
 
-    assert_equal(
-        [a.index for a in routes[0] if a.type == ActivityType.CLIENT], [3, 4]
-    )
+    assert_equal([a.index for a in routes[0] if a.is_client()], [3, 4])
     assert_equal(routes[0].vehicle_type(), 0)
     assert_equal(routes[0], Route(data, [3, 4], 0))
 
-    assert_equal(
-        [a.index for a in routes[1] if a.type == ActivityType.CLIENT], [1, 2]
-    )
+    assert_equal([a.index for a in routes[1] if a.is_client()], [1, 2])
     assert_equal(routes[1].vehicle_type(), 1)
     assert_equal(routes[1], Route(data, [1, 2], 1))
 

@@ -609,6 +609,8 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<Activity>(m, "Activity", DOC(pyvrp, Activity))
         .def_readonly("type", &Activity::type)
         .def_readonly("index", &Activity::index)
+        .def("is_client", &Activity::isClient, DOC(pyvrp, Activity, isClient))
+        .def("is_depot", &Activity::isDepot, DOC(pyvrp, Activity, isDepot))
         .def(py::self == py::self)
         .def(py::pickle(
             [](Activity const &a) { return py::make_tuple(a.type, a.index); },

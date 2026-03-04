@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 import pyvrp
-from pyvrp import ActivityType, CostEvaluator, RandomNumberGenerator
+from pyvrp import CostEvaluator, RandomNumberGenerator
 from pyvrp.search import (
     PerturbationManager,
     PerturbationParams,
@@ -137,12 +137,7 @@ def test_perturb_switches_remove_insert(ok_small):
 
     # Test that the perturbed solution contains only client 3.
     perturbed = sol.unload()
-    visits = [
-        a.index
-        for r in perturbed.routes()
-        for a in r
-        if a.type == ActivityType.CLIENT
-    ]
+    visits = [a.index for r in perturbed.routes() for a in r if a.is_client()]
     assert_equal(visits, [3])
 
 

@@ -35,8 +35,22 @@ struct Activity
     ActivityType type;
     size_t index;
 
+    /**
+     * Returns whether this activity is a client visit.
+     */
+    [[nodiscard]] bool isClient() const;
+
+    /**
+     * Returns whether this activity is a depot visit.
+     */
+    [[nodiscard]] bool isDepot() const;
+
     bool operator==(Activity const &) const = default;
 };
+
+inline bool Activity::isClient() const { return type == ActivityType::Client; }
+
+inline bool Activity::isDepot() const { return type == ActivityType::Depot; }
 }  // namespace pyvrp
 
 #endif  // PYVRP_ACTIVITY_H

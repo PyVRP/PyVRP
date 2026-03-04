@@ -5,7 +5,6 @@ import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
-    ActivityType,
     Client,
     Depot,
     ProblemData,
@@ -70,19 +69,11 @@ def test_route_access_methods(ok_small):
 
     # Test route access: getting the route plan should return a simple list.
     assert_equal(
-        [
-            a.index
-            for a in routes[0].activities()
-            if a.type == ActivityType.CLIENT
-        ],
+        [a.index for a in routes[0].activities() if a.is_client()],
         [1, 3],
     )
     assert_equal(
-        [
-            a.index
-            for a in routes[1].activities()
-            if a.type == ActivityType.CLIENT
-        ],
+        [a.index for a in routes[1].activities() if a.is_client()],
         [2, 4],
     )
 
@@ -119,9 +110,7 @@ def test_access_multiple_trips(ok_small_multiple_trips):
     trips = [Trip(data, [1, 2], 0), Trip(data, [3], 0)]
     route = Route(data, trips, 0)
 
-    assert_equal(
-        [a.index for a in route if a.type == ActivityType.CLIENT], [1, 2, 3]
-    )
+    assert_equal([a.index for a in route if a.is_client()], [1, 2, 3])
     assert_equal([a.index for a in route], [1, 2, 3])
 
     assert_equal([a.index for a in trips[0]], [1, 2])
@@ -621,8 +610,8 @@ def test_statistics_with_small_multi_trip_example(ok_small_multiple_trips):
     route2 = Route(ok_small_multiple_trips, [trip1, trip2], 0)
 
     assert_equal(
-        [a.index for a in route2 if a.type == ActivityType.CLIENT],
-        [a.index for a in route1 if a.type == ActivityType.CLIENT],
+        [a.index for a in route2 if a.is_client()],
+        [a.index for a in route1 if a.is_client()],
     )
     assert_equal(len(route2), len(route1))
     assert_equal(route1.num_trips(), 1)
@@ -896,7 +885,7 @@ def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
     route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
     assert_equal([a.index for a in route], [1, 2])
     assert_equal(
-        [a.index for a in route.activities() if a.type == ActivityType.CLIENT],
+        [a.index for a in route.activities() if a.is_client()],
         [1, 2],
     )
 

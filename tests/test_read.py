@@ -9,7 +9,7 @@ from numpy.testing import (
     assert_raises,
 )
 
-from pyvrp import ActivityType, CostEvaluator
+from pyvrp import CostEvaluator
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from tests.helpers import read, read_solution
@@ -511,12 +511,8 @@ def test_read_solution_single_vehicle_type(ok_small):
     solution = read_solution("data/OkSmall.sol", ok_small)
     routes = solution.routes()
 
-    assert_equal(
-        [a.index for a in routes[0] if a.type == ActivityType.CLIENT], [1, 2]
-    )
-    assert_equal(
-        [a.index for a in routes[1] if a.type == ActivityType.CLIENT], [3, 4]
-    )
+    assert_equal([a.index for a in routes[0] if a.is_client()], [1, 2])
+    assert_equal([a.index for a in routes[1] if a.is_client()], [3, 4])
 
     assert_equal(routes[0].vehicle_type(), 0)
     assert_equal(routes[1].vehicle_type(), 0)
@@ -533,12 +529,8 @@ def test_read_solution_multiple_vehicle_types(ok_small_multi_depot):
 
     # The solution file shows three routes, but empty routes are ignored.
     assert_equal(solution.num_routes(), 2)
-    assert_equal(
-        [a.index for a in routes[0] if a.type == ActivityType.CLIENT], [2]
-    )
-    assert_equal(
-        [a.index for a in routes[1] if a.type == ActivityType.CLIENT], [3, 4]
-    )
+    assert_equal([a.index for a in routes[0] if a.is_client()], [2])
+    assert_equal([a.index for a in routes[1] if a.is_client()], [3, 4])
 
     # The instance has two vehicle types: two of the first type and one of the
     # second type. Because the second route was empty, the second vehicle of
@@ -582,16 +574,12 @@ def test_read_solution_multiple_reload_depots():
     route = solution.routes()[0]
 
     trip1 = route.trip(0)
-    assert_equal(
-        [a.index for a in trip1 if a.type == ActivityType.CLIENT], [2]
-    )
+    assert_equal([a.index for a in trip1 if a.is_client()], [2])
     assert_equal(trip1.start_depot(), 0)
     assert_equal(trip1.end_depot(), 1)
 
     trip2 = route.trip(1)
-    assert_equal(
-        [a.index for a in trip2 if a.type == ActivityType.CLIENT], [3, 4]
-    )
+    assert_equal([a.index for a in trip2 if a.is_client()], [3, 4])
     assert_equal(trip2.start_depot(), 1)
     assert_equal(trip2.end_depot(), 0)
 
@@ -671,11 +659,11 @@ def test_read_hfvrp_solution():
     routes = sol.routes()
 
     assert_equal(
-        [a.index for a in routes[1] if a.type == ActivityType.CLIENT],
+        [a.index for a in routes[1] if a.is_client()],
         [59, 35, 99, 49, 79, 47, 109, 18],
     )
     assert_equal(
-        [a.index for a in routes[-1] if a.type == ActivityType.CLIENT],
+        [a.index for a in routes[-1] if a.is_client()],
         [5, 6, 3, 93, 42, 9],
     )
 

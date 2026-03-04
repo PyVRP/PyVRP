@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyvrp import ActivityType, ProblemData, Solution
+from pyvrp import ProblemData, Solution
 
 
 def plot_solution(
@@ -44,7 +44,7 @@ def plot_solution(
     in_solution = np.zeros(data.num_locations, dtype=bool)
     for idx, route in enumerate(solution.routes()):
         color = colors(idx % colors.N)
-        clients = [a.index for a in route if a.type == ActivityType.CLIENT]
+        clients = [a.index for a in route if a.is_client()]
         in_solution[clients] = True
 
         if len(route) == 1 or plot_clients:  # explicit client coordinate plot
@@ -57,9 +57,7 @@ def plot_solution(
             if len(trip) == 0:
                 continue
 
-            trip_clients = [
-                a.index for a in trip if a.type == ActivityType.CLIENT
-            ]
+            trip_clients = [a.index for a in trip if a.is_client()]
             x = x_coords[trip_clients]
             y = y_coords[trip_clients]
 
