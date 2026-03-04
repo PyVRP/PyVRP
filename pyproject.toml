@@ -151,6 +151,10 @@ before-build = "pip install delvewheel"
 repair-wheel-command = "delvewheel repair -w {dest_dir} {wheel}"
 
 
+[tool.cibuildwheel.macos.environment]
+MACOSX_DEPLOYMENT_TARGET = "13.3"
+
+
 [tool.poetry]
 include = [
     { path = "benchmarks/", format = "sdist" },
