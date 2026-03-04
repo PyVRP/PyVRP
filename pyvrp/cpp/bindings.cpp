@@ -1005,8 +1005,6 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t) {  // __setstate__
                 using Routes = std::vector<Route>;
-                using Neighbours
-                    = std::vector<std::optional<std::pair<size_t, size_t>>>;
 
                 Solution sol(
                     t[0].cast<size_t>(),                    // num clients
