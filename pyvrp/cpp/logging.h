@@ -3,11 +3,16 @@
 
 #include <spdlog/spdlog.h>
 
-#define PYVRP_LEVEL_DEBUG 1
-#define PYVRP_LEVEL_INFO 2
-#define PYVRP_LEVEL_WARN 3
-#define PYVRP_LEVEL_ERROR 4
-#define PYVRP_LEVEL_CRITICAL 5
+/**
+ * Logging macro definitions, mostly as simple wrappers around spdlog macros.
+ * Use these instead of relying on spdlog directly.
+ */
+
+#define PYVRP_LEVEL_DEBUG SPDLOG_LEVEL_DEBUG
+#define PYVRP_LEVEL_INFO SPDLOG_LEVEL_INFO
+#define PYVRP_LEVEL_WARN SPDLOG_LEVEL_WARN
+#define PYVRP_LEVEL_ERROR SPDLOG_LEVEL_ERROR
+#define PYVRP_LEVEL_CRITICAL SPDLOG_LEVEL_CRITICAL
 
 #if PYVRP_LOG_LEVEL <= PYVRP_LEVEL_DEBUG
 #define PYVRP_DEBUG(name, ...)                                                 \
