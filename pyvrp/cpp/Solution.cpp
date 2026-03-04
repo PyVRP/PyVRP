@@ -122,16 +122,18 @@ bool Solution::operator==(Solution const &other) const
                               && distanceCost_ == other.distanceCost_
                               && durationCost_ == other.durationCost_
                               && timeWarp_ == other.timeWarp_
-                              && routes_.size() == other.routes_.size()
                               && numClients_ == other.numClients_;
     // clang-format on
 
     if (!attributeChecks)
         return false;
 
-    // TODO check routes
-
-    return true;
+    // Tests if the routes are permutations of each other. Quadratic (in the
+    // number of routes) in the worst case.
+    return std::is_permutation(routes_.begin(),
+                               routes_.end(),
+                               other.routes_.begin(),
+                               other.routes_.end());
 }
 
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
