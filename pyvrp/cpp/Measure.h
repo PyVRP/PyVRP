@@ -5,6 +5,7 @@
 #include <cmath>
 #include <compare>
 #include <cstdint>
+#include <format>
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -230,7 +231,7 @@ std::ostream &operator<<(std::ostream &out,
     return out << measure.get();
 }
 
-// Specialisations for hashing and numerical limits.
+// Specialisations for hashing, numerical limits, and formatting.
 
 template <pyvrp::MeasureType Type, pyvrp::NumberType Value>
 struct std::hash<pyvrp::Measure<Type, Value>>
@@ -253,6 +254,15 @@ public:
     static pyvrp::Measure<Type, Value> min()
     {
         return std::numeric_limits<Value>::min();
+    }
+};
+
+template <pyvrp::MeasureType Type, pyvrp::NumberType Value>
+struct std::formatter<pyvrp::Measure<Type, Value>> : std::formatter<Value>
+{
+    auto format(pyvrp::Measure<Type, Value> const measure, auto &ctx) const
+    {
+        return std::formatter<Value>::format(measure.get(), ctx);
     }
 };
 

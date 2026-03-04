@@ -42,6 +42,14 @@ using PiecewiseLinearFunction
 
 PYBIND11_MODULE(_pyvrp, m)
 {
+    pyvrp::registerLogger("pyvrp");
+
+#ifdef NDEBUG
+    m.attr("_BUILD_TYPE") = "RELEASE";
+#else
+    m.attr("_BUILD_TYPE") = "DEBUG";
+#endif
+
     py::class_<DynamicBitset>(m, "DynamicBitset", DOC(pyvrp, DynamicBitset))
         .def(py::init<size_t>(), py::arg("num_bits"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__

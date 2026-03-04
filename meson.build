@@ -25,10 +25,25 @@ if compiler.has_argument('-Wno-dangling-reference')
     add_project_arguments('-Wno-dangling-reference', language: 'cpp')
 endif
 
+# Logging configuration and spdlog dependency.
+if get_option('buildtype') == 'debug'
+    # Log everything in debug builds.
+    add_project_arguments('-DPYVRP_LOG_LEVEL=0', language: 'cpp')
+else
+    # Only log INFO and up in release builds.
+    add_project_arguments('-DPYVRP_LOG_LEVEL=2', language: 'cpp')
+endif
+
+spdlog = dependency(
+    'spdlog',
+    default_options: ['std_format=enabled'],
+    static: true,
+)
+
 # We first compile static libraries that contains all regular, C++ code, one
-# per extension module. These are linked against when we compile the actual 
-# Python extension modules down below. We also define the top-level source 
-# directory here, for convenience.
+# per extension module. The C++ libraries depend on spdlog. They are linked
+# against when we compile the actual Python extension modules down below. We
+# also define the top-level source directory here, for convenience.
 SRC_DIR = 'pyvrp' / 'cpp'
 INCLUDES = include_directories(SRC_DIR)
 
@@ -45,6 +60,7 @@ libpyvrp = static_library(
         SRC_DIR / 'LoadSegment.cpp',
         SRC_DIR / 'DurationSegment.cpp',
     ],
+    dependencies: spdlog,
     include_directories: INCLUDES,
 )
 
@@ -65,22 +81,27 @@ libsearch = static_library(
         SRC_DIR / 'search' / 'Solution.cpp',
         SRC_DIR / 'search' / 'SwapTails.cpp',
     ],
+    dependencies: spdlog,
     include_directories: INCLUDES,
     link_with: libpyvrp,
 )
 
 # Extension as [extension name, subdirectory, core C++ library]. The extension
 # name names the eventual module name, subdirectory gives the source and
-# installation directories (relative to top-level directories), and the core 
+# installation directories (relative to top-level directories), and the core
 # C++ library is one of the static libraries we defined above.
 extensions = [
     ['pyvrp', '', libpyvrp],
     ['search', 'search', libsearch],
 ]
 
-# Extension dependencies: Python itself, and pybind11.
+# Extension dependencies: Python itself, pybind11, and spdlog.
 py = import('python').find_installation()
-dependencies = [py.dependency(), dependency('pybind11')]
+dependencies = [
+    py.dependency(),
+    dependency('pybind11'),
+    spdlog,
+]
 
 foreach extension : extensions
     rawname = extension[0]

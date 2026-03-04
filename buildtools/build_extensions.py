@@ -83,7 +83,7 @@ def compile(build_dir: pathlib.Path, verbose: bool):
 
 
 def install(build_dir: pathlib.Path):
-    check_call(["meson", "install", "-C", build_dir])
+    check_call(["meson", "install", "-C", build_dir, "--skip-subprojects"])
 
 
 def build(

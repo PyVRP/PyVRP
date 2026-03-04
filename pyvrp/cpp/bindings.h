@@ -1,9 +1,16 @@
+#ifndef PYVRP_BINDINGS_H
+#define PYVRP_BINDINGS_H
+
 #include "Matrix.h"
 #include "Measure.h"
 
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+#include <spdlog/sinks/base_sink.h>
+#include <spdlog/spdlog.h>
 
+#include <memory>
+#include <mutex>
 #include <type_traits>
 
 // Used to separate template parameters that otherwise do not work well with
@@ -140,3 +147,62 @@ struct type_caster<pyvrp::Measure<T, V>>
     }
 };
 }  // namespace pybind11::detail
+
+namespace pyvrp
+{
+// A spdlog sink that forwards messages to a Python logger.
+class LogSink : public spdlog::sinks::base_sink<std::mutex>
+{
+    std::string const name_;
+
+protected:
+    void sink_it_(spdlog::details::log_msg const &msg) override
+    {
+        // Need the GIL to interact with Python logging.
+        pybind11::gil_scoped_acquire gil;
+
+        pybind11::object logger  // get or create the named logger
+            = pybind11::module_::import("logging").attr("getLogger")(name_);
+
+        // Map spdlog level to Python's logging level. spdlog conveniently
+        // uses 1, 2, 3, ... where Python uses 10, 20, 30, ... so we can just
+        // multiply by 10 to get the equivalent Python level.
+        int const level = 10 * msg.level;
+        if (!logger.attr("isEnabledFor")(level).cast<bool>())
+            return;
+
+        auto const funcname = msg.source.funcname ? msg.source.funcname : "";
+        auto const filename = msg.source.filename ? msg.source.filename : "";
+        auto const record
+            = logger.attr("makeRecord")(name_,               // name
+                                        level,               // level
+                                        filename,            // pathname
+                                        msg.source.line,     // lineno
+                                        msg.payload.data(),  // msg
+                                        pybind11::none(),    // args
+                                        pybind11::none(),    // exc_info
+                                        funcname);           // func
+
+        logger.attr("handle")(record);
+    }
+
+    void flush_() override {}
+
+public:
+    explicit LogSink(std::string name) : name_(std::move(name)) {}
+};
+
+// Creates and registers a spdlog logger that forwards to Python.
+inline void registerLogger(std::string const &name)
+{
+    if (spdlog::get(name) != nullptr)  // already registered
+        return;
+
+    auto sink = std::make_shared<LogSink>(name);
+    auto logger = std::make_shared<spdlog::logger>(name, std::move(sink));
+    logger->set_level(spdlog::level::trace);  // Python does the filtering
+    spdlog::register_logger(std::move(logger));
+}
+}  // namespace pyvrp
+
+#endif  // PYVRP_BINDINGS_H

@@ -21,3 +21,14 @@ The bindings depend on header files ending in `_docs.h`. Those header files
 contain docstrings that are automatically extracted from the other header files
 present in this directory. The documentation headers are generated automatically
 by Meson during compilation.
+
+## Logging
+
+We use `spdlog` for logging in the C++ codebase. Logging is done using the
+wrapper macros provided in `logging.h`. DEBUG logs are present only in debug
+builds, but everything above that is present in release builds, too. The logs
+are shared with Python via the bindings, and further processing can be done
+there using the familiar `logging` interface.
+
+Our loggers nest under the top-level `"pyvrp"` logger, and match the folder
+structure (e.g., `pyvrp/search` uses the `"pyvrp.search"` logger).
