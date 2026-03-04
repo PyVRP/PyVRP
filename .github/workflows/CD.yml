@@ -5,6 +5,7 @@ on:
     types: [ created ]
   push:
     branches: [ main ]
+  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
