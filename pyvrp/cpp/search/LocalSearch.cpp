@@ -2,6 +2,7 @@
 #include "DynamicBitset.h"
 #include "Measure.h"
 #include "Trip.h"
+#include "logging.h"
 
 #include <algorithm>
 #include <cassert>
@@ -18,6 +19,9 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
                                         CostEvaluator const &costEvaluator,
                                         bool exhaustive)
 {
+    PYVRP_DEBUG(
+        "pyvrp.search", "Applying local search (exhaustive={}).", exhaustive);
+
     std::fill(lastTest_.begin(), lastTest_.end(), -1);
     std::fill(lastUpdate_.begin(), lastUpdate_.end(), 0);
     numUpdates_ = 0;
@@ -38,6 +42,13 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
     ensureStructuralFeasibility(costEvaluator);
     search(costEvaluator);
 
+    [[maybe_unused]] auto const stats = statistics();
+    PYVRP_DEBUG("pyvrp.search",
+                "Completed local search: improving={}, updates={}, moves={}.",
+                stats.numImproving,
+                stats.numUpdates,
+                stats.numMoves);
+
     return solution_.unload();
 }
 
@@ -49,6 +60,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     searchCompleted_ = false;
     for (int step = 0; !searchCompleted_; ++step)
     {
+        PYVRP_DEBUG("pyvrp.search", "Entering search loop (step={}).", step);
         searchCompleted_ = true;
 
         for (auto const uClient : searchSpace_.clientOrder())
@@ -111,6 +123,11 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
         auto const [deltaCost, shouldApply] = op->evaluate(U, costEvaluator);
         if (shouldApply)
         {
+            PYVRP_DEBUG("pyvrp.search",
+                        "Applying operator to U={} (delta={}).",
+                        U->client(),
+                        deltaCost);
+
             auto *rU = U->route();
             if (rU)
                 searchSpace_.markPromising(U);
@@ -151,6 +168,12 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
         auto const [deltaCost, shouldApply] = op->evaluate(U, V, costEvaluator);
         if (shouldApply)
         {
+            PYVRP_DEBUG("pyvrp.search",
+                        "Applying operator to U={} and V={} (delta={}).",
+                        U->client(),
+                        V->client(),
+                        deltaCost);
+
             auto *rU = U->route();
             auto *rV = V->route();
             assert(rV);

@@ -1,7 +1,6 @@
 #include "Solution.h"
 
 #include "ClientSegment.h"
-#include "logging.h"
 
 #include <algorithm>
 #include <cassert>
@@ -57,8 +56,6 @@ Solution::Solution(ProblemData const &data) : data_(data)
 
 void Solution::load(pyvrp::Solution const &solution)
 {
-    PYVRP_DEBUG("pyvrp.search", "Loading solution.");
-
     // Determine offsets for vehicle types.
     std::vector<size_t> vehicleOffset(data_.numVehicleTypes(), 0);
     for (size_t vehType = 1; vehType < data_.numVehicleTypes(); vehType++)
@@ -120,8 +117,6 @@ void Solution::load(pyvrp::Solution const &solution)
 
 pyvrp::Solution Solution::unload() const
 {
-    PYVRP_DEBUG("pyvrp.search", "Unloading solution.");
-
     std::vector<pyvrp::Route> solRoutes;
     solRoutes.reserve(data_.numVehicles());
 
