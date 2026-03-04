@@ -26,8 +26,6 @@ jobs:
         with:
           package-dir: .
           output-dir: dist
-        env:
-          MACOSX_DEPLOYMENT_TARGET: "13.3"
       - uses: actions/upload-artifact@v4  # upload all wheels
         with:
           name: dist-${{ matrix.os }}
