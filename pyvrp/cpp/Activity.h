@@ -20,8 +20,8 @@ enum class ActivityType : uint8_t
 /**
  * Activity(type: ActivityType, index: int)
  *
- * A single activity performed during a route. An activity is either a depot
- * visit or a client visit.
+ * A single activity in a route plan. An activity is either a depot visit or
+ * a client visit.
  *
  * Attributes
  * ----------

@@ -607,6 +607,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .value("CLIENT", ActivityType::Client);
 
     py::class_<Activity>(m, "Activity", DOC(pyvrp, Activity))
+        .def(
+            py::init<ActivityType, size_t>(), py::arg("type"), py::arg("index"))
         .def_readonly("type", &Activity::type)
         .def_readonly("index", &Activity::index)
         .def("is_client", &Activity::isClient, DOC(pyvrp, Activity, isClient))
