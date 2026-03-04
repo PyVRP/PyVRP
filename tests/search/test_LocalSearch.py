@@ -677,3 +677,33 @@ def test_debug_logs_on_bks(rc208, caplog):
     for record, exp_msg in zip(caplog.records, expected):
         assert_equal(record.levelno, logging.DEBUG)
         assert_(exp_msg in record.message)
+
+
+@skip_if_release
+def test_debug_operator_logs(prize_collecting, caplog):
+    """
+    Tests that the debug logs also contain information about improvements found
+    by the operators.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbourhood = compute_neighbours(prize_collecting)
+    ls = LocalSearch(prize_collecting, rng, neighbourhood)
+    ls.add_operator(Exchange10(prize_collecting))
+
+    sol = Solution.make_random(prize_collecting, rng)
+    cost_eval = CostEvaluator([1_000], 1_000, 0)
+
+    with caplog.at_level(logging.DEBUG, logger="pyvrp.search"):
+        ls(sol, cost_eval, exhaustive=True)
+
+    # A few expected debug records, and the indices they should occupy in the
+    # captured logs list.
+    expected = [
+        (0, "Applying local search (exhaustive=true)."),
+        (2, "Applying operator to U=10 and V=49 (delta=-300)."),
+        (-2, "Entering search loop (step=3)."),
+        (-1, "Completed local search: improving=71, updates=71, moves=5671."),
+    ]
+
+    for idx, exp_msg in expected:
+        assert_equal(caplog.records[idx].message, exp_msg)
