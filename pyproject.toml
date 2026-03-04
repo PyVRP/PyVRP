@@ -55,7 +55,7 @@ build = [
     "meson>=1.0.0",
     "ninja>=1.11.1",
     "gcovr>=8.6",
-    "docblock>=0.1.6",
+    "docblock>=0.1.8",
 ]
 
 dev = [
