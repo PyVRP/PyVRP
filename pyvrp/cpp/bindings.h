@@ -1,3 +1,6 @@
+#ifndef PYVRP_BINDINGS_H
+#define PYVRP_BINDINGS_H
+
 #include "Matrix.h"
 #include "Measure.h"
 
@@ -190,7 +193,7 @@ public:
 };
 
 // Creates and registers a spdlog logger that forwards to Python.
-inline void init_logging(std::string const &name)
+inline void registerLogger(std::string const &name)
 {
     if (spdlog::get(name) != nullptr)  // already registered
         return;
@@ -201,3 +204,5 @@ inline void init_logging(std::string const &name)
     spdlog::register_logger(std::move(logger));
 }
 }  // namespace pyvrp
+
+#endif  // PYVRP_BINDINGS_H

@@ -25,8 +25,10 @@ by Meson during compilation.
 ## Logging
 
 We use `spdlog` for logging in the C++ codebase. Logging is done using the
-macros `spdlog` provides: INFO and up are present in release builds, everything
-below that (DEBUG, TRACE) is present only in debug builds. The logs are shared
-with Python via the bindings, and further processing can be done there using
-the familiar `logging` interface. We only use loggers nested under the top-level
-`"pyvrp"` logger.
+wrapper macros provided in `logging.h`. DEBUG logs are present only in debug
+builds, but everything above that is present in release builds, too. The logs
+are shared with Python via the bindings, and further processing can be done
+there using the familiar `logging` interface.
+
+Our loggers nest under the top-level `"pyvrp"` logger, and match the folder
+structure (e.g., `pyvrp/search` uses the `"pyvrp.search"` logger).

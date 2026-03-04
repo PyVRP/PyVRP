@@ -28,10 +28,10 @@ endif
 # Logging configuration and spdlog dependency.
 if get_option('buildtype') == 'debug'
     # Log everything in debug builds.
-    add_project_arguments('-DSPDLOG_ACTIVE_LEVEL=0', language: 'cpp')
+    add_project_arguments('-DPYVRP_LOG_LEVEL=0', language: 'cpp')
 else
     # Only log INFO and up in release builds.
-    add_project_arguments('-DSPDLOG_ACTIVE_LEVEL=2', language: 'cpp')
+    add_project_arguments('-DPYVRP_LOG_LEVEL=2', language: 'cpp')
 endif
 
 spdlog = dependency(

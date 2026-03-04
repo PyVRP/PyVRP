@@ -45,7 +45,7 @@ using pyvrp::search::UnaryOperator;
 
 PYBIND11_MODULE(_search, m)
 {
-    pyvrp::init_logging("pyvrp.search");
+    pyvrp::registerLogger("pyvrp.search");
 
     py::class_<UnaryOperator>(m, "UnaryOperator");
     py::class_<BinaryOperator>(m, "BinaryOperator");

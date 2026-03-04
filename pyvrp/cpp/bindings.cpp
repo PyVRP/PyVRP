@@ -42,7 +42,7 @@ using PiecewiseLinearFunction
 
 PYBIND11_MODULE(_pyvrp, m)
 {
-    pyvrp::init_logging("pyvrp");
+    pyvrp::registerLogger("pyvrp");
 
     py::class_<DynamicBitset>(m, "DynamicBitset", DOC(pyvrp, DynamicBitset))
         .def(py::init<size_t>(), py::arg("num_bits"))
