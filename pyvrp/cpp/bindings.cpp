@@ -957,10 +957,6 @@ PYBIND11_MODULE(_pyvrp, m)
              &Solution::routes,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, Solution, routes))
-        .def("neighbours",
-             &Solution::neighbours,
-             py::return_value_policy::reference_internal,
-             DOC(pyvrp, Solution, neighbours))
         .def("is_feasible",
              &Solution::isFeasible,
              DOC(pyvrp, Solution, isFeasible))
@@ -1024,13 +1020,10 @@ PYBIND11_MODULE(_pyvrp, m)
                                       sol.prizes(),
                                       sol.uncollectedPrizes(),
                                       sol.timeWarp(),
-                                      sol.routes(),
-                                      sol.neighbours());
+                                      sol.routes());
             },
             [](py::tuple t) {  // __setstate__
                 using Routes = std::vector<Route>;
-                using Neighbours
-                    = std::vector<std::optional<std::pair<size_t, size_t>>>;
 
                 Solution sol(
                     t[0].cast<size_t>(),                    // num clients
@@ -1047,8 +1040,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[11].cast<pyvrp::Cost>(),              // prizes
                     t[12].cast<pyvrp::Cost>(),              // uncollected
                     t[13].cast<pyvrp::Duration>(),          // time warp
-                    t[14].cast<Routes>(),                   // routes
-                    t[15].cast<Neighbours>());              // neighbours
+                    t[14].cast<Routes>());                  // routes
 
                 return sol;
             }))

@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <fstream>
 #include <numeric>
-#include <unordered_map>
 
 using pyvrp::Cost;
 using pyvrp::Distance;
@@ -16,7 +15,6 @@ using pyvrp::Solution;
 
 using Client = size_t;
 using Routes = std::vector<Route>;
-using Neighbours = std::vector<std::optional<std::pair<Client, Client>>>;
 
 void Solution::evaluate(ProblemData const &data)
 {
@@ -68,8 +66,6 @@ size_t Solution::numMissingGroups() const { return numMissingGroups_; }
 
 Routes const &Solution::routes() const { return routes_; }
 
-Neighbours const &Solution::neighbours() const { return neighbours_; }
-
 bool Solution::isFeasible() const
 {
     // clang-format off
@@ -118,21 +114,6 @@ Cost Solution::uncollectedPrizes() const { return uncollectedPrizes_; }
 
 Duration Solution::timeWarp() const { return timeWarp_; }
 
-void Solution::makeNeighbours()
-{
-    for (auto const &route : routes_)
-        for (auto const &trip : route.trips())
-        {
-            auto const startDepot = trip.startDepot();
-            auto const endDepot = trip.endDepot();
-
-            for (size_t idx = 0; idx != trip.size(); ++idx)
-                neighbours_[trip[idx]] = {
-                    idx == 0 ? startDepot : trip[idx - 1],               // pred
-                    idx == trip.size() - 1 ? endDepot : trip[idx + 1]};  // succ
-        }
-}
-
 bool Solution::operator==(Solution const &other) const
 {
     // clang-format off
@@ -141,31 +122,21 @@ bool Solution::operator==(Solution const &other) const
                               && distanceCost_ == other.distanceCost_
                               && durationCost_ == other.durationCost_
                               && timeWarp_ == other.timeWarp_
-                              && routes_.size() == other.routes_.size()
-                              && neighbours_ == other.neighbours_;
+                              && numClients_ == other.numClients_;
     // clang-format on
 
     if (!attributeChecks)
         return false;
 
-    // The visits are the same for both solutions, but the vehicle
-    // assignments need not be. We check this via a mapping from the first
-    // client in each route to the vehicle type of that route. We need to
-    // base this on the visits since the route order can differ between
-    // solutions.
-    std::unordered_map<Client, VehicleType> client2vehType;
-    for (auto const &route : routes_)
-        client2vehType[route[0]] = route.vehicleType();
-
-    for (auto const &route : other.routes_)
-        if (client2vehType[route[0]] != route.vehicleType())
-            return false;
-
-    return true;
+    // Tests if the routes are permutations of each other. Quadratic (in the
+    // number of routes) in the worst case.
+    return std::is_permutation(routes_.begin(),
+                               routes_.end(),
+                               other.routes_.begin(),
+                               other.routes_.end());
 }
 
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
-    : neighbours_(data.numLocations(), std::nullopt)
 {
     // Add all required and randomly selected optional clients. For required
     // groups we insert a random client, for optional groups we choose randomly
@@ -243,7 +214,7 @@ Solution::Solution(ProblemData const &data,
 }
 
 Solution::Solution(ProblemData const &data, std::vector<Route> routes)
-    : routes_(std::move(routes)), neighbours_(data.numLocations(), std::nullopt)
+    : routes_(std::move(routes))
 {
     if (routes_.size() > data.numVehicles())
     {
@@ -309,7 +280,6 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
             throw std::runtime_error(msg.str());
         }
 
-    makeNeighbours();
     evaluate(data);
 }
 
@@ -327,8 +297,7 @@ Solution::Solution(size_t numClients,
                    Cost prizes,
                    Cost uncollectedPrizes,
                    Duration timeWarp,
-                   Routes routes,
-                   Neighbours neighbours)
+                   Routes routes)
     : numClients_(numClients),
       numMissingClients_(numMissingClients),
       numMissingGroups_(numMissingGroups),
@@ -343,8 +312,7 @@ Solution::Solution(size_t numClients,
       prizes_(prizes),
       uncollectedPrizes_(uncollectedPrizes),
       timeWarp_(timeWarp),
-      routes_(std::move(routes)),
-      neighbours_(std::move(neighbours))
+      routes_(std::move(routes))
 {
 }
 
