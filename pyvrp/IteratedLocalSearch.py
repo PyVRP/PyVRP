@@ -77,8 +77,8 @@ class IteratedLocalSearchParams:
     num_iters_no_improvement
         Number of iterations without improvement before a restart occurs.
     history_length
-        History length for the late acceptance hill-climbing stopping criterion
-        used by the algorithm. Must be positive.
+        History length for the late acceptance hill-climbing criterion used by
+        the algorithm. Must be positive.
     exhaustive_on_best
         Whether to perform a more expensive, exhaustive search for newly found
         best solutions.
