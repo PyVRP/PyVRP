@@ -8,14 +8,16 @@ namespace pyvrp
 /**
  * Activity(type: ActivityType, idx: int)
  *
- * TODO
+ * A route activity.
  *
  * Parameters
  * ----------
  * type
- *     TODO
+ *     The type of activity, for example a depot or client visit.
  * idx
- *     TODO
+ *     The unique index of the activity corresponding to the activity type. For
+ *     example, if this is a client visit and ``idx`` is 0, then this activity
+ *     visits the first client.
  */
 struct Activity
 {
@@ -25,9 +27,9 @@ struct Activity
      * Attributes
      * ----------
      * CLIENT
-     *     TODO
+     *     A client visit.
      * DEPOT
-     *     TODO
+     *     A depot visit.
      */
     enum class ActivityType
     {
