@@ -52,7 +52,8 @@ PYBIND11_MODULE(_pyvrp, m)
     m.attr("_BUILD_TYPE") = "DEBUG";
 #endif
 
-    py::enum_<Activity::ActivityType>(m, "ActivityType")
+    py::enum_<Activity::ActivityType>(
+        m, "ActivityType", DOC(pyvrp, Activity, ActivityType))
         .value("CLIENT", Activity::ActivityType::CLIENT)
         .value("DEPOT", Activity::ActivityType::DEPOT);
 
