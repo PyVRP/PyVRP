@@ -390,8 +390,8 @@ bool Route::operator==(pyvrp::Route const &other) const
         if (trip.startDepot() != visits[idx++])
             return false;  // not the same reload depot
 
-        for (auto const visit : trip)
-            if (visit != visits[idx++])
+        for (auto const [_, client] : trip)
+            if (client != visits[idx++])
                 return false;
     }
 

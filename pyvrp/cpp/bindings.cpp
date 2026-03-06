@@ -54,14 +54,17 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::enum_<Activity::ActivityType>(
         m, "ActivityType", DOC(pyvrp, Activity, ActivityType))
-        .value("CLIENT", Activity::ActivityType::CLIENT)
-        .value("DEPOT", Activity::ActivityType::DEPOT);
+        .value("DEPOT", Activity::ActivityType::DEPOT)
+        .value("CLIENT", Activity::ActivityType::CLIENT);
 
     py::class_<Activity>(m, "Activity", DOC(pyvrp, Activity))
         .def(py::init<Activity::ActivityType, size_t>(),
              py::arg("type"),
              py::arg("idx"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
+        .def("__iter__",
+             [](Activity const &activity)
+             { return py::iter(py::make_tuple(activity.type, activity.idx)); })
         .def_readonly("type", &Activity::type)
         .def_readonly("idx", &Activity::idx)
         .def("is_client", &Activity::isClient, DOC(pyvrp, Activity, isClient))
@@ -636,10 +639,10 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("vehicle_type"),
              py::arg("start_depot") = py::none(),
              py::arg("end_depot") = py::none())
-        .def("visits",
-             &Trip::visits,
+        .def("activities",
+             &Trip::activities,
              py::return_value_policy::reference_internal,
-             DOC(pyvrp, Trip, visits))
+             DOC(pyvrp, Trip, activities))
         .def("distance", &Trip::distance, DOC(pyvrp, Trip, distance))
         .def("delivery",
              &Trip::delivery,
@@ -692,7 +695,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::pickle(
             [](Trip const &trip) {  // __getstate__
                 // Returns a tuple that completely encodes the trip's state.
-                return py::make_tuple(trip.visits(),
+                return py::make_tuple(trip.activities(),
                                       trip.distance(),
                                       trip.delivery(),
                                       trip.pickup(),
@@ -709,19 +712,19 @@ PYBIND11_MODULE(_pyvrp, m)
             [](py::tuple t) {  // __setstate__
                 using Loads = std::vector<pyvrp::Load>;
 
-                Trip trip(t[0].cast<Trip::Visits>(),     // visits
-                          t[1].cast<pyvrp::Distance>(),  // distance
-                          t[2].cast<Loads>(),            // delivery
-                          t[3].cast<Loads>(),            // pickup
-                          t[4].cast<Loads>(),            // load
-                          t[5].cast<Loads>(),            // excess load
-                          t[6].cast<pyvrp::Duration>(),  // travel
-                          t[7].cast<pyvrp::Duration>(),  // service
-                          t[8].cast<pyvrp::Duration>(),  // release
-                          t[9].cast<pyvrp::Cost>(),      // prizes
-                          t[10].cast<size_t>(),          // vehicle type
-                          t[11].cast<size_t>(),          // start depot
-                          t[12].cast<size_t>());         // end depot
+                Trip trip(t[0].cast<Trip::Activities>(),  // activities
+                          t[1].cast<pyvrp::Distance>(),   // distance
+                          t[2].cast<Loads>(),             // delivery
+                          t[3].cast<Loads>(),             // pickup
+                          t[4].cast<Loads>(),             // load
+                          t[5].cast<Loads>(),             // excess load
+                          t[6].cast<pyvrp::Duration>(),   // travel
+                          t[7].cast<pyvrp::Duration>(),   // service
+                          t[8].cast<pyvrp::Duration>(),   // release
+                          t[9].cast<pyvrp::Cost>(),       // prizes
+                          t[10].cast<size_t>(),           // vehicle type
+                          t[11].cast<size_t>(),           // start depot
+                          t[12].cast<size_t>());          // end depot
 
                 return trip;
             }))

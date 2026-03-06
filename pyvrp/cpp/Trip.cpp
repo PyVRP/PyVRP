@@ -31,12 +31,11 @@ bool canEndAt(ProblemData::VehicleType const &vehType, size_t depot)
 }  // namespace
 
 Trip::Trip(ProblemData const &data,
-           Visits visits,
+           std::vector<Client> visits,
            size_t vehicleType,
            std::optional<size_t> startDepot,
            std::optional<size_t> endDepot)
-    : visits_(std::move(visits)),
-      delivery_(data.numLoadDimensions(), 0),
+    : delivery_(data.numLoadDimensions(), 0),
       pickup_(data.numLoadDimensions(), 0),
       load_(data.numLoadDimensions(), 0),
       excessLoad_(data.numLoadDimensions(), 0),
@@ -52,7 +51,9 @@ Trip::Trip(ProblemData const &data,
     if (!canEndAt(vehData, endDepot_))
         throw std::invalid_argument("Vehicle cannot end at end_depot.");
 
-    for (auto const client : visits_)
+    activities_.reserve(visits.size());
+    for (auto const client : visits)
+    {
         if (client < data.numDepots() || client >= data.numLocations())
         {
             std::ostringstream msg;
@@ -60,13 +61,17 @@ Trip::Trip(ProblemData const &data,
             throw std::invalid_argument(msg.str());
         }
 
+        activities_.emplace_back(Activity::ActivityType::CLIENT, client);
+    }
+
     auto const &distances = data.distanceMatrix(vehData.profile);
     auto const &durations = data.durationMatrix(vehData.profile);
 
     ProblemData::Depot const &depot = data.location(startDepot_);
     service_ += depot.serviceDuration;
 
-    for (size_t prevClient = startDepot_; auto const client : visits_)
+    size_t prevClient = startDepot_;
+    for (auto const [_, client] : activities_)
     {
         distance_ += distances(prevClient, client);
         travel_ += durations(prevClient, client);
@@ -80,14 +85,13 @@ Trip::Trip(ProblemData const &data,
         prevClient = client;
     }
 
-    auto const last = empty() ? startDepot_ : visits_.back();
-    distance_ += distances(last, endDepot_);
-    travel_ += durations(last, endDepot_);
+    distance_ += distances(prevClient, endDepot_);
+    travel_ += durations(prevClient, endDepot_);
 
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
         LoadSegment segment;
-        for (auto const client : visits_)
+        for (auto const [_, client] : activities_)
         {
             ProblemData::Client const &clientData = data.location(client);
             segment = LoadSegment::merge(segment, {clientData, dim});
@@ -100,7 +104,7 @@ Trip::Trip(ProblemData const &data,
     }
 }
 
-Trip::Trip(Visits visits,
+Trip::Trip(Activities activities,
            Distance distance,
            std::vector<Load> delivery,
            std::vector<Load> pickup,
@@ -113,7 +117,7 @@ Trip::Trip(Visits visits,
            size_t vehicleType,
            size_t startDepot,
            size_t endDepot)
-    : visits_(std::move(visits)),
+    : activities_(std::move(activities)),
       distance_(distance),
       delivery_(std::move(delivery)),
       pickup_(std::move(pickup)),
@@ -129,25 +133,28 @@ Trip::Trip(Visits visits,
 {
 }
 
-bool Trip::empty() const { return visits_.empty(); }
+bool Trip::empty() const { return activities_.empty(); }
 
-size_t Trip::size() const { return visits_.size(); }
+size_t Trip::size() const { return activities_.size(); }
 
-Trip::Client Trip::operator[](size_t idx) const { return visits_[idx]; }
+pyvrp::Activity Trip::operator[](size_t idx) const { return activities_[idx]; }
 
-Trip::Visits::const_iterator Trip::begin() const { return visits_.begin(); }
-Trip::Visits::const_iterator Trip::end() const { return visits_.end(); }
-
-Trip::Visits::const_reverse_iterator Trip::rbegin() const
+Trip::Activities::const_iterator Trip::begin() const
 {
-    return visits_.rbegin();
+    return activities_.begin();
 }
-Trip::Visits::const_reverse_iterator Trip::rend() const
+Trip::Activities::const_iterator Trip::end() const { return activities_.end(); }
+
+Trip::Activities::const_reverse_iterator Trip::rbegin() const
 {
-    return visits_.rend();
+    return activities_.rbegin();
+}
+Trip::Activities::const_reverse_iterator Trip::rend() const
+{
+    return activities_.rend();
 }
 
-Trip::Visits const &Trip::visits() const { return visits_; }
+Trip::Activities const &Trip::activities() const { return activities_; }
 
 Distance Trip::distance() const { return distance_; }
 
@@ -191,7 +198,7 @@ bool Trip::operator==(Trip const &other) const
         && startDepot_ == other.startDepot_  // might vary between trips
         && endDepot_ == other.endDepot_      // might vary between trips
         && vehicleType_ == other.vehicleType_
-        && visits_ == other.visits_;
+        && activities_ == other.activities_;
     // clang-format on
 }
 
@@ -201,7 +208,7 @@ std::ostream &operator<<(std::ostream &out, Trip const &trip)
     {
         if (idx != 0)
             out << ' ';
-        out << trip[idx];
+        out << trip[idx].idx;
     }
 
     return out;

@@ -26,15 +26,15 @@ struct Activity
      *
      * Attributes
      * ----------
-     * CLIENT
-     *     A client visit.
      * DEPOT
      *     A depot visit.
+     * CLIENT
+     *     A client visit.
      */
     enum class ActivityType
     {
-        CLIENT = 0,
-        DEPOT = 1,
+        DEPOT = 0,
+        CLIENT = 1,
     };
 
     ActivityType const type;
