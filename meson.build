@@ -25,6 +25,12 @@ if compiler.has_argument('-Wno-dangling-reference')
     add_project_arguments('-Wno-dangling-reference', language: 'cpp')
 endif
 
+if compiler.has_argument('-Wno-stringop-overflow')
+    # This diagnostic issues false positives for some of our code.
+    # See PyVRP#1063.
+    add_project_link_arguments('-Wno-stringop-overflow', language: 'cpp')
+endif
+
 # Logging configuration and spdlog dependency.
 if get_option('buildtype') == 'debug'
     # Log everything in debug builds.
