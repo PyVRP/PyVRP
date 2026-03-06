@@ -1,4 +1,5 @@
 #include "bindings.h"
+#include "Activity.h"
 #include "CostEvaluator.h"
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
@@ -26,6 +27,7 @@
 
 namespace py = pybind11;
 
+using pyvrp::Activity;
 using pyvrp::CostEvaluator;
 using pyvrp::DurationSegment;
 using pyvrp::DynamicBitset;
@@ -49,6 +51,29 @@ PYBIND11_MODULE(_pyvrp, m)
 #else
     m.attr("_BUILD_TYPE") = "DEBUG";
 #endif
+
+    py::enum_<Activity::ActivityType>(m, "ActivityType")
+        .value("CLIENT", Activity::ActivityType::CLIENT)
+        .value("DEPOT", Activity::ActivityType::DEPOT);
+
+    py::class_<Activity>(m, "Activity", DOC(pyvrp, Activity))
+        .def(py::init<Activity::ActivityType, size_t>(),
+             py::arg("type"),
+             py::arg("idx"))
+        .def(py::self == py::self, py::arg("other"))  // this is __eq__
+        .def_readonly("type", &Activity::type)
+        .def_readonly("idx", &Activity::idx)
+        .def("is_client", &Activity::isClient, DOC(pyvrp, Activity, isClient))
+        .def("is_depot", &Activity::isDepot, DOC(pyvrp, Activity, isDepot))
+        .def(py::pickle(
+            [](Activity const &activity) {  // __getstate__
+                return py::make_tuple(activity.type, activity.idx);
+            },
+            [](py::tuple t) -> Activity  // __setstate__
+            {
+                return {t[0].cast<Activity::ActivityType>(),
+                        t[1].cast<size_t>()};
+            }));
 
     py::class_<DynamicBitset>(m, "DynamicBitset", DOC(pyvrp, DynamicBitset))
         .def(py::init<size_t>(), py::arg("num_bits"))

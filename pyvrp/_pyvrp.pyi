@@ -1,8 +1,23 @@
+from enum import Enum
 from typing import Iterator, overload
 
 import numpy as np
 
 _BUILD_TYPE: str
+
+class ActivityType(Enum):
+    CLIENT = 0
+    DEPOT = 1
+
+class Activity:
+    type: ActivityType
+    idx: int
+    def __init__(self, type: ActivityType, idx: int) -> None: ...
+    def is_client(self) -> bool: ...
+    def is_depot(self) -> bool: ...
+    def __eq__(self, other: object) -> bool: ...
+    def __getstate__(self) -> tuple: ...
+    def __setstate__(self, state: tuple, /) -> None: ...
 
 class CostEvaluator:
     def __init__(
