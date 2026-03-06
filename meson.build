@@ -26,8 +26,7 @@ if compiler.has_argument('-Wno-dangling-reference')
 endif
 
 if compiler.has_argument('-Wno-stringop-overflow')
-    # This diagnostic issues false positives for some of our code.
-    # See PyVRP#1063.
+    # This diagnostic issues false positives for some of our code (see #1063).
     add_project_link_arguments('-Wno-stringop-overflow', language: 'cpp')
 endif
 
