@@ -20,7 +20,14 @@ namespace pyvrp
 struct Activity
 {
     /**
-     * Activity types.
+     * Enum of activity types.
+     *
+     * Attributes
+     * ----------
+     * CLIENT
+     *     TODO
+     * DEPOT
+     *     TODO
      */
     enum class ActivityType
     {
