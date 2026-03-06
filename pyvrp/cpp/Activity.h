@@ -24,8 +24,8 @@ struct Activity
      */
     enum class ActivityType
     {
-        CLIENT,
-        DEPOT,
+        CLIENT = 0,
+        DEPOT = 1,
     };
 
     ActivityType const type;
