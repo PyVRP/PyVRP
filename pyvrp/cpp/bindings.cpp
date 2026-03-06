@@ -72,8 +72,8 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t) -> Activity  // __setstate__
             {
-                return {t[0].cast<Activity::ActivityType>(),
-                        t[1].cast<size_t>()};
+                return {t[0].cast<Activity::ActivityType>(),  // type
+                        t[1].cast<size_t>()};                 // idx
             }));
 
     py::class_<DynamicBitset>(m, "DynamicBitset", DOC(pyvrp, DynamicBitset))
