@@ -1,6 +1,7 @@
 #ifndef PYVRP_TRIP_H
 #define PYVRP_TRIP_H
 
+#include "Activity.h"
 #include "ProblemData.h"
 
 #include <optional>
@@ -31,10 +32,10 @@ class Trip
 {
 public:
     using Client = size_t;
-    using Visits = std::vector<Client>;
+    using Activities = std::vector<Activity>;
 
 private:
-    Visits visits_;
+    Activities activities_;
 
     Distance distance_ = 0;         // Total travel distance on this trip
     std::vector<Load> delivery_;    // Total delivery amount served on this trip
@@ -58,18 +59,18 @@ public:
      */
     [[nodiscard]] size_t size() const;
 
-    [[nodiscard]] Client operator[](size_t idx) const;
+    [[nodiscard]] Activity operator[](size_t idx) const;
 
-    [[nodiscard]] Visits::const_iterator begin() const;
-    [[nodiscard]] Visits::const_iterator end() const;
+    [[nodiscard]] Activities::const_iterator begin() const;
+    [[nodiscard]] Activities::const_iterator end() const;
 
-    [[nodiscard]] Visits::const_reverse_iterator rbegin() const;
-    [[nodiscard]] Visits::const_reverse_iterator rend() const;
+    [[nodiscard]] Activities::const_reverse_iterator rbegin() const;
+    [[nodiscard]] Activities::const_reverse_iterator rend() const;
 
     /**
-     * Trip visits, as a list of clients.
+     * Trip activities, as a list of clients.
      */
-    [[nodiscard]] Visits const &visits() const;
+    [[nodiscard]] Activities const &activities() const;
 
     /**
      * Total distance travelled on this trip.
@@ -148,13 +149,13 @@ public:
     Trip(Trip &&other) = default;
 
     Trip(ProblemData const &data,
-         Visits visits,
+         std::vector<Client> visits,
          size_t vehicleType,
          std::optional<size_t> startDepot = std::nullopt,
          std::optional<size_t> endDepot = std::nullopt);
 
     // This constructor does *no* validation. Useful when unserialising objects.
-    Trip(Visits visits,
+    Trip(Activities activities,
          Distance distance,
          std::vector<Load> delivery,
          std::vector<Load> pickup,

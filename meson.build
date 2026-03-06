@@ -55,6 +55,7 @@ INCLUDES = include_directories(SRC_DIR)
 libpyvrp = static_library(
     'pyvrp',
     [
+        SRC_DIR / 'Activity.cpp',
         SRC_DIR / 'CostEvaluator.cpp',
         SRC_DIR / 'DynamicBitset.cpp',
         SRC_DIR / 'ProblemData.cpp',

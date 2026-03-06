@@ -46,7 +46,7 @@ Client Route::Iterator::operator*() const
     assert(trip_ < trips.size());
     assert(idx_ < trips[trip_].size());
 
-    return trips[trip_][idx_];
+    return trips[trip_][idx_].idx;
 }
 
 Route::Iterator Route::Iterator::operator++(int)
@@ -173,7 +173,7 @@ void Route::makeSchedule(ProblemData const &data)
                start.serviceDuration);
 
         size_t prevClient = trip.startDepot();
-        for (auto const client : trip)
+        for (auto const [_, client] : trip)
         {
             now += durations(prevClient, client);
 
@@ -264,7 +264,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         size_t nextClient = trip->endDepot();
         for (auto it = trip->rbegin(); it != trip->rend(); ++it)
         {
-            auto const client = *it;
+            auto const [_, client] = *it;
             auto const edgeDuration = durations(client, nextClient);
             ProblemData::Client const &clientData = data.location(client);
 
@@ -352,7 +352,7 @@ Client Route::operator[](size_t idx) const
 {
     for (auto const &trip : trips_)
         if (idx < trip.size())
-            return trip[idx];
+            return trip[idx].idx;
         else
             idx -= trip.size();
 
