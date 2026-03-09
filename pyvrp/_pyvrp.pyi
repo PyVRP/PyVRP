@@ -71,9 +71,17 @@ class PiecewiseLinearFunction:
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
 
-class Client:
+class Location:
     x: float
     y: float
+    name: str
+    def __init__(self, x: float, y: float, *, name: str = "") -> None: ...
+    def __eq__(self, other: object) -> bool: ...
+    def __getstate__(self) -> tuple: ...
+    def __setstate__(self, state: tuple, /) -> None: ...
+
+class Client:
+    location: int
     delivery: list[int]
     pickup: list[int]
     service_duration: int
@@ -86,8 +94,7 @@ class Client:
     name: str
     def __init__(
         self,
-        x: float,
-        y: float,
+        location: int,
         delivery: list[int] = [],
         pickup: list[int] = [],
         service_duration: int = 0,
@@ -126,16 +133,14 @@ class ClientGroup:
     def __setstate__(self, state: tuple, /) -> None: ...
 
 class Depot:
-    x: float
-    y: float
+    location: int
     tw_early: int
     tw_late: int
     service_duration: int
     name: str
     def __init__(
         self,
-        x: float,
-        y: float,
+        location: int,
         tw_early: int = 0,
         tw_late: int = ...,
         service_duration: int = 0,
@@ -222,6 +227,7 @@ class VehicleType:
 class ProblemData:
     def __init__(
         self,
+        locations: list[Location],
         clients: list[Client],
         depots: list[Depot],
         vehicle_types: list[VehicleType],
@@ -229,7 +235,7 @@ class ProblemData:
         duration_matrices: list[np.ndarray[int]],
         groups: list[ClientGroup] = [],
     ) -> None: ...
-    def location(self, idx: int) -> Client | Depot: ...
+    def locations(self) -> list[Location]: ...
     def clients(self) -> list[Client]: ...
     def depots(self) -> list[Depot]: ...
     def groups(self) -> list[ClientGroup]: ...
@@ -238,6 +244,7 @@ class ProblemData:
     def duration_matrices(self) -> list[np.ndarray[int]]: ...
     def replace(
         self,
+        locations: list[Location] | None = None,
         clients: list[Client] | None = None,
         depots: list[Depot] | None = None,
         vehicle_types: list[VehicleType] | None = None,
@@ -245,6 +252,7 @@ class ProblemData:
         duration_matrices: list[np.ndarray[int]] | None = None,
         groups: list[ClientGroup] | None = None,
     ) -> ProblemData: ...
+    def location(self, location: int) -> Location: ...
     def client(self, client: int) -> Client: ...
     def depot(self, depot: int) -> Depot: ...
     def group(self, group: int) -> ClientGroup: ...

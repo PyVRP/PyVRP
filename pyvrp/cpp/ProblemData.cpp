@@ -642,7 +642,7 @@ void ProblemData::validate() const
 
         for (auto const client : group)
         {
-            if (client < numDepots() || client >= numLocations())
+            if (client >= numClients())
                 throw std::out_of_range("Group references invalid client.");
 
             auto const &clientData = clients_[client];

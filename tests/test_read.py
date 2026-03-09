@@ -90,35 +90,34 @@ def test_reading_OkSmall_instance():
     assert_equal(data.duration_matrix(profile=0), expected)
 
     # From the DEMAND_SECTION in the file
-    expected = [0, 5, 5, 3, 5]
+    expected = [5, 5, 3, 5]
 
-    for loc in range(1, data.num_locations):  # excl. depot (has no delivery)
-        assert_equal(data.location(loc).delivery, [expected[loc]])
+    for idx in range(data.num_clients):
+        assert_equal(data.client(idx).delivery, [expected[idx]])
 
     # From the TIME_WINDOW_SECTION in the file
     expected = [
-        (0, 45000),
         (15600, 22500),
         (12000, 19500),
         (8400, 15300),
         (12000, 19500),
     ]
 
-    for loc in range(data.num_depots, data.num_locations):
-        assert_equal(data.location(loc).tw_early, expected[loc][0])
-        assert_equal(data.location(loc).tw_late, expected[loc][1])
+    for client in range(data.num_clients):
+        assert_equal(data.client(client).tw_early, expected[client][0])
+        assert_equal(data.client(client).tw_late, expected[client][1])
 
     # Vehicle time window is derived from the depot's time window in the
     # TIME_WINDOW_SECTION of the file.
     vehicle_type = data.vehicle_type(0)
-    assert_equal(vehicle_type.tw_early, expected[0][0])
-    assert_equal(vehicle_type.tw_late, expected[0][1])
+    assert_equal(vehicle_type.tw_early, 0)
+    assert_equal(vehicle_type.tw_late, 45000)
 
     # From the SERVICE_TIME_SECTION in the file
-    expected = [0, 360, 360, 420, 360]
+    expected = [360, 360, 420, 360]
 
-    for loc in range(1, data.num_locations):  # excl. depot (has no service)
-        assert_equal(data.location(loc).service_duration, expected[loc])
+    for client in range(data.num_clients):
+        assert_equal(data.client(client).service_duration, expected[client])
 
 
 def test_reading_vrplib_instance():
@@ -157,13 +156,13 @@ def test_reading_vrplib_instance():
     assert_equal(distances[1, 0], 493)
 
     # This is a CVRP instance, so all other fields should have default values.
-    for loc in range(1, data.num_locations):
-        assert_equal(data.location(loc).service_duration, 0)
-        assert_equal(data.location(loc).tw_early, 0)
-        assert_equal(data.location(loc).tw_late, np.iinfo(np.int64).max)
-        assert_equal(data.location(loc).release_time, 0)
-        assert_equal(data.location(loc).prize, 0)
-        assert_equal(data.location(loc).required, True)
+    for client in data.clients():
+        assert_equal(client.service_duration, 0)
+        assert_equal(client.tw_early, 0)
+        assert_equal(client.tw_late, np.iinfo(np.int64).max)
+        assert_equal(client.release_time, 0)
+        assert_equal(client.prize, 0)
+        assert_equal(client.required, True)
 
 
 def test_warns_about_scaling_issues():
@@ -270,12 +269,17 @@ def test_multiple_depots():
     assert_equal(veh_type2.tw_late, 20_000)
 
     depot1, depot2 = data.depots()
+    assert_equal(depot1.location, 0)
+    assert_equal(depot2.location, 1)
 
     # Test that the depot coordinates have been parsed correctly.
-    assert_equal(depot1.x, 2_334)
-    assert_equal(depot1.y, 726)
-    assert_equal(depot2.x, 226)
-    assert_equal(depot2.y, 1_297)
+    loc1 = data.location(0)
+    assert_equal(loc1.x, 2_334)
+    assert_equal(loc1.y, 726)
+
+    loc2 = data.location(1)
+    assert_equal(loc2.x, 226)
+    assert_equal(loc2.y, 1_297)
 
 
 def test_mdvrptw_instance():
@@ -422,10 +426,10 @@ def test_reading_mutually_exclusive_group():
 
     group = data.group(0)
     assert_equal(len(group), 3)
-    assert_equal(group.clients, [1, 2, 3])
+    assert_equal(group.clients, [0, 1, 2])
 
     for client in data.group(0):
-        client_data = data.location(client)  # type: ignore
+        client_data = data.client(client)  # type: ignore
         assert_equal(client_data.required, False)
         assert_equal(client_data.group, 0)
 
@@ -584,7 +588,7 @@ def test_read_solution_multiple_reload_depots():
     assert_equal(trip2.end_depot(), 0)
 
 
-def test_2d_data_sections_are_correctly_casted_from_1d():
+def test_2d_data_sections_are_correctly_cast_from_1d():
     """
     Tests that data sections that are expected to be 2D arrays (reload depots,
     allowed clients, mutually exclusive groups) are correctly cast from 1D

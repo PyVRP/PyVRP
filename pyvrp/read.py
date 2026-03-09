@@ -12,6 +12,7 @@ from pyvrp._pyvrp import (
     Client,
     ClientGroup,
     Depot,
+    Location,
     ProblemData,
     Route,
     Solution,
@@ -271,6 +272,7 @@ class _InstanceParser:
             client_idcs = tuple(range(self.num_depots, self.num_locations))
             return [client_idcs for _ in range(self.num_vehicles)]
 
+        num_depots = self.num_depots
         allowed_clients = self.instance["vehicles_allowed_clients"]
 
         if isinstance(allowed_clients[0], Number):
@@ -279,7 +281,8 @@ class _InstanceParser:
             allowed_clients = np.atleast_2d(allowed_clients).T
 
         return [
-            tuple(idx - 1 for idx in clients) for clients in allowed_clients
+            tuple(idx - 1 - num_depots for idx in clients)
+            for clients in allowed_clients
         ]
 
     def vehicles_depots(self) -> np.ndarray:
@@ -324,6 +327,7 @@ class _InstanceParser:
         if "mutually_exclusive_group" not in self.instance:
             return []
 
+        num_depots = self.num_depots
         groups = self.instance["mutually_exclusive_group"]
 
         if isinstance(groups[0], Number):
@@ -331,7 +335,9 @@ class _InstanceParser:
             # cast it to a 2D array.
             groups = np.atleast_2d(groups).T
 
-        raw_groups = [[idx - 1 for idx in group] for group in groups]
+        raw_groups = [
+            [idx - 1 - num_depots for idx in group] for group in groups
+        ]
 
         # Only keep groups if they have more than one member. Empty groups or
         # groups with one member are trivial to decide, so there is no point
@@ -349,6 +355,7 @@ class _ProblemDataBuilder:
         self.parser = parser
 
     def data(self) -> ProblemData:
+        locations = self._locations()
         clients = self._clients()
         depots = self._depots()
         vehicle_types = self._vehicle_types()
@@ -356,6 +363,7 @@ class _ProblemDataBuilder:
         groups = self._groups()
 
         return ProblemData(
+            locations=locations,
             clients=clients,
             depots=depots,
             vehicle_types=vehicle_types,
@@ -365,6 +373,13 @@ class _ProblemDataBuilder:
             duration_matrices=distance_matrices,
             groups=groups,
         )
+
+    def _locations(self) -> list[Location]:
+        coords = self.parser.coords()
+        return [
+            Location(x=coords[idx][0], y=coords[idx][1])
+            for idx in range(self.parser.num_locations)
+        ]
 
     def _depots(self) -> list[Depot]:
         num_depots = self.parser.num_depots
@@ -378,11 +393,7 @@ class _ProblemDataBuilder:
             """
             raise ValueError(msg)
 
-        coords = self.parser.coords()
-        return [
-            Depot(x=coords[idx][0], y=coords[idx][1])
-            for idx in range(num_depots)
-        ]
+        return [Depot(location=idx) for idx in range(num_depots)]
 
     def _clients(self) -> list[Client]:
         groups = self.parser.mutually_exclusive_groups()
@@ -393,7 +404,6 @@ class _ProblemDataBuilder:
             for client in members:
                 idx2group[client] = group
 
-        coords = self.parser.coords()
         demands = self.parser.demands()
         backhauls = self.parser.backhauls()
         service_duration = self.parser.service_times()
@@ -402,21 +412,21 @@ class _ProblemDataBuilder:
         prizes = self.parser.prizes()  # we interpret a zero-prize client as
         required = np.isclose(prizes, 0)  # required in the benchmark instances
 
+        num_depots = self.parser.num_depots
         return [
             Client(
-                x=coords[idx][0],
-                y=coords[idx][1],
-                delivery=np.atleast_1d(demands[idx]),
-                pickup=np.atleast_1d(backhauls[idx]),
-                service_duration=service_duration[idx],
-                tw_early=time_windows[idx][0],
-                tw_late=time_windows[idx][1],
-                release_time=release_times[idx],
-                prize=prizes[idx],
-                required=required[idx] and idx2group[idx] is None,
+                location=num_depots + idx,
+                delivery=np.atleast_1d(demands[num_depots + idx]),
+                pickup=np.atleast_1d(backhauls[num_depots + idx]),
+                service_duration=service_duration[num_depots + idx],
+                tw_early=time_windows[num_depots + idx][0],
+                tw_late=time_windows[num_depots + idx][1],
+                release_time=release_times[num_depots + idx],
+                prize=prizes[num_depots + idx],
+                required=required[num_depots + idx] and idx2group[idx] is None,
                 group=idx2group[idx],
             )
-            for idx in range(self.parser.num_depots, num_locs)
+            for idx in range(self.parser.num_clients)
         ]
 
     def _vehicle_types(self) -> list[VehicleType]:
