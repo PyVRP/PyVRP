@@ -1,4 +1,5 @@
 #include "bindings.h"
+#include "Activity.h"
 #include "CostEvaluator.h"
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
@@ -26,6 +27,7 @@
 
 namespace py = pybind11;
 
+using pyvrp::Activity;
 using pyvrp::CostEvaluator;
 using pyvrp::DurationSegment;
 using pyvrp::DynamicBitset;
@@ -42,6 +44,9 @@ using PiecewiseLinearFunction
 
 PYBIND11_MODULE(_pyvrp, m)
 {
+    py::options options;
+    options.disable_enum_members_docstring();
+
     pyvrp::registerLogger("pyvrp");
 
 #ifdef NDEBUG
@@ -49,6 +54,41 @@ PYBIND11_MODULE(_pyvrp, m)
 #else
     m.attr("_BUILD_TYPE") = "DEBUG";
 #endif
+
+    py::enum_<Activity::ActivityType>(
+        m, "ActivityType", DOC(pyvrp, Activity, ActivityType))
+        .value("DEPOT", Activity::ActivityType::DEPOT)
+        .value("CLIENT", Activity::ActivityType::CLIENT);
+
+    py::class_<Activity>(m, "Activity", DOC(pyvrp, Activity))
+        .def(py::init<Activity::ActivityType, size_t>(),
+             py::arg("type"),
+             py::arg("idx"))
+        .def(py::init<std::string const &>(), py::arg("description"))
+        .def(py::self == py::self, py::arg("other"))  // this is __eq__
+        .def("__iter__",
+             [](Activity const &activity)
+             { return py::iter(py::make_tuple(activity.type, activity.idx)); })
+        .def_readonly("type", &Activity::type)
+        .def_readonly("idx", &Activity::idx)
+        .def("is_client", &Activity::isClient, DOC(pyvrp, Activity, isClient))
+        .def("is_depot", &Activity::isDepot, DOC(pyvrp, Activity, isDepot))
+        .def(py::pickle(
+            [](Activity const &activity) {  // __getstate__
+                return py::make_tuple(activity.type, activity.idx);
+            },
+            [](py::tuple t) -> Activity  // __setstate__
+            {
+                return {t[0].cast<Activity::ActivityType>(),  // type
+                        t[1].cast<size_t>()};                 // idx
+            }))
+        .def("__str__",
+             [](Activity const &activity)
+             {
+                 std::stringstream stream;
+                 stream << activity;
+                 return stream.str();
+             });
 
     py::class_<DynamicBitset>(m, "DynamicBitset", DOC(pyvrp, DynamicBitset))
         .def(py::init<size_t>(), py::arg("num_bits"))
@@ -610,10 +650,10 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("vehicle_type"),
              py::arg("start_depot") = py::none(),
              py::arg("end_depot") = py::none())
-        .def("visits",
-             &Trip::visits,
+        .def("activities",
+             &Trip::activities,
              py::return_value_policy::reference_internal,
-             DOC(pyvrp, Trip, visits))
+             DOC(pyvrp, Trip, activities))
         .def("distance", &Trip::distance, DOC(pyvrp, Trip, distance))
         .def("delivery",
              &Trip::delivery,
@@ -666,7 +706,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::pickle(
             [](Trip const &trip) {  // __getstate__
                 // Returns a tuple that completely encodes the trip's state.
-                return py::make_tuple(trip.visits(),
+                return py::make_tuple(trip.activities(),
                                       trip.distance(),
                                       trip.delivery(),
                                       trip.pickup(),
@@ -683,19 +723,19 @@ PYBIND11_MODULE(_pyvrp, m)
             [](py::tuple t) {  // __setstate__
                 using Loads = std::vector<pyvrp::Load>;
 
-                Trip trip(t[0].cast<Trip::Visits>(),     // visits
-                          t[1].cast<pyvrp::Distance>(),  // distance
-                          t[2].cast<Loads>(),            // delivery
-                          t[3].cast<Loads>(),            // pickup
-                          t[4].cast<Loads>(),            // load
-                          t[5].cast<Loads>(),            // excess load
-                          t[6].cast<pyvrp::Duration>(),  // travel
-                          t[7].cast<pyvrp::Duration>(),  // service
-                          t[8].cast<pyvrp::Duration>(),  // release
-                          t[9].cast<pyvrp::Cost>(),      // prizes
-                          t[10].cast<size_t>(),          // vehicle type
-                          t[11].cast<size_t>(),          // start depot
-                          t[12].cast<size_t>());         // end depot
+                Trip trip(t[0].cast<Trip::Activities>(),  // activities
+                          t[1].cast<pyvrp::Distance>(),   // distance
+                          t[2].cast<Loads>(),             // delivery
+                          t[3].cast<Loads>(),             // pickup
+                          t[4].cast<Loads>(),             // load
+                          t[5].cast<Loads>(),             // excess load
+                          t[6].cast<pyvrp::Duration>(),   // travel
+                          t[7].cast<pyvrp::Duration>(),   // service
+                          t[8].cast<pyvrp::Duration>(),   // release
+                          t[9].cast<pyvrp::Cost>(),       // prizes
+                          t[10].cast<size_t>(),           // vehicle type
+                          t[11].cast<size_t>(),           // start depot
+                          t[12].cast<size_t>());          // end depot
 
                 return trip;
             }))

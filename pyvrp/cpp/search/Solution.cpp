@@ -94,7 +94,7 @@ void Solution::load(pyvrp::Solution const &solution)
                 route.push_back(&depot);
             }
 
-            for (auto const client : trip)
+            for (auto const [_, client] : trip)
                 route.push_back(&nodes[client]);
         }
 

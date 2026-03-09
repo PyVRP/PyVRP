@@ -1,7 +1,7 @@
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import Route, Trip
+from pyvrp import Activity, ActivityType, Route, Trip
 
 
 @pytest.mark.parametrize(("start_idx", "end_idx"), [(1, 0), (0, 1)])
@@ -48,14 +48,17 @@ def test_trip_defaults_to_vehicle_start_end_depots(ok_small_multi_depot):
 
 
 @pytest.mark.parametrize("visits", [[], [1], [2, 3]])
-def test_trip_length_and_visits(ok_small, visits: list[int]):
+def test_trip_length_and_activities(ok_small, visits: list[int]):
     """
     Tests that the trip length returns the number of client visits, and
-    visits() the actual visits.
+    activities() the actual visit activities.
     """
     trip = Trip(ok_small, visits, 0, 0, 0)
     assert_equal(len(trip), len(visits))
-    assert_equal(trip.visits(), visits)
+    assert_equal(
+        trip.activities(),
+        [Activity(ActivityType.CLIENT, visit) for visit in visits],
+    )
 
 
 @pytest.mark.parametrize("visits", [[1, 2, 3], [4, 3], [4], [1, 2, 3, 4]])
@@ -73,7 +76,6 @@ def test_single_route_and_trip_same_statistics(ok_small, visits: list[int]):
     assert_equal(trip.vehicle_type(), route.vehicle_type())
     assert_equal(trip.start_depot(), route.start_depot())
     assert_equal(trip.end_depot(), route.end_depot())
-    assert_equal(trip.visits(), route.visits())
 
     # Distance- and cost-related statistics.
     assert_equal(trip.distance(), route.distance())
@@ -120,12 +122,12 @@ def test_trip_iter_and_getitem(ok_small):
     trip = Trip(ok_small, [1, 2], 0, 0, 0)
 
     # Regular indexing gets the client visits.
-    assert_equal(trip[0], 1)
-    assert_equal(trip[1], 2)
+    assert_equal(trip[0], Activity("C1"))
+    assert_equal(trip[1], Activity("C2"))
 
     # Indexing from the end is also supported.
-    assert_equal(trip[-1], 2)
-    assert_equal(trip[-2], 1)
+    assert_equal(trip[-1], Activity("C2"))
+    assert_equal(trip[-2], Activity("C1"))
 
     # Negative indexing need to result in a proper index.
     with assert_raises(IndexError):
@@ -135,8 +137,8 @@ def test_trip_iter_and_getitem(ok_small):
     with assert_raises(IndexError):
         trip[2]
 
-    # The trip is iterable, and iterating it returns the client visits.
-    assert_equal(trip.visits(), [client for client in trip])
+    # The trip is iterable, and iterating it returns the client activities.
+    assert_equal(trip.activities(), [activity for activity in trip])
 
 
 def test_load(ok_small):

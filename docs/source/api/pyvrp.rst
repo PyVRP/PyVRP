@@ -72,6 +72,12 @@ This object stores the best observed solution and detailed runtime statistics.
 
 .. automodule:: pyvrp._pyvrp
 
+   .. autoclass:: ActivityType
+      :members:
+
+   .. autoclass:: Activity
+      :members:
+
    .. autoclass:: CostEvaluator
       :members:
 

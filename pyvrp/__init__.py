@@ -15,6 +15,8 @@ from .PenaltyManager import PenaltyManager as PenaltyManager
 from .PenaltyManager import PenaltyParams as PenaltyParams
 from .Result import Result as Result
 from .Statistics import Statistics as Statistics
+from ._pyvrp import Activity as Activity
+from ._pyvrp import ActivityType as ActivityType
 from ._pyvrp import Client as Client
 from ._pyvrp import ClientGroup as ClientGroup
 from ._pyvrp import CostEvaluator as CostEvaluator

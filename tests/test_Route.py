@@ -5,6 +5,7 @@ import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
+    Activity,
     Client,
     Depot,
     ProblemData,
@@ -107,11 +108,8 @@ def test_access_multiple_trips(ok_small_multiple_trips):
     assert_equal(route.visits(), [1, 2, 3])
     assert_equal([client for client in route], [1, 2, 3])
 
-    assert_equal(trips[0].visits(), [1, 2])
-    assert_equal([client for client in trips[0]], [1, 2])
-
-    assert_equal(trips[1].visits(), [3])
-    assert_equal([client for client in trips[1]], [3])
+    assert_equal(trips[0].activities(), [Activity("C1"), Activity("C2")])
+    assert_equal(trips[1].activities(), [Activity("C3")])
 
 
 def test_route_time_warp_calculations(ok_small):
