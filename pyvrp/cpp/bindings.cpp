@@ -44,6 +44,9 @@ using PiecewiseLinearFunction
 
 PYBIND11_MODULE(_pyvrp, m)
 {
+    py::options options;
+    options.disable_enum_members_docstring();
+
     pyvrp::registerLogger("pyvrp");
 
 #ifdef NDEBUG

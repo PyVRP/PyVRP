@@ -14,7 +14,6 @@ Activity::ActivityType char2type(char type)
         return Activity::ActivityType::DEPOT;
     case 'C':
         return Activity::ActivityType::CLIENT;
-        break;
     default:
         throw std::invalid_argument("Activity type not understood.");
     }
