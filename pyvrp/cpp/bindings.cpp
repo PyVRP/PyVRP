@@ -588,6 +588,16 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::durationMatrices,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, durationMatrices))
+        .def("client",
+             &ProblemData::client,
+             py::arg("client"),
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, client))
+        .def("depot",
+             &ProblemData::depot,
+             py::arg("depot"),
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, depot))
         .def("group",
              &ProblemData::group,
              py::arg("group"),

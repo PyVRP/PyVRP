@@ -654,6 +654,16 @@ public:
     [[nodiscard]] std::vector<Matrix<Duration>> const &durationMatrices() const;
 
     /**
+     * TODO
+     */
+    [[nodiscard]] inline Client const &client(size_t client) const;
+
+    /**
+     * TODO
+     */
+    [[nodiscard]] inline Depot const &depot(size_t depot) const;
+
+    /**
      * Returns the client group at the given index.
      *
      * Parameters
@@ -808,6 +818,18 @@ ProblemData::Location ProblemData::location(size_t idx) const
     return idx < depots_.size()
                ? Location{.depot = &depots_[idx]}
                : Location{.client = &clients_[idx - depots_.size()]};
+}
+
+ProblemData::Client const &ProblemData::client(size_t client) const
+{
+    assert(client < numClients());
+    return clients_[client];
+}
+
+ProblemData::Depot const &ProblemData::depot(size_t depot) const
+{
+    assert(depot < numDepots());
+    return depots_[depot];
 }
 
 Matrix<Distance> const &ProblemData::distanceMatrix(size_t profile) const
