@@ -1,6 +1,7 @@
 import pickle
 
-from numpy.testing import assert_, assert_equal
+import pytest
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import Activity, ActivityType
 
@@ -66,3 +67,13 @@ def test_description_init():
     assert_(activity.is_client())
     assert_equal(activity.idx, 100)
     assert_equal(str(activity), "C100")
+
+
+@pytest.mark.parametrize("description", ("", "D", "U0", "UA"))
+def test_raises_unknown_description(description: str):
+    """
+    Tests that the description-based constructor raises for unknown or
+    incomplete descriptions.
+    """
+    with assert_raises(ValueError):
+        Activity(description)
