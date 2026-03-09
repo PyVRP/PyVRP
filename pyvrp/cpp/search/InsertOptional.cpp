@@ -12,9 +12,11 @@ std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
     assert(!U->isDepot());
     stats_.numEvaluations++;
 
-    ProblemData::Client const &uData = data.location(U->client());
     if (U->route() || !V->route())
         return std::make_pair(0, false);
+
+    auto const [_, uClient] = U->activity();
+    ProblemData::Client const &uData = data.client(uClient);
 
     if (uData.group)
     {
@@ -34,7 +36,7 @@ std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
 
     costEvaluator.deltaCost(deltaCost,
                             Route::Proposal(route->before(V->idx()),
-                                            ClientSegment(data, U->client()),
+                                            ClientSegment(data, uClient),
                                             route->after(V->idx() + 1)));
 
     return std::make_pair(deltaCost, deltaCost < 0);

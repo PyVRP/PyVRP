@@ -29,8 +29,8 @@ namespace
 Matrix<double> computeProximity(ProblemData const &data,
                                 NeighbourhoodParams const &params)
 {
-    Matrix<double> prox(data.numLocations(),
-                        data.numLocations(),
+    Matrix<double> prox(data.numClients(),
+                        data.numClients(),
                         std::numeric_limits<double>::max());
 
     std::set<std::tuple<pyvrp::Cost, pyvrp::Cost, size_t>> seen = {};
@@ -47,29 +47,32 @@ Matrix<double> computeProximity(ProblemData const &data,
         auto const &dists = data.distanceMatrix(vehType.profile);
         auto const &durs = data.durationMatrix(vehType.profile);
 
-        for (size_t frm = data.numDepots(); frm != data.numLocations(); ++frm)
+        for (size_t frm = 0; frm != data.numClients(); ++frm)
         {
-            ProblemData::Client const &frmData = data.location(frm);
+            ProblemData::Client const &frmData = data.client(frm);
             auto const frmServ = static_cast<double>(frmData.serviceDuration);
             auto const frmEarly = static_cast<double>(frmData.twEarly);
             auto const frmLate = static_cast<double>(frmData.twLate);
 
-            for (size_t to = data.numDepots(); to != data.numLocations(); ++to)
+            for (size_t to = 0; to != data.numClients(); ++to)
             {
-                ProblemData::Client const &toData = data.location(to);
+                ProblemData::Client const &toData = data.client(to);
                 auto const toEarly = static_cast<double>(toData.twEarly);
                 auto const toLate = static_cast<double>(toData.twLate);
-                auto const edgeDur = static_cast<double>(durs(frm, to));
+                auto const edgeDur = static_cast<double>(
+                    durs(frmData.location, toData.location));
 
                 if (frmEarly + frmServ + edgeDur > toLate)  // then this edge
                     continue;                               // is not feasible
 
-                auto const distance = static_cast<double>(dists(frm, to));
+                auto const edgeDist = static_cast<double>(
+                    dists(frmData.location, toData.location));
+
                 auto const minWait = toEarly - edgeDur - frmServ - frmLate;
                 auto const duration = edgeDur + std::max(minWait, 0.0);
 
                 auto const cost  // minimum edge cost using this vehicle type
-                    = static_cast<double>(vehType.unitDistanceCost) * distance
+                    = static_cast<double>(vehType.unitDistanceCost) * edgeDist
                       + static_cast<double>(vehType.unitDurationCost) * duration
                       + params.weightWaitTime * std::max(minWait, 0.0);
 
@@ -100,8 +103,8 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
     auto prox = computeProximity(data, params);
 
     if (params.symmetricProximity)  // then we symmetrise the proximity matrix
-        for (size_t frm = 0; frm != data.numLocations(); ++frm)
-            for (size_t to = frm; to != data.numLocations(); ++to)
+        for (size_t frm = 0; frm != data.numClients(); ++frm)
+            for (size_t to = frm; to != data.numClients(); ++to)
                 prox(frm, to) = prox(to, frm)
                     = std::min(prox(frm, to), prox(to, frm));
 
@@ -114,7 +117,7 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
                 // not too problematic if we need to have them.
                 prox(frmClient, toClient) = std::numeric_limits<double>::max();
 
-    for (size_t idx = 0; idx != data.numLocations(); ++idx)  // excl. self
+    for (size_t idx = 0; idx != data.numClients(); ++idx)  // excl. self
         prox(idx, idx) = std::numeric_limits<double>::infinity();
 
     // Adjust the neigbhourhood size to the minimum of the number of other
@@ -123,11 +126,10 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
     size_t const numClients = std::max<size_t>(data.numClients(), 1);
     size_t const numNeighbours = std::min(params.numNeighbours, numClients - 1);
 
-    std::vector<std::vector<size_t>> neighbours(data.numLocations());
+    std::vector<std::vector<size_t>> neighbours(data.numClients());
 
     std::vector<size_t> indices(data.numClients());
-    for (size_t client = data.numDepots(); client != data.numLocations();
-         ++client)
+    for (size_t client = 0; client != data.numClients(); ++client)
     {
         auto const comp = [&](auto const a, auto const b)
         { return prox(client, a) < prox(client, b); };

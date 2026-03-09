@@ -116,26 +116,27 @@ public:
     };
 
     /**
-     * Light wrapper class around a client or depot location. This class tracks
-     * the route it is in, and the position and role it currently has in that
-     * route.
+     * Light wrapper class around an activity. This class tracks the route it is
+     * in, and the position and role it currently has in that route.
      */
     class Node
     {
         friend class Route;
 
-        size_t loc_;    // Location represented by this node
+        Activity activity_;  // activity represented by this node
+
         size_t idx_;    // Position in the route
         size_t trip_;   // Trip index.
         Route *route_;  // Indicates membership of a route, if any
 
     public:
-        Node(size_t loc);
+        Node(Activity::ActivityType type, size_t idx);
+        Node(Activity activity);
 
         /**
-         * Returns the location represented by this node.
+         * Returns the activity that this node represents.
          */
-        [[nodiscard]] inline size_t client() const;  // TODO rename to loc
+        [[nodiscard]] inline Activity activity() const;
 
         /**
          * Returns this node's position in a route. This value is ``0`` when
@@ -154,6 +155,11 @@ public:
          * a route, this returns ``None`` (C++: ``nullptr``).
          */
         [[nodiscard]] inline Route *route() const;
+
+        /**
+         * Returns whether this node is a client.
+         */
+        [[nodiscard]] inline bool isClient() const;
 
         /**
          * Returns whether this node is a depot.
@@ -643,13 +649,15 @@ inline Route::Node const *n(Route::Node const *node)
     return route[node->idx() + 1];
 }
 
-size_t Route::Node::client() const { return loc_; }
+Activity Route::Node::activity() const { return activity_; }
 
 size_t Route::Node::idx() const { return idx_; }
 
 size_t Route::Node::trip() const { return trip_; }
 
 Route *Route::Node::route() const { return route_; }
+
+bool Route::Node::isClient() const { return activity_.isClient(); }
 
 bool Route::Node::isDepot() const
 {
@@ -670,7 +678,7 @@ bool Route::Node::isReloadDepot() const
 {
     // clang-format off
     return route_
-        && loc_ < route_->data.numDepots()
+        && activity_.isDepot()
         && !isStartDepot()
         && !isEndDepot();
     // clang-format on
@@ -808,8 +816,8 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
 
     if (size() != 1 && route_[start]->isReloadDepot())  // first need to add the
     {                                                   // start depot's service
-        auto const from = route_[start]->client();
-        ProblemData::Depot const &depot = route_.data.location(from);
+        auto const [_, from] = route_[start]->activity();
+        auto const &depot = route_.data.depot(from);
         segment = DurationSegment::merge(segment, {depot.serviceDuration});
     }
 
@@ -1109,7 +1117,7 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
                 // finalise the current segment. We first travel there. We need
                 // to end the segment within the depot's time windows to
                 // properly account for any release time on our segment.
-                ProblemData::Depot const &depot = data.location(other.last());
+                ProblemData::Depot const &depot = data.depot(other.last());
                 DurationSegment depotDS = {depot, depot.serviceDuration};
                 ds = DurationSegment::merge(edgeDur, depotDS, ds);
                 ds = ds.finaliseFront();

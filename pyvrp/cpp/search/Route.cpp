@@ -5,7 +5,15 @@
 
 using pyvrp::search::Route;
 
-Route::Node::Node(size_t loc) : loc_(loc), idx_(0), trip_(0), route_(nullptr) {}
+Route::Node::Node(Activity::ActivityType type, size_t idx)
+    : Node(Activity{type, idx})
+{
+}
+
+Route::Node::Node(Activity activity)
+    : activity_(std::move(activity)), idx_(0), trip_(0), route_(nullptr)
+{
+}
 
 void Route::Node::assign(Route *route, size_t idx, size_t trip)
 {
@@ -94,8 +102,9 @@ void Route::clear()
     nodes.clear();
     depots_.clear();
 
-    depots_.emplace_back(vehicleType_.startDepot);
-    depots_.emplace_back(vehicleType_.endDepot);
+    depots_.emplace_back(Activity::ActivityType::DEPOT,
+                         vehicleType_.startDepot);
+    depots_.emplace_back(Activity::ActivityType::DEPOT, vehicleType_.endDepot);
 
     for (size_t idx : {0, 1})
     {
@@ -112,7 +121,7 @@ void Route::reserve(size_t size) { nodes.reserve(size); }
 void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
-    auto const isDepot = node->client() < data.numDepots();
+    auto const isDepot = !node->isClient();
 
     if (isDepot)  // is depot, so we need to insert a copy into our own memory
     {
@@ -123,7 +132,7 @@ void Route::insert(size_t idx, Node *node)
                 nodes[depot.idx()] = &depot;
         }
 
-        node = &depots_.emplace_back(node->client());
+        node = &depots_.emplace_back(node->activity());
     }
 
     if (numTrips() > maxTrips())
@@ -202,7 +211,20 @@ void Route::update()
 {
     visits.clear();
     for (auto const *node : nodes)
-        visits.emplace_back(node->client());
+    {
+        auto const [type, idx] = node->activity();
+        switch (type)
+        {
+        case Activity::ActivityType::DEPOT:
+            visits.emplace_back(data.depot(idx).location);
+            break;
+        case Activity::ActivityType::CLIENT:
+            visits.emplace_back(data.client(idx).location);
+            break;
+        default:
+            throw std::invalid_argument("Activity type not understood.");
+        }
+    }
 
     // Distance.
     auto const &distMat = data.distanceMatrix(profile());
@@ -215,12 +237,12 @@ void Route::update()
     // Duration.
     durAt.resize(nodes.size());
 
-    ProblemData::Depot const &start = data.location(startDepot());
+    ProblemData::Depot const &start = data.depot(startDepot());
     DurationSegment const vehStart(vehicleType_, vehicleType_.startLate);
     DurationSegment const depotStart(start, start.serviceDuration);
     durAt[0] = DurationSegment::merge(vehStart, depotStart);
 
-    ProblemData::Depot const &end = data.location(endDepot());
+    ProblemData::Depot const &end = data.depot(endDepot());
     DurationSegment const depotEnd(end, 0);
     DurationSegment const vehEnd(vehicleType_, vehicleType_.twLate);
     durAt[nodes.size() - 1] = DurationSegment::merge(depotEnd, vehEnd);
@@ -228,15 +250,16 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
     {
         auto const *node = nodes[idx];
+        auto const activity = node->activity();
 
         if (!node->isReloadDepot())
         {
-            ProblemData::Client const &client = data.location(node->client());
+            auto const &client = data.client(activity.idx);
             durAt[idx] = {client};
         }
         else
         {
-            ProblemData::Depot const &depot = data.location(node->client());
+            auto const &depot = data.depot(activity.idx);
             durAt[idx] = {depot, 0};
         }
     }
@@ -256,7 +279,8 @@ void Route::update()
         {
             // Then we need to first account for depot service before we merge
             // with the idx segment.
-            ProblemData::Depot const &depot = data.location(visits[prev]);
+            auto const activity = nodes[prev]->activity();
+            auto const &depot = data.depot(activity.idx);
             before = DurationSegment::merge(before, {depot.serviceDuration});
         }
 
@@ -279,7 +303,8 @@ void Route::update()
             // at idx after already travelling to next, but that's OK since
             // we're essentially using the trick of adding service to the
             // outgoing edge.
-            ProblemData::Depot const &depot = data.location(visits[idx]);
+            auto const activity = nodes[idx]->activity();
+            auto const &depot = data.depot(activity.idx);
             after = DurationSegment::merge({depot.serviceDuration}, after);
         }
 
@@ -297,10 +322,16 @@ void Route::update()
         loadAt[dim][nodes.size() - 1] = {};
 
         for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-            loadAt[dim][idx]
-                = nodes[idx]->isReloadDepot()
-                      ? LoadSegment{}
-                      : LoadSegment{data.location(visits[idx]), dim};
+        {
+            if (nodes[idx]->isReloadDepot())
+            {
+                loadAt[dim][idx] = {};
+                continue;
+            }
+
+            auto const activity = nodes[idx]->activity();
+            loadAt[dim][idx] = {data.client(activity.idx), dim};
+        }
 
         loadBefore[dim].resize(nodes.size());
         loadBefore[dim][0] = loadAt[dim][0];
@@ -416,7 +447,7 @@ std::ostream &operator<<(std::ostream &out, Route const &route)
 
 std::ostream &operator<<(std::ostream &out, Route::Node const &node)
 {
-    return out << node.client();
+    return out << node.activity();
 }
 
 template <>

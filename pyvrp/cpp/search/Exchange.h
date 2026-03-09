@@ -215,8 +215,16 @@ std::pair<Cost, bool> Exchange<N, M>::evaluate(
     else
     {
         if constexpr (N == M)  // symmetric, so only have to evaluate this once
-            if (U->client() >= V->client())
+        {
+            auto const [uType, uClient] = U->activity();
+            assert(uType == Activity::ActivityType::CLIENT);
+
+            auto const [vType, vClient] = V->activity();
+            assert(vType == Activity::ActivityType::CLIENT);
+
+            if (uClient >= vClient)
                 return std::make_pair(0, false);
+        }
 
         if (adjacent(U, V))
             return std::make_pair(0, false);

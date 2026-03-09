@@ -152,9 +152,9 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
             clients.push_back(groupMembers[idx]);
         }
 
-    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
+    for (size_t idx = 0; idx != data.numClients(); ++idx)
     {
-        ProblemData::Client const &clientData = data.location(idx);
+        auto const &clientData = data.client(idx);
         if (clientData.group)  // already handled groups above, skip here
             continue;
 
@@ -222,7 +222,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         throw std::runtime_error(msg);
     }
 
-    DynamicBitset isVisited(data.numLocations());
+    DynamicBitset isVisited(data.numClients());
     std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes_)
     {
@@ -243,11 +243,10 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         }
     }
 
-    for (size_t client = data.numDepots(); client != data.numLocations();
-         ++client)
+    for (size_t client = 0; client != data.numClients(); ++client)
         if (!isVisited[client])  // we need to check if the client visit
         {                        // is required if this is true
-            ProblemData::Client const &clientData = data.location(client);
+            auto const &clientData = data.client(client);
             numMissingClients_ += clientData.required;
         }
 

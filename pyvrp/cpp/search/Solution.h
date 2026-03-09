@@ -34,7 +34,7 @@ class Solution
     friend class pyvrp::CostEvaluator;
 
 public:
-    std::vector<Route::Node> nodes;  // size numLocations()
+    std::vector<Route::Node> nodes;  // size numClients()
     std::vector<Route> routes;       // size numVehicles(), ordered by type
 
     Solution(ProblemData const &data);

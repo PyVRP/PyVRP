@@ -67,7 +67,7 @@ Trip::Trip(ProblemData const &data,
     auto const &distances = data.distanceMatrix(vehData.profile);
     auto const &durations = data.durationMatrix(vehData.profile);
 
-    ProblemData::Depot const &depot = data.location(startDepot_);
+    auto const &depot = data.depot(startDepot_);
     service_ += depot.serviceDuration;
 
     size_t prevClient = startDepot_;
@@ -76,7 +76,7 @@ Trip::Trip(ProblemData const &data,
         distance_ += distances(prevClient, client);
         travel_ += durations(prevClient, client);
 
-        ProblemData::Client const &clientData = data.location(client);
+        auto const &clientData = data.client(client);
 
         service_ += clientData.serviceDuration;
         release_ = std::max(release_, clientData.releaseTime);
@@ -93,7 +93,7 @@ Trip::Trip(ProblemData const &data,
         LoadSegment segment;
         for (auto const [_, client] : activities_)
         {
-            ProblemData::Client const &clientData = data.location(client);
+            auto const &clientData = data.client(client);
             segment = LoadSegment::merge(segment, {clientData, dim});
         }
 
