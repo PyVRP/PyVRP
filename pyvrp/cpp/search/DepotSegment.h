@@ -40,7 +40,7 @@ public:
 
     pyvrp::DurationSegment duration([[maybe_unused]] size_t profile) const
     {
-        pyvrp::ProblemData::Depot const &depot = data_.location(depot_);
+        auto const &depot = data_.depot(depot_);
         return {depot, 0};  // service is handled while evaluating proposal
     }
 

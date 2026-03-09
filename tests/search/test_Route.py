@@ -243,21 +243,22 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     """
     assert_equal(ok_small.num_load_dimensions, 1)
 
+    data = ok_small.client(client - 1)
     route = make_search_route(ok_small, [client])
 
     # Only the client has any delivery demand, so the total route load should
     # be equal to it.
-    assert_equal(route.load(), ok_small.location(client).delivery)
+    assert_equal(route.load(), data.delivery)
     assert_equal(
         route.load_between(0, 2, dimension=0).load(),
-        ok_small.location(client).delivery[0],
+        data.delivery[0],
     )
 
     # The load_between() function is inclusive.
     assert_equal(route.load_between(0, 0, dimension=0).load(), 0)
     assert_equal(
         route.load_between(1, 1, dimension=0).load(),
-        ok_small.location(client).delivery[0],
+        data.delivery[0],
     )
 
     # Distances on various segments of the route.
@@ -296,7 +297,6 @@ def test_route_duration_access(ok_small):
 
     for idx in range(len(route)):
         is_depot = idx % (len(route) - 1) == 0
-        loc = ok_small.location(idx % (route.num_clients() + 1))
         ds = route.duration_at(idx)
 
         assert_equal(ds.time_warp(), 0)
@@ -307,9 +307,11 @@ def test_route_duration_access(ok_small):
             assert_equal(ds.start_late(), vehicle_type.tw_late)
             assert_equal(ds.duration(), 0)
         else:
-            assert_equal(ds.start_early(), loc.tw_early)
-            assert_equal(ds.start_late(), loc.tw_late)
-            assert_equal(ds.duration(), loc.service_duration)
+            loc = idx % (route.num_clients() + 1)
+            client = ok_small.client(loc - ok_small.num_depots)
+            assert_equal(ds.start_early(), client.tw_early)
+            assert_equal(ds.start_late(), client.tw_late)
+            assert_equal(ds.duration(), client.service_duration)
 
 
 def test_route_duration_access_with_latest_start(ok_small):
@@ -371,7 +373,7 @@ def test_duration_between_client_returns_node_duration(ok_small, loc: int):
     Tests that calling the ``duration_between()`` with the same start and end
     arguments returns a node's duration segment data.
     """
-    client = ok_small.location(loc)
+    client = ok_small.client(loc - ok_small.num_depots)
 
     route = Route(ok_small, vehicle_type=0)
     route.append(Node(loc=loc))
@@ -901,8 +903,8 @@ def test_bug_reload_swaps_pickup_delivery_swap(small_spd):
     data = small_spd.replace(vehicle_types=[new_type])
     route = make_search_route(data, [1, 0, 3, 4])
 
-    client3 = data.location(3)
-    client4 = data.location(4)
+    client3 = data.client(2)
+    client4 = data.client(3)
     assert_equal(client3.delivery[0] + client4.delivery[0], 34)
     assert_equal(client3.pickup[0] + client4.pickup[0], 50)
 
@@ -1138,7 +1140,7 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     Tests that the route duration caches correctly account for depot service
     duration.
     """
-    old_depot = ok_small_multiple_trips.location(0)
+    old_depot = ok_small_multiple_trips.depot(0)
     new_depot = Depot(old_depot.x, old_depot.y, service_duration=200)
     data = ok_small_multiple_trips.replace(depots=[new_depot])
 

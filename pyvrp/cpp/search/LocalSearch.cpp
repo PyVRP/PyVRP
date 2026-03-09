@@ -238,7 +238,7 @@ void LocalSearch::ensureStructuralFeasibility(
     for (auto const client : searchSpace_.clientOrder())
     {
         auto &node = solution_.nodes[client];
-        ProblemData::Client const &clientData = data.location(client);
+        auto const &clientData = data.client(client - data.numDepots());
 
         if (!node.route() && clientData.required)  // then we must insert
         {
@@ -279,7 +279,7 @@ void LocalSearch::ensureStructuralFeasibility(
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
     {
         auto const &node = solution_.nodes[idx];
-        ProblemData::Client const &clientData = data.location(idx);
+        auto const &clientData = data.client(idx - data.numDepots());
         assert(node.route() || !clientData.required);
     }
 

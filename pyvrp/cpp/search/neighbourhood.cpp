@@ -49,14 +49,14 @@ Matrix<double> computeProximity(ProblemData const &data,
 
         for (size_t frm = data.numDepots(); frm != data.numLocations(); ++frm)
         {
-            ProblemData::Client const &frmData = data.location(frm);
+            auto const &frmData = data.client(frm - data.numDepots());
             auto const frmServ = static_cast<double>(frmData.serviceDuration);
             auto const frmEarly = static_cast<double>(frmData.twEarly);
             auto const frmLate = static_cast<double>(frmData.twLate);
 
             for (size_t to = data.numDepots(); to != data.numLocations(); ++to)
             {
-                ProblemData::Client const &toData = data.location(to);
+                auto const &toData = data.client(to - data.numDepots());
                 auto const toEarly = static_cast<double>(toData.twEarly);
                 auto const toLate = static_cast<double>(toData.twLate);
                 auto const edgeDur = static_cast<double>(durs(frm, to));

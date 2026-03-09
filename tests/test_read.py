@@ -70,9 +70,12 @@ def test_reading_OkSmall_instance():
         (1191, 639),
     ]
 
-    for loc in range(data.num_locations):
-        assert_equal(data.location(loc).x, expected[loc][0])
-        assert_equal(data.location(loc).y, expected[loc][1])
+    assert_equal(data.depot(0).x, expected[0][0])
+    assert_equal(data.depot(0).y, expected[0][1])
+
+    for client in range(data.num_clients):
+        assert_equal(data.client(client).x, expected[client + 1][0])
+        assert_equal(data.client(client).y, expected[client + 1][1])
 
     # From the EDGE_WEIGHT_SECTION in the file
     expected = [
@@ -90,35 +93,34 @@ def test_reading_OkSmall_instance():
     assert_equal(data.duration_matrix(profile=0), expected)
 
     # From the DEMAND_SECTION in the file
-    expected = [0, 5, 5, 3, 5]
+    expected = [5, 5, 3, 5]
 
-    for loc in range(1, data.num_locations):  # excl. depot (has no delivery)
-        assert_equal(data.location(loc).delivery, [expected[loc]])
+    for client in range(data.num_clients):
+        assert_equal(data.client(client).delivery, [expected[client]])
 
     # From the TIME_WINDOW_SECTION in the file
     expected = [
-        (0, 45000),
         (15600, 22500),
         (12000, 19500),
         (8400, 15300),
         (12000, 19500),
     ]
 
-    for loc in range(data.num_depots, data.num_locations):
-        assert_equal(data.location(loc).tw_early, expected[loc][0])
-        assert_equal(data.location(loc).tw_late, expected[loc][1])
+    for client in range(data.num_clients):
+        assert_equal(data.client(client).tw_early, expected[client][0])
+        assert_equal(data.client(client).tw_late, expected[client][1])
 
     # Vehicle time window is derived from the depot's time window in the
     # TIME_WINDOW_SECTION of the file.
     vehicle_type = data.vehicle_type(0)
-    assert_equal(vehicle_type.tw_early, expected[0][0])
-    assert_equal(vehicle_type.tw_late, expected[0][1])
+    assert_equal(vehicle_type.tw_early, 0)
+    assert_equal(vehicle_type.tw_late, 45000)
 
     # From the SERVICE_TIME_SECTION in the file
-    expected = [0, 360, 360, 420, 360]
+    expected = [360, 360, 420, 360]
 
-    for loc in range(1, data.num_locations):  # excl. depot (has no service)
-        assert_equal(data.location(loc).service_duration, expected[loc])
+    for client in range(data.num_clients):
+        assert_equal(data.client(client).service_duration, expected[client])
 
 
 def test_reading_vrplib_instance():
@@ -137,11 +139,11 @@ def test_reading_vrplib_instance():
     assert_equal(data.num_locations, data.num_depots + data.num_clients)
 
     # Coordinates are scaled by 10 to align with 1 decimal distance precision
-    assert_equal(data.location(0).x, 1450)  # depot [x, y] location
-    assert_equal(data.location(0).y, 2150)
+    assert_equal(data.depot(0).x, 1450)  # depot [x, y] location
+    assert_equal(data.depot(0).y, 2150)
 
-    assert_equal(data.location(1).x, 1510)  # first customer [x, y] location
-    assert_equal(data.location(1).y, 2640)
+    assert_equal(data.client(0).x, 1510)  # first customer [x, y] location
+    assert_equal(data.client(0).y, 2640)
 
     # The data file specifies distances as 2D Euclidean. We take that and
     # should compute integer equivalents with up to one decimal precision.
@@ -157,13 +159,14 @@ def test_reading_vrplib_instance():
     assert_equal(distances[1, 0], 493)
 
     # This is a CVRP instance, so all other fields should have default values.
-    for loc in range(1, data.num_locations):
-        assert_equal(data.location(loc).service_duration, 0)
-        assert_equal(data.location(loc).tw_early, 0)
-        assert_equal(data.location(loc).tw_late, np.iinfo(np.int64).max)
-        assert_equal(data.location(loc).release_time, 0)
-        assert_equal(data.location(loc).prize, 0)
-        assert_equal(data.location(loc).required, True)
+    for idx in range(data.num_clients):
+        client = data.client(idx)
+        assert_equal(client.service_duration, 0)
+        assert_equal(client.tw_early, 0)
+        assert_equal(client.tw_late, np.iinfo(np.int64).max)
+        assert_equal(client.release_time, 0)
+        assert_equal(client.prize, 0)
+        assert_equal(client.required, True)
 
 
 def test_warns_about_scaling_issues():
@@ -187,11 +190,11 @@ def test_round_func_round_nearest():
 
     # We're going to test dist(0, 1) and dist(1, 0), which should be the same
     # since the distances are symmetric/Euclidean.
-    assert_equal(data.location(0).x, 40)
-    assert_equal(data.location(0).y, 50)
+    assert_equal(data.depot(0).x, 40)
+    assert_equal(data.depot(0).y, 50)
 
-    assert_equal(data.location(1).x, 25)
-    assert_equal(data.location(1).y, 85)
+    assert_equal(data.client(0).x, 25)
+    assert_equal(data.client(0).y, 85)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     distances = data.distance_matrix(profile=0)
@@ -210,11 +213,11 @@ def test_round_func_exact():
 
     # We're going to test dist(0, 1) and dist(1, 0), which should be the same
     # since the distances are symmetric/Euclidean.
-    assert_equal(data.location(0).x, 40_000)
-    assert_equal(data.location(0).y, 50_000)
+    assert_equal(data.depot(0).x, 40_000)
+    assert_equal(data.depot(0).y, 50_000)
 
-    assert_equal(data.location(1).x, 25_000)
-    assert_equal(data.location(1).y, 85_000)
+    assert_equal(data.client(0).x, 25_000)
+    assert_equal(data.client(0).y, 85_000)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     distances = data.distance_matrix(profile=0)
@@ -425,7 +428,7 @@ def test_reading_mutually_exclusive_group():
     assert_equal(group.clients, [1, 2, 3])
 
     for client in data.group(0):
-        client_data = data.location(client)  # type: ignore
+        client_data = data.client(client - data.num_depots)
         assert_equal(client_data.required, False)
         assert_equal(client_data.group, 0)
 

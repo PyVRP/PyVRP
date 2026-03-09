@@ -188,7 +188,7 @@ def test_route_start_and_end_time_calculations(ok_small):
     # should thus depart as soon as possible to arrive at the first client the
     # moment its time window opens.
     durations = ok_small.duration_matrix(profile=0)
-    start_time = ok_small.location(1).tw_early - durations[0, 1]
+    start_time = ok_small.client(0).tw_early - durations[0, 1]
     end_time = start_time + routes[0].duration() - routes[0].time_warp()
 
     assert_(routes[0].has_time_warp())
@@ -413,8 +413,12 @@ def test_route_schedule(ok_small, visits: list[int]):
     assert_equal(len(schedule), len(route) + 2)  # schedule includes depots
 
     for visit in schedule:
-        data = ok_small.location(visit.location)
-        service = getattr(data, "service_duration", 0)  # only for clients
+        if visit.location < ok_small.num_depots:
+            data = ok_small.depot(visit.location)
+        else:
+            data = ok_small.client(visit.location - ok_small.num_depots)
+
+        service = data.service_duration
         assert_equal(visit.service_duration, service)
         assert_equal(
             visit.service_duration,
