@@ -1,5 +1,7 @@
 #include "Activity.h"
 
+#include <cassert>
+
 using pyvrp::Activity;
 
 namespace
@@ -38,9 +40,7 @@ Activity::Activity(std::string const &description)
     : type(char2type(description.empty() ? ' ' : description[0])),
       idx(std::stol(description.empty() ? 0 : description.substr(1)))
 {
-    if (description.size() < 2)
-        throw std::invalid_argument(
-            "Activity description must include at least a type and an index.");
+    assert(description.size() >= 2);  // sanity check; type/idx do validation
 }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::Activity const &activity)
