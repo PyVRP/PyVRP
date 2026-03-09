@@ -2,6 +2,8 @@
 #define PYVRP_ACTIVITY_H
 
 #include <cstddef>
+#include <ostream>
+#include <string>
 
 namespace pyvrp
 {
@@ -42,6 +44,8 @@ struct Activity
 
     Activity(ActivityType type, size_t idx);
 
+    Activity(std::string const &description);
+
     bool operator==(Activity const &other) const = default;
 
     /**
@@ -59,5 +63,7 @@ struct Activity
 bool pyvrp::Activity::isClient() const { return type == ActivityType::CLIENT; }
 
 bool pyvrp::Activity::isDepot() const { return type == ActivityType::DEPOT; }
+
+std::ostream &operator<<(std::ostream &out, pyvrp::Activity const &activity);
 
 #endif  // PYVRP_ACTIVITY_H

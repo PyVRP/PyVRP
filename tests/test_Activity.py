@@ -50,3 +50,19 @@ def test_pickle():
     pickled = pickle.dumps(activity)
     unpickled = pickle.loads(pickled)
     assert_equal(activity, unpickled)
+
+
+def test_description_init():
+    """
+    Tests the alternative, description-based constructor and string
+    representation.
+    """
+    activity = Activity("D0")
+    assert_(activity.is_depot())
+    assert_equal(activity.idx, 0)
+    assert_equal(str(activity), "D0")
+
+    activity = Activity("C100")
+    assert_(activity.is_client())
+    assert_equal(activity.idx, 100)
+    assert_equal(str(activity), "C100")

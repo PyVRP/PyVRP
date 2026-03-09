@@ -61,6 +61,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::init<Activity::ActivityType, size_t>(),
              py::arg("type"),
              py::arg("idx"))
+        .def(py::init<std::string const &>(), py::arg("description"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
         .def("__iter__",
              [](Activity const &activity)
@@ -77,7 +78,14 @@ PYBIND11_MODULE(_pyvrp, m)
             {
                 return {t[0].cast<Activity::ActivityType>(),  // type
                         t[1].cast<size_t>()};                 // idx
-            }));
+            }))
+        .def("__str__",
+             [](Activity const &activity)
+             {
+                 std::stringstream stream;
+                 stream << activity;
+                 return stream.str();
+             });
 
     py::class_<DynamicBitset>(m, "DynamicBitset", DOC(pyvrp, DynamicBitset))
         .def(py::init<size_t>(), py::arg("num_bits"))
