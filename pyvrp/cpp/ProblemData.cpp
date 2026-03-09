@@ -53,8 +53,30 @@ bool hasTimeWindow(auto const &arg)
 }
 }  // namespace
 
-ProblemData::Client::Client(Coordinate x,
-                            Coordinate y,
+ProblemData::Location::Location(Coordinate x, Coordinate y, std::string name)
+    : x(x), y(y), name(duplicate(name.data()))
+{
+}
+
+ProblemData::Location::Location(Location const &location)
+    : x(location.x), y(location.y), name(duplicate(location.name))
+{
+}
+
+ProblemData::Location::Location(Location &&location)
+    : x(location.x), y(location.y), name(location.name)  // we can steal
+{
+    location.name = nullptr;  // stolen
+}
+
+bool ProblemData::Location::operator==(Location const &other) const
+{
+    return x == other.x && y == other.y && std::strcmp(name, other.name) == 0;
+}
+
+ProblemData::Location::~Location() {}
+
+ProblemData::Client::Client(size_t location,
                             std::vector<Load> delivery,
                             std::vector<Load> pickup,
                             Duration serviceDuration,
@@ -65,8 +87,7 @@ ProblemData::Client::Client(Coordinate x,
                             bool required,
                             std::optional<size_t> group,
                             std::string name)
-    : x(x),
-      y(y),
+    : location(location),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
@@ -106,8 +127,7 @@ ProblemData::Client::Client(Coordinate x,
 }
 
 ProblemData::Client::Client(Client const &client)
-    : x(client.x),
-      y(client.y),
+    : location(client.location),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
@@ -122,8 +142,7 @@ ProblemData::Client::Client(Client const &client)
 }
 
 ProblemData::Client::Client(Client &&client)
-    : x(client.x),
-      y(client.y),
+    : location(client.location),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
@@ -143,8 +162,7 @@ ProblemData::Client::~Client() { delete[] name; }
 bool ProblemData::Client::operator==(Client const &other) const
 {
     // clang-format off
-    return x == other.x
-        && y == other.y
+    return location == other.location
         && delivery == other.delivery
         && pickup == other.pickup
         && serviceDuration == other.serviceDuration
@@ -223,14 +241,12 @@ void ProblemData::ClientGroup::addClient(size_t client)
 
 void ProblemData::ClientGroup::clear() { clients_.clear(); }
 
-ProblemData::Depot::Depot(Coordinate x,
-                          Coordinate y,
+ProblemData::Depot::Depot(size_t location,
                           Duration twEarly,
                           Duration twLate,
                           Duration serviceDuration,
                           std::string name)
-    : x(x),
-      y(y),
+    : location(location),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
@@ -247,8 +263,7 @@ ProblemData::Depot::Depot(Coordinate x,
 }
 
 ProblemData::Depot::Depot(Depot const &depot)
-    : x(depot.x),
-      y(depot.y),
+    : location(depot.location),
       serviceDuration(depot.serviceDuration),
       twEarly(depot.twEarly),
       twLate(depot.twLate),
@@ -257,8 +272,7 @@ ProblemData::Depot::Depot(Depot const &depot)
 }
 
 ProblemData::Depot::Depot(Depot &&depot)
-    : x(depot.x),
-      y(depot.y),
+    : location(depot.location),
       serviceDuration(depot.serviceDuration),
       twEarly(depot.twEarly),
       twLate(depot.twLate),
@@ -272,8 +286,7 @@ ProblemData::Depot::~Depot() { delete[] name; }
 bool ProblemData::Depot::operator==(Depot const &other) const
 {
     // clang-format off
-    return x == other.x
-        && y == other.y
+    return location == other.location
         && twEarly == other.twEarly
         && twLate == other.twLate
         && serviceDuration == other.serviceDuration
@@ -497,6 +510,11 @@ bool ProblemData::VehicleType::operator==(VehicleType const &other) const
     // clang-format on
 }
 
+std::vector<ProblemData::Location> const &ProblemData::locations() const
+{
+    return locations_;
+}
+
 std::vector<ProblemData::Client> const &ProblemData::clients() const
 {
     return clients_;
@@ -546,7 +564,7 @@ size_t ProblemData::numDepots() const { return depots_.size(); }
 
 size_t ProblemData::numGroups() const { return groups_.size(); }
 
-size_t ProblemData::numLocations() const { return numDepots() + numClients(); }
+size_t ProblemData::numLocations() const { return locations_.size(); }
 
 size_t ProblemData::numVehicleTypes() const { return vehicleTypes_.size(); }
 
@@ -563,9 +581,12 @@ size_t ProblemData::numLoadDimensions() const { return numLoadDimensions_; }
 void ProblemData::validate() const
 {
     // Client checks.
-    for (size_t idx = numDepots(); idx != numLocations(); ++idx)
+    for (size_t idx = 0; idx != numClients(); ++idx)
     {
-        ProblemData::Client const &client = location(idx);
+        auto const &client = clients_[idx];
+
+        if (client.location >= numLocations())
+            throw std::out_of_range("Client references invalid location.");
 
         if (client.delivery.size() != numLoadDimensions_)
         {
@@ -603,6 +624,14 @@ void ProblemData::validate() const
     if (depots_.empty())
         throw std::invalid_argument("Expected at least one depot.");
 
+    for (size_t idx = 0; idx != numDepots(); ++idx)
+    {
+        auto const &depot = depots_[idx];
+
+        if (depot.location >= numLocations())
+            throw std::out_of_range("Depot references invalid location.");
+    }
+
     // Group checks.
     for (size_t idx = 0; idx != numGroups(); ++idx)
     {
@@ -616,7 +645,7 @@ void ProblemData::validate() const
             if (client < numDepots() || client >= numLocations())
                 throw std::out_of_range("Group references invalid client.");
 
-            ProblemData::Client const &clientData = location(client);
+            auto const &clientData = clients_[client];
             if (!clientData.group || *clientData.group != idx)
             {
                 auto const *msg = "Group references client not in group.";
@@ -696,14 +725,16 @@ void ProblemData::validate() const
 }
 
 ProblemData
-ProblemData::replace(std::optional<std::vector<Client>> &clients,
+ProblemData::replace(std::optional<std::vector<Location>> &locations,
+                     std::optional<std::vector<Client>> &clients,
                      std::optional<std::vector<Depot>> &depots,
                      std::optional<std::vector<VehicleType>> &vehicleTypes,
                      std::optional<std::vector<Matrix<Distance>>> &distMats,
                      std::optional<std::vector<Matrix<Duration>>> &durMats,
                      std::optional<std::vector<ClientGroup>> &groups) const
 {
-    return {clients.value_or(clients_),
+    return {locations.value_or(locations_),
+            clients.value_or(clients_),
             depots.value_or(depots_),
             vehicleTypes.value_or(vehicleTypes_),
             distMats.value_or(dists_),
@@ -711,7 +742,8 @@ ProblemData::replace(std::optional<std::vector<Client>> &clients,
             groups.value_or(groups_)};
 }
 
-ProblemData::ProblemData(std::vector<Client> clients,
+ProblemData::ProblemData(std::vector<Location> locations,
+                         std::vector<Client> clients,
                          std::vector<Depot> depots,
                          std::vector<VehicleType> vehicleTypes,
                          std::vector<Matrix<Distance>> distMats,
@@ -719,6 +751,7 @@ ProblemData::ProblemData(std::vector<Client> clients,
                          std::vector<ClientGroup> groups)
     : dists_(std::move(distMats)),
       durs_(std::move(durMats)),
+      locations_(std::move(locations)),
       clients_(std::move(clients)),
       depots_(std::move(depots)),
       vehicleTypes_(std::move(vehicleTypes)),
