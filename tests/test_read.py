@@ -9,7 +9,7 @@ from numpy.testing import (
     assert_raises,
 )
 
-from pyvrp import CostEvaluator
+from pyvrp import Activity, CostEvaluator
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from tests.helpers import read, read_solution
@@ -574,12 +574,12 @@ def test_read_solution_multiple_reload_depots():
     route = solution.routes()[0]
 
     trip1 = route.trip(0)
-    assert_equal(trip1.visits(), [2])
+    assert_equal(trip1.activities(), [Activity("C2")])
     assert_equal(trip1.start_depot(), 0)
     assert_equal(trip1.end_depot(), 1)
 
     trip2 = route.trip(1)
-    assert_equal(trip2.visits(), [3, 4])
+    assert_equal(trip2.activities(), [Activity("C3"), Activity("C4")])
     assert_equal(trip2.start_depot(), 1)
     assert_equal(trip2.end_depot(), 0)
 

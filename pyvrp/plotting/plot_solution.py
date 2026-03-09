@@ -54,8 +54,8 @@ def plot_solution(
             if len(trip) == 0:
                 continue
 
-            x = x_coords[trip]
-            y = y_coords[trip]
+            x = x_coords[[activity.idx for activity in trip]]
+            y = y_coords[[activity.idx for activity in trip]]
 
             # Clients visited by this trip, as a line segment or single dot (in
             # case of a singleton trip). Trips of the same route share colour.
