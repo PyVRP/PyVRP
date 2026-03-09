@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from pyvrp._pyvrp import (
         CostEvaluator,
         ProblemData,
-        RandomNumberGenerator,
         Solution,
     )
     from pyvrp.search.SearchMethod import SearchMethod
@@ -115,8 +114,6 @@ class IteratedLocalSearch:
         The problem data instance.
     penalty_manager
         Penalty manager to use.
-    rng
-        Random number generator.
     search_method
         Search method to use.
     initial_solution
@@ -130,14 +127,12 @@ class IteratedLocalSearch:
         self,
         data: ProblemData,
         penalty_manager: PenaltyManager,
-        rng: RandomNumberGenerator,
         search_method: SearchMethod,
         initial_solution: Solution,
         params: IteratedLocalSearchParams = IteratedLocalSearchParams(),
     ):
         self._data = data
         self._pm = penalty_manager
-        self._rng = rng
         self._search = search_method
         self._init = initial_solution
         self._params = params

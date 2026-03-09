@@ -74,7 +74,7 @@ def test_best_solution_improves_with_more_iterations(rc208):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
     ls.add_operator(Exchange10(rc208))
     init = Solution.make_random(rc208, rng)
-    algo = IteratedLocalSearch(rc208, pm, rng, ls, init)
+    algo = IteratedLocalSearch(rc208, pm, ls, init)
 
     initial_best = algo.run(MaxIterations(0)).best
     new_best = algo.run(MaxIterations(25)).best
@@ -95,7 +95,7 @@ def test_best_initial_solution(rc208):
     pm = PenaltyManager(initial_penalties=([20], 6, 6))
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
     bks = read_solution("data/RC208.sol", rc208)
-    algo = IteratedLocalSearch(rc208, pm, rng, ls, bks)
+    algo = IteratedLocalSearch(rc208, pm, ls, bks)
 
     result = algo.run(MaxIterations(0))
 
@@ -116,7 +116,7 @@ def test_ils_result_has_correct_stats(ok_small):
     neighbours = compute_neighbours(ok_small)
     ls = LocalSearch(ok_small, rng, neighbours, perturbation)
     init = Solution.make_random(ok_small, rng)
-    ils = IteratedLocalSearch(ok_small, pm, rng, ls, init)
+    ils = IteratedLocalSearch(ok_small, pm, ls, init)
 
     # Search is a no-op, so we should return the initial solution after 10
     # iterations.
@@ -145,7 +145,6 @@ def test_ils_acceptance_behaviour(ok_small):
     ils = IteratedLocalSearch(
         ok_small,
         PenaltyManager(initial_penalties=([20], 6, 6)),
-        RandomNumberGenerator(42),
         lambda *_, **kws: sols.pop(0),  # returns from sols one at a time
         sols[0],
         IteratedLocalSearchParams(history_length=2, exhaustive_on_best=False),
@@ -205,7 +204,6 @@ def test_restart(ok_small):
         ils = IteratedLocalSearch(
             ok_small,
             PenaltyManager(initial_penalties=([20], 6, 6)),
-            RandomNumberGenerator(42),
             lambda *_, **kw: sols[next(idx)],  # returns sols one at a time
             sols[0],
             params,
@@ -249,7 +247,6 @@ def test_exhaustive_search_on_new_best_solution(ok_small):
     ils = IteratedLocalSearch(
         ok_small,
         PenaltyManager(initial_penalties=([20], 6, 6)),
-        RandomNumberGenerator(42),
         search,
         sols[0],
     )
@@ -289,7 +286,6 @@ def test_callback_on_start_and_end(ok_small):
     ils = IteratedLocalSearch(
         ok_small,
         PenaltyManager(initial_penalties=([20], 6, 6)),
-        rng,
         lambda sol, *args, **kwargs: sol,
         init,
         IteratedLocalSearchParams(callbacks=callbacks),
@@ -332,7 +328,6 @@ def test_callback_on_iteration_and_restart(ok_small, max_iterations):
     ils = IteratedLocalSearch(
         ok_small,
         PenaltyManager(initial_penalties=([20], 6, 6)),
-        rng,
         lambda sol, *args, **kwargs: sol,
         init,
         IteratedLocalSearchParams(
@@ -374,7 +369,6 @@ def test_callback_on_best(ok_small):
     ils = IteratedLocalSearch(
         ok_small,
         PenaltyManager(initial_penalties=([20], 6, 6)),
-        RandomNumberGenerator(42),
         lambda *args, **kwargs: sols[next(idx)],
         sols[0],
         IteratedLocalSearchParams(callbacks=callbacks),
