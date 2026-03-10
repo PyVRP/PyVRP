@@ -513,9 +513,9 @@ def test_model_solves_small_instance_with_fixed_costs():
         m.add_location(x=idx, y=idx)
         m.add_client(x=idx, y=idx, service_duration=1, tw_early=0, tw_late=20)
 
-    for frm in m.locations:
-        for to in m.locations:
-            if frm != to:
+    for idx_frm, frm in enumerate(m.locations):
+        for idx_to, to in enumerate(m.locations):
+            if idx_frm != idx_to:
                 m.add_edge(frm, to, distance=0, duration=5)
 
     res = m.solve(stop=MaxIterations(10))
@@ -558,9 +558,9 @@ def test_model_solves_small_instance_with_shift_durations():
             tw_late=20,
         )
 
-    for frm in m.locations:
-        for to in m.locations:
-            if frm != to:
+    for idx_frm, frm in enumerate(m.locations):
+        for idx_to, to in enumerate(m.locations):
+            if idx_frm != idx_to:
                 m.add_edge(frm, to, distance=0, duration=5)
 
     res = m.solve(stop=MaxIterations(100))
@@ -886,9 +886,9 @@ def test_adding_multiple_routing_profiles():
     m.add_location(2, 2)
     m.add_client(x=2, y=2)
 
-    for frm in m.locations:
-        for to in m.locations:
-            if frm != to:
+    for idx_frm, frm in enumerate(m.locations):
+        for idx_to, to in enumerate(m.locations):
+            if idx_frm != idx_to:
                 m.add_edge(frm, to, distance=10, duration=5, profile=profile1)
                 m.add_edge(frm, to, distance=5, duration=10, profile=profile2)
 
