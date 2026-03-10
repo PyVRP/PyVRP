@@ -231,10 +231,10 @@ def test_excess_load_penalised_cost():
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(1, 1)],
         clients=[
-            Client(x=0, y=0, delivery=[2, 1], pickup=[0, 0]),
-            Client(x=1, y=1, delivery=[3, 2], pickup=[0, 0]),
+            Client(location=1, delivery=[2, 1], pickup=[0, 0]),
+            Client(location=2, delivery=[3, 2], pickup=[0, 0]),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[
             VehicleType(2, capacity=[1, 1]),
         ],
