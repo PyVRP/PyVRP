@@ -1,7 +1,14 @@
 import numpy as np
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
+from pyvrp import (
+    Client,
+    CostEvaluator,
+    Depot,
+    Location,
+    ProblemData,
+    VehicleType,
+)
 from pyvrp.search import ReplaceOptional
 from pyvrp.search._search import Node
 from tests.helpers import make_search_route
@@ -13,6 +20,7 @@ def test_replacing_optional_client():
     replaced with another that is not currently in the solution.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
             Client(0, 0, tw_early=0, tw_late=1, prize=1, required=False),
             Client(0, 0, tw_early=0, tw_late=1, prize=5, required=False),
@@ -41,6 +49,7 @@ def test_skips_replacing_required_client():
     Tests that ReplaceOptional does not replace a required client.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
             Client(0, 0, tw_early=0, tw_late=1, prize=1, required=True),
             Client(0, 0, tw_early=0, tw_late=1, prize=5, required=False),
