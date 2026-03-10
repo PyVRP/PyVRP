@@ -7,6 +7,7 @@ from pyvrp import (
     Client,
     CostEvaluator,
     Depot,
+    Location,
     ProblemData,
     RandomNumberGenerator,
     VehicleType,
@@ -81,6 +82,7 @@ def test_move_involving_empty_routes():
     non-empty route (or vice-versa) is correctly evaluated.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 1), Location(1, 0)],
         clients=[Client(x=1, y=1), Client(x=1, y=0)],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[
@@ -143,6 +145,12 @@ def test_move_involving_multiple_depots():
     """
     # Locations with indices 0 and 1 are depots, with 2 and 3 are clients.
     data = ProblemData(
+        locations=[
+            Location(0, 0),
+            Location(5, 5),
+            Location(1, 1),
+            Location(4, 4),
+        ],
         clients=[Client(x=1, y=1), Client(x=4, y=4)],
         depots=[Depot(x=0, y=0), Depot(x=5, y=5)],
         vehicle_types=[
