@@ -82,20 +82,32 @@ Route::ScheduledVisit::ScheduledVisit(size_t location,
                                       Duration endService,
                                       Duration waitDuration,
                                       Duration timeWarp)
-    : location(location),
-      trip(trip),
-      startService(startService),
-      endService(endService),
-      waitDuration(waitDuration),
-      timeWarp(timeWarp)
+    : location_(location),
+      trip_(trip),
+      startService_(startService),
+      endService_(endService),
+      waitDuration_(waitDuration),
+      timeWarp_(timeWarp)
 {
-    assert(startService <= endService);
+    assert(startService_ <= endService_);
 }
+
+size_t Route::ScheduledVisit::location() const { return location_; }
+
+size_t Route::ScheduledVisit::trip() const { return trip_; }
+
+Duration Route::ScheduledVisit::startService() const { return startService_; }
+
+Duration Route::ScheduledVisit::endService() const { return endService_; }
 
 Duration Route::ScheduledVisit::serviceDuration() const
 {
-    return endService - startService;
+    return endService_ - startService_;
 }
+
+Duration Route::ScheduledVisit::waitDuration() const { return waitDuration_; }
+
+Duration Route::ScheduledVisit::timeWarp() const { return timeWarp_; }
 
 void Route::validate(ProblemData const &data) const
 {
