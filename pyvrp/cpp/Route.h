@@ -88,15 +88,16 @@ public:
      *     back in time' to begin service. Non-zero time warp indicates an
      *     infeasible route.
      */
-    struct ScheduledVisit
+    class ScheduledVisit
     {
-        size_t const location = 0;
-        size_t const trip = 0;
-        Duration const startService = 0;
-        Duration const endService = 0;
-        Duration const waitDuration = 0;
-        Duration const timeWarp = 0;
+        size_t location_ = 0;
+        size_t trip_ = 0;
+        Duration startService_ = 0;
+        Duration endService_ = 0;
+        Duration waitDuration_ = 0;
+        Duration timeWarp_ = 0;
 
+    public:
         ScheduledVisit(size_t location,
                        size_t trip,
                        Duration startService,
@@ -104,7 +105,13 @@ public:
                        Duration waitDuration,
                        Duration timeWarp);
 
+        [[nodiscard]] size_t location() const;
+        [[nodiscard]] size_t trip() const;
+        [[nodiscard]] Duration startService() const;
+        [[nodiscard]] Duration endService() const;
         [[nodiscard]] Duration serviceDuration() const;
+        [[nodiscard]] Duration waitDuration() const;
+        [[nodiscard]] Duration timeWarp() const;
     };
 
 private:

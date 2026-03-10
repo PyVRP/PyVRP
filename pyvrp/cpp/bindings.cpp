@@ -754,22 +754,25 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<Route::ScheduledVisit>(
         m, "ScheduledVisit", DOC(pyvrp, Route, ScheduledVisit))
-        .def_readonly("location", &Route::ScheduledVisit::location)
-        .def_readonly("trip", &Route::ScheduledVisit::trip)
-        .def_readonly("start_service", &Route::ScheduledVisit::startService)
-        .def_readonly("end_service", &Route::ScheduledVisit::endService)
-        .def_readonly("wait_duration", &Route::ScheduledVisit::waitDuration)
-        .def_readonly("time_warp", &Route::ScheduledVisit::timeWarp)
+        .def_property_readonly("location", &Route::ScheduledVisit::location)
+        .def_property_readonly("trip", &Route::ScheduledVisit::trip)
+        .def_property_readonly("start_service",
+                               &Route::ScheduledVisit::startService)
+        .def_property_readonly("end_service",
+                               &Route::ScheduledVisit::endService)
+        .def_property_readonly("wait_duration",
+                               &Route::ScheduledVisit::waitDuration)
+        .def_property_readonly("time_warp", &Route::ScheduledVisit::timeWarp)
         .def_property_readonly("service_duration",
                                &Route::ScheduledVisit::serviceDuration)
         .def(py::pickle(
             [](Route::ScheduledVisit const &visit) {  // __getstate__
-                return py::make_tuple(visit.location,
-                                      visit.trip,
-                                      visit.startService,
-                                      visit.endService,
-                                      visit.waitDuration,
-                                      visit.timeWarp);
+                return py::make_tuple(visit.location(),
+                                      visit.trip(),
+                                      visit.startService(),
+                                      visit.endService(),
+                                      visit.waitDuration(),
+                                      visit.timeWarp());
             },
             [](py::tuple t) {  // __setstate__
                 Route::ScheduledVisit visit(
