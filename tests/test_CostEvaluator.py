@@ -6,6 +6,7 @@ from pyvrp import (
     Client,
     CostEvaluator,
     Depot,
+    Location,
     ProblemData,
     Route,
     Solution,
@@ -228,6 +229,7 @@ def test_excess_load_penalised_cost():
     Tests that excess load is properly penalised in the cost computations.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(1, 1)],
         clients=[
             Client(x=0, y=0, delivery=[2, 1], pickup=[0, 0]),
             Client(x=1, y=1, delivery=[3, 2], pickup=[0, 0]),

@@ -171,6 +171,36 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[1].cast<Segments>());    // segments
             }));
 
+    py::class_<ProblemData::Location>(
+        m, "Location", DOC(pyvrp, ProblemData, Location))
+        .def(py::init<pyvrp::Coordinate, pyvrp::Coordinate, char const *>(),
+             py::arg("x"),
+             py::arg("y"),
+             py::kw_only(),
+             py::arg("name") = "")
+        .def_readonly("x", &ProblemData::Location::x)
+        .def_readonly("y", &ProblemData::Location::y)
+        .def_readonly("name",
+                      &ProblemData::Location::name,
+                      py::return_value_policy::reference_internal)
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](ProblemData::Location const &location) {  // __getstate__
+                return py::make_tuple(location.x, location.y, location.name);
+            },
+            [](py::tuple t) {  // __setstate__
+                ProblemData::Location location(
+                    t[0].cast<pyvrp::Coordinate>(),  // x
+                    t[1].cast<pyvrp::Coordinate>(),  // y
+                    t[2].cast<std::string>());       // name
+
+                return location;
+            }))
+        .def(
+            "__str__",
+            [](ProblemData::Location const &location) { return location.name; },
+            py::return_value_policy::reference_internal);
+
     py::class_<ProblemData::Client>(
         m, "Client", DOC(pyvrp, ProblemData, Client))
         .def(py::init<pyvrp::Coordinate,
@@ -500,12 +530,14 @@ PYBIND11_MODULE(_pyvrp, m)
             py::return_value_policy::reference_internal);
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))
-        .def(py::init<std::vector<ProblemData::Client>,
+        .def(py::init<std::vector<ProblemData::Location>,
+                      std::vector<ProblemData::Client>,
                       std::vector<ProblemData::Depot>,
                       std::vector<ProblemData::VehicleType>,
                       std::vector<Matrix<pyvrp::Distance>>,
                       std::vector<Matrix<pyvrp::Duration>>,
                       std::vector<ProblemData::ClientGroup>>(),
+             py::arg("locations"),
              py::arg("clients"),
              py::arg("depots"),
              py::arg("vehicle_types"),
@@ -514,6 +546,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("groups") = py::list())
         .def("replace",
              &ProblemData::replace,
+             py::arg("locations") = py::none(),
              py::arg("clients") = py::none(),
              py::arg("depots") = py::none(),
              py::arg("vehicle_types") = py::none(),
@@ -545,6 +578,10 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("num_load_dimensions",
                                &ProblemData::numLoadDimensions,
                                DOC(pyvrp, ProblemData, numLoadDimensions))
+        .def("locations",
+             &ProblemData::locations,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, locations))
         .def("clients",
              &ProblemData::clients,
              py::return_value_policy::reference_internal,
@@ -569,6 +606,18 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::durationMatrices,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, durationMatrices))
+        .def(
+            "location",
+            [](ProblemData const &data, size_t location)
+            {
+                if (location >= data.numLocations())
+                    throw py::index_error();
+
+                return data.location(location);
+            },
+            py::arg("location"),
+            py::return_value_policy::reference_internal,
+            DOC(pyvrp, ProblemData, location))
         .def(
             "client",
             [](ProblemData const &data, size_t client)
@@ -619,7 +668,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData const &data) {  // __getstate__
-                return py::make_tuple(data.clients(),
+                return py::make_tuple(data.locations(),
+                                      data.clients(),
                                       data.depots(),
                                       data.vehicleTypes(),
                                       data.distanceMatrices(),
@@ -627,6 +677,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       data.groups());
             },
             [](py::tuple t) {  // __setstate__
+                using Locations = std::vector<ProblemData::Location>;
                 using Clients = std::vector<ProblemData::Client>;
                 using Depots = std::vector<ProblemData::Depot>;
                 using VehicleTypes = std::vector<ProblemData::VehicleType>;
@@ -634,12 +685,13 @@ PYBIND11_MODULE(_pyvrp, m)
                 using DurMats = std::vector<pyvrp::Matrix<pyvrp::Duration>>;
                 using Groups = std::vector<ProblemData::ClientGroup>;
 
-                ProblemData data(t[0].cast<Clients>(),
-                                 t[1].cast<Depots>(),
-                                 t[2].cast<VehicleTypes>(),
-                                 t[3].cast<DistMats>(),
-                                 t[4].cast<DurMats>(),
-                                 t[5].cast<Groups>());
+                ProblemData data(t[0].cast<Locations>(),
+                                 t[1].cast<Clients>(),
+                                 t[2].cast<Depots>(),
+                                 t[3].cast<VehicleTypes>(),
+                                 t[4].cast<DistMats>(),
+                                 t[5].cast<DurMats>(),
+                                 t[6].cast<Groups>());
 
                 return data;
             }));

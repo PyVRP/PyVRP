@@ -9,6 +9,7 @@ from pyvrp._pyvrp import (
     Client,
     ClientGroup,
     Depot,
+    Location,
     ProblemData,
     Solution,
     VehicleType,
@@ -37,8 +38,8 @@ class Edge:
 
     def __init__(
         self,
-        frm: Client | Depot,
-        to: Client | Depot,
+        frm: Location,
+        to: Location,
         distance: int,
         duration: int,
     ):
@@ -81,8 +82,8 @@ class Profile:
 
     def add_edge(
         self,
-        frm: Client | Depot,
-        to: Client | Depot,
+        frm: Location,
+        to: Location,
         distance: int,
         duration: int = 0,
     ) -> Edge:
@@ -103,6 +104,7 @@ class Model:
     """
 
     def __init__(self) -> None:
+        self._locations: list[Location] = []
         self._clients: list[Client] = []
         self._depots: list[Depot] = []
         self._edges: list[Edge] = []
@@ -125,13 +127,11 @@ class Model:
         return self._depots
 
     @property
-    def locations(self) -> list[Client | Depot]:
+    def locations(self) -> list[Location]:
         """
-        Returns all locations (depots and clients) in the current model. The
-        clients in the routes of the solution returned by :meth:`~solve` can be
-        used to index these locations.
+        Returns all locations in the current model.
         """
-        return self._depots + self._clients
+        return self._locations
 
     @property
     def groups(self) -> list[ClientGroup]:
@@ -177,9 +177,9 @@ class Model:
         Model
             A model instance representing the given data.
         """
+        locs = data.locations()
         depots = data.depots()
         clients = data.clients()
-        locs = depots + clients
 
         profiles = [Profile() for _ in range(data.num_profiles)]
         for idx, profile in enumerate(profiles):
@@ -197,6 +197,7 @@ class Model:
             ]
 
         self = Model()
+        self._locations = locs
         self._clients = clients
         self._depots = depots
         self._groups = data.groups()
@@ -204,6 +205,26 @@ class Model:
         self._vehicle_types = data.vehicle_types()
 
         return self
+
+    def add_location(
+        self,
+        x: float,
+        y: float,
+        *,
+        name: str = "",
+    ) -> Location:
+        """
+        Adds a location with the given attributes to the model. Returns the
+        created :class:`~pyvrp._pyvrp.Location` instance.
+        """
+        loc = Location(
+            x=x,
+            y=y,
+            name=name,
+        )
+
+        self._locations.append(loc)
+        return loc
 
     def add_client(
         self,
@@ -313,8 +334,8 @@ class Model:
 
     def add_edge(
         self,
-        frm: Client | Depot,
-        to: Client | Depot,
+        frm: Location,
+        to: Location,
         distance: int,
         duration: int = 0,
         profile: Profile | None = None,
@@ -462,7 +483,7 @@ class Model:
             :const:`~pyvrp.constants.MAX_VALUE`, a large number. Note that this
             value cannot exceed :const:`~pyvrp.constants.MAX_VALUE`.
         """
-        locs = self.locations
+        locs = self._locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
         # First we create the base distance and duration matrices. These are
@@ -503,6 +524,7 @@ class Model:
             durations = [base_duration]
 
         return ProblemData(
+            self._locations,
             self._clients,
             self._depots,
             self.vehicle_types,

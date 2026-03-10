@@ -53,6 +53,29 @@ bool hasTimeWindow(auto const &arg)
 }
 }  // namespace
 
+ProblemData::Location::Location(Coordinate x, Coordinate y, std::string name)
+    : x(x), y(y), name(duplicate(name.data()))
+{
+}
+
+ProblemData::Location::Location(Location const &location)
+    : x(location.x), y(location.y), name(duplicate(location.name))
+{
+}
+
+ProblemData::Location::Location(Location &&location)
+    : x(location.x), y(location.y), name(location.name)  // we can steal
+{
+    location.name = nullptr;  // stolen
+}
+
+bool ProblemData::Location::operator==(Location const &other) const
+{
+    return x == other.x && y == other.y && std::strcmp(name, other.name) == 0;
+}
+
+ProblemData::Location::~Location() { delete[] name; }
+
 ProblemData::Client::Client(Coordinate x,
                             Coordinate y,
                             std::vector<Load> delivery,
@@ -497,6 +520,11 @@ bool ProblemData::VehicleType::operator==(VehicleType const &other) const
     // clang-format on
 }
 
+std::vector<ProblemData::Location> const &ProblemData::locations() const
+{
+    return locations_;
+}
+
 std::vector<ProblemData::Client> const &ProblemData::clients() const
 {
     return clients_;
@@ -527,6 +555,12 @@ std::vector<Matrix<Duration>> const &ProblemData::durationMatrices() const
     return durs_;
 }
 
+ProblemData::Location const &ProblemData::location(size_t location) const
+{
+    assert(location < numLocations());
+    return locations_[location];
+}
+
 ProblemData::ClientGroup const &ProblemData::group(size_t group) const
 {
     assert(group < groups_.size());
@@ -546,7 +580,7 @@ size_t ProblemData::numDepots() const { return depots_.size(); }
 
 size_t ProblemData::numGroups() const { return groups_.size(); }
 
-size_t ProblemData::numLocations() const { return numDepots() + numClients(); }
+size_t ProblemData::numLocations() const { return locations_.size(); }
 
 size_t ProblemData::numVehicleTypes() const { return vehicleTypes_.size(); }
 
@@ -562,10 +596,14 @@ size_t ProblemData::numLoadDimensions() const { return numLoadDimensions_; }
 
 void ProblemData::validate() const
 {
+    if (numLocations() != numDepots() + numClients())  // TODO temp
+        throw std::invalid_argument(
+            "Need #locations to match #depots + #clients.");
+
     // Client checks.
-    for (size_t idx = numDepots(); idx != numLocations(); ++idx)
+    for (size_t idx = 0; idx != numClients(); ++idx)
     {
-        auto const &client = clients_[idx - numDepots()];
+        auto const &client = clients_[idx];
 
         if (client.delivery.size() != numLoadDimensions_)
         {
@@ -586,7 +624,8 @@ void ProblemData::validate() const
             throw std::out_of_range("Client references invalid group.");
 
         auto const &group = groups_[*client.group];
-        if (std::find(group.begin(), group.end(), idx) == group.end())
+        if (std::find(group.begin(), group.end(), numDepots() + idx)
+            == group.end())
         {
             auto const *msg = "Client not in the group it references.";
             throw std::invalid_argument(msg);
@@ -696,14 +735,16 @@ void ProblemData::validate() const
 }
 
 ProblemData
-ProblemData::replace(std::optional<std::vector<Client>> &clients,
+ProblemData::replace(std::optional<std::vector<Location>> &locations,
+                     std::optional<std::vector<Client>> &clients,
                      std::optional<std::vector<Depot>> &depots,
                      std::optional<std::vector<VehicleType>> &vehicleTypes,
                      std::optional<std::vector<Matrix<Distance>>> &distMats,
                      std::optional<std::vector<Matrix<Duration>>> &durMats,
                      std::optional<std::vector<ClientGroup>> &groups) const
 {
-    return {clients.value_or(clients_),
+    return {locations.value_or(locations_),
+            clients.value_or(clients_),
             depots.value_or(depots_),
             vehicleTypes.value_or(vehicleTypes_),
             distMats.value_or(dists_),
@@ -711,7 +752,8 @@ ProblemData::replace(std::optional<std::vector<Client>> &clients,
             groups.value_or(groups_)};
 }
 
-ProblemData::ProblemData(std::vector<Client> clients,
+ProblemData::ProblemData(std::vector<Location> locations,
+                         std::vector<Client> clients,
                          std::vector<Depot> depots,
                          std::vector<VehicleType> vehicleTypes,
                          std::vector<Matrix<Distance>> distMats,
@@ -719,6 +761,7 @@ ProblemData::ProblemData(std::vector<Client> clients,
                          std::vector<ClientGroup> groups)
     : dists_(std::move(distMats)),
       durs_(std::move(durMats)),
+      locations_(std::move(locations)),
       clients_(std::move(clients)),
       depots_(std::move(depots)),
       vehicleTypes_(std::move(vehicleTypes)),

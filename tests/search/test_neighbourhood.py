@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Depot, ProblemData, VehicleType
+from pyvrp import Depot, Location, ProblemData, VehicleType
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 
 
@@ -190,6 +190,7 @@ def test_zero_clients():
     Tests that the neighbourhood for an instance with zero clients is empty.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0)],
         clients=[],
         depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
         vehicle_types=[VehicleType()],

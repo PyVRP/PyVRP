@@ -12,6 +12,7 @@ from pyvrp._pyvrp import (
     Client,
     ClientGroup,
     Depot,
+    Location,
     ProblemData,
     Route,
     Solution,
@@ -349,6 +350,7 @@ class _ProblemDataBuilder:
         self.parser = parser
 
     def data(self) -> ProblemData:
+        locations = self._locations()
         clients = self._clients()
         depots = self._depots()
         vehicle_types = self._vehicle_types()
@@ -356,6 +358,7 @@ class _ProblemDataBuilder:
         groups = self._groups()
 
         return ProblemData(
+            locations=locations,
             clients=clients,
             depots=depots,
             vehicle_types=vehicle_types,
@@ -365,6 +368,13 @@ class _ProblemDataBuilder:
             duration_matrices=distance_matrices,
             groups=groups,
         )
+
+    def _locations(self) -> list[Location]:
+        coords = self.parser.coords()
+        return [
+            Location(x=coords[idx][0], y=coords[idx][1])
+            for idx in range(len(coords))
+        ]
 
     def _depots(self) -> list[Depot]:
         num_depots = self.parser.num_depots

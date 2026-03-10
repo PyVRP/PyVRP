@@ -6,6 +6,7 @@ from pyvrp import (
     ClientGroup,
     CostEvaluator,
     Depot,
+    Location,
     ProblemData,
     VehicleType,
 )
@@ -19,6 +20,7 @@ def test_does_not_remove_required_clients():
     might result in a significant cost improvement.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 1), Location(2, 2)],
         clients=[
             # This client cannot be removed, even though it causes significant
             # load violations.
@@ -60,6 +62,7 @@ def test_supports(
     assert_(RemoveOptional.supports(ok_small_prizes))
 
     data = ProblemData(  # instance with optional group
+        locations=[Location(0, 0), Location(0, 0)],
         clients=[Client(x=0, y=0, group=0, required=False)],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType()],
@@ -81,6 +84,7 @@ def test_fixed_vehicle_cost():
     """
     cost_eval = CostEvaluator([], 0, 0)
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 1), Location(1, 0)],
         clients=[
             Client(x=1, y=1, required=False),
             Client(x=1, y=0, required=False),
@@ -134,6 +138,7 @@ def test_empty_route_delta_cost_bug():
         [1, 1, 0],
     ]
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
         clients=[Client(x=0, y=0, required=False)],
         vehicle_types=[
@@ -160,6 +165,7 @@ def test_cannot_remove_required_group():
     that could render the solution structurally infeasible.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         depots=[Depot(x=0, y=0)],
         clients=[
             Client(x=0, y=0, group=0, required=False),
