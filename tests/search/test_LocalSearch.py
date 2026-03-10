@@ -9,6 +9,7 @@ from pyvrp import (
     ClientGroup,
     CostEvaluator,
     Depot,
+    Location,
     ProblemData,
     RandomNumberGenerator,
     Route,
@@ -546,6 +547,7 @@ def test_local_search_inserts_into_empty_solutions():
     Tests that the local search inserts into empty solutions.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
             Client(0, 0, prize=1_000, required=False),  # high prizes make
             Client(0, 0, prize=1_000, required=False),  # inserting worthwhile
@@ -584,6 +586,7 @@ def test_does_not_insert_optional_groups():
     # group. The group isn't worth visiting since that incurs distance cost,
     # and there is no prize to be obtained.
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
             Client(x=0, y=0, group=0, required=False),
             Client(x=0, y=0, group=0, required=False),
