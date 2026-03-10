@@ -2,7 +2,14 @@ import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import Client, CostEvaluator, Depot, ProblemData, VehicleType
+from pyvrp import (
+    Client,
+    CostEvaluator,
+    Depot,
+    Location,
+    ProblemData,
+    VehicleType,
+)
 from pyvrp.search import RelocateWithDepot
 from tests.helpers import make_search_route
 
@@ -115,6 +122,12 @@ def test_inserts_best_reload_depot():
 
     veh_type = VehicleType(capacity=[5], reload_depots=[0, 1])
     data = ProblemData(
+        locations=[
+            Location(0, 0),
+            Location(0, 0),
+            Location(0, 0),
+            Location(0, 0),
+        ],
         clients=[Client(0, 0, delivery=[5]), Client(0, 0, delivery=[5])],
         depots=[Depot(0, 0), Depot(0, 0)],
         vehicle_types=[veh_type],
@@ -150,6 +163,7 @@ def test_fixed_vehicle_cost():
     to non-empty routes becoming empty.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[Client(0, 0, delivery=[5]), Client(0, 0, delivery=[4])],
         depots=[Depot(0, 0)],
         vehicle_types=[
@@ -258,6 +272,7 @@ def test_can_insert_reload_after_start_depot():
     start depot if that is an improving move.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
             Client(x=0, y=0, delivery=[1]),
             Client(x=0, y=0, delivery=[1]),
@@ -295,6 +310,12 @@ def test_can_insert_reload_before_end_depot():
     mat[[0, 1], 0] = 0
 
     data = ProblemData(
+        locations=[
+            Location(0, 0),
+            Location(0, 0),
+            Location(0, 0),
+            Location(0, 0),
+        ],
         clients=[Client(x=0, y=0), Client(x=0, y=0)],
         depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
         vehicle_types=[VehicleType(1, reload_depots=[0, 1])],
