@@ -8,6 +8,7 @@ from pyvrp import (
     Activity,
     Client,
     Depot,
+    Location,
     ProblemData,
     RandomNumberGenerator,
     Route,
@@ -389,6 +390,7 @@ def test_bug_start_time_before_release_time():
     """
     mat = [[0, 10], [10, 0]]
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 1)],
         clients=[Client(1, 1, release_time=5)],
         depots=[Depot(0, 0)],
         vehicle_types=[VehicleType()],
@@ -716,6 +718,7 @@ def test_small_example_from_cattaruzza_paper():
     ]
 
     data = ProblemData(
+        locations=[Location(0, 0) for _ in range(6)],
         clients=clients,
         depots=[depot],
         vehicle_types=[VehicleType(reload_depots=[0])],
@@ -766,6 +769,7 @@ def test_multi_trip_with_release_times():
     ]
 
     data = ProblemData(
+        locations=[Location(0, 0) for _ in range(4)],
         clients=[
             Client(0, 0, tw_early=60, tw_late=100, release_time=40),
             Client(0, 0, tw_early=70, tw_late=90, release_time=50),
