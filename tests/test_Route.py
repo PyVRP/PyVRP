@@ -274,7 +274,7 @@ def test_release_time_and_service_duration():
     also the ``test_release_time_and_shift_duration`` test.
     """
     ok_small = read("data/OkSmallReleaseTimes.txt")
-    depot = Depot(x=2334, y=726, service_duration=6_000)
+    depot = Depot(0, service_duration=6_000)
     data = ok_small.replace(depots=[depot])
 
     # This route has a release time of 5000, but we want to start much later
@@ -391,8 +391,8 @@ def test_bug_start_time_before_release_time():
     mat = [[0, 10], [10, 0]]
     data = ProblemData(
         locations=[Location(0, 0), Location(1, 1)],
-        clients=[Client(1, 1, release_time=5)],
-        depots=[Depot(0, 0)],
+        clients=[Client(1, release_time=5)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType()],
         distance_matrices=[mat],
         duration_matrices=[mat],
@@ -697,15 +697,15 @@ def test_small_example_from_cattaruzza_paper():
            *Transportation Science* 50(2): 676-693.
            https://doi.org/10.1287/trsc.2015.0608.
     """
-    depot = Depot(0, 0, tw_early=0, tw_late=200, service_duration=20)
+    depot = Depot(0, tw_early=0, tw_late=200, service_duration=20)
     clients = [
         # Figure 1 details release times for some clients. But release times
         # are not actually binding in the example, so they are not needed.
-        Client(0, 0, tw_early=100, tw_late=120, service_duration=5),
-        Client(0, 0, tw_early=50, tw_late=75, service_duration=5),
-        Client(0, 0, tw_early=50, tw_late=75, service_duration=5),
-        Client(0, 0, tw_early=50, tw_late=100, service_duration=5),
-        Client(0, 0, tw_early=50, tw_late=100, service_duration=5),
+        Client(1, tw_early=100, tw_late=120, service_duration=5),
+        Client(2, tw_early=50, tw_late=75, service_duration=5),
+        Client(3, tw_early=50, tw_late=75, service_duration=5),
+        Client(4, tw_early=50, tw_late=100, service_duration=5),
+        Client(5, tw_early=50, tw_late=100, service_duration=5),
     ]
 
     matrix = [
@@ -771,11 +771,11 @@ def test_multi_trip_with_release_times():
     data = ProblemData(
         locations=[Location(0, 0) for _ in range(4)],
         clients=[
-            Client(0, 0, tw_early=60, tw_late=100, release_time=40),
-            Client(0, 0, tw_early=70, tw_late=90, release_time=50),
-            Client(0, 0, tw_early=80, tw_late=150, release_time=100),
+            Client(1, tw_early=60, tw_late=100, release_time=40),
+            Client(2, tw_early=70, tw_late=90, release_time=50),
+            Client(3, tw_early=80, tw_late=150, release_time=100),
         ],
-        depots=[Depot(0, 0)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(reload_depots=[0])],
         distance_matrices=[matrix],
         duration_matrices=[matrix],

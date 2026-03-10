@@ -29,7 +29,7 @@ def test_measure_convertible_to_int(input, expected):
     Tests that input argument for which int() succeeds are also properly
     handled on the C++ side.
     """
-    client = Client(1, 1, tw_late=input)
+    client = Client(0, tw_late=input)
     assert_equal(client.tw_late, expected)
 
 
@@ -42,4 +42,4 @@ def test_larger_than_max_size(input):
     raise an overflow error to warn the user.
     """
     with assert_raises(OverflowError):
-        Client(1, 1, tw_late=input)
+        Client(0, tw_late=input)

@@ -398,11 +398,8 @@ def test_excess_load_calculation_with_multiple_load_dimensions(
     """
     data = ProblemData(
         locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
-        clients=[
-            Client(1, 0, delivery1),
-            Client(2, 0, delivery2),
-        ],
-        depots=[Depot(0, 0)],
+        clients=[Client(1, delivery1), Client(2, delivery2)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(1, capacity=capacity)],
         distance_matrices=[[[0, 1, 2], [1, 0, 1], [2, 1, 0]]],
         duration_matrices=[[[0, 1, 2], [1, 0, 1], [2, 1, 0]]],
@@ -435,11 +432,8 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
 
     data = ProblemData(
         locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
-        clients=[
-            Client(x=1, y=0, tw_late=5),
-            Client(x=2, y=0, tw_late=5),
-        ],
-        depots=[Depot(x=0, y=0)],
+        clients=[Client(1, tw_late=5), Client(2, tw_late=5)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(2, tw_late=10)],
         distance_matrices=[dist_mat],
         duration_matrices=[dur_mat],
@@ -471,8 +465,8 @@ def test_time_warp_return_to_depot():
     """
     data = ProblemData(
         locations=[Location(0, 0), Location(1, 0)],
-        clients=[Client(x=1, y=0)],
-        depots=[Depot(x=0, y=0)],
+        clients=[Client(1)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(tw_late=1)],
         distance_matrices=[np.asarray([[0, 0], [0, 0]])],
         duration_matrices=[np.asarray([[0, 1], [1, 0]])],
@@ -617,11 +611,8 @@ def test_eq_unassigned():
     dist = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 1), Location(1, 0)],
-        clients=[
-            Client(x=0, y=1, required=False),
-            Client(x=1, y=0, required=False),
-        ],
-        depots=[Depot(x=0, y=0)],
+        clients=[Client(1, required=False), Client(2, required=False)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(2)],
         distance_matrices=[dist],
         duration_matrices=[dist],
@@ -760,8 +751,8 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     # Clients 1 and 2 are part of a mutually exclusive group. Of these clients,
     # exactly one must be part of a feasible solution.
     clients = ok_small.clients()
-    clients[0] = Client(1, 1, delivery=[0], required=False, group=0)
-    clients[1] = Client(2, 2, delivery=[0], required=False, group=0)
+    clients[0] = Client(1, delivery=[0], required=False, group=0)
+    clients[1] = Client(2, delivery=[0], required=False, group=0)
 
     group = ClientGroup([1, 2], required=True)
     assert_(group.required)
@@ -782,8 +773,8 @@ def test_optional_mutually_exclusive_group(ok_small):
     # Clients 1 and 2 are part of a mutually exclusive group. Of these clients,
     # at most one must be part of a feasible solution.
     clients = ok_small.clients()
-    clients[0] = Client(1, 1, delivery=[0], required=False, group=0)
-    clients[1] = Client(2, 2, delivery=[0], required=False, group=0)
+    clients[0] = Client(1, delivery=[0], required=False, group=0)
+    clients[1] = Client(2, delivery=[0], required=False, group=0)
 
     group = ClientGroup([1, 2], required=False)
     assert_(not group.required)
