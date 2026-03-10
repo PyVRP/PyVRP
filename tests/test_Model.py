@@ -345,10 +345,10 @@ def test_model_and_solve(ok_small):
         model.add_location(x, y)
 
     model.add_depot(x=2334, y=726)
-    (model.add_client(226, 1297, 5, 0, 360, 15600, 22500),)
-    (model.add_client(590, 530, 5, 0, 360, 12000, 19500),)
-    (model.add_client(435, 718, 3, 0, 420, 8400, 15300),)
-    (model.add_client(1191, 639, 5, 0, 360, 12000, 19500),)
+    model.add_client(226, 1297, 5, 0, 360, 15600, 22500)
+    model.add_client(590, 530, 5, 0, 360, 12000, 19500)
+    model.add_client(435, 718, 3, 0, 420, 8400, 15300)
+    model.add_client(1191, 639, 5, 0, 360, 12000, 19500)
 
     edge_weights = [
         [0, 1544, 1944, 1931, 1476],
