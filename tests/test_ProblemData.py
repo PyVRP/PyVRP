@@ -1396,3 +1396,38 @@ def test_accessors(ok_small):
     clients = ok_small.clients()
     assert_equal(ok_small.client(0), clients[0])
     assert_equal(ok_small.client(3), clients[3])
+
+
+def test_raises_unknown_location():
+    """
+    Tests that creating depots or clients referencing unknown locations raises.
+    """
+    with assert_raises(IndexError):
+        ProblemData(
+            locations=[Location(0, 0)],
+            depots=[Depot(location=1)],  # invalid location
+            clients=[],
+            vehicle_types=[VehicleType()],
+            distance_matrices=[np.zeros((1, 1), dtype=int)],
+            duration_matrices=[np.zeros((1, 1), dtype=int)],
+        )
+
+    with assert_raises(IndexError):
+        ProblemData(
+            locations=[Location(0, 0), Location(0, 0)],
+            depots=[Depot(location=0)],  # valid location
+            clients=[Client(location=2)],  # invalid location
+            vehicle_types=[VehicleType()],
+            distance_matrices=[np.zeros((2, 2), dtype=int)],
+            duration_matrices=[np.zeros((2, 2), dtype=int)],
+        )
+
+    # Both location references are valid, so this should pass.
+    ProblemData(
+        locations=[Location(0, 0), Location(0, 0)],
+        depots=[Depot(location=0)],  # valid location
+        clients=[Client(location=1)],  # valid location
+        vehicle_types=[VehicleType()],
+        distance_matrices=[np.zeros((2, 2), dtype=int)],
+        duration_matrices=[np.zeros((2, 2), dtype=int)],
+    )

@@ -6,6 +6,7 @@ from pyvrp import (
     Client,
     ClientGroup,
     Depot,
+    Location,
     Model,
     PenaltyParams,
     Profile,
@@ -1213,3 +1214,23 @@ def test_solution_satisfies_group_constraints():
 
     res = m.solve(stop=MaxIterations(1), seed=42)
     assert_equal(res.best.num_missing_groups(), 0)
+
+
+def test_raises_unknown_location():
+    """
+    Tests that the model interface raises when given a location argument that
+    it does not know about.
+    """
+    m = Model()
+    loc = Location(0, 0)  # unknown, created outside of the model
+
+    with assert_raises(ValueError):
+        m.add_depot(location=loc)
+
+    with assert_raises(ValueError):
+        m.add_client(location=loc)
+
+    # Now created via the model interface. This should be OK.
+    loc = m.add_location(0, 0)
+    m.add_depot(location=loc)
+    m.add_client(location=loc)
