@@ -5,6 +5,7 @@ from numpy.testing import assert_equal, assert_raises
 from pyvrp import (
     CostEvaluator,
     Depot,
+    Location,
     ProblemData,
     Result,
     Route,
@@ -137,6 +138,7 @@ def test_plot_demands_raises_for_out_of_bounds_load_dimension():
     raises a ValueError.
     """
     data = ProblemData(
+        locations=[Location(0, 0)],
         clients=[],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType()],
