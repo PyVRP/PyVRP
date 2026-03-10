@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
 import pyvrp
-from pyvrp import Client, Depot, ProblemData, VehicleType
+from pyvrp import Client, Depot, Location, ProblemData, VehicleType
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
 
@@ -466,6 +466,7 @@ def test_shift_duration_depot_time_window_interaction(
     varies around that.
     """
     data = ProblemData(
+        locations=[Location(0, 0)],
         clients=[],
         depots=[Depot(x=0, y=0, tw_early=0, tw_late=1_000)],
         vehicle_types=[VehicleType(tw_early=shift_tw[0], tw_late=shift_tw[1])],
@@ -624,6 +625,7 @@ def test_load_between_multiple_dimensions(frm, to, dim, expected):
     multiple dimensions.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
         clients=[
             Client(1, 0, delivery=[1, 2]),
             Client(2, 0, delivery=[4, 5]),
@@ -947,6 +949,7 @@ def test_multi_trip_with_release_times():
     ]
 
     data = ProblemData(
+        locations=[Location(0, 0) for _ in range(4)],
         clients=[
             Client(0, 0, tw_early=60, tw_late=100, release_time=40),
             Client(0, 0, tw_early=70, tw_late=90, release_time=50),
@@ -1040,6 +1043,7 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
     has distance-related costs or (penalised) constraints.
     """
     data = ProblemData(
+        locations=[Location(0, 0)],
         clients=[],
         depots=[Depot(0, 0)],
         vehicle_types=[veh_type],
@@ -1075,6 +1079,7 @@ def test_has_duration_cost(veh_type: VehicleType, depot: Depot, exp: bool):
     and/or instance has duration-related costs or (penalised) constraints.
     """
     data = ProblemData(
+        locations=[Location(0, 0)],
         clients=[],
         depots=[depot],
         vehicle_types=[veh_type],
