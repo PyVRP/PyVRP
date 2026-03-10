@@ -6,6 +6,7 @@ from pyvrp import (
     ClientGroup,
     CostEvaluator,
     Depot,
+    Location,
     ProblemData,
     VehicleType,
 )
@@ -70,6 +71,7 @@ def test_supports(
     assert_(InsertOptional.supports(ok_small_prizes))
 
     data = ProblemData(  # instance with optional group
+        locations=[Location(0, 0), Location(0, 0)],
         clients=[Client(x=0, y=0, group=0, required=False)],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType()],
@@ -111,6 +113,7 @@ def test_group_skip_duplicates():
     present in the solution.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
             Client(0, 0, prize=1, required=False, group=0),
             Client(0, 0, prize=1, required=False, group=0),
@@ -150,6 +153,7 @@ def test_insert_in_empty_routes_considers_fixed_vehicle_cost():
     """
     cost_eval = CostEvaluator([], 0, 0)
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 1), Location(1, 0)],
         clients=[
             Client(x=1, y=1, required=False),
             Client(x=1, y=0, required=False),
