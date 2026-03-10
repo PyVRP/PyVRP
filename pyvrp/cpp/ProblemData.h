@@ -138,7 +138,7 @@ public:
      * Parameters
      * ----------
      * location
-     *     TODO
+     *     Physical location of this client.
      * delivery
      *     The amounts this client demands from the depot.
      * pickup
@@ -175,7 +175,7 @@ public:
      * Attributes
      * ----------
      * location
-     *     TODO
+     *     Physical location of this client.
      * delivery
      *     Client delivery amounts shipped from the depot.
      * pickup
@@ -329,7 +329,7 @@ public:
      * Parameters
      * ----------
      * location
-     *     TODO
+     *     Physical location of this depot.
      * tw_early
      *     Opening time of this depot. Default 0.
      * tw_late
@@ -343,7 +343,7 @@ public:
      * Attributes
      * ----------
      * location
-     *     TODO
+     *     Physical location of this depot.
      * tw_early
      *     Opening time of this depot.
      * tw_late
@@ -416,11 +416,11 @@ public:
      *     the maximum total delivery or pickup amount that the vehicle can
      *     store along the route.
      * start_depot
-     *     Depot (location index) where vehicles of this type start their
-     *     routes. Default 0 (first depot).
+     *     Depot (index) where vehicles of this type start their routes.
+     *     Defaults to the first depot.
      * end_depot
-     *     Depot (location index) where vehicles of this type end routes.
-     *     Default 0 (first depot).
+     *     Depot (index) where vehicles of this type end routes. Defaults to
+     *     the first depot.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
      * tw_early
@@ -450,9 +450,9 @@ public:
      *     this value is zero, and the vehicle only considers loads from client
      *     visits.
      * reload_depots
-     *     List of reload depots (location indices) this vehicle may visit along
-     *     its route, to empty and reload for subsequent client visits. Defaults
-     *     to an empty list, in which case no reloads are allowed.
+     *     List of reload depots (indices) this vehicle may visit along its
+     *     route, to empty and reload for subsequent client visits. Defaults to
+     *     an empty list, in which case no reloads are allowed.
      * max_reloads
      *     Maximum number of reloads the vehicle may perform on a route.
      *     Unconstrained if not explicitly provided.
@@ -472,9 +472,9 @@ public:
      * capacity
      *     Capacities of this vehicle type, per load dimension.
      * start_depot
-     *     Start location associated with these vehicles.
+     *     Start depot associated with these vehicles.
      * end_depot
-     *     End location associated with these vehicles.
+     *     End depot associated with these vehicles.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type.
      * tw_early
