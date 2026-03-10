@@ -6,6 +6,7 @@ from pyvrp import (
     Client,
     CostEvaluator,
     Depot,
+    Location,
     ProblemData,
     RandomNumberGenerator,
     Solution,
@@ -228,6 +229,7 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     # Distance-wise, the best route is 0 -> 1 -> 2 -> 0. Duration-wise,
     # however, the best route is 0 -> 2 -> 1 -> 0.
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
         clients=[
             Client(x=1, y=0, tw_early=0, tw_late=5),
             Client(x=2, y=0, tw_early=0, tw_late=5),
@@ -393,6 +395,12 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
     the same route.
     """
     data = ProblemData(
+        locations=[
+            Location(0, 0),
+            Location(1, 0),
+            Location(2, 0),
+            Location(2, 0),
+        ],
         clients=[
             Client(x=1, y=0, pickup=[5]),
             Client(x=2, y=0, pickup=[0]),
@@ -570,6 +578,12 @@ def test_bug_evaluating_move_with_initial_load():
     in an improvement. See #813 for details.
     """
     data = ProblemData(
+        locations=[
+            Location(0, 0),
+            Location(0, 0),
+            Location(0, 0),
+            Location(0, 0),
+        ],
         clients=[
             Client(x=0, y=0, delivery=[1]),
             Client(x=0, y=0, delivery=[1]),
@@ -608,6 +622,7 @@ def test_bug_release_time_shift_time_windows():
     been fixed. See #852 for details.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
             Client(x=0, y=0, tw_early=2, release_time=2),
             Client(x=0, y=0, tw_early=2, release_time=2),
@@ -652,6 +667,7 @@ def test_empty_route_delta_cost_bug():
         VehicleType(1, start_depot=0, end_depot=1, shift_duration=0),
     ]
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
         clients=[Client(x=0, y=0)],
         vehicle_types=vehicle_types,
