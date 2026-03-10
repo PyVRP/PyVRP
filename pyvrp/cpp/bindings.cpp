@@ -760,11 +760,11 @@ PYBIND11_MODULE(_pyvrp, m)
                                &Route::ScheduledVisit::startService)
         .def_property_readonly("end_service",
                                &Route::ScheduledVisit::endService)
+        .def_property_readonly("service_duration",
+                               &Route::ScheduledVisit::serviceDuration)
         .def_property_readonly("wait_duration",
                                &Route::ScheduledVisit::waitDuration)
         .def_property_readonly("time_warp", &Route::ScheduledVisit::timeWarp)
-        .def_property_readonly("service_duration",
-                               &Route::ScheduledVisit::serviceDuration)
         .def(py::pickle(
             [](Route::ScheduledVisit const &visit) {  // __getstate__
                 return py::make_tuple(visit.location(),
