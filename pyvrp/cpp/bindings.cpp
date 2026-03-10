@@ -23,7 +23,6 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include <variant>
 
 namespace py = pybind11;
 
@@ -546,24 +545,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("num_load_dimensions",
                                &ProblemData::numLoadDimensions,
                                DOC(pyvrp, ProblemData, numLoadDimensions))
-        .def(
-            "location",
-            [](ProblemData const &data,
-               size_t idx) -> std::variant<ProblemData::Client const *,
-                                           ProblemData::Depot const *>
-            {
-                if (idx >= data.numLocations())
-                    throw py::index_error();
-
-                auto const proxy = data.location(idx);
-                if (idx < data.numDepots())
-                    return proxy.depot;
-                else
-                    return proxy.client;
-            },
-            py::arg("idx"),
-            py::return_value_policy::reference_internal,
-            DOC(pyvrp, ProblemData, location))
         .def("clients",
              &ProblemData::clients,
              py::return_value_policy::reference_internal,
@@ -588,6 +569,30 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::durationMatrices,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, durationMatrices))
+        .def(
+            "client",
+            [](ProblemData const &data, size_t client)
+            {
+                if (client >= data.numClients())
+                    throw py::index_error();
+
+                return data.client(client);
+            },
+            py::arg("client"),
+            py::return_value_policy::reference_internal,
+            DOC(pyvrp, ProblemData, client))
+        .def(
+            "depot",
+            [](ProblemData const &data, size_t depot)
+            {
+                if (depot >= data.numDepots())
+                    throw py::index_error();
+
+                return data.depot(depot);
+            },
+            py::arg("depot"),
+            py::return_value_policy::reference_internal,
+            DOC(pyvrp, ProblemData, depot))
         .def("group",
              &ProblemData::group,
              py::arg("group"),

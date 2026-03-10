@@ -13,7 +13,7 @@ ReplaceGroup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
     assert(!U->isDepot() && solution_);
     stats_.numEvaluations++;
 
-    ProblemData::Client const &uData = data.location(U->client());
+    auto const &uData = data.client(U->client() - data.numDepots());
     if (U->route() || !uData.group)
         return std::make_pair(0, false);
 

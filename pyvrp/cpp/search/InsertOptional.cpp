@@ -12,7 +12,7 @@ std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
     assert(!U->isDepot());
     stats_.numEvaluations++;
 
-    ProblemData::Client const &uData = data.location(U->client());
+    auto const &uData = data.client(U->client() - data.numDepots());
     if (U->route() || !V->route())
         return std::make_pair(0, false);
 

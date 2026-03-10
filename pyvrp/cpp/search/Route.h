@@ -809,7 +809,7 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
     if (size() != 1 && route_[start]->isReloadDepot())  // first need to add the
     {                                                   // start depot's service
         auto const from = route_[start]->client();
-        ProblemData::Depot const &depot = route_.data.location(from);
+        auto const &depot = route_.data.depot(from);
         segment = DurationSegment::merge(segment, {depot.serviceDuration});
     }
 
@@ -1109,7 +1109,7 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
                 // finalise the current segment. We first travel there. We need
                 // to end the segment within the depot's time windows to
                 // properly account for any release time on our segment.
-                ProblemData::Depot const &depot = data.location(other.last());
+                auto const &depot = data.depot(other.last());
                 DurationSegment depotDS = {depot, depot.serviceDuration};
                 ds = DurationSegment::merge(edgeDur, depotDS, ds);
                 ds = ds.finaliseFront();

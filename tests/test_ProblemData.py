@@ -295,9 +295,9 @@ def test_problem_data_replace_no_changes():
     assert_(new is not original)
 
     for idx in range(new.num_clients):
-        assert_(new.location(idx) is not original.location(idx))
-        assert_equal(new.location(idx).x, original.location(idx).x)
-        assert_equal(new.location(idx).y, original.location(idx).y)
+        assert_(new.client(idx) is not original.client(idx))
+        assert_equal(new.client(idx).x, original.client(idx).x)
+        assert_equal(new.client(idx).y, original.client(idx).y)
 
     for idx in range(new.num_vehicle_types):
         new_veh_type = new.vehicle_type(idx)
@@ -343,9 +343,9 @@ def test_problem_data_replace_with_changes():
     )
 
     assert_(new is not original)
-    assert_(new.location(1) is not original.location(1))
-    assert_(new.location(1).x != original.location(1).x)
-    assert_(new.location(1).y != original.location(1).y)
+    assert_(new.client(0) is not original.client(0))
+    assert_(new.client(0).x != original.client(0).x)
+    assert_(new.client(0).y != original.client(0).y)
 
     for idx in range(original.num_vehicle_types):  # only compare first type
         new_veh_type = new.vehicle_type(idx)
@@ -718,16 +718,18 @@ def test_vehicle_type_multiple_capacities():
     assert_equal(vehicle_type.capacity, [998, 37])
 
 
-@pytest.mark.parametrize("idx", [5, 6])
-def test_location_raises_invalid_index(ok_small, idx: int):
+def test_depot_client_raises_invalid_index(ok_small):
     """
-    Tests that calling location(idx) raises when the index is out of bounds.
+    Tests that calling depot(idx) and client(idx) raises when the index is out
+    of bounds.
     """
     assert_equal(ok_small.num_depots, 1)
-    assert_equal(ok_small.num_clients, 4)
-
     with assert_raises(IndexError):
-        ok_small.location(idx)
+        ok_small.depot(1)
+
+    assert_equal(ok_small.num_clients, 4)
+    with assert_raises(IndexError):
+        ok_small.client(4)
 
 
 @pytest.mark.parametrize(

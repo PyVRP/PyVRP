@@ -10,7 +10,7 @@ RemoveOptional::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
     assert(U->client());
     stats_.numEvaluations++;
 
-    ProblemData::Client const &uData = data.location(U->client());
+    auto const &uData = data.client(U->client() - data.numDepots());
     if (!U->route() || uData.required)
         return std::make_pair(0, false);
 

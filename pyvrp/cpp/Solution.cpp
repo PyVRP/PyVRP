@@ -152,14 +152,14 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
             clients.push_back(groupMembers[idx]);
         }
 
-    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
+    for (size_t idx = 0; idx != data.numClients(); ++idx)
     {
-        ProblemData::Client const &clientData = data.location(idx);
+        auto const &clientData = data.client(idx);
         if (clientData.group)  // already handled groups above, skip here
             continue;
 
         if (clientData.required || rng.rand() < 0.5)
-            clients.push_back(idx);
+            clients.push_back(data.numDepots() + idx);
     }
 
     // Shuffle clients to create random routes.
@@ -247,7 +247,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
          ++client)
         if (!isVisited[client])  // we need to check if the client visit
         {                        // is required if this is true
-            ProblemData::Client const &clientData = data.location(client);
+            auto const &clientData = data.client(client - data.numDepots());
             numMissingClients_ += clientData.required;
         }
 

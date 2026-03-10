@@ -40,13 +40,13 @@ public:
 
     pyvrp::DurationSegment duration([[maybe_unused]] size_t profile) const
     {
-        pyvrp::ProblemData::Client const &clientData = data.location(client);
+        auto const &clientData = data.client(client - data.numDepots());
         return {clientData};
     }
 
     pyvrp::LoadSegment load(size_t dimension) const
     {
-        return {data.location(client), dimension};
+        return {data.client(client - data.numDepots()), dimension};
     }
 };
 }  // namespace pyvrp::search

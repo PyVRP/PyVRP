@@ -215,12 +215,12 @@ void Route::update()
     // Duration.
     durAt.resize(nodes.size());
 
-    ProblemData::Depot const &start = data.location(startDepot());
+    auto const &start = data.depot(startDepot());
     DurationSegment const vehStart(vehicleType_, vehicleType_.startLate);
     DurationSegment const depotStart(start, start.serviceDuration);
     durAt[0] = DurationSegment::merge(vehStart, depotStart);
 
-    ProblemData::Depot const &end = data.location(endDepot());
+    auto const &end = data.depot(endDepot());
     DurationSegment const depotEnd(end, 0);
     DurationSegment const vehEnd(vehicleType_, vehicleType_.twLate);
     durAt[nodes.size() - 1] = DurationSegment::merge(depotEnd, vehEnd);
@@ -231,12 +231,12 @@ void Route::update()
 
         if (!node->isReloadDepot())
         {
-            ProblemData::Client const &client = data.location(node->client());
+            auto const &client = data.client(node->client() - data.numDepots());
             durAt[idx] = {client};
         }
         else
         {
-            ProblemData::Depot const &depot = data.location(node->client());
+            auto const &depot = data.depot(node->client());
             durAt[idx] = {depot, 0};
         }
     }
@@ -256,7 +256,7 @@ void Route::update()
         {
             // Then we need to first account for depot service before we merge
             // with the idx segment.
-            ProblemData::Depot const &depot = data.location(visits[prev]);
+            auto const &depot = data.depot(visits[prev]);
             before = DurationSegment::merge(before, {depot.serviceDuration});
         }
 
@@ -279,7 +279,7 @@ void Route::update()
             // at idx after already travelling to next, but that's OK since
             // we're essentially using the trick of adding service to the
             // outgoing edge.
-            ProblemData::Depot const &depot = data.location(visits[idx]);
+            auto const &depot = data.depot(visits[idx]);
             after = DurationSegment::merge({depot.serviceDuration}, after);
         }
 
@@ -300,7 +300,8 @@ void Route::update()
             loadAt[dim][idx]
                 = nodes[idx]->isReloadDepot()
                       ? LoadSegment{}
-                      : LoadSegment{data.location(visits[idx]), dim};
+                      : LoadSegment{data.client(visits[idx] - data.numDepots()),
+                                    dim};
 
         loadBefore[dim].resize(nodes.size());
         loadBefore[dim][0] = loadAt[dim][0];

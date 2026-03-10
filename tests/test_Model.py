@@ -806,7 +806,7 @@ def test_minimise_distance_or_duration(ok_small):
     # thus no difference in actual travel time or distance. But the duration
     # objective should also count service duration along the route, and that
     # is something we can check.
-    service = sum(data.location(loc).service_duration for loc in [1, 4])
+    service = sum(data.client(client).service_duration for client in [0, 3])
     assert_equal(new_res.cost(), orig_res.cost() + service)
 
 

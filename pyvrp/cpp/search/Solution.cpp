@@ -21,7 +21,7 @@ Cost insertCost(pyvrp::search::Route::Node *U,
     assert(V->route() && !U->isDepot());
 
     auto *route = V->route();
-    pyvrp::ProblemData::Client const &client = data.location(U->client());
+    auto const &client = data.client(U->client() - data.numDepots());
 
     Cost deltaCost
         = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
@@ -230,7 +230,7 @@ pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
     for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
         if (!solution.nodes[idx].route())
         {
-            ProblemData::Client const &client = data.location(idx);
+            auto const &client = data.client(idx - data.numDepots());
             cost += client.prize;
         }
 
