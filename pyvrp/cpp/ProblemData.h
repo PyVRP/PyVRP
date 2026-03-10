@@ -15,6 +15,7 @@ namespace pyvrp
 {
 /**
  * ProblemData(
+ *     locations: list[Location],
  *     clients: list[Client],
  *     depots: list[Depot],
  *     vehicle_types: list[VehicleType],
@@ -29,12 +30,12 @@ namespace pyvrp
  * .. note::
  *
  *    The matrices in the ``distance_matrices`` and ``duration_matrices``
- *    arguments should have all depots in the lower indices, starting from
- *    index ``0``. See also the :meth:`~pyvrp._pyvrp.ProblemData.location`
- *    method for details.
+ *    arguments follow the order of the ``locations`` argument.
  *
  * Parameters
  * ----------
+ * locations
+ *     List of physical locations.
  * clients
  *     List of clients to visit.
  * depots
@@ -42,11 +43,11 @@ namespace pyvrp
  * vehicle_types
  *     List of vehicle types in the problem instance.
  * distance_matrices
- *     Distance matrices that give the travel distances between all locations
- *     (both depots and clients). Each matrix corresponds to a routing profile.
+ *     Distance matrices that give the travel distances between all locations.
+ *     Each matrix corresponds to a routing profile.
  * duration_matrices
- *     Duration matrices that give the travel durations between all locations
- *     (both depots and clients). Each matrix corresponds to a routing profile.
+ *     Duration matrices that give the travel durations between all locations.
+ *     Each matrix corresponds to a routing profile.
  * groups
  *     List of client groups. Client groups have certain restrictions - see the
  *     definition for details. By default there are no groups, and empty groups
@@ -57,8 +58,8 @@ namespace pyvrp
  * ValueError
  *     When the data is inconsistent.
  * IndexError
- *     When the data references clients, depots, or groups that do not exist
- *     because the referenced index is out of range.
+ *     When the data references locations, clients, depots, etc. that do not
+ *     exist because the referenced index is out of range.
  */
 class ProblemData
 {
@@ -66,6 +67,55 @@ class ProblemData
     void validate() const;
 
 public:
+    /**
+     * Location(
+     *     x: int,
+     *     y: int,
+     *     *,
+     *     name: str = "",
+     * )
+     *
+     * Represents a physical location on the map.
+     *
+     * Parameters
+     * ----------
+     * x
+     *     Horizontal coordinate of this location. This can for example be a
+     *     longitude value.
+     * y
+     *     Vertical coordinate of this location. This can for example be a
+     *     latitude value.
+     * name
+     *     Free-form name field for this location. Default empty.
+     *
+     * Attributes
+     * ----------
+     * x
+     *     Horizontal location coordinate.
+     * y
+     *     Vertical location coordinate.
+     * name
+     *     Free-form name field for this location.
+     */
+    struct Location
+    {
+        Coordinate const x;
+        Coordinate const y;
+        char const *name;
+
+        Location(Coordinate x, Coordinate y, std::string name = "");
+
+        bool operator==(Location const &other) const;
+
+        Location(Location const &location);
+        Location(Location &&location);
+
+        Location &operator=(Location const &location) = delete;
+        Location &operator=(Location &&location) = delete;
+
+        ~Location();
+    };
+
     /**
      * Client(
      *    x: float,
@@ -575,6 +625,7 @@ public:
 private:
     std::vector<Matrix<Distance>> const dists_;    // Distance matrices
     std::vector<Matrix<Duration>> const durs_;     // Duration matrices
+    std::vector<Location> const locations_;        // Location information
     std::vector<Client> const clients_;            // Client information
     std::vector<Depot> const depots_;              // Depot information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
@@ -586,6 +637,11 @@ private:
 
 public:
     bool operator==(ProblemData const &other) const = default;
+
+    /**
+     * Returns a list of all locations in the problem instance.
+     */
+    [[nodiscard]] std::vector<Location> const &locations() const;
 
     /**
      * Returns a list of all clients in the problem instance.
@@ -628,6 +684,16 @@ public:
      *    way!
      */
     [[nodiscard]] std::vector<Matrix<Duration>> const &durationMatrices() const;
+
+    /**
+     * Returns the location at the given index.
+     *
+     * Parameters
+     * ----------
+     * location
+     *     Location index whose information to retrieve.
+     */
+    [[nodiscard]] Location const &location(size_t location) const;
 
     /**
      * Returns the client at the given index.
@@ -728,8 +794,7 @@ public:
     [[nodiscard]] size_t numGroups() const;
 
     /**
-     * Number of locations in this problem instance, that is, the number of
-     * depots plus the number of clients in the instance.
+     * Number of locations in this problem instance.
      */
     [[nodiscard]] size_t numLocations() const;
 
@@ -759,32 +824,36 @@ public:
      *
      * Parameters
      * ----------
+     * locations
+     *     Optional list of locations.
      * clients
-     *    Optional list of clients.
+     *     Optional list of clients.
      * depots
-     *    Optional list of depots.
+     *     Optional list of depots.
      * vehicle_types
-     *    Optional list of vehicle types.
+     *     Optional list of vehicle types.
      * distance_matrices
-     *    Optional distance matrices, one per routing profile.
+     *     Optional distance matrices, one per routing profile.
      * duration_matrices
-     *    Optional duration matrices, one per routing profile.
+     *     Optional duration matrices, one per routing profile.
      * groups
-     *    Optional client groups.
+     *     Optional client groups.
      *
      * Returns
      * -------
      * ProblemData
      *    A new ProblemData instance with possibly replaced data.
      */
-    ProblemData replace(std::optional<std::vector<Client>> &clients,
+    ProblemData replace(std::optional<std::vector<Location>> &locations,
+                        std::optional<std::vector<Client>> &clients,
                         std::optional<std::vector<Depot>> &depots,
                         std::optional<std::vector<VehicleType>> &vehicleTypes,
                         std::optional<std::vector<Matrix<Distance>>> &distMats,
                         std::optional<std::vector<Matrix<Duration>>> &durMats,
                         std::optional<std::vector<ClientGroup>> &groups) const;
 
-    ProblemData(std::vector<Client> clients,
+    ProblemData(std::vector<Location> locations,
+                std::vector<Client> clients,
                 std::vector<Depot> depots,
                 std::vector<VehicleType> vehicleTypes,
                 std::vector<Matrix<Distance>> distMats,
