@@ -388,11 +388,7 @@ class _ProblemDataBuilder:
             """
             raise ValueError(msg)
 
-        coords = self.parser.coords()
-        return [
-            Depot(x=coords[idx][0], y=coords[idx][1])
-            for idx in range(num_depots)
-        ]
+        return [Depot(location=idx) for idx in range(num_depots)]
 
     def _clients(self) -> list[Client]:
         groups = self.parser.mutually_exclusive_groups()
@@ -403,7 +399,6 @@ class _ProblemDataBuilder:
             for client in members:
                 idx2group[client] = group
 
-        coords = self.parser.coords()
         demands = self.parser.demands()
         backhauls = self.parser.backhauls()
         service_duration = self.parser.service_times()
@@ -414,8 +409,7 @@ class _ProblemDataBuilder:
 
         return [
             Client(
-                x=coords[idx][0],
-                y=coords[idx][1],
+                location=idx,
                 delivery=np.atleast_1d(demands[idx]),
                 pickup=np.atleast_1d(backhauls[idx]),
                 service_duration=service_duration[idx],

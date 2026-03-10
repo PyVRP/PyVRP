@@ -228,8 +228,7 @@ class Model:
 
     def add_client(
         self,
-        x: float,
-        y: float,
+        location: Location,
         delivery: int | list[int] = [],
         pickup: int | list[int] = [],
         service_duration: int = 0,
@@ -260,14 +259,17 @@ class Model:
         else:
             raise ValueError("The given group is not in this model instance.")
 
+        if (location_idx := _idx_by_id(location, self._locations)) is None:
+            msg = "The given location is not in this model instance."
+            raise ValueError(msg)
+
         if required and group is not None and group.mutually_exclusive:
             # Required clients cannot be part of a mutually exclusive client
             # group, since then there's nothing to decide about.
             raise ValueError("Required client in mutually exclusive group.")
 
         client = Client(
-            x=x,
-            y=y,
+            location=location_idx,
             delivery=[delivery] if isinstance(delivery, int) else delivery,
             pickup=[pickup] if isinstance(pickup, int) else pickup,
             service_duration=service_duration,
@@ -300,8 +302,7 @@ class Model:
 
     def add_depot(
         self,
-        x: float,
-        y: float,
+        location: Location,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
         service_duration: int = 0,
@@ -312,9 +313,12 @@ class Model:
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Depot` instance.
         """
+        if (location_idx := _idx_by_id(location, self._locations)) is None:
+            msg = "The given location is not in this model instance."
+            raise ValueError(msg)
+
         depot = Depot(
-            x=x,
-            y=y,
+            location=location_idx,
             tw_early=tw_early,
             tw_late=tw_late,
             service_duration=service_duration,

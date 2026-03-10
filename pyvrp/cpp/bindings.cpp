@@ -203,8 +203,7 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<ProblemData::Client>(
         m, "Client", DOC(pyvrp, ProblemData, Client))
-        .def(py::init<pyvrp::Coordinate,
-                      pyvrp::Coordinate,
+        .def(py::init<size_t,
                       std::vector<pyvrp::Load>,
                       std::vector<pyvrp::Load>,
                       pyvrp::Duration,
@@ -215,8 +214,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       bool,
                       std::optional<size_t>,
                       char const *>(),
-             py::arg("x"),
-             py::arg("y"),
+             py::arg("location"),
              py::arg("delivery") = py::list(),
              py::arg("pickup") = py::list(),
              py::arg("service_duration") = 0,
@@ -228,8 +226,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("group") = py::none(),
              py::kw_only(),
              py::arg("name") = "")
-        .def_readonly("x", &ProblemData::Client::x)
-        .def_readonly("y", &ProblemData::Client::y)
+        .def_readonly("location", &ProblemData::Client::location)
         .def_readonly("delivery",
                       &ProblemData::Client::delivery,
                       py::return_value_policy::reference_internal)
@@ -249,8 +246,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::Client const &client) {  // __getstate__
-                return py::make_tuple(client.x,
-                                      client.y,
+                return py::make_tuple(client.location,
                                       client.delivery,
                                       client.pickup,
                                       client.serviceDuration,
@@ -264,18 +260,17 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t) {  // __setstate__
                 ProblemData::Client client(
-                    t[0].cast<pyvrp::Coordinate>(),         // x
-                    t[1].cast<pyvrp::Coordinate>(),         // y
-                    t[2].cast<std::vector<pyvrp::Load>>(),  // delivery
-                    t[3].cast<std::vector<pyvrp::Load>>(),  // pickup
-                    t[4].cast<pyvrp::Duration>(),           // service duration
-                    t[5].cast<pyvrp::Duration>(),           // tw early
-                    t[6].cast<pyvrp::Duration>(),           // tw late
-                    t[7].cast<pyvrp::Duration>(),           // release time
-                    t[8].cast<pyvrp::Cost>(),               // prize
-                    t[9].cast<bool>(),                      // required
-                    t[10].cast<std::optional<size_t>>(),    // group
-                    t[11].cast<std::string>());             // name
+                    t[0].cast<size_t>(),                    // location
+                    t[1].cast<std::vector<pyvrp::Load>>(),  // delivery
+                    t[2].cast<std::vector<pyvrp::Load>>(),  // pickup
+                    t[3].cast<pyvrp::Duration>(),           // service duration
+                    t[4].cast<pyvrp::Duration>(),           // tw early
+                    t[5].cast<pyvrp::Duration>(),           // tw late
+                    t[6].cast<pyvrp::Duration>(),           // release time
+                    t[7].cast<pyvrp::Cost>(),               // prize
+                    t[8].cast<bool>(),                      // required
+                    t[9].cast<std::optional<size_t>>(),     // group
+                    t[10].cast<std::string>());             // name
 
                 return client;
             }))
@@ -285,21 +280,18 @@ PYBIND11_MODULE(_pyvrp, m)
             py::return_value_policy::reference_internal);
 
     py::class_<ProblemData::Depot>(m, "Depot", DOC(pyvrp, ProblemData, Depot))
-        .def(py::init<pyvrp::Coordinate,
-                      pyvrp::Coordinate,
+        .def(py::init<size_t,
                       pyvrp::Duration,
                       pyvrp::Duration,
                       pyvrp::Duration,
                       char const *>(),
-             py::arg("x"),
-             py::arg("y"),
+             py::arg("location"),
              py::arg("tw_early") = 0,
              py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
              py::arg("service_duration") = 0,
              py::kw_only(),
              py::arg("name") = "")
-        .def_readonly("x", &ProblemData::Depot::x)
-        .def_readonly("y", &ProblemData::Depot::y)
+        .def_readonly("location", &ProblemData::Depot::location)
         .def_readonly("tw_early", &ProblemData::Depot::twEarly)
         .def_readonly("tw_late", &ProblemData::Depot::twLate)
         .def_readonly("service_duration", &ProblemData::Depot::serviceDuration)
@@ -309,8 +301,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData::Depot const &depot) {  // __getstate__
-                return py::make_tuple(depot.x,
-                                      depot.y,
+                return py::make_tuple(depot.location,
                                       depot.twEarly,
                                       depot.twLate,
                                       depot.serviceDuration,
@@ -318,12 +309,11 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t) {  // __setstate__
                 ProblemData::Depot depot(
-                    t[0].cast<pyvrp::Coordinate>(),  // x
-                    t[1].cast<pyvrp::Coordinate>(),  // y
-                    t[2].cast<pyvrp::Duration>(),    // tw early
-                    t[3].cast<pyvrp::Duration>(),    // tw late
-                    t[4].cast<pyvrp::Duration>(),    // service duration
-                    t[5].cast<std::string>());       // name
+                    t[0].cast<size_t>(),           // location
+                    t[1].cast<pyvrp::Duration>(),  // tw early
+                    t[2].cast<pyvrp::Duration>(),  // tw late
+                    t[3].cast<pyvrp::Duration>(),  // service duration
+                    t[4].cast<std::string>());     // name
 
                 return depot;
             }))
