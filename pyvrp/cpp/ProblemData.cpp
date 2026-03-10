@@ -597,9 +597,9 @@ size_t ProblemData::numLoadDimensions() const { return numLoadDimensions_; }
 void ProblemData::validate() const
 {
     // Client checks.
-    for (size_t idx = numDepots(); idx != numLocations(); ++idx)
+    for (size_t idx = 0; idx != numClients(); ++idx)
     {
-        auto const &client = clients_[idx - numDepots()];
+        auto const &client = clients_[idx];
 
         if (client.delivery.size() != numLoadDimensions_)
         {
@@ -620,7 +620,8 @@ void ProblemData::validate() const
             throw std::out_of_range("Client references invalid group.");
 
         auto const &group = groups_[*client.group];
-        if (std::find(group.begin(), group.end(), idx) == group.end())
+        if (std::find(group.begin(), group.end(), numDepots() + idx)
+            == group.end())
         {
             auto const *msg = "Client not in the group it references.";
             throw std::invalid_argument(msg);

@@ -5,7 +5,14 @@ import pytest
 from numpy.random import default_rng
 from numpy.testing import assert_, assert_equal, assert_raises
 
-from pyvrp import Client, ClientGroup, Depot, ProblemData, VehicleType
+from pyvrp import (
+    Client,
+    ClientGroup,
+    Depot,
+    Location,
+    ProblemData,
+    VehicleType,
+)
 
 _INT_MAX = np.iinfo(np.int64).max
 _MAX_SIZE = np.iinfo(np.uint64).max
@@ -190,6 +197,7 @@ def test_problem_data_raises_when_no_depot_is_provided():
     """
     with assert_raises(ValueError):
         ProblemData(
+            locations=[],
             clients=[],
             depots=[],
             vehicle_types=[VehicleType()],
@@ -199,6 +207,7 @@ def test_problem_data_raises_when_no_depot_is_provided():
 
     # One (or more) depots should not raise.
     ProblemData(
+        locations=[Location(0, 0)],
         clients=[],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType()],
@@ -214,6 +223,7 @@ def test_problem_data_raises_when_no_vehicle_type_is_provided():
     """
     with assert_raises(ValueError):
         ProblemData(
+            locations=[Location(0, 0)],
             clients=[],
             depots=[Depot(x=0, y=0)],
             vehicle_types=[],
@@ -223,6 +233,7 @@ def test_problem_data_raises_when_no_vehicle_type_is_provided():
 
     # One (or more) vehicle types should not raise.
     ProblemData(
+        locations=[Location(0, 0)],
         clients=[],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType()],
@@ -234,28 +245,42 @@ def test_problem_data_raises_when_no_vehicle_type_is_provided():
 @pytest.mark.parametrize(
     "matrix",
     [
-        np.asarray([[0, 0]]),  # num rows < num clients
-        np.asarray([[], []]),  # num cols < num clients
-        np.asarray([[0, 0], [0, 0], [0, 0]]),  # num rows > num clients
-        np.asarray([[0, 0, 0], [0, 0, 0]]),  # num cols > num clients
+        np.asarray([[0, 0]]),  # num rows < num locations
+        np.asarray([[], []]),  # num cols < num locations
+        np.asarray([[0, 0], [0, 0], [0, 0]]),  # num rows > num locations
+        np.asarray([[0, 0, 0], [0, 0, 0]]),  # num cols > num locations
     ],
 )
 def test_problem_data_raises_when_incorrect_matrix_dimensions(matrix):
     """
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
-    the distance or duration matrix does not match the number of clients in
-    dimension size.
+    the distance or duration matrix does not match the number of locations.
     """
+    locations = [Location(0, 0), Location(0, 0)]
     clients = [Client(x=0, y=0)]
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType()]
     other_matrix = np.zeros((2, 2), dtype=int)  # this one's OK
 
     with assert_raises(ValueError):
-        ProblemData(clients, depots, vehicle_types, [matrix], [other_matrix])
+        ProblemData(
+            locations,
+            clients,
+            depots,
+            vehicle_types,
+            [matrix],
+            [other_matrix],
+        )
 
     with assert_raises(ValueError):
-        ProblemData(clients, depots, vehicle_types, [other_matrix], [matrix])
+        ProblemData(
+            locations,
+            clients,
+            depots,
+            vehicle_types,
+            [other_matrix],
+            [matrix],
+        )
 
 
 @pytest.mark.parametrize(
@@ -271,12 +296,20 @@ def test_problem_data_raises_matrix_diagonal_nonzero(dist_mat, dur_mat):
     Tests that the ``ProblemData`` constructor raises a ``ValueError`` when
     the distance or duration matrix has a non-zero value on the diagonal.
     """
+    locations = [Location(0, 0), Location(0, 0)]
     clients = [Client(x=0, y=0)]
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType()]
 
     with assert_raises(ValueError):
-        ProblemData(clients, depots, vehicle_types, [dist_mat], [dur_mat])
+        ProblemData(
+            locations,
+            clients,
+            depots,
+            vehicle_types,
+            [dist_mat],
+            [dur_mat],
+        )
 
 
 def test_problem_data_replace_no_changes():
@@ -284,11 +317,12 @@ def test_problem_data_replace_no_changes():
     Tests that when using ``ProblemData.replace()`` without any arguments
     returns a new instance with different objects, but with the same values.
     """
+    locs = [Location(0, 0), Location(0, 0)]
     clients = [Client(x=0, y=0)]
     depots = [Depot(x=0, y=0)]
     vehicle_types = [VehicleType()]
     mat = np.zeros((2, 2), dtype=int)
-    original = ProblemData(clients, depots, vehicle_types, [mat], [mat])
+    original = ProblemData(locs, clients, depots, vehicle_types, [mat], [mat])
 
     new = original.replace()
 
@@ -327,11 +361,15 @@ def test_problem_data_replace_with_changes():
     Tests that when calling ``ProblemData.replace()`` indeed replaces the
     data values with those passed to the method.
     """
-    clients = [Client(x=0, y=0, delivery=[0])]
-    depots = [Depot(x=0, y=0)]
-    vehicle_types = [VehicleType(2, capacity=[1])]
     mat = np.zeros((2, 2), dtype=int)
-    original = ProblemData(clients, depots, vehicle_types, [mat], [mat])
+    original = ProblemData(
+        locations=[Location(0, 0), Location(0, 0)],
+        clients=[Client(x=0, y=0, delivery=[0])],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(2, capacity=[1])],
+        distance_matrices=[mat],
+        duration_matrices=[mat],
+    )
 
     # Let's replace the clients, vehicle types, and the distance matrix, each
     # with different values than in the original data. The duration matrix
@@ -369,29 +407,26 @@ def test_problem_data_replace_with_changes():
 def test_problem_data_replace_raises_mismatched_argument_shapes():
     """
     Tests that a ValueError is raised when replacing data that result in
-    mismatched shape between the clients and the distance/duration matrices.
+    mismatched shape between the locations and the distance/duration matrices.
     """
-    clients = [Client(x=0, y=0)]
-    depots = [Depot(x=0, y=0)]
-    vehicle_types = [VehicleType(2)]
     mat = np.zeros((2, 2), dtype=int)
-    data = ProblemData(clients, depots, vehicle_types, [mat], [mat])
+    data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0)],
+        clients=[Client(x=0, y=0)],
+        depots=[Depot(x=0, y=0)],
+        vehicle_types=[VehicleType(2)],
+        distance_matrices=[mat],
+        duration_matrices=[mat],
+    )
 
     with assert_raises(ValueError):  # matrices are 2x2
-        data.replace(clients=[])
+        data.replace(locations=[])
 
-    with assert_raises(ValueError):  # two clients
+    with assert_raises(ValueError):  # two locations
         data.replace(distance_matrices=[np.where(np.eye(3), 0, 1)])
 
-    with assert_raises(ValueError):  # two clients
+    with assert_raises(ValueError):  # two locations
         data.replace(duration_matrices=[np.where(np.eye(3), 0, 1)])
-
-    with assert_raises(ValueError):
-        data.replace(
-            clients=[Client(x=1, y=1)],
-            distance_matrices=[np.where(np.eye(3), 0, 1)],
-            duration_matrices=[np.where(np.eye(3), 0, 1)],
-        )
 
 
 def test_matrix_access():
@@ -408,6 +443,7 @@ def test_matrix_access():
     np.fill_diagonal(dur_mat, 0)
 
     data = ProblemData(
+        locations=[Location(0, 0), *(Location(0, 0) for _ in range(size - 1))],
         clients=[Client(x=0, y=0, tw_late=10) for _ in range(size - 1)],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2)],
@@ -429,6 +465,7 @@ def test_matrices_are_not_writeable():
     changes from Python causes undefined behaviour on the C++ side.
     """
     data = ProblemData(
+        locations=[Location(0, 0)],
         clients=[],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2)],
@@ -454,6 +491,7 @@ def test_matrices_are_not_copies():
     """
     mat = np.array([[0, 0], [0, 0]])
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 1)],
         clients=[Client(x=0, y=1)],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(2)],
@@ -819,6 +857,7 @@ def test_raises_empty_group():
     """
     with assert_raises(ValueError):
         ProblemData(
+            locations=[Location(1, 1)],
             clients=[],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
@@ -845,6 +884,7 @@ def test_raises_invalid_client_group_indices(
     """
     with assert_raises(IndexError):
         ProblemData(
+            locations=[Location(1, 1), Location(1, 1)],
             clients=[Client(1, 1, required=False, group=index)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
@@ -864,6 +904,7 @@ def test_raises_invalid_group_client_indices(groups: list[ClientGroup]):
     """
     with assert_raises(IndexError):
         ProblemData(
+            locations=[Location(1, 1), Location(1, 1)],
             clients=[Client(1, 1, required=False, group=0)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
@@ -881,6 +922,7 @@ def test_raises_wrong_mutual_group_referencing():
     """
     with assert_raises(ValueError):
         ProblemData(
+            locations=[Location(1, 1), Location(1, 1), Location(2, 2)],
             # The client references the first group, which does not contain the
             # client. That should raise.
             clients=[
@@ -896,6 +938,7 @@ def test_raises_wrong_mutual_group_referencing():
 
     with assert_raises(ValueError):
         ProblemData(
+            locations=[Location(1, 1), Location(1, 1), Location(2, 2)],
             clients=[Client(1, 1), Client(2, 2)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
@@ -916,6 +959,7 @@ def test_raises_for_required_mutually_exclusive_group_membership():
         # required visit, as that defeats the entire point of a mutually
         # exclusive group.
         ProblemData(
+            locations=[Location(1, 1), Location(1, 1)],
             clients=[Client(1, 1, required=True, group=0)],
             depots=[Depot(1, 1)],
             vehicle_types=[VehicleType()],
@@ -1142,6 +1186,7 @@ def test_problem_data_raises_when_pickup_and_delivery_dimensions_differ():
     """
     with assert_raises(ValueError):
         ProblemData(
+            locations=[Location(0, 0), Location(0, 0), Location(1, 1)],
             clients=[
                 Client(x=0, y=0, delivery=[1, 2], pickup=[1, 2]),
                 Client(x=1, y=1, delivery=[1, 2, 3], pickup=[1, 2, 3]),
@@ -1160,6 +1205,7 @@ def test_problem_data_raises_when_capacity_dimensions_differ():
     """
     with assert_raises(ValueError):
         ProblemData(
+            locations=[Location(0, 0)],
             clients=[],
             depots=[Depot(x=0, y=0)],
             vehicle_types=[
@@ -1179,6 +1225,7 @@ def test_problem_data_raises_when_pickup_delivery_capacity_dimensions_differ():
     """
     with assert_raises(ValueError):
         ProblemData(
+            locations=[Location(0, 0), Location(0, 0), Location(1, 1)],
             clients=[
                 Client(x=0, y=0, delivery=[1, 2], pickup=[1, 2]),
                 Client(x=1, y=1, delivery=[1, 2], pickup=[1, 2]),
@@ -1197,6 +1244,7 @@ def test_problem_data_constructor_valid_load_dimensions():
     dimensions for capacity.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(1, 1)],
         clients=[
             Client(x=0, y=0, delivery=[1, 2], pickup=[1, 2]),
             Client(x=1, y=1, delivery=[1, 2], pickup=[1, 2]),
@@ -1236,6 +1284,7 @@ def test_raises_if_vehicle_and_depot_time_windows_do_not_overlap(
 
     with assert_raises(ValueError):
         ProblemData(
+            locations=[Location(0, 0), Location(0, 0)],
             clients=[],
             depots=[depot1, depot2],
             vehicle_types=[vehicle_type],
@@ -1260,6 +1309,7 @@ def test_validate_raises_for_invalid_reload_depot(ok_small):
     mat = np.zeros((1, 1), dtype=int)
     with assert_raises(IndexError):
         ProblemData(
+            locations=[Location(0, 0)],
             clients=[],
             depots=[Depot(x=0, y=0)],
             vehicle_types=[new_vehicle_type],
