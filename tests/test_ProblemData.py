@@ -1002,6 +1002,24 @@ def test_replacing_client_groups(ok_small):
     assert_equal(data.group(0).clients, [1])
 
 
+def test_location_eq():
+    """
+    Tests the location's equality operator.
+    """
+    loc1 = Location(x=0, y=0, name="")
+    loc2 = Location(x=0, y=1, name="")
+    assert_(loc1 == loc1)
+    assert_(loc2 != loc1)
+
+    # Equivalent to loc1.
+    loc3 = Location(x=0, y=0, name="")
+    assert_(loc3 == loc1)
+
+    # And some things that are not locations at all.
+    assert_(loc1 != "test")
+    assert_(loc1 != 1)
+
+
 def test_client_eq():
     """
     Tests the client's equality operator.
@@ -1084,6 +1102,7 @@ def test_eq_checks_names():
     when determining equality.
     """
     x, y = 0, 0
+    assert_(Location(x, y, name="1") != Location(x, y, name="2"))
     assert_(Client(x, y, name="1") != Client(x, y, name="2"))
     assert_(Depot(x, y, name="1") != Depot(x, y, name="2"))
     assert_(VehicleType(name="1") != VehicleType(name="2"))
@@ -1362,3 +1381,18 @@ def test_has_time_windows(small_cvrp, pr107, small_spd, ok_small, rc208):
     assert_(not pr107.has_time_windows())  # is TSP
     assert_(not small_cvrp.has_time_windows())  # is CVRP
     assert_(not small_spd.has_time_windows())  # is VRPSPD
+
+
+def test_accessors(ok_small):
+    """
+    Tests accessing locations, depots, and clients on the data instance.
+    """
+    locations = ok_small.locations()
+    assert_equal(ok_small.location(0), locations[0])
+
+    depots = ok_small.depots()
+    assert_equal(ok_small.depot(0), depots[0])
+
+    clients = ok_small.clients()
+    assert_equal(ok_small.client(0), clients[0])
+    assert_equal(ok_small.client(3), clients[3])
