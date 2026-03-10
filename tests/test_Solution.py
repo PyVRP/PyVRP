@@ -9,6 +9,7 @@ from pyvrp import (
     Client,
     ClientGroup,
     Depot,
+    Location,
     ProblemData,
     RandomNumberGenerator,
     Route,
@@ -396,6 +397,7 @@ def test_excess_load_calculation_with_multiple_load_dimensions(
     calculated correctly.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
         clients=[
             Client(1, 0, delivery1),
             Client(2, 0, delivery2),
@@ -432,6 +434,7 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
     ]
 
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
         clients=[
             Client(x=1, y=0, tw_late=5),
             Client(x=2, y=0, tw_late=5),
@@ -467,6 +470,7 @@ def test_time_warp_return_to_depot():
     travel back to the depot.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0)],
         clients=[Client(x=1, y=0)],
         depots=[Depot(x=0, y=0)],
         vehicle_types=[VehicleType(tw_late=1)],
@@ -612,6 +616,7 @@ def test_eq_unassigned():
     """
     dist = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 1), Location(1, 0)],
         clients=[
             Client(x=0, y=1, required=False),
             Client(x=1, y=0, required=False),
