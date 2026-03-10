@@ -128,8 +128,8 @@ def test_inserts_best_reload_depot():
             Location(0, 0),
             Location(0, 0),
         ],
-        clients=[Client(0, 0, delivery=[5]), Client(0, 0, delivery=[5])],
-        depots=[Depot(0, 0), Depot(0, 0)],
+        clients=[Client(2, delivery=[5]), Client(3, delivery=[5])],
+        depots=[Depot(0), Depot(1)],
         vehicle_types=[veh_type],
         distance_matrices=[mat],
         duration_matrices=[mat],
@@ -164,8 +164,8 @@ def test_fixed_vehicle_cost():
     """
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
-        clients=[Client(0, 0, delivery=[5]), Client(0, 0, delivery=[4])],
-        depots=[Depot(0, 0)],
+        clients=[Client(1, delivery=[5]), Client(2, delivery=[4])],
+        depots=[Depot(0)],
         vehicle_types=[
             VehicleType(
                 num_available=2,
@@ -274,10 +274,10 @@ def test_can_insert_reload_after_start_depot():
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
-            Client(x=0, y=0, delivery=[1]),
-            Client(x=0, y=0, delivery=[1]),
+            Client(location=1, delivery=[1]),
+            Client(location=2, delivery=[1]),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[
             VehicleType(1, capacity=[5], initial_load=[5], reload_depots=[0]),
         ],
@@ -316,8 +316,8 @@ def test_can_insert_reload_before_end_depot():
             Location(0, 0),
             Location(0, 0),
         ],
-        clients=[Client(x=0, y=0), Client(x=0, y=0)],
-        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
+        clients=[Client(location=2), Client(location=3)],
+        depots=[Depot(location=0), Depot(location=1)],
         vehicle_types=[VehicleType(1, reload_depots=[0, 1])],
         distance_matrices=[mat],
         duration_matrices=[np.zeros_like(mat)],

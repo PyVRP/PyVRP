@@ -192,7 +192,7 @@ def test_zero_clients():
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0)],
         clients=[],
-        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
+        depots=[Depot(0), Depot(1)],
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((2, 2), dtype=int)],
         duration_matrices=[np.zeros((2, 2), dtype=int)],

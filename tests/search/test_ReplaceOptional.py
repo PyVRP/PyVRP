@@ -22,10 +22,10 @@ def test_replacing_optional_client():
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
-            Client(0, 0, tw_early=0, tw_late=1, prize=1, required=False),
-            Client(0, 0, tw_early=0, tw_late=1, prize=5, required=False),
+            Client(1, tw_early=0, tw_late=1, prize=1, required=False),
+            Client(2, tw_early=0, tw_late=1, prize=5, required=False),
         ],
-        depots=[Depot(0, 0)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((3, 3), dtype=int)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],
@@ -51,10 +51,10 @@ def test_skips_replacing_required_client():
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
-            Client(0, 0, tw_early=0, tw_late=1, prize=1, required=True),
-            Client(0, 0, tw_early=0, tw_late=1, prize=5, required=False),
+            Client(1, tw_early=0, tw_late=1, prize=1, required=True),
+            Client(2, tw_early=0, tw_late=1, prize=5, required=False),
         ],
-        depots=[Depot(0, 0)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((3, 3), dtype=int)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],

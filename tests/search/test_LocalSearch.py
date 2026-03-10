@@ -549,10 +549,10 @@ def test_local_search_inserts_into_empty_solutions():
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
-            Client(0, 0, prize=1_000, required=False),  # high prizes make
-            Client(0, 0, prize=1_000, required=False),  # inserting worthwhile
+            Client(1, prize=1_000, required=False),  # high prizes make
+            Client(2, prize=1_000, required=False),  # inserting worthwhile
         ],
-        depots=[Depot(0, 0)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((3, 3), dtype=int)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],
@@ -588,10 +588,10 @@ def test_does_not_insert_optional_groups():
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
-            Client(x=0, y=0, group=0, required=False),
-            Client(x=0, y=0, group=0, required=False),
+            Client(location=1, group=0, required=False),
+            Client(location=2, group=0, required=False),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType()],
         distance_matrices=[matrix],
         duration_matrices=[matrix],
