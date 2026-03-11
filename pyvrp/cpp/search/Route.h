@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_ROUTE_H
 
 #include "../Route.h"  // pyvrp::Route
+#include "Activity.h"
 #include "CostEvaluator.h"
 #include "DurationSegment.h"
 #include "LoadSegment.h"
@@ -116,26 +117,26 @@ public:
     };
 
     /**
-     * Light wrapper class around a client or depot location. This class tracks
-     * the route it is in, and the position and role it currently has in that
-     * route.
+     * Light wrapper class around an activity. This class tracks the route it
+     * is in, and the position in that route.
      */
     class Node
     {
         friend class Route;
 
-        size_t loc_;    // Location represented by this node
+        Activity activity_;
         size_t idx_;    // Position in the route
         size_t trip_;   // Trip index.
         Route *route_;  // Indicates membership of a route, if any
 
     public:
-        Node(size_t loc);
+        Node(Activity::ActivityType type, size_t idx);
+        Node(Activity activity);
 
         /**
-         * Returns the location represented by this node.
+         * Returns the activity modelled with this node.
          */
-        [[nodiscard]] inline size_t client() const;  // TODO rename to loc
+        [[nodiscard]] inline Activity activity() const;
 
         /**
          * Returns this node's position in a route. This value is ``0`` when
@@ -154,6 +155,11 @@ public:
          * a route, this returns ``None`` (C++: ``nullptr``).
          */
         [[nodiscard]] inline Route *route() const;
+
+        /**
+         * Returns whether this node is a client.
+         */
+        [[nodiscard]] inline bool isClient() const;
 
         /**
          * Returns whether this node is a depot.
@@ -643,7 +649,7 @@ inline Route::Node const *n(Route::Node const *node)
     return route[node->idx() + 1];
 }
 
-size_t Route::Node::client() const { return loc_; }
+Activity Route::Node::activity() const { return activity_; }
 
 size_t Route::Node::idx() const { return idx_; }
 
@@ -651,10 +657,9 @@ size_t Route::Node::trip() const { return trip_; }
 
 Route *Route::Node::route() const { return route_; }
 
-bool Route::Node::isDepot() const
-{
-    return isStartDepot() || isEndDepot() || isReloadDepot();
-}
+bool Route::Node::isClient() const { return activity_.isClient(); }
+
+bool Route::Node::isDepot() const { return activity_.isDepot(); }
 
 bool Route::Node::isStartDepot() const
 {
@@ -668,12 +673,7 @@ bool Route::Node::isEndDepot() const
 
 bool Route::Node::isReloadDepot() const
 {
-    // clang-format off
-    return route_
-        && loc_ < route_->data.numDepots()
-        && !isStartDepot()
-        && !isEndDepot();
-    // clang-format on
+    return isDepot() && !isStartDepot() && !isEndDepot();
 }
 
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)

@@ -39,8 +39,8 @@ struct Activity
         CLIENT = 1,
     };
 
-    ActivityType const type;
-    size_t const idx;
+    ActivityType type;
+    size_t idx;
 
     Activity(ActivityType type, size_t idx);
 
