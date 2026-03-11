@@ -102,8 +102,9 @@ void Route::clear()
     nodes.clear();
     depots_.clear();
 
-    depots_.emplace_back(vehicleType_.startDepot);
-    depots_.emplace_back(vehicleType_.endDepot);
+    depots_.emplace_back(Activity::ActivityType::DEPOT,
+                         vehicleType_.startDepot);
+    depots_.emplace_back(Activity::ActivityType::DEPOT, vehicleType_.endDepot);
 
     for (size_t idx : {0, 1})
     {
@@ -131,7 +132,7 @@ void Route::insert(size_t idx, Node *node)
                 nodes[depot.idx()] = &depot;
         }
 
-        node = &depots_.emplace_back(node);
+        node = &depots_.emplace_back(node->activity());
     }
 
     if (numTrips() > maxTrips())
@@ -273,7 +274,8 @@ void Route::update()
         {
             // Then we need to first account for depot service before we merge
             // with the idx segment.
-            auto const &depot = data.depot(nodes[prev]->client());
+            auto const [_, depotIdx] = nodes[prev]->activity();
+            auto const &depot = data.depot(depotIdx);
             before = DurationSegment::merge(before, {depot.serviceDuration});
         }
 
@@ -407,12 +409,16 @@ bool Route::operator==(pyvrp::Route const &other) const
     size_t idx = 0;
     for (auto const &trip : other.trips())
     {
-        if (trip.startDepot() != nodes[idx++]->client())
+        auto const [_, depotIdx] = nodes[idx++]->activity();
+        if (trip.startDepot() != depotIdx)
             return false;  // not the same reload depot
 
         for (auto const [_, client] : trip)
-            if (client != nodes[idx++]->client())
+        {
+            auto const [clientType, clientIdx] = nodes[idx++]->activity();
+            if (client != clientIdx)
                 return false;
+        }
     }
 
     return true;

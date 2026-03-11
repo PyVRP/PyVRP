@@ -20,8 +20,10 @@ Cost insertCost(pyvrp::search::Route::Node *U,
 {
     assert(V->route() && !U->isDepot());
 
+    auto const [_, uClient] = U->activity();
+
     auto *route = V->route();
-    auto const &client = data.client(U->client() - data.numDepots());
+    auto const &client = data.client(uClient);
 
     Cost deltaCost
         = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
@@ -30,7 +32,7 @@ Cost insertCost(pyvrp::search::Route::Node *U,
         deltaCost,
         pyvrp::search::Route::Proposal(
             route->before(V->idx()),
-            pyvrp::search::ClientSegment(data, U->client()),
+            pyvrp::search::ClientSegment(data, uClient),
             route->after(V->idx() + 1)));
 
     return deltaCost;
@@ -43,7 +45,10 @@ Solution::Solution(ProblemData const &data) : data_(data)
 {
     nodes.reserve(data.numDepots() + data.numClients());
     for (size_t loc = 0; loc != data.numDepots() + data.numClients(); ++loc)
-        nodes.emplace_back(loc);
+        if (loc < data.numDepots())
+            nodes.emplace_back(Activity::ActivityType::DEPOT, loc);
+        else
+            nodes.emplace_back(Activity::ActivityType::CLIENT, loc);
 
     routes.reserve(data.numVehicles());
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
@@ -90,7 +95,8 @@ void Solution::load(pyvrp::Solution const &solution)
 
             if (tripIdx != 0)  // then we first insert a trip delimiter.
             {
-                Route::Node depot = {trip.startDepot()};
+                Route::Node depot
+                    = {Activity::ActivityType::DEPOT, trip.startDepot()};
                 route.push_back(&depot);
             }
 
@@ -140,15 +146,15 @@ pyvrp::Solution Solution::unload() const
 
             if (!node->isDepot())
             {
-                visits.push_back(node->client());
+                auto const [_, client] = node->activity();
+                visits.push_back(client);
                 continue;
             }
 
-            trips.emplace_back(data_,
-                               visits,
-                               route.vehicleType(),
-                               prevDepot->client(),
-                               node->client());
+            auto const [startType, startDepot] = prevDepot->activity();
+            auto const [endType, endDepot] = node->activity();
+            trips.emplace_back(
+                data_, visits, route.vehicleType(), startDepot, endDepot);
 
             visits.clear();
             prevDepot = node;
@@ -174,7 +180,8 @@ bool Solution::insert(Route::Node *U,
 
     // First attempt a neighbourhood search to place U into routes that are
     // already in use.
-    for (auto const vClient : searchSpace.neighboursOf(U->client()))
+    auto const [_, uClient] = U->activity();
+    for (auto const vClient : searchSpace.neighboursOf(uClient))
     {
         auto *V = &nodes[vClient];
 

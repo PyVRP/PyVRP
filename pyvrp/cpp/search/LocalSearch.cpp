@@ -69,12 +69,12 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!searchSpace_.isPromising(uClient))
                 continue;
 
-            auto const lastTest = lastTest_[U->client()];
-            lastTest_[U->client()] = numUpdates_;
+            auto const lastTest = lastTest_[uClient];
+            lastTest_[uClient] = numUpdates_;
 
             applyUnaryOps(U, costEvaluator);
 
-            for (auto const vClient : searchSpace_.neighboursOf(U->client()))
+            for (auto const vClient : searchSpace_.neighboursOf(uClient))
             {
                 auto *V = &solution_.nodes[vClient];
 
@@ -125,7 +125,7 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
         {
             PYVRP_DEBUG("pyvrp.search",
                         "Applying operator to U={} (delta={}).",
-                        U->client(),
+                        U->activity().idx,
                         deltaCost);
 
             auto *rU = U->route();
@@ -170,8 +170,8 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
         {
             PYVRP_DEBUG("pyvrp.search",
                         "Applying operator to U={} and V={} (delta={}).",
-                        U->client(),
-                        V->client(),
+                        U->activity().idx,
+                        V->activity().idx,
                         deltaCost);
 
             auto *rU = U->route();

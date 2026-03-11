@@ -7,10 +7,11 @@ using pyvrp::search::RemoveOptional;
 std::pair<pyvrp::Cost, bool>
 RemoveOptional::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
 {
-    assert(U->client());
+    assert(U->isClient());
     stats_.numEvaluations++;
 
-    auto const &uData = data.client(U->client() - data.numDepots());
+    auto const [_, uClient] = U->activity();
+    auto const &uData = data.client(uClient);
     if (!U->route() || uData.required)
         return std::make_pair(0, false);
 

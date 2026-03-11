@@ -57,9 +57,11 @@ void PerturbationManager::perturb(Solution &solution,
     DynamicBitset perturbed = {solution.nodes.size()};
     auto const perturb = [&](auto *node, PerturbType action)
     {
+        auto const [_, client] = node->activity();
+
         // This node has already been touched by a previous perturbation, so
         // we skip it here.
-        if (perturbed[node->client()])
+        if (perturbed[client])
             return;
 
         // Remove if node is in a route and we are currently removing.
@@ -80,7 +82,7 @@ void PerturbationManager::perturb(Solution &solution,
         else  // no-op
             return;
 
-        perturbed[node->client()] = true;
+        perturbed[client] = true;
         movesLeft--;
     };
 
@@ -97,7 +99,7 @@ void PerturbationManager::perturb(Solution &solution,
         if (!movesLeft)
             return;
 
-        for (auto const vClient : searchSpace.neighboursOf(U->client()))
+        for (auto const vClient : searchSpace.neighboursOf(uClient))
         {
             auto *V = &solution.nodes[vClient];
             perturb(V, action);
