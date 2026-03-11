@@ -468,7 +468,7 @@ def test_shift_duration_depot_time_window_interaction(
     data = ProblemData(
         locations=[Location(0, 0)],
         clients=[],
-        depots=[Depot(x=0, y=0, tw_early=0, tw_late=1_000)],
+        depots=[Depot(location=0, tw_early=0, tw_late=1_000)],
         vehicle_types=[VehicleType(tw_early=shift_tw[0], tw_late=shift_tw[1])],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
@@ -627,10 +627,10 @@ def test_load_between_multiple_dimensions(frm, to, dim, expected):
     data = ProblemData(
         locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
         clients=[
-            Client(1, 0, delivery=[1, 2]),
-            Client(2, 0, delivery=[4, 5]),
+            Client(1, delivery=[1, 2]),
+            Client(2, delivery=[4, 5]),
         ],
-        depots=[Depot(0, 0)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(1, capacity=[10, 10])],
         distance_matrices=[np.zeros((3, 3), dtype=int)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],
@@ -951,11 +951,11 @@ def test_multi_trip_with_release_times():
     data = ProblemData(
         locations=[Location(0, 0) for _ in range(4)],
         clients=[
-            Client(0, 0, tw_early=60, tw_late=100, release_time=40),
-            Client(0, 0, tw_early=70, tw_late=90, release_time=50),
-            Client(0, 0, tw_early=80, tw_late=150, release_time=100),
+            Client(1, tw_early=60, tw_late=100, release_time=40),
+            Client(2, tw_early=70, tw_late=90, release_time=50),
+            Client(3, tw_early=80, tw_late=150, release_time=100),
         ],
-        depots=[Depot(0, 0)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(reload_depots=[0])],
         distance_matrices=[matrix],
         duration_matrices=[matrix],
@@ -1058,19 +1058,19 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
 @pytest.mark.parametrize(
     ("veh_type", "depot", "exp"),
     [
-        (VehicleType(), Depot(0, 0), False),  # default has no cost
-        (VehicleType(), Depot(0, 0, tw_early=1), True),  # constraint (data)
-        (VehicleType(), Depot(0, 0, tw_late=1), True),  # constraint (data)
-        (VehicleType(start_late=5), Depot(0, 0), True),  # constraint (vehicle)
-        (VehicleType(tw_early=5), Depot(0, 0), True),  # constraint (vehicle)
-        (VehicleType(tw_late=5), Depot(0, 0), True),  # constraint (vehicle)
-        (VehicleType(shift_duration=0), Depot(0, 0), True),  # constraint (veh)
-        (VehicleType(unit_duration_cost=1), Depot(0, 0), True),  # unit cost
+        (VehicleType(), Depot(0), False),  # default has no cost
+        (VehicleType(), Depot(0, tw_early=1), True),  # constraint (data)
+        (VehicleType(), Depot(0, tw_late=1), True),  # constraint (data)
+        (VehicleType(start_late=5), Depot(0), True),  # constraint (vehicle)
+        (VehicleType(tw_early=5), Depot(0), True),  # constraint (vehicle)
+        (VehicleType(tw_late=5), Depot(0), True),  # constraint (vehicle)
+        (VehicleType(shift_duration=0), Depot(0), True),  # constraint (veh)
+        (VehicleType(unit_duration_cost=1), Depot(0), True),  # unit cost
         # unit cost but no max_overtime, so never relevant
-        (VehicleType(unit_overtime_cost=1), Depot(0, 0), False),
+        (VehicleType(unit_overtime_cost=1), Depot(0), False),
         # unit cost and overtime, so could be relevant
-        (VehicleType(unit_overtime_cost=1, max_overtime=1), Depot(0, 0), True),
-        (VehicleType(max_overtime=5), Depot(0, 0), False),  # not constrained
+        (VehicleType(unit_overtime_cost=1, max_overtime=1), Depot(0), True),
+        (VehicleType(max_overtime=5), Depot(0), False),  # not constrained
     ],
 )
 def test_has_duration_cost(veh_type: VehicleType, depot: Depot, exp: bool):
@@ -1145,8 +1145,7 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     Tests that the route duration caches correctly account for depot service
     duration.
     """
-    old_depot = ok_small_multiple_trips.depot(0)
-    new_depot = Depot(old_depot.x, old_depot.y, service_duration=200)
+    new_depot = Depot(location=0, service_duration=200)
     data = ok_small_multiple_trips.replace(depots=[new_depot])
 
     route = make_search_route(data, [3, 4, 0, 1, 2])

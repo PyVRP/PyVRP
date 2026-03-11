@@ -140,7 +140,7 @@ def test_plot_demands_raises_for_out_of_bounds_load_dimension():
     data = ProblemData(
         locations=[Location(0, 0)],
         clients=[],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType()],
         distance_matrices=[np.array([[0]])],
         duration_matrices=[np.array([[0]])],

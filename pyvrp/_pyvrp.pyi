@@ -81,8 +81,7 @@ class Location:
     def __setstate__(self, state: tuple, /) -> None: ...
 
 class Client:
-    x: float
-    y: float
+    location: int
     delivery: list[int]
     pickup: list[int]
     service_duration: int
@@ -95,8 +94,7 @@ class Client:
     name: str
     def __init__(
         self,
-        x: float,
-        y: float,
+        location: int,
         delivery: list[int] = [],
         pickup: list[int] = [],
         service_duration: int = 0,
@@ -135,16 +133,14 @@ class ClientGroup:
     def __setstate__(self, state: tuple, /) -> None: ...
 
 class Depot:
-    x: float
-    y: float
+    location: int
     tw_early: int
     tw_late: int
     service_duration: int
     name: str
     def __init__(
         self,
-        x: float,
-        y: float,
+        location: int,
         tw_early: int = 0,
         tw_late: int = ...,
         service_duration: int = 0,

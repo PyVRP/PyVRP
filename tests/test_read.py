@@ -70,12 +70,9 @@ def test_reading_OkSmall_instance():
         (1191, 639),
     ]
 
-    assert_equal(data.depot(0).x, expected[0][0])
-    assert_equal(data.depot(0).y, expected[0][1])
-
-    for client in range(data.num_clients):
-        assert_equal(data.client(client).x, expected[client + 1][0])
-        assert_equal(data.client(client).y, expected[client + 1][1])
+    for idx, loc in enumerate(data.locations()):
+        assert_equal(loc.x, expected[idx][0])
+        assert_equal(loc.y, expected[idx][1])
 
     # From the EDGE_WEIGHT_SECTION in the file
     expected = [
@@ -139,11 +136,11 @@ def test_reading_vrplib_instance():
     assert_equal(data.num_locations, data.num_depots + data.num_clients)
 
     # Coordinates are scaled by 10 to align with 1 decimal distance precision
-    assert_equal(data.depot(0).x, 1450)  # depot [x, y] location
-    assert_equal(data.depot(0).y, 2150)
+    assert_equal(data.location(0).x, 1450)  # depot [x, y] location
+    assert_equal(data.location(0).y, 2150)
 
-    assert_equal(data.client(0).x, 1510)  # first customer [x, y] location
-    assert_equal(data.client(0).y, 2640)
+    assert_equal(data.location(1).x, 1510)  # first customer [x, y] location
+    assert_equal(data.location(1).y, 2640)
 
     # The data file specifies distances as 2D Euclidean. We take that and
     # should compute integer equivalents with up to one decimal precision.
@@ -190,11 +187,11 @@ def test_round_func_round_nearest():
 
     # We're going to test dist(0, 1) and dist(1, 0), which should be the same
     # since the distances are symmetric/Euclidean.
-    assert_equal(data.depot(0).x, 40)
-    assert_equal(data.depot(0).y, 50)
+    assert_equal(data.location(0).x, 40)
+    assert_equal(data.location(0).y, 50)
 
-    assert_equal(data.client(0).x, 25)
-    assert_equal(data.client(0).y, 85)
+    assert_equal(data.location(1).x, 25)
+    assert_equal(data.location(1).y, 85)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     distances = data.distance_matrix(profile=0)
@@ -213,11 +210,11 @@ def test_round_func_exact():
 
     # We're going to test dist(0, 1) and dist(1, 0), which should be the same
     # since the distances are symmetric/Euclidean.
-    assert_equal(data.depot(0).x, 40_000)
-    assert_equal(data.depot(0).y, 50_000)
+    assert_equal(data.location(0).x, 40_000)
+    assert_equal(data.location(0).y, 50_000)
 
-    assert_equal(data.client(0).x, 25_000)
-    assert_equal(data.client(0).y, 85_000)
+    assert_equal(data.location(1).x, 25_000)
+    assert_equal(data.location(1).y, 85_000)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     distances = data.distance_matrix(profile=0)
@@ -272,13 +269,14 @@ def test_multiple_depots():
     assert_equal(veh_type2.tw_early, 5_000)
     assert_equal(veh_type2.tw_late, 20_000)
 
-    depot1, depot2 = data.depots()
-
     # Test that the depot coordinates have been parsed correctly.
-    assert_equal(depot1.x, 2_334)
-    assert_equal(depot1.y, 726)
-    assert_equal(depot2.x, 226)
-    assert_equal(depot2.y, 1_297)
+    assert_equal(data.depot(0).location, 0)
+    assert_equal(data.location(0).x, 2_334)
+    assert_equal(data.location(0).y, 726)
+
+    assert_equal(data.depot(1).location, 1)
+    assert_equal(data.location(1).x, 226)
+    assert_equal(data.location(1).y, 1_297)
 
 
 def test_mdvrptw_instance():

@@ -103,7 +103,7 @@ def test_remove_reload_depots_service_duration(ok_small_multiple_trips):
     """
     veh_type = ok_small_multiple_trips.vehicle_type(0)
     data = ok_small_multiple_trips.replace(
-        depots=[Depot(x=2334, y=726, service_duration=90)],
+        depots=[Depot(location=0, service_duration=90)],
         vehicle_types=[veh_type.replace(max_reloads=2, unit_duration_cost=1)],
     )
 

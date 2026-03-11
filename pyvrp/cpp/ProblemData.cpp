@@ -76,8 +76,7 @@ bool ProblemData::Location::operator==(Location const &other) const
 
 ProblemData::Location::~Location() { delete[] name; }
 
-ProblemData::Client::Client(Coordinate x,
-                            Coordinate y,
+ProblemData::Client::Client(size_t location,
                             std::vector<Load> delivery,
                             std::vector<Load> pickup,
                             Duration serviceDuration,
@@ -88,8 +87,7 @@ ProblemData::Client::Client(Coordinate x,
                             bool required,
                             std::optional<size_t> group,
                             std::string name)
-    : x(x),
-      y(y),
+    : location(location),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
@@ -129,8 +127,7 @@ ProblemData::Client::Client(Coordinate x,
 }
 
 ProblemData::Client::Client(Client const &client)
-    : x(client.x),
-      y(client.y),
+    : location(client.location),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
@@ -145,8 +142,7 @@ ProblemData::Client::Client(Client const &client)
 }
 
 ProblemData::Client::Client(Client &&client)
-    : x(client.x),
-      y(client.y),
+    : location(client.location),
       serviceDuration(client.serviceDuration),
       twEarly(client.twEarly),
       twLate(client.twLate),
@@ -166,8 +162,7 @@ ProblemData::Client::~Client() { delete[] name; }
 bool ProblemData::Client::operator==(Client const &other) const
 {
     // clang-format off
-    return x == other.x
-        && y == other.y
+    return location == other.location
         && delivery == other.delivery
         && pickup == other.pickup
         && serviceDuration == other.serviceDuration
@@ -246,14 +241,12 @@ void ProblemData::ClientGroup::addClient(size_t client)
 
 void ProblemData::ClientGroup::clear() { clients_.clear(); }
 
-ProblemData::Depot::Depot(Coordinate x,
-                          Coordinate y,
+ProblemData::Depot::Depot(size_t location,
                           Duration twEarly,
                           Duration twLate,
                           Duration serviceDuration,
                           std::string name)
-    : x(x),
-      y(y),
+    : location(location),
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
@@ -270,8 +263,7 @@ ProblemData::Depot::Depot(Coordinate x,
 }
 
 ProblemData::Depot::Depot(Depot const &depot)
-    : x(depot.x),
-      y(depot.y),
+    : location(depot.location),
       serviceDuration(depot.serviceDuration),
       twEarly(depot.twEarly),
       twLate(depot.twLate),
@@ -280,8 +272,7 @@ ProblemData::Depot::Depot(Depot const &depot)
 }
 
 ProblemData::Depot::Depot(Depot &&depot)
-    : x(depot.x),
-      y(depot.y),
+    : location(depot.location),
       serviceDuration(depot.serviceDuration),
       twEarly(depot.twEarly),
       twLate(depot.twLate),
@@ -295,8 +286,7 @@ ProblemData::Depot::~Depot() { delete[] name; }
 bool ProblemData::Depot::operator==(Depot const &other) const
 {
     // clang-format off
-    return x == other.x
-        && y == other.y
+    return location == other.location
         && twEarly == other.twEarly
         && twLate == other.twLate
         && serviceDuration == other.serviceDuration
@@ -605,6 +595,9 @@ void ProblemData::validate() const
     {
         auto const &client = clients_[idx];
 
+        if (client.location >= numLocations())
+            throw std::out_of_range("Client references invalid location.");
+
         if (client.delivery.size() != numLoadDimensions_)
         {
             auto const *msg = "Client has inconsistent delivery size.";
@@ -641,6 +634,10 @@ void ProblemData::validate() const
     // Depot checks.
     if (depots_.empty())
         throw std::invalid_argument("Expected at least one depot.");
+
+    for (auto const &depot : depots_)
+        if (depot.location >= numLocations())
+            throw std::out_of_range("Depot references invalid location.");
 
     // Group checks.
     for (size_t idx = 0; idx != numGroups(); ++idx)

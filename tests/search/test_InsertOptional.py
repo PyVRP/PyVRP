@@ -72,8 +72,8 @@ def test_supports(
 
     data = ProblemData(  # instance with optional group
         locations=[Location(0, 0), Location(0, 0)],
-        clients=[Client(x=0, y=0, group=0, required=False)],
-        depots=[Depot(x=0, y=0)],
+        clients=[Client(location=1, group=0, required=False)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((2, 2), dtype=int)],
         duration_matrices=[np.zeros((2, 2), dtype=int)],
@@ -115,10 +115,10 @@ def test_group_skip_duplicates():
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
-            Client(0, 0, prize=1, required=False, group=0),
-            Client(0, 0, prize=1, required=False, group=0),
+            Client(location=1, prize=1, required=False, group=0),
+            Client(location=2, prize=1, required=False, group=0),
         ],
-        depots=[Depot(0, 0)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((3, 3), dtype=int)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],
@@ -155,10 +155,10 @@ def test_insert_in_empty_routes_considers_fixed_vehicle_cost():
     data = ProblemData(
         locations=[Location(0, 0), Location(1, 1), Location(1, 0)],
         clients=[
-            Client(x=1, y=1, required=False),
-            Client(x=1, y=0, required=False),
+            Client(location=1, required=False),
+            Client(location=2, required=False),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType(fixed_cost=7), VehicleType(fixed_cost=13)],
         distance_matrices=[np.zeros((3, 3), dtype=int)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],

@@ -231,10 +231,10 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     data = ProblemData(
         locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
         clients=[
-            Client(x=1, y=0, tw_early=0, tw_late=5),
-            Client(x=2, y=0, tw_early=0, tw_late=5),
+            Client(location=1, tw_early=0, tw_late=5),
+            Client(location=2, tw_early=0, tw_late=5),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType(1, tw_early=0, tw_late=10)],
         distance_matrices=[
             np.asarray(
@@ -402,11 +402,11 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
             Location(2, 0),
         ],
         clients=[
-            Client(x=1, y=0, pickup=[5]),
-            Client(x=2, y=0, pickup=[0]),
-            Client(x=2, y=0, delivery=[5]),
+            Client(location=1, pickup=[5]),
+            Client(location=2, pickup=[0]),
+            Client(location=3, delivery=[5]),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType(capacity=[5])],
         distance_matrices=[np.where(np.eye(4), 0, 1)],
         duration_matrices=[np.zeros((4, 4), dtype=int)],
@@ -585,11 +585,11 @@ def test_bug_evaluating_move_with_initial_load():
             Location(0, 0),
         ],
         clients=[
-            Client(x=0, y=0, delivery=[1]),
-            Client(x=0, y=0, delivery=[1]),
-            Client(x=0, y=0, delivery=[0]),
+            Client(location=1, delivery=[1]),
+            Client(location=2, delivery=[1]),
+            Client(location=3, delivery=[0]),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType(2, capacity=[5], initial_load=[5])],
         distance_matrices=[np.zeros((4, 4), dtype=int)],
         duration_matrices=[np.zeros((4, 4), dtype=int)],
@@ -624,10 +624,10 @@ def test_bug_release_time_shift_time_windows():
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
         clients=[
-            Client(x=0, y=0, tw_early=2, release_time=2),
-            Client(x=0, y=0, tw_early=2, release_time=2),
+            Client(location=1, tw_early=2, release_time=2),
+            Client(location=2, tw_early=2, release_time=2),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType(), VehicleType(tw_late=1)],
         distance_matrices=[np.zeros((3, 3), dtype=int)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],
@@ -668,8 +668,8 @@ def test_empty_route_delta_cost_bug():
     ]
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
-        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
-        clients=[Client(x=0, y=0)],
+        depots=[Depot(location=0), Depot(location=1)],
+        clients=[Client(location=2)],
         vehicle_types=vehicle_types,
         duration_matrices=[mat],
         distance_matrices=[mat],

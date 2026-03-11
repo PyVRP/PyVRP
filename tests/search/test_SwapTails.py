@@ -83,8 +83,8 @@ def test_move_involving_empty_routes():
     """
     data = ProblemData(
         locations=[Location(0, 0), Location(1, 1), Location(1, 0)],
-        clients=[Client(x=1, y=1), Client(x=1, y=0)],
-        depots=[Depot(x=0, y=0)],
+        clients=[Client(1), Client(2)],
+        depots=[Depot(0)],
         vehicle_types=[
             VehicleType(fixed_cost=10),
             VehicleType(fixed_cost=100),
@@ -151,8 +151,8 @@ def test_move_involving_multiple_depots():
             Location(1, 1),
             Location(4, 4),
         ],
-        clients=[Client(x=1, y=1), Client(x=4, y=4)],
-        depots=[Depot(x=0, y=0), Depot(x=5, y=5)],
+        clients=[Client(2), Client(3)],
+        depots=[Depot(0), Depot(1)],
         vehicle_types=[
             VehicleType(start_depot=0, end_depot=0),
             VehicleType(start_depot=1, end_depot=1),

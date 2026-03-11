@@ -118,8 +118,7 @@ public:
 
     /**
      * Client(
-     *    x: float,
-     *    y: float,
+     *    location: int,
      *    delivery: list[int] = [],
      *    pickup: list[int] = [],
      *    service_duration: int = 0,
@@ -138,14 +137,8 @@ public:
      *
      * Parameters
      * ----------
-     * x
-     *     Horizontal coordinate of this client, that is, the 'x' part of the
-     *     client's (x, y) location tuple. This can for example be a longitude
-     *     value.
-     * y
-     *     Vertical coordinate of this client, that is, the 'y' part of the
-     *     client's (x, y) location tuple. This can for example be a latitude
-     *     value.
+     * location
+     *     Physical location of this client.
      * delivery
      *     The amounts this client demands from the depot.
      * pickup
@@ -181,10 +174,8 @@ public:
      *
      * Attributes
      * ----------
-     * x
-     *     Horizontal coordinate of this client.
-     * y
-     *     Vertical coordinate of this client.
+     * location
+     *     Physical location of this client.
      * delivery
      *     Client delivery amounts shipped from the depot.
      * pickup
@@ -210,8 +201,7 @@ public:
      */
     struct Client
     {
-        Coordinate const x;
-        Coordinate const y;
+        size_t const location;
         Duration const serviceDuration;
         Duration const twEarly;  // Earliest possible start of service
         Duration const twLate;   // Latest possible start of service
@@ -223,8 +213,7 @@ public:
         std::optional<size_t> const group;  // Optional client group membership
         char const *name;                   // Client name (for reference)
 
-        Client(Coordinate x,
-               Coordinate y,
+        Client(size_t location,
                std::vector<Load> delivery = {},
                std::vector<Load> pickup = {},
                Duration serviceDuration = 0,
@@ -327,8 +316,7 @@ public:
 
     /**
      * Depot(
-     *    x: float,
-     *    y: float,
+     *    location: int,
      *    tw_early: int = 0,
      *    tw_late: int = np.iinfo(np.int64).max,
      *    service_duration: int = 0,
@@ -340,14 +328,8 @@ public:
      *
      * Parameters
      * ----------
-     * x
-     *     Horizontal coordinate of this depot, that is, the 'x' part of the
-     *     depot's (x, y) location tuple. This can for example be a longitude
-     *     value.
-     * y
-     *     Vertical coordinate of this depot, that is, the 'y' part of the
-     *     depot's (x, y) location tuple. This can for example be a latitude
-     *     value.
+     * location
+     *     Physical location of this depot.
      * tw_early
      *     Opening time of this depot. Default 0.
      * tw_late
@@ -360,10 +342,8 @@ public:
      *
      * Attributes
      * ----------
-     * x
-     *     Horizontal coordinate of this depot.
-     * y
-     *     Vertical coordinate of this depot.
+     * location
+     *     Physical location of this depot.
      * tw_early
      *     Opening time of this depot.
      * tw_late
@@ -376,15 +356,13 @@ public:
      */
     struct Depot
     {
-        Coordinate const x;
-        Coordinate const y;
+        size_t const location;
         Duration const serviceDuration;
         Duration const twEarly;  // Depot opening time
         Duration const twLate;   // Depot closing time
         char const *name;        // Depot name (for reference)
 
-        Depot(Coordinate x,
-              Coordinate y,
+        Depot(size_t location,
               Duration twEarly = 0,
               Duration twLate = std::numeric_limits<Duration>::max(),
               Duration serviceDuration = 0,
@@ -438,11 +416,11 @@ public:
      *     the maximum total delivery or pickup amount that the vehicle can
      *     store along the route.
      * start_depot
-     *     Depot (location index) where vehicles of this type start their
-     *     routes. Default 0 (first depot).
+     *     Depot (index) where vehicles of this type start their routes.
+     *     Defaults to the first depot.
      * end_depot
-     *     Depot (location index) where vehicles of this type end routes.
-     *     Default 0 (first depot).
+     *     Depot (index) where vehicles of this type end routes. Defaults to
+     *     the first depot.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type. Default 0.
      * tw_early
@@ -472,9 +450,9 @@ public:
      *     this value is zero, and the vehicle only considers loads from client
      *     visits.
      * reload_depots
-     *     List of reload depots (location indices) this vehicle may visit along
-     *     its route, to empty and reload for subsequent client visits. Defaults
-     *     to an empty list, in which case no reloads are allowed.
+     *     List of reload depots (indices) this vehicle may visit along its
+     *     route, to empty and reload for subsequent client visits. Defaults to
+     *     an empty list, in which case no reloads are allowed.
      * max_reloads
      *     Maximum number of reloads the vehicle may perform on a route.
      *     Unconstrained if not explicitly provided.
@@ -494,9 +472,9 @@ public:
      * capacity
      *     Capacities of this vehicle type, per load dimension.
      * start_depot
-     *     Start location associated with these vehicles.
+     *     Start depot associated with these vehicles.
      * end_depot
-     *     End location associated with these vehicles.
+     *     End depot associated with these vehicles.
      * fixed_cost
      *     Fixed cost of using a vehicle of this type.
      * tw_early

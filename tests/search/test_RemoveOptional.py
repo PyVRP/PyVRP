@@ -24,12 +24,12 @@ def test_does_not_remove_required_clients():
         clients=[
             # This client cannot be removed, even though it causes significant
             # load violations.
-            Client(x=1, y=1, delivery=[100], required=True),
+            Client(location=1, delivery=[100], required=True),
             # This client can and should be removed, because the prize is not
             # worth the detour.
-            Client(x=2, y=2, delivery=[0], prize=0, required=False),
+            Client(location=2, delivery=[0], prize=0, required=False),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType(1, capacity=[50])],
         distance_matrices=[np.where(np.eye(3), 0, 10)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],
@@ -63,8 +63,8 @@ def test_supports(
 
     data = ProblemData(  # instance with optional group
         locations=[Location(0, 0), Location(0, 0)],
-        clients=[Client(x=0, y=0, group=0, required=False)],
-        depots=[Depot(x=0, y=0)],
+        clients=[Client(location=1, group=0, required=False)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((2, 2), dtype=int)],
         duration_matrices=[np.zeros((2, 2), dtype=int)],
@@ -86,10 +86,10 @@ def test_fixed_vehicle_cost():
     data = ProblemData(
         locations=[Location(0, 0), Location(1, 1), Location(1, 0)],
         clients=[
-            Client(x=1, y=1, required=False),
-            Client(x=1, y=0, required=False),
+            Client(location=1, required=False),
+            Client(location=2, required=False),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType(fixed_cost=7), VehicleType(fixed_cost=13)],
         distance_matrices=[np.zeros((3, 3), dtype=int)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],
@@ -139,8 +139,8 @@ def test_empty_route_delta_cost_bug():
     ]
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
-        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
-        clients=[Client(x=0, y=0, required=False)],
+        depots=[Depot(location=0), Depot(location=1)],
+        clients=[Client(location=2, required=False)],
         vehicle_types=[
             # Vehicle type has time warp because just travelling between depots
             # violates the shift_duration constraint.
@@ -166,10 +166,10 @@ def test_cannot_remove_required_group():
     """
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         clients=[
-            Client(x=0, y=0, group=0, required=False),
-            Client(x=0, y=0, group=1, required=False),
+            Client(location=1, group=0, required=False),
+            Client(location=2, group=1, required=False),
         ],
         vehicle_types=[VehicleType()],
         duration_matrices=[np.where(np.eye(3), 0, 1)],

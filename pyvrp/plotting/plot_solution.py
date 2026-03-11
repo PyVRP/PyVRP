@@ -28,40 +28,35 @@ def plot_solution(
     if not ax:
         _, ax = plt.subplots()
 
-    num_locs = data.num_locations
-    x_coords = np.empty((num_locs,))
-    y_coords = np.empty((num_locs,))
-    for idx, depot in enumerate(data.depots()):
-        x_coords[idx] = depot.x
-        y_coords[idx] = depot.y
-    for idx, client in enumerate(data.clients(), data.num_depots):
-        x_coords[idx] = client.x
-        y_coords[idx] = client.y
+    x_coords = np.array([loc.x for loc in data.locations()])
+    y_coords = np.array([loc.y for loc in data.locations()])
+
+    depot_locs = np.array([depot.location for depot in data.depots()], int)
+    client_locs = np.array([client.location for client in data.clients()], int)
 
     # These are the depots, as big red stars.
     kwargs = dict(label="Depot", c="tab:red", marker="*", zorder=3, s=500)
-    ax.scatter(
-        x_coords[: data.num_depots],
-        y_coords[: data.num_depots],
-        **kwargs,
-    )
+    ax.scatter(x_coords[depot_locs], y_coords[depot_locs], **kwargs)
 
     colors = plt.get_cmap("tab10")
-    in_solution = np.zeros(data.num_locations, dtype=bool)
+    in_solution = np.zeros(data.num_depots + data.num_clients, dtype=bool)
     for idx, route in enumerate(solution.routes()):
         color = colors(idx % colors.N)
         in_solution[route] = True
 
         if len(route) == 1 or plot_clients:  # explicit client coordinate plot
             kwargs = dict(label=f"Route {idx + 1}", zorder=3, s=75)
-            ax.scatter(x_coords[route], y_coords[route], **kwargs, color=color)
+            visits = route.visits()
+            locs = [client_locs[visit - data.num_depots] for visit in visits]
+            ax.scatter(x_coords[locs], y_coords[locs], **kwargs, color=color)
 
         for trip in route.trips():
             if len(trip) == 0:
                 continue
 
-            x = x_coords[[activity.idx for activity in trip]]
-            y = y_coords[[activity.idx for activity in trip]]
+            idcs = [activity.idx - data.num_depots for activity in trip]
+            x = x_coords[client_locs[idcs]]
+            y = y_coords[client_locs[idcs]]
 
             # Clients visited by this trip, as a line segment or single dot (in
             # case of a singleton trip). Trips of the same route share colour.
@@ -74,20 +69,20 @@ def plot_solution(
             # first client is given an arrow head to indicate route direction.
             # We don't do this for the edge returning to the depot because that
             # adds a lot of clutter at the depot.
-            start_depot = trip.start_depot()
-            end_depot = trip.end_depot()
+            start_loc = depot_locs[trip.start_depot()]
+            end_loc = depot_locs[trip.end_depot()]
 
             kwargs = dict(linewidth=0.25, color="grey")
             ax.plot(
-                [x[-1], x_coords[end_depot]],
-                [y[-1], y_coords[end_depot]],
+                [x[-1], x_coords[end_loc]],
+                [y[-1], y_coords[end_loc]],
                 linewidth=0.25,
                 color="grey",
             )
             ax.annotate(
                 "",
                 xy=(x[0], y[0]),
-                xytext=(x_coords[start_depot], y_coords[start_depot]),
+                xytext=(x_coords[start_loc], y_coords[start_loc]),
                 arrowprops=dict(arrowstyle="-|>", **kwargs),
                 zorder=1,
             )
@@ -96,8 +91,8 @@ def plot_solution(
         # Then we also plot the unvisited clients as grey dots. This is helpful
         # in understanding solutions for problems with optional clients.
         unvisited = np.flatnonzero(~in_solution[data.num_depots :])
-        x = x_coords[data.num_depots + unvisited]
-        y = y_coords[data.num_depots + unvisited]
+        x = x_coords[client_locs[unvisited]]
+        y = y_coords[client_locs[unvisited]]
         ax.scatter(x, y, label="Unvisited", zorder=3, s=75, c="grey")
 
     ax.grid(color="grey", linestyle="solid", linewidth=0.2)
