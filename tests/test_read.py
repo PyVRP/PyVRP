@@ -271,15 +271,12 @@ def test_multiple_depots():
 
     # Test that the depot coordinates have been parsed correctly.
     assert_equal(data.depot(0).location, 0)
+    assert_equal(data.location(0).x, 2_334)
+    assert_equal(data.location(0).y, 726)
+
     assert_equal(data.depot(1).location, 1)
-
-    loc1 = data.location(0)
-    loc2 = data.location(1)
-
-    assert_equal(loc1.x, 2_334)
-    assert_equal(loc1.y, 726)
-    assert_equal(loc2.x, 226)
-    assert_equal(loc2.y, 1_297)
+    assert_equal(data.location(1).x, 226)
+    assert_equal(data.location(1).y, 1_297)
 
 
 def test_mdvrptw_instance():
