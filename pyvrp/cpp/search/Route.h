@@ -1073,12 +1073,23 @@ std::pair<Cost, Distance> Route::Proposal<Segments...>::distance() const
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto distance = segment.distance(profile);
-        auto last = segment.last();
+        auto lastLoc
+            = segment.last() < data.numDepots()
+                  ? data.depot(segment.last()).location
+                  : data.client(segment.last() - data.numDepots()).location;
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            distance += matrix(last, other.first()) + other.distance(profile);
-            last = other.last();
+            auto const firstLoc
+                = other.first() < data.numDepots()
+                      ? data.depot(other.first()).location
+                      : data.client(other.first() - data.numDepots()).location;
+
+            distance += matrix(lastLoc, firstLoc) + other.distance(profile);
+            lastLoc
+                = other.last() < data.numDepots()
+                      ? data.depot(other.last()).location
+                      : data.client(other.last() - data.numDepots()).location;
 
             if constexpr (sizeof...(args) != 0)
                 self(self, std::forward<decltype(args)>(args)...);
@@ -1114,14 +1125,22 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto ds = segment.duration(profile);
-        auto first = segment.first();
+        auto firstLoc
+            = segment.first() < data.numDepots()
+                  ? data.depot(segment.first()).location
+                  : data.client(segment.first() - data.numDepots()).location;
 
         if (segment.startsAtReloadDepot())
             ds = ds.finaliseFront();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            auto edgeDur = matrix(other.last(), first);
+            auto const lastLoc
+                = other.last() < data.numDepots()
+                      ? data.depot(other.last()).location
+                      : data.client(other.last() - data.numDepots()).location;
+
+            auto edgeDur = matrix(lastLoc, firstLoc);
 
             if (other.endsAtReloadDepot())
             {
@@ -1138,7 +1157,10 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
             }
 
             ds = DurationSegment::merge(edgeDur, other.duration(profile), ds);
-            first = other.first();
+            firstLoc
+                = other.first() < data.numDepots()
+                      ? data.depot(other.first()).location
+                      : data.client(other.first() - data.numDepots()).location;
 
             if constexpr (sizeof...(args) != 0)
             {
