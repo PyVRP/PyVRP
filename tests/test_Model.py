@@ -1198,3 +1198,27 @@ def test_raises_unknown_location():
     loc = m.add_location(0, 0)
     m.add_depot(location=loc)
     m.add_client(location=loc)
+
+
+def test_adding_location():
+    """
+    Tests adding and using a location.
+    """
+    m = Model()
+
+    # Add location and test the attributes.
+    loc = m.add_location(x=0.0, y=1.2, name="test")
+    assert_equal(loc.x, 0.0)
+    assert_equal(loc.y, 1.2)
+    assert_equal(loc.name, "test")
+
+    # Add a client at the location. Since the location is the first one, the
+    # client should have a location index of 0.
+    client = m.add_client(location=loc)
+    assert_equal(client.location, 0)
+
+    # Add another location and client. The client should have a location index
+    # of 1.
+    loc2 = m.add_location(x=1, y=1)
+    client2 = m.add_client(location=loc2)
+    assert_equal(client2.location, 1)
