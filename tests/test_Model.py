@@ -938,7 +938,7 @@ def test_model_solves_instances_with_multiple_profiles():
     m.add_depot(location=m.add_location(1, 1))
 
     m.add_client(location=m.add_location(1, 2))
-    m.add_client(m.add_location(2, 1))
+    m.add_client(location=m.add_location(2, 1))
 
     prof1 = m.add_profile()  # this profile only cares about distance on x axis
     prof2 = m.add_profile()  # this one only about distance on y axis
