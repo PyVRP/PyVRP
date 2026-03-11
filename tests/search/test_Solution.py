@@ -42,7 +42,9 @@ def test_nodes_routes_access(ok_small):
     search_sol.load(pyvrp_sol)
 
     # There should be #locations nodes, and #vehicles routes.
-    assert_equal(len(search_sol.nodes), ok_small.num_locations)
+    assert_equal(
+        len(search_sol.nodes), ok_small.num_depots + ok_small.num_clients
+    )
     assert_equal(len(search_sol.routes), ok_small.num_vehicles)
 
     for client in [1, 2]:  # [1, 2] are in the first route

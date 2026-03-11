@@ -45,7 +45,9 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
-    neighbours = [[] for _ in range(ok_small.num_locations)]
+    neighbours = [
+        [] for _ in range(ok_small.num_depots + ok_small.num_clients)
+    ]
     ls = LocalSearch(ok_small, rng, neighbours)
     ls.add_operator(Exchange10(ok_small))
     ls.add_operator(Exchange11(ok_small))
@@ -81,7 +83,9 @@ def test_get_set_neighbours(ok_small):
     ``test_SearchSpace.py``, which handle validation.
     """
     rng = RandomNumberGenerator(seed=42)
-    neighbours = [[] for _ in range(ok_small.num_locations)]
+    neighbours = [
+        [] for _ in range(ok_small.num_depots + ok_small.num_clients)
+    ]
     ls = LocalSearch(ok_small, rng, neighbours)
     assert_equal(ls.neighbours, neighbours)
 
@@ -336,20 +340,22 @@ def test_no_op_multi_trip_instance(ok_small_multiple_trips):
     Tests that loading and exporting a multi-trip instance correctly returns an
     equivalent solution when no operators are available.
     """
+    data = ok_small_multiple_trips
+
     rng = RandomNumberGenerator(seed=42)
-    neighbours = [[] for _ in range(ok_small_multiple_trips.num_locations)]
+    neighbours = [[] for _ in range(data.num_depots + data.num_clients)]
     ls = LocalSearch(
-        ok_small_multiple_trips,
+        data,
         rng,
         neighbours,
         PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
     )
 
-    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
-    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
-    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+    trip1 = Trip(data, [1, 2], 0)
+    trip2 = Trip(data, [3, 4], 0)
+    route = Route(data, [trip1, trip2], 0)
 
-    sol = Solution(ok_small_multiple_trips, [route])
+    sol = Solution(data, [route])
     cost_eval = CostEvaluator([20], 6, 0)
     assert_equal(ls(sol, cost_eval), sol)
 

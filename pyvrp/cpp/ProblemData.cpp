@@ -586,10 +586,6 @@ size_t ProblemData::numLoadDimensions() const { return numLoadDimensions_; }
 
 void ProblemData::validate() const
 {
-    if (numLocations() != numDepots() + numClients())  // TODO temp
-        throw std::invalid_argument(
-            "Need #locations to match #depots + #clients.");
-
     // Client checks.
     for (size_t idx = 0; idx != numClients(); ++idx)
     {
