@@ -401,7 +401,7 @@ def test_problem_data_replace_raises_mismatched_argument_shapes():
         duration_matrices=[mat],
     )
 
-    with assert_raises(ValueError):  # matrices are 2x2
+    with assert_raises(IndexError):  # matrices are 2x2
         data.replace(locations=[])
 
     with assert_raises(ValueError):  # two locations
