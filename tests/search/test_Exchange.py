@@ -626,15 +626,15 @@ def test_bug_release_time_shift_time_windows():
     been fixed. See #852 for details.
     """
     data = ProblemData(
-        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
+        locations=[Location(0, 0)],
         clients=[
-            Client(location=1, tw_early=2, release_time=2),
-            Client(location=2, tw_early=2, release_time=2),
+            Client(location=0, tw_early=2, release_time=2),
+            Client(location=0, tw_early=2, release_time=2),
         ],
         depots=[Depot(location=0)],
         vehicle_types=[VehicleType(), VehicleType(tw_late=1)],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
     route1 = make_search_route(data, [1], vehicle_type=0)

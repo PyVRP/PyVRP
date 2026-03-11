@@ -71,12 +71,12 @@ def test_supports(
     assert_(InsertOptional.supports(ok_small_prizes))
 
     data = ProblemData(  # instance with optional group
-        locations=[Location(0, 0), Location(0, 0)],
-        clients=[Client(location=1, group=0, required=False)],
+        locations=[Location(0, 0)],
+        clients=[Client(location=0, group=0, required=False)],
         depots=[Depot(location=0)],
         vehicle_types=[VehicleType()],
-        distance_matrices=[np.zeros((2, 2), dtype=int)],
-        duration_matrices=[np.zeros((2, 2), dtype=int)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
         groups=[ClientGroup(clients=[1], required=False)],
     )
 
@@ -113,15 +113,15 @@ def test_group_skip_duplicates():
     present in the solution.
     """
     data = ProblemData(
-        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
+        locations=[Location(0, 0)],
         clients=[
-            Client(location=1, prize=1, required=False, group=0),
-            Client(location=2, prize=1, required=False, group=0),
+            Client(location=0, prize=1, required=False, group=0),
+            Client(location=0, prize=1, required=False, group=0),
         ],
         depots=[Depot(location=0)],
         vehicle_types=[VehicleType()],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
         groups=[ClientGroup([1, 2], required=False)],
     )
 

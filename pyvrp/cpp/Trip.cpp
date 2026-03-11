@@ -54,7 +54,8 @@ Trip::Trip(ProblemData const &data,
     activities_.reserve(visits.size());
     for (auto const client : visits)
     {
-        if (client < data.numDepots() || client >= data.numLocations())
+        if (client < data.numDepots()
+            || client >= data.numDepots() + data.numClients())
         {
             std::ostringstream msg;
             msg << "Client " << client << " is not understood.";

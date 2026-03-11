@@ -193,12 +193,12 @@ def test_zero_clients():
     Tests that the neighbourhood for an instance with zero clients is empty.
     """
     data = ProblemData(
-        locations=[Location(0, 0), Location(0, 0)],
+        locations=[Location(0, 0)],
         clients=[],
-        depots=[Depot(0), Depot(1)],
+        depots=[Depot(0), Depot(0)],
         vehicle_types=[VehicleType()],
-        distance_matrices=[np.zeros((2, 2), dtype=int)],
-        duration_matrices=[np.zeros((2, 2), dtype=int)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
     # Two empty lists, one for each of the depots.

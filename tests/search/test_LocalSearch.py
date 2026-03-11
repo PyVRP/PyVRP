@@ -553,15 +553,15 @@ def test_local_search_inserts_into_empty_solutions():
     Tests that the local search inserts into empty solutions.
     """
     data = ProblemData(
-        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
+        locations=[Location(0, 0)],
         clients=[
-            Client(1, prize=1_000, required=False),  # high prizes make
-            Client(2, prize=1_000, required=False),  # inserting worthwhile
+            Client(0, prize=1_000, required=False),  # high prizes make
+            Client(0, prize=1_000, required=False),  # inserting worthwhile
         ],
         depots=[Depot(0)],
         vehicle_types=[VehicleType()],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
     rng = RandomNumberGenerator(seed=2)

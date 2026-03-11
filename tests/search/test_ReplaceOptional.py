@@ -20,15 +20,15 @@ def test_replacing_optional_client():
     replaced with another that is not currently in the solution.
     """
     data = ProblemData(
-        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
+        locations=[Location(0, 0)],
         clients=[
-            Client(1, tw_early=0, tw_late=1, prize=1, required=False),
-            Client(2, tw_early=0, tw_late=1, prize=5, required=False),
+            Client(0, tw_early=0, tw_late=1, prize=1, required=False),
+            Client(0, tw_early=0, tw_late=1, prize=5, required=False),
         ],
         depots=[Depot(0)],
         vehicle_types=[VehicleType()],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
     route = make_search_route(data, [1])
@@ -49,15 +49,15 @@ def test_skips_replacing_required_client():
     Tests that ReplaceOptional does not replace a required client.
     """
     data = ProblemData(
-        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
+        locations=[Location(0, 0)],
         clients=[
-            Client(1, tw_early=0, tw_late=1, prize=1, required=True),
-            Client(2, tw_early=0, tw_late=1, prize=5, required=False),
+            Client(0, tw_early=0, tw_late=1, prize=1, required=True),
+            Client(0, tw_early=0, tw_late=1, prize=5, required=False),
         ],
         depots=[Depot(0)],
         vehicle_types=[VehicleType()],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
     route = make_search_route(data, [1])
