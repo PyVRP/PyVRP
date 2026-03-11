@@ -1222,3 +1222,30 @@ def test_adding_location():
     loc2 = m.add_location(x=1, y=1)
     client2 = m.add_client(location=loc2)
     assert_equal(client2.location, 1)
+
+
+def test_solve_clients_in_same_location():
+    """
+    Smoke test that checks if the model can solve an instance with clients in
+    the same location.
+    """
+    m = Model()
+    m.add_vehicle_type()
+    m.add_depot(location=m.add_location(5, 5))
+
+    # Two clients in the same place.
+    loc = m.add_location(10, 10)
+    m.add_client(loc)
+    m.add_client(loc)
+
+    for frm in m.locations:
+        for to in m.locations:
+            dist = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, dist)
+
+    res = m.solve(stop=MaxIterations(10))
+
+    best = res.best
+    assert_(best.is_feasible())
+    assert_equal(best.num_clients(), 2)
+    assert_equal(best.distance(), 20)  # depot loc to clients loc, and back

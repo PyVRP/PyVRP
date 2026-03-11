@@ -8,8 +8,8 @@ using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 
 SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
-    : neighbours_(data.numLocations()),
-      promising_(data.numLocations()),
+    : neighbours_(data.numDepots() + data.numClients()),
+      promising_(data.numDepots() + data.numClients()),
       clientOrder_(data.numClients())
 {
     setNeighbours(neighbours);

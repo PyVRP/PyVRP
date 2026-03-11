@@ -73,7 +73,7 @@ def plot_route_schedule(
         trace_drive_serv.append((dist, drive_time + serv_time))
         trace_load.append((dist, load))
 
-    prev_idx = vehicle_type.start_depot
+    prev_loc = data.depot(vehicle_type.start_depot).location
     for visit in route.schedule():
         idx = visit.location
         if idx < data.num_depots:
@@ -81,8 +81,8 @@ def plot_route_schedule(
         else:
             stop = data.client(idx - data.num_depots)  # type: ignore
 
-        drive_time += durations[prev_idx, idx]
-        dist += distances[prev_idx, idx]
+        drive_time += durations[prev_loc, stop.location]
+        dist += distances[prev_loc, stop.location]
 
         arrive = visit.start_service - visit.wait_duration
         add_traces(dist, arrive, drive_time, serv_time, load)
@@ -102,7 +102,7 @@ def plot_route_schedule(
 
         timewindow_lines.append(((dist, stop.tw_early), (dist, stop.tw_late)))
 
-        prev_idx = idx
+        prev_loc = stop.location
 
     xs, ys = zip(*trace_time)
     ax.plot(xs, ys, label="Time (earliest)")

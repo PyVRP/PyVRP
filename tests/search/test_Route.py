@@ -292,7 +292,9 @@ def test_route_duration_access(ok_small):
     Tests access to a client's or depot's duration segment, as tracked by the
     route.
     """
-    clients = range(ok_small.num_depots, ok_small.num_locations)
+    clients = range(
+        ok_small.num_depots, ok_small.num_depots + ok_small.num_clients
+    )
     route = make_search_route(ok_small, clients)
 
     for idx in range(len(route)):
@@ -396,7 +398,9 @@ def test_duration_between_equal_to_before_after_when_one_is_depot(ok_small):
     Tests that ``duration_between()`` returns the same value as
     ``duration_before()`` or ``duration_after()`` when one side is the depot.
     """
-    clients = range(ok_small.num_depots, ok_small.num_locations)
+    clients = range(
+        ok_small.num_depots, ok_small.num_depots + ok_small.num_clients
+    )
     route = make_search_route(ok_small, clients)
 
     for idx in [1, 2, 3, 4]:
@@ -416,7 +420,9 @@ def test_duration_between_single_route_has_correct_time_warp(ok_small):
     Tests duration segment access on a single-route solution where we know
     exactly where in the route time warp occurs.
     """
-    clients = range(ok_small.num_depots, ok_small.num_locations)
+    clients = range(
+        ok_small.num_depots, ok_small.num_depots + ok_small.num_clients
+    )
     route = make_search_route(ok_small, clients)
     assert_equal(route.num_clients(), ok_small.num_clients)
 
@@ -441,7 +447,9 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
     Tests that calling distance() on the route object is the same as calling
     dist_between() with the start and end depot indices as arguments.
     """
-    clients = range(ok_small.num_depots, ok_small.num_locations)
+    clients = range(
+        ok_small.num_depots, ok_small.num_depots + ok_small.num_clients
+    )
     route = make_search_route(ok_small, clients)
     assert_equal(route.distance(), route.dist_between(0, len(route) - 1))
 
@@ -501,7 +509,7 @@ def test_shift_duration(ok_small, shift_duration: int, expected: int):
     vehicle_type = VehicleType(3, capacity=[10], shift_duration=shift_duration)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    clients = range(data.num_depots, data.num_locations)
+    clients = range(data.num_depots, data.num_depots + data.num_clients)
     route = make_search_route(data, clients)
 
     assert_equal(route.duration(), 7_950)
@@ -525,7 +533,7 @@ def test_max_distance(ok_small: ProblemData, max_distance: int, expected: int):
     vehicle_type = VehicleType(3, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    clients = range(data.num_depots, data.num_locations)
+    clients = range(data.num_depots, data.num_depots + data.num_clients)
     route = make_search_route(data, clients)
 
     assert_equal(route.distance(), 6_450)
@@ -567,7 +575,9 @@ def test_dist_between_equal_to_before_after_when_one_is_depot(ok_small):
     Tests that ``dist_between()`` returns the same value as
     ``dist_before()`` or ``distance_after()`` when one side is the depot.
     """
-    clients = range(ok_small.num_depots, ok_small.num_locations)
+    clients = range(
+        ok_small.num_depots, ok_small.num_depots + ok_small.num_clients
+    )
     route = make_search_route(ok_small, clients)
 
     for idx in [1, 2, 3, 4]:
@@ -583,7 +593,9 @@ def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
     Tests that ``load_between()`` returns the same value as
     ``load_before()`` or ``load_after()`` when one side is the depot.
     """
-    clients = range(small_spd.num_depots, small_spd.num_locations)
+    clients = range(
+        small_spd.num_depots, small_spd.num_depots + small_spd.num_clients
+    )
     route = make_search_route(small_spd, clients)
 
     for idx in [1, 2, 3, 4]:
@@ -648,7 +660,7 @@ def test_load_between_equal_to_before_after_when_one_is_depot_different_dims(
     load_after() for multiple load dimensions when one side is the depot.
     """
     data = ok_small_multiple_load
-    clients = range(data.num_depots, data.num_locations)
+    clients = range(data.num_depots, data.num_depots + data.num_clients)
     route = make_search_route(data, clients)
 
     for idx in [1, 2, 3]:
@@ -674,7 +686,7 @@ def test_distance_different_profiles(ok_small_two_profiles):
     segments takes into account the profile argument.
     """
     data = ok_small_two_profiles
-    clients = range(data.num_depots, data.num_locations)
+    clients = range(data.num_depots, data.num_depots + data.num_clients)
     route = make_search_route(data, clients)
 
     assert_equal(route.distance(), 6_450)
@@ -692,7 +704,7 @@ def test_duration_different_profiles(ok_small_two_profiles):
     segments takes into account the profile argument.
     """
     data = ok_small_two_profiles
-    clients = range(data.num_depots, data.num_locations)
+    clients = range(data.num_depots, data.num_depots + data.num_clients)
     route = make_search_route(data, clients)
 
     assert_equal(route.duration(), 7_950)

@@ -41,8 +41,8 @@ using pyvrp::search::Solution;
 
 Solution::Solution(ProblemData const &data) : data_(data)
 {
-    nodes.reserve(data.numLocations());
-    for (size_t loc = 0; loc != data.numLocations(); ++loc)
+    nodes.reserve(data.numDepots() + data.numClients());
+    for (size_t loc = 0; loc != data.numDepots() + data.numClients(); ++loc)
         nodes.emplace_back(loc);
 
     routes.reserve(data.numVehicles());
@@ -227,12 +227,9 @@ pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
     auto const &data = solution.data_;
 
     Cost cost = 0;  // cost is route cost + uncollected prizes
-    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
-        if (!solution.nodes[idx].route())
-        {
-            auto const &client = data.client(idx - data.numDepots());
-            cost += client.prize;
-        }
+    for (size_t idx = 0; idx != data.numClients(); ++idx)
+        if (!solution.nodes[data.numDepots() + idx].route())
+            cost += data.client(idx).prize;
 
     for (auto const &route : solution.routes)
         cost += penalisedCost(route);

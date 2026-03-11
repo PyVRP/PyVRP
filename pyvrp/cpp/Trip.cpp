@@ -54,7 +54,8 @@ Trip::Trip(ProblemData const &data,
     activities_.reserve(visits.size());
     for (auto const client : visits)
     {
-        if (client < data.numDepots() || client >= data.numLocations())
+        if (client < data.numDepots()
+            || client >= data.numDepots() + data.numClients())
         {
             std::ostringstream msg;
             msg << "Client " << client << " is not understood.";
@@ -67,26 +68,27 @@ Trip::Trip(ProblemData const &data,
     auto const &distances = data.distanceMatrix(vehData.profile);
     auto const &durations = data.durationMatrix(vehData.profile);
 
-    auto const &depot = data.depot(startDepot_);
-    service_ += depot.serviceDuration;
+    auto const &start = data.depot(startDepot_);
+    service_ += start.serviceDuration;
 
-    size_t prevClient = startDepot_;
+    size_t prevLoc = start.location;
     for (auto const [_, client] : activities_)
     {
-        distance_ += distances(prevClient, client);
-        travel_ += durations(prevClient, client);
-
         auto const &clientData = data.client(client - data.numDepots());
+
+        distance_ += distances(prevLoc, clientData.location);
+        travel_ += durations(prevLoc, clientData.location);
 
         service_ += clientData.serviceDuration;
         release_ = std::max(release_, clientData.releaseTime);
         prizes_ += clientData.prize;
 
-        prevClient = client;
+        prevLoc = clientData.location;
     }
 
-    distance_ += distances(prevClient, endDepot_);
-    travel_ += durations(prevClient, endDepot_);
+    auto const &end = data.depot(endDepot_);
+    distance_ += distances(prevLoc, end.location);
+    travel_ += durations(prevLoc, end.location);
 
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {

@@ -313,8 +313,8 @@ private:
 
     std::vector<Node> depots_;  // start, end, and reload depots (in that order)
 
-    std::vector<Node *> nodes;   // Nodes in this route, including depots
-    std::vector<size_t> visits;  // Locations in this route, incl. depots
+    std::vector<Node *> nodes;      // Nodes in this route
+    std::vector<size_t> locations;  // Visited locations in this route
 
     std::vector<Distance> cumDist;  // Dist of start -> node (incl.)
 
@@ -405,12 +405,12 @@ public:
     [[nodiscard]] inline std::vector<Load> const &capacity() const;
 
     /**
-     * @return The location index of this route's starting depot.
+     * @return The depot index of this route's starting depot.
      */
     [[nodiscard]] inline size_t startDepot() const;
 
     /**
-     * @return The location index of this route's ending depot.
+     * @return The depot index of this route's ending depot.
      */
     [[nodiscard]] inline size_t endDepot() const;
 
@@ -739,11 +739,17 @@ LoadSegment const &Route::SegmentBefore::load(size_t dimension) const
 
 Route const *Route::SegmentBefore::route() const { return &route_; }
 
-size_t Route::SegmentBefore::first() const { return route_.visits.front(); }
-size_t Route::SegmentBefore::last() const { return route_.visits[end]; }
+size_t Route::SegmentBefore::first() const { return route_.startDepot(); }
+
+size_t Route::SegmentBefore::last() const
+{
+    return route_.nodes[end]->client();
+}
+
 size_t Route::SegmentBefore::size() const { return end + 1; }
 
 bool Route::SegmentBefore::startsAtReloadDepot() const { return false; }
+
 bool Route::SegmentBefore::endsAtReloadDepot() const
 {
     return route_.nodes[end]->isReloadDepot();
@@ -751,8 +757,13 @@ bool Route::SegmentBefore::endsAtReloadDepot() const
 
 Route const *Route::SegmentAfter::route() const { return &route_; }
 
-size_t Route::SegmentAfter::first() const { return route_.visits[start]; }
-size_t Route::SegmentAfter::last() const { return route_.visits.back(); }
+size_t Route::SegmentAfter::first() const
+{
+    return route_.nodes[start]->client();
+}
+
+size_t Route::SegmentAfter::last() const { return route_.endDepot(); }
+
 size_t Route::SegmentAfter::size() const { return route_.size() - start; }
 
 bool Route::SegmentAfter::startsAtReloadDepot() const
@@ -763,14 +774,23 @@ bool Route::SegmentAfter::endsAtReloadDepot() const { return false; }
 
 Route const *Route::SegmentBetween::route() const { return &route_; }
 
-size_t Route::SegmentBetween::first() const { return route_.visits[start]; }
-size_t Route::SegmentBetween::last() const { return route_.visits[end]; }
+size_t Route::SegmentBetween::first() const
+{
+    return route_.nodes[start]->client();
+}
+
+size_t Route::SegmentBetween::last() const
+{
+    return route_.nodes[end]->client();
+}
+
 size_t Route::SegmentBetween::size() const { return end - start + 1; }
 
 bool Route::SegmentBetween::startsAtReloadDepot() const
 {
     return route_.nodes[start]->isReloadDepot();
 }
+
 bool Route::SegmentBetween::endsAtReloadDepot() const
 {
     return route_.nodes[end]->isReloadDepot();
@@ -785,8 +805,8 @@ Distance Route::SegmentBetween::distance(size_t profile) const
 
         for (size_t step = start; step != end; ++step)
         {
-            auto const from = route_.visits[step];
-            auto const to = route_.visits[step + 1];
+            auto const from = route_.locations[step];
+            auto const to = route_.locations[step + 1];
             distance += mat(from, to);
         }
 
@@ -815,8 +835,8 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
 
     for (size_t step = start; step != end; ++step)
     {
-        auto const from = route_.visits[step];
-        auto const to = route_.visits[step + 1];
+        auto const from = route_.locations[step];
+        auto const to = route_.locations[step + 1];
         auto const &durAt = route_.durAt[step + 1];
         segment = DurationSegment::merge(mat(from, to), segment, durAt);
     }
@@ -1053,12 +1073,23 @@ std::pair<Cost, Distance> Route::Proposal<Segments...>::distance() const
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto distance = segment.distance(profile);
-        auto last = segment.last();
+        auto lastLoc
+            = segment.last() < data.numDepots()
+                  ? data.depot(segment.last()).location
+                  : data.client(segment.last() - data.numDepots()).location;
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            distance += matrix(last, other.first()) + other.distance(profile);
-            last = other.last();
+            auto const firstLoc
+                = other.first() < data.numDepots()
+                      ? data.depot(other.first()).location
+                      : data.client(other.first() - data.numDepots()).location;
+
+            distance += matrix(lastLoc, firstLoc) + other.distance(profile);
+            lastLoc
+                = other.last() < data.numDepots()
+                      ? data.depot(other.last()).location
+                      : data.client(other.last() - data.numDepots()).location;
 
             if constexpr (sizeof...(args) != 0)
                 self(self, std::forward<decltype(args)>(args)...);
@@ -1094,14 +1125,22 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto ds = segment.duration(profile);
-        auto first = segment.first();
+        auto firstLoc
+            = segment.first() < data.numDepots()
+                  ? data.depot(segment.first()).location
+                  : data.client(segment.first() - data.numDepots()).location;
 
         if (segment.startsAtReloadDepot())
             ds = ds.finaliseFront();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            auto edgeDur = matrix(other.last(), first);
+            auto const lastLoc
+                = other.last() < data.numDepots()
+                      ? data.depot(other.last()).location
+                      : data.client(other.last() - data.numDepots()).location;
+
+            auto edgeDur = matrix(lastLoc, firstLoc);
 
             if (other.endsAtReloadDepot())
             {
@@ -1118,7 +1157,10 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
             }
 
             ds = DurationSegment::merge(edgeDur, other.duration(profile), ds);
-            first = other.first();
+            firstLoc
+                = other.first() < data.numDepots()
+                      ? data.depot(other.first()).location
+                      : data.client(other.first() - data.numDepots()).location;
 
             if constexpr (sizeof...(args) != 0)
             {

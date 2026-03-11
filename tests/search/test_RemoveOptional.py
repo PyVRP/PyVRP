@@ -62,12 +62,12 @@ def test_supports(
     assert_(RemoveOptional.supports(ok_small_prizes))
 
     data = ProblemData(  # instance with optional group
-        locations=[Location(0, 0), Location(0, 0)],
-        clients=[Client(location=1, group=0, required=False)],
+        locations=[Location(0, 0)],
+        clients=[Client(location=0, group=0, required=False)],
         depots=[Depot(location=0)],
         vehicle_types=[VehicleType()],
-        distance_matrices=[np.zeros((2, 2), dtype=int)],
-        duration_matrices=[np.zeros((2, 2), dtype=int)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
         groups=[ClientGroup(clients=[1], required=False)],
     )
 

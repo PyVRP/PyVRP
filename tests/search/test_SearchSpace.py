@@ -87,7 +87,7 @@ def test_get_neighbours(ok_small):
     search_space = SearchSpace(ok_small, neighbours)
     assert_equal(search_space.neighbours, neighbours)
 
-    for idx in range(ok_small.num_locations):
+    for idx in range(ok_small.num_depots + ok_small.num_clients):
         assert_equal(neighbours[idx], search_space.neighbours_of(idx))
 
 
@@ -97,7 +97,9 @@ def test_promising(ok_small):
     """
     search_space = SearchSpace(ok_small, compute_neighbours(ok_small))
 
-    for client in range(ok_small.num_depots, ok_small.num_locations):
+    for client in range(
+        ok_small.num_depots, ok_small.num_depots + ok_small.num_clients
+    ):
         # The client does not start off promising.
         assert_(not search_space.is_promising(client))
 
@@ -110,7 +112,9 @@ def test_all_promising(ok_small):
     """
     Tests marking and unmarking all clients as promising.
     """
-    clients = range(ok_small.num_depots, ok_small.num_locations)
+    clients = range(
+        ok_small.num_depots, ok_small.num_depots + ok_small.num_clients
+    )
 
     # Initially no clients start off promising.
     search_space = SearchSpace(ok_small, compute_neighbours(ok_small))

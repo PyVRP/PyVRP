@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.collections import LineCollection
 
 from pyvrp import ProblemData
 
@@ -30,13 +29,11 @@ def plot_time_windows(
     # Lexicographic sort so for equal start we get shorter TW first
     tw = tw[np.lexsort((tw[:, 1], tw[:, 0]))]
 
-    lines = [
-        ((loc, early), (loc, late))
-        for loc, (early, late) in enumerate(tw, data.num_depots - 1)
-    ]
-    ax.add_collection(LineCollection(lines, linewidths=1))
-    ax.set_xlim([0, data.num_locations])
-    ax.set_ylim([tw.min(), tw.max()])
+    ax.bar(
+        np.arange(data.num_clients),
+        height=tw[:, 1] - tw[:, 0],
+        bottom=tw[:, 0],
+    )
 
     ax.set_title(title)
     ax.set_xlabel("Client (sorted by TW)")

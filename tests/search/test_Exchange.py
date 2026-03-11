@@ -55,7 +55,9 @@ def test_swap_single_route_stays_single_route(rc208, operator):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
     ls.add_operator(operator(rc208))
 
-    single_route = list(range(rc208.num_depots, rc208.num_locations))
+    single_route = list(
+        range(rc208.num_depots, rc208.num_depots + rc208.num_clients)
+    )
     sol = Solution(rc208, [single_route])
     improved_sol = ls(sol, cost_evaluator, exhaustive=True)
 
@@ -79,7 +81,9 @@ def test_relocate_uses_empty_routes(rc208, operator):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
     ls.add_operator(operator(rc208))
 
-    single_route = list(range(rc208.num_depots, rc208.num_locations))
+    single_route = list(
+        range(rc208.num_depots, rc208.num_depots + rc208.num_clients)
+    )
     sol = Solution(rc208, [single_route])
     improved_sol = ls(sol, cost_evaluator, exhaustive=True)
 
@@ -292,7 +296,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     # client moves allowed by it will not improve the initial solution created
     # below. So the only improvements (1, 0)-exchange can make must come from
     # moving clients behind the depot of a route.
-    neighbours = [[] for _ in range(data.num_locations)]
+    neighbours = [[] for _ in range(data.num_depots + data.num_clients)]
     neighbours[2].append(1)
 
     ls = LocalSearch(data, rng, neighbours)
@@ -622,15 +626,15 @@ def test_bug_release_time_shift_time_windows():
     been fixed. See #852 for details.
     """
     data = ProblemData(
-        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
+        locations=[Location(0, 0)],
         clients=[
-            Client(location=1, tw_early=2, release_time=2),
-            Client(location=2, tw_early=2, release_time=2),
+            Client(location=0, tw_early=2, release_time=2),
+            Client(location=0, tw_early=2, release_time=2),
         ],
         depots=[Depot(location=0)],
         vehicle_types=[VehicleType(), VehicleType(tw_late=1)],
-        distance_matrices=[np.zeros((3, 3), dtype=int)],
-        duration_matrices=[np.zeros((3, 3), dtype=int)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
     route1 = make_search_route(data, [1], vehicle_type=0)

@@ -184,22 +184,22 @@ void Route::makeSchedule(ProblemData const &data)
                latestStart,
                start.serviceDuration);
 
-        size_t prevClient = trip.startDepot();
+        size_t prevLoc = data.depot(trip.startDepot()).location;
         for (auto const [_, client] : trip)
         {
-            now += durations(prevClient, client);
-
             auto const &clientData = data.client(client - data.numDepots());
+            now += durations(prevLoc, clientData.location);
+
             handle(client,
                    tripIdx,
                    clientData.twEarly,
                    clientData.twLate,
                    clientData.serviceDuration);
 
-            prevClient = client;
+            prevLoc = clientData.location;
         }
 
-        now += durations(prevClient, trip.endDepot());
+        now += durations(prevLoc, data.depot(trip.endDepot()).location);
     }
 
     auto const &end = data.depot(endDepot_);
@@ -273,19 +273,19 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         auto const &end = data.depot(trip->endDepot());
         ds = DurationSegment::merge({end, 0}, ds);
 
-        size_t nextClient = trip->endDepot();
+        size_t nextLoc = end.location;
         for (auto it = trip->rbegin(); it != trip->rend(); ++it)
         {
             auto const [_, client] = *it;
-            auto const edgeDuration = durations(client, nextClient);
             auto const &clientData = data.client(client - data.numDepots());
+            auto const edgeDuration = durations(clientData.location, nextLoc);
 
             ds = DurationSegment::merge(edgeDuration, {clientData}, ds);
-            nextClient = client;
+            nextLoc = clientData.location;
         }
 
-        auto const edgeDuration = durations(trip->startDepot(), nextClient);
         auto const &start = data.depot(trip->startDepot());
+        auto const edgeDuration = durations(start.location, nextLoc);
         DurationSegment const depotDS = {start, start.serviceDuration};
 
         ds = DurationSegment::merge(edgeDuration, depotDS, ds);

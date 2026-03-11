@@ -586,10 +586,6 @@ size_t ProblemData::numLoadDimensions() const { return numLoadDimensions_; }
 
 void ProblemData::validate() const
 {
-    if (numLocations() != numDepots() + numClients())  // TODO temp
-        throw std::invalid_argument(
-            "Need #locations to match #depots + #clients.");
-
     // Client checks.
     for (size_t idx = 0; idx != numClients(); ++idx)
     {
@@ -649,7 +645,7 @@ void ProblemData::validate() const
 
         for (auto const client : group)
         {
-            if (client < numDepots() || client >= numLocations())
+            if (client < numDepots() || client >= numDepots() + numClients())
                 throw std::out_of_range("Group references invalid client.");
 
             auto const &clientData = clients_[client - numDepots()];

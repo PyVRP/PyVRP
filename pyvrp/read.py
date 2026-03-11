@@ -179,7 +179,7 @@ class _InstanceParser:
 
     @property
     def num_vehicles(self) -> int:
-        return self.instance.get("vehicles", self.num_locations - 1)
+        return self.instance.get("vehicles", self.num_clients)
 
     def type(self) -> str:
         return self.instance.get("type", "")

@@ -152,7 +152,7 @@ def test_perturb_inserts_into_new_routes(ok_small):
     # Start with an empty solution, and an empty granular neighbourhood. So
     # there is no way to insert clients next to their neighbours.
     sol = Solution(data)
-    neighbours = [[] for _ in range(data.num_locations)]
+    neighbours = [[] for _ in range(data.num_depots + data.num_clients)]
 
     search_space = SearchSpace(data, neighbours)
     cost_eval = CostEvaluator([2000], 0, 0)  # heavily penalise load violations

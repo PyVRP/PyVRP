@@ -222,7 +222,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         throw std::runtime_error(msg);
     }
 
-    DynamicBitset isVisited(data.numLocations());
+    DynamicBitset isVisited(data.numDepots() + data.numClients());
     std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes_)
     {
@@ -243,11 +243,10 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         }
     }
 
-    for (size_t client = data.numDepots(); client != data.numLocations();
-         ++client)
-        if (!isVisited[client])  // we need to check if the client visit
-        {                        // is required if this is true
-            auto const &clientData = data.client(client - data.numDepots());
+    for (size_t client = 0; client != data.numClients(); ++client)
+        if (!isVisited[data.numDepots() + client])  // not visited; is the visit
+        {                                           // required?
+            auto const &clientData = data.client(client);
             numMissingClients_ += clientData.required;
         }
 

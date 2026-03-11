@@ -54,7 +54,7 @@ def test_compute_neighbours(
     )
     neighbours = compute_neighbours(rc208, params)
 
-    assert_equal(len(neighbours), rc208.num_locations)
+    assert_equal(len(neighbours), rc208.num_depots + rc208.num_clients)
     assert_equal(len(neighbours[0]), 0)
 
     # We compare sets because the expected data (from the old C++
@@ -71,7 +71,10 @@ def test_neighbours_are_sorted_by_proximity(small_cvrp):
     """
     params = NeighbourhoodParams(0, small_cvrp.num_clients)
     neighbours = compute_neighbours(small_cvrp, params)
-    clients = list(range(small_cvrp.num_depots, small_cvrp.num_locations))
+    clients = range(
+        small_cvrp.num_depots,
+        small_cvrp.num_depots + small_cvrp.num_clients
+    )
     distances = small_cvrp.distance_matrix(profile=0)
 
     for client in clients:
@@ -190,12 +193,12 @@ def test_zero_clients():
     Tests that the neighbourhood for an instance with zero clients is empty.
     """
     data = ProblemData(
-        locations=[Location(0, 0), Location(0, 0)],
+        locations=[Location(0, 0)],
         clients=[],
-        depots=[Depot(0), Depot(1)],
+        depots=[Depot(0), Depot(0)],
         vehicle_types=[VehicleType()],
-        distance_matrices=[np.zeros((2, 2), dtype=int)],
-        duration_matrices=[np.zeros((2, 2), dtype=int)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
     # Two empty lists, one for each of the depots.
