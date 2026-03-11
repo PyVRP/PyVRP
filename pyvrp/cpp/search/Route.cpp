@@ -200,9 +200,20 @@ void Route::swap(Node *first, Node *second)
 
 void Route::update()
 {
-    visits.clear();
+    locations.clear();
     for (auto const *node : nodes)
-        visits.emplace_back(node->client());
+    {
+        if (node->isDepot())
+        {
+            auto const &depot = data.depot(node->client());
+            locations.emplace_back(depot.location);
+        }
+        else
+        {
+            auto const &client = data.client(node->client() - data.numDepots());
+            locations.emplace_back(client.location);
+        }
+    }
 
     // Distance.
     auto const &distMat = data.distanceMatrix(profile());
@@ -210,7 +221,8 @@ void Route::update()
     cumDist.resize(nodes.size());
     cumDist[0] = 0;
     for (size_t idx = 1; idx != nodes.size(); ++idx)
-        cumDist[idx] = cumDist[idx - 1] + distMat(visits[idx - 1], visits[idx]);
+        cumDist[idx]
+            = cumDist[idx - 1] + distMat(locations[idx - 1], locations[idx]);
 
     // Duration.
     durAt.resize(nodes.size());
@@ -256,11 +268,11 @@ void Route::update()
         {
             // Then we need to first account for depot service before we merge
             // with the idx segment.
-            auto const &depot = data.depot(visits[prev]);
+            auto const &depot = data.depot(nodes[prev]->client());
             before = DurationSegment::merge(before, {depot.serviceDuration});
         }
 
-        auto const edgeDur = durations(visits[prev], visits[idx]);
+        auto const edgeDur = durations(locations[prev], locations[idx]);
         durBefore[idx] = DurationSegment::merge(edgeDur, before, durAt[idx]);
     }
 
@@ -279,11 +291,11 @@ void Route::update()
             // at idx after already travelling to next, but that's OK since
             // we're essentially using the trick of adding service to the
             // outgoing edge.
-            auto const &depot = data.depot(visits[idx]);
+            auto const &depot = data.depot(nodes[idx]->client());
             after = DurationSegment::merge({depot.serviceDuration}, after);
         }
 
-        auto const edgeDur = durations(visits[idx], visits[next]);
+        auto const edgeDur = durations(locations[idx], locations[next]);
         durAfter[idx] = DurationSegment::merge(edgeDur, durAt[idx], after);
     }
 
@@ -300,7 +312,8 @@ void Route::update()
             loadAt[dim][idx]
                 = nodes[idx]->isReloadDepot()
                       ? LoadSegment{}
-                      : LoadSegment{data.client(visits[idx] - data.numDepots()),
+                      : LoadSegment{data.client(nodes[idx]->client()
+                                                - data.numDepots()),
                                     dim};
 
         loadBefore[dim].resize(nodes.size());
@@ -359,13 +372,13 @@ bool Route::operator==(Route const &other) const
     assert(!dirty && !other.dirty);
 
     // First compare simple attributes, since that's a quick and cheap check.
-    // Only when these are the same we test if the visits are all equal.
+    // Only when these are the same we test if the nodes are all equal.
     // clang-format off
     return distance_ == other.distance_
         && duration_ == other.duration_
         && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
-        && visits == other.visits;
+        && nodes == other.nodes;
     // clang-format on
 }
 
@@ -388,11 +401,11 @@ bool Route::operator==(pyvrp::Route const &other) const
     size_t idx = 0;
     for (auto const &trip : other.trips())
     {
-        if (trip.startDepot() != visits[idx++])
+        if (trip.startDepot() != nodes[idx++]->client())
             return false;  // not the same reload depot
 
         for (auto const [_, client] : trip)
-            if (client != visits[idx++])
+            if (client != nodes[idx++]->client())
                 return false;
     }
 
