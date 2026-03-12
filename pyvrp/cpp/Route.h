@@ -111,6 +111,11 @@ public:
     [[nodiscard]] size_t size() const;
 
     /**
+     * Returns the number of clients in this route.
+     */
+    [[nodiscard]] size_t numClients() const;
+
+    /**
      * Returns the number of trips in this route.
      */
     [[nodiscard]] size_t numTrips() const;

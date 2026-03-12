@@ -26,7 +26,7 @@ void Solution::evaluate(ProblemData const &data)
     for (auto const &route : routes_)
     {
         // Whole solution statistics.
-        numClients_ += route.size();
+        numClients_ += route.numClients();
         prizes_ += route.prizes();
         distance_ += route.distance();
         distanceCost_ += route.distanceCost();

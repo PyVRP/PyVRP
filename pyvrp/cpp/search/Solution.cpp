@@ -82,7 +82,9 @@ void Solution::load(pyvrp::Solution const &solution)
         route.clear();
 
         route.reserve(solRoute.size());
-        for (auto const activity : solRoute)
+        for (size_t idx = 1; idx != solRoute.size() - 1; ++idx)
+        {
+            auto const activity = solRoute[idx];
             if (activity.isDepot())
             {
                 Route::Node depot = activity;
@@ -93,6 +95,7 @@ void Solution::load(pyvrp::Solution const &solution)
                 assert(activity.isClient());
                 route.push_back(&nodes[activity.idx]);
             }
+        }
 
         route.update();
     }
@@ -116,8 +119,6 @@ pyvrp::Solution Solution::unload() const
     std::vector<pyvrp::Route> solRoutes;
     solRoutes.reserve(data_.numVehicles());
 
-    std::vector<size_t> visits;
-
     for (auto const &route : routes)
     {
         if (route.empty())
@@ -125,6 +126,9 @@ pyvrp::Solution Solution::unload() const
 
         std::vector<Activity> activities;
         activities.reserve(route.size());
+
+        for (size_t idx = 1; idx != route.size() - 1; ++idx)
+            activities.emplace_back(route[idx]->activity());
 
         solRoutes.emplace_back(
             data_, std::move(activities), route.vehicleType());

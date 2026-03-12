@@ -49,12 +49,95 @@ Duration Route::ScheduledVisit::waitDuration() const { return waitDuration_; }
 
 Duration Route::ScheduledVisit::timeWarp() const { return timeWarp_; }
 
-void Route::makeSchedule([[maybe_unused]] ProblemData const &data)
+void Route::makeSchedule(ProblemData const &data)
 {
     schedule_.clear();
     schedule_.reserve(activities_.size());
 
-    // TODO
+    auto const &vehData = data.vehicleType(vehicleType_);
+    auto const &durations = data.durationMatrix(vehData.profile);
+
+    Duration releaseTime;
+    std::vector<Duration> releaseTimes;
+    for (auto it = activities_.begin() + 1; it != activities_.end(); ++it)
+    {
+        if (it->isDepot())
+        {
+            releaseTimes.push_back(releaseTime);
+            releaseTime = 0;
+            continue;
+        }
+
+        auto const &client = data.client(it->idx);
+        releaseTime = std::max(releaseTime, client.releaseTime);
+    }
+    releaseTimes.push_back(0);
+
+    auto now = startTime_;
+    auto const handle = [&](Activity activity,
+                            size_t trip,
+                            Duration early,
+                            Duration late,
+                            Duration service)
+    {
+        auto const wait = std::max<Duration>(early - now, 0);
+        auto const tw = std::max<Duration>(now - late, 0);
+
+        now += wait;
+        now -= tw;
+
+        schedule_.emplace_back(activity, trip, now, now + service, wait, tw);
+
+        now += service;
+    };
+
+    size_t tripIdx = 0;
+    size_t prevLoc = data.depot(startDepot_).location;
+    for (size_t idx = 0; idx != activities_.size(); ++idx)
+    {
+        auto const activity = activities_[idx];
+
+        if (activity.isDepot())
+        {
+            auto const &depot = data.depot(activity.idx);
+            now += durations(prevLoc, depot.location);
+
+            Duration earliestStart = depot.twEarly;
+            Duration latestStart = depot.twLate;
+            Duration serviceDuration = depot.serviceDuration;
+
+            if (idx == activities_.size() - 1)
+                serviceDuration = 0;
+            else
+                earliestStart
+                    = std::max(depot.twEarly,
+                               std::min(releaseTimes[tripIdx++], depot.twLate));
+
+            if (idx == 0)  // first trip accounts for latest start
+                latestStart = std::min(depot.twLate, vehData.startLate);
+
+            handle(activity,
+                   tripIdx,
+                   earliestStart,
+                   latestStart,
+                   serviceDuration);
+
+            prevLoc = depot.location;
+        }
+        else
+        {
+            auto const &clientData = data.client(activity.idx);
+            now += durations(prevLoc, clientData.location);
+
+            handle(activity,
+                   tripIdx,
+                   clientData.twEarly,
+                   clientData.twLate,
+                   clientData.serviceDuration);
+
+            prevLoc = clientData.location;
+        }
+    }
 }
 
 Route::Route(ProblemData const &data,
@@ -62,15 +145,10 @@ Route::Route(ProblemData const &data,
              VehicleType vehicleType)
 {
     std::vector<Activity> activities;
-    activities.reserve(visits.size() + 2);  // clients and start/end depot
-
-    auto const &vehData = data.vehicleType(vehicleType);
-    activities.emplace_back(Activity::ActivityType::DEPOT, vehData.startDepot);
+    activities.reserve(visits.size());
 
     for (auto const client : visits)
         activities.emplace_back(Activity::ActivityType::CLIENT, client);
-
-    activities.emplace_back(Activity::ActivityType::DEPOT, vehData.endDepot);
 
     *this = Route(data, activities, vehicleType);
 }
@@ -154,8 +232,55 @@ Route::Route(ProblemData const &data, Activities activities, size_t vehType)
         excessLoad_[dim] = ls.excessLoad(vehData.capacity[dim]);
     }
 
-    // Duration.
-    // TODO
+    // Duration. We iterate in reverse, that is, from the last to
+    // the first visit.
+    auto const &durations = data.durationMatrix(vehData.profile);
+    DurationSegment ds = {vehData, vehData.twLate};
+    size_t nextLoc = data.depot(endDepot_).location;
+    for (auto idx = activities_.size(); idx-- > 0;)
+    {
+        auto const activity = activities_[idx];
+        if (activity.isDepot())
+        {
+            auto const &depot = data.depot(activity.idx);
+            auto const edgeDuration = durations(depot.location, nextLoc);
+            travel_ += edgeDuration;
+
+            auto const depotService
+                = idx == activities_.size() - 1 ? 0 : depot.serviceDuration;
+
+            service_ += depotService;
+            ds = DurationSegment::merge(
+                edgeDuration, {depot, depotService}, ds);
+
+            if (idx != 0 && idx != activities_.size() - 1)  // is reload depot
+                ds = ds.finaliseFront();
+
+            nextLoc = depot.location;
+        }
+        else
+        {
+            auto const &clientData = data.client(activity.idx);
+            service_ += clientData.serviceDuration;
+
+            auto const edgeDuration = durations(clientData.location, nextLoc);
+            travel_ += edgeDuration;
+
+            ds = DurationSegment::merge(edgeDuration, {clientData}, ds);
+            nextLoc = clientData.location;
+        }
+    }
+
+    ds = DurationSegment::merge({vehData, vehData.startLate}, ds);
+
+    duration_ = ds.duration();
+    overtime_ = std::max<Duration>(duration_ - vehData.shiftDuration, 0);
+    durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_)
+                    + vehData.unitOvertimeCost * static_cast<Cost>(overtime_);
+    startTime_ = ds.startEarly();
+    releaseTime_ = ds.releaseTime();
+    slack_ = ds.slack();
+    timeWarp_ = ds.timeWarp(vehData.maxDuration);
 
     makeSchedule(data);
 
@@ -215,6 +340,13 @@ bool Route::empty() const
 
 size_t Route::size() const { return activities_.size(); }
 
+size_t Route::numClients() const
+{
+    // There are #trips + 1 depots in the route, so size() - #trips - 1 is the
+    // number of clients.
+    return size() - numTrips() - 1;
+}
+
 size_t Route::numTrips() const { return schedule_.back().trip(); }
 
 Activity Route::operator[](size_t idx) const
@@ -227,7 +359,8 @@ Activity Route::operator[](size_t idx) const
 
 Route::Activities::const_iterator Route::begin() const
 {
-    return activities_.begin();}
+    return activities_.begin();
+}
 
 Route::Activities::const_iterator Route::end() const
 {
@@ -336,9 +469,12 @@ std::ostream &operator<<(std::ostream &out, Route const &route)
     {
         auto const &activity = activities[idx];
         if (activity.isDepot())
-            out << " | ";
+            out << '|';
         else
             out << activity;
+
+        if (idx < activities.size() - 2)  // then we'll insert more after this
+            out << ' ';
     }
 
     return out;

@@ -727,6 +727,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("data"),
              py::arg("visits"),
              py::arg("vehicle_type"))
+        .def("num_clients", &Route::numClients, DOC(pyvrp, Route, numClients))
         .def("num_trips", &Route::numTrips, DOC(pyvrp, Route, numTrips))
         .def("activities",
              &Route::activities,
