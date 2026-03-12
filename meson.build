@@ -92,6 +92,13 @@ libsearch = static_library(
     link_with: libpyvrp,
 )
 
+# Declare as dependency so PyVRP can be easily used as a Meson subproject.
+pyvrp_dep = declare_dependency(
+    include_directories: INCLUDES,
+    link_with: [libpyvrp, libsearch],
+    dependencies: spdlog,
+)
+
 # Extension as [extension name, subdirectory, core C++ library]. The extension
 # name names the eventual module name, subdirectory gives the source and
 # installation directories (relative to top-level directories), and the core
