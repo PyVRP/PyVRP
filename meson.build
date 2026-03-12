@@ -154,5 +154,5 @@ if py.found() and pybind11.found()
         )
     endforeach
 else
-    warning('Python or pybind11 not found - skipping extension modules.')
+    message('Python or pybind11 not found - skipping extension modules.')
 endif
