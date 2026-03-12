@@ -8,10 +8,10 @@ def test_stops_on_first_feasible_solution(ok_small):
     """
     Tests that FirstFeasible stops when it first observes a feasible solution.
     """
-    infeas = Solution(ok_small, [[1, 2, 3, 4]])
+    infeas = Solution(ok_small, [[0, 1, 2, 3]])
     assert_(not infeas.is_feasible())
 
-    feas = Solution(ok_small, [[1, 2], [3, 4]])
+    feas = Solution(ok_small, [[0, 1], [2, 3]])
     assert_(feas.is_feasible())
 
     stop = FirstFeasible()
