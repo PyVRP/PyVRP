@@ -54,8 +54,7 @@ Trip::Trip(ProblemData const &data,
     activities_.reserve(visits.size());
     for (auto const client : visits)
     {
-        if (client < data.numDepots()
-            || client >= data.numDepots() + data.numClients())
+        if (client >= data.numClients())
         {
             std::ostringstream msg;
             msg << "Client " << client << " is not understood.";
@@ -74,7 +73,7 @@ Trip::Trip(ProblemData const &data,
     size_t prevLoc = start.location;
     for (auto const [_, client] : activities_)
     {
-        auto const &clientData = data.client(client - data.numDepots());
+        auto const &clientData = data.client(client);
 
         distance_ += distances(prevLoc, clientData.location);
         travel_ += durations(prevLoc, clientData.location);
@@ -95,7 +94,7 @@ Trip::Trip(ProblemData const &data,
         LoadSegment segment;
         for (auto const [_, client] : activities_)
         {
-            auto const &clientData = data.client(client - data.numDepots());
+            auto const &clientData = data.client(client);
             segment = LoadSegment::merge(segment, {clientData, dim});
         }
 

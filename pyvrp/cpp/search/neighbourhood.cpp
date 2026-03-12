@@ -116,8 +116,7 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
                 // of them can be in the solution at a time. We use max float,
                 // not infty: we want to avoid same group neighbours, but it is
                 // not too problematic if we need to have them.
-                prox(frmClient - data.numDepots(), toClient - data.numDepots())
-                    = std::numeric_limits<double>::max();
+                prox(frmClient, toClient) = std::numeric_limits<double>::max();
 
     for (size_t idx = 0; idx != data.numClients(); ++idx)  // excl. self
         prox(idx, idx) = std::numeric_limits<double>::infinity();
@@ -128,25 +127,20 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
     size_t const numClients = std::max<size_t>(data.numClients(), 1);
     size_t const numNeighbours = std::min(params.numNeighbours, numClients - 1);
 
-    std::vector<std::vector<size_t>> neighbours(data.numDepots()
-                                                + data.numClients());
+    std::vector<std::vector<size_t>> neighbours(data.numClients());
 
     std::vector<size_t> indices(data.numClients());
     for (size_t client = 0; client != data.numClients(); ++client)
     {
         auto const comp = [&](auto const a, auto const b)
-        {
-            return prox(client, a - data.numDepots())
-                   < prox(client, b - data.numDepots());
-        };
+        { return prox(client, a) < prox(client, b); };
 
         // Reset the vector and then re-sort for this client.
-        std::iota(indices.begin(), indices.end(), data.numDepots());
+        std::iota(indices.begin(), indices.end(), 0);
         std::stable_sort(indices.begin(), indices.end(), comp);
 
         // Neighbourhood of client is set to the first numNeighbours indices.
-        neighbours[data.numDepots() + client]
-            = {indices.begin(), indices.begin() + numNeighbours};
+        neighbours[client] = {indices.begin(), indices.begin() + numNeighbours};
     }
 
     return neighbours;

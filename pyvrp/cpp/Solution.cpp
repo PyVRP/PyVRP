@@ -159,7 +159,7 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
             continue;
 
         if (clientData.required || rng.rand() < 0.5)
-            clients.push_back(data.numDepots() + idx);
+            clients.push_back(idx);
     }
 
     // Shuffle clients to create random routes.
@@ -222,7 +222,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         throw std::runtime_error(msg);
     }
 
-    DynamicBitset isVisited(data.numDepots() + data.numClients());
+    DynamicBitset isVisited(data.numClients());
     std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes_)
     {
@@ -244,8 +244,8 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
     }
 
     for (size_t client = 0; client != data.numClients(); ++client)
-        if (!isVisited[data.numDepots() + client])  // not visited; is the visit
-        {                                           // required?
+        if (!isVisited[client])  // not visited; is the visit required?
+        {
             auto const &clientData = data.client(client);
             numMissingClients_ += clientData.required;
         }

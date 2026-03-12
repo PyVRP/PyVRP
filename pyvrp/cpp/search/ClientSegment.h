@@ -21,7 +21,7 @@ public:
     ClientSegment(pyvrp::ProblemData const &data, size_t client)
         : data(data), client(client)
     {
-        assert(client >= data.numDepots());  // must be an actual client
+        assert(client < data.numClients());  // must be an actual client
     }
 
     pyvrp::search::Route const *route() const { return nullptr; }
@@ -40,13 +40,13 @@ public:
 
     pyvrp::DurationSegment duration([[maybe_unused]] size_t profile) const
     {
-        auto const &clientData = data.client(client - data.numDepots());
+        auto const &clientData = data.client(client);
         return {clientData};
     }
 
     pyvrp::LoadSegment load(size_t dimension) const
     {
-        return {data.client(client - data.numDepots()), dimension};
+        return {data.client(client), dimension};
     }
 };
 }  // namespace pyvrp::search

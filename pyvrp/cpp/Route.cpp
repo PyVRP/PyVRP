@@ -187,7 +187,7 @@ void Route::makeSchedule(ProblemData const &data)
         size_t prevLoc = data.depot(trip.startDepot()).location;
         for (auto const [_, client] : trip)
         {
-            auto const &clientData = data.client(client - data.numDepots());
+            auto const &clientData = data.client(client);
             now += durations(prevLoc, clientData.location);
 
             handle(client,
@@ -277,7 +277,7 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
         for (auto it = trip->rbegin(); it != trip->rend(); ++it)
         {
             auto const [_, client] = *it;
-            auto const &clientData = data.client(client - data.numDepots());
+            auto const &clientData = data.client(client);
             auto const edgeDuration = durations(clientData.location, nextLoc);
 
             ds = DurationSegment::merge(edgeDuration, {clientData}, ds);

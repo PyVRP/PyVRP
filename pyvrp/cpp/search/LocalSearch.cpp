@@ -238,7 +238,7 @@ void LocalSearch::ensureStructuralFeasibility(
     for (auto const client : searchSpace_.clientOrder())
     {
         auto &node = solution_.nodes[client];
-        auto const &clientData = data.client(client - data.numDepots());
+        auto const &clientData = data.client(client);
 
         if (!node.route() && clientData.required)  // then we must insert
         {
@@ -278,7 +278,7 @@ void LocalSearch::ensureStructuralFeasibility(
     // Debug checks to ensure we have restored structural feasibility.
     for (size_t idx = 0; idx != data.numClients(); ++idx)
     {
-        auto const &node = solution_.nodes[data.numDepots() + idx];
+        auto const &node = solution_.nodes[idx];
         auto const &clientData = data.client(idx);
         assert(node.route() || !clientData.required);
     }
@@ -366,7 +366,7 @@ LocalSearch::LocalSearch(ProblemData const &data,
       solution_(data),
       searchSpace_(data, neighbours),
       perturbationManager_(perturbationManager),
-      lastTest_(data.numDepots() + data.numClients()),
+      lastTest_(data.numClients()),
       lastUpdate_(data.numVehicles())
 {
 }

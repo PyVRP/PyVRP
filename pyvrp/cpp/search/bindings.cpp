@@ -20,6 +20,7 @@
 #include <pybind11/stl.h>
 
 #include <sstream>
+#include <string>
 
 namespace py = pybind11;
 
@@ -621,6 +622,8 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::Activity::ActivityType, size_t>(),
              py::arg("type"),
              py::arg("idx"))
+        .def(py::init([](std::string const &description)  // for testing
+                      { return Route::Node(description); }))
         .def_property_readonly("activity", &Route::Node::activity)
         .def_property_readonly("idx", &Route::Node::idx)
         .def_property_readonly("trip", &Route::Node::trip)

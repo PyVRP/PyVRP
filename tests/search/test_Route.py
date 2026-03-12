@@ -3,22 +3,42 @@ import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
 import pyvrp
-from pyvrp import Client, Depot, Location, ProblemData, VehicleType
+from pyvrp import (
+    Activity,
+    ActivityType,
+    Client,
+    Depot,
+    Location,
+    ProblemData,
+    VehicleType,
+)
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
 
 _INT_MAX = np.iinfo(np.int64).max
 
 
-@pytest.mark.parametrize("loc", [0, 1, 10])
-def test_node_init(loc: int):
+def test_node_init():
     """
-    Tests that after initialisation, a Node has index 0 and is not in a route.
+    Tests the various node constructors.
     """
-    node = Node(loc=loc)
-    assert_equal(node.client, loc)
-    assert_equal(node.idx, 0)
-    assert_(node.route is None)
+    # Activity-based.
+    from_activity = Node(Activity("C1"))
+    assert_equal(from_activity.activity, Activity("C1"))
+    assert_equal(from_activity.idx, 0)
+    assert_(from_activity.route is None)
+
+    # Activity-type based.
+    direct_construction = Node(ActivityType.CLIENT, 1)
+    assert_equal(direct_construction.activity, from_activity.activity)
+    assert_equal(direct_construction.idx, 0)
+    assert_(direct_construction.route is None)
+
+    # Description-based.
+    from_description = Node("C1")
+    assert_equal(from_description.activity, from_activity.activity)
+    assert_equal(from_description.idx, 0)
+    assert_(from_description.route is None)
 
 
 @pytest.mark.parametrize("vehicle_type", (0, 1))

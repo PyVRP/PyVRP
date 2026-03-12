@@ -332,7 +332,9 @@ class _InstanceParser:
             # cast it to a 2D array.
             groups = np.atleast_2d(groups).T
 
-        raw_groups = [[idx - 1 for idx in group] for group in groups]
+        raw_groups = [
+            [idx - self.num_depots - 1 for idx in group] for group in groups
+        ]
 
         # Only keep groups if they have more than one member. Empty groups or
         # groups with one member are trivial to decide, so there is no point
@@ -391,10 +393,11 @@ class _ProblemDataBuilder:
         return [Depot(location=idx) for idx in range(num_depots)]
 
     def _clients(self) -> list[Client]:
-        groups = self.parser.mutually_exclusive_groups()
-        num_locs = self.parser.num_locations
+        num_depots = self.parser.num_depots
+        num_clients = self.parser.num_clients
 
-        idx2group: list[int | None] = [None for _ in range(num_locs)]
+        groups = self.parser.mutually_exclusive_groups()
+        idx2group: list[int | None] = [None for _ in range(num_clients)]
         for group, members in enumerate(groups):
             for client in members:
                 idx2group[client] = group
@@ -417,10 +420,10 @@ class _ProblemDataBuilder:
                 tw_late=time_windows[idx][1],
                 release_time=release_times[idx],
                 prize=prizes[idx],
-                required=required[idx] and idx2group[idx] is None,
-                group=idx2group[idx],
+                required=required[idx] and idx2group[idx - num_depots] is None,
+                group=idx2group[idx - num_depots],
             )
-            for idx in range(self.parser.num_depots, num_locs)
+            for idx in range(num_depots, num_depots + num_clients)
         ]
 
     def _vehicle_types(self) -> list[VehicleType]:

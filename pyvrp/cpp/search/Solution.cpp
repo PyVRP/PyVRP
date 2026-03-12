@@ -43,12 +43,9 @@ using pyvrp::search::Solution;
 
 Solution::Solution(ProblemData const &data) : data_(data)
 {
-    nodes.reserve(data.numDepots() + data.numClients());
-    for (size_t loc = 0; loc != data.numDepots() + data.numClients(); ++loc)
-        if (loc < data.numDepots())
-            nodes.emplace_back(Activity::ActivityType::DEPOT, loc);
-        else
-            nodes.emplace_back(Activity::ActivityType::CLIENT, loc);
+    nodes.reserve(data.numClients());
+    for (size_t loc = 0; loc != data.numClients(); ++loc)
+        nodes.emplace_back(Activity::ActivityType::CLIENT, loc);
 
     routes.reserve(data.numVehicles());
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
@@ -172,7 +169,7 @@ bool Solution::insert(Route::Node *U,
                       CostEvaluator const &costEvaluator,
                       bool required)
 {
-    assert(!U->isDepot());
+    assert(U->isClient());
     assert(size_t(std::distance(nodes.data(), U)) < nodes.size());
 
     Route::Node *UAfter = routes[0][0];  // fallback option
@@ -235,7 +232,7 @@ pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
 
     Cost cost = 0;  // cost is route cost + uncollected prizes
     for (size_t idx = 0; idx != data.numClients(); ++idx)
-        if (!solution.nodes[data.numDepots() + idx].route())
+        if (!solution.nodes[idx].route())
             cost += data.client(idx).prize;
 
     for (auto const &route : solution.routes)
