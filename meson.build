@@ -99,13 +99,14 @@ pyvrp_dep = declare_dependency(
     dependencies: spdlog,
 )
 
-# Python and pybind11 are needed to build extension modules. When used as a
-# subproject, these may be absent - in that case we skip building extensions.
-py = import('python').find_installation(required: false)
-pybind11 = dependency('pybind11', required: false, fallback: ['pybind11'])
-
-if not py.found() or not pybind11.found()
-    msg = 'Cannot build extension modules - Python or pybind11 not found.'
+# Python is needed to build extensions, together with docblock and gcovr. When
+# used as a subproject, these may be absent - in that case we skip extensions.
+py = import('python').find_installation(
+    required: false,
+    modules: ['docblock', 'gcovr']
+)
+if not py.found()
+    msg = 'Cannot build extension modules - Python, docblock or gcovr not found.'
     if meson.is_subproject()
         warning(msg)
         subdir_done()
@@ -117,7 +118,7 @@ endif
 # Extension dependencies: Python itself, pybind11, and spdlog.
 dependencies = [
     py.dependency(),
-    pybind11,
+    dependency('pybind11'),
     spdlog,
 ]
 
