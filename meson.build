@@ -108,11 +108,25 @@ extensions = [
     ['search', 'search', libsearch],
 ]
 
+# Python and pybind11 are needed to build extension modules. When used as a
+# subproject, these may be absent - in that case we skip building extensions.
+py = import('python').find_installation(required: false)
+pybind11 = dependency('pybind11', required: false, fallback: ['pybind11'])
+
+if not py.found() or not pybind11.found()
+    msg = 'Cannot build extension modules - Python or pybind11 not found.'
+    if meson.is_subproject()
+        warning(msg)
+        subdir_done()
+    else
+        error(msg)
+    endif
+endif
+
 # Extension dependencies: Python itself, pybind11, and spdlog.
-py = import('python').find_installation()
 dependencies = [
     py.dependency(),
-    dependency('pybind11'),
+    pybind11,
     spdlog,
 ]
 
@@ -127,13 +141,13 @@ foreach extension : extensions
     # extension, of the form "<name>_docs.h". It is generated from headers in
     # the relevant source directory - which the command below grabs for us.
     doc_glob = f'import glob; print(*glob.glob("@SRC_DIR@/@subdir@/*.h"))'
-    doc_cmd = run_command('python', '-c', doc_glob, check: true)
+    doc_cmd = run_command(py.full_path(), '-c', doc_glob, check: true)
     doc_input_headers = doc_cmd.stdout().split()
     doc_output_header = custom_target(
         'docs for ' + name,
         output: rawname + '_docs.h',
         input: ['buildtools/extract_docstrings.py'] + doc_input_headers,
-        command: ['python', '@INPUT@', '@OUTPUT@'],
+        command: [py.full_path(), '@INPUT@', '@OUTPUT@'],
         depend_files: [SRC_DIR / subdir / 'bindings.cpp'],
     )
 
