@@ -99,19 +99,15 @@ pyvrp_dep = declare_dependency(
     dependencies: spdlog,
 )
 
-# Python is needed to build extensions, together with docblock and gcovr. When
-# used as a subproject, these may be absent - in that case we skip extensions.
-py = import('python').find_installation(
-    required: false,
-    modules: ['docblock', 'gcovr']
-)
+# Python is needed to build extensions. When used as a subproject, Python may
+# be absent - in that case we skip building extension modules.
+py = import('python').find_installation(required: false)
 if not py.found()
-    msg = 'Cannot build extension modules - Python, docblock or gcovr not found.'
     if meson.is_subproject()
-        warning(msg)
+        warning('Python not found - skipping extension modules.')
         subdir_done()
     else
-        error(msg)
+        error('Python is required to build extension modules.')
     endif
 endif
 
