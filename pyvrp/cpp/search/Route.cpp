@@ -407,19 +407,9 @@ bool Route::operator==(pyvrp::Route const &other) const
         return false;
 
     size_t idx = 0;
-    for (auto const &trip : other.trips())
-    {
-        auto const [_, depotIdx] = nodes[idx++]->activity();
-        if (trip.startDepot() != depotIdx)
-            return false;  // not the same reload depot
-
-        for (auto const [_, client] : trip)
-        {
-            auto const [clientType, clientIdx] = nodes[idx++]->activity();
-            if (client != clientIdx)
-                return false;
-        }
-    }
+    for (auto const &activity : other.activities())
+        if (nodes[idx++]->activity() != activity)
+            return false;
 
     return true;
 }

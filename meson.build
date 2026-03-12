@@ -60,7 +60,6 @@ libpyvrp = static_library(
         SRC_DIR / 'DynamicBitset.cpp',
         SRC_DIR / 'ProblemData.cpp',
         SRC_DIR / 'RandomNumberGenerator.cpp',
-        SRC_DIR / 'Trip.cpp',
         SRC_DIR / 'Route.cpp',
         SRC_DIR / 'Solution.cpp',
         SRC_DIR / 'LoadSegment.cpp',

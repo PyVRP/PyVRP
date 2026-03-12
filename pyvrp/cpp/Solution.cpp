@@ -176,9 +176,10 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     auto const perRoute = perVehicle + adjustment;
     auto const numRoutes = (numClients + perRoute - 1) / perRoute;
 
-    std::vector<std::vector<Client>> routes(numRoutes);
+    std::vector<std::vector<Activity>> routes(numRoutes);
     for (size_t idx = 0; idx != numClients; ++idx)
-        routes[idx / perRoute].push_back(clients[idx]);
+        routes[idx / perRoute].emplace_back(Activity::ActivityType::CLIENT,
+                                            clients[idx]);
 
     std::vector<size_t> vehTypes;
     vehTypes.reserve(data.numVehicles());
@@ -216,6 +217,7 @@ Solution::Solution(ProblemData const &data,
 Solution::Solution(ProblemData const &data, std::vector<Route> routes)
     : routes_(std::move(routes))
 {
+
     if (routes_.size() > data.numVehicles())
     {
         auto const msg = "Number of routes must not exceed number of vehicles.";
@@ -229,11 +231,17 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         if (route.empty())
             throw std::runtime_error("Solution should not have empty routes.");
 
+        static_assert(std::ranges::input_range<Route>);
+
         usedVehicles[route.vehicleType()]++;
-        for (auto const client : route)
+        for (auto const activity : route)
         {
-            if (isVisited[client])  // client is also visited by an earlier
-            {                       // route if this is true
+            if (!activity.isClient())
+                continue;
+
+            auto const [_, client] = activity;
+            if (isVisited[client])
+            {
                 std::ostringstream msg;
                 msg << "Client " << client << " is visited more than once.";
                 throw std::runtime_error(msg.str());

@@ -1,5 +1,4 @@
 import pickle
-from itertools import pairwise
 
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
@@ -13,7 +12,6 @@ from pyvrp import (
     RandomNumberGenerator,
     Route,
     Solution,
-    Trip,
     VehicleType,
 )
 from tests.helpers import read
@@ -99,18 +97,16 @@ def test_route_access_methods(ok_small):
 
 def test_access_multiple_trips(ok_small_multiple_trips):
     """
-    Tests that accessing the route's clients via visits(), iteration, or the
-    underlying trips works correctly for a multi-trip instance.
+    Tests that accessing the route's activities via activities() or iteration
+    works correctly for a multi-trip instance.
     """
     data = ok_small_multiple_trips
-    trips = [Trip(data, [1, 2], 0), Trip(data, [3], 0)]
-    route = Route(data, trips, 0)
+    activities = [Activity(des) for des in ["C0", "C1", "D0", "C2"]]
+    route = Route(data, activities, vehicle_type=0)
 
-    assert_equal(route.visits(), [1, 2, 3])
-    assert_equal([client for client in route], [1, 2, 3])
-
-    assert_equal(trips[0].activities(), [Activity("C1"), Activity("C2")])
-    assert_equal(trips[1].activities(), [Activity("C3")])
+    incl_depots = [Activity("D0"), *activities, Activity("D0")]
+    assert_equal(route.activities(), incl_depots)
+    assert_equal([activity for activity in route], incl_depots)
 
 
 def test_route_time_warp_calculations(ok_small):
@@ -476,78 +472,6 @@ def test_initial_load_calculation(ok_small):
     assert_(new_route.has_excess_load())
 
 
-def test_bug_initial_load_multiple_trips(ok_small_multiple_trips):
-    """
-    Tests that a bug where initial load was evaluated at each trip has been
-    corrected: initial load is a route-level property, not trip-level.
-    """
-    veh_type = ok_small_multiple_trips.vehicle_type(0)
-    new_type = veh_type.replace(initial_load=[5])
-    data = ok_small_multiple_trips.replace(vehicle_types=[new_type])
-
-    trip1 = Trip(data, [1, 2], 0)
-    trip2 = Trip(data, [3, 4], 0)
-
-    # Both trips are load feasible.
-    assert_(not trip1.has_excess_load())
-    assert_(not trip2.has_excess_load())
-
-    # But the route is not because the first trip has a load of 10, in addition
-    # to the initial load of 5: 15 > 10.
-    route = Route(data, [trip1, trip2], 0)
-    assert_equal(route.excess_load(), [5])
-
-
-@pytest.mark.parametrize(("start_depot", "end_depot"), [(0, 1), (1, 0)])
-def test_raises_if_route_does_not_start_and_end_at_vehicle_start_end_depots(
-    ok_small_multi_depot, start_depot: int, end_depot: int
-):
-    """
-    Tests that the route constructor raises when the route implied by the
-    sequence of trips does not start at the vehicle type's start_depot, or end
-    at the end_depot.
-    """
-    old_veh_type = ok_small_multi_depot.vehicle_type(0)
-    veh_type = old_veh_type.replace(reload_depots=[0, 1], max_reloads=2)
-    data = ok_small_multi_depot.replace(vehicle_types=[veh_type])
-
-    trip1 = Trip(data, [2], 0, start_depot, 1)
-    trip2 = Trip(data, [3], 0, 1, end_depot)
-
-    with assert_raises(ValueError):
-        Route(data, [trip1, trip2], 0)
-
-
-def test_raises_inconsistent_vehicle_type(ok_small_two_profiles):
-    """
-    Tests that the route constructor raises when trips do not share the route's
-    vehicle type.
-    """
-    trip = Trip(ok_small_two_profiles, [], 1)
-    assert_equal(trip.vehicle_type(), 1)
-
-    with assert_raises(ValueError):
-        Route(ok_small_two_profiles, [trip], 0)
-
-
-def test_raises_consecutive_trips_different_depots(ok_small_multi_depot):
-    """
-    Tests that the route constructor raises when consecutive trips disagree on
-    their start and end depots.
-    """
-    old_veh_type = ok_small_multi_depot.vehicle_type(0)
-    veh_type = old_veh_type.replace(reload_depots=[0, 1], max_reloads=2)
-    data = ok_small_multi_depot.replace(vehicle_types=[veh_type])
-
-    trip1 = Trip(data, [2], 0, 0, 1)
-    trip2 = Trip(data, [3], 0, 0, 0)
-    assert_equal(trip1.end_depot(), 1)
-    assert_equal(trip2.start_depot(), 0)
-
-    with assert_raises(ValueError):
-        Route(data, [trip1, trip2], 0)
-
-
 def test_raises_multiple_trips_without_reload_depots(ok_small):
     """
     Tests that the route constructor raises when there is more than one trip,
@@ -555,9 +479,9 @@ def test_raises_multiple_trips_without_reload_depots(ok_small):
     """
     assert_equal(len(ok_small.vehicle_type(0).reload_depots), 0)
 
-    trips = [Trip(ok_small, [1, 2], 0), Trip(ok_small, [3], 0)]
+    activities = map(Activity, ["C1", "C2", "D0", "C3"])
     with assert_raises(ValueError):
-        Route(ok_small, trips, 0)
+        Route(ok_small, activities, 0)
 
 
 def test_raises_vehicle_max_reloads(ok_small_multiple_trips):
@@ -568,12 +492,9 @@ def test_raises_vehicle_max_reloads(ok_small_multiple_trips):
     veh_type = ok_small_multiple_trips.vehicle_type(0)
     assert_equal(veh_type.max_reloads, 1)
 
-    trip1 = Trip(ok_small_multiple_trips, [1], 0)
-    trip2 = Trip(ok_small_multiple_trips, [2], 0)
-    trip3 = Trip(ok_small_multiple_trips, [3], 0)
-
+    activities = map(Activity, ["C1", "D0", "D0", "C3"])
     with assert_raises(ValueError):
-        Route(ok_small_multiple_trips, [trip1, trip2, trip3], 0)
+        Route(ok_small_multiple_trips, activities, 0)
 
 
 def test_str(ok_small_multiple_trips):
@@ -582,16 +503,16 @@ def test_str(ok_small_multiple_trips):
     multiple trips.
     """
     data = ok_small_multiple_trips
-    trips = [Trip(data, [1, 2], 0), Trip(data, [3], 0)]
+    activities = [Activity(des) for des in ["C0", "C1", "D0", "C2"]]
 
-    route1 = Route(data, trips, 0)
-    assert_equal(str(route1), "1 2 | 3")
+    route1 = Route(data, activities, 0)
+    assert_equal(str(route1), "C0 C1 | C2")
 
-    route2 = Route(data, [trips[0]], 0)
-    assert_equal(str(route2), "1 2")
+    route2 = Route(data, [activities[:2]], 0)
+    assert_equal(str(route2), "C0 C1")
 
-    route3 = Route(data, [trips[1]], 0)
-    assert_equal(str(route3), "3")
+    route3 = Route(data, [activities[-1]], 0)
+    assert_equal(str(route3), "C2")
 
     route4 = Route(data, [], 0)
     assert_equal(str(route4), "")
@@ -602,12 +523,11 @@ def test_statistics_with_small_multi_trip_example(ok_small_multiple_trips):
     Tests some statistics calculations on a small multi-trip example.
     """
     # Regular route, executed in a single trip.
-    route1 = Route(ok_small_multiple_trips, [1, 2, 3, 4], 0)
+    route1 = Route(ok_small_multiple_trips, [0, 1, 2, 3], 0)
 
     # Same visits but executed over two trips.
-    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
-    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
-    route2 = Route(ok_small_multiple_trips, [trip1, trip2], 0)
+    activities = map(Activity, ["C0", "C1", "D0", "C2", "C3"])
+    route2 = Route(ok_small_multiple_trips, activities, 0)
 
     assert_equal(route2.visits(), route1.visits())
     assert_equal(len(route2), len(route1))
@@ -635,37 +555,21 @@ def test_statistics_with_small_multi_trip_example(ok_small_multiple_trips):
     assert_equal(route2.service_duration(), route1.service_duration())
 
 
-def test_schedule_multi_trip_example(ok_small_multiple_trips):
-    """
-    Tests that schedule() includes the depot visits, which is particularly
-    important when a route consists of multiple trips.
-    """
-    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
-    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
-    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
-
-    schedule = route.schedule()
-    locations = [visit.location for visit in schedule]
-    assert_equal(locations, [0, 1, 2, 0, 3, 4, 0])
-
-
 def test_index_multiple_trips(ok_small_multiple_trips):
     """
     Tests that direct indexing a route object with multiple trips finds the
     correct client associated with each index.
     """
-    trip1 = Trip(ok_small_multiple_trips, [1], 0)
-    trip2 = Trip(ok_small_multiple_trips, [3], 0)
+    activities = [Activity(des) for des in ["C0", "D0", "C2"]]
+    route = Route(ok_small_multiple_trips, [activities], 0)
+    assert_equal(route[0], Activity("D0"))  # start
+    assert_equal(route[-3], Activity("D0"))  # reload
 
-    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
-    assert_equal(route[0], 1)
-    assert_equal(route[-2], 1)
-
-    assert_equal(route[1], 3)
-    assert_equal(route[-1], 3)
+    assert_equal(route[1], Activity("C0"))
+    assert_equal(route[-2], Activity("C2"))
 
     with assert_raises(IndexError):
-        route[2]
+        route[5]
 
 
 def test_iter_empty_trips(ok_small_multiple_trips):
@@ -675,14 +579,10 @@ def test_iter_empty_trips(ok_small_multiple_trips):
     veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=2)
     data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
 
-    trip1 = Trip(data, [1, 2], 0)
-    trip2 = Trip(data, [], 0)
-    trip3 = Trip(data, [3, 4], 0)
-
-    route = Route(data, [trip1, trip2, trip3], 0)
-    assert_equal(str(route), "1 2 |  | 3 4")
+    activities = map(Activity, ["C0", "C1", "D0", "D0", "C2", "C3"])
+    route = Route(data, activities, 0)
+    assert_equal(str(route), "C0 C1 |  | C2 C3")
     assert_equal(route.num_trips(), 3)
-    assert_equal(list(route), [1, 2, 3, 4])
 
 
 def test_small_example_from_cattaruzza_paper():
@@ -726,11 +626,8 @@ def test_small_example_from_cattaruzza_paper():
         duration_matrices=[matrix],
     )
 
-    trip1 = Trip(data, [5, 3], 0)
-    trip2 = Trip(data, [1], 0)
-    trip3 = Trip(data, [4], 0)
-    trip4 = Trip(data, [2], 0)
-    route = Route(data, [trip1, trip2, trip3, trip4], 0)
+    acts = map(Activity, ["C4", "C2", "D0", "C0", "D0", "C3", "D0", "C1"])
+    route = Route(data, acts, 0)
 
     # These values were verified from the paper, and where needed calculated
     # manually. Note that the paper setting requires the first trip to start
@@ -781,31 +678,17 @@ def test_multi_trip_with_release_times():
         duration_matrices=[matrix],
     )
 
-    trip1 = Trip(data, [1, 2], 0)
-    trip2 = Trip(data, [3], 0)
-
-    assert_equal(trip1.release_time(), 50)
-    assert_equal(trip2.release_time(), 100)
-
     # Route should have a release time corresponding to its first trip.
-    route = Route(data, [trip1, trip2], 0)
-    assert_equal(route.release_time(), trip1.release_time())
-
-    # Travel is explained better below.
-    assert_equal(trip1.travel_duration(), 45)
-    assert_equal(trip2.travel_duration(), 50)
+    route = Route(data, map(Activity, ["C0", "C1", "D0", "C2"]), 0)
+    assert_equal(route.release_time(), 50)  # from C1, which is binding
     assert_equal(route.travel_duration(), 95)
-
-    # No service.
-    assert_equal(trip1.service_duration(), 0)
-    assert_equal(trip2.service_duration(), 0)
     assert_equal(route.service_duration(), 0)
 
     # Some route-level statistics. We start at 50, the release time for the
-    # first trip. Then we drive to client 1 and arrive at 80. We do service,
-    # and drive to 2, where we arrive at 90. Again, service and drive to 0,
-    # where we arrive at 95. We then wait until 100, the release time for the
-    # second trip. We then drive to 3, where we arrive at 140. We service, and
+    # first trip. Then we drive to C0 and arrive at 80. We do service, and
+    # drive to C1, where we arrive at 90. Again, service and drive to D0, where
+    # we arrive at 95. We then wait until 100, the release time for the
+    # second trip. We then drive to C2, where we arrive at 140. We service, and
     # drive back to the depot, where we arrive at 150. We finish at 150.
     assert_equal(route.start_time(), 50)
     assert_equal(route.duration(), 100)
@@ -835,52 +718,12 @@ def test_multi_trip_initial_load(ok_small_multiple_trips):
     new_type = old_type.replace(initial_load=[5])
     data = ok_small_multiple_trips.replace(vehicle_types=[new_type])
 
-    trip1 = Trip(data, [1, 2], 0)
-    trip2 = Trip(data, [3, 4], 0)
-    route = Route(data, [trip1, trip2], 0)
-
     # The trips themselves are fine, but the vehicle has initial load, and that
-    # causes the first trip - which has 10 delivery load already - to exceed
-    # the vehicle's capacity.
-    assert_equal(trip1.excess_load(), [0])
-    assert_equal(trip2.excess_load(), [0])
+    # causes the first trip - which has 10 delivery load already from C0 and C1
+    # - to exceed the vehicle's capacity.
+    activities = ["C0", "C1",  "D0", "C2", "C3"]
+    route = Route(data, activities, 0)
     assert_equal(route.excess_load(), [5])
-
-
-@pytest.mark.parametrize(
-    "trips",
-    [
-        [[61, 64, 49, 55, 54, 53], [70, 11, 10, 8]],
-        [[5, 2, 1, 7, 3, 4], [18, 19, 16, 14, 12]],
-        [[20, 22, 24, 27, 30, 29, 6], [68, 57, 40, 44, 46], [15, 17, 13, 9]],
-    ],
-)
-def test_multi_trip_release_time_routes(mtvrptw_release_times, trips):
-    """
-    Tests a few routes from a solution to this multi-trip instance with release
-    times. These routes were part of a best-found solution after a 5min run, so
-    they should be feasible. Furthermore, the release times of each trip should
-    obviously be non-decreasing.
-    """
-    trips = [Trip(mtvrptw_release_times, visits, 0) for visits in trips]
-    route = Route(mtvrptw_release_times, trips, 0)
-    assert_(route.is_feasible())
-
-    for trip1, trip2 in pairwise(trips):
-        assert_(trip1.release_time() <= trip2.release_time())
-
-
-def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
-    """
-    Ensures that the bug identified in #812 stays fixed. Before the fix, this
-    would trigger an assert because an empty trip would be indexed.
-    """
-    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
-    trip2 = Trip(ok_small_multiple_trips, [], 0)
-
-    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
-    assert_equal([client for client in route], [1, 2])
-    assert_equal(route.visits(), [1, 2])
 
 
 def test_route_release_time_after_vehicle_start_late():

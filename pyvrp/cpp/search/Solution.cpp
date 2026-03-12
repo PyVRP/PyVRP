@@ -81,25 +81,18 @@ void Solution::load(pyvrp::Solution const &solution)
         // the solution.
         route.clear();
 
-        // Routes use a representation with nodes for each client, reload depot
-        // (one per trip), and start/end depots. The start depot doubles as the
-        // reload depot for the first trip.
-        route.reserve(solRoute.size() + solRoute.numTrips() + 1);
-
-        for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
-        {
-            auto const &trip = solRoute.trip(tripIdx);
-
-            if (tripIdx != 0)  // then we first insert a trip delimiter.
+        route.reserve(solRoute.size());
+        for (auto const activity : solRoute)
+            if (activity.isDepot())
             {
-                Route::Node depot
-                    = {Activity::ActivityType::DEPOT, trip.startDepot()};
+                Route::Node depot = activity;
                 route.push_back(&depot);
             }
-
-            for (auto const [_, client] : trip)
-                route.push_back(&nodes[client]);
-        }
+            else
+            {
+                assert(activity.isClient());
+                route.push_back(&nodes[activity.idx]);
+            }
 
         route.update();
     }
@@ -130,35 +123,11 @@ pyvrp::Solution Solution::unload() const
         if (route.empty())
             continue;
 
-        std::vector<Trip> trips;
-        trips.reserve(route.numTrips());
+        std::vector<Activity> activities;
+        activities.reserve(route.size());
 
-        visits.clear();
-        visits.reserve(route.numClients());
-
-        auto const *prevDepot = route[0];
-        for (size_t idx = 1; idx != route.size(); ++idx)
-        {
-            auto const *node = route[idx];
-
-            if (!node->isDepot())
-            {
-                auto const [_, client] = node->activity();
-                visits.push_back(client);
-                continue;
-            }
-
-            auto const [startType, startDepot] = prevDepot->activity();
-            auto const [endType, endDepot] = node->activity();
-            trips.emplace_back(
-                data_, visits, route.vehicleType(), startDepot, endDepot);
-
-            visits.clear();
-            prevDepot = node;
-        }
-
-        assert(trips.size() == route.numTrips());
-        solRoutes.emplace_back(data_, std::move(trips), route.vehicleType());
+        solRoutes.emplace_back(
+            data_, std::move(activities), route.vehicleType());
     }
 
     return {data_, std::move(solRoutes)};

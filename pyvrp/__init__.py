@@ -29,7 +29,6 @@ from ._pyvrp import RandomNumberGenerator as RandomNumberGenerator
 from ._pyvrp import Route as Route
 from ._pyvrp import ScheduledVisit as ScheduledVisit
 from ._pyvrp import Solution as Solution
-from ._pyvrp import Trip as Trip
 from ._pyvrp import VehicleType as VehicleType
 from .minimise_fleet import minimise_fleet as minimise_fleet
 from .read import read as read

@@ -5,6 +5,7 @@ import pytest
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import (
+    Activity,
     Client,
     ClientGroup,
     CostEvaluator,
@@ -14,7 +15,6 @@ from pyvrp import (
     RandomNumberGenerator,
     Route,
     Solution,
-    Trip,
     VehicleType,
 )
 from pyvrp.search import (
@@ -344,9 +344,8 @@ def test_no_op_multi_trip_instance(ok_small_multiple_trips):
         PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
     )
 
-    trip1 = Trip(data, [0, 1], 0)
-    trip2 = Trip(data, [2, 3], 0)
-    route = Route(data, [trip1, trip2], 0)
+    activities = map(Activity, ["C0", "C1", "D0", "C2", "C3"])
+    route = Route(data, activities, 0)
 
     sol = Solution(data, [route])
     cost_eval = CostEvaluator([20], 6, 0)
@@ -388,8 +387,8 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_operator(Exchange10(data))
 
-    route1 = Route(data, [Trip(data, [0], 0), Trip(data, [2], 0)], 0)
-    route2 = Route(data, [1, 3], 0)
+    route1 = Route(data, [Activity(des) for des in ["C0", "D0", "C2"]], 0)
+    route2 = Route(data, [Activity(des) for des in ["C1", "C3"]], 0)
     sol = Solution(data, [route1, route2])
 
     cost_eval = CostEvaluator([1_000], 0, 0)
@@ -623,9 +622,8 @@ def test_removes_useless_consecutive_depots(ok_small_multiple_trips):
     ls.add_operator(RemoveAdjacentDepot(data))
 
     # Set up a route with an empty trip, so a consecutive reload depot visit.
-    trips = [Trip(data, visits, vehicle_type=0) for visits in [[1], [], [2]]]
-    route = Route(data, trips, vehicle_type=0)
-    assert_equal(str(route), "1 |  | 2")
+    route = Route(data, map(Activity, ["C1", "D0", "D0", "C2"]), 0)
+    assert_equal(str(route), "C1 |  | C2")
 
     # The local search should remove this consecutive depot visit.
     sol = Solution(data, [route])

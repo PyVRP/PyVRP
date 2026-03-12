@@ -1,6 +1,6 @@
 import pathlib
 from collections import defaultdict
-from itertools import count, pairwise
+from itertools import count
 from numbers import Number
 from typing import Callable
 from warnings import warn
@@ -16,7 +16,6 @@ from pyvrp._pyvrp import (
     ProblemData,
     Route,
     Solution,
-    Trip,
     VehicleType,
 )
 from pyvrp.constants import MAX_VALUE
@@ -127,6 +126,7 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         if not route:
             continue
 
+        # TODO
         route_visits = np.array(route, dtype=int)
         depot_idcs = np.flatnonzero(route_visits < data.num_depots)
 
@@ -145,10 +145,7 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
             veh_type.end_depot,
         ]
 
-        trips = [
-            Trip(data, visits, veh2type[idx], start, end)
-            for visits, (start, end) in zip(trip_visits, pairwise(depots))
-        ]
+        trips = []
 
         routes.append(Route(data, trips, veh2type[idx]))
 
