@@ -134,7 +134,7 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         trip_visits = [
             # These visits include the reload depots for later trips as the
             # first trip visit, which we need to skip.
-            trip_visits[trip_idx > 0 :]
+            trip_visits[trip_idx > 0 :] - data.num_depots
             for trip_idx, trip_visits in enumerate(trip_visits)
         ]
 
