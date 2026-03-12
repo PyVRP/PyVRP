@@ -7,7 +7,7 @@ from pyvrp.search._search import SearchSpace
 from tests.helpers import make_search_route
 
 
-@pytest.mark.parametrize("size", [1, 2, 3, 4, 6, 7])  # num_clients + 1 == 5
+@pytest.mark.parametrize("size", [1, 2, 3, 5, 6, 7])  # num_clients == 5
 def test_raises_when_neighbourhood_dimensions_do_not_match(ok_small, size):
     """
     Tests that the search space raises when the neighbourhood size does not
@@ -23,16 +23,12 @@ def test_raises_when_neighbourhood_dimensions_do_not_match(ok_small, size):
         search_space.neighbours = neighbours
 
 
-def test_raises_when_neighbourhood_contains_self_or_depot(ok_small):
+def test_raises_when_neighbourhood_contains_self(ok_small):
     """
-    Tests that the search space raises when the granular neighbourhood contains
-    the depot (for any client) or the client is in its own neighbourhood.
+    Tests that the search space raises when a client is in its own
+    neighbourhood.
     """
-    neighbours = [[], [2], [3], [4], [0]]  # 4 has depot as neighbour
-    with assert_raises(RuntimeError):
-        SearchSpace(ok_small, neighbours)
-
-    neighbours = [[], [1], [3], [4], [1]]  # 1 has itself as neighbour
+    neighbours = [[0], [2], [3], [0]]  # 0 has itself as neighbour
     with assert_raises(RuntimeError):
         SearchSpace(ok_small, neighbours)
 
@@ -82,12 +78,12 @@ def test_get_neighbours(ok_small):
     Tests getting the SearchSpace's full granular neighbourhood, and
     client-specific neighbourhoods.
     """
-    neighbours = [[], [2, 3], [3, 4], [1, 2], [2, 3]]
+    neighbours = [[1, 2], [2, 3], [0, 1], [1, 2]]
 
     search_space = SearchSpace(ok_small, neighbours)
     assert_equal(search_space.neighbours, neighbours)
 
-    for idx in range(ok_small.num_depots + ok_small.num_clients):
+    for idx in range(ok_small.num_clients):
         assert_equal(neighbours[idx], search_space.neighbours_of(idx))
 
 
@@ -97,9 +93,7 @@ def test_promising(ok_small):
     """
     search_space = SearchSpace(ok_small, compute_neighbours(ok_small))
 
-    for client in range(
-        ok_small.num_depots, ok_small.num_depots + ok_small.num_clients
-    ):
+    for client in range(ok_small.num_clients):
         # The client does not start off promising.
         assert_(not search_space.is_promising(client))
 
@@ -112,9 +106,7 @@ def test_all_promising(ok_small):
     """
     Tests marking and unmarking all clients as promising.
     """
-    clients = range(
-        ok_small.num_depots, ok_small.num_depots + ok_small.num_clients
-    )
+    clients = range(ok_small.num_clients)
 
     # Initially no clients start off promising.
     search_space = SearchSpace(ok_small, compute_neighbours(ok_small))
@@ -132,12 +124,12 @@ def test_all_promising(ok_small):
 @pytest.mark.parametrize(
     ("mark", "exp_marked", "exp_unmarked"),
     [
-        (0, [1], [2, 3, 4]),  # start depot
-        (1, [1, 2], [3, 4]),
-        (2, [1, 2, 3], [4]),
-        (3, [2, 3, 4], [1]),
-        (4, [3, 4], [1, 2]),
-        (5, [4], [1, 2, 3]),  # end depot
+        (0, [0], [1, 2, 3]),  # start depot
+        (1, [0, 1], [2, 3]),
+        (2, [0, 1, 2], [3]),
+        (3, [1, 2, 3], [0]),
+        (4, [2, 3], [0, 1]),
+        (5, [3], [0, 1, 2]),  # end depot
     ],
 )
 def test_node_promising(
@@ -149,7 +141,7 @@ def test_node_promising(
     """
     Tests marking nodes (and their client neighbours) as promising.
     """
-    route = make_search_route(ok_small, [1, 2, 3, 4])
+    route = make_search_route(ok_small, ["C0", "C1", "C2", "C3"])
 
     search_space = SearchSpace(ok_small, compute_neighbours(ok_small))
     search_space.mark_promising(route[mark])
@@ -170,7 +162,7 @@ def test_search_order_and_shuffle(ok_small_two_profiles):
     search_space = SearchSpace(data, compute_neighbours(data))
 
     # Initially we have an unshuffled, default search order.
-    assert_equal(search_space.client_order(), [1, 2, 3, 4])  # 4 clients
+    assert_equal(search_space.client_order(), [0, 1, 2, 3])  # 4 clients
     assert_equal(search_space.veh_type_order(), [(0, 0), (1, 3)])  # 2 types
 
     rng = RandomNumberGenerator(seed=1821)
@@ -178,10 +170,10 @@ def test_search_order_and_shuffle(ok_small_two_profiles):
 
     # After shuffling, the search order has changed, but is still fixed: it
     # does not change again until we do another shuffle.
-    assert_equal(search_space.client_order(), [1, 3, 2, 4])
-    assert_equal(search_space.client_order(), [1, 3, 2, 4])  # again to check
+    assert_equal(search_space.client_order(), [0, 2, 1, 3])
+    assert_equal(search_space.client_order(), [0, 2, 1, 3])  # again to check
     assert_equal(search_space.veh_type_order(), [(1, 3), (0, 0)])
 
     # Shuffling again changes the search order.
     search_space.shuffle(rng)
-    assert_equal(search_space.client_order(), [4, 3, 2, 1])
+    assert_equal(search_space.client_order(), [3, 2, 1, 0])
