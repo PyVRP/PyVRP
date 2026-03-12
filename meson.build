@@ -99,22 +99,19 @@ pyvrp_dep = declare_dependency(
     dependencies: spdlog,
 )
 
-# Python is needed to build extensions. When used as a subproject, Python may
-# be absent - in that case we skip building extension modules.
-py = import('python').find_installation(required: false)
-if not py.found()
-    if meson.is_subproject()
-        warning('Python not found - skipping extension modules.')
-        subdir_done()
-    else
-        error('Python is required to build extension modules.')
-    endif
+# Python and pybind are needed to build extension modules. When used as a
+# subproject, these may be absent - in that case we skip extensions.
+py = import('python').find_installation(required: not meson.is_subproject())
+pybind11 = dependency('pybind11', required: not meson.is_subproject())
+if not py.found() or not pybind11.found()
+    warning('Python or pybind11 not found - skipping extension modules.')
+    subdir_done()
 endif
 
 # Extension dependencies: Python itself, pybind11, and spdlog.
 dependencies = [
     py.dependency(),
-    dependency('pybind11'),
+    pybind11,
     spdlog,
 ]
 
