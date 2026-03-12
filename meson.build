@@ -99,15 +99,6 @@ pyvrp_dep = declare_dependency(
     dependencies: spdlog,
 )
 
-# Extension as [extension name, subdirectory, core C++ library]. The extension
-# name names the eventual module name, subdirectory gives the source and
-# installation directories (relative to top-level directories), and the core
-# C++ library is one of the static libraries we defined above.
-extensions = [
-    ['pyvrp', '', libpyvrp],
-    ['search', 'search', libsearch],
-]
-
 # Python and pybind11 are needed to build extension modules. When used as a
 # subproject, these may be absent - in that case we skip building extensions.
 py = import('python').find_installation(required: false)
@@ -128,6 +119,15 @@ dependencies = [
     py.dependency(),
     pybind11,
     spdlog,
+]
+
+# Extension as [extension name, subdirectory, core C++ library]. The extension
+# name names the eventual module name, subdirectory gives the source and
+# installation directories (relative to top-level directories), and the core
+# C++ library is one of the static libraries we defined above.
+extensions = [
+    ['pyvrp', '', libpyvrp],
+    ['search', 'search', libsearch],
 ]
 
 foreach extension : extensions
