@@ -3,6 +3,7 @@ import pytest
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import (
+    Activity,
     Client,
     CostEvaluator,
     Depot,
@@ -19,19 +20,20 @@ def test_inserts_depot_single_route(ok_small_multiple_trips):
     Tests that RelocateWithDepot inserts a reload depot along with the node
     relocation in the same route.
     """
-    route = make_search_route(ok_small_multiple_trips, [1, 2, 3, 4])
+    data = ok_small_multiple_trips
+    route = make_search_route(data, ["C0", "C1", "C2", "C3"])
 
-    assert_equal(str(route), "1 2 3 4")
+    assert_equal(str(route), "C0 C1 C2 C3")
     assert_equal(route.num_depots(), 2)
     assert_equal(route.num_trips(), 1)
     assert_equal(route.excess_load(), [8])
 
-    op = RelocateWithDepot(ok_small_multiple_trips)
+    op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([500], 0, 0)
 
-    # The route now is 1 2 3 4, proposal evaluates 1 3 | 2 4 and 1 3 2 | 4. Of
-    # these two moves, the move resulting in 1 3 | 2 4 is better, with total
-    # route cost 9_543 (compared to 10_450 now). The cost delta is thus -907.
+    # The proposal evaluates C0 C2 | C1 C3 and C0 C2 C1 | C3. Of these, the
+    # move resulting in C0 C2 | C1 C3 is better, with total route cost 9_543
+    # (compared to 10_450 now). The cost delta is thus -907.
     assert_equal(op.evaluate(route[2], route[3], cost_eval), (-907, True))
 
     op.apply(route[2], route[3])
@@ -43,8 +45,8 @@ def test_inserts_depot_single_route(ok_small_multiple_trips):
     assert_equal(route.num_trips(), 2)
     assert_equal(route.excess_load(), [0])
 
-    # Check that the route now indeed includes the "3 | 2" bit.
-    assert_equal(str(route), "1 3 | 2 4")
+    # Check that the route now indeed includes the "C2 | C1" bit.
+    assert_equal(str(route), "C0 C2 | C1 C3")
 
 
 def test_inserts_depot_across_routes(ok_small_multiple_trips):
@@ -52,16 +54,16 @@ def test_inserts_depot_across_routes(ok_small_multiple_trips):
     Tests that RelocateWithDepot inserts a reload depot along with the node
     relocation across routes.
     """
-    route1 = make_search_route(ok_small_multiple_trips, [3])
-    route2 = make_search_route(ok_small_multiple_trips, [1, 2, 4])
+    route1 = make_search_route(ok_small_multiple_trips, ["C2"])
+    route2 = make_search_route(ok_small_multiple_trips, ["C0", "C1", "C3"])
 
-    assert_equal(str(route1), "3")
-    assert_equal(str(route2), "1 2 4")
+    assert_equal(str(route1), "C2")
+    assert_equal(str(route2), "C0 C1 C3")
 
     op = RelocateWithDepot(ok_small_multiple_trips)
     cost_eval = CostEvaluator([500], 0, 0)
 
-    # The proposal evaluates 1 | 3 2 4 and 1 3 | 2 4. Of these, the second is
+    # The proposal evaluates C0 | C2 C1 C3 and C0 C2 | C1 C3. The second is
     # better, with total cost 9_543 (compared to 3_994 + 8_601 now). The cost
     # delta is thus -3_052.
     assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (-3_052, True))
@@ -71,19 +73,19 @@ def test_inserts_depot_across_routes(ok_small_multiple_trips):
     route2.update()
 
     assert_equal(str(route1), "")
-    assert_equal(str(route2), "1 3 | 2 4")
+    assert_equal(str(route2), "C0 C2 | C1 C3")
 
 
 @pytest.mark.parametrize(
     ("load_penalty", "exp_delta_cost", "exp_route_str"),
     [
-        # With such a large load penalty, we insert the depot after 1 because
+        # With such a large load penalty, we insert the depot after C0 because
         # that ensures the route has no excess load, which dominates the cost
         # structure.
-        (1_000, -3_897, "2 1 | 3 4"),
+        (1_000, -3_897, "C1 C0 | C2 C3"),
         # With this load penalty the time aspect is still important, and we
-        # insert the depot before 1 because that is better w.r.t. time warp.
-        (300, -54, "2 | 1 3 4"),  # depot before 1
+        # insert the depot before C0 because that is better w.r.t. time warp.
+        (300, -54, "C1 | C0 C2 C3"),  # depot before C0
     ],
 )
 def test_reload_depot_before_or_after_relocate(
@@ -96,9 +98,10 @@ def test_reload_depot_before_or_after_relocate(
     RelocateWithDepot evaluates placing a reload depot either before or after
     the relocated node. This test checks if it picks the best option.
     """
-    route = make_search_route(ok_small_multiple_trips, [1, 2, 3, 4])
+    data = ok_small_multiple_trips
+    route = make_search_route(data, ["C0", "C1", "C2", "C3"])
 
-    op = RelocateWithDepot(ok_small_multiple_trips)
+    op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([load_penalty], 1, 0)
     actual_delta_cost, _ = op.evaluate(route[1], route[2], cost_eval)
     assert_equal(actual_delta_cost, exp_delta_cost)
@@ -135,7 +138,7 @@ def test_inserts_best_reload_depot():
         duration_matrices=[mat],
     )
 
-    route = make_search_route(data, [2, 3])
+    route = make_search_route(data, ["C0", "C1"])
 
     assert_(route.has_excess_load())
     assert_equal(route.excess_load(), [5])
@@ -143,18 +146,18 @@ def test_inserts_best_reload_depot():
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([500], 0, 0)
 
-    # We evaluate two moves, 3 | 2 and 3 2 |, for each depot (0 and 1). Only
-    # 3 | 2 removes excess load. Then the depot choice: depot 0 incurs a small
-    # routing costs, whereas 1 is fee. Thus, we should evaluate and apply the
-    # move using depot 1, at delta cost -2_500.
+    # We evaluate two moves, C1 | C0 and C1 C0 |, for each depot (D0 and D1).
+    # Only C1 | C0 removes excess load. Then the depot choice: D0 has a small
+    # routing costs, whereas D1 is fee. Thus, we should evaluate and apply the
+    # move using D1, at delta cost -2_500.
     assert_equal(op.evaluate(route[1], route[2], cost_eval), (-2_500, True))
 
     op.apply(route[1], route[2])
     route.update()
 
     assert_(not route.has_excess_load())
-    assert_equal(str(route), "3 | 2")
-    assert_equal(route[2].client, 1)
+    assert_equal(str(route), "C1 | C0")
+    assert_equal(route[2].activity, Activity("D1"))
 
 
 def test_fixed_vehicle_cost():
@@ -179,8 +182,8 @@ def test_fixed_vehicle_cost():
         duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
-    route1 = make_search_route(data, [1])
-    route2 = make_search_route(data, [2])
+    route1 = make_search_route(data, ["C0"])
+    route2 = make_search_route(data, ["C1"])
 
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([0], 0, 0)
@@ -195,17 +198,18 @@ def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
     Tests that RelocateWithDepot does not evaluate moves that would result in
     more trips than the vehicle on the route can execute.
     """
-    route = make_search_route(ok_small_multiple_trips, [3, 0, 1, 2, 4])
+    activities = ["C2", "D0", "C0", "C1", "C3"]
+    route = make_search_route(ok_small_multiple_trips, activities)
 
-    assert_equal(str(route), "3 | 1 2 4")
+    assert_equal(str(route), "C2 | C0 C1 C3")
     assert_equal(route.excess_load(), [5])
 
     op = RelocateWithDepot(ok_small_multiple_trips)
     cost_eval = CostEvaluator([10_000], 0, 0)
 
-    # This move would result in either 3 | 2 | 1 4, or 3 | 2 1 | 4, both of
-    # which would resolve any excess load. But that's more trips than the
-    # vehicle can perform, so this move cannot be done.
+    # This move would result in either C2 | C1 | C0 C3, or C2 | C1 C0 | C3,
+    # both of which would resolve any excess load. But that's more trips than
+    # the vehicle can perform, so this move cannot be done.
     assert_equal(op.evaluate(route[3], route[4], cost_eval), (0, False))
     assert_equal(route.num_trips(), route.max_trips())
 
@@ -216,33 +220,34 @@ def test_bug_release_times(mtvrptw_release_times):
     warp calculation caused by DurationSegment.finalise_front() not working
     correctly - it did not properly account for release times.
     """
-    # This route visits 34, reloads, and then visits 23, 38, and 48, as
+    # This route visits C33, reloads, and then visits C22, C37, and C47, as
     # follows:
     # - Leave the depot at 14579.
-    # - Visit 34 at 14902, leave at 15802.
+    # - Visit C33 at 14902, leave at 15802.
     # - Return to reload depot at 16125.
-    # - Visit 23 at 16430, leave at 17330.
-    # - Visit 38 at 12230, adding 5395 time warp. Leave at 13130.
-    # - Visit 48 at 28560, leave at 29460.
+    # - Visit C22 at 16430, leave at 17330.
+    # - Visit C37 at 12230, adding 5395 time warp. Leave at 13130.
+    # - Visit C47 at 28560, leave at 29460.
     # - Return to depot at 29567.
-    route1 = make_search_route(mtvrptw_release_times, [34, 0, 23, 38, 48])
+    activities = ["C33", "D0", "C22", "C37", "C47"]
+    route1 = make_search_route(mtvrptw_release_times, activities)
 
     assert_equal(route1.distance(), 1713)
     assert_equal(route1.time_warp(), 5395)
     assert_equal(route1.duration(), 29567 + 5395 - 14579)
 
-    # This route visits 6, as follows:
+    # This route visits C5, as follows:
     # - Leave the depot at 4718.
-    # - Visit 6 at 4970, leave at 5870.
+    # - Visit C5 at 4970, leave at 5870.
     # - Return to depot at 6122.
-    route2 = make_search_route(mtvrptw_release_times, [6])
+    route2 = make_search_route(mtvrptw_release_times, ["C5"])
 
     assert_equal(route2.distance(), 504)
     assert_equal(route2.time_warp(), 0)
     assert_equal(route2.duration(), 6122 - 4718)
 
-    assert_equal(str(route1), "34 | 23 38 48")
-    assert_equal(str(route2), "6")
+    assert_equal(str(route1), "C33 | C22 C37 C47")
+    assert_equal(str(route2), "C5")
 
     op = RelocateWithDepot(mtvrptw_release_times)
     cost_eval = CostEvaluator([0], 1, 0)
@@ -250,8 +255,8 @@ def test_bug_release_times(mtvrptw_release_times):
     assert_(delta_cost < 0)
 
     op.apply(route1[3], route2[1])
-    assert_equal(str(route1), "34 | 38 48")
-    assert_equal(str(route2), "6 23 |")
+    assert_equal(str(route1), "C33 | C37 C47")
+    assert_equal(str(route2), "C5 C22 |")
 
     route1.update()
     assert_equal(route1.distance(), 1525)
@@ -285,17 +290,17 @@ def test_can_insert_reload_after_start_depot():
         duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
-    route = make_search_route(data, [1, 2])
-    assert_equal(str(route), "1 2")
+    route = make_search_route(data, ["C0", "C1"])
+    assert_equal(str(route), "C0 C1")
 
-    # Evaluate turning "1 2" into "| 2 1", which would immediately resolve all
-    # initial load, and thus reduce excess load by 2.
+    # Evaluate turning "C0 C1" into "| C1 C0", which would immediately resolve
+    # all initial load, and thus reduce excess load by 2.
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([1], 0, 0)
     assert_equal(op.evaluate(route[2], route[0], cost_eval), (-2, True))
 
     op.apply(route[2], route[0])
-    assert_equal(str(route), "| 2 1")
+    assert_equal(str(route), "| C1 C0")
 
 
 def test_can_insert_reload_before_end_depot():
@@ -323,20 +328,20 @@ def test_can_insert_reload_before_end_depot():
         duration_matrices=[np.zeros_like(mat)],
     )
 
-    route = make_search_route(data, [2, 3])
-    assert_equal(str(route), "2 3")
+    route = make_search_route(data, ["C0", "C1"])
+    assert_equal(str(route), "C0 C1")
 
-    # Evaluate inserting client 2 after 3, with a depot. This should result in
-    # a route "2 3 |", with a reload depot visits to 1.
+    # Evaluate inserting C0 after C1, with a depot. This should result in
+    # a route "C1 C0 |", with a reload at D1.
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([], 0, 0)
     assert_equal(op.evaluate(route[1], route[2], cost_eval), (-10, True))
 
     # Test if that is indeed the case: the route should be correct, and the
-    # reload depot should be 1, not 0.
+    # reload depot should be D1, not D0.
     op.apply(route[1], route[2])
-    assert_equal(str(route), "3 2 |")
-    assert_equal(route[3].client, 1)
+    assert_equal(str(route), "C1 C0 |")
+    assert_equal(route[3].activity, Activity("D1"))
 
 
 def test_supports(ok_small, ok_small_multiple_trips, mtvrptw_release_times):
@@ -367,7 +372,7 @@ def test_depot_service_duration(ok_small_multiple_trips):
 
     # Single route, no reload depots. This route has excess load, which the
     # cost evaluator penalises heavily, but is feasible w.r.t. duration.
-    route = make_search_route(data, [3, 2, 4, 1])
+    route = make_search_route(data, ["C2", "C1", "C3", "C0"])
     assert_(route.excess_load(), [8])
     assert_(route.duration(), 200 + 360 + 360 + 360 + 420)  # depot and clients
     assert_(not route.has_time_warp())
@@ -379,7 +384,7 @@ def test_depot_service_duration(ok_small_multiple_trips):
     op.apply(route[1], route[3])
     route.update()
 
-    assert_equal(str(route), "2 4 | 3 1")
+    assert_equal(str(route), "C1 C3 | C2 C0")
     assert_equal(route.excess_load(), [0])
     assert_equal(route.duration(), 2 * 200 + 360 + 360 + 360 + 420)
     assert_(not route.has_time_warp())
