@@ -26,8 +26,19 @@ public:
 
     pyvrp::search::Route const *route() const { return nullptr; }
 
-    Activity first() const { return {Activity::ActivityType::CLIENT, client}; }
-    Activity last() const { return {Activity::ActivityType::CLIENT, client}; }
+    Activity firstActivity() const
+    {
+        return {Activity::ActivityType::CLIENT, client};
+    }
+
+    Activity lastActivity() const
+    {
+        return {Activity::ActivityType::CLIENT, client};
+    }
+
+    size_t firstLocation() const { return data.client(client).location; }
+    size_t lastLocation() const { return data.client(client).location; }
+
     size_t size() const { return 1; }
 
     bool startsAtReloadDepot() const { return false; }
