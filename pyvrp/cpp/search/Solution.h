@@ -17,7 +17,7 @@ namespace pyvrp::search
  * An alternative representation of a routing solution that is more amenable
  * to efficient modification. This is intended for use in the local search.
  *
- * This solution struct owns a vector of nodes, for the depots and clients. It
+ * This solution struct owns a vector of nodes, one for each client. It
  * additionally owns a vector of (search) routes, which store non-owning
  * pointers into the nodes to model route visits. Modifying the solution via
  * search operators involves copying pointers, not whole nodes. That is very
@@ -34,7 +34,7 @@ class Solution
     friend class pyvrp::CostEvaluator;
 
 public:
-    std::vector<Route::Node> nodes;  // size numDepots() + numClients()
+    std::vector<Route::Node> nodes;  // size numClients()
     std::vector<Route> routes;       // size numVehicles(), ordered by type
 
     Solution(ProblemData const &data);

@@ -55,9 +55,7 @@ def test_swap_single_route_stays_single_route(rc208, operator):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
     ls.add_operator(operator(rc208))
 
-    single_route = list(
-        range(rc208.num_depots, rc208.num_depots + rc208.num_clients)
-    )
+    single_route = list(range(rc208.num_clients))
     sol = Solution(rc208, [single_route])
     improved_sol = ls(sol, cost_evaluator, exhaustive=True)
 
@@ -81,9 +79,7 @@ def test_relocate_uses_empty_routes(rc208, operator):
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208, nb_params))
     ls.add_operator(operator(rc208))
 
-    single_route = list(
-        range(rc208.num_depots, rc208.num_depots + rc208.num_clients)
-    )
+    single_route = list(range(rc208.num_clients))
     sol = Solution(rc208, [single_route])
     improved_sol = ls(sol, cost_evaluator, exhaustive=True)
 
@@ -119,7 +115,7 @@ def test_cannot_exchange_when_parts_overlap_with_depot(ok_small, operator):
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
     ls.add_operator(operator(ok_small))
 
-    sol = Solution(ok_small, [[1, 2], [3], [4]])
+    sol = Solution(ok_small, [[0, 1], [2], [3]])
     new_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     assert_equal(new_sol, sol)
@@ -138,7 +134,7 @@ def test_cannot_exchange_when_segments_overlap(ok_small, operator):
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
     ls.add_operator(operator(ok_small))
 
-    sol = Solution(ok_small, [[1, 2, 3, 4]])
+    sol = Solution(ok_small, [[0, 1, 2, 3]])
     new_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     assert_equal(new_sol, sol)
@@ -157,9 +153,9 @@ def test_cannot_swap_adjacent_segments(ok_small):
     ls.add_operator(Exchange22(ok_small))
 
     # An adjacent swap by (2, 2)-exchange could have created the single-route
-    # solution [3, 4, 1, 2], which has a much lower cost. But that's not
+    # solution [C2, C3, C0, C1], which has a much lower cost. But that's not
     # allowed because adjacent swaps are not allowed.
-    sol = Solution(ok_small, [[1, 2, 3, 4]])
+    sol = Solution(ok_small, [[0, 1, 2, 3]])
     new_sol = ls(sol, cost_evaluator, exhaustive=True)
 
     assert_equal(new_sol, sol)
@@ -177,9 +173,9 @@ def test_swap_between_routes_OkSmall(ok_small):
     ls = LocalSearch(ok_small, rng, compute_neighbours(ok_small, nb_params))
     ls.add_operator(Exchange21(ok_small))
 
-    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    sol = Solution(ok_small, [[0, 1], [2, 3]])
     improved_sol = ls(sol, cost_evaluator, exhaustive=True)
-    expected = Solution(ok_small, [[3, 4, 2], [1]])
+    expected = Solution(ok_small, [[2, 3, 1], [0]])
     assert_equal(improved_sol, expected)
 
     current_cost = cost_evaluator.penalised_cost(sol)
@@ -194,17 +190,17 @@ def test_relocate_after_depot_should_work(ok_small):
     """
     op = Exchange10(ok_small)
 
-    # We create two routes: one with clients [1, 2, 3], and the other empty.
-    # It is an improving move to insert client 3 into the empty route.
+    # We create two routes: one with clients [C0, C1, C2], and the other empty.
+    # It is an improving move to insert C2 into the empty route.
     route1 = Route(ok_small, vehicle_type=0)
     route2 = Route(ok_small, vehicle_type=0)
 
-    nodes = [Node(loc=client) for client in [1, 2, 3]]
+    nodes = [Node(descr) for descr in ["C0", "C1", "C2"]]
     for node in nodes:
         route1.append(node)
     route1.update()
 
-    # This solution can be improved by moving 3 into its own route, that is,
+    # This solution can be improved by moving C2 into its own route, that is,
     # inserting it after the depot of an empty route. Before the bug was fixed,
     # (1, 0)-exchange never performed this move.
     cost_evaluator = CostEvaluator([20], 6, 0)
@@ -230,8 +226,8 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     Tests that (1, 0)-exchange checks the duration matrix for time-window
     feasibility before applying a move that improves the travelled distance.
     """
-    # Distance-wise, the best route is 0 -> 1 -> 2 -> 0. Duration-wise,
-    # however, the best route is 0 -> 2 -> 1 -> 0.
+    # Distance-wise, the best route is D0 -> C0 -> C1 -> D0. Duration-wise,
+    # however, the best route is D0 -> C1 -> C0 -> D0.
     data = ProblemData(
         locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
         clients=[
@@ -265,8 +261,8 @@ def test_relocate_only_happens_when_distance_and_duration_allow_it():
     # We also consider a distance-optimal solution that is not feasible. Since
     # we have non-zero time warp penalty, this solution should be improved into
     # the duration optimal solution.
-    duration_optimal = Solution(data, [[2, 1]])
-    distance_optimal = Solution(data, [[1, 2]])
+    duration_optimal = Solution(data, [[1, 0]])
+    distance_optimal = Solution(data, [[0, 1]])
 
     assert_(distance_optimal.distance() < duration_optimal.distance())
     assert_(duration_optimal.time_warp() < distance_optimal.time_warp())
@@ -296,25 +292,25 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     # client moves allowed by it will not improve the initial solution created
     # below. So the only improvements (1, 0)-exchange can make must come from
     # moving clients behind the depot of a route.
-    neighbours = [[] for _ in range(data.num_depots + data.num_clients)]
-    neighbours[2].append(1)
+    neighbours = [[] for _ in range(data.num_clients)]
+    neighbours[1].append(0)
 
     ls = LocalSearch(data, rng, neighbours)
     ls.add_operator(Exchange10(data))
 
-    # The initial solution has routes with loads [13, 5, 0, 0]
-    # with excess [1, 0, 0, 0]. Moving node 3 to route 4 will resolve all
-    # load penalties, but other moves would increase load penalties.
-    # Therefore, this requires moving to an empty route which is not the first.
+    # Solution has routes with loads [13, 5, 0, 0] and excess [1, 0, 0, 0].
+    # Moving C2 to route 4 will resolve all load penalties, but other moves
+    # would increase load penalties. Therefore, this requires moving to an
+    # empty route which is not the first.
     sol = Solution(
-        data, [SolRoute(data, [1, 2, 3], 0), SolRoute(data, [4], 1)]
+        data, [SolRoute(data, [0, 1, 2], 0), SolRoute(data, [3], 1)]
     )
     expected = Solution(
         data,
         [
-            SolRoute(data, [1, 2], 0),
-            SolRoute(data, [4], 1),
-            SolRoute(data, [3], 3),
+            SolRoute(data, [0, 1], 0),
+            SolRoute(data, [3], 1),
+            SolRoute(data, [2], 3),
         ],
     )
     assert_equal(ls(sol, cost_evaluator), expected)
@@ -343,7 +339,7 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 
-    route1 = make_search_route(data, [2, 4, 1, 3])
+    route1 = make_search_route(data, ["C1", "C3", "C0", "C2"])
     route2 = make_search_route(data, [])
 
     # First route is not empty, second route is. The operator evaluates moving
@@ -373,8 +369,8 @@ def test_exchange_with_duration_constraint(ok_small, op, max_dur, cost):
     data = ok_small.replace(vehicle_types=[vehicle_type])
     op = op(data)
 
-    route1 = make_search_route(data, [2, 4])
-    route2 = make_search_route(data, [1, 3])
+    route1 = make_search_route(data, ["C1", "C3"])
+    route2 = make_search_route(data, ["C0", "C2"])
 
     # Without duration constraint, route1 has a duration of 5_229 and no time
     # warp while route2 has a duration of 5_814 and timewarp 2_087, for a net
@@ -416,17 +412,17 @@ def test_within_route_simultaneous_pickup_and_delivery(operator):
         duration_matrices=[np.zeros((4, 4), dtype=int)],
     )
 
-    # Route is 1 -> 2 -> 3, and stores 1's pickup amount (5) before dropping
-    # off 3's delivery amount (5). So total load is 10, and the excess load 5.
-    route = make_search_route(data, [1, 2, 3])
+    # Route is C0 -> C1 -> C2, and gets C0's pickup amount (5) before dropping
+    # off C2's delivery amount (5). So total load is 10, and the excess load 5.
+    route = make_search_route(data, ["C0", "C1", "C2"])
     assert_(not route.is_feasible())
     assert_equal(route.load(), [10])
     assert_equal(route.excess_load(), [5])
 
-    # For (1, 0)-exchange, we evaluate inserting 1 after 3. That'd resolve the
-    # excess load. For (1, 1)-exchange, we evaluate swapping 1 and 3, which
-    # would also resolve the excess load: the important bit is that we visit 3
-    # before 1.
+    # For (1, 0)-exchange, we evaluate inserting C0 after C2. That resolves the
+    # excess load. For (1, 1)-exchange, we evaluate swapping C0 and C2, which
+    # would also resolve the excess load: the important bit is that we visit C2
+    # before C0.
     op = operator(data)
     cost_eval = CostEvaluator([1], 1, 0)
     assert_equal(op.evaluate(route[1], route[3], cost_eval), (-5, True))
@@ -449,7 +445,7 @@ def test_relocate_max_distance(ok_small, max_distance: int, expected: int):
     vehicle_type = VehicleType(2, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    route1 = make_search_route(data, [1, 2])
+    route1 = make_search_route(data, ["C0", "C1"])
     route2 = make_search_route(data, [])
 
     assert_equal(route1.distance(), 5_501)
@@ -458,8 +454,8 @@ def test_relocate_max_distance(ok_small, max_distance: int, expected: int):
     cost_eval = CostEvaluator([0], 0, 10)
     op = Exchange10(data)
 
-    # Moving client #2 from route1 to route2 does not improve the overall
-    # distance, but can be helpful in reducing maximum distance violations.
+    # Moving C1 from route1 to route2 does not improve the overall distance,
+    # but can be helpful in reducing maximum distance violations.
     actual, should_apply = op.evaluate(route1[2], route2[0], cost_eval)
     assert_equal(actual, expected)
     assert_equal(should_apply, expected < 0)
@@ -501,8 +497,8 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
     vehicle_type = VehicleType(2, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    route1 = make_search_route(data, [1, 2])
-    route2 = make_search_route(data, [3])
+    route1 = make_search_route(data, ["C0", "C1"])
+    route2 = make_search_route(data, ["C2"])
 
     assert_equal(route1.distance(), 5_501)
     assert_equal(route1.excess_distance(), max(5_501 - max_distance, 0))
@@ -513,7 +509,7 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
     cost_eval = CostEvaluator([0], 0, 10)
     op = Exchange11(data)
 
-    # Swapping client #2 in route1 and client #3 in route2 improves the overall
+    # Swapping client C1 in route1 and client C2 in route2 improves the overall
     # distance and reduces the excess distance violations.
     actual, should_apply = op.evaluate(route1[2], route2[1], cost_eval)
     assert_equal(actual, expected)
@@ -547,13 +543,13 @@ def test_swap_with_different_profiles(ok_small_two_profiles):
     """
     data = ok_small_two_profiles
 
-    route1 = make_search_route(data, [3], vehicle_type=0)
-    route2 = make_search_route(data, [4], vehicle_type=1)
+    route1 = make_search_route(data, ["C2"], vehicle_type=0)
+    route2 = make_search_route(data, ["C3"], vehicle_type=1)
 
     op = Exchange11(data)
     cost_eval = CostEvaluator([0], 0, 0)  # all zero so no costs from penalties
 
-    # This move evaluates swapping loc 3 and 4 between routes. The cost delta
+    # This move evaluates swapping C2 and C3 between routes. The cost delta
     # is as follows, taking into account the different profiles' distances.
     dist1, dist2 = data.distance_matrices()
     delta = dist1[0, 4] + dist1[4, 0] + dist2[0, 3] + dist2[3, 0]
@@ -567,7 +563,7 @@ def test_swap_does_not_swap_depots(ok_small_multiple_trips):
     a reload depot.
     """
     data = ok_small_multiple_trips
-    route = make_search_route(data, [1, 2, 0, 3, 4])  # route is 1 2 | 3 4
+    route = make_search_route(data, ["C0", "C1", "D0", "C2", "C3"])
 
     op = Exchange21(data)
     cost_eval = CostEvaluator([0], 0, 0)
@@ -602,8 +598,8 @@ def test_bug_evaluating_move_with_initial_load():
     op = Exchange21(data)
     cost_eval = CostEvaluator([1], 0, 0)
 
-    route1 = make_search_route(data, [2, 3])
-    route2 = make_search_route(data, [1])
+    route1 = make_search_route(data, ["C1", "C2"])
+    route2 = make_search_route(data, ["C0"])
 
     # This move just permutes the solution, turning route1 into route2, and
     # vice versa. Thus, the delta cost of this move should be zero.
@@ -637,17 +633,17 @@ def test_bug_release_time_shift_time_windows():
         duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
-    route1 = make_search_route(data, [1], vehicle_type=0)
+    route1 = make_search_route(data, ["C0"], vehicle_type=0)
     assert_(route1.is_feasible())
 
-    # Vehicle's time windows are constrained to [0, 1], but client 2 is not
-    # released until 2. So there's a unit of time warp when we leave the depot.
-    # Then we have to wait until 2 at the client, and have another unit of time
-    # warp when we return to the depot.
-    route2 = make_search_route(data, [2], vehicle_type=1)
+    # Vehicle's time windows are constrained to [0, 1], but C1 is not released
+    # until 2. So there's a unit of time warp when we leave the depot. Then we
+    # have to wait until 2 at the client, and have another unit of time warp
+    # when we return to the depot.
+    route2 = make_search_route(data, ["C1"], vehicle_type=1)
     assert_equal(route2.time_warp(), 2)
 
-    # This move proposes inserting 1 before 2 in route2. That changes nothing
+    # This move proposes inserting C0 before C2 in route2. That changes nothing
     # about route2's time warp, so the move should not affect costs.
     op = Exchange10(data)
     cost_eval = CostEvaluator([], 1, 0)
@@ -679,11 +675,11 @@ def test_empty_route_delta_cost_bug():
         distance_matrices=[mat],
     )
 
-    route1 = make_search_route(data, [2], vehicle_type=0)
+    route1 = make_search_route(data, ["C0"], vehicle_type=0)
     route2 = make_search_route(data, [], vehicle_type=1)
 
-    # This move proposes inserting the client 2 in route2. Before fixing the
-    # bug, route2's cost was included in the delta cost computation, claiming
+    # This move proposes inserting C0 in route2. Before fixing the bug,
+    # route2's cost was included in the delta cost computation, claiming
     # this to be an improving move. But an empty route's cost should not be
     # included in the delta cost.
     op = Exchange10(data)
@@ -696,7 +692,7 @@ def test_relocate_overtime(ok_small_overtime):
     Tests a relocate move involving overtime correctly evaluates the resulting
     (duration-based) cost delta.
     """
-    route1 = make_search_route(ok_small_overtime, [1, 3])
+    route1 = make_search_route(ok_small_overtime, ["C0", "C2"])
     route2 = make_search_route(ok_small_overtime, [])
 
     # First route takes 5'814, of which 814 is overtime. The cost structure
@@ -705,7 +701,7 @@ def test_relocate_overtime(ok_small_overtime):
     assert_equal(route1.overtime(), 814)
     old_cost = 5_814 + 10 * 814
 
-    # The move evaluates the new routes [1] and [3]. Those have the following
+    # The move evaluates the new routes [C0] and [C2]. Those have the following
     # durations (travel to client, service, travel back to depot):
     # - route 1: 1544 + 360 + 1726 = 3630,
     # - route 2: 1931 + 420 + 2063 = 4414.
@@ -725,8 +721,8 @@ def test_skip_unassigned_clients(operator, ok_small):
     """
     Tests that the operators do not evaluate moves for unassigned clients.
     """
-    route = make_search_route(ok_small, [1, 2])
-    node = Node(loc=3)  # unassigned
+    route = make_search_route(ok_small, ["C0", "C1"])
+    node = Node("C2")  # unassigned
 
     operator = Exchange10(ok_small)
     cost_eval = CostEvaluator([0], 0, 0)

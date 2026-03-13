@@ -1,10 +1,10 @@
 #ifndef PYVRP_SEARCH_DEPOTSEGMENT_H
 #define PYVRP_SEARCH_DEPOTSEGMENT_H
 
-#include "ProblemData.h"
-
+#include "Activity.h"
 #include "DurationSegment.h"
 #include "LoadSegment.h"
+#include "ProblemData.h"
 
 namespace pyvrp::search
 {
@@ -26,8 +26,8 @@ public:
 
     pyvrp::search::Route const *route() const { return nullptr; }
 
-    size_t first() const { return depot_; }
-    size_t last() const { return depot_; }
+    Activity first() const { return {Activity::ActivityType::DEPOT, depot_}; }
+    Activity last() const { return {Activity::ActivityType::DEPOT, depot_}; }
     size_t size() const { return 1; }
 
     bool startsAtReloadDepot() const { return true; }

@@ -855,7 +855,7 @@ def test_raises_empty_group():
     ("groups", "index"),
     [
         ([], 0),  # index 0, but there are no groups
-        ([ClientGroup([1])], 1),  # there is one group, but index is 1
+        ([ClientGroup([0])], 1),  # there is one group, but index is 1
     ],
 )
 def test_raises_invalid_client_group_indices(
@@ -878,13 +878,10 @@ def test_raises_invalid_client_group_indices(
         )
 
 
-@pytest.mark.parametrize(
-    "groups", [[ClientGroup([0, 1])], [ClientGroup([1, 2])]]
-)
-def test_raises_invalid_group_client_indices(groups: list[ClientGroup]):
+def test_raises_invalid_group_client_indices():
     """
-    Tests that groups with client indices that are either depots or outside the
-    range of client locations results in an IndexError.
+    Tests that group client indices that are outside the range of clients
+    results in an IndexError.
     """
     with assert_raises(IndexError):
         ProblemData(
@@ -894,7 +891,7 @@ def test_raises_invalid_group_client_indices(groups: list[ClientGroup]):
             vehicle_types=[VehicleType()],
             distance_matrices=[np.zeros((2, 2))],
             duration_matrices=[np.zeros((2, 2))],
-            groups=groups,
+            groups=[ClientGroup([0, 1])],
         )
 
 
@@ -949,7 +946,7 @@ def test_raises_for_required_mutually_exclusive_group_membership():
             vehicle_types=[VehicleType()],
             distance_matrices=[np.zeros((2, 2))],
             duration_matrices=[np.zeros((2, 2))],
-            groups=[ClientGroup([1])],
+            groups=[ClientGroup([0])],
         )
 
 
@@ -978,12 +975,12 @@ def test_replacing_client_groups(ok_small):
     # that has a mutually exclusive group.
     clients = ok_small.clients()
     clients[0] = Client(1, delivery=[1], required=False, group=0)
-    data = ok_small.replace(clients=clients, groups=[ClientGroup([1])])
+    data = ok_small.replace(clients=clients, groups=[ClientGroup([0])])
 
     # There should now be a single client group (at index 0) that has the first
     # client as its only member.
     assert_equal(data.num_groups, 1)
-    assert_equal(data.group(0).clients, [1])
+    assert_equal(data.group(0).clients, [0])
 
 
 def test_location_eq():

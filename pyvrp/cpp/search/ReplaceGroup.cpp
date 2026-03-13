@@ -13,7 +13,8 @@ ReplaceGroup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
     assert(!U->isDepot() && solution_);
     stats_.numEvaluations++;
 
-    auto const &uData = data.client(U->client() - data.numDepots());
+    auto const [_, uClient] = U->activity();
+    auto const &uData = data.client(uClient);
     if (U->route() || !uData.group)
         return std::make_pair(0, false);
 
@@ -24,14 +25,14 @@ ReplaceGroup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
     for (auto const client : group)
         if (solution_->nodes[client].route())
         {
-            assert(client != U->client());
+            assert(client != uClient);
             V_ = &solution_->nodes[client];
             auto *route = V_->route();
 
             costEvaluator.deltaCost(  // evaluate replacing V with U
                 deltaCost,
                 Route::Proposal(route->before(V_->idx() - 1),
-                                ClientSegment(data, U->client()),
+                                ClientSegment(data, uClient),
                                 route->after(V_->idx() + 1)));
 
             // At most one group member is in the solution at any one time, so

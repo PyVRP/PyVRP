@@ -25,8 +25,7 @@ public:
     using Neighbours = std::vector<std::vector<size_t>>;
 
 private:
-    // Neighbourhood restrictions: list of nearby clients for each client (size
-    // numLocations, but nothing is stored for the depots!).
+    // Neighbourhood restrictions: list of nearby clients for each client.
     Neighbours neighbours_;
 
     // Tracks clients that can likely be improved by local search operators.

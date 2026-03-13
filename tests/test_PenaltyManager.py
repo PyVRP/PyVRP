@@ -106,8 +106,8 @@ def test_load_penalty_update_increase(ok_small):
     # Within bandwidth, so penalty should not change.
     assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 1)
 
-    feas = Solution(ok_small, [[1, 2]])
-    infeas = Solution(ok_small, [[1, 2, 3]])
+    feas = Solution(ok_small, [[0, 1]])
+    infeas = Solution(ok_small, [[0, 1, 2]])
 
     assert_(not feas.has_excess_load())
     assert_(infeas.has_excess_load())
@@ -142,8 +142,8 @@ def test_load_penalty_update_decrease(ok_small):
     params = PenaltyParams(num_registrations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(([4], 1, 1), params)
 
-    feas = Solution(ok_small, [[1, 2]])
-    infeas = Solution(ok_small, [[1, 2, 3]])
+    feas = Solution(ok_small, [[0, 1]])
+    infeas = Solution(ok_small, [[0, 1, 2]])
 
     assert_(not feas.has_excess_load())
     assert_(infeas.has_excess_load())
@@ -190,8 +190,8 @@ def test_time_warp_penalty_update_increase(ok_small):
     params = PenaltyParams(num_registrations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(([1], 1, 1), params)
 
-    feas = Solution(ok_small, [[1, 2]])
-    infeas = Solution(ok_small, [[1, 2, 3]])
+    feas = Solution(ok_small, [[0, 1]])
+    infeas = Solution(ok_small, [[0, 1, 2]])
 
     assert_(not feas.has_time_warp())
     assert_(infeas.has_time_warp())
@@ -230,8 +230,8 @@ def test_time_warp_penalty_update_decrease(ok_small):
     params = PenaltyParams(num_registrations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(([1], 4, 1), params)
 
-    feas = Solution(ok_small, [[1, 2]])
-    infeas = Solution(ok_small, [[1, 2, 3]])
+    feas = Solution(ok_small, [[0, 1]])
+    infeas = Solution(ok_small, [[0, 1, 2]])
 
     assert_(not feas.has_time_warp())
     assert_(infeas.has_time_warp())
@@ -281,8 +281,8 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
     params = PenaltyParams(num_registrations, 1.1, 0.9, 0.5)
     pm = PenaltyManager(([4], 4, 4), params)
 
-    feas = Solution(data, [[1, 2], [3, 4]])
-    infeas = Solution(data, [[1, 2, 3, 4]])
+    feas = Solution(data, [[0, 1], [2, 3]])
+    infeas = Solution(data, [[0, 1, 2, 3]])
 
     assert_(feas.is_feasible())
     assert_(not infeas.is_feasible())
@@ -325,7 +325,7 @@ def test_max_min_penalty(ok_small):
     # penalised by that value.
     assert_equal(pm.cost_evaluator().tw_penalty(1), params.max_penalty)
 
-    infeas = Solution(ok_small, [[1, 2, 3, 4]])
+    infeas = Solution(ok_small, [[0, 1, 2, 3]])
     assert_(infeas.has_time_warp())
 
     # When we register an infeasible solution, normally the penalty should go
@@ -334,7 +334,7 @@ def test_max_min_penalty(ok_small):
     pm.register(infeas)
     assert_equal(pm.cost_evaluator().tw_penalty(1), params.max_penalty)
 
-    feas = Solution(ok_small, [[1, 2], [3, 4]])
+    feas = Solution(ok_small, [[0, 1], [2, 3]])
     assert_(not feas.has_time_warp())
 
     # But when we register a feasible solution, the time warp penalty parameter
@@ -356,7 +356,7 @@ def test_warns_max_penalty_value(ok_small):
     pm = PenaltyManager(initial, params)
     assert_equal(pm.penalties(), initial)
 
-    infeas = Solution(ok_small, [[1, 2, 3, 4]])
+    infeas = Solution(ok_small, [[0, 1, 2, 3]])
     assert_(infeas.has_time_warp())
 
     with pytest.warns(PenaltyBoundWarning):

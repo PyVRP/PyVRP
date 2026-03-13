@@ -39,12 +39,26 @@ def tabulate(headers: list[str], rows: np.ndarray) -> str:
 
 
 def write_solution(where: Path, data: ProblemData, result: Result):
+    def route2vrplib(route) -> list[int]:
+        visits: list[int] = []
+        for activity in route:
+            # Map activities back to VRPLIB's format.  VRPLIB uses a format
+            # where the route visits are numbered with [0, ..., num_depots) for
+            # the depots, and [num_depots, ..., num_depots + num_clients) for
+            # the clients.
+            if activity.is_depot():
+                visits.append(activity.idx)
+
+            if activity.is_client():
+                visits.append(data.num_depots + activity.idx)
+
+        return visits[1:-1]  # skip start and end depots
+
     with open(where, "w") as fh:
         if data.num_vehicle_types == 1:
             for idx, route in enumerate(result.best.routes(), 1):
-                visits = [str(visit.location) for visit in route.schedule()]
-                visits = visits[1:-1]  # skip start and end depots
-                fh.write(f"Route #{idx}: {' '.join(visits)}\n")
+                visits = route2vrplib(route)
+                fh.write(f"Route #{idx}: {' '.join(map(str, visits))}\n")
 
             fh.write(f"Cost: {round(result.cost(), 2)}\n")
             return
@@ -59,11 +73,9 @@ def write_solution(where: Path, data: ProblemData, result: Result):
 
         routes = [f"Route #{idx + 1}:" for idx in range(data.num_vehicles)]
         for route in result.best.routes():
-            visits = [str(visit.location) for visit in route.schedule()]
-            visits = visits[1:-1]  # skip start and end depots
-
+            visits = route2vrplib(route)
             vehicle = next(type2vehicle[route.vehicle_type()])
-            routes[vehicle] += " " + " ".join(visits)
+            routes[vehicle] += " " + " ".join(map(str, visits))
 
         fh.writelines(route + "\n" for route in routes)
         fh.write(f"Cost: {round(result.cost(), 2)}\n")

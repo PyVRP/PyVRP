@@ -1,5 +1,6 @@
 #include "RelocateWithDepot.h"
 
+#include "Activity.h"
 #include "DepotSegment.h"
 
 #include <cassert>
@@ -171,7 +172,7 @@ void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
     uRoute->remove(U->idx());
 
     auto *vRoute = V->route();
-    Route::Node depot = {move_.depot};
+    Route::Node depot = {Activity::ActivityType::DEPOT, move_.depot};
 
     if (move_.type == MoveType::DEPOT_U)
     {

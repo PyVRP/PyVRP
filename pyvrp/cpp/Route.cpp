@@ -5,84 +5,23 @@
 #include <algorithm>
 #include <cassert>
 #include <fstream>
-#include <numeric>
 
+using pyvrp::Activity;
 using pyvrp::Cost;
 using pyvrp::Distance;
 using pyvrp::Duration;
 using pyvrp::Load;
 using pyvrp::Route;
-using pyvrp::Trip;
 
 using Client = size_t;
 
-Route::Iterator::Iterator(Route const &route, size_t idx)
-    : route_(&route), trip_(route.numTrips()), idx_(0)
-{
-    assert(idx <= route.size());
-
-    auto const &trips = route.trips();
-    for (size_t trip = 0; trip != trips.size(); ++trip)
-    {
-        if (idx < trips[trip].size())
-        {
-            trip_ = trip;
-            idx_ = idx;
-            break;
-        }
-
-        idx -= trips[trip].size();
-    }
-}
-
-bool Route::Iterator::operator==(Iterator const &other) const
-{
-    return route_ == other.route_ && trip_ == other.trip_ && idx_ == other.idx_;
-}
-
-Client Route::Iterator::operator*() const
-{
-    auto const &trips = route_->trips();
-    assert(trip_ < trips.size());
-    assert(idx_ < trips[trip_].size());
-
-    return trips[trip_][idx_].idx;
-}
-
-Route::Iterator Route::Iterator::operator++(int)
-{
-    auto tmp = *this;
-    ++*this;
-    return tmp;
-}
-
-Route::Iterator &Route::Iterator::operator++()
-{
-    auto const &trips = route_->trips();
-    if (idx_ + 1 < trips[trip_].size())
-    {
-        ++idx_;
-        return *this;
-    }
-
-    // Then we move to the next trip. This trip could be empty - in that case
-    // we continue to the next until we either exhaust all trips, or we find a
-    // non-empty trip.
-    ++trip_;
-    while (trip_ < trips.size() && trips[trip_].empty())
-        ++trip_;
-
-    idx_ = 0;
-    return *this;
-}
-
-Route::ScheduledVisit::ScheduledVisit(size_t location,
+Route::ScheduledVisit::ScheduledVisit(Activity activity,
                                       size_t trip,
                                       Duration startService,
                                       Duration endService,
                                       Duration waitDuration,
                                       Duration timeWarp)
-    : location_(location),
+    : activity_(activity),
       trip_(trip),
       startService_(startService),
       endService_(endService),
@@ -92,7 +31,7 @@ Route::ScheduledVisit::ScheduledVisit(size_t location,
     assert(startService_ <= endService_);
 }
 
-size_t Route::ScheduledVisit::location() const { return location_; }
+Activity Route::ScheduledVisit::activity() const { return activity_; }
 
 size_t Route::ScheduledVisit::trip() const { return trip_; }
 
@@ -109,47 +48,32 @@ Duration Route::ScheduledVisit::waitDuration() const { return waitDuration_; }
 
 Duration Route::ScheduledVisit::timeWarp() const { return timeWarp_; }
 
-void Route::validate(ProblemData const &data) const
-{
-    auto const &vehData = data.vehicleType(vehicleType_);
-
-    if (trips_.size() > vehData.maxTrips())
-        throw std::invalid_argument("Vehicle cannot perform this many trips.");
-
-    if (trips_[0].startDepot() != startDepot_)
-    {
-        auto const *msg = "Route must start at vehicle's start_depot.";
-        throw std::invalid_argument(msg);
-    }
-
-    if (trips_.back().endDepot() != endDepot_)
-        throw std::invalid_argument("Route must end at vehicle's end_depot.");
-
-    for (auto const &trip : trips_)
-        if (trip.vehicleType() != vehicleType_)
-        {
-            auto const *msg = "Each trip must use the route's vehicle type.";
-            throw std::invalid_argument(msg);
-        }
-
-    for (size_t idx = 0; idx + 1 != trips_.size(); ++idx)
-        if (trips_[idx].endDepot() != trips_[idx + 1].startDepot())
-        {
-            auto *msg = "Consecutive trips must start at previous' end_depot.";
-            throw std::invalid_argument(msg);
-        }
-}
-
 void Route::makeSchedule(ProblemData const &data)
 {
     schedule_.clear();
-    schedule_.reserve(size() + numTrips() + 1);  // clients and depots
+    schedule_.reserve(activities_.size());
 
     auto const &vehData = data.vehicleType(vehicleType_);
     auto const &durations = data.durationMatrix(vehData.profile);
 
+    Duration releaseTime;
+    std::vector<Duration> releaseTimes;  // per trip
+    for (auto it = activities_.begin() + 1; it != activities_.end(); ++it)
+    {
+        if (it->isDepot())
+        {
+            releaseTimes.push_back(releaseTime);
+            releaseTime = 0;
+            continue;
+        }
+
+        auto const &client = data.client(it->idx);
+        releaseTime = std::max(releaseTime, client.releaseTime);
+    }
+    releaseTimes.push_back(0);
+
     auto now = startTime_;
-    auto const handle = [&](size_t location,
+    auto const handle = [&](Activity activity,
                             size_t trip,
                             Duration early,
                             Duration late,
@@ -161,36 +85,47 @@ void Route::makeSchedule(ProblemData const &data)
         now += wait;
         now -= tw;
 
-        schedule_.emplace_back(location, trip, now, now + service, wait, tw);
+        schedule_.emplace_back(activity, trip, now, now + service, wait, tw);
 
         now += service;
     };
 
-    for (size_t tripIdx = 0; tripIdx != trips_.size(); ++tripIdx)
+    size_t tripIdx = 0;
+    size_t prevLoc = data.depot(startDepot_).location;
+    for (size_t idx = 0; idx != activities_.size(); ++idx)
     {
-        auto const &trip = trips_[tripIdx];
-        auto const &start = data.depot(trip.startDepot());
+        auto const activity = activities_[idx];
 
-        auto const earliestStart = std::max(
-            start.twEarly, std::min(trip.releaseTime(), start.twLate));
-        auto const latestStart = tripIdx == 0  // first trip also accounts for
-                                               // the latest start constraint
-                                     ? std::min(start.twLate, vehData.startLate)
-                                     : start.twLate;
-
-        handle(trip.startDepot(),
-               tripIdx,
-               earliestStart,
-               latestStart,
-               start.serviceDuration);
-
-        size_t prevLoc = data.depot(trip.startDepot()).location;
-        for (auto const [_, client] : trip)
+        if (activity.isDepot())
         {
-            auto const &clientData = data.client(client - data.numDepots());
+            auto const &depot = data.depot(activity.idx);
+            now += durations(prevLoc, depot.location);
+
+            Duration earliestStart = depot.twEarly;
+            Duration latestStart = depot.twLate;
+            Duration serviceDuration = depot.serviceDuration;
+
+            if (idx == activities_.size() - 1)
+                serviceDuration = 0;
+            else
+                earliestStart
+                    = std::max(depot.twEarly,
+                               std::min(releaseTimes[tripIdx++], depot.twLate));
+
+            if (idx == 0)  // first trip accounts for latest start
+                latestStart = std::min(depot.twLate, vehData.startLate);
+
+            handle(
+                activity, tripIdx, earliestStart, latestStart, serviceDuration);
+
+            prevLoc = depot.location;
+        }
+        else
+        {
+            auto const &clientData = data.client(activity.idx);
             now += durations(prevLoc, clientData.location);
 
-            handle(client,
+            handle(activity,
                    tripIdx,
                    clientData.twEarly,
                    clientData.twLate,
@@ -198,97 +133,138 @@ void Route::makeSchedule(ProblemData const &data)
 
             prevLoc = clientData.location;
         }
-
-        now += durations(prevLoc, data.depot(trip.endDepot()).location);
     }
-
-    auto const &end = data.depot(endDepot_);
-    handle(endDepot_, numTrips(), end.twEarly, end.twLate, 0);
 }
 
-Route::Route(ProblemData const &data, Visits visits, size_t vehicleType)
-    : Route(data, {{data, std::move(visits), vehicleType}}, vehicleType)
+Route::Route(ProblemData const &data,
+             std::vector<Client> visits,
+             VehicleType vehicleType)
 {
+    std::vector<Activity> activities;
+    activities.reserve(visits.size());
+
+    for (auto const client : visits)
+        activities.emplace_back(Activity::ActivityType::CLIENT, client);
+
+    *this = Route(data, activities, vehicleType);
 }
 
-Route::Route(ProblemData const &data, Trips trips, size_t vehType)
-    : trips_(std::move(trips)),
+Route::Route(ProblemData const &data, Activities activities, size_t vehType)
+    : activities_(std::move(activities)),
       delivery_(data.numLoadDimensions(), 0),
       pickup_(data.numLoadDimensions(), 0),
       excessLoad_(data.numLoadDimensions(), 0),
       vehicleType_(vehType)
 {
-    if (trips_.empty())  // then we insert a dummy trip for ease.
-        trips_.emplace_back(data, Visits{}, vehType);
-
-    auto const &vehData = data.vehicleType(vehType);
+    auto const &vehData = data.vehicleType(vehicleType_);
     startDepot_ = vehData.startDepot;
     endDepot_ = vehData.endDepot;
     fixedVehicleCost_ = vehData.fixedCost;
 
-    validate(data);
+    activities_.insert(activities_.begin(),
+                       {Activity::ActivityType::DEPOT, startDepot_});
+    activities_.emplace_back(Activity::ActivityType::DEPOT, endDepot_);
 
-    for (auto const &trip : trips_)  // general statistics
+    for (auto const &activity : activities_)
     {
-        distance_ += trip.distance();
-        service_ += trip.serviceDuration();
-        travel_ += trip.travelDuration();
-        prizes_ += trip.prizes();
+        if (activity.isDepot() && activity.idx >= data.numDepots())
+        {
+            std::ostringstream msg;
+            msg << "Depot " << activity << " is not understood.";
+            throw std::invalid_argument(msg.str());
+        }
+
+        if (activity.isClient() && activity.idx >= data.numClients())
+        {
+            std::ostringstream msg;
+            msg << "Client " << activity << " is not understood.";
+            throw std::invalid_argument(msg.str());
+        }
+    }
+
+    // Distance.
+    auto const &distances = data.distanceMatrix(vehData.profile);
+    size_t frmLoc = data.depot(startDepot_).location;
+    for (size_t idx = 1; idx != activities_.size(); ++idx)
+    {
+        auto const toLoc = activities_[idx].isDepot()
+                               ? data.depot(activities_[idx].idx).location
+                               : data.client(activities_[idx].idx).location;
+
+        distance_ += distances(frmLoc, toLoc);
+        frmLoc = toLoc;
     }
 
     distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
     excessDistance_ = std::max<Distance>(distance_ - vehData.maxDistance, 0);
 
-    for (size_t idx = 0; idx != trips_.size(); ++idx)  // load statistics
+    // Prizes.
+    for (auto const &activity : activities_)
+        if (activity.isClient())
+            prizes_ += data.client(activity.idx).prize;
+
+    // Load.
+    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
-        auto const &trip = trips_[idx];
-        auto const &tripDeliv = trip.delivery();
-        auto const &tripPick = trip.pickup();
-        auto const &tripLoad = trip.load();
+        LoadSegment ls;
 
-        for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+        if (vehData.initialLoad[dim] > 0)  // start with initial vehicle load
+            ls = {vehData, dim};
+
+        for (size_t idx = 1; idx != activities_.size(); ++idx)
         {
-            LoadSegment ls = {tripDeliv[dim], tripPick[dim], tripLoad[dim], 0};
+            if (activities_[idx].isDepot())
+            {
+                delivery_[dim] += ls.delivery();
+                pickup_[dim] += ls.pickup();
+                ls = ls.finalise(vehData.capacity[dim]);
+            }
 
-            if (idx == 0 && vehData.initialLoad[dim] > 0)
-                // This is initial load that the first trip does not know about
-                // that we need to account for first.
-                ls = LoadSegment::merge({vehData, dim}, ls);
-
-            delivery_[dim] += ls.delivery();
-            pickup_[dim] += ls.pickup();
-            excessLoad_[dim] += ls.excessLoad(vehData.capacity[dim]);
+            if (activities_[idx].isClient())
+                ls = LoadSegment::merge(
+                    ls, {data.client(activities_[idx].idx), dim});
         }
+
+        excessLoad_[dim] = ls.excessLoad(vehData.capacity[dim]);
     }
 
-    // Duration statistics. We iterate in reverse, that is, from the last to
+    // Duration. We iterate in reverse, that is, from the last to
     // the first visit.
     auto const &durations = data.durationMatrix(vehData.profile);
     DurationSegment ds = {vehData, vehData.twLate};
-    for (auto trip = trips_.rbegin(); trip != trips_.rend(); ++trip)
+    size_t nextLoc = data.depot(endDepot_).location;
+    for (auto idx = activities_.size(); idx-- > 0;)
     {
-        if (trip != trips_.rbegin())  // need to finalise before next trip,
-            ds = ds.finaliseFront();  // unless this is the first one
-
-        auto const &end = data.depot(trip->endDepot());
-        ds = DurationSegment::merge({end, 0}, ds);
-
-        size_t nextLoc = end.location;
-        for (auto it = trip->rbegin(); it != trip->rend(); ++it)
+        auto const activity = activities_[idx];
+        if (activity.isDepot())
         {
-            auto const [_, client] = *it;
-            auto const &clientData = data.client(client - data.numDepots());
+            auto const &depot = data.depot(activity.idx);
+            auto const edgeDuration = durations(depot.location, nextLoc);
+            travel_ += edgeDuration;
+
+            auto const depotService
+                = idx == activities_.size() - 1 ? 0 : depot.serviceDuration;
+
+            service_ += depotService;
+            ds = DurationSegment::merge(
+                edgeDuration, {depot, depotService}, ds);
+
+            if (idx != 0 && idx != activities_.size() - 1)  // is reload depot
+                ds = ds.finaliseFront();
+
+            nextLoc = depot.location;
+        }
+        else
+        {
+            auto const &clientData = data.client(activity.idx);
+            service_ += clientData.serviceDuration;
+
             auto const edgeDuration = durations(clientData.location, nextLoc);
+            travel_ += edgeDuration;
 
             ds = DurationSegment::merge(edgeDuration, {clientData}, ds);
             nextLoc = clientData.location;
         }
-
-        auto const &start = data.depot(trip->startDepot());
-        auto const edgeDuration = durations(start.location, nextLoc);
-        DurationSegment const depotDS = {start, start.serviceDuration};
-
-        ds = DurationSegment::merge(edgeDuration, depotDS, ds);
     }
 
     ds = DurationSegment::merge({vehData, vehData.startLate}, ds);
@@ -298,13 +274,17 @@ Route::Route(ProblemData const &data, Trips trips, size_t vehType)
     durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_)
                     + vehData.unitOvertimeCost * static_cast<Cost>(overtime_);
     startTime_ = ds.startEarly();
+    releaseTime_ = ds.releaseTime();
     slack_ = ds.slack();
     timeWarp_ = ds.timeWarp(vehData.maxDuration);
 
     makeSchedule(data);
+
+    if (numTrips() > vehData.maxTrips())
+        throw std::invalid_argument("Vehicle cannot perform this many trips.");
 }
 
-Route::Route(Trips trips,
+Route::Route(std::vector<Activity> activities,
              Distance distance,
              Cost distanceCost,
              Distance excessDistance,
@@ -318,13 +298,14 @@ Route::Route(Trips trips,
              Duration travel,
              Duration service,
              Duration startTime,
+             Duration releaseTime,
              Duration slack,
              Cost prizes,
              size_t vehicleType,
              size_t startDepot,
              size_t endDepot,
              std::vector<ScheduledVisit> schedule)
-    : trips_(std::move(trips)),
+    : activities_(std::move(activities)),
       schedule_(std::move(schedule)),
       distance_(distance),
       distanceCost_(distanceCost),
@@ -339,6 +320,7 @@ Route::Route(Trips trips,
       travel_(travel),
       service_(service),
       startTime_(startTime),
+      releaseTime_(releaseTime),
       slack_(slack),
       prizes_(prizes),
       vehicleType_(vehicleType),
@@ -347,43 +329,41 @@ Route::Route(Trips trips,
 {
 }
 
-bool Route::empty() const { return size() == 0; }
-
-size_t Route::size() const
+bool Route::empty() const
 {
-    return std::accumulate(trips_.begin(),
-                           trips_.end(),
-                           0,
-                           [](size_t count, auto const &trip)
-                           { return count + trip.size(); });
+    return size() == 2;  // only start and end depot activities
 }
 
-size_t Route::numTrips() const { return trips_.size(); }
+size_t Route::size() const { return activities_.size(); }
 
-Client Route::operator[](size_t idx) const
+size_t Route::numClients() const
 {
-    for (auto const &trip : trips_)
-        if (idx < trip.size())
-            return trip[idx].idx;
-        else
-            idx -= trip.size();
-
-    throw std::out_of_range("Index out of range.");
+    // There are #trips + 1 depots in the route, so size() - #trips - 1 is the
+    // number of clients.
+    return size() - numTrips() - 1;
 }
 
-Route::Iterator Route::begin() const { return Iterator(*this, 0); }
+size_t Route::numTrips() const { return schedule_.back().trip(); }
 
-Route::Iterator Route::end() const { return Iterator(*this, size()); }
-
-Route::Trips const &Route::trips() const { return trips_; }
-
-Trip const &Route::trip(size_t idx) const
+Activity Route::operator[](size_t idx) const
 {
-    assert(idx < trips_.size());
-    return trips_[idx];
+    if (idx >= size())
+        throw std::out_of_range("Index out of range.");
+
+    return activities_[idx];
 }
 
-Route::Visits Route::visits() const { return {begin(), end()}; }
+Route::Activities::const_iterator Route::begin() const
+{
+    return activities_.begin();
+}
+
+Route::Activities::const_iterator Route::end() const
+{
+    return activities_.end();
+}
+
+Route::Activities const &Route::activities() const { return activities_; }
 
 std::vector<Route::ScheduledVisit> const &Route::schedule() const
 {
@@ -424,7 +404,7 @@ Duration Route::endTime() const { return startTime_ + duration_ - timeWarp_; }
 
 Duration Route::slack() const { return slack_; }
 
-Duration Route::releaseTime() const { return trips_[0].releaseTime(); }
+Duration Route::releaseTime() const { return releaseTime_; }
 
 Cost Route::prizes() const { return prizes_; }
 
@@ -453,13 +433,13 @@ bool Route::hasTimeWarp() const { return timeWarp_ > 0; }
 bool Route::operator==(Route const &other) const
 {
     // First compare simple attributes, since that's a quick and cheap check.
-    // Only when these are the same we test if the visits are all equal.
+    // Only when these are the same we test if the activities are all equal.
     // clang-format off
     return distance_ == other.distance_
         && duration_ == other.duration_
         && timeWarp_ == other.timeWarp_
         && vehicleType_ == other.vehicleType_
-        && trips_ == other.trips_;
+        && activities_ == other.activities_;
     // clang-format on
 }
 
@@ -478,14 +458,24 @@ template <> Cost pyvrp::CostEvaluator::penalisedCost(Route const &route) const
     // clang-format on
 }
 
+std::ostream &operator<<(std::ostream &out, Route::ScheduledVisit const &visit)
+{
+    return out << visit.activity();
+}
+
 std::ostream &operator<<(std::ostream &out, Route const &route)
 {
-    auto const &trips = route.trips();
-    for (size_t idx = 0; idx != trips.size(); ++idx)
+    auto const &activities = route.activities();
+    for (size_t idx = 1; idx != activities.size() - 1; ++idx)
     {
-        if (idx != 0)
-            out << " | ";
-        out << trips[idx];
+        auto const &activity = activities[idx];
+        if (activity.isDepot())
+            out << '|';
+        else
+            out << activity;
+
+        if (idx < activities.size() - 2)  // then we'll insert more after this
+            out << ' ';
     }
 
     return out;

@@ -31,14 +31,14 @@ def test_replacing_optional_client():
         duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
-    route = make_search_route(data, [1])
+    route = make_search_route(data, ["C0"])
 
     op = ReplaceOptional(data)
     cost_eval = CostEvaluator([], 0, 0)
 
-    # Replacing client 1 with 2 yields a prize of 5, rather than 1, at no
-    # sadditional cost.
-    client2 = Node(loc=2)
+    # Replacing C0 with C1 yields a prize of 5, rather than 1, at no additional
+    # cost.
+    client2 = Node("C1")
     delta, should_apply = op.evaluate(client2, route[1], cost_eval)
     assert_equal(delta, -4)  # +5 prize, -1 prize.
     assert_(should_apply)
@@ -60,14 +60,14 @@ def test_skips_replacing_required_client():
         duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
-    route = make_search_route(data, [1])
+    route = make_search_route(data, ["C0"])
 
     op = ReplaceOptional(data)
     cost_eval = CostEvaluator([], 0, 0)
 
-    # Same example as in previous test but now client 1 is a required client,
+    # Same example as in previous test but now C0 is a required client,
     # and cannot be replaced.
-    client2 = Node(loc=2)
+    client2 = Node("C1")
     assert_equal(op.evaluate(client2, route[1], cost_eval), (0, False))
 
 
@@ -76,18 +76,18 @@ def test_skips_assigned_depot_or_missing_other(ok_small_prizes):
     Tests that ReplaceOptional skips assigned clients, depots, or when the
     other client to replace is missing.
     """
-    route = make_search_route(ok_small_prizes, [1, 2])
+    route = make_search_route(ok_small_prizes, ["C0", "C1"])
     assert_(route[1].route)
     assert_(route[2].route)
 
-    # Client 1 is already assigned, cannot be inserted again.
+    # C0 is already assigned, cannot be inserted again.
     op = ReplaceOptional(ok_small_prizes)
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(op.evaluate(route[1], route[2], cost_eval), (0, False))
 
     # These are not assigned anywhere, so cannot replace.
-    node3 = Node(loc=3)
-    node4 = Node(loc=4)
+    node3 = Node("C2")
+    node4 = Node("C3")
     assert_equal(op.evaluate(node3, node4, cost_eval), (0, False))
 
     # This is a depot, which cannot be replaced.

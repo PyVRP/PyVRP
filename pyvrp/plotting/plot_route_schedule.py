@@ -75,11 +75,10 @@ def plot_route_schedule(
 
     prev_loc = data.depot(vehicle_type.start_depot).location
     for visit in route.schedule():
-        idx = visit.location
-        if idx < data.num_depots:
-            stop = data.depot(idx)  # type: ignore
+        if visit.activity.is_depot():
+            stop = data.depot(visit.activity.idx)  # type: ignore
         else:
-            stop = data.client(idx - data.num_depots)  # type: ignore
+            stop = data.client(visit.activity.idx)  # type: ignore
 
         drive_time += durations[prev_loc, stop.location]
         dist += distances[prev_loc, stop.location]

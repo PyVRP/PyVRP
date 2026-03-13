@@ -14,21 +14,21 @@ def test_replace(ok_small_mutually_exclusive_groups):
     cost_eval = CostEvaluator([0], 0, 0)
 
     sol = Solution(data)
-    sol.load(PyVRPSolution(data, [[1, 4]]))
-    assert_equal(str(sol.routes[0]), "1 4")
+    sol.load(PyVRPSolution(data, [[0, 3]]))
+    assert_equal(str(sol.routes[0]), "C0 C3")
 
     op = ReplaceGroup(data)
     op.init(sol)
 
-    # Replacing client 1 with 2 is slightly improving:
-    # delta = dist(0, 2) + dist(2, 4) - dist(0, 1) - dist(1, 4)
+    # Replacing C0 with C1 is slightly improving:
+    # delta = dist(D0, C1) + dist(C1, C3) - dist(D0, C0) - dist(C0, C3)
     #       = 1944 + 1090 - 1544 - 1593
     #       = -103.
-    node = Node(loc=2)
+    node = Node("C1")
     assert_equal(op.evaluate(node, cost_eval), (-103, True))
 
     op.apply(node)
-    assert_equal(str(sol.routes[0]), "2 4")
+    assert_equal(str(sol.routes[0]), "C1 C3")
 
 
 def test_supports(

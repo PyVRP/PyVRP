@@ -87,9 +87,6 @@ This object stores the best observed solution and detailed runtime statistics.
    .. autoclass:: Solution
       :members:
 
-   .. autoclass:: Trip
-      :members:
-
    .. autoclass:: Location
       :members:
 

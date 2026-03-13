@@ -1,6 +1,6 @@
 import pathlib
 from collections import defaultdict
-from itertools import count, pairwise
+from itertools import count
 from numbers import Number
 from typing import Callable
 from warnings import warn
@@ -9,6 +9,8 @@ import numpy as np
 import vrplib
 
 from pyvrp._pyvrp import (
+    Activity,
+    ActivityType,
     Client,
     ClientGroup,
     Depot,
@@ -16,7 +18,6 @@ from pyvrp._pyvrp import (
     ProblemData,
     Route,
     Solution,
-    Trip,
     VehicleType,
 )
 from pyvrp.constants import MAX_VALUE
@@ -127,30 +128,19 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         if not route:
             continue
 
-        route_visits = np.array(route, dtype=int)
-        depot_idcs = np.flatnonzero(route_visits < data.num_depots)
+        activities = []
+        for visit in route:
+            # VRPLIB uses a format where the route visits are numbered with
+            # [0, ..., num_depots) for the depots, and [num_depots, ...,
+            # num_depots + num_clients) for the clients.
+            if visit < data.num_depots:
+                activity = Activity(ActivityType.DEPOT, visit)
+            else:
+                visit = visit - data.num_depots
+                activity = Activity(ActivityType.CLIENT, visit)
+            activities.append(activity)
 
-        trip_visits = np.split(route_visits, depot_idcs)
-        trip_visits = [
-            # These visits include the reload depots for later trips as the
-            # first trip visit, which we need to skip.
-            trip_visits[trip_idx > 0 :]
-            for trip_idx, trip_visits in enumerate(trip_visits)
-        ]
-
-        veh_type = data.vehicle_type(veh2type[idx])
-        depots = [
-            veh_type.start_depot,
-            *route_visits[depot_idcs],
-            veh_type.end_depot,
-        ]
-
-        trips = [
-            Trip(data, visits, veh2type[idx], start, end)
-            for visits, (start, end) in zip(trip_visits, pairwise(depots))
-        ]
-
-        routes.append(Route(data, trips, veh2type[idx]))
+        routes.append(Route(data, activities, veh2type[idx]))
 
     return Solution(data, routes)
 
@@ -332,7 +322,9 @@ class _InstanceParser:
             # cast it to a 2D array.
             groups = np.atleast_2d(groups).T
 
-        raw_groups = [[idx - 1 for idx in group] for group in groups]
+        raw_groups = [
+            [idx - self.num_depots - 1 for idx in group] for group in groups
+        ]
 
         # Only keep groups if they have more than one member. Empty groups or
         # groups with one member are trivial to decide, so there is no point
@@ -391,10 +383,11 @@ class _ProblemDataBuilder:
         return [Depot(location=idx) for idx in range(num_depots)]
 
     def _clients(self) -> list[Client]:
-        groups = self.parser.mutually_exclusive_groups()
-        num_locs = self.parser.num_locations
+        num_depots = self.parser.num_depots
+        num_clients = self.parser.num_clients
 
-        idx2group: list[int | None] = [None for _ in range(num_locs)]
+        groups = self.parser.mutually_exclusive_groups()
+        idx2group: list[int | None] = [None for _ in range(num_clients)]
         for group, members in enumerate(groups):
             for client in members:
                 idx2group[client] = group
@@ -417,10 +410,10 @@ class _ProblemDataBuilder:
                 tw_late=time_windows[idx][1],
                 release_time=release_times[idx],
                 prize=prizes[idx],
-                required=required[idx] and idx2group[idx] is None,
-                group=idx2group[idx],
+                required=required[idx] and idx2group[idx - num_depots] is None,
+                group=idx2group[idx - num_depots],
             )
-            for idx in range(self.parser.num_depots, num_locs)
+            for idx in range(num_depots, num_depots + num_clients)
         ]
 
     def _vehicle_types(self) -> list[VehicleType]:

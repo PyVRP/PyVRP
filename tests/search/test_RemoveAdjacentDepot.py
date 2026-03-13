@@ -14,7 +14,7 @@ def test_cannot_evaluate_unassigned(ok_small_multiple_trips):
     cost_eval = CostEvaluator([1], 1, 1)
     op = RemoveAdjacentDepot(data)
 
-    unassigned = Node(loc=1)
+    unassigned = Node("C0")
     assert_equal(op.evaluate(unassigned, cost_eval), (0, False))
 
 
@@ -24,29 +24,29 @@ def test_removes_best_adjacent_depot(ok_small_multiple_trips):
     """
     veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=2)
     data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
-    route = make_search_route(data, [1, 0, 2, 0, 3])
+    route = make_search_route(data, ["C0", "D0", "C1", "D0", "C2"])
 
     cost_eval = CostEvaluator([0], 0, 0)
     op = RemoveAdjacentDepot(data)
 
-    # Client 1 has a depot after it, that can be removed. Delta cost is purely
+    # C0 has a depot after it, that can be removed. Delta cost is purely
     # distance based:
-    #   delta = dist(1, 2) - dist(1, 0) - dist(0, 2)
+    #   delta = dist(C0, C1) - dist(C0, D0) - dist(D0, C1)
     #         = 1_992 - 1_726 - 1_944
     #         = -1_678.
     assert_equal(op.evaluate(route[1], cost_eval), (-1_678, True))
 
-    # Client 2 has a depot before and after it. Removing the depot after it is
-    # better, so that's the move we should apply.
+    # C1 has a depot before and after it. Removing the depot after is better,
+    # so that's the move we should apply.
     assert_equal(op.evaluate(route[3], cost_eval), (-3_275, True))
 
-    # Client 3 has a depot before it. Removing that depot is the same move as
-    # we evaluated for client 2, so we should find the same delta cost.
+    # C2 has a depot before it. Removing that depot is the same move as we
+    # evaluated for C1, so we should find the same delta cost.
     assert_equal(op.evaluate(route[5], cost_eval), (-3_275, True))
 
-    # Applying the last evaluated move removes the depot between 2 and 3.
+    # Applying the last evaluated move removes the depot between C1 and C2.
     op.apply(route[5])
-    assert_equal(str(route), "1 | 2 3")
+    assert_equal(str(route), "C0 | C1 C2")
 
 
 def test_removes_consecutive_depots(ok_small_multiple_trips):
@@ -55,7 +55,7 @@ def test_removes_consecutive_depots(ok_small_multiple_trips):
     """
     veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=2)
     data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
-    route = make_search_route(data, [1, 0, 0, 2])
+    route = make_search_route(data, ["C0", "D0", "D0", "C1"])
 
     cost_eval = CostEvaluator([0], 0, 0)
     op = RemoveAdjacentDepot(data)
@@ -80,7 +80,7 @@ def test_remove_reload_depot(ok_small_multiple_trips):
     Tests that RemoveAdjacentDepot correctly evaluates removing a reload depot.
     """
     data = ok_small_multiple_trips
-    route = make_search_route(data, [1, 2, 0, 3, 4])
+    route = make_search_route(data, ["C0", "C1", "D0", "C2", "C3"])
 
     assert_(not route.has_excess_load())
     assert_(route[3].is_reload_depot())
@@ -88,9 +88,9 @@ def test_remove_reload_depot(ok_small_multiple_trips):
     # If we remove the reload depot, we gain 8 excess load. That costs 8_000
     # with this cost evaluator. Additionally, we have some changes in distance
     # cost, as follows:
-    #              dist(2, 3) = 621
-    # dist(2, 0) + dist(0, 3) = 1965 + 1931
-    #              dist delta = -3275
+    #                dist(C1, C2) = 621
+    # dist(C1, D0) + dist(D0, C2) = 1965 + 1931
+    #                  dist delta = -3275
     op = RemoveAdjacentDepot(data)
     cost_eval = CostEvaluator([1000], 0, 0)
     assert_equal(op.evaluate(route[2], cost_eval), (8_000 - 3_275, False))
@@ -113,6 +113,6 @@ def test_remove_reload_depots_service_duration(ok_small_multiple_trips):
     # Reloads twice in a row. Removing either of the reloads should only impact
     # duration cost, by removing the associated depot service duration. We
     # evaluate from the adjacent client nodes.
-    route = make_search_route(data, [1, 2, 0, 0, 3, 4])
+    route = make_search_route(data, ["C0", "C1", "D0", "D0", "C2", "C3"])
     assert_equal(op.evaluate(route[2], cost_eval), (-90, True))
     assert_equal(op.evaluate(route[5], cost_eval), (-90, True))

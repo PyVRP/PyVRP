@@ -1,79 +1,42 @@
 #ifndef PYVRP_ROUTE_H
 #define PYVRP_ROUTE_H
 
+#include "Activity.h"
 #include "CostEvaluator.h"
 #include "Measure.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
-#include "Trip.h"
 
 #include <iosfwd>
-#include <optional>
 #include <vector>
 
 namespace pyvrp
 {
 /**
- * Route(data: ProblemData, visits: list[int] | list[Trip], vehicle_type: int)
+ * Route(data: ProblemData, activities: list[Activity], vehicle_type: int)
  *
- * A simple class that stores the route plan and some statistics. Internally,
- * a route consists of one or more :class:`~pyvrp._pyvrp.Trip` objects.
+ * A simple class that stores the route plan and some statistics.
  */
 class Route
 {
     using Client = size_t;
     using Depot = size_t;
     using VehicleType = size_t;
-    using Trips = std::vector<Trip>;
-    using Visits = std::vector<Client>;
-
-    // Validates the consistency of the constructed instance.
-    void validate(ProblemData const &data) const;
+    using Activities = std::vector<Activity>;
 
     // Creates the data returned by ``schedule()``.
     void makeSchedule(ProblemData const &data);
 
 public:
     /**
-     * Forward iterator through the clients visited by this route.
-     */
-    class Iterator
-    {
-        Route const *route_ = nullptr;
-        size_t trip_ = 0;
-        size_t idx_ = 0;
-
-    public:
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type = std::ptrdiff_t;
-        using value_type = Client;
-
-        Iterator(Route const &route, size_t idx);
-
-        Iterator() = default;
-        Iterator(Iterator const &other) = default;
-        Iterator(Iterator &&other) = default;
-
-        Iterator &operator=(Iterator const &other) = default;
-        Iterator &operator=(Iterator &&other) = default;
-
-        bool operator==(Iterator const &other) const;
-
-        Client operator*() const;
-
-        Iterator operator++(int);
-        Iterator &operator++();
-    };
-
-    /**
-     * Simple object that stores some data about a client or depot visit.
+     * Simple object that stores some data about a route activity.
      *
      * Attributes
      * ----------
-     * location : int
-     *     Index of the visited location (client or depot).
+     * activity : Activity
+     *     Route activity.
      * trip : int
-     *     Index of the trip visiting this location.
+     *     Trip index.
      * start_service : int
      *     Time at which service begins.
      * end_service : int
@@ -90,7 +53,7 @@ public:
      */
     class ScheduledVisit
     {
-        size_t location_ = 0;
+        Activity activity_;
         size_t trip_ = 0;
         Duration startService_ = 0;
         Duration endService_ = 0;
@@ -98,14 +61,14 @@ public:
         Duration timeWarp_ = 0;
 
     public:
-        ScheduledVisit(size_t location,
+        ScheduledVisit(Activity activity,
                        size_t trip,
                        Duration startService,
                        Duration endService,
                        Duration waitDuration,
                        Duration timeWarp);
 
-        [[nodiscard]] size_t location() const;
+        [[nodiscard]] Activity activity() const;
         [[nodiscard]] size_t trip() const;
         [[nodiscard]] Duration startService() const;
         [[nodiscard]] Duration endService() const;
@@ -115,8 +78,8 @@ public:
     };
 
 private:
-    Trips trips_ = {};
-    std::vector<ScheduledVisit> schedule_ = {};  // Client visit schedule data
+    Activities activities_ = {};
+    std::vector<ScheduledVisit> schedule_ = {};  // Activity schedule
     Distance distance_ = 0;        // Total travel distance on this route
     Cost distanceCost_ = 0;        // Total cost of travel distance
     Distance excessDistance_ = 0;  // Excess travel distance
@@ -130,6 +93,7 @@ private:
     Duration travel_ = 0;           // Total *travel* duration on this route
     Duration service_ = 0;          // Total *service* duration on this route
     Duration startTime_ = 0;        // (earliest) start time of this route
+    Duration releaseTime_ = 0;      // Release time of the first route trip
     Duration slack_ = 0;            // Total time slack on this route
     Cost fixedVehicleCost_ = 0;     // Fixed cost of vehicle used on this route
     Cost prizes_ = 0;               // Total value of prizes on this route
@@ -142,38 +106,32 @@ public:
     [[nodiscard]] bool empty() const;
 
     /**
-     * Returns the number of clients visited by this route.
+     * Returns the number of activities in this route.
      */
     [[nodiscard]] size_t size() const;
+
+    /**
+     * Returns the number of clients in this route.
+     */
+    [[nodiscard]] size_t numClients() const;
 
     /**
      * Returns the number of trips in this route.
      */
     [[nodiscard]] size_t numTrips() const;
 
-    [[nodiscard]] Client operator[](size_t idx) const;
+    [[nodiscard]] Activity operator[](size_t idx) const;
 
-    [[nodiscard]] Iterator begin() const;
-    [[nodiscard]] Iterator end() const;
+    [[nodiscard]] Activities::const_iterator begin() const;
+    [[nodiscard]] Activities::const_iterator end() const;
 
     /**
-     * Returns the trips that make up this route.
+     * Route activities.
      */
-    [[nodiscard]] Trips const &trips() const;
+    [[nodiscard]] Activities const &activities() const;
 
     /**
-     * Returns the trip at the given index.
-     */
-    [[nodiscard]] Trip const &trip(size_t idx) const;
-
-    /**
-     * Route visits, as a list of clients.
-     */
-    [[nodiscard]] Visits visits() const;
-
-    /**
-     * Statistics about each visit and the overall route schedule. This includes
-     * all client visits, but also starting and leaving depots.
+     * Statistics about each activity and the overall route schedule.
      *
      * .. note::
      *
@@ -343,12 +301,16 @@ public:
     Route(Route const &other) = default;
     Route(Route &&other) = default;
 
-    Route(ProblemData const &data, Trips trips, VehicleType vehicleType);
+    Route(ProblemData const &data,
+          std::vector<Client> visits,
+          VehicleType vehicleType);
 
-    Route(ProblemData const &data, Visits visits, VehicleType vehicleType);
+    Route(ProblemData const &data,
+          Activities activities,
+          VehicleType vehicleType);
 
     // This constructor does *no* validation. Useful when unserialising objects.
-    Route(Trips trips,
+    Route(Activities activities,
           Distance distance,
           Cost distanceCost,
           Distance excessDistance,
@@ -362,6 +324,7 @@ public:
           Duration travel,
           Duration service,
           Duration startTime,
+          Duration releaseTime,
           Duration slack,
           Cost prizes,
           VehicleType vehicleType,
@@ -373,6 +336,9 @@ public:
 template <>  // specialisation for pyvrp::Route
 Cost CostEvaluator::penalisedCost(Route const &route) const;
 }  // namespace pyvrp
+
+std::ostream &operator<<(std::ostream &out,
+                         pyvrp::Route::ScheduledVisit const &visit);
 
 std::ostream &operator<<(std::ostream &out, pyvrp::Route const &route);
 

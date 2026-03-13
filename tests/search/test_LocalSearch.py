@@ -5,6 +5,7 @@ import pytest
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import (
+    Activity,
     Client,
     ClientGroup,
     CostEvaluator,
@@ -14,7 +15,6 @@ from pyvrp import (
     RandomNumberGenerator,
     Route,
     Solution,
-    Trip,
     VehicleType,
 )
 from pyvrp.search import (
@@ -45,10 +45,7 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
-    neighbours = [
-        [] for _ in range(ok_small.num_depots + ok_small.num_clients)
-    ]
-    ls = LocalSearch(ok_small, rng, neighbours)
+    ls = LocalSearch(ok_small, rng, [[] for _ in range(ok_small.num_clients)])
     ls.add_operator(Exchange10(ok_small))
     ls.add_operator(Exchange11(ok_small))
 
@@ -83,9 +80,7 @@ def test_get_set_neighbours(ok_small):
     ``test_SearchSpace.py``, which handle validation.
     """
     rng = RandomNumberGenerator(seed=42)
-    neighbours = [
-        [] for _ in range(ok_small.num_depots + ok_small.num_clients)
-    ]
+    neighbours = [[] for _ in range(ok_small.num_clients)]
     ls = LocalSearch(ok_small, rng, neighbours)
     assert_equal(ls.neighbours, neighbours)
 
@@ -104,27 +99,25 @@ def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):
     because the current cost doesn't count the current time warp.
     """
     rng = RandomNumberGenerator(seed=42)
-    sol = Solution(ok_small, [[1, 2, 3, 4]])
+    sol = Solution(ok_small, [[0, 1, 2, 3]])
 
-    # We make neighbours only contain 1 -> 2, so the only feasible move
-    # is changing [1, 2, 3, 4] into [2, 1, 3, 4] or moving one of the nodes
-    # into its own route. Since those solutions have larger distance but
-    # smaller time warp, they are considered improving moves with a
-    # sufficiently large time warp penalty.
-    neighbours = [[], [2], [], [], []]  # 1 -> 2 only
+    # We restrict neighbours to C0 -> C1, so the only feasible move is changing
+    # [C0, C1, C2, C3] into [C1, C0, C2, C3] or moving one of the nodes into a
+    # new route. Since those solutions have larger distance but smaller time
+    # warp, they are considered improving sufficiently large time warp penalty.
+    neighbours = [[1], [], [], []]  # C0 -> C1 only
     ls = LocalSearch(ok_small, rng, neighbours)
     ls.add_operator(Exchange10(ok_small))
 
     # With 0 timewarp penalty, the solution should not change since
-    # the solution [2, 1, 3, 4] has larger distance.
+    # the solution [C1, C0, C2, C3] has larger distance.
     improved_sol = ls(sol, CostEvaluator([0], 0, 0), exhaustive=True)
     assert_equal(sol, improved_sol)
 
     # Now doing it again with a large TW penalty, we must find the alternative
-    # solution
-    # (previously this was not the case since due to caching the current TW was
-    # computed as being zero, causing the move to be evaluated as worse)
-    cost_evaluator_tw = CostEvaluator([0], 1000, 0)
+    # solution. Previously caching caused the  current time warp to be computed
+    # as zero, and the move was then evaluated as worse.
+    cost_evaluator_tw = CostEvaluator([0], 1_000, 0)
     improved_sol = ls(sol, cost_evaluator_tw, exhaustive=True)
     improved_cost = cost_evaluator_tw.penalised_cost(improved_sol)
     assert_(improved_cost < cost_evaluator_tw.penalised_cost(sol))
@@ -211,7 +204,8 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     ls.add_operator(Exchange11(data))
 
     # Update the improved (locally optimal) solution with vehicles of type 1.
-    routes = [Route(data, r.visits(), 1) for r in improved.routes()]
+    # Exclude start and end depots.
+    routes = [Route(data, r.activities()[1:-1], 1) for r in improved.routes()]
     improved = Solution(data, routes)
 
     # This should not find any further improvements and thus not change the
@@ -239,7 +233,7 @@ def test_bugfix_vehicle_type_offsets(ok_small):
 
     cost_evaluator = CostEvaluator([1], 1, 0)
 
-    current = Solution(data, [Route(data, [1, 3], 1), Route(data, [2, 4], 1)])
+    current = Solution(data, [Route(data, [0, 2], 1), Route(data, [1, 3], 1)])
     current_cost = cost_evaluator.penalised_cost(current)
 
     improved = ls(current, cost_evaluator, exhaustive=True)
@@ -283,8 +277,8 @@ def test_local_search_completes_incomplete_solutions(ok_small_prizes):
     ls.add_operator(Exchange10(ok_small_prizes))
 
     cost_eval = CostEvaluator([1], 1, 0)
-    sol = Solution(ok_small_prizes, [[2], [3, 4]])
-    assert_(not sol.is_complete())  # 1 is required but not visited
+    sol = Solution(ok_small_prizes, [[1], [2, 3]])
+    assert_(not sol.is_complete())  # C0 is required but not visited
 
     new_sol = ls(sol, cost_eval, exhaustive=True)
     assert_(new_sol.is_complete())
@@ -303,7 +297,7 @@ def test_mutually_exclusive_group_not_in_solution(
     ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
     ls.add_operator(InsertOptional(ok_small_mutually_exclusive_groups))
 
-    sol = Solution(ok_small_mutually_exclusive_groups, [[4]])
+    sol = Solution(ok_small_mutually_exclusive_groups, [[3]])
     assert_equal(sol.num_missing_groups(), 1)
 
     improved = ls(sol, CostEvaluator([20], 6, 0))
@@ -314,8 +308,8 @@ def test_swap_if_improving_mutually_exclusive_group(
     ok_small_mutually_exclusive_groups,
 ):
     """
-    Tests that we swap a client (1) in a mutually exclusive group when another
-    client (3) in the group is better to have.
+    Tests that we swap a client (C0) in a mutually exclusive group when another
+    client (C2) in the group is better to have.
     """
     data = ok_small_mutually_exclusive_groups
     rng = RandomNumberGenerator(seed=42)
@@ -326,13 +320,13 @@ def test_swap_if_improving_mutually_exclusive_group(
     ls.add_operator(ReplaceGroup(data))
 
     cost_eval = CostEvaluator([20], 6, 0)
-    sol = Solution(data, [[1, 4]])
+    sol = Solution(data, [[0, 3]])
     improved = ls(sol, cost_eval, exhaustive=True)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
     routes = improved.routes()
     assert_equal(improved.num_routes(), 1)
-    assert_equal(routes[0].visits(), [3, 4])
+    assert_equal(str(routes[0]), "C2 C3")
 
 
 def test_no_op_multi_trip_instance(ok_small_multiple_trips):
@@ -343,7 +337,7 @@ def test_no_op_multi_trip_instance(ok_small_multiple_trips):
     data = ok_small_multiple_trips
 
     rng = RandomNumberGenerator(seed=42)
-    neighbours = [[] for _ in range(data.num_depots + data.num_clients)]
+    neighbours = [[] for _ in range(data.num_clients)]
     ls = LocalSearch(
         data,
         rng,
@@ -351,9 +345,8 @@ def test_no_op_multi_trip_instance(ok_small_multiple_trips):
         PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
     )
 
-    trip1 = Trip(data, [1, 2], 0)
-    trip2 = Trip(data, [3, 4], 0)
-    route = Route(data, [trip1, trip2], 0)
+    activities = map(Activity, ["C0", "C1", "D0", "C2", "C3"])
+    route = Route(data, activities, 0)
 
     sol = Solution(data, [route])
     cost_eval = CostEvaluator([20], 6, 0)
@@ -371,7 +364,7 @@ def test_local_search_inserts_reload_depots(ok_small_multiple_trips):
     ls = LocalSearch(ok_small_multiple_trips, rng, neighbours)
     ls.add_operator(RelocateWithDepot(ok_small_multiple_trips))
 
-    sol = Solution(ok_small_multiple_trips, [[1, 2, 3, 4]])
+    sol = Solution(ok_small_multiple_trips, [[0, 1, 2, 3]])
     assert_(sol.has_excess_load())
 
     cost_eval = CostEvaluator([1_000], 0, 0)
@@ -392,22 +385,27 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     """
     data = ok_small_multiple_trips
     rng = RandomNumberGenerator(seed=2)
-    ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_operator(Exchange10(data))
+    ls = LocalSearch(
+        data,
+        rng,
+        compute_neighbours(data),
+        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
+    )
+    ls.add_operator(RemoveAdjacentDepot(data))
 
-    route1 = Route(data, [Trip(data, [1], 0), Trip(data, [3], 0)], 0)
-    route2 = Route(data, [2, 4], 0)
+    route1 = Route(data, [Activity(des) for des in ["C0", "D0", "C2"]], 0)
+    route2 = Route(data, [Activity(des) for des in ["C1", "C3"]], 0)
     sol = Solution(data, [route1, route2])
 
     cost_eval = CostEvaluator([1_000], 0, 0)
-    improved = ls(sol, cost_eval)
+    improved = ls(sol, cost_eval, exhaustive=True)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
     # The local search should have removed the reload depot from the first
     # route, because that was not providing any value.
     routes = improved.routes()
-    assert_(str(routes[0]), "1 3")
-    assert_(str(routes[1]), "2 4")
+    assert_equal(str(routes[0]), "C0 C2")
+    assert_equal(str(routes[1]), "C1 C3")
 
 
 def test_search_statistics(ok_small):
@@ -490,10 +488,10 @@ def test_operators_property(ok_small):
 @pytest.mark.parametrize(
     ("instance", "exp_clients"),
     [
-        # {1, 2, 3, 4} are all required clients.
-        ("ok_small", {1, 2, 3, 4}),
-        # 3 from required group {1, 2, 3}, 4 is a required client.
-        ("ok_small_mutually_exclusive_groups", {3, 4}),
+        # {0, 1, 2, 3} are all required clients.
+        ("ok_small", {0, 1, 2, 3}),
+        # 2 from required group {0, 1, 2}, 3 is a required client.
+        ("ok_small_mutually_exclusive_groups", {2, 3}),
     ],
 )
 def test_inserts_required_missing(instance, exp_clients: set[int], request):
@@ -514,8 +512,13 @@ def test_inserts_required_missing(instance, exp_clients: set[int], request):
     improved = ls(sol, cost_eval)
     assert_(improved.is_complete())
 
-    visits = {client for route in improved.routes() for client in route}
-    assert_equal(visits, exp_clients)
+    client_visits = {
+        activity.idx
+        for route in improved.routes()
+        for activity in route
+        if activity.is_client()
+    }
+    assert_equal(client_visits, exp_clients)
 
 
 def test_local_search_exhaustive(rc208):
@@ -601,7 +604,7 @@ def test_does_not_insert_optional_groups():
         vehicle_types=[VehicleType()],
         distance_matrices=[matrix],
         duration_matrices=[matrix],
-        groups=[ClientGroup([1, 2], required=False)],
+        groups=[ClientGroup([0, 1], required=False)],
     )
 
     rng = RandomNumberGenerator(seed=2)
@@ -630,15 +633,14 @@ def test_removes_useless_consecutive_depots(ok_small_multiple_trips):
     ls.add_operator(RemoveAdjacentDepot(data))
 
     # Set up a route with an empty trip, so a consecutive reload depot visit.
-    trips = [Trip(data, visits, vehicle_type=0) for visits in [[1], [], [2]]]
-    route = Route(data, trips, vehicle_type=0)
-    assert_equal(str(route), "1 |  | 2")
+    route = Route(data, map(Activity, ["C1", "D0", "D0", "C2"]), 0)
+    assert_equal(str(route), "C1 | | C2")
 
     # The local search should remove this consecutive depot visit.
     sol = Solution(data, [route])
     cost_eval = CostEvaluator([1], 1, 1)
     improved = ls(sol, cost_eval, exhaustive=True)
-    assert_(" |  | " not in str(improved))
+    assert_(" | | " not in str(improved))
 
 
 def test_insert_missing_groups_and_clients(ok_small_mutually_exclusive_groups):
@@ -709,7 +711,7 @@ def test_debug_operator_logs(prize_collecting, caplog):
     # captured logs list.
     expected = [
         (0, "Applying local search (exhaustive=true)."),
-        (2, "Applying operator to U=10 and V=49 (delta=-300)."),
+        (2, "Applying operator to U=9 and V=48 (delta=-300)."),
         (-2, "Entering search loop (step=3)."),
         (-1, "Completed local search: improving=71, updates=71, moves=5671."),
     ]

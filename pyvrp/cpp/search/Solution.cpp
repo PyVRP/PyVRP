@@ -20,8 +20,10 @@ Cost insertCost(pyvrp::search::Route::Node *U,
 {
     assert(V->route() && !U->isDepot());
 
+    auto const [_, uClient] = U->activity();
+
     auto *route = V->route();
-    auto const &client = data.client(U->client() - data.numDepots());
+    auto const &client = data.client(uClient);
 
     Cost deltaCost
         = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
@@ -30,7 +32,7 @@ Cost insertCost(pyvrp::search::Route::Node *U,
         deltaCost,
         pyvrp::search::Route::Proposal(
             route->before(V->idx()),
-            pyvrp::search::ClientSegment(data, U->client()),
+            pyvrp::search::ClientSegment(data, uClient),
             route->after(V->idx() + 1)));
 
     return deltaCost;
@@ -41,9 +43,9 @@ using pyvrp::search::Solution;
 
 Solution::Solution(ProblemData const &data) : data_(data)
 {
-    nodes.reserve(data.numDepots() + data.numClients());
-    for (size_t loc = 0; loc != data.numDepots() + data.numClients(); ++loc)
-        nodes.emplace_back(loc);
+    nodes.reserve(data.numClients());
+    for (size_t loc = 0; loc != data.numClients(); ++loc)
+        nodes.emplace_back(Activity::ActivityType::CLIENT, loc);
 
     routes.reserve(data.numVehicles());
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
@@ -79,23 +81,20 @@ void Solution::load(pyvrp::Solution const &solution)
         // the solution.
         route.clear();
 
-        // Routes use a representation with nodes for each client, reload depot
-        // (one per trip), and start/end depots. The start depot doubles as the
-        // reload depot for the first trip.
-        route.reserve(solRoute.size() + solRoute.numTrips() + 1);
-
-        for (size_t tripIdx = 0; tripIdx != solRoute.numTrips(); ++tripIdx)
+        route.reserve(solRoute.size());
+        for (size_t idx = 1; idx != solRoute.size() - 1; ++idx)
         {
-            auto const &trip = solRoute.trip(tripIdx);
-
-            if (tripIdx != 0)  // then we first insert a trip delimiter.
+            auto const activity = solRoute[idx];
+            if (activity.isDepot())
             {
-                Route::Node depot = {trip.startDepot()};
+                Route::Node depot = activity;
                 route.push_back(&depot);
             }
-
-            for (auto const [_, client] : trip)
-                route.push_back(&nodes[client]);
+            else
+            {
+                assert(activity.isClient());
+                route.push_back(&nodes[activity.idx]);
+            }
         }
 
         route.update();
@@ -120,42 +119,19 @@ pyvrp::Solution Solution::unload() const
     std::vector<pyvrp::Route> solRoutes;
     solRoutes.reserve(data_.numVehicles());
 
-    std::vector<size_t> visits;
-
     for (auto const &route : routes)
     {
         if (route.empty())
             continue;
 
-        std::vector<Trip> trips;
-        trips.reserve(route.numTrips());
+        std::vector<Activity> activities;
+        activities.reserve(route.size());
 
-        visits.clear();
-        visits.reserve(route.numClients());
+        for (size_t idx = 1; idx != route.size() - 1; ++idx)
+            activities.emplace_back(route[idx]->activity());
 
-        auto const *prevDepot = route[0];
-        for (size_t idx = 1; idx != route.size(); ++idx)
-        {
-            auto const *node = route[idx];
-
-            if (!node->isDepot())
-            {
-                visits.push_back(node->client());
-                continue;
-            }
-
-            trips.emplace_back(data_,
-                               visits,
-                               route.vehicleType(),
-                               prevDepot->client(),
-                               node->client());
-
-            visits.clear();
-            prevDepot = node;
-        }
-
-        assert(trips.size() == route.numTrips());
-        solRoutes.emplace_back(data_, std::move(trips), route.vehicleType());
+        solRoutes.emplace_back(
+            data_, std::move(activities), route.vehicleType());
     }
 
     return {data_, std::move(solRoutes)};
@@ -166,7 +142,7 @@ bool Solution::insert(Route::Node *U,
                       CostEvaluator const &costEvaluator,
                       bool required)
 {
-    assert(!U->isDepot());
+    assert(U->isClient());
     assert(size_t(std::distance(nodes.data(), U)) < nodes.size());
 
     Route::Node *UAfter = routes[0][0];  // fallback option
@@ -174,7 +150,8 @@ bool Solution::insert(Route::Node *U,
 
     // First attempt a neighbourhood search to place U into routes that are
     // already in use.
-    for (auto const vClient : searchSpace.neighboursOf(U->client()))
+    auto const [_, uClient] = U->activity();
+    for (auto const vClient : searchSpace.neighboursOf(uClient))
     {
         auto *V = &nodes[vClient];
 
@@ -228,7 +205,7 @@ pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
 
     Cost cost = 0;  // cost is route cost + uncollected prizes
     for (size_t idx = 0; idx != data.numClients(); ++idx)
-        if (!solution.nodes[data.numDepots() + idx].route())
+        if (!solution.nodes[idx].route())
             cost += data.client(idx).prize;
 
     for (auto const &route : solution.routes)
