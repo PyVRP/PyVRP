@@ -721,6 +721,18 @@ def test_multi_trip_initial_load(ok_small_multiple_trips):
     assert_equal(route.excess_load(), [5])
 
 
+def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
+    """
+    Ensures that the bug identified in #812 stays fixed. Before the fix, this
+    would trigger an assert because an empty trip would be indexed.
+    """
+    activities = map(Activity, ["C0", "C1", "D0"])
+    route = Route(ok_small_multiple_trips, activities, 0)
+
+    # D0 -> C0 -> C1 -> D0 -> D0.
+    assert_equal([activity.idx for activity in route], [0, 0, 1, 0, 0])
+
+
 def test_route_release_time_after_vehicle_start_late():
     """
     Tests that a route time warps back to the vehicle's latest start if that
