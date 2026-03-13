@@ -2,7 +2,6 @@ import numpy as np
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import (
-    Activity,
     Client,
     ClientGroup,
     CostEvaluator,
@@ -24,7 +23,7 @@ def test_inserts_when_makes_sense(prize_collecting):
     route = make_search_route(prize_collecting, ["C0", "C1", "C2"])
     assert_equal(str(route), "C0 C1 C2")
 
-    node = Node(Activity("C5"))
+    node = Node("C5")
     op = InsertOptional(prize_collecting)
     cost_eval = CostEvaluator([0], 0, 0)
 

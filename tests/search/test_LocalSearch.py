@@ -385,15 +385,20 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     """
     data = ok_small_multiple_trips
     rng = RandomNumberGenerator(seed=2)
-    ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_operator(Exchange10(data))
+    ls = LocalSearch(
+        data,
+        rng,
+        compute_neighbours(data),
+        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
+    )
+    ls.add_operator(RemoveAdjacentDepot(data))
 
     route1 = Route(data, [Activity(des) for des in ["C0", "D0", "C2"]], 0)
     route2 = Route(data, [Activity(des) for des in ["C1", "C3"]], 0)
     sol = Solution(data, [route1, route2])
 
     cost_eval = CostEvaluator([1_000], 0, 0)
-    improved = ls(sol, cost_eval)
+    improved = ls(sol, cost_eval, exhaustive=True)
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
     # The local search should have removed the reload depot from the first
