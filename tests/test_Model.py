@@ -477,8 +477,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
 
     # Solve an instance with no clients.
     res = m.solve(stop=MaxIterations(1))
-    solution = [r.visits() for r in res.best.routes()]
-    assert_equal(solution, [])
+    assert_equal(res.best.num_clients(), 0)
 
     # Solve an instance with one client.
     client_loc = m.add_location(0, 0)
@@ -487,8 +486,7 @@ def test_model_solves_instance_with_zero_or_one_clients():
     m.add_edge(client_loc, depot_loc, distance=0)
 
     res = m.solve(stop=MaxIterations(1))
-    solution = [r.visits() for r in res.best.routes()]
-    assert_equal(solution, [[1]])
+    assert_equal(res.best.num_clients(), 1)
 
 
 def test_model_solves_small_instance_with_fixed_costs():
@@ -588,10 +586,9 @@ def test_model_solves_line_instance_with_multiple_depots():
 
     # All locations are on a horizontal line, with the depots on each end. The
     # line is organised as follows:
-    #     D C C C C D   (depot or client)
-    #     0 2 3 4 5 1   (location index)
-    # Thus, clients 2 and 3 are closest to depot 0, and clients 4 and 5 are
-    # closest to depot 1.
+    #     D0 C0 C1 C2 C3 D1   (depot or client)
+    #      0  2  3  4  5  1   (location index)
+    # Thus, C0 and C1 are closest to D0, and C2 and C3 are closest to D1.
     for frm in m.locations:
         for to in m.locations:
             m.add_edge(frm, to, distance=abs(frm.x - to.x))
@@ -604,9 +601,11 @@ def test_model_solves_line_instance_with_multiple_depots():
     # assigned to the first route, and clients closest to depot 1 assigned to
     # the second route. Route membership is compared using sets because the
     # optimal visit order is not unique.
-    routes = res.best.routes()
-    assert_equal(set(routes[0].visits()), {2, 3})
-    assert_equal(set(routes[1].visits()), {4, 5})
+    route1, route2 = res.best.routes()
+    clients1 = {activity.idx for activity in route1 if activity.is_client()}
+    clients2 = {activity.idx for activity in route2 if activity.is_client()}
+    assert_equal(clients1, {0, 1})
+    assert_equal(clients2, {2, 3})
 
 
 def test_client_depot_and_vehicle_type_name_fields():
@@ -700,7 +699,7 @@ def test_from_data_client_group(ok_small):
     clients[0] = Client(1, delivery=[1], required=False, group=0)
     clients[1] = Client(2, delivery=[1], required=False, group=0)
 
-    group = ClientGroup([1, 2])
+    group = ClientGroup([0, 1])
 
     data = ok_small.replace(clients=clients, groups=[group])
     model = Model.from_data(data)
@@ -715,7 +714,7 @@ def test_from_data_client_group(ok_small):
     group = model.groups[0]
     assert_(group.required)
     assert_equal(len(group), 2)
-    assert_equal(group.clients, [1, 2])
+    assert_equal(group.clients, [0, 1])
 
 
 def test_to_data_client_group():
@@ -737,7 +736,7 @@ def test_to_data_client_group():
     assert_equal(data.num_groups, 1)
 
     group = data.group(0)
-    assert_equal(group.clients, [1, 2])
+    assert_equal(group.clients, [0, 1])
 
 
 def test_raises_mutually_exclusive_client_group_required_client():
@@ -753,36 +752,6 @@ def test_raises_mutually_exclusive_client_group_required_client():
 
     with assert_raises(ValueError):
         m.add_client(location=loc, required=True, group=group)
-
-
-def test_client_group_membership_works_with_intermediate_changes():
-    """
-    Tests that repeatedly calling data() does not add clients more than once
-    to each client group they are in, and everything continues to work when
-    the model changes between calls to data().
-    """
-    m = Model()
-    m.add_vehicle_type()
-    m.add_depot(location=m.add_location(1, 1))
-
-    # Add three clients to the model, with (for now) indices 1, 2, 3.
-    group = m.add_client_group()
-    m.add_client(location=m.add_location(1, 1), required=False, group=group)
-    m.add_client(location=m.add_location(1, 1), required=False, group=group)
-    m.add_client(location=m.add_location(1, 1), required=False, group=group)
-
-    m.data()
-    assert_equal(len(group), 3)
-    assert_equal(group.clients, [1, 2, 3])
-
-    # Add another depot and another client. The clients now have indices 2, 3,
-    # 4, and 5.
-    m.add_depot(location=m.add_location(1, 2))
-    m.add_client(location=m.add_location(1, 1), required=False, group=group)
-
-    m.data()
-    assert_equal(len(group), 4)
-    assert_equal(group.clients, [2, 3, 4, 5])
 
 
 def test_tsp_instance_with_mutually_exclusive_groups(gtsp):
@@ -958,8 +927,8 @@ def test_model_solves_instances_with_multiple_profiles():
     assert_equal(res.cost(), 0)
 
     route1, route2 = res.best.routes()
-    assert_equal(route1.visits(), [1])
-    assert_equal(route2.visits(), [2])
+    assert_equal(str(route1), "C0")
+    assert_equal(str(route2), "C1")
 
 
 def test_model_solves_instance_with_zero_load_dimensions():

@@ -283,7 +283,7 @@ class Model:
         )
 
         if group_idx is not None:
-            client_idx = len(self._depots) + len(self._clients)
+            client_idx = len(self._clients)
             self._groups[group_idx].add_client(client_idx)
 
         self._clients.append(client)
@@ -326,14 +326,6 @@ class Model:
         )
 
         self._depots.append(depot)
-
-        for group in self._groups:  # new depot invalidates client indices
-            group.clear()
-
-        for idx, client in enumerate(self._clients, len(self._depots)):
-            if client.group is not None:
-                self._groups[client.group].add_client(idx)
-
         return depot
 
     def add_edge(
