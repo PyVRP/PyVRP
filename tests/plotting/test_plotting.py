@@ -41,8 +41,8 @@ def test_plot_solution_multiple_depots():
     """
     data = read("data/OkSmallMultipleDepots.txt", round_func="trunc")
     routes = [
-        Route(data, [2, 3], vehicle_type=0),
-        Route(data, [4], vehicle_type=1),
+        Route(data, [0, 1], vehicle_type=0),
+        Route(data, [2], vehicle_type=1),
     ]
 
     plotting.plot_solution(Solution(data, routes), data)
@@ -67,8 +67,8 @@ def test_plot_solution_optional_clients(ok_small_prizes):
     instance contains optional clients and ``plot_clients`` is True.
     """
     routes = [
-        Route(ok_small_prizes, [2, 3], vehicle_type=0),
-        Route(ok_small_prizes, [1], vehicle_type=0),
+        Route(ok_small_prizes, [1, 2], vehicle_type=0),
+        Route(ok_small_prizes, [0], vehicle_type=0),
     ]
     plotting.plot_solution(
         Solution(ok_small_prizes, routes),
