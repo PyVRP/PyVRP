@@ -119,7 +119,7 @@ def test_remove(ok_small_prizes):
 
     op = RemoveOptional(ok_small_prizes)
 
-    # Purely distance. Removes arcs C1 -> C2 -> D0, adds arcs C1 -> 0. This has
+    # Purely distance. Removes C1 -> C2 -> D0, adds arcs C1 -> D0. This has
     # delta distance of 1726 - 1992 - 1965 = -2231, and a prize delta of 15:
     # -2231 + 15 = -2216.
     assert_equal(op.evaluate(route[2], cost_eval), (-2216, True))
