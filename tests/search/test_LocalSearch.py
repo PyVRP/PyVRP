@@ -204,7 +204,8 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     ls.add_operator(Exchange11(data))
 
     # Update the improved (locally optimal) solution with vehicles of type 1.
-    routes = [Route(data, r.visits(), 1) for r in improved.routes()]
+    # Exclude start and end depots.
+    routes = [Route(data, r.activities()[1:-1], 1) for r in improved.routes()]
     improved = Solution(data, routes)
 
     # This should not find any further improvements and thus not change the
@@ -325,7 +326,7 @@ def test_swap_if_improving_mutually_exclusive_group(
 
     routes = improved.routes()
     assert_equal(improved.num_routes(), 1)
-    assert_equal(routes[0].visits(), [2, 3])
+    assert_equal(str(routes[0]), "C2 C3")
 
 
 def test_no_op_multi_trip_instance(ok_small_multiple_trips):

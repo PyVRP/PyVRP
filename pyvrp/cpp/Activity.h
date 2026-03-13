@@ -66,4 +66,18 @@ bool pyvrp::Activity::isDepot() const { return type == ActivityType::DEPOT; }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::Activity const &activity);
 
+template <> struct std::hash<pyvrp::Activity>
+{
+    size_t operator()(pyvrp::Activity const &activity) const
+    {
+        using ActivityType = pyvrp::Activity::ActivityType;
+
+        size_t res = 17;
+        res = res * 31 + std::hash<ActivityType>()(activity.type);
+        res = res * 31 + std::hash<size_t>()(activity.idx);
+
+        return res;
+    }
+};
+
 #endif  // PYVRP_ACTIVITY_H

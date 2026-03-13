@@ -1139,7 +1139,7 @@ def test_eq_pyvrp_route(ok_small_multiple_trips):
     Tests __eq__ between search.Route and pyvrp.Route.
 
     """
-    activities = ["C0", "C1", "D0", "C2", "C3"]
+    activities = map(Activity, ["C0", "C1", "D0", "C2", "C3"])
     pyvrp_route = pyvrp.Route(ok_small_multiple_trips, activities, 0)
     search_route = make_search_route(ok_small_multiple_trips, activities)
     assert_(pyvrp_route == search_route)

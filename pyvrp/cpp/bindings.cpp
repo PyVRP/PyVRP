@@ -63,6 +63,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("idx"))
         .def(py::init<std::string const &>(), py::arg("description"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
+        .def("__hash__",
+             [](Activity const &activity) { return std::hash<Activity>()(activity); })
         .def("__iter__",
              [](Activity const &activity)
              { return py::iter(py::make_tuple(activity.type, activity.idx)); })
