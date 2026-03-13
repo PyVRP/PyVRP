@@ -29,14 +29,14 @@ class Route
 
 public:
     /**
-     * Simple object that stores some data about a client or depot visit.
+     * Simple object that stores some data about a route activity.
      *
      * Attributes
      * ----------
-     * location : int
-     *     Index of the visited location (client or depot).
+     * activity: Activity
+     *     Route activity.
      * trip : int
-     *     Index of the trip visiting this location.
+     *     Trip index.
      * start_service : int
      *     Time at which service begins.
      * end_service : int
