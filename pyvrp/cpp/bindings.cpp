@@ -333,7 +333,6 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("add_client",
              &ProblemData::ClientGroup::addClient,
              py::arg("client"))
-        .def("clear", &ProblemData::ClientGroup::clear)
         .def_property_readonly("clients",
                                &ProblemData::ClientGroup::clients,
                                py::return_value_policy::reference_internal)

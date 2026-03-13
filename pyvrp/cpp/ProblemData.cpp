@@ -239,8 +239,6 @@ void ProblemData::ClientGroup::addClient(size_t client)
     clients_.push_back(client);
 }
 
-void ProblemData::ClientGroup::clear() { clients_.clear(); }
-
 ProblemData::Depot::Depot(size_t location,
                           Duration twEarly,
                           Duration twLate,

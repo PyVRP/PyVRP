@@ -946,7 +946,7 @@ def test_raises_for_required_mutually_exclusive_group_membership():
             vehicle_types=[VehicleType()],
             distance_matrices=[np.zeros((2, 2))],
             duration_matrices=[np.zeros((2, 2))],
-            groups=[ClientGroup([1])],
+            groups=[ClientGroup([0])],
         )
 
 
