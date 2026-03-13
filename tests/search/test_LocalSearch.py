@@ -507,8 +507,13 @@ def test_inserts_required_missing(instance, exp_clients: set[int], request):
     improved = ls(sol, cost_eval)
     assert_(improved.is_complete())
 
-    visits = {client for route in improved.routes() for client in route}
-    assert_equal(visits, exp_clients)
+    client_visits = {
+        activity.idx
+        for route in improved.routes()
+        for activity in route
+        if activity.is_client()
+    }
+    assert_equal(client_visits, exp_clients)
 
 
 def test_local_search_exhaustive(rc208):
@@ -624,13 +629,13 @@ def test_removes_useless_consecutive_depots(ok_small_multiple_trips):
 
     # Set up a route with an empty trip, so a consecutive reload depot visit.
     route = Route(data, map(Activity, ["C1", "D0", "D0", "C2"]), 0)
-    assert_equal(str(route), "C1 |  | C2")
+    assert_equal(str(route), "C1 | | C2")
 
     # The local search should remove this consecutive depot visit.
     sol = Solution(data, [route])
     cost_eval = CostEvaluator([1], 1, 1)
     improved = ls(sol, cost_eval, exhaustive=True)
-    assert_(" |  | " not in str(improved))
+    assert_(" | | " not in str(improved))
 
 
 def test_insert_missing_groups_and_clients(ok_small_mutually_exclusive_groups):

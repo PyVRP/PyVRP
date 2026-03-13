@@ -400,7 +400,7 @@ bool Route::operator==(pyvrp::Route const &other) const
                               && timeWarp_ == other.timeWarp()
                               && vehicleType() == other.vehicleType()
                               && numTrips() == other.numTrips()
-                              && numClients() == other.size();
+                              && size() == other.size();
     // clang-format on
 
     if (!simpleChecks)

@@ -9,6 +9,8 @@ import numpy as np
 import vrplib
 
 from pyvrp._pyvrp import (
+    Activity,
+    ActivityType,
     Client,
     ClientGroup,
     Depot,
@@ -126,28 +128,19 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         if not route:
             continue
 
-        # TODO
-        route_visits = np.array(route, dtype=int)
-        depot_idcs = np.flatnonzero(route_visits < data.num_depots)
+        activities = []
+        for visit in route:
+            # VRPLIB uses a format where the route visits (for depots and
+            # clients) are numbered with [0, ..., num_depots) for the depots,
+            # and [num_depots, ..., num_depots + num_clients) for the clients.
+            if visit < data.num_depots:
+                activity = Activity(ActivityType.DEPOT, visit)
+            else:
+                visit = visit - data.num_depots
+                activity = Activity(ActivityType.CLIENT, visit)
+            activities.append(activity)
 
-        trip_visits = np.split(route_visits, depot_idcs)
-        trip_visits = [
-            # These visits include the reload depots for later trips as the
-            # first trip visit, which we need to skip.
-            trip_visits[trip_idx > 0 :] - data.num_depots
-            for trip_idx, trip_visits in enumerate(trip_visits)
-        ]
-
-        veh_type = data.vehicle_type(veh2type[idx])
-        depots = [
-            veh_type.start_depot,
-            *route_visits[depot_idcs],
-            veh_type.end_depot,
-        ]
-
-        trips = []
-
-        routes.append(Route(data, trips, veh2type[idx]))
+        routes.append(Route(data, activities, veh2type[idx]))
 
     return Solution(data, routes)
 
