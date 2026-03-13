@@ -217,7 +217,6 @@ Solution::Solution(ProblemData const &data,
 Solution::Solution(ProblemData const &data, std::vector<Route> routes)
     : routes_(std::move(routes))
 {
-
     if (routes_.size() > data.numVehicles())
     {
         auto const msg = "Number of routes must not exceed number of vehicles.";

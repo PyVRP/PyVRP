@@ -1187,3 +1187,16 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     # After the start and end depots.
     assert_equal(route.duration_after(0).duration(), route.duration())
     assert_equal(route.duration_after(6).duration(), 0)
+
+
+def test_node_is_client_and_is_depot():
+    """
+    Tests Node's is_client() and is_depot() members.
+    """
+    node = Node("D0")
+    assert_(node.is_depot())
+    assert_(not node.is_client())
+
+    node = Node("C0")
+    assert_(node.is_client())
+    assert_(not node.is_depot())
