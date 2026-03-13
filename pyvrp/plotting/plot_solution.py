@@ -53,7 +53,7 @@ def plot_solution(
         clients = [activity.idx for activity in client_activities]
         in_solution[clients] = True
 
-        trips: list[list[int]] = []
+        trips: list[list[int]] = []  # as lists of client locations
         for activity in activities[:-1]:
             if activity.is_depot():
                 trips.append([])
