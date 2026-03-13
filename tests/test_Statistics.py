@@ -9,11 +9,11 @@ def test_csv_serialises_correctly(ok_small, tmp_path):
     Tests that writing a CSV of a ``Statistics`` object and then reading that
     CSV again returns the same object.
     """
-    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    sol = Solution(ok_small, [[0, 1], [2, 3]])
     cost_eval = CostEvaluator([20], 6, 6)
 
     collected_stats = Statistics()
-    for idx in range(10):  # populate the statistics object
+    for _ in range(10):  # populate the statistics object
         collected_stats.collect(sol, sol, sol, cost_eval)
 
     csv_path = tmp_path / "test.csv"
@@ -39,7 +39,7 @@ def test_collect_a_data_point_per_iteration(ok_small, num_iterations: int):
     stats = Statistics()
     assert_(stats.is_collecting())
 
-    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    sol = Solution(ok_small, [[0, 1], [2, 3]])
     cost_eval = CostEvaluator([20], 6, 6)
 
     for _ in range(num_iterations):  # populate the statistics object
@@ -53,9 +53,9 @@ def test_data_point_matches_collect(ok_small):
     Tests that the data point collected matches with the values passed to
     ``collect()``.
     """
-    curr = Solution(ok_small, [[1, 2, 3, 4]])
-    cand = Solution(ok_small, [[2, 1], [4, 3]])
-    best = Solution(ok_small, [[1, 2], [3, 4]])
+    curr = Solution(ok_small, [[0, 1, 2, 3]])
+    cand = Solution(ok_small, [[1, 0], [3, 2]])
+    best = Solution(ok_small, [[0, 1], [2, 3]])
     cost_eval = CostEvaluator([20], 6, 6)
 
     stats = Statistics()
@@ -78,7 +78,7 @@ def test_eq(ok_small, num_iterations: int):
     """
     Tests the equality operator.
     """
-    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    sol = Solution(ok_small, [[0, 1], [2, 3]])
     cost_eval = CostEvaluator([20], 6, 6)
 
     stats = Statistics()
@@ -96,7 +96,7 @@ def test_more_eq(ok_small):
     """
     Tests the equality operator for the same search trajectory.
     """
-    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    sol = Solution(ok_small, [[0, 1], [2, 3]])
     cost_eval = CostEvaluator([20], 6, 6)
 
     stats1 = Statistics()
@@ -126,7 +126,7 @@ def test_iterating_over_statistics_returns_data(ok_small):
     stats = Statistics()
     assert_equal(list(stats), [])
 
-    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    sol = Solution(ok_small, [[0, 1], [2, 3]])
     cost_eval = CostEvaluator([20], 6, 6)
     cost = cost_eval.penalised_cost(sol)
 
@@ -149,7 +149,7 @@ def test_not_collecting(ok_small):
     Tests that calling collect_from() on a Statistics object that is not
     collecting is a no-op.
     """
-    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    sol = Solution(ok_small, [[0, 1], [2, 3]])
     cost_eval = CostEvaluator([20], 6, 6)
 
     stats = Statistics(collect_stats=False)
