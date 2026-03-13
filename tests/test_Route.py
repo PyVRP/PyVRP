@@ -754,3 +754,47 @@ def test_fixed_vehicle_cost(ok_small, fixed_cost: int):
 
     route = Route(data, [], 0)
     assert_equal(route.fixed_vehicle_cost(), fixed_cost)
+
+
+def test_raises_invalid_depot_or_client(ok_small_multiple_trips):
+    """
+    Tests that Route's constructor raises for invalid depot or client
+    activities.
+    """
+    data = ok_small_multiple_trips
+
+    assert_equal(data.num_depots, 1)
+    with assert_raises(ValueError):  # D1 does not exist
+        Route(data, [Activity("D1")], vehicle_type=0)
+
+    assert_equal(data.num_clients, 4)
+    with assert_raises(ValueError):  # C4 does not exist
+        Route(data, [Activity("C4")], vehicle_type=0)
+
+    # But D0 and C3 do exist, so this should be OK.
+    Route(data, [Activity("C3"), Activity("D0")], vehicle_type=0)
+
+
+def test_schedule_str(ok_small):
+    """
+    Tests ScheduledVisit's __str__ implementation.
+    """
+    route = Route(ok_small, [0, 1], 0)
+
+    schedule = route.schedule()
+    assert_equal(str(schedule[0]), "D0")
+    assert_equal(str(schedule[1]), "C0")
+    assert_equal(str(schedule[2]), "C1")
+    assert_equal(str(schedule[3]), "D0")
+
+
+def test_len(ok_small_multiple_trips):
+    """
+    Tests that Route counts all activities for its length, including depot
+    visits. Also tests number of trips and clients.
+    """
+    data = ok_small_multiple_trips
+    route = Route(data, [Activity("C0"), Activity("D0"), Activity("C1")], 0)
+    assert_equal(len(route), 5)
+    assert_equal(route.num_clients(), 2)
+    assert_equal(route.num_trips(), 2)
