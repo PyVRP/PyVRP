@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 import pyvrp
-from pyvrp import Activity, CostEvaluator, RandomNumberGenerator
+from pyvrp import CostEvaluator, RandomNumberGenerator
 from pyvrp.search import (
     PerturbationManager,
     PerturbationParams,
@@ -137,15 +137,15 @@ def test_perturb_switches_remove_insert(ok_small):
 
     # Test that the perturbed solution contains only C2.
     perturbed = sol.unload()
-    client_activities = {
-        act
+    clients = [
+        act.idx
         for r in perturbed.routes()
         for act in r.activities()
         if act.is_client()
-    }
+    ]
 
     assert_equal(perturbed.num_clients(), 1)
-    assert_equal(client_activities, {Activity("C2")})
+    assert_equal(clients, [2])
 
 
 def test_perturb_inserts_into_new_routes(ok_small):
