@@ -64,7 +64,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::init<std::string const &>(), py::arg("description"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
         .def("__hash__",
-             [](Activity const &activity) { return std::hash<Activity>()(activity); })
+             [](Activity const &activity)
+             { return std::hash<Activity>()(activity); })
         .def("__iter__",
              [](Activity const &activity)
              { return py::iter(py::make_tuple(activity.type, activity.idx)); })
@@ -710,7 +711,7 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t) {  // __setstate__
                 Route::ScheduledVisit visit(
-                    t[0].cast<Activity>(),            // activity
+                    t[0].cast<Activity>(),          // activity
                     t[1].cast<size_t>(),            // trip
                     t[2].cast<pyvrp::Duration>(),   // start service
                     t[3].cast<pyvrp::Duration>(),   // end service
@@ -838,7 +839,7 @@ PYBIND11_MODULE(_pyvrp, m)
                 using Schedule = std::vector<Route::ScheduledVisit>;
 
                 Route route(
-                    t[0].cast<Activities>(),                     // activities
+                    t[0].cast<Activities>(),                // activities
                     t[1].cast<pyvrp::Distance>(),           // distance
                     t[2].cast<pyvrp::Cost>(),               // distance cost
                     t[3].cast<pyvrp::Distance>(),           // excess distance
@@ -852,7 +853,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[11].cast<pyvrp::Duration>(),          // travel
                     t[12].cast<pyvrp::Duration>(),          // service
                     t[13].cast<pyvrp::Duration>(),          // start time
-                    t[14].cast<pyvrp::Duration>(), // release time
+                    t[14].cast<pyvrp::Duration>(),          // release time
                     t[15].cast<pyvrp::Duration>(),          // slack
                     t[16].cast<pyvrp::Cost>(),              // prizes
                     t[17].cast<size_t>(),                   // vehicle type

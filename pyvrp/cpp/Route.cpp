@@ -116,11 +116,8 @@ void Route::makeSchedule(ProblemData const &data)
             if (idx == 0)  // first trip accounts for latest start
                 latestStart = std::min(depot.twLate, vehData.startLate);
 
-            handle(activity,
-                   tripIdx,
-                   earliestStart,
-                   latestStart,
-                   serviceDuration);
+            handle(
+                activity, tripIdx, earliestStart, latestStart, serviceDuration);
 
             prevLoc = depot.location;
         }

@@ -130,9 +130,9 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
 
         activities = []
         for visit in route:
-            # VRPLIB uses a format where the route visits (for depots and
-            # clients) are numbered with [0, ..., num_depots) for the depots,
-            # and [num_depots, ..., num_depots + num_clients) for the clients.
+            # VRPLIB uses a format where the route visits are numbered with
+            # [0, ..., num_depots) for the depots, and [num_depots, ...,
+            # num_depots + num_clients) for the clients.
             if visit < data.num_depots:
                 activity = Activity(ActivityType.DEPOT, visit)
             else:
