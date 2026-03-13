@@ -399,8 +399,8 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     # The local search should have removed the reload depot from the first
     # route, because that was not providing any value.
     routes = improved.routes()
-    assert_(str(routes[0]), "0 2")
-    assert_(str(routes[1]), "1 3")
+    assert_equal(str(routes[0]), "C0 C2")
+    assert_equal(str(routes[1]), "C1 C3")
 
 
 def test_search_statistics(ok_small):

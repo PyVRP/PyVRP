@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cassert>
 #include <fstream>
-#include <numeric>
 
 using pyvrp::Activity;
 using pyvrp::Cost;
@@ -58,7 +57,7 @@ void Route::makeSchedule(ProblemData const &data)
     auto const &durations = data.durationMatrix(vehData.profile);
 
     Duration releaseTime;
-    std::vector<Duration> releaseTimes;
+    std::vector<Duration> releaseTimes;  // per trip
     for (auto it = activities_.begin() + 1; it != activities_.end(); ++it)
     {
         if (it->isDepot())
@@ -332,7 +331,7 @@ Route::Route(std::vector<Activity> activities,
 
 bool Route::empty() const
 {
-    return size() == 2;  // only start and end depot activites
+    return size() == 2;  // only start and end depot activities
 }
 
 size_t Route::size() const { return activities_.size(); }

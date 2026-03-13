@@ -373,8 +373,8 @@ def test_depot_service_duration(ok_small_multiple_trips):
     # Single route, no reload depots. This route has excess load, which the
     # cost evaluator penalises heavily, but is feasible w.r.t. duration.
     route = make_search_route(data, ["C2", "C1", "C3", "C0"])
-    assert_(route.excess_load(), [8])
-    assert_(route.duration(), 200 + 360 + 360 + 360 + 420)  # depot and clients
+    assert_equal(route.excess_load(), [8])
+    assert_equal(route.duration(), 200 + 360 + 360 + 360 + 420)  # all service
     assert_(not route.has_time_warp())
 
     # The reload depot removes excess load (improvement of -8_000) but adds 200

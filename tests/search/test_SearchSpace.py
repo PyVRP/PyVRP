@@ -7,7 +7,7 @@ from pyvrp.search._search import SearchSpace
 from tests.helpers import make_search_route
 
 
-@pytest.mark.parametrize("size", [1, 2, 3, 5, 6, 7])  # num_clients == 5
+@pytest.mark.parametrize("size", [1, 2, 3, 5, 6, 7])  # num_clients == 4
 def test_raises_when_neighbourhood_dimensions_do_not_match(ok_small, size):
     """
     Tests that the search space raises when the neighbourhood size does not

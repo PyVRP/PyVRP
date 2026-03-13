@@ -298,10 +298,10 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     ls = LocalSearch(data, rng, neighbours)
     ls.add_operator(Exchange10(data))
 
-    # Thi solution has routes with loads [13, 5, 0, 0] and excess [1, 0, 0, 0].
-    # Moving C2 to C4 will resolve all load penalties, but other moves would
-    # increase load penalties. Therefore, this requires moving to an empty
-    # route which is not the first.
+    # Solution has routes with loads [13, 5, 0, 0] and excess [1, 0, 0, 0].
+    # Moving C2 to route 4 will resolve all load penalties, but other moves
+    # would increase load penalties. Therefore, this requires moving to an
+    # empty route which is not the first.
     sol = Solution(
         data, [SolRoute(data, [0, 1, 2], 0), SolRoute(data, [3], 1)]
     )

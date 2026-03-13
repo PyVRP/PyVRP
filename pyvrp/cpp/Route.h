@@ -33,7 +33,7 @@ public:
      *
      * Attributes
      * ----------
-     * activity: Activity
+     * activity : Activity
      *     Route activity.
      * trip : int
      *     Trip index.
