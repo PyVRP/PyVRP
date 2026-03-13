@@ -337,6 +337,9 @@ template <>  // specialisation for pyvrp::Route
 Cost CostEvaluator::penalisedCost(Route const &route) const;
 }  // namespace pyvrp
 
+std::ostream &operator<<(std::ostream &out,
+                         pyvrp::Route::ScheduledVisit const &visit);
+
 std::ostream &operator<<(std::ostream &out, pyvrp::Route const &route);
 
 #endif  // PYVRP_ROUTE_H

@@ -73,7 +73,7 @@ def write_solution(where: Path, data: ProblemData, result: Result):
 
         routes = [f"Route #{idx + 1}:" for idx in range(data.num_vehicles)]
         for route in result.best.routes():
-            visits = route2vrplib(visits)
+            visits = route2vrplib(route)
             vehicle = next(type2vehicle[route.vehicle_type()])
             routes[vehicle] += " " + " ".join(map(str, visits))
 

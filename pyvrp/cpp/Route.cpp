@@ -459,6 +459,11 @@ template <> Cost pyvrp::CostEvaluator::penalisedCost(Route const &route) const
     // clang-format on
 }
 
+std::ostream &operator<<(std::ostream &out, Route::ScheduledVisit const &visit)
+{
+    return out << visit.activity();
+}
+
 std::ostream &operator<<(std::ostream &out, Route const &route)
 {
     auto const &activities = route.activities();

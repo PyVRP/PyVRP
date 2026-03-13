@@ -719,7 +719,14 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[5].cast<pyvrp::Duration>());  // time warp
 
                 return visit;
-            }));
+            }))
+        .def("__str__",
+             [](Route::ScheduledVisit const &visit)
+             {
+                 std::stringstream stream;
+                 stream << visit;
+                 return stream.str();
+             });
 
     py::class_<Route>(m, "Route", DOC(pyvrp, Route))
         .def(py::init<ProblemData const &, std::vector<Activity>, size_t>(),
