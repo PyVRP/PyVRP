@@ -1072,13 +1072,9 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     assert(first.route() == last.route());  // must start and end at same route
 
     // Must start and end at the route start and end.
-    [[maybe_unused]] auto const *route = this->route();
-
-    assert(first.front().activity().isDepot());
-    assert(first.front().activity().idx == route->startDepot());
-
-    assert(last.back().activity().isDepot());
-    assert(last.back().activity().idx == route->endDepot());
+    [[maybe_unused]] auto const &route = *this->route();
+    assert(first.front().activity() == route[0]->activity());
+    assert(last.back().activity() == route[route.size() - 1]->activity());
 }
 
 template <Segment... Segments> size_t Route::Proposal<Segments...>::size() const
