@@ -204,8 +204,12 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     ls.add_operator(Exchange11(data))
 
     # Update the improved (locally optimal) solution with vehicles of type 1.
-    # Exclude start and end depots.
-    routes = [Route(data, r.activities()[1:-1], 1) for r in improved.routes()]
+    routes = []
+    for route in improved.routes():
+        activities = [step.activity for step in route]
+
+        # Exclude start and end depots.
+        routes.append(Route(data, activities[1:-1], 1))
     improved = Solution(data, routes)
 
     # This should not find any further improvements and thus not change the
@@ -513,10 +517,10 @@ def test_inserts_required_missing(instance, exp_clients: set[int], request):
     assert_(improved.is_complete())
 
     client_visits = {
-        activity.idx
+        step.activity.idx
         for route in improved.routes()
-        for activity in route
-        if activity.is_client()
+        for step in route
+        if step.activity.is_client()
     }
     assert_equal(client_visits, exp_clients)
 

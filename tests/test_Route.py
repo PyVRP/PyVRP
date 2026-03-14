@@ -93,16 +93,15 @@ def test_route_access_methods(ok_small):
 
 def test_access_multiple_trips(ok_small_multiple_trips):
     """
-    Tests that accessing the route's activities via activities() or iteration
-    works correctly for a multi-trip instance.
+    Tests that accessing the route's schedule via iteration works correctly for
+    a multi-trip instance.
     """
     data = ok_small_multiple_trips
     activities = [Activity(des) for des in ["C0", "C1", "D0", "C2"]]
     route = Route(data, activities, vehicle_type=0)
 
     incl_depots = [Activity("D0"), *activities, Activity("D0")]
-    assert_equal(route.activities(), incl_depots)
-    assert_equal([activity for activity in route], incl_depots)
+    assert_equal([step.activity for step in route], incl_depots)
 
 
 def test_route_time_warp_calculations(ok_small):
@@ -557,11 +556,11 @@ def test_index_multiple_trips(ok_small_multiple_trips):
     """
     activities = [Activity(des) for des in ["C0", "D0", "C2"]]
     route = Route(ok_small_multiple_trips, activities, 0)
-    assert_equal(route[0], Activity("D0"))  # start
-    assert_equal(route[-3], Activity("D0"))  # reload
+    assert_equal(route[0].activity, Activity("D0"))  # start
+    assert_equal(route[-3].activity, Activity("D0"))  # reload
 
-    assert_equal(route[1], Activity("C0"))
-    assert_equal(route[-2], Activity("C2"))
+    assert_equal(route[1].activity, Activity("C0"))
+    assert_equal(route[-2].activity, Activity("C2"))
 
     with assert_raises(IndexError):
         route[5]
@@ -730,7 +729,7 @@ def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
     route = Route(ok_small_multiple_trips, activities, 0)
 
     # D0 -> C0 -> C1 -> D0 -> D0.
-    assert_equal([activity.idx for activity in route], [0, 0, 1, 0, 0])
+    assert_equal([step.activity.idx for step in route], [0, 0, 1, 0, 0])
 
 
 def test_route_release_time_after_vehicle_start_late():

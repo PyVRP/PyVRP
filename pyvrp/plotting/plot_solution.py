@@ -45,7 +45,7 @@ def plot_solution(
     for idx, route in enumerate(solution.routes()):
         color = colors(idx % colors.N)
 
-        activities = route.activities()
+        activities = [step.activity for step in route.schedule()]
         client_activities = filter(Activity.is_client, activities)
         depot_activities = filter(Activity.is_depot, activities)
 

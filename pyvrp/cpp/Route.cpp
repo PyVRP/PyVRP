@@ -59,12 +59,12 @@ void Route::validate(ProblemData const &data,
 {
     auto const &vehData = data.vehicleType(vehicleType_);
 
-    size_t numReloads = 0;
+    size_t numTrips = 1;
     for (auto const &activity : activities)  // some quick checks up front
     {
         if (activity.isDepot())
         {
-            numReloads++;
+            numTrips++;  // this is a reload depot, so we start another trip
 
             if (activity.idx >= data.numDepots())
             {
@@ -82,7 +82,7 @@ void Route::validate(ProblemData const &data,
         }
     }
 
-    if (numReloads > vehData.maxReloads)
+    if (numTrips > vehData.maxTrips())
         throw std::invalid_argument("Vehicle cannot perform this many trips.");
 }
 
@@ -99,12 +99,11 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
     auto const &end = data.depot(vehData.endDepot);
     auto ds = DurationSegment::merge({end, 0}, {vehData, vehData.twLate});
     size_t nextLoc = end.location;
-    for (auto idx = activities.size(); idx-- > 0;)
+    for (auto it = activities.rbegin(); it != activities.rend(); ++it)
     {
-        auto const activity = activities[idx];
-        if (activity.isDepot())
+        if (it->isDepot())
         {
-            auto const &depot = data.depot(activity.idx);
+            auto const &depot = data.depot(it->idx);
 
             auto const depotService = depot.serviceDuration;
             service_ += depotService;
@@ -120,7 +119,7 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
         }
         else
         {
-            auto const &clientData = data.client(activity.idx);
+            auto const &clientData = data.client(it->idx);
             service_ += clientData.serviceDuration;
 
             auto const edgeDur = durations(clientData.location, nextLoc);
@@ -132,7 +131,12 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
     }
 
     auto const &start = data.depot(vehData.startDepot);
-    ds = DurationSegment::merge({start, start.serviceDuration}, ds);
+    auto const edgeDur = durations(start.location, nextLoc);
+
+    service_ += start.serviceDuration;
+    travel_ += edgeDur;
+
+    ds = DurationSegment::merge(edgeDur, {start, start.serviceDuration}, ds);
     ds = DurationSegment::merge({vehData, vehData.startLate}, ds);
 
     releaseTimes.insert(releaseTimes.begin(), ds.releaseTime());
@@ -170,7 +174,7 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
         = std::max(start.twEarly, std::min(releaseTime_, start.twLate));
     Duration latestStart = std::min(start.twLate, vehData.startLate);
     handle({Activity::ActivityType::DEPOT, vehData.startDepot},
-           0,
+           tripIdx,
            earliestStart,
            latestStart,
            start.serviceDuration);
@@ -183,7 +187,7 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
             now += durations(prevLoc, depot.location);
 
             Duration earliestStart = std::max(
-                depot.twEarly, std::min(releaseTimes[tripIdx++], depot.twLate));
+                depot.twEarly, std::min(releaseTimes[++tripIdx], depot.twLate));
 
             handle(activity,
                    tripIdx,
@@ -207,8 +211,9 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
             prevLoc = clientData.location;
         }
 
+    now += durations(prevLoc, end.location);
     handle({Activity::ActivityType::DEPOT, vehData.endDepot},
-           tripIdx++,
+           ++tripIdx,
            end.twEarly,
            end.twLate,
            0);

@@ -41,7 +41,9 @@ def tabulate(headers: list[str], rows: np.ndarray) -> str:
 def write_solution(where: Path, data: ProblemData, result: Result):
     def route2vrplib(route) -> list[int]:
         visits: list[int] = []
-        for activity in route:
+        for step in route:
+            activity = step.activity
+
             # Map activities back to VRPLIB's format.  VRPLIB uses a format
             # where the route visits are numbered with [0, ..., num_depots) for
             # the depots, and [num_depots, ..., num_depots + num_clients) for
