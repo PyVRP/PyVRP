@@ -93,14 +93,15 @@ def test_route_access_methods(ok_small):
 
 def test_access_multiple_trips(ok_small_multiple_trips):
     """
-    Tests that accessing the route's schedule via iteration works correctly for
-    a multi-trip instance.
+    Tests that accessing the route's schedule via schedule() or iteration works
+    correctly for a multi-trip instance.
     """
     data = ok_small_multiple_trips
     activities = [Activity(des) for des in ["C0", "C1", "D0", "C2"]]
     route = Route(data, activities, vehicle_type=0)
 
     incl_depots = [Activity("D0"), *activities, Activity("D0")]
+    assert_equal(route.schedule(), incl_depots)
     assert_equal([activity for activity in route], incl_depots)
 
 
@@ -808,4 +809,5 @@ def test_len(ok_small_multiple_trips):
     route = Route(data, [Activity("C0"), Activity("D0"), Activity("C1")], 0)
     assert_equal(len(route), 5)
     assert_equal(route.num_clients(), 2)
+    assert_equal(route.num_depots(), 3)
     assert_equal(route.num_trips(), 2)

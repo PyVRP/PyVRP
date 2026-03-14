@@ -665,8 +665,8 @@ def test_str_contains_routes(ok_small, vehicle_types):
         # Each line should contain a route, where each route should contain
         # every client that is in the route as returned by routes().
         for route, str_route in zip(routes, str_representation):
-            activities = [activity for activity in route]
-            for activity in activities[1:-1]:  # skip start/end depots
+            activities = route.schedule()[1:-1]  # skip start/end depots
+            for activity in activities:
                 assert_(str(activity) in str_route)
 
 

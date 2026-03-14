@@ -206,10 +206,8 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     # Update the improved (locally optimal) solution with vehicles of type 1.
     routes = []
     for route in improved.routes():
-        activities = [activity for activity in route]
-
-        # Exclude start and end depots.
-        routes.append(Route(data, activities[1:-1], 1))
+        activities = route.schedule()[1:-1]  # exclude start and end depots
+        routes.append(Route(data, activities, 1))
     improved = Solution(data, routes)
 
     # This should not find any further improvements and thus not change the
