@@ -24,8 +24,11 @@ class Route
     using VehicleType = size_t;
     using Activities = std::vector<Activity>;
 
-    // Creates the data returned by ``schedule()``.
-    void makeSchedule(ProblemData const &data);
+    void validate(ProblemData const &data, Activities const &activities) const;
+    void setSchedule(ProblemData const &data, Activities const &activities);
+    void setDistance(ProblemData const &data);
+    void setLoad(ProblemData const &data);
+    void setOtherStatistics(ProblemData const &data);
 
 public:
     /**
@@ -51,7 +54,7 @@ public:
      *     back in time' to begin service. Non-zero time warp indicates an
      *     infeasible route.
      */
-    class ScheduledVisit
+    class ScheduledActivity
     {
         Activity activity_;
         size_t trip_ = 0;
@@ -61,12 +64,14 @@ public:
         Duration timeWarp_ = 0;
 
     public:
-        ScheduledVisit(Activity activity,
-                       size_t trip,
-                       Duration startService,
-                       Duration endService,
-                       Duration waitDuration,
-                       Duration timeWarp);
+        ScheduledActivity(Activity activity,
+                          size_t trip,
+                          Duration startService,
+                          Duration endService,
+                          Duration waitDuration,
+                          Duration timeWarp);
+
+        bool operator==(ScheduledActivity const &other) const = default;
 
         [[nodiscard]] Activity activity() const;
         [[nodiscard]] size_t trip() const;
@@ -78,8 +83,9 @@ public:
     };
 
 private:
-    Activities activities_ = {};
-    std::vector<ScheduledVisit> schedule_ = {};  // Activity schedule
+    using Schedule = std::vector<ScheduledActivity>;
+
+    std::vector<ScheduledActivity> schedule_ = {};  // Activity schedule
     Distance distance_ = 0;        // Total travel distance on this route
     Cost distanceCost_ = 0;        // Total cost of travel distance
     Distance excessDistance_ = 0;  // Excess travel distance
@@ -99,8 +105,6 @@ private:
     Cost prizes_ = 0;               // Total value of prizes on this route
 
     VehicleType vehicleType_;  // Type of vehicle
-    Depot startDepot_;         // Assigned start depot
-    Depot endDepot_;           // Assigned end depot
 
 public:
     [[nodiscard]] bool empty() const;
@@ -116,19 +120,19 @@ public:
     [[nodiscard]] size_t numClients() const;
 
     /**
+     * Returns the number of depots in this route.
+     */
+    [[nodiscard]] size_t numDepots() const;
+
+    /**
      * Returns the number of trips in this route.
      */
     [[nodiscard]] size_t numTrips() const;
 
-    [[nodiscard]] Activity operator[](size_t idx) const;
+    [[nodiscard]] ScheduledActivity operator[](size_t idx) const;
 
-    [[nodiscard]] Activities::const_iterator begin() const;
-    [[nodiscard]] Activities::const_iterator end() const;
-
-    /**
-     * Route activities.
-     */
-    [[nodiscard]] Activities const &activities() const;
+    [[nodiscard]] Schedule::const_iterator begin() const;
+    [[nodiscard]] Schedule::const_iterator end() const;
 
     /**
      * Statistics about each activity and the overall route schedule.
@@ -138,7 +142,7 @@ public:
      *    The schedule assumes the route starts at :meth:`~start_time`. Starting
      *    later may be feasible, but shifts the schedule.
      */
-    [[nodiscard]] std::vector<ScheduledVisit> const &schedule() const;
+    [[nodiscard]] Schedule const &schedule() const;
 
     /**
      * The fixed cost of the vehicle servicing this route.
@@ -261,12 +265,12 @@ public:
     [[nodiscard]] VehicleType vehicleType() const;
 
     /**
-     * Location index of the route's starting depot.
+     * Index of the route's starting depot.
      */
     [[nodiscard]] Depot startDepot() const;
 
     /**
-     * Location index of the route's ending depot.
+     * Index of the route's ending depot.
      */
     [[nodiscard]] Depot endDepot() const;
 
@@ -302,15 +306,15 @@ public:
     Route(Route &&other) = default;
 
     Route(ProblemData const &data,
-          std::vector<Client> visits,
+          std::vector<Client> const &visits,
           VehicleType vehicleType);
 
     Route(ProblemData const &data,
-          Activities activities,
+          Activities const &activities,
           VehicleType vehicleType);
 
     // This constructor does *no* validation. Useful when unserialising objects.
-    Route(Activities activities,
+    Route(Schedule schedule,
           Distance distance,
           Cost distanceCost,
           Distance excessDistance,
@@ -327,10 +331,7 @@ public:
           Duration releaseTime,
           Duration slack,
           Cost prizes,
-          VehicleType vehicleType,
-          Depot startDepot,
-          Depot endDepot,
-          std::vector<ScheduledVisit> schedule);
+          VehicleType vehicleType);
 };
 
 template <>  // specialisation for pyvrp::Route
@@ -338,7 +339,7 @@ Cost CostEvaluator::penalisedCost(Route const &route) const;
 }  // namespace pyvrp
 
 std::ostream &operator<<(std::ostream &out,
-                         pyvrp::Route::ScheduledVisit const &visit);
+                         pyvrp::Route::ScheduledActivity const &visit);
 
 std::ostream &operator<<(std::ostream &out, pyvrp::Route const &route);
 

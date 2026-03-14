@@ -233,8 +233,10 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         static_assert(std::ranges::input_range<Route>);
 
         usedVehicles[route.vehicleType()]++;
-        for (auto const activity : route)
+        for (auto const &step : route)
         {
+            auto const activity = step.activity();
+
             if (!activity.isClient())
                 continue;
 

@@ -789,7 +789,7 @@ def test_raises_invalid_depot_or_client(ok_small_multiple_trips):
 
 def test_schedule_str(ok_small):
     """
-    Tests ScheduledVisit's __str__ implementation.
+    Tests ScheduledActivity's __str__ implementation.
     """
     route = Route(ok_small, [0, 1], 0)
 

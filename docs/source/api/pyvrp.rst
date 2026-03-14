@@ -106,7 +106,7 @@ This object stores the best observed solution and detailed runtime statistics.
    .. autoclass:: ProblemData
       :members:
 
-   .. autoclass:: ScheduledVisit
+   .. autoclass:: ScheduledActivity
       :members:
 
    .. autoclass:: PiecewiseLinearFunction

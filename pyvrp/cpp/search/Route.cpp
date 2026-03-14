@@ -407,8 +407,8 @@ bool Route::operator==(pyvrp::Route const &other) const
         return false;
 
     size_t idx = 0;
-    for (auto const &activity : other.activities())
-        if (nodes[idx++]->activity() != activity)
+    for (auto const &step : other.schedule())
+        if (nodes[idx++]->activity() != step.activity())
             return false;
 
     return true;

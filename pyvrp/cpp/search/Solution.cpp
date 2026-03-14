@@ -84,7 +84,7 @@ void Solution::load(pyvrp::Solution const &solution)
         route.reserve(solRoute.size());
         for (size_t idx = 1; idx != solRoute.size() - 1; ++idx)
         {
-            auto const activity = solRoute[idx];
+            auto const activity = solRoute[idx].activity();
             if (activity.isDepot())
             {
                 Route::Node depot = activity;
