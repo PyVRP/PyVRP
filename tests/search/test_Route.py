@@ -24,18 +24,24 @@ def test_node_init():
     # Activity-based.
     from_activity = Node(Activity("C1"))
     assert_equal(from_activity.activity, Activity("C1"))
+    assert_equal(from_activity.idx, 1)
+    assert_equal(from_activity.type, ActivityType.CLIENT)
     assert_equal(from_activity.pos, 0)
     assert_(from_activity.route is None)
 
     # Activity-type based.
     direct_construction = Node(ActivityType.CLIENT, 1)
     assert_equal(direct_construction.activity, from_activity.activity)
+    assert_equal(direct_construction.idx, 1)
+    assert_equal(direct_construction.type, ActivityType.CLIENT)
     assert_equal(direct_construction.pos, 0)
     assert_(direct_construction.route is None)
 
     # Description-based.
     from_description = Node("C1")
     assert_equal(from_description.activity, from_activity.activity)
+    assert_equal(from_description.idx, 1)
+    assert_equal(from_description.type, ActivityType.CLIENT)
     assert_equal(from_description.pos, 0)
     assert_(from_description.route is None)
 
