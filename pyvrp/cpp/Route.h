@@ -129,7 +129,7 @@ public:
      */
     [[nodiscard]] size_t numTrips() const;
 
-    [[nodiscard]] ScheduledActivity operator[](size_t idx) const;
+    [[nodiscard]] ScheduledActivity const &operator[](size_t idx) const;
 
     [[nodiscard]] Schedule::const_iterator begin() const;
     [[nodiscard]] Schedule::const_iterator end() const;

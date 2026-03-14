@@ -796,7 +796,10 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("has_time_warp",
              &Route::hasTimeWarp,
              DOC(pyvrp, Route, hasTimeWarp))
-        .def("schedule", &Route::schedule, DOC(pyvrp, Route, schedule))
+        .def("schedule",
+             &Route::schedule,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, schedule))
         .def("__len__", &Route::size, DOC(pyvrp, Route, size))
         .def(
             "__iter__",
@@ -810,7 +813,8 @@ PYBIND11_MODULE(_pyvrp, m)
                 // conditional so we support negative offsets from the end.
                 return route[idx < 0 ? route.size() + idx : idx];
             },
-            py::arg("idx"))
+            py::arg("idx"),
+            py::return_value_policy::reference_internal)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](Route const &route) {  // __getstate__

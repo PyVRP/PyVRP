@@ -93,7 +93,6 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
 
     std::vector<Duration> releaseTimes;  // per trip, for the schedule
 
-    // General iteration statistics, from the last to the first activity.
     auto const &end = data.depot(vehData.endDepot);
     auto ds = DurationSegment::merge({end, 0}, {vehData, vehData.twLate});
     size_t nextLoc = end.location;
@@ -166,30 +165,24 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
         now += service;
     };
 
-    size_t tripIdx = 0;
-
-    Duration earliestStart
-        = std::max(start.twEarly, std::min(releaseTime_, start.twLate));
-    Duration latestStart = std::min(start.twLate, vehData.startLate);
     handle({Activity::ActivityType::DEPOT, vehData.startDepot},
-           tripIdx,
-           earliestStart,
-           latestStart,
+           0,
+           std::max(start.twEarly, std::min(releaseTime_, start.twLate)),
+           std::min(start.twLate, vehData.startLate),
            start.serviceDuration);
 
     size_t prevLoc = start.location;
-    for (auto const &activity : activities)
+    for (size_t tripIdx = 0; auto const &activity : activities)
         if (activity.isDepot())
         {
+            auto const releaseTime = releaseTimes[++tripIdx];
+
             auto const &depot = data.depot(activity.idx);
             now += durations(prevLoc, depot.location);
 
-            Duration earliestStart = std::max(
-                depot.twEarly, std::min(releaseTimes[++tripIdx], depot.twLate));
-
             handle(activity,
                    tripIdx,
-                   earliestStart,
+                   std::max(depot.twEarly, std::min(releaseTime, depot.twLate)),
                    depot.twLate,
                    depot.serviceDuration);
 
@@ -211,7 +204,7 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
 
     now += durations(prevLoc, end.location);
     handle({Activity::ActivityType::DEPOT, vehData.endDepot},
-           ++tripIdx,
+           releaseTimes.size(),
            end.twEarly,
            end.twLate,
            0);
@@ -358,7 +351,7 @@ size_t Route::numDepots() const { return numTrips() + 1; }
 
 size_t Route::numTrips() const { return schedule_.back().trip(); }
 
-Route::ScheduledActivity Route::operator[](size_t idx) const
+Route::ScheduledActivity const &Route::operator[](size_t idx) const
 {
     if (idx >= size())
         throw std::out_of_range("Index out of range.");
