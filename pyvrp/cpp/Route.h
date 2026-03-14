@@ -85,7 +85,7 @@ public:
 private:
     using Schedule = std::vector<ScheduledActivity>;
 
-    std::vector<ScheduledActivity> schedule_ = {};  // Activity schedule
+    Schedule schedule_ = {};       // Activity schedule
     Distance distance_ = 0;        // Total travel distance on this route
     Cost distanceCost_ = 0;        // Total cost of travel distance
     Distance excessDistance_ = 0;  // Excess travel distance

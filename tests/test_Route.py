@@ -811,3 +811,16 @@ def test_len(ok_small_multiple_trips):
     assert_equal(route.num_clients(), 2)
     assert_equal(route.num_depots(), 3)
     assert_equal(route.num_trips(), 2)
+
+
+def test_schedule_trip_count(ok_small_multiple_trips):
+    """
+    Tests that the trip counter for scheduled activities starts at 0, and is
+    incremented at every subsequent (reload) depot.
+    """
+    data = ok_small_multiple_trips
+    route = Route(data, [Activity("C0"), Activity("D0")], 0)
+    assert_equal(route[0].trip, 0)  # start depot
+    assert_equal(route[1].trip, 0)  # client, so no increment
+    assert_equal(route[2].trip, 1)  # reload depot, increment
+    assert_equal(route[3].trip, 2)  # end depot, increment
