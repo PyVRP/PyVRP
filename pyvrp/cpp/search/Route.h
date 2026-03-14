@@ -16,21 +16,22 @@
 
 namespace pyvrp::search
 {
-// This defines the minimal interface required for a segment of visits.
+class SegmentProxy;  // forward declaration
+
+// This defines the minimal interface required for a segment of activities.
 template <typename T>
-concept Segment = requires(T arg, size_t profile, size_t dimension) {
-    { arg.route() };
-    { arg.firstActivity() } -> std::same_as<Activity>;
-    { arg.lastActivity() } -> std::same_as<Activity>;
-    { arg.firstLocation() } -> std::same_as<size_t>;
-    { arg.lastLocation() } -> std::same_as<size_t>;
-    { arg.size() } -> std::same_as<size_t>;
-    { arg.startsAtReloadDepot() } -> std::same_as<bool>;
-    { arg.endsAtReloadDepot() } -> std::same_as<bool>;
-    { arg.distance(profile) } -> std::convertible_to<Distance>;
-    { arg.duration(profile) } -> std::convertible_to<DurationSegment>;
-    { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
-};
+concept Segment
+    = requires(T arg, size_t profile, size_t dimension, size_t idx) {
+          { arg.route() };
+          { arg.front() } -> std::convertible_to<SegmentProxy>;
+          { arg.back() } -> std::convertible_to<SegmentProxy>;
+          { arg.size() } -> std::same_as<size_t>;
+          { arg.startsAtReloadDepot() } -> std::same_as<bool>;
+          { arg.endsAtReloadDepot() } -> std::same_as<bool>;
+          { arg.distance(profile) } -> std::convertible_to<Distance>;
+          { arg.duration(profile) } -> std::convertible_to<DurationSegment>;
+          { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
+      };
 
 namespace detail
 {
@@ -48,6 +49,20 @@ template <class Tuple> auto constexpr reverse(Tuple &&tuple)
     return reverse_impl(tuple, indices);
 }
 }  // namespace detail
+
+/**
+ * Simple proxy that can be queried for activity and location attributes.
+ */
+class SegmentProxy
+{
+    Activity activity_;
+    size_t location_;
+
+public:
+    inline SegmentProxy(Activity activity, size_t location);
+    inline Activity activity() const;
+    inline size_t location() const;
+};
 
 /**
  * This ``Route`` class supports fast delta cost computations and in-place
@@ -243,11 +258,8 @@ private:
     public:
         inline Route const *route() const;
 
-        inline Activity firstActivity() const;  // activity at start
-        inline Activity lastActivity() const;   // end depot activity
-
-        inline size_t firstLocation() const;  // location at start
-        inline size_t lastLocation() const;   // end depot location
+        inline SegmentProxy front() const;  // at start
+        inline SegmentProxy back() const;   // at end depot
 
         inline size_t size() const;
 
@@ -272,11 +284,8 @@ private:
     public:
         inline Route const *route() const;
 
-        inline Activity firstActivity() const;  // start depot activity
-        inline Activity lastActivity() const;   // activity at end
-
-        inline size_t firstLocation() const;  // start depot location
-        inline size_t lastLocation() const;   // location at end
+        inline SegmentProxy front() const;  // at start depot
+        inline SegmentProxy back() const;   // at end
 
         inline size_t size() const;
 
@@ -303,11 +312,8 @@ private:
     public:
         inline Route const *route() const;
 
-        inline Activity firstActivity() const;  // activity at start
-        inline Activity lastActivity() const;   // activity at end
-
-        inline size_t firstLocation() const;  // location at start
-        inline size_t lastLocation() const;   // location at end
+        inline SegmentProxy front() const;  // at start
+        inline SegmentProxy back() const;   // at end
 
         inline size_t size() const;
 
@@ -663,6 +669,15 @@ inline Route::Node const *n(Route::Node const *node)
     return route[node->idx() + 1];
 }
 
+SegmentProxy::SegmentProxy(Activity activity, size_t location)
+    : activity_(activity), location_(location)
+{
+}
+
+Activity SegmentProxy::activity() const { return activity_; }
+
+size_t SegmentProxy::location() const { return location_; }
+
 Activity Route::Node::activity() const { return activity_; }
 
 size_t Route::Node::idx() const { return idx_; }
@@ -753,24 +768,14 @@ LoadSegment const &Route::SegmentBefore::load(size_t dimension) const
 
 Route const *Route::SegmentBefore::route() const { return &route_; }
 
-Activity Route::SegmentBefore::firstActivity() const
+SegmentProxy Route::SegmentBefore::front() const
 {
-    return route_.nodes.front()->activity();
+    return {route_.nodes.front()->activity(), route_.locations.front()};
 }
 
-Activity Route::SegmentBefore::lastActivity() const
+SegmentProxy Route::SegmentBefore::back() const
 {
-    return route_.nodes[end]->activity();
-}
-
-size_t Route::SegmentBefore::firstLocation() const
-{
-    return route_.locations.front();
-}
-
-size_t Route::SegmentBefore::lastLocation() const
-{
-    return route_.locations[end];
+    return {route_.nodes[end]->activity(), route_.locations[end]};
 }
 
 size_t Route::SegmentBefore::size() const { return end + 1; }
@@ -784,24 +789,14 @@ bool Route::SegmentBefore::endsAtReloadDepot() const
 
 Route const *Route::SegmentAfter::route() const { return &route_; }
 
-Activity Route::SegmentAfter::firstActivity() const
+SegmentProxy Route::SegmentAfter::front() const
 {
-    return route_.nodes[start]->activity();
+    return {route_.nodes[start]->activity(), route_.locations[start]};
 }
 
-Activity Route::SegmentAfter::lastActivity() const
+SegmentProxy Route::SegmentAfter::back() const
 {
-    return route_.nodes.back()->activity();
-}
-
-size_t Route::SegmentAfter::firstLocation() const
-{
-    return route_.locations[start];
-}
-
-size_t Route::SegmentAfter::lastLocation() const
-{
-    return route_.locations.back();
+    return {route_.nodes.back()->activity(), route_.locations.back()};
 }
 
 size_t Route::SegmentAfter::size() const { return route_.size() - start; }
@@ -814,24 +809,14 @@ bool Route::SegmentAfter::endsAtReloadDepot() const { return false; }
 
 Route const *Route::SegmentBetween::route() const { return &route_; }
 
-Activity Route::SegmentBetween::firstActivity() const
+SegmentProxy Route::SegmentBetween::front() const
 {
-    return route_.nodes[start]->activity();
+    return {route_.nodes[start]->activity(), route_.locations[start]};
 }
 
-Activity Route::SegmentBetween::lastActivity() const
+SegmentProxy Route::SegmentBetween::back() const
 {
-    return route_.nodes[end]->activity();
-}
-
-size_t Route::SegmentBetween::firstLocation() const
-{
-    return route_.locations[start];
-}
-
-size_t Route::SegmentBetween::lastLocation() const
-{
-    return route_.locations[end];
+    return {route_.nodes[end]->activity(), route_.locations[end]};
 }
 
 size_t Route::SegmentBetween::size() const { return end - start + 1; }
@@ -1089,11 +1074,11 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     // Must start and end at the route start and end.
     [[maybe_unused]] auto const *route = this->route();
 
-    assert(first.firstActivity().isDepot());
-    assert(first.firstActivity().idx == route->startDepot());
+    assert(first.front().activity().isDepot());
+    assert(first.front().activity().idx == route->startDepot());
 
-    assert(last.lastActivity().isDepot());
-    assert(last.lastActivity().idx == route->endDepot());
+    assert(last.back().activity().isDepot());
+    assert(last.back().activity().idx == route->endDepot());
 }
 
 template <Segment... Segments> size_t Route::Proposal<Segments...>::size() const
@@ -1128,13 +1113,13 @@ std::pair<Cost, Distance> Route::Proposal<Segments...>::distance() const
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto distance = segment.distance(profile);
-        auto lastLoc = segment.lastLocation();
+        auto lastLoc = segment.back().location();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            distance += matrix(lastLoc, other.firstLocation());
+            distance += matrix(lastLoc, other.front().location());
             distance += other.distance(profile);
-            lastLoc = other.lastLocation();
+            lastLoc = other.back().location();
 
             if constexpr (sizeof...(args) != 0)
                 self(self, std::forward<decltype(args)>(args)...);
@@ -1170,14 +1155,14 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto ds = segment.duration(profile);
-        auto firstLoc = segment.firstLocation();
+        auto firstLoc = segment.front().location();
 
         if (segment.startsAtReloadDepot())
             ds = ds.finaliseFront();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            auto edgeDur = matrix(other.lastLocation(), firstLoc);
+            auto edgeDur = matrix(other.back().location(), firstLoc);
 
             if (other.endsAtReloadDepot())
             {
@@ -1185,7 +1170,7 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
                 // finalise the current segment. We first travel there. We need
                 // to end the segment within the depot's time windows to
                 // properly account for any release time on our segment.
-                auto const [_, idx] = other.lastActivity();
+                auto const [_, idx] = other.back().activity();
                 auto const &depot = data.depot(idx);
                 DurationSegment depotDS = {depot, depot.serviceDuration};
                 ds = DurationSegment::merge(edgeDur, depotDS, ds);
@@ -1195,7 +1180,7 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
             }
 
             ds = DurationSegment::merge(edgeDur, other.duration(profile), ds);
-            firstLoc = other.firstLocation();
+            firstLoc = other.front().location();
 
             if constexpr (sizeof...(args) != 0)
             {

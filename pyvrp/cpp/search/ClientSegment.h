@@ -26,18 +26,17 @@ public:
 
     pyvrp::search::Route const *route() const { return nullptr; }
 
-    Activity firstActivity() const
+    SegmentProxy front() const
     {
-        return {Activity::ActivityType::CLIENT, client};
+        return {{Activity::ActivityType::CLIENT, client},
+                data.client(client).location};
     }
 
-    Activity lastActivity() const
+    SegmentProxy back() const
     {
-        return {Activity::ActivityType::CLIENT, client};
+        return {{Activity::ActivityType::CLIENT, client},
+                data.client(client).location};
     }
-
-    size_t firstLocation() const { return data.client(client).location; }
-    size_t lastLocation() const { return data.client(client).location; }
 
     size_t size() const { return 1; }
 
