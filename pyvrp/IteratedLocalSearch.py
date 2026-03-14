@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from pyvrp.ProgressPrinter import ProgressPrinter
@@ -11,9 +11,59 @@ from pyvrp.Statistics import Statistics
 
 if TYPE_CHECKING:
     from pyvrp.PenaltyManager import PenaltyManager
-    from pyvrp._pyvrp import ProblemData, RandomNumberGenerator, Solution
+    from pyvrp._pyvrp import (
+        CostEvaluator,
+        ProblemData,
+        Solution,
+    )
     from pyvrp.search.SearchMethod import SearchMethod
     from pyvrp.stop.StoppingCriterion import StoppingCriterion
+
+
+class IteratedLocalSearchCallbacks:
+    """
+    Interface and no-op implementation of callbacks used inside the iterated
+    local search algorithm. These callbacks allow user-space code to observe
+    search progress.
+    """
+
+    def on_start(self, initial: Solution):
+        """
+        Called at search start with the initial solution.
+        """
+        pass
+
+    def on_end(self, result: Result):
+        """
+        Called at search end with the final result.
+        """
+        pass
+
+    def on_iteration(
+        self,
+        current: Solution,
+        candidate: Solution,
+        best: Solution,
+        cost_evaluator: CostEvaluator,
+    ):
+        """
+        Called at the end of each iteration, with the current, candidate, and
+        best-found solutions so far. Includes the cost evaluator currently in
+        use.
+        """
+        pass
+
+    def on_restart(self, best: Solution):
+        """
+        Called when the search restarts, with the best solution found so far.
+        """
+        pass
+
+    def on_best(self, best: Solution):
+        """
+        Called when the search finds a new best solution.
+        """
+        pass
 
 
 @dataclass
@@ -26,18 +76,27 @@ class IteratedLocalSearchParams:
     num_iters_no_improvement
         Number of iterations without improvement before a restart occurs.
     history_length
-        History length for the late acceptance hill-climbing stopping criterion
-        used by the algorithm. Must be positive.
+        History length for the late acceptance hill-climbing criterion used by
+        the algorithm. Must be positive.
     exhaustive_on_best
         Whether to perform a more expensive, exhaustive search for newly found
         best solutions.
+    callbacks
+        Optional callbacks to be called during the search.
     """
 
     num_iters_no_improvement: int = 150_000
     history_length: int = 300
     exhaustive_on_best: bool = True
+    callbacks: IteratedLocalSearchCallbacks = field(  # type: ignore[assignment]
+        default=None,
+        compare=False,  # this doesn't influence parameter configurations
+    )
 
     def __post_init__(self):
+        if self.callbacks is None:
+            self.callbacks = IteratedLocalSearchCallbacks()
+
         if self.num_iters_no_improvement < 0:
             raise ValueError("num_iters_no_improvement < 0 not understood.")
 
@@ -55,8 +114,6 @@ class IteratedLocalSearch:
         The problem data instance.
     penalty_manager
         Penalty manager to use.
-    rng
-        Random number generator.
     search_method
         Search method to use.
     initial_solution
@@ -70,14 +127,12 @@ class IteratedLocalSearch:
         self,
         data: ProblemData,
         penalty_manager: PenaltyManager,
-        rng: RandomNumberGenerator,
         search_method: SearchMethod,
         initial_solution: Solution,
         params: IteratedLocalSearchParams = IteratedLocalSearchParams(),
     ):
         self._data = data
         self._pm = penalty_manager
-        self._rng = rng
         self._search = search_method
         self._init = initial_solution
         self._params = params
@@ -122,6 +177,8 @@ class IteratedLocalSearch:
                Research*, 258(1): 70 - 78.
                https://doi.org/10.1016/j.ejor.2016.07.012.
         """
+        callbacks = self._params.callbacks
+
         print_progress = ProgressPrinter(display, display_interval)
         print_progress.start(self._data)
 
@@ -131,6 +188,8 @@ class IteratedLocalSearch:
         start = time.perf_counter()
         iters = iters_no_improvement = 0
         best = curr = self._init
+
+        callbacks.on_start(self._init)
 
         cost_eval = self._pm.cost_evaluator()
         while not stop(cost_eval.cost(best)):
@@ -142,6 +201,8 @@ class IteratedLocalSearch:
 
                 curr = best
                 iters_no_improvement = 0
+
+                callbacks.on_restart(best)
 
             cost_eval = self._pm.cost_evaluator()
             cand = self._search(curr, cost_eval, exhaustive=False)
@@ -160,6 +221,8 @@ class IteratedLocalSearch:
                     cand = self._search(cand, cost_eval, exhaustive=True)
                     if cand.is_feasible():
                         best = cand
+
+                callbacks.on_best(best)
 
             cand_cost = cost_eval.penalised_cost(cand)
             curr_cost = cost_eval.penalised_cost(curr)
@@ -188,10 +251,12 @@ class IteratedLocalSearch:
 
             stats.collect(curr, cand, best, cost_eval)
             print_progress.iteration(stats)
+            callbacks.on_iteration(curr, cand, best, cost_eval)
 
         runtime = time.perf_counter() - start
         res = Result(best, stats, iters, runtime)
 
         print_progress.end(res)
+        callbacks.on_end(res)
 
         return res

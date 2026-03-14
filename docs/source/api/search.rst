@@ -32,6 +32,9 @@ All search methods implement the :class:`SearchMethod` protocol.
    .. autoclass:: PerturbationManager
       :members:
       :exclude-members: perturb
+   
+   .. autoclass:: NeighbourhoodParams
+      :members:
 
 .. automodule:: pyvrp.search.neighbourhood
    :members:
@@ -57,40 +60,49 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
    .. autoclass:: UnaryOperator
 
    .. autoclass:: Exchange10
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: Exchange20
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: Exchange30
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init
    
    .. autoclass:: Exchange11
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: Exchange21
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: Exchange31
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init
    
    .. autoclass:: Exchange22
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: Exchange32
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init
    
    .. autoclass:: Exchange33
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: RelocateWithDepot
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: RemoveAdjacentDepot
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: RemoveOptional
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init
+
+   .. autoclass:: InsertOptional
+      :exclude-members: evaluate, apply, statistics, supports, init
+
+   .. autoclass:: ReplaceGroup
+      :exclude-members: evaluate, apply, statistics, supports, init
+
+   .. autoclass:: ReplaceOptional
+      :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: SwapTails
-      :exclude-members: evaluate, apply, statistics, supports
+      :exclude-members: evaluate, apply, statistics, supports, init

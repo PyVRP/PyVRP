@@ -12,5 +12,5 @@ class MultipleCriteria:
 
         self.criteria = criteria
 
-    def __call__(self, best_cost: float) -> bool:
+    def __call__(self, best_cost: int) -> bool:
         return any(crit(best_cost) for crit in self.criteria)

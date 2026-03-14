@@ -1,6 +1,7 @@
 #ifndef PYVRP_ROUTE_H
 #define PYVRP_ROUTE_H
 
+#include "CostEvaluator.h"
 #include "Measure.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
@@ -87,15 +88,16 @@ public:
      *     back in time' to begin service. Non-zero time warp indicates an
      *     infeasible route.
      */
-    struct ScheduledVisit
+    class ScheduledVisit
     {
-        size_t const location = 0;
-        size_t const trip = 0;
-        Duration const startService = 0;
-        Duration const endService = 0;
-        Duration const waitDuration = 0;
-        Duration const timeWarp = 0;
+        size_t location_ = 0;
+        size_t trip_ = 0;
+        Duration startService_ = 0;
+        Duration endService_ = 0;
+        Duration waitDuration_ = 0;
+        Duration timeWarp_ = 0;
 
+    public:
         ScheduledVisit(size_t location,
                        size_t trip,
                        Duration startService,
@@ -103,7 +105,13 @@ public:
                        Duration waitDuration,
                        Duration timeWarp);
 
+        [[nodiscard]] size_t location() const;
+        [[nodiscard]] size_t trip() const;
+        [[nodiscard]] Duration startService() const;
+        [[nodiscard]] Duration endService() const;
         [[nodiscard]] Duration serviceDuration() const;
+        [[nodiscard]] Duration waitDuration() const;
+        [[nodiscard]] Duration timeWarp() const;
     };
 
 private:
@@ -123,12 +131,12 @@ private:
     Duration service_ = 0;          // Total *service* duration on this route
     Duration startTime_ = 0;        // (earliest) start time of this route
     Duration slack_ = 0;            // Total time slack on this route
+    Cost fixedVehicleCost_ = 0;     // Fixed cost of vehicle used on this route
     Cost prizes_ = 0;               // Total value of prizes on this route
 
-    std::pair<Coordinate, Coordinate> centroid_;  // Route center
-    VehicleType vehicleType_;                     // Type of vehicle
-    Depot startDepot_;                            // Assigned start depot
-    Depot endDepot_;                              // Assigned end depot
+    VehicleType vehicleType_;  // Type of vehicle
+    Depot startDepot_;         // Assigned start depot
+    Depot endDepot_;           // Assigned end depot
 
 public:
     [[nodiscard]] bool empty() const;
@@ -173,6 +181,11 @@ public:
      *    later may be feasible, but shifts the schedule.
      */
     [[nodiscard]] std::vector<ScheduledVisit> const &schedule() const;
+
+    /**
+     * The fixed cost of the vehicle servicing this route.
+     */
+    [[nodiscard]] Cost fixedVehicleCost() const;
 
     /**
      * Total distance travelled on this route.
@@ -285,11 +298,6 @@ public:
     [[nodiscard]] Cost prizes() const;
 
     /**
-     * Center point of the client locations on this route.
-     */
-    [[nodiscard]] std::pair<Coordinate, Coordinate> const &centroid() const;
-
-    /**
      * Index of the type of vehicle used on this route.
      */
     [[nodiscard]] VehicleType vehicleType() const;
@@ -356,12 +364,14 @@ public:
           Duration startTime,
           Duration slack,
           Cost prizes,
-          std::pair<Coordinate, Coordinate> centroid,
           VehicleType vehicleType,
           Depot startDepot,
           Depot endDepot,
           std::vector<ScheduledVisit> schedule);
 };
+
+template <>  // specialisation for pyvrp::Route
+Cost CostEvaluator::penalisedCost(Route const &route) const;
 }  // namespace pyvrp
 
 std::ostream &operator<<(std::ostream &out, pyvrp::Route const &route);

@@ -29,8 +29,14 @@ def plot_solution(
         _, ax = plt.subplots()
 
     num_locs = data.num_locations
-    x_coords = np.array([data.location(loc).x for loc in range(num_locs)])
-    y_coords = np.array([data.location(loc).y for loc in range(num_locs)])
+    x_coords = np.empty((num_locs,))
+    y_coords = np.empty((num_locs,))
+    for idx, depot in enumerate(data.depots()):
+        x_coords[idx] = depot.x
+        y_coords[idx] = depot.y
+    for idx, client in enumerate(data.clients(), data.num_depots):
+        x_coords[idx] = client.x
+        y_coords[idx] = client.y
 
     # These are the depots, as big red stars.
     kwargs = dict(label="Depot", c="tab:red", marker="*", zorder=3, s=500)
@@ -54,8 +60,8 @@ def plot_solution(
             if len(trip) == 0:
                 continue
 
-            x = x_coords[trip]
-            y = y_coords[trip]
+            x = x_coords[[activity.idx for activity in trip]]
+            y = y_coords[[activity.idx for activity in trip]]
 
             # Clients visited by this trip, as a line segment or single dot (in
             # case of a singleton trip). Trips of the same route share colour.

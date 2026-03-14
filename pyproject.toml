@@ -55,7 +55,7 @@ build = [
     "meson>=1.0.0",
     "ninja>=1.11.1",
     "gcovr>=8.6",
-    "docblock>=0.1.6",
+    "docblock>=0.1.8",
 ]
 
 dev = [
@@ -149,6 +149,10 @@ test-command = "pytest ./tests"
 [tool.cibuildwheel.windows]
 before-build = "pip install delvewheel"
 repair-wheel-command = "delvewheel repair -w {dest_dir} {wheel}"
+
+
+[tool.cibuildwheel.macos.environment]
+MACOSX_DEPLOYMENT_TARGET = "13.3"
 
 
 [tool.poetry]

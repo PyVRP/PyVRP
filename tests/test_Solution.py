@@ -13,7 +13,6 @@ from pyvrp import (
     RandomNumberGenerator,
     Route,
     Solution,
-    Trip,
     VehicleType,
 )
 from tests.helpers import read
@@ -222,84 +221,6 @@ def test_route_constructor_allows_incomplete_solutions(ok_small_prizes):
     sol = Solution(ok_small_prizes, [[1]])
     assert_(sol.is_feasible())
     assert_(sol.is_complete())
-
-
-def test_neighbours(ok_small):
-    """
-    Tests that the neighbour structure of (pred, succ) pairs for each client in
-    the solution works correctly.
-    """
-    assert_equal(ok_small.num_clients, 4)
-
-    sol = Solution(ok_small, [[3], [1, 2]])  # client 4 is not in the solution
-    assert_(not sol.is_complete())
-
-    neighbours = sol.neighbours()
-    expected = [
-        None,  # 0: is depot
-        (0, 2),  # 1: between depot (0) and 2
-        (1, 0),  # 2: between 1 and depot (0)
-        (0, 0),  # 3: between depot (0) and depot (0)
-        None,  # 4: unassigned
-    ]
-
-    for loc in range(ok_small.num_locations):
-        assert_equal(neighbours[loc], expected[loc])
-
-
-def test_neighbours_includes_reload_depots(ok_small_multiple_trips):
-    """
-    Tests that the neighbours calculation accounts for reload depots.
-    """
-    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
-    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
-    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
-
-    sol = Solution(ok_small_multiple_trips, [route])
-    assert_equal(sol.num_routes(), 1)
-    assert_equal(sol.num_trips(), 2)
-
-    neighbours = sol.neighbours()
-    assert_(neighbours[0] is None)  # is depot
-    assert_equal(neighbours[1], (0, 2))  # (start, 2)
-    assert_equal(neighbours[2], (1, 0))  # (1, reload)
-    assert_equal(neighbours[3], (0, 4))  # (reload, 4)
-    assert_equal(neighbours[4], (3, 0))  # (3, end)
-
-
-def test_neighbours_multi_depot(ok_small):
-    """
-    Tests that the neighbour structure of (pred, succ) pairs for each client in
-    the solution works correctly when there are multiple depots.
-    """
-    # Make a two-depot instance by changing the first client in ok_small into
-    # a depot, and adding a vehicle type that operates out of that depot.
-    locations = ok_small.depots() + ok_small.clients()
-    locations[1] = Depot(locations[1].x, locations[1].y)
-
-    data = ok_small.replace(
-        depots=locations[:2],
-        clients=locations[2:],
-        vehicle_types=[
-            VehicleType(capacity=[10], start_depot=0, end_depot=0),
-            VehicleType(capacity=[10], start_depot=1, end_depot=1),
-        ],
-    )
-
-    sol = Solution(data, [Route(data, [4], 0), Route(data, [2, 3], 1)])
-    assert_(sol.is_complete())
-
-    neighbours = sol.neighbours()
-    expected = [
-        None,  # 0: is depot
-        None,  # 1: is depot
-        (1, 3),  # 2: between depot (1) and 3
-        (2, 1),  # 3: between 2 and depot (1)
-        (0, 0),  # 4: between depot (0) and depot (0)
-    ]
-
-    for loc in range(ok_small.num_locations):
-        assert_equal(neighbours[loc], expected[loc])
 
 
 def test_feasibility(ok_small):
@@ -821,7 +742,6 @@ def test_fixed_vehicle_cost(
     [
         ([[1], [3, 4]], True),  # only one - OK
         ([[2], [3, 4]], True),  # only one - OK
-        ([[1, 2], [3, 4]], False),  # both are in the solution - not OK
         ([[3, 4]], False),  # none - not OK
     ],
 )
@@ -845,7 +765,7 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     data = ok_small.replace(clients=clients, groups=[group])
     sol = Solution(data, routes)
     assert_equal(sol.is_feasible(), feasible)
-    assert_equal(sol.is_group_feasible(), feasible)
+    assert_equal(sol.num_missing_groups(), 0 if feasible else 1)
 
 
 def test_optional_mutually_exclusive_group(ok_small):
@@ -867,7 +787,7 @@ def test_optional_mutually_exclusive_group(ok_small):
     data = ok_small.replace(clients=clients, groups=[group])
     sol = Solution(data, [[3, 4]])
     assert_(sol.is_feasible())
-    assert_(sol.is_group_feasible())
+    assert_equal(sol.num_missing_groups(), 0)
 
 
 def test_distance_duration_cost_calculations(ok_small):
@@ -911,3 +831,55 @@ def test_overtime(ok_small_overtime):
     assert_equal(sol.overtime(), route.overtime())
     assert_equal(sol.duration(), route.duration())
     assert_equal(sol.duration_cost(), route.duration_cost())
+
+
+def test_raises_duplicate_group(ok_small_mutually_exclusive_groups):
+    """
+    Tests that Solution raises when a group is present in the solution more
+    than once.
+    """
+    with pytest.raises(RuntimeError):
+        # 1 and 2 are both part of the same mutually exclusive group, and thus
+        # cannot be in the solution at the same time.
+        Solution(ok_small_mutually_exclusive_groups, [[1, 2]])
+
+    # But just once is OK.
+    Solution(ok_small_mutually_exclusive_groups, [[1]])
+    Solution(ok_small_mutually_exclusive_groups, [[2]])
+
+
+@pytest.mark.parametrize(
+    ("visits", "is_complete"),
+    [
+        ([1, 4], True),  # 1 is from a required group, 4 is a required client
+        ([1], False),  # missing the required client
+        ([4], False),  # missing the required group
+    ],
+)
+def test_is_complete(
+    ok_small_mutually_exclusive_groups,
+    visits: list[int],
+    is_complete: bool,
+):
+    """
+    Tests that the is_complete() method looks at both missing clients and
+    groups.
+    """
+    sol = Solution(ok_small_mutually_exclusive_groups, [visits])
+    assert_equal(sol.is_complete(), is_complete)
+
+
+def test_make_random(ok_small_mutually_exclusive_groups, gtsp):
+    """
+    Smoke test that checks that make_random() returns a complete solution,
+    without any missing clients or groups.
+    """
+    for seed in range(10):
+        rng = RandomNumberGenerator(seed=seed)
+        sol = Solution.make_random(ok_small_mutually_exclusive_groups, rng)
+        assert_(sol.is_complete())
+
+    for seed in range(10):
+        rng = RandomNumberGenerator(seed=seed)
+        sol = Solution.make_random(gtsp, rng)
+        assert_(sol.is_complete())

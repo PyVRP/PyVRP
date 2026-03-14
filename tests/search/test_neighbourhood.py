@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import VehicleType
+from pyvrp import Depot, ProblemData, VehicleType
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 
 
@@ -14,61 +14,23 @@ def test_neighbourhood_params_raises_for_empty_neighbourhoods():
         NeighbourhoodParams(num_neighbours=0)
 
 
-@mark.parametrize(
-    (
-        "weight_wait_time",
-        "weight_time_warp",
-        "num_neighbours",
-        "symmetric_proximity",
-        "symmetric_neighbours",
-    ),
-    [
-        # non-empty neighbourhood structure (num_neighbours > 0)
-        (20, 20, 1, True, False),
-        # no weights for wait time or time warp should be OK
-        (0, 0, 1, True, False),
-    ],
-)
-def test_neighbourhood_params_does_not_raise_for_valid_arguments(
-    weight_wait_time: int,
-    weight_time_warp: int,
-    num_neighbours: int,
-    symmetric_proximity: bool,
-    symmetric_neighbours: bool,
-):
-    """
-    Tests that ``NeighbourhoodParams`` allows valid arguments and edge cases.
-    """
-    NeighbourhoodParams(
-        weight_wait_time,
-        weight_time_warp,
-        num_neighbours,
-        symmetric_proximity,
-        symmetric_neighbours,
-    )
-
-
 # fmt: off
 @mark.parametrize(
     (
         "weight_wait_time",
-        "weight_time_warp",
         "num_neighbours",
         "symmetric_proximity",
-        "symmetric_neighbours",
         "idx_check",
         "expected_neighbours_check",
     ),
     [
-        (20, 20, 10, True, False, 2,
+        (20, 10, True, 2,
          {1, 3, 4, 5, 6, 7, 8, 45, 46, 100}),
-        (20, 20, 10, True, True, 2,
-         {1, 3, 4, 5, 6, 7, 8, 45, 46, 60, 70, 79, 100}),
         # From original C++ implementation
-        (18, 20, 34, True, False, 1,
+        (18, 34, True, 1,
          {2, 3, 4, 5, 6, 7, 8, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 53,
           54, 55, 60, 61, 68, 69, 70, 73, 78, 79, 81, 88, 90, 98, 100}),
-        (18, 20, 34, True, False, 99,
+        (18, 34, True, 99,
          {9, 10, 11, 12, 13, 14, 15, 16, 20, 22, 24, 47, 52, 53, 55, 56, 57,
           58, 59, 60, 64, 65, 66, 69, 74, 80, 82, 83, 86, 87, 88, 90, 91, 98}),
     ],
@@ -77,10 +39,8 @@ def test_neighbourhood_params_does_not_raise_for_valid_arguments(
 def test_compute_neighbours(
     rc208,
     weight_wait_time: int,
-    weight_time_warp: int,
     num_neighbours: int,
     symmetric_proximity: bool,
-    symmetric_neighbours: bool,
     idx_check: int,
     expected_neighbours_check: set[int],
 ):
@@ -89,10 +49,8 @@ def test_compute_neighbours(
     """
     params = NeighbourhoodParams(
         weight_wait_time,
-        weight_time_warp,
         num_neighbours,
         symmetric_proximity,
-        symmetric_neighbours,
     )
     neighbours = compute_neighbours(rc208, params)
 
@@ -104,17 +62,14 @@ def test_compute_neighbours(
     assert_equal(set(neighbours[idx_check]), expected_neighbours_check)
 
     for neighb in neighbours[1:]:
-        if symmetric_neighbours:
-            assert_(len(neighb) >= num_neighbours)
-        else:
-            assert_equal(len(neighb), num_neighbours)
+        assert_equal(len(neighb), num_neighbours)
 
 
 def test_neighbours_are_sorted_by_proximity(small_cvrp):
     """
     Tests that the neighbourhood lists sort by their proximity: closest first.
     """
-    params = NeighbourhoodParams(0, 0, small_cvrp.num_clients)
+    params = NeighbourhoodParams(0, small_cvrp.num_clients)
     neighbours = compute_neighbours(small_cvrp, params)
     clients = list(range(small_cvrp.num_depots, small_cvrp.num_locations))
     distances = small_cvrp.distance_matrix(profile=0)
@@ -127,25 +82,6 @@ def test_neighbours_are_sorted_by_proximity(small_cvrp):
         dists = distances[client, valid]
         by_proximity = valid[np.argsort(dists, kind="stable")]
         assert_equal(by_proximity, neighbours[client])
-
-
-def test_symmetric_neighbours(rc208):
-    """
-    Tests that when ``symmetric_neighbours`` is true, if an edge (i, j) is
-    in the granular neighbourhood, then so is (j, i).
-    """
-    # Symmetric neighbourhood structure: if (i, j) is in, then so is (j, i).
-    params = NeighbourhoodParams(symmetric_neighbours=True)
-    sym_neighbours = [set(n) for n in compute_neighbours(rc208, params)]
-
-    for client in range(rc208.num_locations):
-        for neighbour in sym_neighbours[client]:
-            assert_(client in sym_neighbours[neighbour])
-
-    # But when neighbours are not symmetrised, this is typically not the case.
-    params = NeighbourhoodParams(symmetric_neighbours=False)
-    asym_neighbours = [set(n) for n in compute_neighbours(rc208, params)]
-    assert_(sym_neighbours != asym_neighbours)
 
 
 def test_more_neighbours_than_instance_size(rc208):
@@ -165,7 +101,7 @@ def test_proximity_with_prizes(prize_collecting):
     Tests that prizes factor into the neighbourhood structure, and offset
     travel costs somewhat.
     """
-    params = NeighbourhoodParams(0, 0, num_neighbours=10)
+    params = NeighbourhoodParams(0, num_neighbours=10)
     neighbours = compute_neighbours(prize_collecting, params)
 
     # We compare the number of times clients 20 and 36 are in other clients'
@@ -186,7 +122,7 @@ def test_proximity_with_mutually_exclusive_groups(
     Tests that clients that are a member of a mutually exclusive client group
     are not in each other's neighbourhood.
     """
-    params = NeighbourhoodParams(0, 0, num_neighbours=1)
+    params = NeighbourhoodParams(0, num_neighbours=1)
     neighbours = compute_neighbours(ok_small_mutually_exclusive_groups, params)
 
     group = ok_small_mutually_exclusive_groups.group(0)
@@ -247,3 +183,19 @@ def test_multiple_routing_profiles(ok_small):
     # neighbourhood computations, resulting in the same neighbourhood as with
     # the original (unchanged) data.
     assert_equal(compute_neighbours(data), compute_neighbours(ok_small))
+
+
+def test_zero_clients():
+    """
+    Tests that the neighbourhood for an instance with zero clients is empty.
+    """
+    data = ProblemData(
+        clients=[],
+        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[np.zeros((2, 2), dtype=int)],
+        duration_matrices=[np.zeros((2, 2), dtype=int)],
+    )
+
+    # Two empty lists, one for each of the depots.
+    assert_equal(compute_neighbours(data), [[], []])

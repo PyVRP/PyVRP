@@ -20,16 +20,16 @@ jobs:
       matrix:
         include:
           - compiler: gcc  # minimum gcc version
-            compiler-version: '10'
+            compiler-version: '13'
             python-version: '3.11'
           - compiler: gcc  # recent gcc version
             compiler-version: '14'
             python-version: '3.14'
           - compiler: clang  # minimum clang version
-            compiler-version: '14'
+            compiler-version: '16'
             python-version: '3.11'
           - compiler: clang  # recent clang version
-            compiler-version: '19'
+            compiler-version: '20'
             python-version: '3.14'
     steps:
       - uses: actions/checkout@v4
@@ -57,6 +57,13 @@ jobs:
         run: uv run --no-sync pre-commit install --install-hooks
       - name: Run pre-commit
         run: uv run --no-sync pre-commit run --all-files
+      - name: Update package index
+        run: |
+          # Change mirror priorities because Azure can be really slow - https://github.com/actions/runner-images/issues/7048.
+          sudo sed -i '/archive.ubuntu.com\/ubuntu\/\tpriority/ s/priority:2/priority:0/' /etc/apt/apt-mirrors.txt
+          sudo sed -i '/azure.archive.ubuntu.com\/ubuntu\/\tpriority/ s/priority:0/priority:1/' /etc/apt/apt-mirrors.txt
+          sudo sed -i '/security.ubuntu.com\/ubuntu\/\tpriority/ s/priority:3/priority:2/' /etc/apt/apt-mirrors.txt
+          sudo apt-get update
       - if: matrix.compiler == 'clang'
         name: Set up clang
         run: |
@@ -94,9 +101,7 @@ jobs:
           files: build/meson-logs/coverage.xml
       - if: matrix.compiler == 'gcc'
         name: Install Valgrind
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y valgrind
+        run: sudo apt-get install -y valgrind
       - if: matrix.compiler == 'gcc'
         # Run this only when using GCC, because for some reason Valgrind has issues with
         # some of the outputs Clang produces.

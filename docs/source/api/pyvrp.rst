@@ -31,6 +31,9 @@ This object stores the best observed solution and detailed runtime statistics.
    .. autoclass:: IteratedLocalSearchParams
       :members:
 
+   .. autoclass:: IteratedLocalSearchCallbacks
+      :members:
+
    .. autoclass:: IteratedLocalSearch
       :members:
 
@@ -69,6 +72,12 @@ This object stores the best observed solution and detailed runtime statistics.
 
 .. automodule:: pyvrp._pyvrp
 
+   .. autoclass:: ActivityType
+      :members:
+
+   .. autoclass:: Activity
+      :members:
+
    .. autoclass:: CostEvaluator
       :members:
 
@@ -99,6 +108,10 @@ This object stores the best observed solution and detailed runtime statistics.
 
    .. autoclass:: ScheduledVisit
       :members:
+
+   .. autoclass:: PiecewiseLinearFunction
+      :members:
+      :special-members: __call__
 
    .. autoclass:: DynamicBitset
       :members:

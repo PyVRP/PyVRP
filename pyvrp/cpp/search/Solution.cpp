@@ -1,10 +1,41 @@
 #include "Solution.h"
 
-#include "primitives.h"
+#include "ClientSegment.h"
 
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+
+using pyvrp::Cost;
+using pyvrp::Distance;
+using pyvrp::Duration;
+using pyvrp::Load;
+
+namespace
+{
+Cost insertCost(pyvrp::search::Route::Node *U,
+                pyvrp::search::Route::Node *V,
+                pyvrp::ProblemData const &data,
+                pyvrp::CostEvaluator const &costEvaluator)
+{
+    assert(V->route() && !U->isDepot());
+
+    auto *route = V->route();
+    auto const &client = data.client(U->client() - data.numDepots());
+
+    Cost deltaCost
+        = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
+
+    costEvaluator.deltaCost<true>(
+        deltaCost,
+        pyvrp::search::Route::Proposal(
+            route->before(V->idx()),
+            pyvrp::search::ClientSegment(data, U->client()),
+            route->after(V->idx() + 1)));
+
+    return deltaCost;
+}
+}  // namespace
 
 using pyvrp::search::Solution;
 
@@ -63,7 +94,7 @@ void Solution::load(pyvrp::Solution const &solution)
                 route.push_back(&depot);
             }
 
-            for (auto const client : trip)
+            for (auto const [_, client] : trip)
                 route.push_back(&nodes[client]);
         }
 
@@ -135,6 +166,7 @@ bool Solution::insert(Route::Node *U,
                       CostEvaluator const &costEvaluator,
                       bool required)
 {
+    assert(!U->isDepot());
     assert(size_t(std::distance(nodes.data(), U)) < nodes.size());
 
     Route::Node *UAfter = routes[0][0];  // fallback option
@@ -186,4 +218,24 @@ bool Solution::insert(Route::Node *U,
     }
 
     return false;
+}
+
+template <>
+pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
+    pyvrp::search::Solution const &solution) const
+{
+    auto const &data = solution.data_;
+
+    Cost cost = 0;  // cost is route cost + uncollected prizes
+    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
+        if (!solution.nodes[idx].route())
+        {
+            auto const &client = data.client(idx - data.numDepots());
+            cost += client.prize;
+        }
+
+    for (auto const &route : solution.routes)
+        cost += penalisedCost(route);
+
+    return cost;
 }

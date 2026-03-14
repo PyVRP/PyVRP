@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal
@@ -17,14 +19,19 @@ from pyvrp import (
 from pyvrp.search import (
     Exchange10,
     Exchange11,
+    InsertOptional,
     LocalSearch,
     PerturbationManager,
     PerturbationParams,
     RelocateWithDepot,
     RemoveAdjacentDepot,
+    RemoveOptional,
+    ReplaceGroup,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
+from tests.helpers import read_solution
+from tests.markers import skip_if_release
 
 
 def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
@@ -278,71 +285,6 @@ def test_local_search_completes_incomplete_solutions(ok_small_prizes):
     assert_(new_sol.is_complete())
 
 
-def test_replacing_optional_client():
-    """
-    Tests that the local search evaluates moves where an optional client is
-    replaced with another that is not currently in the solution.
-    """
-    mat = [
-        [0, 0, 0],
-        [0, 0, 2],
-        [0, 2, 0],
-    ]
-    data = ProblemData(
-        clients=[
-            Client(0, 0, tw_early=0, tw_late=1, prize=1, required=False),
-            Client(0, 0, tw_early=0, tw_late=1, prize=5, required=False),
-        ],
-        depots=[Depot(0, 0)],
-        vehicle_types=[VehicleType()],
-        distance_matrices=[mat],
-        duration_matrices=[mat],
-    )
-
-    rng = RandomNumberGenerator(seed=42)
-    ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_operator(Exchange10(data))
-
-    # We start with a solution containing just client 1.
-    sol = Solution(data, [[1]])
-    assert_equal(sol.prizes(), 1)
-    assert_(sol.is_feasible())
-
-    # A unit of time warp has a penalty of 5 units, so it's never worthwhile to
-    # have both clients 1 and 2 in the solution. However, replacing client 1
-    # with 2 yields a prize of 5, rather than 1, at no additional cost.
-    cost_eval = CostEvaluator([], 5, 0)
-    improved = ls(sol, cost_eval)
-    assert_equal(improved.prizes(), 5)
-    assert_(improved.is_feasible())
-
-
-def test_mutually_exclusive_group(gtsp):
-    """
-    Smoke test that runs the local search on a medium-size TSP instance with
-    fifty mutually exclusive client groups.
-    """
-    assert_equal(gtsp.num_groups, 50)
-
-    rng = RandomNumberGenerator(seed=42)
-    neighbours = compute_neighbours(gtsp)
-    perturbation = PerturbationManager(PerturbationParams(0, 0))
-
-    ls = LocalSearch(gtsp, rng, neighbours, perturbation)
-    ls.add_operator(Exchange10(gtsp))
-
-    sol = Solution.make_random(gtsp, rng)
-    cost_eval = CostEvaluator([20], 6, 0)
-    improved = ls(sol, cost_eval)
-
-    assert_(not sol.is_group_feasible())
-    assert_(improved.is_group_feasible())
-
-    sol_cost = cost_eval.penalised_cost(sol)
-    improved_cost = cost_eval.penalised_cost(improved)
-    assert_(improved_cost < sol_cost)
-
-
 def test_mutually_exclusive_group_not_in_solution(
     ok_small_mutually_exclusive_groups,
 ):
@@ -354,13 +296,13 @@ def test_mutually_exclusive_group_not_in_solution(
     neighbours = compute_neighbours(ok_small_mutually_exclusive_groups)
 
     ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
-    ls.add_operator(Exchange10(ok_small_mutually_exclusive_groups))
+    ls.add_operator(InsertOptional(ok_small_mutually_exclusive_groups))
 
     sol = Solution(ok_small_mutually_exclusive_groups, [[4]])
-    assert_(not sol.is_group_feasible())
+    assert_equal(sol.num_missing_groups(), 1)
 
     improved = ls(sol, CostEvaluator([20], 6, 0))
-    assert_(improved.is_group_feasible())
+    assert_equal(improved.num_missing_groups(), 0)
 
 
 def test_swap_if_improving_mutually_exclusive_group(
@@ -376,7 +318,7 @@ def test_swap_if_improving_mutually_exclusive_group(
     perturbation = PerturbationManager(PerturbationParams(0, 0))
 
     ls = LocalSearch(data, rng, neighbours, perturbation)
-    ls.add_operator(Exchange10(data))
+    ls.add_operator(ReplaceGroup(data))
 
     cost_eval = CostEvaluator([20], 6, 0)
     sol = Solution(data, [[1, 4]])
@@ -543,7 +485,7 @@ def test_operators_property(ok_small):
     [
         # {1, 2, 3, 4} are all required clients.
         ("ok_small", {1, 2, 3, 4}),
-        # 1 from required group {1, 2, 3}, 4 is a required client.
+        # 3 from required group {1, 2, 3}, 4 is a required client.
         ("ok_small_mutually_exclusive_groups", {3, 4}),
     ],
 )
@@ -601,8 +543,7 @@ def test_local_search_exhaustive(rc208):
 
 def test_local_search_inserts_into_empty_solutions():
     """
-    Tests that the local search inserts into empty solutions, even when the
-    granular neighbourhood is empty.
+    Tests that the local search inserts into empty solutions.
     """
     data = ProblemData(
         clients=[
@@ -617,8 +558,8 @@ def test_local_search_inserts_into_empty_solutions():
 
     rng = RandomNumberGenerator(seed=2)
     cost_eval = CostEvaluator([], 0, 0)
-    ls = LocalSearch(data, rng, [[], [], []])
-    ls.add_operator(Exchange10(data))
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_operator(InsertOptional(data))
 
     empty = Solution(data, [])
     assert_equal(empty.num_clients(), 0)
@@ -656,11 +597,12 @@ def test_does_not_insert_optional_groups():
 
     rng = RandomNumberGenerator(seed=2)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_operator(Exchange10(data))
+    ls.add_operator(InsertOptional(data))
+    ls.add_operator(RemoveOptional(data))
 
-    # Start with a full solution. After local search, the solution should be
+    # Start with the group present. After local search, the solution should be
     # empty because the group is not worth keeping around.
-    sol = Solution(data, [[1, 2]])
+    sol = Solution(data, [[1]])
     cost_eval = CostEvaluator([], 0, 0)
     improved = ls(sol, cost_eval, exhaustive=True)
     assert_equal(improved.num_clients(), 0)
@@ -688,3 +630,80 @@ def test_removes_useless_consecutive_depots(ok_small_multiple_trips):
     cost_eval = CostEvaluator([1], 1, 1)
     improved = ls(sol, cost_eval, exhaustive=True)
     assert_(" |  | " not in str(improved))
+
+
+def test_insert_missing_groups_and_clients(ok_small_mutually_exclusive_groups):
+    """
+    Tests that the local search establishes basic structural feasibility, by
+    inserting required groups and clients if they are missing.
+    """
+    data = ok_small_mutually_exclusive_groups
+    sol = Solution(data, [])
+    assert_(not sol.is_complete())
+    assert_equal(sol.num_missing_clients(), 1)
+    assert_equal(sol.num_missing_groups(), 1)
+
+    rng = RandomNumberGenerator(seed=42)
+    cost_eval = CostEvaluator([0], 0, 0)
+    ls = LocalSearch(data, rng, compute_neighbours(data))
+
+    new = ls(sol, cost_eval)
+    assert_(new.is_complete())
+    assert_equal(new.num_missing_clients(), 0)
+    assert_equal(new.num_missing_groups(), 0)
+
+
+@skip_if_release
+def test_debug_logs_on_bks(rc208, caplog):
+    """
+    Tests that the local search logs various relevant statements in debug mode.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
+    ls.add_operator(Exchange10(rc208))
+
+    bks = read_solution("data/RC208.sol", rc208)
+    cost_eval = CostEvaluator([1_000], 1_000, 0)
+
+    with caplog.at_level(logging.DEBUG, logger="pyvrp.search"):
+        ls(bks, cost_eval, exhaustive=False)
+
+    expected = [
+        "Applying local search (exhaustive=false)",
+        "Entering search loop (step=0).",
+        "Completed local search: improving=0",  # bks, so no improvements
+    ]
+
+    for record, exp_msg in zip(caplog.records, expected):
+        assert_equal(record.levelno, logging.DEBUG)
+        assert_(exp_msg in record.message)
+
+
+@skip_if_release
+def test_debug_operator_logs(prize_collecting, caplog):
+    """
+    Tests that the debug logs also contain information about improvements found
+    by the operators.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbourhood = compute_neighbours(prize_collecting)
+    ls = LocalSearch(prize_collecting, rng, neighbourhood)
+    ls.add_operator(Exchange10(prize_collecting))
+
+    sol = Solution.make_random(prize_collecting, rng)
+    cost_eval = CostEvaluator([1_000], 1_000, 0)
+
+    with caplog.at_level(logging.DEBUG, logger="pyvrp.search"):
+        ls(sol, cost_eval, exhaustive=True)
+
+    # A few expected debug records, and the indices they should occupy in the
+    # captured logs list.
+    expected = [
+        (0, "Applying local search (exhaustive=true)."),
+        (2, "Applying operator to U=10 and V=49 (delta=-300)."),
+        (-2, "Entering search loop (step=3)."),
+        (-1, "Completed local search: improving=71, updates=71, moves=5671."),
+    ]
+
+    for idx, exp_msg in expected:
+        assert_equal(caplog.records[idx].message, exp_msg)

@@ -28,6 +28,13 @@ jobs:
           enable-cache: true
       - name: Install Python dependencies
         run: uv sync --no-install-project
+      - name: Update package index
+        run: |
+          # Change mirror priorities because Azure can be really slow - https://github.com/actions/runner-images/issues/7048.
+          sudo sed -i '/archive.ubuntu.com\/ubuntu\/\tpriority/ s/priority:2/priority:0/' /etc/apt/apt-mirrors.txt
+          sudo sed -i '/azure.archive.ubuntu.com\/ubuntu\/\tpriority/ s/priority:0/priority:1/' /etc/apt/apt-mirrors.txt
+          sudo sed -i '/security.ubuntu.com\/ubuntu\/\tpriority/ s/priority:3/priority:2/' /etc/apt/apt-mirrors.txt
+          sudo apt-get update
       - name: Set up GCC
         run: |
           sudo apt-get install -y gcc-14 g++-14

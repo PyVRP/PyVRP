@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-22.04, windows-2022, macos-14 ]
+        os: [ ubuntu-24.04, ubuntu-24.04-arm, windows-2022, macos-15 ]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,7 +34,7 @@ jobs:
   deploy:
     name: Deploy to PyPI
     needs: [ build ]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: github.event_name == 'release' && github.event.action == 'created'
     permissions:
       id-token: write  # for trusted publishing

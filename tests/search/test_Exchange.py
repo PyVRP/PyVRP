@@ -698,3 +698,16 @@ def test_relocate_overtime(ok_small_overtime):
         op.evaluate(route1[2], route2[0], cost_eval),
         (new_cost - old_cost, True),
     )
+
+
+@pytest.mark.parametrize("operator", [Exchange10, Exchange11])
+def test_skip_unassigned_clients(operator, ok_small):
+    """
+    Tests that the operators do not evaluate moves for unassigned clients.
+    """
+    route = make_search_route(ok_small, [1, 2])
+    node = Node(loc=3)  # unassigned
+
+    operator = Exchange10(ok_small)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(operator.evaluate(node, route[0], cost_eval), (0, False))

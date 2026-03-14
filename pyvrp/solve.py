@@ -169,7 +169,8 @@ def solve(
         if op.supports(data):
             ls.add_operator(op(data))
 
-    pm = PenaltyManager.init_from(data, params.penalty)
+    penalties = params.penalty.midpoint_penalties(data)
+    pm = PenaltyManager(penalties, params.penalty)
 
     init = initial_solution
     if init is None:
@@ -178,5 +179,5 @@ def solve(
         random = Solution.make_random(data, rng)
         init = ls(random, pm.max_cost_evaluator(), exhaustive=True)
 
-    algo = IteratedLocalSearch(data, pm, rng, ls, init, params.ils)
+    algo = IteratedLocalSearch(data, pm, ls, init, params.ils)
     return algo.run(stop, collect_stats, display, params.display_interval)

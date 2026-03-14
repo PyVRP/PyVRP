@@ -1,11 +1,11 @@
 import pickle
 from itertools import pairwise
 
-import numpy as np
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
+    Activity,
     Client,
     Depot,
     ProblemData,
@@ -108,11 +108,8 @@ def test_access_multiple_trips(ok_small_multiple_trips):
     assert_equal(route.visits(), [1, 2, 3])
     assert_equal([client for client in route], [1, 2, 3])
 
-    assert_equal(trips[0].visits(), [1, 2])
-    assert_equal([client for client in trips[0]], [1, 2])
-
-    assert_equal(trips[1].visits(), [3])
-    assert_equal([client for client in trips[1]], [3])
+    assert_equal(trips[0].activities(), [Activity("C1"), Activity("C2")])
+    assert_equal(trips[1].activities(), [Activity("C3")])
 
 
 def test_route_time_warp_calculations(ok_small):
@@ -191,7 +188,7 @@ def test_route_start_and_end_time_calculations(ok_small):
     # should thus depart as soon as possible to arrive at the first client the
     # moment its time window opens.
     durations = ok_small.duration_matrix(profile=0)
-    start_time = ok_small.location(1).tw_early - durations[0, 1]
+    start_time = ok_small.client(0).tw_early - durations[0, 1]
     end_time = start_time + routes[0].duration() - routes[0].time_warp()
 
     assert_(routes[0].has_time_warp())
@@ -289,26 +286,6 @@ def test_release_time_and_service_duration():
     assert_equal(route.duration(), 6_000 + 5_998)
     assert_equal(route.service_duration(), 6_000 + 1_140)
     assert_equal(route.time_warp(), 0)
-
-
-def test_route_centroid(ok_small):
-    """
-    Tests that each route's center point is the center point of all clients
-    visited by that route.
-    """
-    x = np.array([ok_small.location(idx).x for idx in range(5)])
-    y = np.array([ok_small.location(idx).y for idx in range(5)])
-
-    routes = [
-        Route(ok_small, [1, 2], 0),
-        Route(ok_small, [3], 0),
-        Route(ok_small, [4], 0),
-    ]
-
-    for route in routes:
-        x_center, y_center = route.centroid()
-        assert_allclose(x_center, x[route].mean())
-        assert_allclose(y_center, y[route].mean())
 
 
 def test_route_can_be_pickled(rc208):
@@ -436,8 +413,12 @@ def test_route_schedule(ok_small, visits: list[int]):
     assert_equal(len(schedule), len(route) + 2)  # schedule includes depots
 
     for visit in schedule:
-        data = ok_small.location(visit.location)
-        service = getattr(data, "service_duration", 0)  # only for clients
+        if visit.location < ok_small.num_depots:
+            data = ok_small.depot(visit.location)
+        else:
+            data = ok_small.client(visit.location - ok_small.num_depots)
+
+        service = data.service_duration
         assert_equal(visit.service_duration, service)
         assert_equal(
             visit.service_duration,
@@ -633,7 +614,6 @@ def test_statistics_with_small_multi_trip_example(ok_small_multiple_trips):
 
     # Route structure and general statistics.
     assert_equal(route2.prizes(), route1.prizes())
-    assert_allclose(route2.centroid(), route1.centroid())
     assert_equal(route2.start_depot(), route1.start_depot())
     assert_equal(route2.end_depot(), route1.end_depot())
 
@@ -922,10 +902,13 @@ def test_route_release_time_after_vehicle_start_late():
     assert_equal(sum(v.time_warp for v in route.schedule()), route.time_warp())
 
 
-def test_zero_centroid_empty_routes(ok_small):
+@pytest.mark.parametrize("fixed_cost", (0, 10))
+def test_fixed_vehicle_cost(ok_small, fixed_cost: int):
     """
-    Tests that the centroid for empty routes is (0, 0). Previously, this
-    returned NaN due to a divide-by-zero bug. See #908 for details.
+    Tests the Route's fixed_vehicle_cost() method.
     """
-    route = Route(ok_small, [], 0)
-    assert_equal(route.centroid(), (0.0, 0.0))
+    veh_type = ok_small.vehicle_type(0).replace(fixed_cost=fixed_cost)
+    data = ok_small.replace(vehicle_types=[veh_type])
+
+    route = Route(data, [], 0)
+    assert_equal(route.fixed_vehicle_cost(), fixed_cost)

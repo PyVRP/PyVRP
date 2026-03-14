@@ -1,6 +1,6 @@
 import numpy as np
 
-from pyvrp._pyvrp import ProblemData, VehicleType
+from pyvrp._pyvrp import CostEvaluator, ProblemData, VehicleType
 from pyvrp.solve import SolveParams, solve
 from pyvrp.stop import FirstFeasible, MultipleCriteria, StoppingCriterion
 
@@ -72,15 +72,17 @@ def minimise_fleet(
             display=False,
             params=params,
         )
+        best = res.best
+        cost_eval = CostEvaluator([0] * data.num_load_dimensions, 0, 0)
 
-        if stop(res.cost()) or not res.is_feasible():
+        if stop(cost_eval.cost(best)) or not best.is_feasible():
             return feas_fleet
 
         feas_fleet = fleet
-        if res.best.num_routes() < data.num_vehicles:
+        if best.num_routes() < data.num_vehicles:
             # Then we can make a bigger jump because more than one vehicle of
             # the feasible fleet was unused.
-            feas_fleet = fleet.replace(num_available=res.best.num_routes())
+            feas_fleet = fleet.replace(num_available=best.num_routes())
 
     return feas_fleet
 

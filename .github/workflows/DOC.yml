@@ -11,7 +11,7 @@ concurrency:
 jobs:
   build:
     name: "Build documentation"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,13 +24,22 @@ jobs:
           version: "0.7.5"
           enable-cache: true
           python-version: "3.13"
-      - name: Install pandoc
-        run: sudo apt install pandoc
-      - name: Set up GCC
+      - name: Update package index
         run: |
-          sudo apt-get install -y gcc-11 g++-11
-          echo "CC=gcc-11" >> $GITHUB_ENV
-          echo "CXX=g++-11" >> $GITHUB_ENV
+          # Change mirror priorities because Azure can be really slow - https://github.com/actions/runner-images/issues/7048.
+          sudo sed -i '/archive.ubuntu.com\/ubuntu\/\tpriority/ s/priority:2/priority:0/' /etc/apt/apt-mirrors.txt
+          sudo sed -i '/azure.archive.ubuntu.com\/ubuntu\/\tpriority/ s/priority:0/priority:1/' /etc/apt/apt-mirrors.txt
+          sudo sed -i '/security.ubuntu.com\/ubuntu\/\tpriority/ s/priority:3/priority:2/' /etc/apt/apt-mirrors.txt
+          sudo apt-get update
+      - name: Set up GCC and pandoc
+        run: |
+          sudo apt-get install -y gcc-13 g++-13 pandoc
+
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 10
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 10
+
+          echo "CC=gcc-13" >> $GITHUB_ENV
+          echo "CXX=g++-13" >> $GITHUB_ENV
       - name: Build PyVRP
         run: uv sync --group docs --group examples
       - name: Build documentation
@@ -50,7 +59,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Deploy documentation

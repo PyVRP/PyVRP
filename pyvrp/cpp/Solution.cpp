@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <fstream>
 #include <numeric>
-#include <unordered_map>
 
 using pyvrp::Cost;
 using pyvrp::Distance;
@@ -16,7 +15,6 @@ using pyvrp::Solution;
 
 using Client = size_t;
 using Routes = std::vector<Route>;
-using Neighbours = std::vector<std::optional<std::pair<Client, Client>>>;
 
 void Solution::evaluate(ProblemData const &data)
 {
@@ -37,7 +35,7 @@ void Solution::evaluate(ProblemData const &data)
         durationCost_ += route.durationCost();
         excessDistance_ += route.excessDistance();
         timeWarp_ += route.timeWarp();
-        fixedVehicleCost_ += data.vehicleType(route.vehicleType()).fixedCost;
+        fixedVehicleCost_ += route.fixedVehicleCost();
 
         auto const &excessLoad = route.excessLoad();
         for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
@@ -64,9 +62,9 @@ size_t Solution::numClients() const { return numClients_; }
 
 size_t Solution::numMissingClients() const { return numMissingClients_; }
 
-Routes const &Solution::routes() const { return routes_; }
+size_t Solution::numMissingGroups() const { return numMissingGroups_; }
 
-Neighbours const &Solution::neighbours() const { return neighbours_; }
+Routes const &Solution::routes() const { return routes_; }
 
 bool Solution::isFeasible() const
 {
@@ -74,14 +72,14 @@ bool Solution::isFeasible() const
     return !hasExcessLoad()
         && !hasTimeWarp()
         && !hasExcessDistance()
-        && isComplete()
-        && isGroupFeasible();
+        && isComplete();
     // clang-format on
 }
 
-bool Solution::isGroupFeasible() const { return isGroupFeas_; }
-
-bool Solution::isComplete() const { return numMissingClients_ == 0; }
+bool Solution::isComplete() const
+{
+    return numMissingClients_ == 0 && numMissingGroups_ == 0;
+}
 
 bool Solution::hasExcessLoad() const
 {
@@ -116,21 +114,6 @@ Cost Solution::uncollectedPrizes() const { return uncollectedPrizes_; }
 
 Duration Solution::timeWarp() const { return timeWarp_; }
 
-void Solution::makeNeighbours()
-{
-    for (auto const &route : routes_)
-        for (auto const &trip : route.trips())
-        {
-            auto const startDepot = trip.startDepot();
-            auto const endDepot = trip.endDepot();
-
-            for (size_t idx = 0; idx != trip.size(); ++idx)
-                neighbours_[trip[idx]] = {
-                    idx == 0 ? startDepot : trip[idx - 1],               // pred
-                    idx == trip.size() - 1 ? endDepot : trip[idx + 1]};  // succ
-        }
-}
-
 bool Solution::operator==(Solution const &other) const
 {
     // clang-format off
@@ -139,41 +122,44 @@ bool Solution::operator==(Solution const &other) const
                               && distanceCost_ == other.distanceCost_
                               && durationCost_ == other.durationCost_
                               && timeWarp_ == other.timeWarp_
-                              && isGroupFeas_ == other.isGroupFeas_
-                              && routes_.size() == other.routes_.size()
-                              && neighbours_ == other.neighbours_;
+                              && numClients_ == other.numClients_;
     // clang-format on
 
     if (!attributeChecks)
         return false;
 
-    // The visits are the same for both solutions, but the vehicle
-    // assignments need not be. We check this via a mapping from the first
-    // client in each route to the vehicle type of that route. We need to
-    // base this on the visits since the route order can differ between
-    // solutions.
-    std::unordered_map<Client, VehicleType> client2vehType;
-    for (auto const &route : routes_)
-        client2vehType[route[0]] = route.vehicleType();
-
-    for (auto const &route : other.routes_)
-        if (client2vehType[route[0]] != route.vehicleType())
-            return false;
-
-    return true;
+    // Tests if the routes are permutations of each other. Quadratic (in the
+    // number of routes) in the worst case.
+    return std::is_permutation(routes_.begin(),
+                               routes_.end(),
+                               other.routes_.begin(),
+                               other.routes_.end());
 }
 
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
-    : neighbours_(data.numLocations(), std::nullopt)
 {
-    // Add all required and randomly selected optional clients.
+    // Add all required and randomly selected optional clients. For required
+    // groups we insert a random client, for optional groups we choose randomly
+    // whether to insert at all.
     std::vector<size_t> clients;
     clients.reserve(data.numClients());
-    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
+
+    for (auto const &group : data.groups())  // first handle groups
+        if (group.required || rng.rand() < 0.5)
+        {
+            auto const &groupMembers = group.clients();
+            auto const idx = rng.randint(groupMembers.size());
+            clients.push_back(groupMembers[idx]);
+        }
+
+    for (size_t idx = 0; idx != data.numClients(); ++idx)
     {
-        ProblemData::Client const &clientData = data.location(idx);
+        auto const &clientData = data.client(idx);
+        if (clientData.group)  // already handled groups above, skip here
+            continue;
+
         if (clientData.required || rng.rand() < 0.5)
-            clients.push_back(idx);
+            clients.push_back(data.numDepots() + idx);
     }
 
     // Shuffle clients to create random routes.
@@ -228,7 +214,7 @@ Solution::Solution(ProblemData const &data,
 }
 
 Solution::Solution(ProblemData const &data, std::vector<Route> routes)
-    : routes_(std::move(routes)), neighbours_(data.numLocations(), std::nullopt)
+    : routes_(std::move(routes))
 {
     if (routes_.size() > data.numVehicles())
     {
@@ -261,19 +247,26 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
          ++client)
         if (!isVisited[client])  // we need to check if the client visit
         {                        // is required if this is true
-            ProblemData::Client const &clientData = data.location(client);
+            auto const &clientData = data.client(client - data.numDepots());
             numMissingClients_ += clientData.required;
         }
 
-    for (auto const &group : data.groups())
+    for (size_t idx = 0; idx != data.numGroups(); ++idx)
     {
-        // The solution is feasible w.r.t. this client group if exactly one
-        // of the clients in the group is in the solution. When the group is
-        // not required, we relax this to at most one client.
+        auto const &group = data.group(idx);
         assert(group.mutuallyExclusive);
+
         auto const inSol = [&](auto client) { return isVisited[client]; };
-        auto const numInSol = std::count_if(group.begin(), group.end(), inSol);
-        isGroupFeas_ &= group.required ? numInSol == 1 : numInSol <= 1;
+        auto const count = std::count_if(group.begin(), group.end(), inSol);
+        if (count > 1)
+        {
+            std::ostringstream msg;
+            msg << "Group " << idx << " is visited more than once.";
+            throw std::runtime_error(msg.str());
+        }
+
+        if (group.required && count == 0)  // required but missing group
+            numMissingGroups_++;
     }
 
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
@@ -286,12 +279,12 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
             throw std::runtime_error(msg.str());
         }
 
-    makeNeighbours();
     evaluate(data);
 }
 
 Solution::Solution(size_t numClients,
                    size_t numMissingClients,
+                   size_t numMissingGroups,
                    Distance distance,
                    Cost distanceCost,
                    Duration duration,
@@ -303,11 +296,10 @@ Solution::Solution(size_t numClients,
                    Cost prizes,
                    Cost uncollectedPrizes,
                    Duration timeWarp,
-                   bool isGroupFeasible,
-                   Routes routes,
-                   Neighbours neighbours)
+                   Routes routes)
     : numClients_(numClients),
       numMissingClients_(numMissingClients),
+      numMissingGroups_(numMissingGroups),
       distance_(distance),
       distanceCost_(distanceCost),
       duration_(duration),
@@ -319,10 +311,18 @@ Solution::Solution(size_t numClients,
       prizes_(prizes),
       uncollectedPrizes_(uncollectedPrizes),
       timeWarp_(timeWarp),
-      isGroupFeas_(isGroupFeasible),
-      routes_(std::move(routes)),
-      neighbours_(std::move(neighbours))
+      routes_(std::move(routes))
 {
+}
+
+template <>
+Cost pyvrp::CostEvaluator::penalisedCost(Solution const &solution) const
+{
+    Cost cost = solution.uncollectedPrizes();
+    for (auto const &route : solution.routes())
+        cost += penalisedCost(route);
+
+    return cost;
 }
 
 std::ostream &operator<<(std::ostream &out, Solution const &sol)

@@ -38,28 +38,17 @@ def test_raises_when_neighbourhood_contains_self_or_depot(ok_small):
 
 
 @pytest.mark.parametrize(
-    (
-        "weight_wait_time",
-        "weight_time_warp",
-        "num_neighbours",
-        "symmetric_proximity",
-        "symmetric_neighbours",
-    ),
+    ("num_neighbours", "symmetric_proximity"),
     [
-        (20, 20, 10, True, False),
-        (20, 20, 10, True, True),
+        (10, True),
         # From original c++ implementation
-        # (18, 20, 34, False),
-        (18, 20, 34, True, True),
+        (34, False),
     ],
 )
 def test_set_get_neighbours(
     rc208,
-    weight_wait_time: int,
-    weight_time_warp: int,
     num_neighbours: int,
     symmetric_proximity: bool,
-    symmetric_neighbours: bool,
 ):
     """
     Tests setting and getting neighbours.
@@ -68,13 +57,7 @@ def test_set_get_neighbours(
     prev_neighbours = compute_neighbours(rc208, params)
     search_space = SearchSpace(rc208, prev_neighbours)
 
-    params = NeighbourhoodParams(
-        weight_wait_time,
-        weight_time_warp,
-        num_neighbours,
-        symmetric_proximity,
-        symmetric_neighbours,
-    )
+    params = NeighbourhoodParams(20, num_neighbours, symmetric_proximity)
     neighbours = compute_neighbours(rc208, params)
 
     # Test that before we set neighbours we don't have same

@@ -2,6 +2,7 @@
 #define PYVRP_DYNAMICBITSET_H
 
 #include <bitset>
+#include <climits>
 #include <vector>
 
 namespace pyvrp
@@ -23,9 +24,11 @@ namespace pyvrp
 // See https://en.cppreference.com/w/cpp/utility/bitset for further information.
 class DynamicBitset
 {
-    static constexpr size_t BLOCK_SIZE = 64;
+public:
+    static constexpr size_t BLOCK_SIZE = sizeof(unsigned long long) * CHAR_BIT;
     using Block = std::bitset<BLOCK_SIZE>;
 
+private:
     std::vector<Block> data_;
 
 public:
@@ -36,6 +39,8 @@ public:
 
     [[nodiscard]] bool operator[](size_t idx) const;
     [[nodiscard]] Block::reference operator[](size_t idx);
+
+    [[nodiscard]] std::vector<Block> const &data() const;
 
     [[nodiscard]] bool all() const;
     [[nodiscard]] bool any() const;

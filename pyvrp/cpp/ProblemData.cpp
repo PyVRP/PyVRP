@@ -272,7 +272,7 @@ ProblemData::Depot::~Depot() { delete[] name; }
 bool ProblemData::Depot::operator==(Depot const &other) const
 {
     // clang-format off
-    return x == other.x 
+    return x == other.x
         && y == other.y
         && twEarly == other.twEarly
         && twLate == other.twLate
@@ -540,12 +540,6 @@ ProblemData::vehicleType(size_t vehicleType) const
     return vehicleTypes_[vehicleType];
 }
 
-std::pair<pyvrp::Coordinate, pyvrp::Coordinate> const &
-ProblemData::centroid() const
-{
-    return centroid_;
-}
-
 size_t ProblemData::numClients() const { return clients_.size(); }
 
 size_t ProblemData::numDepots() const { return depots_.size(); }
@@ -571,7 +565,7 @@ void ProblemData::validate() const
     // Client checks.
     for (size_t idx = numDepots(); idx != numLocations(); ++idx)
     {
-        ProblemData::Client const &client = location(idx);
+        auto const &client = clients_[idx - numDepots()];
 
         if (client.delivery.size() != numLoadDimensions_)
         {
@@ -622,7 +616,7 @@ void ProblemData::validate() const
             if (client < numDepots() || client >= numLocations())
                 throw std::out_of_range("Group references invalid client.");
 
-            ProblemData::Client const &clientData = location(client);
+            auto const &clientData = clients_[client - numDepots()];
             if (!clientData.group || *clientData.group != idx)
             {
                 auto const *msg = "Group references client not in group.";
@@ -749,11 +743,5 @@ ProblemData::ProblemData(std::vector<Client> clients,
                          vehicleTypes_.end(),
                          hasTimeWindow<VehicleType>))
 {
-    for (auto const &client : clients_)
-    {
-        centroid_.first += static_cast<double>(client.x) / numClients();
-        centroid_.second += static_cast<double>(client.y) / numClients();
-    }
-
     validate();
 }
