@@ -29,43 +29,6 @@ void Route::Node::unassign()
     route_ = nullptr;
 }
 
-Route::Iterator::Iterator(std::vector<Node *> const &nodes, size_t idx)
-    : nodes_(&nodes), idx_(idx)
-{
-    ensureValidIndex();
-}
-
-void Route::Iterator::ensureValidIndex()
-{
-    // size() - 1 is the index of the end depot, and what's returned by
-    // Route::end() - we must not exceed it.
-    while (idx_ < nodes_->size() - 1 && operator*() -> isReloadDepot())
-        idx_++;  // skip any intermediate reload depots
-
-    assert(0 < idx_ && idx_ < nodes_->size());
-}
-
-bool Route::Iterator::operator==(Iterator const &other) const
-{
-    return nodes_ == other.nodes_ && idx_ == other.idx_;
-}
-
-Route::Node *Route::Iterator::operator*() const { return (*nodes_)[idx_]; }
-
-Route::Iterator Route::Iterator::operator++(int)
-{
-    auto tmp = *this;
-    ++*this;
-    return tmp;
-}
-
-Route::Iterator &Route::Iterator::operator++()
-{
-    idx_++;
-    ensureValidIndex();
-    return *this;
-}
-
 Route::Route(ProblemData const &data, size_t vehicleType)
     : data(data),
       vehicleType_(data.vehicleType(vehicleType)),
@@ -80,9 +43,15 @@ Route::Route(ProblemData const &data, size_t vehicleType)
 
 Route::~Route() { clear(); }
 
-Route::Iterator Route::begin() const { return Iterator(nodes, 1); }
+std::vector<Route::Node *>::const_iterator Route::begin() const
+{
+    return nodes.begin();
+}
 
-Route::Iterator Route::end() const { return Iterator(nodes, nodes.size() - 1); }
+std::vector<Route::Node *>::const_iterator Route::end() const
+{
+    return nodes.end();
+}
 
 size_t Route::vehicleType() const
 {

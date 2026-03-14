@@ -209,39 +209,6 @@ public:
         void unassign();
     };
 
-    /**
-     * Forward iterator through the client nodes visited by this route.
-     */
-    class Iterator
-    {
-        std::vector<Node *> const *nodes_;
-        size_t idx_ = 0;
-
-        // Ensures we skip reload depots.
-        void ensureValidIndex();
-
-    public:
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type = std::ptrdiff_t;
-        using value_type = Node *;
-
-        Iterator(std::vector<Node *> const &nodes, size_t idx);
-
-        Iterator() = default;
-        Iterator(Iterator const &other) = default;
-        Iterator(Iterator &&other) = default;
-
-        Iterator &operator=(Iterator const &other) = default;
-        Iterator &operator=(Iterator &&other) = default;
-
-        bool operator==(Iterator const &other) const;
-
-        Node *operator*() const;
-
-        Iterator operator++(int);
-        Iterator &operator++();
-    };
-
 private:
     using LoadSegments = std::vector<LoadSegment>;
 
@@ -376,8 +343,8 @@ public:
     [[nodiscard]] inline Node *operator[](size_t idx);
     [[nodiscard]] inline Node const *operator[](size_t idx) const;
 
-    [[nodiscard]] Iterator begin() const;
-    [[nodiscard]] Iterator end() const;
+    [[nodiscard]] std::vector<Node *>::const_iterator begin() const;
+    [[nodiscard]] std::vector<Node *>::const_iterator end() const;
 
     /**
      * Tests if this route is feasible.

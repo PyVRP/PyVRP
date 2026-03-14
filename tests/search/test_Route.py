@@ -144,31 +144,34 @@ def test_route_insert(ok_small):
     assert_equal(route[3].activity, Activity("C1"))
 
 
-def test_route_iter_returns_all_clients(ok_small):
+def test_route_iter(ok_small):
     """
-    Tests that iterating over a route returns all clients in the route, but
-    not the depots.
+    Tests that iterating over a route returns all route activities.
     """
     route = make_search_route(ok_small, ["C0", "C1", "C2"])
     nodes = [node for node in route]
-    assert_equal(len(nodes), route.num_clients())
+    assert_equal(len(nodes), route.num_clients() + 2)  # incl start + end
 
-    # Iterating the Route object returns only clients, not the depots.
-    assert_equal(nodes[0], route[1])
-    assert_equal(nodes[1], route[2])
-    assert_equal(nodes[2], route[3])
+    # Iterating should happen in the same order as indexing.
+    assert_equal(nodes[0], route[0])
+    assert_equal(nodes[1], route[1])
+    assert_equal(nodes[2], route[2])
 
 
-def test_iter_skips_reload_depots(ok_small_multiple_trips):
+def test_iter_reload_depots(ok_small_multiple_trips):
     """
-    Tests that iterating a route skips (repeated) reload depots.
+    Tests that iterating a route without clients returns all (reload) depot
+    actiivties.
     """
     veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=100)
     data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
 
     route = make_search_route(data, ["D0", "D0", "D0"])
     assert_equal(route.num_clients(), 0)  # there are no clients
-    assert_equal(list(route), [])  # and thus iteration yields an empty list
+    assert_equal(len([node for node in route]), 5)  # 3 reloads + start/end
+
+    for node in route:  # all are visits to D0
+        assert_equal(node.activity, Activity("D0"))
 
 
 def test_route_add_and_delete_client_leaves_route_empty(ok_small):
