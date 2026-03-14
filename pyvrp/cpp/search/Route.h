@@ -1,7 +1,6 @@
 #ifndef PYVRP_SEARCH_ROUTE_H
 #define PYVRP_SEARCH_ROUTE_H
 
-#include "../Route.h"  // pyvrp::Route
 #include "Activity.h"
 #include "CostEvaluator.h"
 #include "DurationSegment.h"
@@ -16,19 +15,22 @@
 
 namespace pyvrp::search
 {
-// This defines the minimal interface required for a segment of visits.
+class SegmentProxy;  // forward declaration
+
+// This defines the minimal interface required for a segment of activities.
 template <typename T>
-concept Segment = requires(T arg, size_t profile, size_t dimension) {
-    { arg.route() };
-    { arg.first() } -> std::same_as<Activity>;
-    { arg.last() } -> std::same_as<Activity>;
-    { arg.size() } -> std::same_as<size_t>;
-    { arg.startsAtReloadDepot() } -> std::same_as<bool>;
-    { arg.endsAtReloadDepot() } -> std::same_as<bool>;
-    { arg.distance(profile) } -> std::convertible_to<Distance>;
-    { arg.duration(profile) } -> std::convertible_to<DurationSegment>;
-    { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
-};
+concept Segment
+    = requires(T arg, size_t profile, size_t dimension, size_t idx) {
+          { arg.route() };
+          { arg.front() } -> std::convertible_to<SegmentProxy>;
+          { arg.back() } -> std::convertible_to<SegmentProxy>;
+          { arg.size() } -> std::same_as<size_t>;
+          { arg.startsAtReloadDepot() } -> std::same_as<bool>;
+          { arg.endsAtReloadDepot() } -> std::same_as<bool>;
+          { arg.distance(profile) } -> std::convertible_to<Distance>;
+          { arg.duration(profile) } -> std::convertible_to<DurationSegment>;
+          { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
+      };
 
 namespace detail
 {
@@ -46,6 +48,20 @@ template <class Tuple> auto constexpr reverse(Tuple &&tuple)
     return reverse_impl(tuple, indices);
 }
 }  // namespace detail
+
+/**
+ * Simple proxy that can be queried for activity and location attributes.
+ */
+class SegmentProxy
+{
+    Activity activity_;
+    size_t location_;
+
+public:
+    inline SegmentProxy(Activity activity, size_t location);
+    inline Activity activity() const;
+    inline size_t location() const;
+};
 
 /**
  * This ``Route`` class supports fast delta cost computations and in-place
@@ -79,7 +95,7 @@ public:
         std::tuple<Segments...> segments_;
 
         /**
-         * Returns the number of depots and clients in the proposed route.
+         * Returns the number of activities in the proposed route.
          */
         size_t size() const;
 
@@ -193,39 +209,6 @@ public:
         void unassign();
     };
 
-    /**
-     * Forward iterator through the client nodes visited by this route.
-     */
-    class Iterator
-    {
-        std::vector<Node *> const *nodes_;
-        size_t idx_ = 0;
-
-        // Ensures we skip reload depots.
-        void ensureValidIndex();
-
-    public:
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type = std::ptrdiff_t;
-        using value_type = Node *;
-
-        Iterator(std::vector<Node *> const &nodes, size_t idx);
-
-        Iterator() = default;
-        Iterator(Iterator const &other) = default;
-        Iterator(Iterator &&other) = default;
-
-        Iterator &operator=(Iterator const &other) = default;
-        Iterator &operator=(Iterator &&other) = default;
-
-        bool operator==(Iterator const &other) const;
-
-        Node *operator*() const;
-
-        Iterator operator++(int);
-        Iterator &operator++();
-    };
-
 private:
     using LoadSegments = std::vector<LoadSegment>;
 
@@ -241,8 +224,9 @@ private:
     public:
         inline Route const *route() const;
 
-        inline Activity first() const;  // activity at start
-        inline Activity last() const;   // end depot activity
+        inline SegmentProxy front() const;  // at start
+        inline SegmentProxy back() const;   // at end depot
+
         inline size_t size() const;
 
         inline bool startsAtReloadDepot() const;
@@ -266,8 +250,9 @@ private:
     public:
         inline Route const *route() const;
 
-        inline Activity first() const;  // start depot activity
-        inline Activity last() const;   // activity at end
+        inline SegmentProxy front() const;  // at start depot
+        inline SegmentProxy back() const;   // at end
+
         inline size_t size() const;
 
         inline bool startsAtReloadDepot() const;
@@ -293,8 +278,9 @@ private:
     public:
         inline Route const *route() const;
 
-        inline Activity first() const;  // activity at start
-        inline Activity last() const;   // activity at end
+        inline SegmentProxy front() const;  // at start
+        inline SegmentProxy back() const;   // at end
+
         inline size_t size() const;
 
         inline bool startsAtReloadDepot() const;
@@ -357,8 +343,8 @@ public:
     [[nodiscard]] inline Node *operator[](size_t idx);
     [[nodiscard]] inline Node const *operator[](size_t idx) const;
 
-    [[nodiscard]] Iterator begin() const;
-    [[nodiscard]] Iterator end() const;
+    [[nodiscard]] std::vector<Node *>::const_iterator begin() const;
+    [[nodiscard]] std::vector<Node *>::const_iterator end() const;
 
     /**
      * Tests if this route is feasible.
@@ -517,7 +503,7 @@ public:
     [[nodiscard]] inline bool empty() const;
 
     /**
-     * Number of clients and depots on this route.
+     * Number of activities on this route.
      */
     [[nodiscard]] inline size_t size() const;
 
@@ -613,7 +599,6 @@ public:
     void update();
 
     bool operator==(Route const &other) const;
-    bool operator==(pyvrp::Route const &other) const;
 
     Route(ProblemData const &data, size_t vehicleType);
     ~Route();
@@ -648,6 +633,15 @@ inline Route::Node const *n(Route::Node const *node)
     auto const &route = *node->route();
     return route[node->idx() + 1];
 }
+
+SegmentProxy::SegmentProxy(Activity activity, size_t location)
+    : activity_(activity), location_(location)
+{
+}
+
+Activity SegmentProxy::activity() const { return activity_; }
+
+size_t SegmentProxy::location() const { return location_; }
 
 Activity Route::Node::activity() const { return activity_; }
 
@@ -739,14 +733,14 @@ LoadSegment const &Route::SegmentBefore::load(size_t dimension) const
 
 Route const *Route::SegmentBefore::route() const { return &route_; }
 
-Activity Route::SegmentBefore::first() const
+SegmentProxy Route::SegmentBefore::front() const
 {
-    return route_.nodes.front()->activity();
+    return {route_.nodes.front()->activity(), route_.locations.front()};
 }
 
-Activity Route::SegmentBefore::last() const
+SegmentProxy Route::SegmentBefore::back() const
 {
-    return route_.nodes[end]->activity();
+    return {route_.nodes[end]->activity(), route_.locations[end]};
 }
 
 size_t Route::SegmentBefore::size() const { return end + 1; }
@@ -760,14 +754,14 @@ bool Route::SegmentBefore::endsAtReloadDepot() const
 
 Route const *Route::SegmentAfter::route() const { return &route_; }
 
-Activity Route::SegmentAfter::first() const
+SegmentProxy Route::SegmentAfter::front() const
 {
-    return route_.nodes[start]->activity();
+    return {route_.nodes[start]->activity(), route_.locations[start]};
 }
 
-Activity Route::SegmentAfter::last() const
+SegmentProxy Route::SegmentAfter::back() const
 {
-    return route_.nodes.back()->activity();
+    return {route_.nodes.back()->activity(), route_.locations.back()};
 }
 
 size_t Route::SegmentAfter::size() const { return route_.size() - start; }
@@ -780,14 +774,14 @@ bool Route::SegmentAfter::endsAtReloadDepot() const { return false; }
 
 Route const *Route::SegmentBetween::route() const { return &route_; }
 
-Activity Route::SegmentBetween::first() const
+SegmentProxy Route::SegmentBetween::front() const
 {
-    return route_.nodes[start]->activity();
+    return {route_.nodes[start]->activity(), route_.locations[start]};
 }
 
-Activity Route::SegmentBetween::last() const
+SegmentProxy Route::SegmentBetween::back() const
 {
-    return route_.nodes[end]->activity();
+    return {route_.nodes[end]->activity(), route_.locations[end]};
 }
 
 size_t Route::SegmentBetween::size() const { return end - start + 1; }
@@ -1043,9 +1037,9 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     assert(first.route() == last.route());  // must start and end at same route
 
     // Must start and end at the route start and end.
-    [[maybe_unused]] auto const *route = this->route();
-    assert(first.first().isDepot() && first.first().idx == route->startDepot());
-    assert(last.last().isDepot() && last.last().idx == route->endDepot());
+    [[maybe_unused]] auto const &route = *this->route();
+    assert(first.front().activity() == route[0]->activity());
+    assert(last.back().activity() == route[route.size() - 1]->activity());
 }
 
 template <Segment... Segments> size_t Route::Proposal<Segments...>::size() const
@@ -1080,22 +1074,13 @@ std::pair<Cost, Distance> Route::Proposal<Segments...>::distance() const
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto distance = segment.distance(profile);
-
-        auto activity = segment.last();
-        auto lastLoc = activity.isDepot() ? data.depot(activity.idx).location
-                                          : data.client(activity.idx).location;
+        auto lastLoc = segment.back().location();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            activity = other.first();
-            auto const firstLoc = activity.isDepot()
-                                      ? data.depot(activity.idx).location
-                                      : data.client(activity.idx).location;
-
-            distance += matrix(lastLoc, firstLoc) + other.distance(profile);
-            activity = other.last();
-            lastLoc = activity.isDepot() ? data.depot(activity.idx).location
-                                         : data.client(activity.idx).location;
+            distance += matrix(lastLoc, other.front().location());
+            distance += other.distance(profile);
+            lastLoc = other.back().location();
 
             if constexpr (sizeof...(args) != 0)
                 self(self, std::forward<decltype(args)>(args)...);
@@ -1131,21 +1116,14 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
     auto const fn = [&](auto &&segment, auto &&...args)
     {
         auto ds = segment.duration(profile);
-        auto activity = segment.first();
-        auto firstLoc = activity.isDepot() ? data.depot(activity.idx).location
-                                           : data.client(activity.idx).location;
+        auto firstLoc = segment.front().location();
 
         if (segment.startsAtReloadDepot())
             ds = ds.finaliseFront();
 
         auto const merge = [&](auto const &self, auto &&other, auto &&...args)
         {
-            activity = other.last();
-            auto const lastLoc = activity.isDepot()
-                                     ? data.depot(activity.idx).location
-                                     : data.client(activity.idx).location;
-
-            auto edgeDur = matrix(lastLoc, firstLoc);
+            auto edgeDur = matrix(other.back().location(), firstLoc);
 
             if (other.endsAtReloadDepot())
             {
@@ -1153,7 +1131,7 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
                 // finalise the current segment. We first travel there. We need
                 // to end the segment within the depot's time windows to
                 // properly account for any release time on our segment.
-                auto const [_, idx] = other.last();
+                auto const [_, idx] = other.back().activity();
                 auto const &depot = data.depot(idx);
                 DurationSegment depotDS = {depot, depot.serviceDuration};
                 ds = DurationSegment::merge(edgeDur, depotDS, ds);
@@ -1163,10 +1141,7 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
             }
 
             ds = DurationSegment::merge(edgeDur, other.duration(profile), ds);
-
-            activity = other.first();
-            firstLoc = activity.isDepot() ? data.depot(activity.idx).location
-                                          : data.client(activity.idx).location;
+            firstLoc = other.front().location();
 
             if constexpr (sizeof...(args) != 0)
             {

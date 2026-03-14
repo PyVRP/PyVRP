@@ -26,8 +26,18 @@ public:
 
     pyvrp::search::Route const *route() const { return nullptr; }
 
-    Activity first() const { return {Activity::ActivityType::DEPOT, depot_}; }
-    Activity last() const { return {Activity::ActivityType::DEPOT, depot_}; }
+    SegmentProxy front() const
+    {
+        return {{Activity::ActivityType::DEPOT, depot_},
+                data_.depot(depot_).location};
+    }
+
+    SegmentProxy back() const
+    {
+        return {{Activity::ActivityType::DEPOT, depot_},
+                data_.depot(depot_).location};
+    }
+
     size_t size() const { return 1; }
 
     bool startsAtReloadDepot() const { return true; }

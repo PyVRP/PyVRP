@@ -467,11 +467,6 @@ PYBIND11_MODULE(_search, m)
         .def("num_trips", &Route::numTrips)
         .def("max_trips", &Route::maxTrips)
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
-        .def(  // __eq__ overload for pyvrp.Route
-            "__eq__",
-            [](Route const &route, pyvrp::Route const &other)
-            { return route == other; },
-            py::is_operator())
         .def("__delitem__", &Route::remove, py::arg("idx"))
         .def(
             "__getitem__",
