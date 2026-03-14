@@ -140,11 +140,10 @@ public:
     {
         friend class Route;
 
-        size_t idx_;    // Index of the activity corresponding to type.
+        Activity activity_;
         size_t pos_;    // Position in the route.
         size_t trip_;   // Trip index.
         Route *route_;  // Indicates membership of a route, if any
-        Activity::ActivityType type_;
 
     public:
         Node(Activity::ActivityType type, size_t idx);
@@ -654,11 +653,11 @@ Activity SegmentProxy::activity() const { return activity_; }
 
 size_t SegmentProxy::location() const { return location_; }
 
-Activity Route::Node::activity() const { return {type_, idx_}; }
+Activity Route::Node::activity() const { return activity_; }
 
-size_t Route::Node::idx() const { return idx_; }
+size_t Route::Node::idx() const { return activity_.idx; }
 
-Activity::ActivityType Route::Node::type() const { return type_; }
+Activity::ActivityType Route::Node::type() const { return activity_.type; }
 
 size_t Route::Node::pos() const { return pos_; }
 
@@ -666,15 +665,9 @@ size_t Route::Node::trip() const { return trip_; }
 
 Route *Route::Node::route() const { return route_; }
 
-bool Route::Node::isClient() const
-{
-    return type_ == Activity::ActivityType::CLIENT;
-}
+bool Route::Node::isClient() const { return activity_.isClient(); }
 
-bool Route::Node::isDepot() const
-{
-    return type_ == Activity::ActivityType::DEPOT;
-}
+bool Route::Node::isDepot() const { return activity_.isDepot(); }
 
 bool Route::Node::isStartDepot() const
 {

@@ -11,11 +11,7 @@ Route::Node::Node(Activity::ActivityType type, size_t idx)
 }
 
 Route::Node::Node(Activity activity)
-    : idx_(activity.idx),
-      pos_(0),
-      trip_(0),
-      route_(nullptr),
-      type_(activity.type)
+    : activity_(activity), pos_(0), trip_(0), route_(nullptr)
 {
 }
 
