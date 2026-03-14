@@ -11,6 +11,8 @@ using pyvrp::Distance;
 using pyvrp::Duration;
 using pyvrp::Load;
 
+using pyvrp::search::Solution;
+
 namespace
 {
 Cost insertCost(pyvrp::search::Route::Node *U,
@@ -37,9 +39,31 @@ Cost insertCost(pyvrp::search::Route::Node *U,
 
     return deltaCost;
 }
-}  // namespace
 
-using pyvrp::search::Solution;
+// Comparison operator to check if pyvrp::Route and search::Route are equivalent
+// - if so, the pyvrp::Route does not need to be loaded.
+bool operator==(pyvrp::Route const &pyvrp, pyvrp::search::Route const &search)
+{
+    // clang-format off
+    bool const simpleChecks = pyvrp.distance() == search.distance()
+                              && pyvrp.duration() == search.duration()
+                              && pyvrp.timeWarp() == search.timeWarp()
+                              && pyvrp.vehicleType() == search.vehicleType()
+                              && pyvrp.numTrips() == search.numTrips()
+                              && pyvrp.size() == search.size();
+    // clang-format on
+
+    if (!simpleChecks)
+        return false;
+
+    size_t idx = 0;
+    for (auto const &activity : pyvrp.activities())
+        if (search[idx++]->activity() != activity)
+            return false;
+
+    return true;
+}
+}  // namespace
 
 Solution::Solution(ProblemData const &data) : data_(data)
 {

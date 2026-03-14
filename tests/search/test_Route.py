@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
-import pyvrp
 from pyvrp import (
     Activity,
     ActivityType,
@@ -1132,16 +1131,6 @@ def test_eq(ok_small):
     route2 = make_search_route(ok_small, ["C2", "C3"])
     assert_(route2 == route2)
     assert_(route1 != route2)
-
-
-def test_eq_pyvrp_route(ok_small_multiple_trips):
-    """
-    Tests __eq__ between search.Route and pyvrp.Route.
-    """
-    activities = [Activity(des) for des in ["C0", "C1", "D0", "C2", "C3"]]
-    pyvrp_route = pyvrp.Route(ok_small_multiple_trips, activities, 0)
-    search_route = make_search_route(ok_small_multiple_trips, activities)
-    assert_(pyvrp_route == search_route)
 
 
 def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):

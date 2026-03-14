@@ -390,30 +390,6 @@ bool Route::operator==(Route const &other) const
     // clang-format on
 }
 
-bool Route::operator==(pyvrp::Route const &other) const
-{
-    assert(!dirty);
-
-    // clang-format off
-    bool const simpleChecks = distance_ == other.distance()
-                              && duration_ == other.duration()
-                              && timeWarp_ == other.timeWarp()
-                              && vehicleType() == other.vehicleType()
-                              && numTrips() == other.numTrips()
-                              && size() == other.size();
-    // clang-format on
-
-    if (!simpleChecks)
-        return false;
-
-    size_t idx = 0;
-    for (auto const &activity : other.activities())
-        if (nodes[idx++]->activity() != activity)
-            return false;
-
-    return true;
-}
-
 std::ostream &operator<<(std::ostream &out, Route const &route)
 {
     for (size_t idx = 1; idx != route.size() - 1; ++idx)
