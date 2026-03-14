@@ -233,14 +233,12 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         static_assert(std::ranges::input_range<Route>);
 
         usedVehicles[route.vehicleType()]++;
-        for (auto const &step : route)
+        for (auto const &activity : route)
         {
-            auto const activity = step.activity();
-
             if (!activity.isClient())
                 continue;
 
-            auto const [_, client] = activity;
+            auto const client = activity.idx;
             if (isVisited[client])
             {
                 std::ostringstream msg;
@@ -253,7 +251,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
     }
 
     for (size_t client = 0; client != data.numClients(); ++client)
-        if (!isVisited[client])  // not visited; is the visit required?
+        if (!isVisited[client])  // not visited; is the client visit required?
         {
             auto const &clientData = data.client(client);
             numMissingClients_ += clientData.required;

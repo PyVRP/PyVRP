@@ -32,12 +32,14 @@ class Route
 
 public:
     /**
-     * Simple object that stores some data about a route activity.
+     * Route activity with schedule information.
      *
      * Attributes
      * ----------
-     * activity : Activity
-     *     Route activity.
+     * type : ActivityType
+     *     The type of activity, for example a depot or client visit.
+     * idx : int
+     *     The index of the activity corresponding to the activity type.
      * trip : int
      *     Trip index.
      * start_service : int
@@ -54,9 +56,8 @@ public:
      *     back in time' to begin service. Non-zero time warp indicates an
      *     infeasible route.
      */
-    class ScheduledActivity
+    class ScheduledActivity : public Activity
     {
-        Activity activity_;
         size_t trip_ = 0;
         Duration startService_ = 0;
         Duration endService_ = 0;
@@ -73,7 +74,6 @@ public:
 
         bool operator==(ScheduledActivity const &other) const = default;
 
-        [[nodiscard]] Activity activity() const;
         [[nodiscard]] size_t trip() const;
         [[nodiscard]] Duration startService() const;
         [[nodiscard]] Duration endService() const;
@@ -337,9 +337,6 @@ public:
 template <>  // specialisation for pyvrp::Route
 Cost CostEvaluator::penalisedCost(Route const &route) const;
 }  // namespace pyvrp
-
-std::ostream &operator<<(std::ostream &out,
-                         pyvrp::Route::ScheduledActivity const &visit);
 
 std::ostream &operator<<(std::ostream &out, pyvrp::Route const &route);
 

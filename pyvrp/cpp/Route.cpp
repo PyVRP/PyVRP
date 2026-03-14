@@ -21,7 +21,7 @@ Route::ScheduledActivity::ScheduledActivity(Activity activity,
                                             Duration endService,
                                             Duration waitDuration,
                                             Duration timeWarp)
-    : activity_(activity),
+    : Activity(activity),
       trip_(trip),
       startService_(startService),
       endService_(endService),
@@ -30,8 +30,6 @@ Route::ScheduledActivity::ScheduledActivity(Activity activity,
 {
     assert(startService_ <= endService_);
 }
-
-Activity Route::ScheduledActivity::activity() const { return activity_; }
 
 size_t Route::ScheduledActivity::trip() const { return trip_; }
 
@@ -227,7 +225,7 @@ void Route::setDistance(ProblemData const &data)
     size_t frmLoc = data.depot(startDepot()).location;
     for (size_t idx = 1; idx != schedule_.size(); ++idx)
     {
-        auto const activity = schedule_[idx].activity();
+        auto const &activity = schedule_[idx];
         auto const toLoc = activity.isDepot()
                                ? data.depot(activity.idx).location
                                : data.client(activity.idx).location;
@@ -253,7 +251,7 @@ void Route::setLoad(ProblemData const &data)
 
         for (size_t idx = 1; idx != schedule_.size(); ++idx)
         {
-            auto const activity = schedule_[idx].activity();
+            auto const &activity = schedule_[idx];
 
             if (activity.isDepot())
             {
@@ -275,12 +273,9 @@ void Route::setOtherStatistics(ProblemData const &data)
     auto const &vehData = data.vehicleType(vehicleType_);
     fixedVehicleCost_ = vehData.fixedCost;
 
-    for (auto const &step : schedule_)
-    {
-        auto const activity = step.activity();
+    for (auto const &activity : schedule_)
         if (activity.isClient())
             prizes_ += data.client(activity.idx).prize;
-    }
 }
 
 Route::Route(ProblemData const &data,
@@ -422,7 +417,7 @@ size_t Route::vehicleType() const { return vehicleType_; }
 
 size_t Route::startDepot() const
 {
-    auto const activity = schedule_.front().activity();
+    auto const &activity = schedule_.front();
 
     assert(activity.isDepot());
     return activity.idx;
@@ -430,7 +425,7 @@ size_t Route::startDepot() const
 
 size_t Route::endDepot() const
 {
-    auto const activity = schedule_.back().activity();
+    auto const &activity = schedule_.back();
 
     assert(activity.isDepot());
     return activity.idx;
@@ -480,17 +475,11 @@ template <> Cost pyvrp::CostEvaluator::penalisedCost(Route const &route) const
     // clang-format on
 }
 
-std::ostream &operator<<(std::ostream &out,
-                         Route::ScheduledActivity const &visit)
-{
-    return out << visit.activity();
-}
-
 std::ostream &operator<<(std::ostream &out, Route const &route)
 {
     for (size_t idx = 1; idx != route.size() - 1; ++idx)
     {
-        auto const activity = route[idx].activity();
+        auto const &activity = route[idx];
         if (activity.isDepot())
             out << '|';
         else

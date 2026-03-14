@@ -602,12 +602,8 @@ def test_model_solves_line_instance_with_multiple_depots():
     # the second route. Route membership is compared using sets because the
     # optimal visit order is not unique.
     route1, route2 = res.best.routes()
-    clients1 = {
-        step.activity.idx for step in route1 if step.activity.is_client()
-    }
-    clients2 = {
-        step.activity.idx for step in route2 if step.activity.is_client()
-    }
+    clients1 = {activity.idx for activity in route1 if activity.is_client()}
+    clients2 = {activity.idx for activity in route2 if activity.is_client()}
     assert_equal(clients1, {0, 1})
     assert_equal(clients2, {2, 3})
 

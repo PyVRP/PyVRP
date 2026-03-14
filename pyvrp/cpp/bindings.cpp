@@ -683,9 +683,8 @@ PYBIND11_MODULE(_pyvrp, m)
                 return data;
             }));
 
-    py::class_<Route::ScheduledActivity>(
+    py::class_<Route::ScheduledActivity, Activity>(
         m, "ScheduledActivity", DOC(pyvrp, Route, ScheduledActivity))
-        .def_property_readonly("activity", &Route::ScheduledActivity::activity)
         .def_property_readonly("trip", &Route::ScheduledActivity::trip)
         .def_property_readonly("start_service",
                                &Route::ScheduledActivity::startService)
@@ -697,16 +696,16 @@ PYBIND11_MODULE(_pyvrp, m)
                                &Route::ScheduledActivity::waitDuration)
         .def_property_readonly("time_warp", &Route::ScheduledActivity::timeWarp)
         .def(py::pickle(
-            [](Route::ScheduledActivity const &visit) {  // __getstate__
-                return py::make_tuple(visit.activity(),
-                                      visit.trip(),
-                                      visit.startService(),
-                                      visit.endService(),
-                                      visit.waitDuration(),
-                                      visit.timeWarp());
+            [](Route::ScheduledActivity const &activity) {  // __getstate__
+                return py::make_tuple(Activity{activity.type, activity.idx},
+                                      activity.trip(),
+                                      activity.startService(),
+                                      activity.endService(),
+                                      activity.waitDuration(),
+                                      activity.timeWarp());
             },
             [](py::tuple t) {  // __setstate__
-                Route::ScheduledActivity visit(
+                Route::ScheduledActivity activity(
                     t[0].cast<Activity>(),          // activity
                     t[1].cast<size_t>(),            // trip
                     t[2].cast<pyvrp::Duration>(),   // start service
@@ -714,13 +713,13 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[4].cast<pyvrp::Duration>(),   // wait duration
                     t[5].cast<pyvrp::Duration>());  // time warp
 
-                return visit;
+                return activity;
             }))
         .def("__str__",
-             [](Route::ScheduledActivity const &visit)
+             [](Route::ScheduledActivity const &activity)
              {
                  std::stringstream stream;
-                 stream << visit;
+                 stream << activity;
                  return stream.str();
              });
 

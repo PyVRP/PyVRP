@@ -101,7 +101,7 @@ def test_access_multiple_trips(ok_small_multiple_trips):
     route = Route(data, activities, vehicle_type=0)
 
     incl_depots = [Activity("D0"), *activities, Activity("D0")]
-    assert_equal([step.activity for step in route], incl_depots)
+    assert_equal([activity for activity in route], incl_depots)
 
 
 def test_route_time_warp_calculations(ok_small):
@@ -406,26 +406,26 @@ def test_route_schedule(ok_small, visits: list[int]):
     schedule = route.schedule()
     assert_equal(len(schedule), len(route))
 
-    for visit in schedule:
-        if visit.activity.is_depot():
-            data = ok_small.depot(visit.activity.idx)
+    for activity in schedule:
+        if activity.is_depot():
+            data = ok_small.depot(activity.idx)
         else:
-            data = ok_small.client(visit.activity.idx)
+            data = ok_small.client(activity.idx)
 
         service = data.service_duration
-        assert_equal(visit.service_duration, service)
+        assert_equal(activity.service_duration, service)
         assert_equal(
-            visit.service_duration,
-            visit.end_service - visit.start_service,
+            activity.service_duration,
+            activity.end_service - activity.start_service,
         )
 
-    service_duration = sum(visit.service_duration for visit in schedule)
+    service_duration = sum(activity.service_duration for activity in schedule)
     assert_equal(service_duration, route.service_duration())
 
-    wait_duration = sum(visit.wait_duration for visit in schedule)
+    wait_duration = sum(activity.wait_duration for activity in schedule)
     assert_equal(wait_duration, route.wait_duration())
 
-    time_warp = sum(visit.time_warp for visit in schedule)
+    time_warp = sum(activity.time_warp for activity in schedule)
     assert_equal(time_warp, route.time_warp())
 
 
@@ -441,7 +441,7 @@ def test_route_schedule_wait_duration():
     assert_equal(schedule[-2].wait_duration, 1_550)
     assert_equal(route.wait_duration(), 1_550)
 
-    wait_duration = sum(visit.wait_duration for visit in schedule)
+    wait_duration = sum(activity.wait_duration for activity in schedule)
     assert_equal(wait_duration, route.wait_duration())
 
 
@@ -556,11 +556,11 @@ def test_index_multiple_trips(ok_small_multiple_trips):
     """
     activities = [Activity(des) for des in ["C0", "D0", "C2"]]
     route = Route(ok_small_multiple_trips, activities, 0)
-    assert_equal(route[0].activity, Activity("D0"))  # start
-    assert_equal(route[-3].activity, Activity("D0"))  # reload
+    assert_equal(route[0], Activity("D0"))  # start
+    assert_equal(route[-3], Activity("D0"))  # reload
 
-    assert_equal(route[1].activity, Activity("C0"))
-    assert_equal(route[-2].activity, Activity("C2"))
+    assert_equal(route[1], Activity("C0"))
+    assert_equal(route[-2], Activity("C2"))
 
     with assert_raises(IndexError):
         route[5]
@@ -729,7 +729,7 @@ def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
     route = Route(ok_small_multiple_trips, activities, 0)
 
     # D0 -> C0 -> C1 -> D0 -> D0.
-    assert_equal([step.activity.idx for step in route], [0, 0, 1, 0, 0])
+    assert_equal([activity.idx for activity in route], [0, 0, 1, 0, 0])
 
 
 def test_route_release_time_after_vehicle_start_late():

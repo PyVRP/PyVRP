@@ -138,10 +138,10 @@ def test_perturb_switches_remove_insert(ok_small):
     # Test that the perturbed solution contains only C2.
     perturbed = sol.unload()
     clients = [
-        step.activity.idx
+        activity.idx
         for route in perturbed.routes()
-        for step in route
-        if step.activity.is_client()
+        for activity in route
+        if activity.is_client()
     ]
 
     assert_equal(perturbed.num_clients(), 1)

@@ -578,7 +578,7 @@ def test_read_solution_multiple_reload_depots():
     # Start and end depots are D0, but the reload happens at D1.
     assert_equal(route.start_depot(), 0)
     assert_equal(route.end_depot(), 0)
-    assert_equal(route[2].activity, Activity("D1"))
+    assert_equal(route[2], Activity("D1"))
 
 
 def test_2d_data_sections_are_correctly_casted_from_1d():
@@ -656,9 +656,7 @@ def test_read_hfvrp_solution():
     routes = sol.routes()
 
     def route2clients(route):
-        return [
-            step.activity.idx for step in route if step.activity.is_client()
-        ]
+        return [activity.idx for activity in route if activity.is_client()]
 
     assert_equal(route2clients(routes[1]), [58, 34, 98, 48, 78, 46, 108, 17])
     assert_equal(route2clients(routes[-1]), [4, 5, 2, 92, 41, 8])
