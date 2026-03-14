@@ -842,8 +842,7 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
 
     if (size() != 1 && route_[start]->isReloadDepot())  // first need to add the
     {                                                   // start depot's service
-        auto const [_, from] = route_[start]->activity();
-        auto const &depot = route_.data.depot(from);
+        auto const &depot = route_.data.depot(route_[start]->idx());
         segment = DurationSegment::merge(segment, {depot.serviceDuration});
     }
 
