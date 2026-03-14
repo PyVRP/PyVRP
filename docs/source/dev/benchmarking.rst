@@ -11,7 +11,7 @@ To find out about available options, run
 
 We use the following instances and configurations to benchmark PyVRP:
 
-* For the CVRP, we use `the X-instances of Uchoa <https://github.com/PyVRP/Instances/tree/main/CVRP>`_.
+* For the CVRP, we use `the X-instances of Uchoa <https://github.com/PyVRP/Instances/tree/main/CVRP#cvrp>`_.
   Each instance has :math:`n` clients; the runtimes are computed as :math:`2.4 n` seconds on a reference CPU with PassMark score 2183.
   Thus, an instance with 100 clients is ran for 240 seconds, assuming a CPU with PassMark score 2183.
   For this benchmark, the ``round`` rounding function should be used.
