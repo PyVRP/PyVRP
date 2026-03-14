@@ -93,15 +93,15 @@ def test_route_access_methods(ok_small):
 
 def test_access_multiple_trips(ok_small_multiple_trips):
     """
-    Tests that accessing the route's activities via activities() or iteration
-    works correctly for a multi-trip instance.
+    Tests that accessing the route's schedule via schedule() or iteration works
+    correctly for a multi-trip instance.
     """
     data = ok_small_multiple_trips
     activities = [Activity(des) for des in ["C0", "C1", "D0", "C2"]]
     route = Route(data, activities, vehicle_type=0)
 
     incl_depots = [Activity("D0"), *activities, Activity("D0")]
-    assert_equal(route.activities(), incl_depots)
+    assert_equal(route.schedule(), incl_depots)
     assert_equal([activity for activity in route], incl_depots)
 
 
@@ -407,26 +407,26 @@ def test_route_schedule(ok_small, visits: list[int]):
     schedule = route.schedule()
     assert_equal(len(schedule), len(route))
 
-    for visit in schedule:
-        if visit.activity.is_depot():
-            data = ok_small.depot(visit.activity.idx)
+    for activity in schedule:
+        if activity.is_depot():
+            data = ok_small.depot(activity.idx)
         else:
-            data = ok_small.client(visit.activity.idx)
+            data = ok_small.client(activity.idx)
 
         service = data.service_duration
-        assert_equal(visit.service_duration, service)
+        assert_equal(activity.service_duration, service)
         assert_equal(
-            visit.service_duration,
-            visit.end_service - visit.start_service,
+            activity.service_duration,
+            activity.end_service - activity.start_service,
         )
 
-    service_duration = sum(visit.service_duration for visit in schedule)
+    service_duration = sum(activity.service_duration for activity in schedule)
     assert_equal(service_duration, route.service_duration())
 
-    wait_duration = sum(visit.wait_duration for visit in schedule)
+    wait_duration = sum(activity.wait_duration for activity in schedule)
     assert_equal(wait_duration, route.wait_duration())
 
-    time_warp = sum(visit.time_warp for visit in schedule)
+    time_warp = sum(activity.time_warp for activity in schedule)
     assert_equal(time_warp, route.time_warp())
 
 
@@ -442,7 +442,7 @@ def test_route_schedule_wait_duration():
     assert_equal(schedule[-2].wait_duration, 1_550)
     assert_equal(route.wait_duration(), 1_550)
 
-    wait_duration = sum(visit.wait_duration for visit in schedule)
+    wait_duration = sum(activity.wait_duration for activity in schedule)
     assert_equal(wait_duration, route.wait_duration())
 
 
@@ -789,7 +789,7 @@ def test_raises_invalid_depot_or_client(ok_small_multiple_trips):
 
 def test_schedule_str(ok_small):
     """
-    Tests ScheduledVisit's __str__ implementation.
+    Tests ScheduledActivity's __str__ implementation.
     """
     route = Route(ok_small, [0, 1], 0)
 
@@ -809,4 +809,18 @@ def test_len(ok_small_multiple_trips):
     route = Route(data, [Activity("C0"), Activity("D0"), Activity("C1")], 0)
     assert_equal(len(route), 5)
     assert_equal(route.num_clients(), 2)
+    assert_equal(route.num_depots(), 3)
     assert_equal(route.num_trips(), 2)
+
+
+def test_schedule_trip_count(ok_small_multiple_trips):
+    """
+    Tests that the trip counter for scheduled activities starts at 0, and is
+    incremented at every subsequent (reload) depot.
+    """
+    data = ok_small_multiple_trips
+    route = Route(data, [Activity("C0"), Activity("D0")], 0)
+    assert_equal(route[0].trip, 0)  # start depot
+    assert_equal(route[1].trip, 0)  # client, so no increment
+    assert_equal(route[2].trip, 1)  # reload depot, increment
+    assert_equal(route[3].trip, 2)  # end depot, increment

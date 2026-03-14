@@ -69,8 +69,8 @@ class ProblemData
 public:
     /**
      * Location(
-     *     x: int,
-     *     y: int,
+     *     x: float,
+     *     y: float,
      *     *,
      *     name: str = "",
      * )

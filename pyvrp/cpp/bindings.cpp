@@ -683,30 +683,29 @@ PYBIND11_MODULE(_pyvrp, m)
                 return data;
             }));
 
-    py::class_<Route::ScheduledVisit>(
-        m, "ScheduledVisit", DOC(pyvrp, Route, ScheduledVisit))
-        .def_property_readonly("activity", &Route::ScheduledVisit::activity)
-        .def_property_readonly("trip", &Route::ScheduledVisit::trip)
+    py::class_<Route::ScheduledActivity, Activity>(
+        m, "ScheduledActivity", DOC(pyvrp, Route, ScheduledActivity))
+        .def_property_readonly("trip", &Route::ScheduledActivity::trip)
         .def_property_readonly("start_service",
-                               &Route::ScheduledVisit::startService)
+                               &Route::ScheduledActivity::startService)
         .def_property_readonly("end_service",
-                               &Route::ScheduledVisit::endService)
+                               &Route::ScheduledActivity::endService)
         .def_property_readonly("service_duration",
-                               &Route::ScheduledVisit::serviceDuration)
+                               &Route::ScheduledActivity::serviceDuration)
         .def_property_readonly("wait_duration",
-                               &Route::ScheduledVisit::waitDuration)
-        .def_property_readonly("time_warp", &Route::ScheduledVisit::timeWarp)
+                               &Route::ScheduledActivity::waitDuration)
+        .def_property_readonly("time_warp", &Route::ScheduledActivity::timeWarp)
         .def(py::pickle(
-            [](Route::ScheduledVisit const &visit) {  // __getstate__
-                return py::make_tuple(visit.activity(),
-                                      visit.trip(),
-                                      visit.startService(),
-                                      visit.endService(),
-                                      visit.waitDuration(),
-                                      visit.timeWarp());
+            [](Route::ScheduledActivity const &activity) {  // __getstate__
+                return py::make_tuple(Activity{activity.type, activity.idx},
+                                      activity.trip(),
+                                      activity.startService(),
+                                      activity.endService(),
+                                      activity.waitDuration(),
+                                      activity.timeWarp());
             },
             [](py::tuple t) {  // __setstate__
-                Route::ScheduledVisit visit(
+                Route::ScheduledActivity activity(
                     t[0].cast<Activity>(),          // activity
                     t[1].cast<size_t>(),            // trip
                     t[2].cast<pyvrp::Duration>(),   // start service
@@ -714,31 +713,32 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[4].cast<pyvrp::Duration>(),   // wait duration
                     t[5].cast<pyvrp::Duration>());  // time warp
 
-                return visit;
+                return activity;
             }))
         .def("__str__",
-             [](Route::ScheduledVisit const &visit)
+             [](Route::ScheduledActivity const &activity)
              {
                  std::stringstream stream;
-                 stream << visit;
+                 stream << activity;
                  return stream.str();
              });
 
     py::class_<Route>(m, "Route", DOC(pyvrp, Route))
-        .def(py::init<ProblemData const &, std::vector<Activity>, size_t>(),
+        .def(py::init<ProblemData const &,
+                      std::vector<Activity> const &,
+                      size_t>(),
              py::arg("data"),
              py::arg("activities"),
              py::arg("vehicle_type"))
-        .def(py::init<ProblemData const &, std::vector<size_t>, size_t>(),
+        .def(py::init<ProblemData const &,
+                      std::vector<size_t> const &,
+                      size_t>(),
              py::arg("data"),
              py::arg("visits"),
              py::arg("vehicle_type"))
         .def("num_clients", &Route::numClients, DOC(pyvrp, Route, numClients))
+        .def("num_depots", &Route::numDepots, DOC(pyvrp, Route, numDepots))
         .def("num_trips", &Route::numTrips, DOC(pyvrp, Route, numTrips))
-        .def("activities",
-             &Route::activities,
-             py::return_value_policy::reference_internal,
-             DOC(pyvrp, Route, activities))
         .def("fixed_vehicle_cost",
              &Route::fixedVehicleCost,
              DOC(pyvrp, Route, fixedVehicleCost))
@@ -796,7 +796,10 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("has_time_warp",
              &Route::hasTimeWarp,
              DOC(pyvrp, Route, hasTimeWarp))
-        .def("schedule", &Route::schedule, DOC(pyvrp, Route, schedule))
+        .def("schedule",
+             &Route::schedule,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Route, schedule))
         .def("__len__", &Route::size, DOC(pyvrp, Route, size))
         .def(
             "__iter__",
@@ -810,12 +813,13 @@ PYBIND11_MODULE(_pyvrp, m)
                 // conditional so we support negative offsets from the end.
                 return route[idx < 0 ? route.size() + idx : idx];
             },
-            py::arg("idx"))
+            py::arg("idx"),
+            py::return_value_policy::reference_internal)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](Route const &route) {  // __getstate__
                 // Returns a tuple that completely encodes the route's state.
-                return py::make_tuple(route.activities(),
+                return py::make_tuple(route.schedule(),
                                       route.distance(),
                                       route.distanceCost(),
                                       route.excessDistance(),
@@ -832,17 +836,13 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.releaseTime(),
                                       route.slack(),
                                       route.prizes(),
-                                      route.vehicleType(),
-                                      route.startDepot(),
-                                      route.endDepot(),
-                                      route.schedule());
+                                      route.vehicleType());
             },
             [](py::tuple t) {  // __setstate__
-                using Activities = std::vector<Activity>;
-                using Schedule = std::vector<Route::ScheduledVisit>;
+                using Schedule = std::vector<Route::ScheduledActivity>;
 
                 Route route(
-                    t[0].cast<Activities>(),                // activities
+                    t[0].cast<Schedule>(),                  // schedule
                     t[1].cast<pyvrp::Distance>(),           // distance
                     t[2].cast<pyvrp::Cost>(),               // distance cost
                     t[3].cast<pyvrp::Distance>(),           // excess distance
@@ -859,10 +859,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[14].cast<pyvrp::Duration>(),          // release time
                     t[15].cast<pyvrp::Duration>(),          // slack
                     t[16].cast<pyvrp::Cost>(),              // prizes
-                    t[17].cast<size_t>(),                   // vehicle type
-                    t[18].cast<size_t>(),                   // start depot
-                    t[19].cast<size_t>(),                   // end depot
-                    t[20].cast<Schedule>());                // schedule
+                    t[17].cast<size_t>());                  // vehicle type
 
                 return route;
             }))

@@ -56,7 +56,7 @@ bool operator==(pyvrp::Route const &pyvrp, pyvrp::search::Route const &search)
         return false;
 
     size_t idx = 0;
-    for (auto const &activity : pyvrp.activities())
+    for (auto const &activity : pyvrp)
         if (search[idx++]->activity() != activity)
             return false;
 
@@ -107,7 +107,7 @@ void Solution::load(pyvrp::Solution const &solution)
         route.reserve(solRoute.size());
         for (size_t idx = 1; idx != solRoute.size() - 1; ++idx)
         {
-            auto const activity = solRoute[idx];
+            auto const &activity = solRoute[idx];
             if (activity.isDepot())
             {
                 Route::Node depot = activity;
