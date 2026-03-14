@@ -488,16 +488,15 @@ std::ostream &operator<<(std::ostream &out,
 
 std::ostream &operator<<(std::ostream &out, Route const &route)
 {
-    auto const &schedule = route.schedule();
-    for (size_t idx = 1; idx != schedule.size() - 1; ++idx)
+    for (size_t idx = 1; idx != route.size() - 1; ++idx)
     {
-        auto const activity = schedule[idx].activity();
+        auto const activity = route[idx].activity();
         if (activity.isDepot())
             out << '|';
         else
             out << activity;
 
-        if (idx < schedule.size() - 2)  // then we'll insert more after this
+        if (idx < route.size() - 2)  // then we'll insert more after this
             out << ' ';
     }
 
