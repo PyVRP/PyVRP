@@ -56,7 +56,7 @@ bool operator==(pyvrp::Route const &pyvrp, pyvrp::search::Route const &search)
         return false;
 
     size_t idx = 0;
-    for (auto const &activity : pyvrp.schedule())
+    for (auto const &activity : pyvrp)
         if (search[idx++]->activity() != activity)
             return false;
 
