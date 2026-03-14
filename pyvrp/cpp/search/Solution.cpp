@@ -20,12 +20,10 @@ Cost insertCost(pyvrp::search::Route::Node *U,
                 pyvrp::ProblemData const &data,
                 pyvrp::CostEvaluator const &costEvaluator)
 {
-    assert(V->route() && !U->isDepot());
-
-    auto const [_, uClient] = U->activity();
+    assert(V->route() && U->isClient());
 
     auto *route = V->route();
-    auto const &client = data.client(uClient);
+    auto const &client = data.client(U->idx());
 
     Cost deltaCost
         = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
@@ -33,9 +31,9 @@ Cost insertCost(pyvrp::search::Route::Node *U,
     costEvaluator.deltaCost<true>(
         deltaCost,
         pyvrp::search::Route::Proposal(
-            route->before(V->idx()),
-            pyvrp::search::ClientSegment(data, uClient),
-            route->after(V->idx() + 1)));
+            route->before(V->pos()),
+            pyvrp::search::ClientSegment(data, U->idx()),
+            route->after(V->pos() + 1)));
 
     return deltaCost;
 }
@@ -173,8 +171,7 @@ bool Solution::insert(Route::Node *U,
 
     // First attempt a neighbourhood search to place U into routes that are
     // already in use.
-    auto const [_, uClient] = U->activity();
-    for (auto const vClient : searchSpace.neighboursOf(uClient))
+    for (auto const vClient : searchSpace.neighboursOf(U->idx()))
     {
         auto *V = &nodes[vClient];
 
@@ -213,7 +210,7 @@ bool Solution::insert(Route::Node *U,
     if (required || bestCost < 0)
     {
         auto *route = UAfter->route();
-        route->insert(UAfter->idx() + 1, U);
+        route->insert(UAfter->pos() + 1, U);
         return true;
     }
 

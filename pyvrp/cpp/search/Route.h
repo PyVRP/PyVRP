@@ -140,10 +140,11 @@ public:
     {
         friend class Route;
 
-        Activity activity_;
-        size_t idx_;    // Position in the route
+        size_t idx_;    // Index of the activity corresponding to type.
+        size_t pos_;    // Position in the route.
         size_t trip_;   // Trip index.
         Route *route_;  // Indicates membership of a route, if any
+        Activity::ActivityType type_;
 
     public:
         Node(Activity::ActivityType type, size_t idx);
@@ -155,10 +156,20 @@ public:
         [[nodiscard]] inline Activity activity() const;
 
         /**
+         * Index of the activity modelled with this node.
+         */
+        [[nodiscard]] inline size_t idx() const;
+
+        /**
+         * Type of activity modelled with this node.
+         */
+        [[nodiscard]] inline Activity::ActivityType type() const;
+
+        /**
          * Returns this node's position in a route. This value is ``0`` when
          * the node is *not* in a route.
          */
-        [[nodiscard]] inline size_t idx() const;
+        [[nodiscard]] inline size_t pos() const;
 
         /**
          * Returns this node's assigned trip number.  This value is ``0`` when
@@ -198,10 +209,10 @@ public:
         [[nodiscard]] inline bool isReloadDepot() const;
 
         /**
-         * Assigns the node to the given route, at the given index, in the
+         * Assigns the node to the given route, at the given position, in the
          * given trip.
          */
-        void assign(Route *route, size_t idx, size_t trip);
+        void assign(Route *route, size_t pos, size_t trip);
 
         /**
          * Removes the node from its assigned route, if any.
@@ -610,13 +621,13 @@ public:
 inline Route::Node *p(Route::Node *node)
 {
     auto &route = *node->route();
-    return route[node->idx() - 1];
+    return route[node->pos() - 1];
 }
 
 inline Route::Node const *p(Route::Node const *node)
 {
     auto const &route = *node->route();
-    return route[node->idx() - 1];
+    return route[node->pos() - 1];
 }
 
 /**
@@ -625,13 +636,13 @@ inline Route::Node const *p(Route::Node const *node)
 inline Route::Node *n(Route::Node *node)
 {
     auto &route = *node->route();
-    return route[node->idx() + 1];
+    return route[node->pos() + 1];
 }
 
 inline Route::Node const *n(Route::Node const *node)
 {
     auto const &route = *node->route();
-    return route[node->idx() + 1];
+    return route[node->pos() + 1];
 }
 
 SegmentProxy::SegmentProxy(Activity activity, size_t location)
@@ -643,17 +654,27 @@ Activity SegmentProxy::activity() const { return activity_; }
 
 size_t SegmentProxy::location() const { return location_; }
 
-Activity Route::Node::activity() const { return activity_; }
+Activity Route::Node::activity() const { return {type_, idx_}; }
 
 size_t Route::Node::idx() const { return idx_; }
+
+Activity::ActivityType Route::Node::type() const { return type_; }
+
+size_t Route::Node::pos() const { return pos_; }
 
 size_t Route::Node::trip() const { return trip_; }
 
 Route *Route::Node::route() const { return route_; }
 
-bool Route::Node::isClient() const { return activity_.isClient(); }
+bool Route::Node::isClient() const
+{
+    return type_ == Activity::ActivityType::CLIENT;
+}
 
-bool Route::Node::isDepot() const { return activity_.isDepot(); }
+bool Route::Node::isDepot() const
+{
+    return type_ == Activity::ActivityType::DEPOT;
+}
 
 bool Route::Node::isStartDepot() const
 {

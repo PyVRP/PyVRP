@@ -14,20 +14,18 @@ std::pair<pyvrp::Cost, bool> ReplaceOptional::evaluate(
     if (U->route() || !V->route() || V->isDepot())
         return std::make_pair(0, false);
 
-    auto const [uType, uClient] = U->activity();
-    auto const [vType, vClient] = V->activity();
-
-    auto const &uData = data.client(uClient);
-    auto const &vData = data.client(vClient);
+    assert(U->isClient() && V->isClient());
+    auto const &uData = data.client(U->idx());
+    auto const &vData = data.client(V->idx());
     if (vData.required || uData.group || vData.group)
         return std::make_pair(0, false);
 
     auto *route = V->route();
     Cost deltaCost = vData.prize - uData.prize;
     costEvaluator.deltaCost(deltaCost,
-                            Route::Proposal(route->before(V->idx() - 1),
-                                            ClientSegment(data, uClient),
-                                            route->after(V->idx() + 1)));
+                            Route::Proposal(route->before(V->pos() - 1),
+                                            ClientSegment(data, U->idx()),
+                                            route->after(V->pos() + 1)));
 
     return std::make_pair(deltaCost, deltaCost < 0);
 }
@@ -38,7 +36,7 @@ void ReplaceOptional::apply(Route::Node *U, Route::Node *V) const
     stats_.numApplications++;
 
     auto *route = V->route();
-    auto const idx = V->idx();
+    auto const idx = V->pos();
     route->remove(idx);
     route->insert(idx, U);
 }

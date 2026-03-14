@@ -18,8 +18,8 @@ void RelocateWithDepot::evalDepotBefore(Cost fixedCost,
 
     if (uRoute != vRoute)
     {
-        auto const uProposal = Route::Proposal(uRoute->before(U->idx() - 1),
-                                               uRoute->after(U->idx() + 1));
+        auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
+                                               uRoute->after(U->pos() + 1));
 
         for (auto const depot : vehType.reloadDepots)
         {
@@ -27,10 +27,10 @@ void RelocateWithDepot::evalDepotBefore(Cost fixedCost,
             costEvaluator.deltaCost(
                 deltaCost,
                 uProposal,
-                Route::Proposal(vRoute->before(V->idx()),
+                Route::Proposal(vRoute->before(V->pos()),
                                 DepotSegment(data, depot),
-                                uRoute->at(U->idx()),
-                                vRoute->after(V->idx() + 1)));
+                                uRoute->at(U->pos()),
+                                vRoute->after(V->pos() + 1)));
 
             if (deltaCost < move_.cost)
                 move_ = {deltaCost, MoveType::DEPOT_U, depot};
@@ -42,22 +42,22 @@ void RelocateWithDepot::evalDepotBefore(Cost fixedCost,
         for (auto const depot : vehType.reloadDepots)
         {
             auto deltaCost = fixedCost;
-            if (U->idx() < V->idx())
+            if (U->pos() < V->pos())
                 costEvaluator.deltaCost(
                     deltaCost,
-                    Route::Proposal(route->before(U->idx() - 1),
-                                    route->between(U->idx() + 1, V->idx()),
+                    Route::Proposal(route->before(U->pos() - 1),
+                                    route->between(U->pos() + 1, V->pos()),
                                     DepotSegment(data, depot),
-                                    route->at(U->idx()),
-                                    route->after(V->idx() + 1)));
+                                    route->at(U->pos()),
+                                    route->after(V->pos() + 1)));
             else
                 costEvaluator.deltaCost(
                     deltaCost,
-                    Route::Proposal(route->before(V->idx()),
+                    Route::Proposal(route->before(V->pos()),
                                     DepotSegment(data, depot),
-                                    route->at(U->idx()),
-                                    route->between(V->idx() + 1, U->idx() - 1),
-                                    route->after(U->idx() + 1)));
+                                    route->at(U->pos()),
+                                    route->between(V->pos() + 1, U->pos() - 1),
+                                    route->after(U->pos() + 1)));
 
             if (deltaCost < move_.cost)
                 move_ = {deltaCost, MoveType::DEPOT_U, depot};
@@ -76,8 +76,8 @@ void RelocateWithDepot::evalDepotAfter(Cost fixedCost,
 
     if (uRoute != vRoute)
     {
-        auto const uProposal = Route::Proposal(uRoute->before(U->idx() - 1),
-                                               uRoute->after(U->idx() + 1));
+        auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
+                                               uRoute->after(U->pos() + 1));
 
         for (auto const depot : vehType.reloadDepots)
         {
@@ -85,10 +85,10 @@ void RelocateWithDepot::evalDepotAfter(Cost fixedCost,
             costEvaluator.deltaCost(
                 deltaCost,
                 uProposal,
-                Route::Proposal(vRoute->before(V->idx()),
-                                uRoute->at(U->idx()),
+                Route::Proposal(vRoute->before(V->pos()),
+                                uRoute->at(U->pos()),
                                 DepotSegment(data, depot),
-                                vRoute->after(V->idx() + 1)));
+                                vRoute->after(V->pos() + 1)));
 
             if (deltaCost < move_.cost)
                 move_ = {deltaCost, MoveType::U_DEPOT, depot};
@@ -100,22 +100,22 @@ void RelocateWithDepot::evalDepotAfter(Cost fixedCost,
         for (auto const depot : vehType.reloadDepots)
         {
             Cost deltaCost = fixedCost;
-            if (U->idx() < V->idx())
+            if (U->pos() < V->pos())
                 costEvaluator.deltaCost(
                     deltaCost,
-                    Route::Proposal(route->before(U->idx() - 1),
-                                    route->between(U->idx() + 1, V->idx()),
-                                    route->at(U->idx()),
+                    Route::Proposal(route->before(U->pos() - 1),
+                                    route->between(U->pos() + 1, V->pos()),
+                                    route->at(U->pos()),
                                     DepotSegment(data, depot),
-                                    route->after(V->idx() + 1)));
+                                    route->after(V->pos() + 1)));
             else
                 costEvaluator.deltaCost(
                     deltaCost,
-                    Route::Proposal(route->before(V->idx()),
-                                    route->at(U->idx()),
+                    Route::Proposal(route->before(V->pos()),
+                                    route->at(U->pos()),
                                     DepotSegment(data, depot),
-                                    route->between(V->idx() + 1, U->idx() - 1),
-                                    route->after(U->idx() + 1)));
+                                    route->between(V->pos() + 1, U->pos() - 1),
+                                    route->after(U->pos() + 1)));
 
             if (deltaCost < move_.cost)
                 move_ = {deltaCost, MoveType::U_DEPOT, depot};
@@ -169,15 +169,15 @@ void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
     stats_.numApplications++;
 
     auto *uRoute = U->route();
-    uRoute->remove(U->idx());
+    uRoute->remove(U->pos());
 
     auto *vRoute = V->route();
     Route::Node depot = {Activity::ActivityType::DEPOT, move_.depot};
 
     if (move_.type == MoveType::DEPOT_U)
     {
-        vRoute->insert(V->idx() + 1, U);
-        vRoute->insert(V->idx() + 1, &depot);
+        vRoute->insert(V->pos() + 1, U);
+        vRoute->insert(V->pos() + 1, &depot);
     }
 
     // We need to be careful to insert the depot last, because doing so could
@@ -185,8 +185,8 @@ void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
     // layout, which could invalidate V if V is a depot).
     if (move_.type == MoveType::U_DEPOT)
     {
-        vRoute->insert(V->idx() + 1, U);
-        vRoute->insert(V->idx() + 2, &depot);
+        vRoute->insert(V->pos() + 1, U);
+        vRoute->insert(V->pos() + 2, &depot);
     }
 }
 

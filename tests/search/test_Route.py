@@ -24,19 +24,19 @@ def test_node_init():
     # Activity-based.
     from_activity = Node(Activity("C1"))
     assert_equal(from_activity.activity, Activity("C1"))
-    assert_equal(from_activity.idx, 0)
+    assert_equal(from_activity.pos, 0)
     assert_(from_activity.route is None)
 
     # Activity-type based.
     direct_construction = Node(ActivityType.CLIENT, 1)
     assert_equal(direct_construction.activity, from_activity.activity)
-    assert_equal(direct_construction.idx, 0)
+    assert_equal(direct_construction.pos, 0)
     assert_(direct_construction.route is None)
 
     # Description-based.
     from_description = Node("C1")
     assert_equal(from_description.activity, from_activity.activity)
-    assert_equal(from_description.idx, 0)
+    assert_equal(from_description.pos, 0)
     assert_(from_description.route is None)
 
 
@@ -56,28 +56,27 @@ def test_route_init(ok_small, vehicle_type: int):
     assert_equal(route.vehicle_type, vehicle_type)
 
 
-def test_insert_and_remove_update_node_idx_and_route_properties(ok_small):
+def test_insert_and_remove_update_node_pos_and_route_properties(ok_small):
     """
-    Tests that after a node is inserted into a route, its index and route
-    properties are updated to reflect its new position in the route. After
-    the node is removed from the route, these properties revert to their
-    defaults.
+    Tests that after a node is inserted into a route, its ``pos`` and ``route``
+    properties are updated to reflect its new position in the route. After the
+    node is removed from the route, these properties revert to their defaults.
     """
     route = Route(ok_small, vehicle_type=0)
 
     # After construction, the node is not in a route yet.
     node = Node("C0")
-    assert_equal(node.idx, 0)
+    assert_equal(node.pos, 0)
     assert_(node.route is None)
 
-    # Add to the route, test the route and idx properties are updated.
+    # Add to the route, test the route and pos properties are updated.
     route.append(node)
-    assert_equal(node.idx, 1)
+    assert_equal(node.pos, 1)
     assert_(node.route is route)
 
     # Remove and test the node reverts to its initial state.
     del route[1]
-    assert_equal(node.idx, 0)
+    assert_equal(node.pos, 0)
     assert_(node.route is None)
 
 
