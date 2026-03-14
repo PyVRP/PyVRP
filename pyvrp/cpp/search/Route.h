@@ -95,7 +95,7 @@ public:
         std::tuple<Segments...> segments_;
 
         /**
-         * Returns the number of depots and clients in the proposed route.
+         * Returns the number of activities in the proposed route.
          */
         size_t size() const;
 
@@ -503,7 +503,7 @@ public:
     [[nodiscard]] inline bool empty() const;
 
     /**
-     * Number of clients and depots on this route.
+     * Number of activities on this route.
      */
     [[nodiscard]] inline size_t size() const;
 

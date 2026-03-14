@@ -49,7 +49,6 @@ bool operator==(pyvrp::Route const &pyvrp, pyvrp::search::Route const &search)
                               && pyvrp.duration() == search.duration()
                               && pyvrp.timeWarp() == search.timeWarp()
                               && pyvrp.vehicleType() == search.vehicleType()
-                              && pyvrp.numTrips() == search.numTrips()
                               && pyvrp.size() == search.size();
     // clang-format on
 
