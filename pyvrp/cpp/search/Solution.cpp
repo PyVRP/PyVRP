@@ -40,8 +40,8 @@ Cost insertCost(pyvrp::search::Route::Node *U,
     return deltaCost;
 }
 
-// Comparison operator to check if pyvrp::Route and search::Route are equivalent
-// - if so, the pyvrp::Route does not need to be loaded.
+// Comparison operator to determine if pyvrp::Route and search::Route are
+// equivalent - if so, the pyvrp::Route does not need to be loaded.
 bool operator==(pyvrp::Route const &pyvrp, pyvrp::search::Route const &search)
 {
     // clang-format off
