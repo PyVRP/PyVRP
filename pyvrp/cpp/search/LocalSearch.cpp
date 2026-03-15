@@ -124,7 +124,7 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
         {
             PYVRP_DEBUG("pyvrp.search",
                         "Applying operator to U={} (delta={}).",
-                        U->activity().idx,
+                        U->idx(),
                         deltaCost);
 
             auto *rU = U->route();
@@ -169,8 +169,8 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
         {
             PYVRP_DEBUG("pyvrp.search",
                         "Applying operator to U={} and V={} (delta={}).",
-                        U->activity().idx,
-                        V->activity().idx,
+                        U->idx(),
+                        V->idx(),
                         deltaCost);
 
             auto *rU = U->route();
@@ -266,7 +266,7 @@ void LocalSearch::ensureStructuralFeasibility(
             {
                 searchSpace_.markPromising(&node);
                 auto *route = node.route();
-                route->remove(node.idx());
+                route->remove(node.pos());
                 update(route, route);
                 groupCount[idx]--;
             }

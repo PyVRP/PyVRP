@@ -70,23 +70,14 @@ void SearchSpace::markPromising(Route::Node const *node)
 {
     assert(node->route());
 
-    if (!node->isDepot())
-    {
-        auto const [_, client] = node->activity();
-        markPromising(client);
-    }
+    if (node->isClient())
+        markPromising(node->idx());
 
-    if (!node->isStartDepot() && !p(node)->isDepot())
-    {
-        auto const [_, client] = p(node)->activity();
-        markPromising(client);
-    }
+    if (!node->isStartDepot() && p(node)->isClient())
+        markPromising(p(node)->idx());
 
-    if (!node->isEndDepot() && !n(node)->isDepot())
-    {
-        auto const [_, client] = n(node)->activity();
-        markPromising(client);
-    }
+    if (!node->isEndDepot() && n(node)->isClient())
+        markPromising(n(node)->idx());
 }
 
 void SearchSpace::markAllPromising() { promising_.set(); }

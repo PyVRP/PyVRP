@@ -32,6 +32,7 @@ def test_replacing_optional_client():
     )
 
     route = make_search_route(data, ["C0"])
+    assert_equal(str(route), "C0")
 
     op = ReplaceOptional(data)
     cost_eval = CostEvaluator([], 0, 0)
@@ -42,6 +43,11 @@ def test_replacing_optional_client():
     delta, should_apply = op.evaluate(client2, route[1], cost_eval)
     assert_equal(delta, -4)  # +5 prize, -1 prize.
     assert_(should_apply)
+
+    # Apply the move - we should now have only C1 in the route, and no longer
+    # C0.
+    op.apply(client2, route[1])
+    assert_equal(str(route), "C1")
 
 
 def test_skips_replacing_required_client():

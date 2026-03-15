@@ -14,28 +14,25 @@ namespace pyvrp::search
  */
 class DepotSegment
 {
-    pyvrp::ProblemData const &data_;
-    size_t depot_;
+    ProblemData::Depot const &depot_;
+    size_t const idx_;
 
 public:
     DepotSegment(pyvrp::ProblemData const &data, size_t depot)
-        : data_(data), depot_(depot)
+        : depot_(data.depot(depot)), idx_(depot)
     {
-        assert(depot < data.numDepots());  // must be an actual depot
     }
 
     pyvrp::search::Route const *route() const { return nullptr; }
 
     SegmentProxy front() const
     {
-        return {{Activity::ActivityType::DEPOT, depot_},
-                data_.depot(depot_).location};
+        return {{Activity::ActivityType::DEPOT, idx_}, depot_.location};
     }
 
     SegmentProxy back() const
     {
-        return {{Activity::ActivityType::DEPOT, depot_},
-                data_.depot(depot_).location};
+        return {{Activity::ActivityType::DEPOT, idx_}, depot_.location};
     }
 
     size_t size() const { return 1; }
@@ -50,8 +47,7 @@ public:
 
     pyvrp::DurationSegment duration([[maybe_unused]] size_t profile) const
     {
-        auto const &depot = data_.depot(depot_);
-        return {depot, 0};  // service is handled while evaluating proposal
+        return {depot_, 0};  // service is handled while evaluating proposal
     }
 
     pyvrp::LoadSegment load([[maybe_unused]] size_t dimension) const

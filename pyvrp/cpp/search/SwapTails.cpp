@@ -56,25 +56,25 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
     if (!n(U)->isEndDepot() && !n(V)->isEndDepot())
     {
         auto const uProposal
-            = Route::Proposal(uRoute->before(U->idx()),
-                              vRoute->between(V->idx() + 1, vRoute->size() - 2),
+            = Route::Proposal(uRoute->before(U->pos()),
+                              vRoute->between(V->pos() + 1, vRoute->size() - 2),
                               uRoute->at(uRoute->size() - 1));
 
         auto const vProposal
-            = Route::Proposal(vRoute->before(V->idx()),
-                              uRoute->between(U->idx() + 1, uRoute->size() - 2),
+            = Route::Proposal(vRoute->before(V->pos()),
+                              uRoute->between(U->pos() + 1, uRoute->size() - 2),
                               vRoute->at(vRoute->size() - 1));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
     else if (!n(U)->isEndDepot() && n(V)->isEndDepot())
     {
-        auto const uProposal = Route::Proposal(uRoute->before(U->idx()),
+        auto const uProposal = Route::Proposal(uRoute->before(U->pos()),
                                                uRoute->at(uRoute->size() - 1));
 
         auto const vProposal
-            = Route::Proposal(vRoute->before(V->idx()),
-                              uRoute->between(U->idx() + 1, uRoute->size() - 2),
+            = Route::Proposal(vRoute->before(V->pos()),
+                              uRoute->between(U->pos() + 1, uRoute->size() - 2),
                               vRoute->at(vRoute->size() - 1));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
@@ -82,11 +82,11 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
     else if (n(U)->isEndDepot() && !n(V)->isEndDepot())
     {
         auto const uProposal
-            = Route::Proposal(uRoute->before(U->idx()),
-                              vRoute->between(V->idx() + 1, vRoute->size() - 2),
+            = Route::Proposal(uRoute->before(U->pos()),
+                              vRoute->between(V->pos() + 1, vRoute->size() - 2),
                               uRoute->at(uRoute->size() - 1));
 
-        auto const vProposal = Route::Proposal(vRoute->before(V->idx()),
+        auto const vProposal = Route::Proposal(vRoute->before(V->pos()),
                                                vRoute->at(vRoute->size() - 1));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
@@ -101,21 +101,21 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
     auto *nU = n(U);
     auto *nV = n(V);
 
-    auto insertIdx = U->idx() + 1;
+    auto insertIdx = U->pos() + 1;
     while (!nV->isEndDepot())
     {
         auto *node = nV;
         nV = n(nV);
-        V->route()->remove(node->idx());
+        V->route()->remove(node->pos());
         U->route()->insert(insertIdx++, node);
     }
 
-    insertIdx = V->idx() + 1;
+    insertIdx = V->pos() + 1;
     while (!nU->isEndDepot())
     {
         auto *node = nU;
         nU = n(nU);
-        U->route()->remove(node->idx());
+        U->route()->remove(node->pos());
         V->route()->insert(insertIdx++, node);
     }
 }

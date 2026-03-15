@@ -141,7 +141,7 @@ public:
         friend class Route;
 
         Activity activity_;
-        size_t idx_;    // Position in the route
+        size_t pos_;    // Position in the route.
         size_t trip_;   // Trip index.
         Route *route_;  // Indicates membership of a route, if any
 
@@ -155,10 +155,20 @@ public:
         [[nodiscard]] inline Activity activity() const;
 
         /**
+         * Index of the activity modelled with this node.
+         */
+        [[nodiscard]] inline size_t idx() const;
+
+        /**
+         * Type of activity modelled with this node.
+         */
+        [[nodiscard]] inline Activity::ActivityType type() const;
+
+        /**
          * Returns this node's position in a route. This value is ``0`` when
          * the node is *not* in a route.
          */
-        [[nodiscard]] inline size_t idx() const;
+        [[nodiscard]] inline size_t pos() const;
 
         /**
          * Returns this node's assigned trip number.  This value is ``0`` when
@@ -198,10 +208,10 @@ public:
         [[nodiscard]] inline bool isReloadDepot() const;
 
         /**
-         * Assigns the node to the given route, at the given index, in the
+         * Assigns the node to the given route, at the given position, in the
          * given trip.
          */
-        void assign(Route *route, size_t idx, size_t trip);
+        void assign(Route *route, size_t pos, size_t trip);
 
         /**
          * Removes the node from its assigned route, if any.
@@ -610,13 +620,13 @@ public:
 inline Route::Node *p(Route::Node *node)
 {
     auto &route = *node->route();
-    return route[node->idx() - 1];
+    return route[node->pos() - 1];
 }
 
 inline Route::Node const *p(Route::Node const *node)
 {
     auto const &route = *node->route();
-    return route[node->idx() - 1];
+    return route[node->pos() - 1];
 }
 
 /**
@@ -625,13 +635,13 @@ inline Route::Node const *p(Route::Node const *node)
 inline Route::Node *n(Route::Node *node)
 {
     auto &route = *node->route();
-    return route[node->idx() + 1];
+    return route[node->pos() + 1];
 }
 
 inline Route::Node const *n(Route::Node const *node)
 {
     auto const &route = *node->route();
-    return route[node->idx() + 1];
+    return route[node->pos() + 1];
 }
 
 SegmentProxy::SegmentProxy(Activity activity, size_t location)
@@ -645,7 +655,11 @@ size_t SegmentProxy::location() const { return location_; }
 
 Activity Route::Node::activity() const { return activity_; }
 
-size_t Route::Node::idx() const { return idx_; }
+size_t Route::Node::idx() const { return activity_.idx; }
+
+Activity::ActivityType Route::Node::type() const { return activity_.type; }
+
+size_t Route::Node::pos() const { return pos_; }
 
 size_t Route::Node::trip() const { return trip_; }
 
@@ -828,8 +842,7 @@ Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
 
     if (size() != 1 && route_[start]->isReloadDepot())  // first need to add the
     {                                                   // start depot's service
-        auto const [_, from] = route_[start]->activity();
-        auto const &depot = route_.data.depot(from);
+        auto const &depot = route_.data.depot(route_[start]->idx());
         segment = DurationSegment::merge(segment, {depot.serviceDuration});
     }
 

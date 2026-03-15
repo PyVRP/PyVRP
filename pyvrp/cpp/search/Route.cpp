@@ -11,20 +11,20 @@ Route::Node::Node(Activity::ActivityType type, size_t idx)
 }
 
 Route::Node::Node(Activity activity)
-    : activity_(activity), idx_(0), trip_(0), route_(nullptr)
+    : activity_(activity), pos_(0), trip_(0), route_(nullptr)
 {
 }
 
-void Route::Node::assign(Route *route, size_t idx, size_t trip)
+void Route::Node::assign(Route *route, size_t pos, size_t trip)
 {
-    idx_ = idx;
+    pos_ = pos;
     trip_ = trip;
     route_ = route;
 }
 
 void Route::Node::unassign()
 {
-    idx_ = 0;
+    pos_ = 0;
     trip_ = 0;
     route_ = nullptr;
 }
@@ -98,7 +98,7 @@ void Route::insert(size_t idx, Node *node)
         {                                          // must update references
             depots_.reserve(depots_.size() + 1);
             for (auto &depot : depots_)
-                nodes[depot.idx()] = &depot;
+                nodes[depot.pos()] = &depot;
         }
 
         node = &depots_.emplace_back(node->activity());
@@ -112,7 +112,7 @@ void Route::insert(size_t idx, Node *node)
 
     for (size_t after = idx; after != nodes.size(); ++after)
     {
-        nodes[after]->idx_ = after;
+        nodes[after]->pos_ = after;
         if (isDepot)  // then we need to bump each following trip index
             nodes[after]->trip_++;
     }
@@ -133,7 +133,7 @@ void Route::remove(size_t idx)
         auto const depotIdx = std::distance(depots_.data(), nodes[idx]);
         auto it = depots_.erase(depots_.begin() + depotIdx);
         for (; it != depots_.end(); ++it)
-            nodes[it->idx()] = &*it;
+            nodes[it->pos()] = &*it;
     }
     else
         // We do not own this node, so we only unassign it.
@@ -142,7 +142,7 @@ void Route::remove(size_t idx)
     nodes.erase(nodes.begin() + idx);  // remove dangling pointer
     for (auto after = idx; after != nodes.size(); ++after)
     {
-        nodes[after]->idx_ = after;
+        nodes[after]->pos_ = after;
         if (isDepot)  // then we need to decrease each following trip index
             nodes[after]->trip_--;
     }
@@ -158,13 +158,13 @@ void Route::swap(Node *first, Node *second)
 
     // TODO specialise std::swap for Node
     if (first->route_)
-        first->route_->nodes[first->idx_] = second;
+        first->route_->nodes[first->pos_] = second;
 
     if (second->route_)
-        second->route_->nodes[second->idx_] = first;
+        second->route_->nodes[second->pos_] = first;
 
     std::swap(first->route_, second->route_);
-    std::swap(first->idx_, second->idx_);
+    std::swap(first->pos_, second->pos_);
     std::swap(first->trip_, second->trip_);
 
 #ifndef NDEBUG
@@ -182,12 +182,11 @@ void Route::update()
     for (auto const *node : nodes)
     {
         assert(node->isDepot() || node->isClient());
-        auto const [_, idx] = node->activity();
 
         if (node->isDepot())
-            locations.emplace_back(data.depot(idx).location);
+            locations.emplace_back(data.depot(node->idx()).location);
         else
-            locations.emplace_back(data.client(idx).location);
+            locations.emplace_back(data.client(node->idx()).location);
     }
 
     // Distance.
@@ -217,15 +216,9 @@ void Route::update()
         auto const *node = nodes[idx];
 
         if (!node->isReloadDepot())
-        {
-            auto const [_, client] = node->activity();
-            durAt[idx] = {data.client(client)};
-        }
+            durAt[idx] = {data.client(node->idx())};
         else
-        {
-            auto const [_, depot] = node->activity();
-            durAt[idx] = {data.depot(depot), 0};
-        }
+            durAt[idx] = {data.depot(node->idx()), 0};
     }
 
     auto const &durations = data.durationMatrix(profile());
@@ -243,8 +236,7 @@ void Route::update()
         {
             // Then we need to first account for depot service before we merge
             // with the idx segment.
-            auto const [_, depotIdx] = nodes[prev]->activity();
-            auto const &depot = data.depot(depotIdx);
+            auto const &depot = data.depot(nodes[prev]->idx());
             before = DurationSegment::merge(before, {depot.serviceDuration});
         }
 
@@ -267,8 +259,7 @@ void Route::update()
             // at idx after already travelling to next, but that's OK since
             // we're essentially using the trick of adding service to the
             // outgoing edge.
-            auto const [_, depotIdx] = nodes[idx]->activity();
-            auto const &depot = data.depot(depotIdx);
+            auto const &depot = data.depot(nodes[idx]->idx());
             after = DurationSegment::merge({depot.serviceDuration}, after);
         }
 
@@ -286,12 +277,10 @@ void Route::update()
         loadAt[dim][nodes.size() - 1] = {};
 
         for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-        {
-            auto const [_, activityIdx] = nodes[idx]->activity();
-            loadAt[dim][idx] = nodes[idx]->isReloadDepot()
-                                   ? LoadSegment{}
-                                   : LoadSegment{data.client(activityIdx), dim};
-        }
+            loadAt[dim][idx]
+                = nodes[idx]->isReloadDepot()
+                      ? LoadSegment{}
+                      : LoadSegment{data.client(nodes[idx]->idx()), dim};
 
         loadBefore[dim].resize(nodes.size());
         loadBefore[dim][0] = loadAt[dim][0];
@@ -310,7 +299,7 @@ void Route::update()
         excessLoad_[dim]
             = loadBefore[dim][nodes.size() - 1].excessLoad(capacity);
         for (auto it = depots_.begin() + 1; it != depots_.end(); ++it)
-            load_[dim] += loadBefore[dim][it->idx()].load();
+            load_[dim] += loadBefore[dim][it->pos()].load();
 
         loadAfter[dim].resize(nodes.size());
         loadAfter[dim][nodes.size() - 1] = loadAt[dim][nodes.size() - 1];
