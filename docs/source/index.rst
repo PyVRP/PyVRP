@@ -41,14 +41,6 @@ Contents
 
 .. toctree::
    :maxdepth: 1
-   :caption: About us
-
-   about/about
-   about/funding
-   about/citing
-
-.. toctree::
-   :maxdepth: 1
    :caption: Tutorials
 
    notebooks/load
@@ -66,6 +58,15 @@ Contents
    api/search
    api/plotting
    api/stop
+
+.. toctree::
+   :maxdepth: 1
+   :caption: About us
+
+   about/about
+   about/funding
+   about/citing
+   about/licenses
 
 .. toctree::
    :maxdepth: 1
