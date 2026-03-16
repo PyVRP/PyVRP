@@ -63,11 +63,6 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("idx"))
         .def(py::init<std::string const &>(), py::arg("description"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
-        .def("__iter__",
-             [](Activity const &activity) {
-                 return py::iter(
-                     py::make_tuple(activity.type(), activity.idx()));
-             })
         .def_property_readonly("type", &Activity::type)
         .def_property_readonly("idx", &Activity::idx)
         .def("is_client", &Activity::isClient, DOC(pyvrp, Activity, isClient))
