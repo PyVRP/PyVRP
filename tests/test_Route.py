@@ -414,13 +414,11 @@ def test_route_schedule(ok_small, visits: list[int]):
             data = ok_small.client(activity.idx)
 
         service = data.service_duration
-        assert_equal(activity.service_duration, service)
-        assert_equal(
-            activity.service_duration,
-            activity.end_service - activity.start_service,
-        )
+        duration = activity.duration
+        assert_equal(duration, service)
+        assert_equal(duration, activity.end_time - activity.start_time)
 
-    service_duration = sum(activity.service_duration for activity in schedule)
+    service_duration = sum(activity.duration for activity in schedule)
     assert_equal(service_duration, route.service_duration())
 
     wait_duration = sum(activity.wait_duration for activity in schedule)
@@ -639,14 +637,14 @@ def test_small_example_from_cattaruzza_paper():
     # Numbers from the paper. Trip 3 starts at 125, 4 at 115, and the route
     # ends at the end depot at 95.
     schedule = route.schedule()
-    assert_equal(schedule[5].start_service, 125)  # trip 3
-    assert_equal(schedule[5].service_duration, 20)
+    assert_equal(schedule[5].start_time, 125)  # trip 3
+    assert_equal(schedule[5].duration, 20)
 
-    assert_equal(schedule[7].start_service, 115)  # trip 4
-    assert_equal(schedule[7].service_duration, 20)
+    assert_equal(schedule[7].start_time, 115)  # trip 4
+    assert_equal(schedule[7].duration, 20)
 
-    assert_equal(schedule[9].start_service, 95)  # end depot
-    assert_equal(schedule[9].service_duration, 0)
+    assert_equal(schedule[9].start_time, 95)  # end depot
+    assert_equal(schedule[9].duration, 0)
 
 
 def test_multi_trip_with_release_times():
@@ -694,15 +692,15 @@ def test_multi_trip_with_release_times():
 
     schedule = route.schedule()
 
-    assert_equal(schedule[0].start_service, 50)
-    assert_equal(schedule[0].end_service, 50)
+    assert_equal(schedule[0].start_time, 50)
+    assert_equal(schedule[0].end_time, 50)
 
-    assert_equal(schedule[3].start_service, 100)
-    assert_equal(schedule[3].end_service, 100)
+    assert_equal(schedule[3].start_time, 100)
+    assert_equal(schedule[3].end_time, 100)
     assert_equal(schedule[3].wait_duration, 5)
 
-    assert_equal(schedule[-1].start_service, 150)
-    assert_equal(schedule[-1].end_service, 150)
+    assert_equal(schedule[-1].start_time, 150)
+    assert_equal(schedule[-1].end_time, 150)
 
 
 def test_multi_trip_initial_load(ok_small_multiple_trips):

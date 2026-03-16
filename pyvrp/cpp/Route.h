@@ -42,42 +42,42 @@ public:
      *     The index of the activity corresponding to the activity type.
      * trip : int
      *     Trip index.
-     * start_service : int
-     *     Time at which service begins.
-     * end_service : int
-     *     Time at which service completes.
-     * service_duration : int
-     *     Duration of the service.
+     * start_time : int
+     *     Time at which this activity begins.
+     * end_time : int
+     *     Time at which this activity completes.
+     * duration : int
+     *     Activity duration.
      * wait_duration : int
-     *     If the vehicle arrives early, this is the duration it has to wait
-     *     until it can begin service.
+     *     If the vehicle arrives early for this activity, this is the duration
+     *     it has to wait until it can begin the activity.
      * time_warp : int
      *     If the vehicle arrives late, this is the duration it has to 'travel
-     *     back in time' to begin service. Non-zero time warp indicates an
+     *     back in time' to begin the activity. Non-zero time warp indicates an
      *     infeasible route.
      */
     class ScheduledActivity : public Activity
     {
         size_t trip_ = 0;
-        Duration startService_ = 0;
-        Duration endService_ = 0;
+        Duration startTime_ = 0;
+        Duration endTime_ = 0;
         Duration waitDuration_ = 0;
         Duration timeWarp_ = 0;
 
     public:
         ScheduledActivity(Activity activity,
                           size_t trip,
-                          Duration startService,
-                          Duration endService,
+                          Duration startTime,
+                          Duration endTime,
                           Duration waitDuration,
                           Duration timeWarp);
 
         bool operator==(ScheduledActivity const &other) const = default;
 
         [[nodiscard]] size_t trip() const;
-        [[nodiscard]] Duration startService() const;
-        [[nodiscard]] Duration endService() const;
-        [[nodiscard]] Duration serviceDuration() const;
+        [[nodiscard]] Duration startTime() const;
+        [[nodiscard]] Duration endTime() const;
+        [[nodiscard]] Duration duration() const;
         [[nodiscard]] Duration waitDuration() const;
         [[nodiscard]] Duration timeWarp() const;
     };

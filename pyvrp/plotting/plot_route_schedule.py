@@ -83,21 +83,21 @@ def plot_route_schedule(
         drive_time += durations[prev_loc, stop.location]
         dist += distances[prev_loc, stop.location]
 
-        arrive = activity.start_service - activity.wait_duration
+        arrive = activity.start_time - activity.wait_duration
         add_traces(dist, arrive, drive_time, serv_time, load)
 
         if activity.time_warp > 0:
-            true_arrive = activity.start_service + activity.time_warp
+            true_arrive = activity.start_time + activity.time_warp
             timewarp_lines.append(((dist, true_arrive), (dist, stop.tw_late)))
 
         if isinstance(stop, Client) and track_load:
             load -= stop.delivery[load_dimension]
             load += stop.pickup[load_dimension]
 
-        add_traces(dist, activity.start_service, drive_time, serv_time, load)
+        add_traces(dist, activity.start_time, drive_time, serv_time, load)
 
-        serv_time += activity.service_duration
-        add_traces(dist, activity.end_service, drive_time, serv_time, load)
+        serv_time += activity.duration
+        add_traces(dist, activity.end_time, drive_time, serv_time, load)
 
         timewindow_lines.append(((dist, stop.tw_early), (dist, stop.tw_late)))
 
