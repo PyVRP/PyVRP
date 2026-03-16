@@ -75,7 +75,7 @@ public:
      *     name: str = "",
      * )
      *
-     * Represents a physical location on the map.
+     * Represents a physical location.
      *
      * Parameters
      * ----------
