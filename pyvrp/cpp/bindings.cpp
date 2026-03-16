@@ -686,12 +686,10 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<Route::ScheduledActivity, Activity>(
         m, "ScheduledActivity", DOC(pyvrp, Route, ScheduledActivity))
         .def_property_readonly("trip", &Route::ScheduledActivity::trip)
-        .def_property_readonly("start_service",
-                               &Route::ScheduledActivity::startService)
-        .def_property_readonly("end_service",
-                               &Route::ScheduledActivity::endService)
-        .def_property_readonly("service_duration",
-                               &Route::ScheduledActivity::serviceDuration)
+        .def_property_readonly("start_time",
+                               &Route::ScheduledActivity::startTime)
+        .def_property_readonly("end_time", &Route::ScheduledActivity::endTime)
+        .def_property_readonly("duration", &Route::ScheduledActivity::duration)
         .def_property_readonly("wait_duration",
                                &Route::ScheduledActivity::waitDuration)
         .def_property_readonly("time_warp", &Route::ScheduledActivity::timeWarp)
@@ -699,8 +697,8 @@ PYBIND11_MODULE(_pyvrp, m)
             [](Route::ScheduledActivity const &activity) {  // __getstate__
                 return py::make_tuple(Activity{activity.type, activity.idx},
                                       activity.trip(),
-                                      activity.startService(),
-                                      activity.endService(),
+                                      activity.startTime(),
+                                      activity.endTime(),
                                       activity.waitDuration(),
                                       activity.timeWarp());
             },
@@ -708,8 +706,8 @@ PYBIND11_MODULE(_pyvrp, m)
                 Route::ScheduledActivity activity(
                     t[0].cast<Activity>(),          // activity
                     t[1].cast<size_t>(),            // trip
-                    t[2].cast<pyvrp::Duration>(),   // start service
-                    t[3].cast<pyvrp::Duration>(),   // end service
+                    t[2].cast<pyvrp::Duration>(),   // start time
+                    t[3].cast<pyvrp::Duration>(),   // end time
                     t[4].cast<pyvrp::Duration>(),   // wait duration
                     t[5].cast<pyvrp::Duration>());  // time warp
 

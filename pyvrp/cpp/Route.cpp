@@ -17,32 +17,29 @@ using Client = size_t;
 
 Route::ScheduledActivity::ScheduledActivity(Activity activity,
                                             size_t trip,
-                                            Duration startService,
-                                            Duration endService,
+                                            Duration startTime,
+                                            Duration endTime,
                                             Duration waitDuration,
                                             Duration timeWarp)
     : Activity(activity),
       trip_(trip),
-      startService_(startService),
-      endService_(endService),
+      startTime_(startTime),
+      endTime_(endTime),
       waitDuration_(waitDuration),
       timeWarp_(timeWarp)
 {
-    assert(startService_ <= endService_);
+    assert(startTime_ <= endTime_);
 }
 
 size_t Route::ScheduledActivity::trip() const { return trip_; }
 
-Duration Route::ScheduledActivity::startService() const
-{
-    return startService_;
-}
+Duration Route::ScheduledActivity::startTime() const { return startTime_; }
 
-Duration Route::ScheduledActivity::endService() const { return endService_; }
+Duration Route::ScheduledActivity::endTime() const { return endTime_; }
 
-Duration Route::ScheduledActivity::serviceDuration() const
+Duration Route::ScheduledActivity::duration() const
 {
-    return endService_ - startService_;
+    return endTime_ - startTime_;
 }
 
 Duration Route::ScheduledActivity::waitDuration() const
