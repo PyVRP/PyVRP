@@ -114,7 +114,7 @@ void Solution::load(pyvrp::Solution const &solution)
             else
             {
                 assert(activity.isClient());
-                route.push_back(&nodes[activity.idx]);
+                route.push_back(&nodes[activity.idx()]);
             }
         }
 

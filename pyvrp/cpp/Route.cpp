@@ -61,7 +61,7 @@ void Route::validate(ProblemData const &data,
         {
             numTrips++;  // this is a reload depot, so we start another trip
 
-            if (activity.idx >= data.numDepots())
+            if (activity.idx() >= data.numDepots())
             {
                 std::ostringstream msg;
                 msg << "Depot " << activity << " is not understood.";
@@ -69,7 +69,7 @@ void Route::validate(ProblemData const &data,
             }
         }
 
-        if (activity.isClient() && activity.idx >= data.numClients())
+        if (activity.isClient() && activity.idx() >= data.numClients())
         {
             std::ostringstream msg;
             msg << "Client " << activity << " is not understood.";
@@ -97,7 +97,7 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
     {
         if (it->isDepot())
         {
-            auto const &depot = data.depot(it->idx);
+            auto const &depot = data.depot(it->idx());
 
             auto const depotService = depot.serviceDuration;
             service_ += depotService;
@@ -113,7 +113,7 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
         }
         else
         {
-            auto const &clientData = data.client(it->idx);
+            auto const &clientData = data.client(it->idx());
             service_ += clientData.serviceDuration;
 
             auto const edgeDur = durations(clientData.location, nextLoc);
@@ -174,7 +174,7 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
         {
             auto const releaseTime = releaseTimes[++tripIdx];
 
-            auto const &depot = data.depot(activity.idx);
+            auto const &depot = data.depot(activity.idx());
             now += durations(prevLoc, depot.location);
 
             handle(activity,
@@ -187,7 +187,7 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
         }
         else
         {
-            auto const &clientData = data.client(activity.idx);
+            auto const &clientData = data.client(activity.idx());
             now += durations(prevLoc, clientData.location);
 
             handle(activity,
@@ -217,8 +217,8 @@ void Route::setDistance(ProblemData const &data)
     {
         auto const &activity = schedule_[idx];
         auto const toLoc = activity.isDepot()
-                               ? data.depot(activity.idx).location
-                               : data.client(activity.idx).location;
+                               ? data.depot(activity.idx()).location
+                               : data.client(activity.idx()).location;
 
         distance_ += distances(frmLoc, toLoc);
         frmLoc = toLoc;
@@ -251,7 +251,7 @@ void Route::setLoad(ProblemData const &data)
             }
 
             if (activity.isClient())
-                ls = LoadSegment::merge(ls, {data.client(activity.idx), dim});
+                ls = LoadSegment::merge(ls, {data.client(activity.idx()), dim});
         }
 
         excessLoad_[dim] = ls.excessLoad(vehData.capacity[dim]);
@@ -265,7 +265,7 @@ void Route::setOtherStatistics(ProblemData const &data)
 
     for (auto const &activity : schedule_)
         if (activity.isClient())
-            prizes_ += data.client(activity.idx).prize;
+            prizes_ += data.client(activity.idx()).prize;
 }
 
 Route::Route(ProblemData const &data,
@@ -410,7 +410,7 @@ size_t Route::startDepot() const
     auto const &activity = schedule_.front();
 
     assert(activity.isDepot());
-    return activity.idx;
+    return activity.idx();
 }
 
 size_t Route::endDepot() const
@@ -418,7 +418,7 @@ size_t Route::endDepot() const
     auto const &activity = schedule_.back();
 
     assert(activity.isDepot());
-    return activity.idx;
+    return activity.idx();
 }
 
 bool Route::isFeasible() const

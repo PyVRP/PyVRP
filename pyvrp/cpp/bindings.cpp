@@ -63,16 +63,13 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("idx"))
         .def(py::init<std::string const &>(), py::arg("description"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
-        .def("__iter__",
-             [](Activity const &activity)
-             { return py::iter(py::make_tuple(activity.type, activity.idx)); })
-        .def_readonly("type", &Activity::type)
-        .def_readonly("idx", &Activity::idx)
+        .def_property_readonly("type", &Activity::type)
+        .def_property_readonly("idx", &Activity::idx)
         .def("is_client", &Activity::isClient, DOC(pyvrp, Activity, isClient))
         .def("is_depot", &Activity::isDepot, DOC(pyvrp, Activity, isDepot))
         .def(py::pickle(
             [](Activity const &activity) {  // __getstate__
-                return py::make_tuple(activity.type, activity.idx);
+                return py::make_tuple(activity.type(), activity.idx());
             },
             [](py::tuple t) -> Activity  // __setstate__
             {
@@ -695,7 +692,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("time_warp", &Route::ScheduledActivity::timeWarp)
         .def(py::pickle(
             [](Route::ScheduledActivity const &activity) {  // __getstate__
-                return py::make_tuple(Activity{activity.type, activity.idx},
+                return py::make_tuple(Activity{activity.type(), activity.idx()},
                                       activity.trip(),
                                       activity.startTime(),
                                       activity.endTime(),

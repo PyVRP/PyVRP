@@ -238,7 +238,7 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
             if (!activity.isClient())
                 continue;
 
-            auto const client = activity.idx;
+            auto const client = activity.idx();
             if (isVisited[client])
             {
                 std::ostringstream msg;
