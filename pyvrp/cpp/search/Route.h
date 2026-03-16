@@ -655,9 +655,9 @@ size_t SegmentProxy::location() const { return location_; }
 
 Activity Route::Node::activity() const { return activity_; }
 
-size_t Route::Node::idx() const { return activity_.idx; }
+size_t Route::Node::idx() const { return activity_.idx(); }
 
-Activity::ActivityType Route::Node::type() const { return activity_.type; }
+Activity::ActivityType Route::Node::type() const { return activity_.type(); }
 
 size_t Route::Node::pos() const { return pos_; }
 
@@ -1144,8 +1144,10 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
                 // finalise the current segment. We first travel there. We need
                 // to end the segment within the depot's time windows to
                 // properly account for any release time on our segment.
-                auto const [_, idx] = other.back().activity();
-                auto const &depot = data.depot(idx);
+                auto const &activity = other.back().activity();
+                assert(activity.isDepot());
+
+                auto const &depot = data.depot(activity.idx());
                 DurationSegment depotDS = {depot, depot.serviceDuration};
                 ds = DurationSegment::merge(edgeDur, depotDS, ds);
                 ds = ds.finaliseFront();
