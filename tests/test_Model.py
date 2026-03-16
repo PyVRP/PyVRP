@@ -1200,12 +1200,16 @@ def test_solve_clients_in_same_location():
     """
     m = Model()
     m.add_vehicle_type()
-    m.add_depot(location=m.add_location(5, 5))
 
     # Two clients in the same place.
     loc = m.add_location(10, 10)
-    m.add_client(loc)
-    m.add_client(loc)
+    client1 = m.add_client(loc)
+    client2 = m.add_client(loc)
+    assert_equal(client1.location, 0)
+    assert_equal(client2.location, 0)
+
+    depot = m.add_depot(location=m.add_location(5, 5))
+    assert_equal(depot.location, 1)
 
     for frm in m.locations:
         for to in m.locations:
