@@ -73,36 +73,35 @@ def plot_route_schedule(
         trace_drive_serv.append((dist, drive_time + serv_time))
         trace_load.append((dist, load))
 
-    prev_idx = vehicle_type.start_depot
-    for visit in route.schedule():
-        idx = visit.location
-        if idx < data.num_depots:
-            stop = data.depot(idx)  # type: ignore
+    prev_loc = data.depot(vehicle_type.start_depot).location
+    for activity in route:
+        if activity.is_depot():
+            stop = data.depot(activity.idx)  # type: ignore
         else:
-            stop = data.client(idx - data.num_depots)  # type: ignore
+            stop = data.client(activity.idx)  # type: ignore
 
-        drive_time += durations[prev_idx, idx]
-        dist += distances[prev_idx, idx]
+        drive_time += durations[prev_loc, stop.location]
+        dist += distances[prev_loc, stop.location]
 
-        arrive = visit.start_service - visit.wait_duration
+        arrive = activity.start_time - activity.wait_duration
         add_traces(dist, arrive, drive_time, serv_time, load)
 
-        if visit.time_warp > 0:
-            true_arrive = visit.start_service + visit.time_warp
+        if activity.time_warp > 0:
+            true_arrive = activity.start_time + activity.time_warp
             timewarp_lines.append(((dist, true_arrive), (dist, stop.tw_late)))
 
         if isinstance(stop, Client) and track_load:
             load -= stop.delivery[load_dimension]
             load += stop.pickup[load_dimension]
 
-        add_traces(dist, visit.start_service, drive_time, serv_time, load)
+        add_traces(dist, activity.start_time, drive_time, serv_time, load)
 
-        serv_time += visit.service_duration
-        add_traces(dist, visit.end_service, drive_time, serv_time, load)
+        serv_time += activity.duration
+        add_traces(dist, activity.end_time, drive_time, serv_time, load)
 
         timewindow_lines.append(((dist, stop.tw_early), (dist, stop.tw_late)))
 
-        prev_idx = idx
+        prev_loc = stop.location
 
     xs, ys = zip(*trace_time)
     ax.plot(xs, ys, label="Time (earliest)")

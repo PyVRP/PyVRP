@@ -24,28 +24,23 @@ def plot_coordinates(
     if not ax:
         _, ax = plt.subplots()
 
-    num_locs = data.num_locations
-    x_coords = np.empty((num_locs,))
-    y_coords = np.empty((num_locs,))
-    for idx, depot in enumerate(data.depots()):
-        x_coords[idx] = depot.x
-        y_coords[idx] = depot.y
-    for idx, client in enumerate(data.clients(), data.num_depots):
-        x_coords[idx] = client.x
-        y_coords[idx] = client.y
+    x_coords = np.array([loc.x for loc in data.locations()])
+    y_coords = np.array([loc.y for loc in data.locations()])
 
     # These are the depots
     kwargs = dict(c="tab:red", marker="*", zorder=3, s=500)
+    depot_locs = [depot.location for depot in data.depots()]
     ax.scatter(
-        x_coords[: data.num_depots],
-        y_coords[: data.num_depots],
+        x_coords[depot_locs],
+        y_coords[depot_locs],
         label="Depot",
         **kwargs,
     )
 
+    client_locs = [client.location for client in data.clients()]
     ax.scatter(
-        x_coords[data.num_depots :],
-        y_coords[data.num_depots :],
+        x_coords[client_locs],
+        y_coords[client_locs],
         s=50,
         label="Clients",
     )

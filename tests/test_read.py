@@ -70,12 +70,9 @@ def test_reading_OkSmall_instance():
         (1191, 639),
     ]
 
-    assert_equal(data.depot(0).x, expected[0][0])
-    assert_equal(data.depot(0).y, expected[0][1])
-
-    for client in range(data.num_clients):
-        assert_equal(data.client(client).x, expected[client + 1][0])
-        assert_equal(data.client(client).y, expected[client + 1][1])
+    for idx, loc in enumerate(data.locations()):
+        assert_equal(loc.x, expected[idx][0])
+        assert_equal(loc.y, expected[idx][1])
 
     # From the EDGE_WEIGHT_SECTION in the file
     expected = [
@@ -139,11 +136,11 @@ def test_reading_vrplib_instance():
     assert_equal(data.num_locations, data.num_depots + data.num_clients)
 
     # Coordinates are scaled by 10 to align with 1 decimal distance precision
-    assert_equal(data.depot(0).x, 1450)  # depot [x, y] location
-    assert_equal(data.depot(0).y, 2150)
+    assert_equal(data.location(0).x, 1450)  # depot [x, y] location
+    assert_equal(data.location(0).y, 2150)
 
-    assert_equal(data.client(0).x, 1510)  # first customer [x, y] location
-    assert_equal(data.client(0).y, 2640)
+    assert_equal(data.location(1).x, 1510)  # first customer [x, y] location
+    assert_equal(data.location(1).y, 2640)
 
     # The data file specifies distances as 2D Euclidean. We take that and
     # should compute integer equivalents with up to one decimal precision.
@@ -190,11 +187,11 @@ def test_round_func_round_nearest():
 
     # We're going to test dist(0, 1) and dist(1, 0), which should be the same
     # since the distances are symmetric/Euclidean.
-    assert_equal(data.depot(0).x, 40)
-    assert_equal(data.depot(0).y, 50)
+    assert_equal(data.location(0).x, 40)
+    assert_equal(data.location(0).y, 50)
 
-    assert_equal(data.client(0).x, 25)
-    assert_equal(data.client(0).y, 85)
+    assert_equal(data.location(1).x, 25)
+    assert_equal(data.location(1).y, 85)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     distances = data.distance_matrix(profile=0)
@@ -213,11 +210,11 @@ def test_round_func_exact():
 
     # We're going to test dist(0, 1) and dist(1, 0), which should be the same
     # since the distances are symmetric/Euclidean.
-    assert_equal(data.depot(0).x, 40_000)
-    assert_equal(data.depot(0).y, 50_000)
+    assert_equal(data.location(0).x, 40_000)
+    assert_equal(data.location(0).y, 50_000)
 
-    assert_equal(data.client(0).x, 25_000)
-    assert_equal(data.client(0).y, 85_000)
+    assert_equal(data.location(1).x, 25_000)
+    assert_equal(data.location(1).y, 85_000)
 
     # Compute the distance, and assert that it is indeed correctly rounded.
     distances = data.distance_matrix(profile=0)
@@ -272,13 +269,14 @@ def test_multiple_depots():
     assert_equal(veh_type2.tw_early, 5_000)
     assert_equal(veh_type2.tw_late, 20_000)
 
-    depot1, depot2 = data.depots()
-
     # Test that the depot coordinates have been parsed correctly.
-    assert_equal(depot1.x, 2_334)
-    assert_equal(depot1.y, 726)
-    assert_equal(depot2.x, 226)
-    assert_equal(depot2.y, 1_297)
+    assert_equal(data.depot(0).location, 0)
+    assert_equal(data.location(0).x, 2_334)
+    assert_equal(data.location(0).y, 726)
+
+    assert_equal(data.depot(1).location, 1)
+    assert_equal(data.location(1).x, 226)
+    assert_equal(data.location(1).y, 1_297)
 
 
 def test_mdvrptw_instance():
@@ -425,10 +423,10 @@ def test_reading_mutually_exclusive_group():
 
     group = data.group(0)
     assert_equal(len(group), 3)
-    assert_equal(group.clients, [1, 2, 3])
+    assert_equal(group.clients, [0, 1, 2])
 
     for client in data.group(0):
-        client_data = data.client(client - data.num_depots)
+        client_data = data.client(client)
         assert_equal(client_data.required, False)
         assert_equal(client_data.group, 0)
 
@@ -514,8 +512,8 @@ def test_read_solution_single_vehicle_type(ok_small):
     solution = read_solution("data/OkSmall.sol", ok_small)
     routes = solution.routes()
 
-    assert_equal(routes[0].visits(), [1, 2])
-    assert_equal(routes[1].visits(), [3, 4])
+    assert_equal(str(routes[0]), "C0 C1")
+    assert_equal(str(routes[1]), "C2 C3")
 
     assert_equal(routes[0].vehicle_type(), 0)
     assert_equal(routes[1].vehicle_type(), 0)
@@ -532,8 +530,8 @@ def test_read_solution_multiple_vehicle_types(ok_small_multi_depot):
 
     # The solution file shows three routes, but empty routes are ignored.
     assert_equal(solution.num_routes(), 2)
-    assert_equal(routes[0].visits(), [2])
-    assert_equal(routes[1].visits(), [3, 4])
+    assert_equal(str(routes[0]), "C0")
+    assert_equal(str(routes[1]), "C1 C2")
 
     # The instance has two vehicle types: two of the first type and one of the
     # second type. Because the second route was empty, the second vehicle of
@@ -575,16 +573,12 @@ def test_read_solution_multiple_reload_depots():
     assert_equal(solution.num_trips(), 2)
 
     route = solution.routes()[0]
+    assert_equal(str(route), "C0 | C1 C2")
 
-    trip1 = route.trip(0)
-    assert_equal(trip1.activities(), [Activity("C2")])
-    assert_equal(trip1.start_depot(), 0)
-    assert_equal(trip1.end_depot(), 1)
-
-    trip2 = route.trip(1)
-    assert_equal(trip2.activities(), [Activity("C3"), Activity("C4")])
-    assert_equal(trip2.start_depot(), 1)
-    assert_equal(trip2.end_depot(), 0)
+    # Start and end depots are D0, but the reload happens at D1.
+    assert_equal(route.start_depot(), 0)
+    assert_equal(route.end_depot(), 0)
+    assert_equal(route[2], Activity("D1"))
 
 
 def test_2d_data_sections_are_correctly_casted_from_1d():
@@ -661,8 +655,11 @@ def test_read_hfvrp_solution():
     sol = read_solution("data/X115-HVRP.sol", data)
     routes = sol.routes()
 
-    assert_equal(routes[1].visits(), [59, 35, 99, 49, 79, 47, 109, 18])
-    assert_equal(routes[-1].visits(), [5, 6, 3, 93, 42, 9])
+    def route2clients(route):
+        return [activity.idx for activity in route if activity.is_client()]
+
+    assert_equal(route2clients(routes[1]), [58, 34, 98, 48, 78, 46, 108, 17])
+    assert_equal(route2clients(routes[-1]), [4, 5, 2, 92, 41, 8])
 
     assert_equal(routes[1].vehicle_type(), 0)
     assert_equal(routes[-1].vehicle_type(), 2)

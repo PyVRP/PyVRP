@@ -26,7 +26,5 @@ def compute_neighbours(
     -------
     list
         A list of list of integers representing the neighbours for each client.
-        The first lists in the lower indices are associated with the depots and
-        are all empty.
     """
     return _compute_neighbours(data, params)  # delegate to C++ implementation

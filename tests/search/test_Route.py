@@ -2,23 +2,48 @@ import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
-import pyvrp
-from pyvrp import Client, Depot, ProblemData, VehicleType
+from pyvrp import (
+    Activity,
+    ActivityType,
+    Client,
+    Depot,
+    Location,
+    ProblemData,
+    VehicleType,
+)
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
 
 _INT_MAX = np.iinfo(np.int64).max
 
 
-@pytest.mark.parametrize("loc", [0, 1, 10])
-def test_node_init(loc: int):
+def test_node_init():
     """
-    Tests that after initialisation, a Node has index 0 and is not in a route.
+    Tests the various node constructors.
     """
-    node = Node(loc=loc)
-    assert_equal(node.client, loc)
-    assert_equal(node.idx, 0)
-    assert_(node.route is None)
+    # Activity-based.
+    from_activity = Node(Activity("C1"))
+    assert_equal(from_activity.activity, Activity("C1"))
+    assert_equal(from_activity.idx, 1)
+    assert_equal(from_activity.type, ActivityType.CLIENT)
+    assert_equal(from_activity.pos, 0)
+    assert_(from_activity.route is None)
+
+    # Activity-type based.
+    direct_construction = Node(ActivityType.CLIENT, 1)
+    assert_equal(direct_construction.activity, from_activity.activity)
+    assert_equal(direct_construction.idx, 1)
+    assert_equal(direct_construction.type, ActivityType.CLIENT)
+    assert_equal(direct_construction.pos, 0)
+    assert_(direct_construction.route is None)
+
+    # Description-based.
+    from_description = Node("C1")
+    assert_equal(from_description.activity, from_activity.activity)
+    assert_equal(from_description.idx, 1)
+    assert_equal(from_description.type, ActivityType.CLIENT)
+    assert_equal(from_description.pos, 0)
+    assert_(from_description.route is None)
 
 
 @pytest.mark.parametrize("vehicle_type", (0, 1))
@@ -37,38 +62,27 @@ def test_route_init(ok_small, vehicle_type: int):
     assert_equal(route.vehicle_type, vehicle_type)
 
 
-@pytest.mark.parametrize("loc", [0, 1, 10])
-def test_new_nodes_are_not_depots(loc: int):
+def test_insert_and_remove_update_node_pos_and_route_properties(ok_small):
     """
-    Tests that new nodes cannot be depots: to be a depot in this context
-    requires route membership, and new nodes are not in routes yet.
-    """
-    node = Node(loc=loc)
-    assert_(not node.is_depot())
-
-
-def test_insert_and_remove_update_node_idx_and_route_properties(ok_small):
-    """
-    Tests that after a node is inserted into a route, its index and route
-    properties are updated to reflect its new position in the route. After
-    the node is removed from the route, these properties revert to their
-    defaults.
+    Tests that after a node is inserted into a route, its ``pos`` and ``route``
+    properties are updated to reflect its new position in the route. After the
+    node is removed from the route, these properties revert to their defaults.
     """
     route = Route(ok_small, vehicle_type=0)
 
     # After construction, the node is not in a route yet.
-    node = Node(loc=1)
-    assert_equal(node.idx, 0)
+    node = Node("C0")
+    assert_equal(node.pos, 0)
     assert_(node.route is None)
 
-    # Add to the route, test the route and idx properties are updated.
+    # Add to the route, test the route and pos properties are updated.
     route.append(node)
-    assert_equal(node.idx, 1)
+    assert_equal(node.pos, 1)
     assert_(node.route is route)
 
     # Remove and test the node reverts to its initial state.
     del route[1]
-    assert_equal(node.idx, 0)
+    assert_equal(node.pos, 0)
     assert_(node.route is None)
 
 
@@ -81,8 +95,8 @@ def test_route_depots_are_depots(ok_small):
     assert_equal(route.start_depot(), ok_small.vehicle_type(0).start_depot)
     assert_equal(route.end_depot(), ok_small.vehicle_type(0).end_depot)
 
-    for loc in range(1, 3):
-        route.append(Node(loc=loc))
+    for activity in ["C0", "C1"]:
+        route.append(Node(activity))
 
         assert_(route[0].is_depot())
         assert_(route[0].is_start_depot())
@@ -100,12 +114,12 @@ def test_route_append_increases_route_len(ok_small):
     route = Route(ok_small, vehicle_type=0)
     assert_equal(route.num_clients(), 0)
 
-    node = Node(loc=1)
+    node = Node("C0")
     route.append(node)
     assert_equal(route.num_clients(), 1)
     assert_(route[1] is node)  # pointers, so must be same object
 
-    node = Node(loc=2)
+    node = Node("C1")
     route.append(node)
     assert_equal(route.num_clients(), 2)
     assert_(route[2] is node)  # pointers, so must be same object
@@ -121,45 +135,48 @@ def test_route_insert(ok_small):
     assert_equal(route.num_depots(), 2)
 
     # Insert a few nodes so we have an actual route.
-    route.append(Node(loc=1))
-    route.append(Node(loc=2))
+    route.append(Node("C0"))
+    route.append(Node("C1"))
     assert_equal(route.num_clients(), 2)
-    assert_equal(route[1].client, 1)
-    assert_equal(route[2].client, 2)
+    assert_equal(route[1].activity, Activity("C0"))
+    assert_equal(route[2].activity, Activity("C1"))
 
     # # Now insert a new nodes at index 1.
-    route.insert(1, Node(loc=3))
+    route.insert(1, Node("C2"))
     assert_equal(route.num_clients(), 3)
-    assert_equal(route[1].client, 3)
-    assert_equal(route[2].client, 1)
-    assert_equal(route[3].client, 2)
+    assert_equal(route[1].activity, Activity("C2"))
+    assert_equal(route[2].activity, Activity("C0"))
+    assert_equal(route[3].activity, Activity("C1"))
 
 
-def test_route_iter_returns_all_clients(ok_small):
+def test_route_iter(ok_small):
     """
-    Tests that iterating over a route returns all clients in the route, but
-    not the depots.
+    Tests that iterating over a route returns all route activities.
     """
-    route = make_search_route(ok_small, [1, 2, 3])
+    route = make_search_route(ok_small, ["C0", "C1", "C2"])
     nodes = [node for node in route]
-    assert_equal(len(nodes), route.num_clients())
+    assert_equal(len(nodes), route.num_clients() + 2)  # incl start + end
 
-    # Iterating the Route object returns only clients, not the depots.
-    assert_equal(nodes[0], route[1])
-    assert_equal(nodes[1], route[2])
-    assert_equal(nodes[2], route[3])
+    # Iterating should happen in the same order as indexing.
+    assert_equal(nodes[0], route[0])
+    assert_equal(nodes[1], route[1])
+    assert_equal(nodes[2], route[2])
 
 
-def test_iter_skips_reload_depots(ok_small_multiple_trips):
+def test_iter_reload_depots(ok_small_multiple_trips):
     """
-    Tests that iterating a route skips (repeated) reload depots.
+    Tests that iterating a route without clients returns all (reload) depot
+    actiivties.
     """
     veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=100)
     data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
 
-    route = make_search_route(data, [0, 0, 0])
+    route = make_search_route(data, ["D0", "D0", "D0"])
     assert_equal(route.num_clients(), 0)  # there are no clients
-    assert_equal(list(route), [])  # and thus iteration yields an empty list
+    assert_equal(len([node for node in route]), 5)  # 3 reloads + start/end
+
+    for node in route:  # all are visits to D0
+        assert_equal(node.activity, Activity("D0"))
 
 
 def test_route_add_and_delete_client_leaves_route_empty(ok_small):
@@ -168,7 +185,7 @@ def test_route_add_and_delete_client_leaves_route_empty(ok_small):
     """
     route = Route(ok_small, vehicle_type=0)
 
-    route.append(Node(loc=1))
+    route.append(Node("C0"))
     assert_equal(route.num_clients(), 1)
 
     del route[1]
@@ -181,13 +198,13 @@ def test_route_delete_reduces_size_by_one(ok_small):
     """
     route = Route(ok_small, vehicle_type=0)
 
-    route.append(Node(loc=1))
-    route.append(Node(loc=2))
+    route.append(Node("C0"))
+    route.append(Node("C1"))
     assert_equal(route.num_clients(), 2)
 
     del route[1]
     assert_equal(route.num_clients(), 1)
-    assert_equal(route[1].client, 2)
+    assert_equal(route[1].activity, Activity("C1"))
 
 
 @pytest.mark.parametrize("num_nodes", range(4))
@@ -198,8 +215,8 @@ def test_route_clear_empties_entire_route(ok_small, num_nodes: int):
     """
     route = Route(ok_small, vehicle_type=0)
 
-    for loc in range(1, num_nodes + 1):
-        route.append(Node(loc=loc))
+    for client in range(num_nodes):
+        route.append(Node(f"C{client}"))
 
     assert_equal(route.num_clients(), num_nodes)
 
@@ -211,7 +228,7 @@ def test_excess_load(ok_small):
     """
     Tests that the route calculations excess load correctly.
     """
-    route = make_search_route(ok_small, [1, 2, 3, 4])
+    route = make_search_route(ok_small, ["C0", "C1", "C2", "C3"])
 
     # The instance has four clients, which have a total delivery demand of 18.
     # The only vehicle type in the instance has a capacity of 10, so this route
@@ -235,7 +252,7 @@ def test_fixed_vehicle_cost(ok_small, fixed_cost: int):
     assert_equal(route.fixed_vehicle_cost(), fixed_cost)
 
 
-@pytest.mark.parametrize("client", [1, 2, 3, 4])
+@pytest.mark.parametrize("client", [0, 1, 2, 3])
 def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     """
     Tests that the route calculates distance and load correctly for a
@@ -243,8 +260,8 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     """
     assert_equal(ok_small.num_load_dimensions, 1)
 
-    data = ok_small.client(client - 1)
-    route = make_search_route(ok_small, [client])
+    data = ok_small.client(client)
+    route = make_search_route(ok_small, [f"C{client}"])
 
     # Only the client has any delivery demand, so the total route load should
     # be equal to it.
@@ -263,9 +280,8 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
 
     # Distances on various segments of the route.
     dists = ok_small.distance_matrix(profile=0)
-    assert_equal(route.dist_between(0, 1), dists[0, client])
-    assert_equal(route.dist_between(1, 2), dists[client, 0])
-    assert_equal(route.dist_between(0, 2), dists[0, client] + dists[client, 0])
+    assert_equal(route.dist_between(0, 1), dists[0, data.location])
+    assert_equal(route.dist_between(1, 2), dists[data.location, 0])
 
     # This should always be zero because distance is a property of the edges,
     # not the nodes.
@@ -273,18 +289,18 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
     assert_equal(route.dist_at(1), 0)
 
 
-@pytest.mark.parametrize("locs", [(1, 2, 3), (3, 4), (1,)])
-def test_str_contains_route(ok_small, locs: list[int]):
+@pytest.mark.parametrize(
+    "activities",
+    [("C0", "C1", "C2"), ("C2", "C3"), ("C0",)],
+)
+def test_str_contains_route(ok_small, activities: list[str]):
     """
-    Test that each client in the route is also printed in the route's __str__.
+    Test that each activity in the route is also printed in the route's string
+    representation.
     """
-    route = Route(ok_small, vehicle_type=0)
-
-    for loc in locs:
-        route.append(Node(loc=loc))
-
-    for loc in locs:
-        assert_(str(loc) in str(route))
+    route = make_search_route(ok_small, activities, vehicle_type=0)
+    for activity in activities:
+        assert_(activity in str(route))
 
 
 def test_route_duration_access(ok_small):
@@ -292,11 +308,11 @@ def test_route_duration_access(ok_small):
     Tests access to a client's or depot's duration segment, as tracked by the
     route.
     """
-    clients = range(ok_small.num_depots, ok_small.num_locations)
+    clients = [f"C{idx}" for idx in range(ok_small.num_clients)]
     route = make_search_route(ok_small, clients)
 
     for idx in range(len(route)):
-        is_depot = idx % (len(route) - 1) == 0
+        is_depot = idx == 0 or idx == len(route) - 1
         ds = route.duration_at(idx)
 
         assert_equal(ds.time_warp(), 0)
@@ -307,8 +323,7 @@ def test_route_duration_access(ok_small):
             assert_equal(ds.start_late(), vehicle_type.tw_late)
             assert_equal(ds.duration(), 0)
         else:
-            loc = idx % (route.num_clients() + 1)
-            client = ok_small.client(loc - ok_small.num_depots)
+            client = ok_small.client(idx - 1)
             assert_equal(ds.start_early(), client.tw_early)
             assert_equal(ds.start_late(), client.tw_late)
             assert_equal(ds.duration(), client.service_duration)
@@ -358,7 +373,7 @@ def test_latest_start(ok_small: ProblemData, start_late: int, expected: int):
     ok_small = ok_small.replace(vehicle_types=[vehicle_type])
 
     route = Route(ok_small, vehicle_type=0)
-    route.append(Node(loc=1))
+    route.append(Node("C0"))
     route.update()
 
     assert_equal(route.duration(), expected)
@@ -367,17 +382,14 @@ def test_latest_start(ok_small: ProblemData, start_late: int, expected: int):
     assert_equal(route.duration_after(0).start_early(), min(start_late, 14056))
 
 
-@pytest.mark.parametrize("loc", [1, 2, 3, 4])
-def test_duration_between_client_returns_node_duration(ok_small, loc: int):
+@pytest.mark.parametrize("idx", [0, 1, 2, 3])
+def test_duration_between_client_returns_node_duration(ok_small, idx: int):
     """
     Tests that calling the ``duration_between()`` with the same start and end
     arguments returns a node's duration segment data.
     """
-    client = ok_small.client(loc - ok_small.num_depots)
-
-    route = Route(ok_small, vehicle_type=0)
-    route.append(Node(loc=loc))
-    route.update()
+    client = ok_small.client(idx)
+    route = make_search_route(ok_small, [f"C{idx}"], vehicle_type=0)
 
     # Duration of the depot node DS's is zero, and for the client it is equal
     # to the service duration.
@@ -396,7 +408,7 @@ def test_duration_between_equal_to_before_after_when_one_is_depot(ok_small):
     Tests that ``duration_between()`` returns the same value as
     ``duration_before()`` or ``duration_after()`` when one side is the depot.
     """
-    clients = range(ok_small.num_depots, ok_small.num_locations)
+    clients = [f"C{idx}" for idx in range(ok_small.num_clients)]
     route = make_search_route(ok_small, clients)
 
     for idx in [1, 2, 3, 4]:
@@ -416,22 +428,22 @@ def test_duration_between_single_route_has_correct_time_warp(ok_small):
     Tests duration segment access on a single-route solution where we know
     exactly where in the route time warp occurs.
     """
-    clients = range(ok_small.num_depots, ok_small.num_locations)
+    clients = [f"C{idx}" for idx in range(ok_small.num_clients)]
     route = make_search_route(ok_small, clients)
     assert_equal(route.num_clients(), ok_small.num_clients)
 
     assert_(route.has_time_warp())
     assert_equal(route.duration_between(0, 5).time_warp(), route.time_warp())
 
-    # Client #1 (at idx 1) causes the time warp in combination with client #3:
-    # #1 can only be visited after #3's window has already closed.
+    # C0 (at idx 1) causes the time warp in combination with C2: C0 can only be
+    # visited after C2's window has already closed.
     assert_equal(route.time_warp(), 3_633)
     assert_equal(route.duration_between(1, 4).time_warp(), 3_633)
     assert_equal(route.duration_between(0, 4).time_warp(), 3_633)
     assert_equal(route.duration_between(1, 5).time_warp(), 3_633)
     assert_equal(route.duration_between(1, 3).time_warp(), 3_633)
 
-    # But excluding client #1, other subtours are (time-)feasible:
+    # But excluding client C0, other subtours are (time-)feasible:
     for start, end in [(2, 4), (3, 5), (2, 3), (4, 5), (5, 5), (0, 1), (0, 2)]:
         assert_equal(route.duration_between(start, end).time_warp(), 0)
 
@@ -441,7 +453,7 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
     Tests that calling distance() on the route object is the same as calling
     dist_between() with the start and end depot indices as arguments.
     """
-    clients = range(ok_small.num_depots, ok_small.num_locations)
+    clients = [f"C{idx}" for idx in range(ok_small.num_clients)]
     route = make_search_route(ok_small, clients)
     assert_equal(route.distance(), route.dist_between(0, len(route) - 1))
 
@@ -466,8 +478,9 @@ def test_shift_duration_depot_time_window_interaction(
     varies around that.
     """
     data = ProblemData(
+        locations=[Location(0, 0)],
         clients=[],
-        depots=[Depot(x=0, y=0, tw_early=0, tw_late=1_000)],
+        depots=[Depot(location=0, tw_early=0, tw_late=1_000)],
         vehicle_types=[VehicleType(tw_early=shift_tw[0], tw_late=shift_tw[1])],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
@@ -500,7 +513,7 @@ def test_shift_duration(ok_small, shift_duration: int, expected: int):
     vehicle_type = VehicleType(3, capacity=[10], shift_duration=shift_duration)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    clients = range(data.num_depots, data.num_locations)
+    clients = [f"C{idx}" for idx in range(data.num_clients)]
     route = make_search_route(data, clients)
 
     assert_equal(route.duration(), 7_950)
@@ -524,7 +537,7 @@ def test_max_distance(ok_small: ProblemData, max_distance: int, expected: int):
     vehicle_type = VehicleType(3, capacity=[10], max_distance=max_distance)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    clients = range(data.num_depots, data.num_locations)
+    clients = [f"C{idx}" for idx in range(data.num_clients)]
     route = make_search_route(data, clients)
 
     assert_equal(route.distance(), 6_450)
@@ -533,16 +546,16 @@ def test_max_distance(ok_small: ProblemData, max_distance: int, expected: int):
 
 
 @pytest.mark.parametrize(
-    ("visits", "load_feas", "time_feas", "dist_feas"),
+    ("activities", "load_feas", "time_feas", "dist_feas"),
     [
-        ([1, 2, 3], False, False, False),
-        ([1, 3], True, False, True),
-        ([1, 2], True, True, True),
+        (["C0", "C1", "C2"], False, False, False),
+        (["C0", "C2"], True, False, True),
+        (["C0", "C1"], True, True, True),
     ],
 )
 def test_is_feasible(
     ok_small,
-    visits: list[int],
+    activities: list[str],
     load_feas: bool,
     time_feas: bool,
     dist_feas: bool,
@@ -553,7 +566,7 @@ def test_is_feasible(
     """
     vehicle_type = VehicleType(3, capacity=[10], max_distance=6_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
-    route = make_search_route(data, visits)
+    route = make_search_route(data, activities)
 
     assert_equal(route.is_feasible(), load_feas and time_feas and dist_feas)
     assert_equal(not route.has_excess_distance(), dist_feas)
@@ -566,7 +579,7 @@ def test_dist_between_equal_to_before_after_when_one_is_depot(ok_small):
     Tests that ``dist_between()`` returns the same value as
     ``dist_before()`` or ``distance_after()`` when one side is the depot.
     """
-    clients = range(ok_small.num_depots, ok_small.num_locations)
+    clients = [f"C{idx}" for idx in range(ok_small.num_clients)]
     route = make_search_route(ok_small, clients)
 
     for idx in [1, 2, 3, 4]:
@@ -582,7 +595,7 @@ def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
     Tests that ``load_between()`` returns the same value as
     ``load_before()`` or ``load_after()`` when one side is the depot.
     """
-    clients = range(small_spd.num_depots, small_spd.num_locations)
+    clients = [f"C{idx}" for idx in range(small_spd.num_clients)]
     route = make_search_route(small_spd, clients)
 
     for idx in [1, 2, 3, 4]:
@@ -624,17 +637,18 @@ def test_load_between_multiple_dimensions(frm, to, dim, expected):
     multiple dimensions.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
         clients=[
-            Client(1, 0, delivery=[1, 2]),
-            Client(2, 0, delivery=[4, 5]),
+            Client(1, delivery=[1, 2]),
+            Client(2, delivery=[4, 5]),
         ],
-        depots=[Depot(0, 0)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(1, capacity=[10, 10])],
         distance_matrices=[np.zeros((3, 3), dtype=int)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    route = make_search_route(data, [1, 2])
+    route = make_search_route(data, ["C0", "C1"])
     assert_equal(route.load_between(frm, to, dimension=dim).load(), expected)
 
 
@@ -646,7 +660,7 @@ def test_load_between_equal_to_before_after_when_one_is_depot_different_dims(
     load_after() for multiple load dimensions when one side is the depot.
     """
     data = ok_small_multiple_load
-    clients = range(data.num_depots, data.num_locations)
+    clients = [f"C{idx}" for idx in range(data.num_clients)]
     route = make_search_route(data, clients)
 
     for idx in [1, 2, 3]:
@@ -672,7 +686,7 @@ def test_distance_different_profiles(ok_small_two_profiles):
     segments takes into account the profile argument.
     """
     data = ok_small_two_profiles
-    clients = range(data.num_depots, data.num_locations)
+    clients = [f"C{idx}" for idx in range(data.num_clients)]
     route = make_search_route(data, clients)
 
     assert_equal(route.distance(), 6_450)
@@ -690,7 +704,7 @@ def test_duration_different_profiles(ok_small_two_profiles):
     segments takes into account the profile argument.
     """
     data = ok_small_two_profiles
-    clients = range(data.num_depots, data.num_locations)
+    clients = [f"C{idx}" for idx in range(data.num_clients)]
     route = make_search_route(data, clients)
 
     assert_equal(route.duration(), 7_950)
@@ -744,11 +758,11 @@ def test_route_swap(ok_small, loc1, loc2, in_route1, in_route2):
     route1 = Route(ok_small, vehicle_type=0)
     route2 = Route(ok_small, vehicle_type=0)
 
-    node1 = Node(loc1)
+    node1 = Node(f"C{loc1}")
     if in_route1:
         route1.append(node1)
 
-    node2 = Node(loc2)
+    node2 = Node(f"C{loc2}")
     if in_route2:
         route2.append(node2)
 
@@ -782,7 +796,7 @@ def test_multi_trip_depots(ok_small_multiple_trips):
     Tests that a depot nodes correctly identify as start, end, or reload depot
     nodes.
     """
-    route = make_search_route(ok_small_multiple_trips, [1, 0, 4])
+    route = make_search_route(ok_small_multiple_trips, ["C0", "D0", "C3"])
 
     assert_(route[0].is_depot())  # 0 is the start depot
     assert_(route[0].is_start_depot())
@@ -809,7 +823,8 @@ def test_multi_trip_load_evaluation(ok_small_multiple_trips):
     """
     Tests load evaluation of a route with multiple trips.
     """
-    route = make_search_route(ok_small_multiple_trips, [1, 2, 0, 3, 4])
+    activities = ["C0", "C1", "D0", "C2", "C3"]
+    route = make_search_route(ok_small_multiple_trips, activities)
 
     # Overall route load statistics: there's 18 load being transported, 10 on
     # the first trip and 8 on the second. Because that's below the capacity of
@@ -838,7 +853,7 @@ def test_route_remove_reload_depot(ok_small_multiple_trips):
     number of depots, and does not affect the start and end depots.
     """
     route = Route(ok_small_multiple_trips, 0)
-    route.append(Node(loc=0))
+    route.append(Node("D0"))
 
     assert_equal(route.num_depots(), 3)  # start, end, and one reload depot
     assert_(route[1].is_reload_depot())
@@ -862,7 +877,7 @@ def test_remove_multiple_reload_depots(ok_small_multiple_trips):
     """
     veh_type = ok_small_multiple_trips.vehicle_type(0).replace(max_reloads=2)
     data = ok_small_multiple_trips.replace(vehicle_types=[veh_type])
-    route = make_search_route(data, [0, 0])
+    route = make_search_route(data, ["D0", "D0"])
 
     assert_(route[1].is_reload_depot())
     assert_(route[2].is_reload_depot())
@@ -886,10 +901,10 @@ def test_route_raises_too_many_trips(ok_small_multiple_trips):
     assert_equal(veh_type.max_reloads, 1)
 
     route = Route(ok_small_multiple_trips, 0)
-    route.append(Node(loc=0))  # first reload, is OK
+    route.append(Node("D0"))  # first reload, is OK
 
     with assert_raises(ValueError):  # second reload, should raise
-        route.append(Node(loc=0))
+        route.append(Node("D0"))
 
 
 def test_bug_reload_swaps_pickup_delivery_swap(small_spd):
@@ -901,7 +916,7 @@ def test_bug_reload_swaps_pickup_delivery_swap(small_spd):
     veh_type = small_spd.vehicle_type(0)
     new_type = veh_type.replace(reload_depots=[0], max_reloads=2)
     data = small_spd.replace(vehicle_types=[new_type])
-    route = make_search_route(data, [1, 0, 3, 4])
+    route = make_search_route(data, ["C0", "D0", "C2", "C3"])
 
     client3 = data.client(2)
     client4 = data.client(3)
@@ -924,7 +939,7 @@ def test_multi_trip_initial_load(ok_small_multiple_trips):
     old_type = ok_small_multiple_trips.vehicle_type(0)
     new_type = old_type.replace(initial_load=[5])
     data = ok_small_multiple_trips.replace(vehicle_types=[new_type])
-    route = make_search_route(data, [1, 2, 0, 3, 4])
+    route = make_search_route(data, ["C0", "C1", "D0", "C2", "C3"])
 
     # There's five excess load on the first trip, due to five initial load
     # already on the vehicle upon departure from the starting depot.
@@ -947,18 +962,19 @@ def test_multi_trip_with_release_times():
     ]
 
     data = ProblemData(
+        locations=[Location(0, 0) for _ in range(4)],
         clients=[
-            Client(0, 0, tw_early=60, tw_late=100, release_time=40),
-            Client(0, 0, tw_early=70, tw_late=90, release_time=50),
-            Client(0, 0, tw_early=80, tw_late=150, release_time=100),
+            Client(1, tw_early=60, tw_late=100, release_time=40),
+            Client(2, tw_early=70, tw_late=90, release_time=50),
+            Client(3, tw_early=80, tw_late=150, release_time=100),
         ],
-        depots=[Depot(0, 0)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(reload_depots=[0])],
         distance_matrices=[matrix],
         duration_matrices=[matrix],
     )
 
-    route = make_search_route(data, [1, 2, 0, 3])
+    route = make_search_route(data, ["C0", "C1", "D0", "C2"])
 
     # The two trips run from [50, 95] and [100, 150]. There's 5 wait duration
     # in between the two trips, for a total route duration of 100.
@@ -998,22 +1014,23 @@ def test_multi_trip_duration_caches(ok_small_multiple_trips):
     """
     Tests that the route duration caches correctly account for reload depots.
     """
-    route = make_search_route(ok_small_multiple_trips, [3, 4, 0, 1, 2])
+    activities = ["C2", "C3", "D0", "C0", "C1"]
+    route = make_search_route(ok_small_multiple_trips, activities)
     assert_(route.is_feasible())
 
-    # Test the prefix cache for the trip [3, 4], ending at the reload depot at
+    # Test the cache for the trip [C2, C3], ending at the reload depot at
     # index 3. We also test direct computation (``duration_between``) for good
     # measure, and compare against a route corresponding to the first trip.
-    first_trip = make_search_route(ok_small_multiple_trips, [3, 4])
+    first_trip = make_search_route(ok_small_multiple_trips, ["C2", "C3"])
     before_reload = route.duration_before(3)
     between_start_reload = route.duration_between(0, 3)
     assert_equal(first_trip.duration(), before_reload.duration())
     assert_equal(between_start_reload.duration(), before_reload.duration())
 
-    # Test the postfix cache for the trip [1, 2], starting at the reload depot
-    # at index 3. We again test direct computation, and compare against a route
+    # Test the cache for the trip [C0, C1], starting at the reload depot at
+    # index 3. We again test direct computation, and compare against a route
     # corresponding to the second trip.
-    second_trip = make_search_route(ok_small_multiple_trips, [1, 2])
+    second_trip = make_search_route(ok_small_multiple_trips, ["C0", "C1"])
     after_reload = route.duration_after(3)
     between_reload_end = route.duration_between(3, 6)
     assert_equal(second_trip.duration(), after_reload.duration())
@@ -1040,8 +1057,9 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
     has distance-related costs or (penalised) constraints.
     """
     data = ProblemData(
+        locations=[Location(0, 0)],
         clients=[],
-        depots=[Depot(0, 0)],
+        depots=[Depot(0)],
         vehicle_types=[veh_type],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
@@ -1054,19 +1072,19 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
 @pytest.mark.parametrize(
     ("veh_type", "depot", "exp"),
     [
-        (VehicleType(), Depot(0, 0), False),  # default has no cost
-        (VehicleType(), Depot(0, 0, tw_early=1), True),  # constraint (data)
-        (VehicleType(), Depot(0, 0, tw_late=1), True),  # constraint (data)
-        (VehicleType(start_late=5), Depot(0, 0), True),  # constraint (vehicle)
-        (VehicleType(tw_early=5), Depot(0, 0), True),  # constraint (vehicle)
-        (VehicleType(tw_late=5), Depot(0, 0), True),  # constraint (vehicle)
-        (VehicleType(shift_duration=0), Depot(0, 0), True),  # constraint (veh)
-        (VehicleType(unit_duration_cost=1), Depot(0, 0), True),  # unit cost
+        (VehicleType(), Depot(0), False),  # default has no cost
+        (VehicleType(), Depot(0, tw_early=1), True),  # constraint (data)
+        (VehicleType(), Depot(0, tw_late=1), True),  # constraint (data)
+        (VehicleType(start_late=5), Depot(0), True),  # constraint (vehicle)
+        (VehicleType(tw_early=5), Depot(0), True),  # constraint (vehicle)
+        (VehicleType(tw_late=5), Depot(0), True),  # constraint (vehicle)
+        (VehicleType(shift_duration=0), Depot(0), True),  # constraint (veh)
+        (VehicleType(unit_duration_cost=1), Depot(0), True),  # unit cost
         # unit cost but no max_overtime, so never relevant
-        (VehicleType(unit_overtime_cost=1), Depot(0, 0), False),
+        (VehicleType(unit_overtime_cost=1), Depot(0), False),
         # unit cost and overtime, so could be relevant
-        (VehicleType(unit_overtime_cost=1, max_overtime=1), Depot(0, 0), True),
-        (VehicleType(max_overtime=5), Depot(0, 0), False),  # not constrained
+        (VehicleType(unit_overtime_cost=1, max_overtime=1), Depot(0), True),
+        (VehicleType(max_overtime=5), Depot(0), False),  # not constrained
     ],
 )
 def test_has_duration_cost(veh_type: VehicleType, depot: Depot, exp: bool):
@@ -1075,6 +1093,7 @@ def test_has_duration_cost(veh_type: VehicleType, depot: Depot, exp: bool):
     and/or instance has duration-related costs or (penalised) constraints.
     """
     data = ProblemData(
+        locations=[Location(0, 0)],
         clients=[],
         depots=[depot],
         vehicle_types=[veh_type],
@@ -1093,7 +1112,7 @@ def test_overtime(ok_small_overtime):
     # The vehicle has a shift duration of 5_000, and allows another 1_000
     # overtime, if needed. This route takes 5'229 to complete, so the route
     # should have 229 units of overtime.
-    route = make_search_route(ok_small_overtime, [2, 4])
+    route = make_search_route(ok_small_overtime, ["C1", "C3"])
 
     # Route-level vehicle type attributes.
     assert_equal(route.shift_duration(), 5_000)
@@ -1112,27 +1131,14 @@ def test_eq(ok_small):
     """
     Tests __eq__.
     """
-    route1 = make_search_route(ok_small, [1, 2])
+    route1 = make_search_route(ok_small, ["C0", "C1"])
     assert_(route1 == route1)
     assert_(route1 != object())
     assert_(route1 != "123")
 
-    route2 = make_search_route(ok_small, [3, 4])
+    route2 = make_search_route(ok_small, ["C2", "C3"])
     assert_(route2 == route2)
     assert_(route1 != route2)
-
-
-def test_eq_pyvrp_route(ok_small_multiple_trips):
-    """
-    Tests __eq__ between search.Route and pyvrp.Route.
-    """
-    trips = [
-        pyvrp.Trip(ok_small_multiple_trips, [1, 2], 0),
-        pyvrp.Trip(ok_small_multiple_trips, [3, 4], 0),
-    ]
-    pyvrp_route = pyvrp.Route(ok_small_multiple_trips, trips, vehicle_type=0)
-    search_route = make_search_route(ok_small_multiple_trips, [1, 2, 0, 3, 4])
-    assert_(pyvrp_route == search_route)
 
 
 def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
@@ -1140,15 +1146,14 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     Tests that the route duration caches correctly account for depot service
     duration.
     """
-    old_depot = ok_small_multiple_trips.depot(0)
-    new_depot = Depot(old_depot.x, old_depot.y, service_duration=200)
+    new_depot = Depot(location=0, service_duration=200)
     data = ok_small_multiple_trips.replace(depots=[new_depot])
 
-    route = make_search_route(data, [3, 4, 0, 1, 2])
+    route = make_search_route(data, ["C2", "C3", "D0", "C0", "C1"])
     assert_(route.is_feasible())
 
     # Check that the first trip's duration matches the route's statistics.
-    first_trip = make_search_route(data, [3, 4])
+    first_trip = make_search_route(data, ["C2", "C3"])
     before_reload = route.duration_before(3)
     between_start_reload = route.duration_between(0, 3)
     assert_equal(first_trip.duration(), before_reload.duration())
@@ -1162,7 +1167,7 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     assert_equal(route.duration_at(6).duration(), 0)  # end depot
 
     # Now the second trip.
-    second_trip = make_search_route(data, [1, 2])
+    second_trip = make_search_route(data, ["C0", "C1"])
     after_reload = route.duration_after(3)
     between_reload_end = route.duration_between(3, 6)
     assert_equal(second_trip.duration(), after_reload.duration())
@@ -1179,3 +1184,16 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     # After the start and end depots.
     assert_equal(route.duration_after(0).duration(), route.duration())
     assert_equal(route.duration_after(6).duration(), 0)
+
+
+def test_node_is_client_and_is_depot():
+    """
+    Tests Node's is_client() and is_depot() members.
+    """
+    node = Node("D0")
+    assert_(node.is_depot())
+    assert_(not node.is_client())
+
+    node = Node("C0")
+    assert_(node.is_client())
+    assert_(not node.is_depot())

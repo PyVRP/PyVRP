@@ -28,8 +28,7 @@ PyVRP supports the following specifications:
       To specify heterogeneous capacities, see :term:`CAPACITY_SECTION`.
 
    ``DIMENSION``
-      Number of locations in the instance.
-      This is the sum of the number of depots and the number of clients.
+      Number of depots and clients in the instance.
 
    ``EDGE_WEIGHT_FORMAT``
       Specifies the format of the :term:`EDGE_WEIGHT_SECTION` if the edge weights are given explicitly.
@@ -67,7 +66,7 @@ PyVRP supports the following data sections:
    :sorted:
 
    ``BACKHAUL_SECTION``
-      Array of backhaul quantities, one for each location.
+      Array of backhaul quantities, one for each depot and client.
       This is the amount picked up at the client and transported back to the depot.
 
    ``CAPACITY_SECTION``
@@ -76,12 +75,12 @@ PyVRP supports the following data sections:
 
    ``DEMAND_SECTION``
    ``LINEHAUL_SECTION``
-      Array of demands, one for each location.
+      Array of demands, one for each depot and client.
       This is the delivery amount from the depot to the client.
 
    ``DEPOT_SECTION``
-      Array of location indices that are depots.
-      These location indices should be the contiguous lower indices, starting from 1.
+      Array of depot indices.
+      These indices should be the contiguous lower indices, starting from 1.
 
    ``EDGE_WEIGHT_SECTION``
       When provided, this section explicitly describes the distance and duration matrices.
@@ -92,23 +91,23 @@ PyVRP supports the following data sections:
       Of all clients in such a group, exactly one must be visited.    
 
    ``NODE_COORD_SECTION``
-      Array of :math:`(x, y)` coordinates for each location.
+      Array of :math:`(x, y)` coordinates for each depot and client.
 
    ``PRIZE_SECTION``
-      Array of prizes for visiting each location.
-      A value of zero for non-depots implies visiting that location is required.
+      Array of prizes for visiting each depot and client.
+      A value of zero for non-depots implies visiting that depot or client is required.
 
    ``RELEASE_TIME_SECTION``
-      Array of release times for each location.
+      Array of release times for each depot and client.
 
    ``SERVICE_TIME_SECTION``
-      Array of service durations for each location.
+      Array of service durations for each depot and client.
 
    ``TIME_WINDOW_SECTION``
-      Array of :math:`[e, l]` time window data, for each location.
+      Array of :math:`[e, l]` time window data, for each depot and client.
 
    ``VEHICLES_ALLOWED_CLIENTS_SECTION``
-      Lists specifying the client locations that each vehicle is allowed to service, one list for each vehicle.
+      Lists specifying the client indices that each vehicle is allowed to service, one list for each vehicle.
       Each vehicle is allowed to visit each client if this section is not provided.
       This section is commonly used in site-dependent instances.
 

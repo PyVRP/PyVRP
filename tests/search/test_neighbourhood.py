@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Depot, ProblemData, VehicleType
+from pyvrp import Depot, Location, ProblemData, VehicleType
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 
 
@@ -24,15 +24,15 @@ def test_neighbourhood_params_raises_for_empty_neighbourhoods():
         "expected_neighbours_check",
     ),
     [
-        (20, 10, True, 2,
-         {1, 3, 4, 5, 6, 7, 8, 45, 46, 100}),
+        (20, 10, True, 1,
+         {0, 2, 3, 4, 5, 6, 7, 44, 45, 99}),
         # From original C++ implementation
-        (18, 34, True, 1,
-         {2, 3, 4, 5, 6, 7, 8, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 53,
-          54, 55, 60, 61, 68, 69, 70, 73, 78, 79, 81, 88, 90, 98, 100}),
-        (18, 34, True, 99,
-         {9, 10, 11, 12, 13, 14, 15, 16, 20, 22, 24, 47, 52, 53, 55, 56, 57,
-          58, 59, 60, 64, 65, 66, 69, 74, 80, 82, 83, 86, 87, 88, 90, 91, 98}),
+        (18, 34, True, 0,
+         {1, 2, 3, 4, 5, 6, 7, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 52,
+          53, 54, 59, 60, 67, 68, 69, 72, 77, 78, 80, 87, 89, 97, 99}),
+        (18, 34, True, 98,
+         {8, 9, 10, 11, 12, 13, 14, 15, 19, 21, 23, 46, 51, 52, 54, 55, 56, 57,
+          58, 59, 63, 64, 65, 68, 73, 79, 81, 82, 85, 86, 87, 89, 90, 97}),
     ],
 )
 # fmt: on
@@ -54,14 +54,13 @@ def test_compute_neighbours(
     )
     neighbours = compute_neighbours(rc208, params)
 
-    assert_equal(len(neighbours), rc208.num_locations)
-    assert_equal(len(neighbours[0]), 0)
+    assert_equal(len(neighbours), rc208.num_clients)
 
     # We compare sets because the expected data (from the old C++
     # implementation) sorts by client ID (ascending), not proximity.
     assert_equal(set(neighbours[idx_check]), expected_neighbours_check)
 
-    for neighb in neighbours[1:]:
+    for neighb in neighbours:
         assert_equal(len(neighb), num_neighbours)
 
 
@@ -71,8 +70,12 @@ def test_neighbours_are_sorted_by_proximity(small_cvrp):
     """
     params = NeighbourhoodParams(0, small_cvrp.num_clients)
     neighbours = compute_neighbours(small_cvrp, params)
-    clients = list(range(small_cvrp.num_depots, small_cvrp.num_locations))
+    clients = range(small_cvrp.num_clients)
+
+    # Only consider client location distances; depots do not factor into the
+    # neighbourhoods.
     distances = small_cvrp.distance_matrix(profile=0)
+    distances = distances[small_cvrp.num_depots:, small_cvrp.num_depots:]
 
     for client in clients:
         # Proximity is completely based on distance. We break ties by index
@@ -104,15 +107,15 @@ def test_proximity_with_prizes(prize_collecting):
     params = NeighbourhoodParams(0, num_neighbours=10)
     neighbours = compute_neighbours(prize_collecting, params)
 
-    # We compare the number of times clients 20 and 36 are in other clients'
-    # neighbourhoods. Client 20 is at location (57, 58), client 36 at (63, 69).
+    # We compare the number of times clients C19 and C35 are in other clients'
+    # neighbourhoods. Client 19 is at location (57, 58), client 35 at (63, 69).
     # They're fairly close to each other, in one corner of the plane. The
-    # biggest difference is in prizes: client 20 has a prize of 33, whereas
-    # client 36 only yields 8. As a consequence, 36 should be in many fewer
-    # neighbourhoods than 20.
-    count_20 = sum(20 in n for n in neighbours)
-    count_36 = sum(36 in n for n in neighbours)
-    assert_(count_20 > count_36)
+    # biggest difference is in prizes: client 19 has a prize of 33, whereas
+    # client 35 only yields 8. As a consequence, 35 should be in many fewer
+    # neighbourhoods than 19.
+    count_19 = sum(19 in n for n in neighbours)
+    count_35 = sum(35 in n for n in neighbours)
+    assert_(count_19 > count_35)
 
 
 def test_proximity_with_mutually_exclusive_groups(
@@ -190,12 +193,12 @@ def test_zero_clients():
     Tests that the neighbourhood for an instance with zero clients is empty.
     """
     data = ProblemData(
+        locations=[Location(0, 0)],
         clients=[],
-        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType()],
-        distance_matrices=[np.zeros((2, 2), dtype=int)],
-        duration_matrices=[np.zeros((2, 2), dtype=int)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
-    # Two empty lists, one for each of the depots.
-    assert_equal(compute_neighbours(data), [[], []])
+    assert_equal(compute_neighbours(data), [])

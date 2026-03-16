@@ -135,11 +135,11 @@ def test_ils_acceptance_behaviour(ok_small):
     Tests ILS acceptance behaviour over a fixed trajectory.
     """
     sols = [
-        Solution(ok_small, [[1, 3], [2, 4]]),  # 22065 (infeas)
-        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
-        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
-        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240
-        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
+        Solution(ok_small, [[0, 2], [1, 3]]),  # 22065 (infeas)
+        Solution(ok_small, [[0, 1], [2, 3]]),  # 9725
+        Solution(ok_small, [[0, 1], [3, 2]]),  # 9868
+        Solution(ok_small, [[0, 3], [1, 2]]),  # 9240
+        Solution(ok_small, [[0, 1], [2, 3]]),  # 9725
     ]
 
     ils = IteratedLocalSearch(
@@ -193,10 +193,10 @@ def test_restart(ok_small):
     Params = IteratedLocalSearchParams
 
     sols = [
-        Solution(ok_small, [[1, 3], [2, 4]]),  # 22065 (infeas)
-        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
-        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725
-        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
+        Solution(ok_small, [[0, 2], [1, 3]]),  # 22065 (infeas)
+        Solution(ok_small, [[0, 1], [2, 3]]),  # 9725
+        Solution(ok_small, [[0, 1], [2, 3]]),  # 9725
+        Solution(ok_small, [[0, 1], [3, 2]]),  # 9868
     ]
 
     def run(params: IteratedLocalSearchParams):  # run with given params
@@ -235,9 +235,9 @@ def test_exhaustive_search_on_new_best_solution(ok_small):
     newfound best solutions.
     """
     sols = [
-        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868
-        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725 - new best
-        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240 - after exhaustive search
+        Solution(ok_small, [[0, 1], [3, 2]]),  # 9868
+        Solution(ok_small, [[0, 1], [2, 3]]),  # 9725 - new best
+        Solution(ok_small, [[0, 3], [1, 2]]),  # 9240 - after exhaustive search
     ]
 
     def search(*_, exhaustive: bool):
@@ -351,9 +351,9 @@ def test_callback_on_best(ok_small):
     obtained.
     """
     sols = [
-        Solution(ok_small, [[1, 2], [4, 3]]),  # 9868, init
-        Solution(ok_small, [[1, 2], [3, 4]]),  # 9725 - new best
-        Solution(ok_small, [[1, 4], [2, 3]]),  # 9240 - after exhaustive search
+        Solution(ok_small, [[0, 1], [3, 2]]),  # 9868, init
+        Solution(ok_small, [[0, 1], [2, 3]]),  # 9725 - new best
+        Solution(ok_small, [[0, 3], [1, 2]]),  # 9240 - after exhaustive search
     ]
 
     class Callbacks(IteratedLocalSearchCallbacks):

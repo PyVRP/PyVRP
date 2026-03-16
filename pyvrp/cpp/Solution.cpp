@@ -26,7 +26,7 @@ void Solution::evaluate(ProblemData const &data)
     for (auto const &route : routes_)
     {
         // Whole solution statistics.
-        numClients_ += route.size();
+        numClients_ += route.numClients();
         prizes_ += route.prizes();
         distance_ += route.distance();
         distanceCost_ += route.distanceCost();
@@ -159,7 +159,7 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
             continue;
 
         if (clientData.required || rng.rand() < 0.5)
-            clients.push_back(data.numDepots() + idx);
+            clients.push_back(idx);
     }
 
     // Shuffle clients to create random routes.
@@ -176,9 +176,10 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     auto const perRoute = perVehicle + adjustment;
     auto const numRoutes = (numClients + perRoute - 1) / perRoute;
 
-    std::vector<std::vector<Client>> routes(numRoutes);
+    std::vector<std::vector<Activity>> routes(numRoutes);
     for (size_t idx = 0; idx != numClients; ++idx)
-        routes[idx / perRoute].push_back(clients[idx]);
+        routes[idx / perRoute].emplace_back(Activity::ActivityType::CLIENT,
+                                            clients[idx]);
 
     std::vector<size_t> vehTypes;
     vehTypes.reserve(data.numVehicles());
@@ -222,18 +223,24 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         throw std::runtime_error(msg);
     }
 
-    DynamicBitset isVisited(data.numLocations());
+    DynamicBitset isVisited(data.numClients());
     std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes_)
     {
         if (route.empty())
             throw std::runtime_error("Solution should not have empty routes.");
 
+        static_assert(std::ranges::input_range<Route>);
+
         usedVehicles[route.vehicleType()]++;
-        for (auto const client : route)
+        for (auto const &activity : route)
         {
-            if (isVisited[client])  // client is also visited by an earlier
-            {                       // route if this is true
+            if (!activity.isClient())
+                continue;
+
+            auto const client = activity.idx();
+            if (isVisited[client])
+            {
                 std::ostringstream msg;
                 msg << "Client " << client << " is visited more than once.";
                 throw std::runtime_error(msg.str());
@@ -243,11 +250,10 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         }
     }
 
-    for (size_t client = data.numDepots(); client != data.numLocations();
-         ++client)
-        if (!isVisited[client])  // we need to check if the client visit
-        {                        // is required if this is true
-            auto const &clientData = data.client(client - data.numDepots());
+    for (size_t client = 0; client != data.numClients(); ++client)
+        if (!isVisited[client])  // not visited; is the client visit required?
+        {
+            auto const &clientData = data.client(client);
             numMissingClients_ += clientData.required;
         }
 

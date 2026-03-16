@@ -23,8 +23,8 @@ RemoveAdjacentDepot::evaluate(Route::Node *U,
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true>(
             deltaCost,
-            Route::Proposal(route->before(U->idx() - 2),
-                            route->after(U->idx())));
+            Route::Proposal(route->before(U->pos() - 2),
+                            route->after(U->pos())));
 
         if (deltaCost < bestCost)
         {
@@ -38,8 +38,8 @@ RemoveAdjacentDepot::evaluate(Route::Node *U,
         Cost deltaCost = 0;
         costEvaluator.deltaCost<true>(
             deltaCost,
-            Route::Proposal(route->before(U->idx()),
-                            route->after(U->idx() + 2)));
+            Route::Proposal(route->before(U->pos()),
+                            route->after(U->pos() + 2)));
 
         if (deltaCost < bestCost)
         {
@@ -59,10 +59,10 @@ void RemoveAdjacentDepot::apply(Route::Node *U) const
     auto *route = U->route();
 
     if (move_ == MoveType::REMOVE_PREV)
-        route->remove(U->idx() - 1);
+        route->remove(U->pos() - 1);
 
     if (move_ == MoveType::REMOVE_NEXT)
-        route->remove(U->idx() + 1);
+        route->remove(U->pos() + 1);
 }
 
 template <>

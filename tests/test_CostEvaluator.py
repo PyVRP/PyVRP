@@ -6,6 +6,7 @@ from pyvrp import (
     Client,
     CostEvaluator,
     Depot,
+    Location,
     ProblemData,
     Route,
     Solution,
@@ -129,13 +130,13 @@ def test_cost(ok_small):
     default_cost_evaluator = CostEvaluator([0], 0, 0)
     cost_evaluator = CostEvaluator([20], 6, 0)
 
-    feas_sol = Solution(ok_small, [[1, 2], [3], [4]])  # feasible solution
+    feas_sol = Solution(ok_small, [[0, 1], [2], [3]])  # feasible solution
     distance = feas_sol.distance()
 
     assert_equal(cost_evaluator.cost(feas_sol), distance)
     assert_equal(default_cost_evaluator.cost(feas_sol), distance)
 
-    infeas_sol = Solution(ok_small, [[1, 2, 3, 4]])  # infeasible solution
+    infeas_sol = Solution(ok_small, [[0, 1, 2, 3]])  # infeasible solution
     assert_(not infeas_sol.is_feasible())
 
     infeas_cost = np.iinfo(np.int64).max
@@ -151,7 +152,7 @@ def test_cost_with_prizes(prize_collecting):
     data = prize_collecting
     cost_evaluator = CostEvaluator([1], 1, 0)
 
-    sol = Solution(data, [[1, 2], [3, 4, 5]])
+    sol = Solution(data, [[0, 1], [2, 3, 4]])
     cost = cost_evaluator.cost(sol)
     assert_(sol.is_feasible())
 
@@ -176,14 +177,14 @@ def test_penalised_cost(ok_small):
     default_evaluator = CostEvaluator([0], 0, 0)
     cost_evaluator = CostEvaluator([penalty_capacity], penalty_tw, 0)
 
-    feas = Solution(ok_small, [[1, 2], [3], [4]])
+    feas = Solution(ok_small, [[0, 1], [2], [3]])
     assert_(feas.is_feasible())
 
     # For a feasible solution, cost and penalised_cost equal distance.
     assert_equal(cost_evaluator.penalised_cost(feas), feas.distance())
     assert_equal(default_evaluator.penalised_cost(feas), feas.distance())
 
-    infeas = Solution(ok_small, [[1, 2, 3, 4]])
+    infeas = Solution(ok_small, [[0, 1, 2, 3]])
     assert_(not infeas.is_feasible())
 
     # Compute cost associated with violated constraints.
@@ -206,7 +207,7 @@ def test_excess_distance_penalised_cost(ok_small):
     vehicle_type = VehicleType(3, capacity=[10], max_distance=5_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    sol = Solution(data, [[1, 2], [3, 4]])
+    sol = Solution(data, [[0, 1], [2, 3]])
     assert_(not sol.is_feasible())
 
     routes = sol.routes()
@@ -228,11 +229,12 @@ def test_excess_load_penalised_cost():
     Tests that excess load is properly penalised in the cost computations.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(0, 0), Location(1, 1)],
         clients=[
-            Client(x=0, y=0, delivery=[2, 1], pickup=[0, 0]),
-            Client(x=1, y=1, delivery=[3, 2], pickup=[0, 0]),
+            Client(location=1, delivery=[2, 1], pickup=[0, 0]),
+            Client(location=2, delivery=[3, 2], pickup=[0, 0]),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[
             VehicleType(2, capacity=[1, 1]),
         ],
@@ -241,7 +243,7 @@ def test_excess_load_penalised_cost():
     )
     assert_equal(data.num_load_dimensions, 2)
 
-    sol = Solution(data, [[1], [2]])
+    sol = Solution(data, [[0], [1]])
     assert_(not sol.is_feasible())
     assert_(sol.has_excess_load())
 
@@ -278,8 +280,8 @@ def test_cost_with_fixed_vehicle_cost(
     )
 
     routes = [
-        Route(data, [1, 2], assignment[0]),
-        Route(data, [3, 4], assignment[1]),
+        Route(data, [0, 1], assignment[0]),
+        Route(data, [2, 3], assignment[1]),
     ]
 
     sol = Solution(data, routes)
@@ -303,7 +305,7 @@ def test_unit_distance_duration_cost(ok_small):
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
 
-    sol = Solution(data, [Route(data, [1, 2], 0), Route(data, [3, 4], 1)])
+    sol = Solution(data, [Route(data, [0, 1], 0), Route(data, [2, 3], 1)])
     assert_(sol.is_feasible())
     assert_equal(sol.distance(), 5_501 + 4_224)
     assert_equal(sol.duration(), 6_221 + 5_004)

@@ -57,7 +57,7 @@ public:
 template <size_t N, size_t M>
 bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
 {
-    auto const first = node->idx();
+    auto const first = node->pos();
     auto const last = first + segLength - 1;
     auto const &route = *node->route();
 
@@ -72,22 +72,22 @@ bool Exchange<N, M>::overlap(Route::Node *U, Route::Node *V) const
     return U->route() == V->route()
            // We need max(M, 1) here because when V is the depot and M == 0,
            // this would turn negative and wrap around to a large number.
-           && U->idx() <= V->idx() + std::max<size_t>(M, 1) - 1
-           && V->idx() <= U->idx() + N - 1;
+           && U->pos() <= V->pos() + std::max<size_t>(M, 1) - 1
+           && V->pos() <= U->pos() + N - 1;
 }
 
 template <size_t N, size_t M>
 bool Exchange<N, M>::adjacent(Route::Node *U, Route::Node *V) const
 {
     return U->route() == V->route()
-           && (U->idx() + N == V->idx() || V->idx() + M == U->idx());
+           && (U->pos() + N == V->pos() || V->pos() + M == U->pos());
 }
 
 template <size_t N, size_t M>
 std::pair<Cost, bool> Exchange<N, M>::evalRelocateMove(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator) const
 {
-    assert(U->idx() > 0);
+    assert(U->pos() > 0);
 
     Cost deltaCost = 0;
 
@@ -104,13 +104,13 @@ std::pair<Cost, bool> Exchange<N, M>::evalRelocateMove(
         if (uRoute->numClients() == N)
             deltaCost -= uRoute->fixedVehicleCost();
 
-        auto const uProposal = Route::Proposal(uRoute->before(U->idx() - 1),
-                                               uRoute->after(U->idx() + N));
+        auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
+                                               uRoute->after(U->pos() + N));
 
         auto const vProposal
-            = Route::Proposal(vRoute->before(V->idx()),
-                              uRoute->between(U->idx(), U->idx() + N - 1),
-                              vRoute->after(V->idx() + 1));
+            = Route::Proposal(vRoute->before(V->pos()),
+                              uRoute->between(U->pos(), U->pos() + N - 1),
+                              vRoute->after(V->pos() + 1));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
@@ -118,20 +118,20 @@ std::pair<Cost, bool> Exchange<N, M>::evalRelocateMove(
     {
         auto *route = U->route();
 
-        if (U->idx() < V->idx())
+        if (U->pos() < V->pos())
             costEvaluator.deltaCost(
                 deltaCost,
-                Route::Proposal(route->before(U->idx() - 1),
-                                route->between(U->idx() + N, V->idx()),
-                                route->between(U->idx(), U->idx() + N - 1),
-                                route->after(V->idx() + 1)));
+                Route::Proposal(route->before(U->pos() - 1),
+                                route->between(U->pos() + N, V->pos()),
+                                route->between(U->pos(), U->pos() + N - 1),
+                                route->after(V->pos() + 1)));
         else
             costEvaluator.deltaCost(
                 deltaCost,
-                Route::Proposal(route->before(V->idx()),
-                                route->between(U->idx(), U->idx() + N - 1),
-                                route->between(V->idx() + 1, U->idx() - 1),
-                                route->after(U->idx() + N)));
+                Route::Proposal(route->before(V->pos()),
+                                route->between(U->pos(), U->pos() + N - 1),
+                                route->between(V->pos() + 1, U->pos() - 1),
+                                route->after(U->pos() + N)));
     }
 
     return std::make_pair(deltaCost, deltaCost < 0);
@@ -141,7 +141,7 @@ template <size_t N, size_t M>
 std::pair<Cost, bool> Exchange<N, M>::evalSwapMove(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator) const
 {
-    assert(U->idx() > 0 && V->idx() > 0);
+    assert(U->pos() > 0 && V->pos() > 0);
     assert(U->route() && V->route());
 
     Cost deltaCost = 0;
@@ -152,14 +152,14 @@ std::pair<Cost, bool> Exchange<N, M>::evalSwapMove(
         auto const *vRoute = V->route();
 
         auto const uProposal
-            = Route::Proposal(uRoute->before(U->idx() - 1),
-                              vRoute->between(V->idx(), V->idx() + M - 1),
-                              uRoute->after(U->idx() + N));
+            = Route::Proposal(uRoute->before(U->pos() - 1),
+                              vRoute->between(V->pos(), V->pos() + M - 1),
+                              uRoute->after(U->pos() + N));
 
         auto const vProposal
-            = Route::Proposal(vRoute->before(V->idx() - 1),
-                              uRoute->between(U->idx(), U->idx() + N - 1),
-                              vRoute->after(V->idx() + M));
+            = Route::Proposal(vRoute->before(V->pos() - 1),
+                              uRoute->between(U->pos(), U->pos() + N - 1),
+                              vRoute->after(V->pos() + M));
 
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
@@ -167,22 +167,22 @@ std::pair<Cost, bool> Exchange<N, M>::evalSwapMove(
     {
         auto const *route = U->route();
 
-        if (U->idx() < V->idx())
+        if (U->pos() < V->pos())
             costEvaluator.deltaCost(
                 deltaCost,
-                Route::Proposal(route->before(U->idx() - 1),
-                                route->between(V->idx(), V->idx() + M - 1),
-                                route->between(U->idx() + N, V->idx() - 1),
-                                route->between(U->idx(), U->idx() + N - 1),
-                                route->after(V->idx() + M)));
+                Route::Proposal(route->before(U->pos() - 1),
+                                route->between(V->pos(), V->pos() + M - 1),
+                                route->between(U->pos() + N, V->pos() - 1),
+                                route->between(U->pos(), U->pos() + N - 1),
+                                route->after(V->pos() + M)));
         else
             costEvaluator.deltaCost(
                 deltaCost,
-                Route::Proposal(route->before(V->idx() - 1),
-                                route->between(U->idx(), U->idx() + N - 1),
-                                route->between(V->idx() + M, U->idx() - 1),
-                                route->between(V->idx(), V->idx() + M - 1),
-                                route->after(U->idx() + N)));
+                Route::Proposal(route->before(V->pos() - 1),
+                                route->between(U->pos(), U->pos() + N - 1),
+                                route->between(V->pos() + M, U->pos() - 1),
+                                route->between(V->pos(), V->pos() + M - 1),
+                                route->after(U->pos() + N)));
     }
 
     return std::make_pair(deltaCost, deltaCost < 0);
@@ -215,8 +215,10 @@ std::pair<Cost, bool> Exchange<N, M>::evaluate(
     else
     {
         if constexpr (N == M)  // symmetric, so only have to evaluate this once
-            if (U->client() >= V->client())
+        {
+            if (U->idx() >= V->idx())
                 return std::make_pair(0, false);
+        }
 
         if (adjacent(U, V))
             return std::make_pair(0, false);
@@ -232,15 +234,15 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
 
     auto &uRoute = *U->route();
     auto &vRoute = *V->route();
-    auto *uToInsert = N == 1 ? U : uRoute[U->idx() + N - 1];
-    auto *insertUAfter = M == 0 ? V : vRoute[V->idx() + M - 1];
+    auto *uToInsert = N == 1 ? U : uRoute[U->pos() + N - 1];
+    auto *insertUAfter = M == 0 ? V : vRoute[V->pos() + M - 1];
 
     // Insert these 'extra' nodes of U after the end of V...
     for (size_t count = 0; count != N - M; ++count)
     {
         auto *prev = p(uToInsert);
-        uRoute.remove(uToInsert->idx());
-        vRoute.insert(insertUAfter->idx() + 1, uToInsert);
+        uRoute.remove(uToInsert->pos());
+        vRoute.insert(insertUAfter->pos() + 1, uToInsert);
         uToInsert = prev;
     }
 

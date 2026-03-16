@@ -39,7 +39,7 @@ def plot_demands(
     demand = np.array([client.delivery[dimension] for client in clients])
     demand = np.sort(demand)
 
-    ax.bar(np.arange(data.num_depots, data.num_locations), demand)
+    ax.bar(np.arange(data.num_clients), demand)
 
     if title is None:
         veh_types = data.vehicle_types()

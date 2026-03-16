@@ -17,12 +17,13 @@ namespace pyvrp
  * type
  *     The type of activity, for example a depot or client visit.
  * idx
- *     The unique index of the activity corresponding to the activity type. For
+ *     The index of the activity corresponding to the activity type. For
  *     example, if this is a client visit and ``idx`` is 0, then this activity
  *     visits the first client.
  */
-struct Activity
+class Activity
 {
+public:
     /**
      * Enum of activity types.
      *
@@ -39,14 +40,26 @@ struct Activity
         CLIENT = 1,
     };
 
-    ActivityType const type;
-    size_t const idx;
+private:
+    ActivityType type_;
+    size_t idx_;
 
+public:
     Activity(ActivityType type, size_t idx);
 
     Activity(std::string const &description);
 
     bool operator==(Activity const &other) const = default;
+
+    /**
+     * The type of activity.
+     */
+    inline ActivityType type() const;
+
+    /**
+     *  The index of the activity corresponding to the activity type.
+     */
+    inline size_t idx() const;
 
     /**
      * Returns whether this activity concerns a client visit.
@@ -58,11 +71,15 @@ struct Activity
      */
     inline bool isDepot() const;
 };
+
+Activity::ActivityType Activity::type() const { return type_; }
+
+size_t Activity::idx() const { return idx_; }
+
+bool Activity::isClient() const { return type_ == ActivityType::CLIENT; }
+
+bool Activity::isDepot() const { return type_ == ActivityType::DEPOT; }
 }  // namespace pyvrp
-
-bool pyvrp::Activity::isClient() const { return type == ActivityType::CLIENT; }
-
-bool pyvrp::Activity::isDepot() const { return type == ActivityType::DEPOT; }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::Activity const &activity);
 

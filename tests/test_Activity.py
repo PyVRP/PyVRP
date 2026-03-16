@@ -19,16 +19,6 @@ def test_is_client_depot():
     assert_(depot.is_depot())
 
 
-def test_unpacking():
-    """
-    Tests unpacking an activity into a (type, idx) tuple.
-    """
-    activity = Activity(ActivityType.CLIENT, 10)
-    type, idx = activity
-    assert_equal(type, ActivityType.CLIENT)
-    assert_equal(idx, 10)
-
-
 def test_eq():
     """
     Tests the Activity's equality operator.
