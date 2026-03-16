@@ -55,8 +55,7 @@ def read(
     Parameters
     ----------
     where
-        File location to read. Assumes the data on the given location is in
-        ``VRPLIB`` format.
+        File location to read. Assumes the file is in ``VRPLIB`` format.
     round_func
         Optional rounding function that is applied to all data values in the
         instance. This can either be a function or a string:
@@ -102,8 +101,8 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
     Parameters
     ----------
     where
-        File location to read. Assumes the solution in the file on the given
-        location is in ``VRPLIB`` solution format.
+        File location to read. Assumes the file is in ``VRPLIB`` solution
+        format.
     data
         Problem data instance that the solution is based on. See
         :meth:`~pyvrp.read` for details.

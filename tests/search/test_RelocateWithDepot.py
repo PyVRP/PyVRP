@@ -223,11 +223,11 @@ def test_bug_release_times(mtvrptw_release_times):
     # This route visits C33, reloads, and then visits C22, C37, and C47, as
     # follows:
     # - Leave the depot at 14579.
-    # - Visit C33 at 14902, leave at 15802.
+    # - Arrive at C33 at 14902, leave at 15802.
     # - Return to reload depot at 16125.
-    # - Visit C22 at 16430, leave at 17330.
-    # - Visit C37 at 12230, adding 5395 time warp. Leave at 13130.
-    # - Visit C47 at 28560, leave at 29460.
+    # - Arrive at C22 at 16430, leave at 17330.
+    # - Arrive at C37 at 12230, adding 5395 time warp. Leave at 13130.
+    # - Arrive at C47 at 28560, leave at 29460.
     # - Return to depot at 29567.
     activities = ["C33", "D0", "C22", "C37", "C47"]
     route1 = make_search_route(mtvrptw_release_times, activities)
@@ -238,7 +238,7 @@ def test_bug_release_times(mtvrptw_release_times):
 
     # This route visits C5, as follows:
     # - Leave the depot at 4718.
-    # - Visit C5 at 4970, leave at 5870.
+    # - Arrive at C5 at 4970, leave at 5870.
     # - Return to depot at 6122.
     route2 = make_search_route(mtvrptw_release_times, ["C5"])
 

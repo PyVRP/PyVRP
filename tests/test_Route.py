@@ -20,7 +20,7 @@ from tests.helpers import read
 def test_route_depot_accessors(ok_small_multi_depot):
     """
     Tests that Route's start_depot() and end_depot() members return the correct
-    depot location indices.
+    depot indices.
     """
     routes = [
         Route(ok_small_multi_depot, [0], 0),

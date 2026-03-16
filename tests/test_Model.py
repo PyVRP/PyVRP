@@ -193,17 +193,17 @@ def test_add_vehicle_type_default_depots():
     depot1 = m.add_depot(m.add_location(0, 0))
     depot2 = m.add_depot(m.add_location(1, 1))
 
-    # No depot specified: should default to the first (location index 0).
+    # No depot specified: should default to the first (depot index 0).
     vehicle_type1 = m.add_vehicle_type()
     assert_equal(vehicle_type1.start_depot, 0)
     assert_equal(vehicle_type1.end_depot, 0)
 
-    # First depot specified, should set first (location index 0).
+    # First depot specified, should set first (depot index 0).
     vehicle_type2 = m.add_vehicle_type(start_depot=depot1, end_depot=depot1)
     assert_equal(vehicle_type2.start_depot, 0)
     assert_equal(vehicle_type2.end_depot, 0)
 
-    # Second depot specified, should set second (location index 1).
+    # Second depot specified, should set second (depot index 1).
     vehicle_type3 = m.add_vehicle_type(start_depot=depot2, end_depot=depot2)
     assert_equal(vehicle_type3.start_depot, 1)
     assert_equal(vehicle_type3.start_depot, 1)
@@ -600,7 +600,7 @@ def test_model_solves_line_instance_with_multiple_depots():
     # Test that there are two routes, with the clients closest to depot 0
     # assigned to the first route, and clients closest to depot 1 assigned to
     # the second route. Route membership is compared using sets because the
-    # optimal visit order is not unique.
+    # optimal route order is not unique.
     route1, route2 = res.best.routes()
     clients1 = {activity.idx for activity in route1 if activity.is_client()}
     clients2 = {activity.idx for activity in route2 if activity.is_client()}
