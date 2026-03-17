@@ -38,8 +38,6 @@ class DynamicBitset:
 
 class PiecewiseLinearFunction:
     @overload
-    def __init__(self) -> None: ...
-    @overload
     def __init__(
         self,
         breakpoints: list[np.int64],

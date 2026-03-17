@@ -93,21 +93,7 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<PiecewiseLinearFunction>(
         m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
-        .def(py::init(
-                 [](py::iterable points)
-                 {
-                     std::vector<PiecewiseLinearFunction::Point> valuePoints;
-                     for (auto const &point : points)
-                     {
-                         auto const seq = py::cast<py::sequence>(point);
-                         if (seq.size() != 2)
-                             throw std::invalid_argument(
-                                 "Each point must be a (x, f(x)) pair.");
-                         valuePoints.push_back(
-                             {seq[0].cast<int64_t>(), seq[1].cast<int64_t>()});
-                     }
-                     return PiecewiseLinearFunction(valuePoints);
-                 }),
+        .def(py::init<std::vector<PiecewiseLinearFunction::Point>>(),
              py::arg("points"),
              DOC(pyvrp, PiecewiseLinearFunction, PiecewiseLinearFunction, 1))
         .def(py::init<std::vector<int64_t>,
@@ -115,8 +101,6 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("breakpoints"),
              py::arg("segments"),
              DOC(pyvrp, PiecewiseLinearFunction, PiecewiseLinearFunction, 2))
-        .def(py::init<>(),
-             DOC(pyvrp, PiecewiseLinearFunction, PiecewiseLinearFunction, 3))
         .def("__call__",
              &PiecewiseLinearFunction::operator(),
              py::arg("x"),

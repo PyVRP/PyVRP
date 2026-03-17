@@ -45,7 +45,9 @@ public:
      *     points: list[tuple[np.int64, np.int64]],
      * )
      *
-     * Creates a piecewise linear function from ordered ``(x, f(x))`` points.
+     * Creates a piecewise linear function from ordered ``(x, f(x))`` points,
+     * following the same interface as Gurobi's piecewise linear objectives:
+     * https://docs.gurobi.com/projects/optimizer/en/current/concepts/modeling/objectives.html#piecewise-linear-objectives
      *
      * Points must be non-decreasing in ``x``. Jumps are represented by two
      * consecutive points sharing the same ``x``-coordinate. The first two and
@@ -67,8 +69,6 @@ public:
      */
     PiecewiseLinearFunction(std::vector<Point> points);
 
-    // FIXME: consider removing this constructor once the points constructor is
-    // the standard interface.
     /**
      * PiecewiseLinearFunction(
      *     breakpoints: list[np.int64],
@@ -96,14 +96,6 @@ public:
                             std::vector<Segment> segments);
 
     /**
-     * PiecewiseLinearFunction()
-     *
-     * Creates the zero function represented by a single segment with zero slope
-     * and zero intercept.
-     */
-    PiecewiseLinearFunction();
-
-    /**
      * Evaluates :math:`f(x)`.
      */
     [[nodiscard]] inline Co operator()(Dom x) const;
@@ -125,12 +117,6 @@ public:
 
     bool operator==(PiecewiseLinearFunction const &other) const = default;
 };
-
-template <typename Dom, typename Co>
-PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction()
-    : PiecewiseLinearFunction({}, {{0, 0}})
-{
-}
 
 template <typename Dom, typename Co>
 PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
@@ -167,44 +153,40 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
     // Left extrapolation: slope of first segment (between first two points).
     auto const firstSlope = (points[1].second - points[0].second)
                             / (points[1].first - points[0].first);
-    segments_.push_back(
-        {points[0].second - firstSlope * points[0].first, firstSlope});
+    segments_.emplace_back(points[0].second - firstSlope * points[0].first,
+                           firstSlope);
 
     // Add all distinct x-values as breakpoints, with the segment to the
     // right of each breakpoint.
-    size_t i = 0;
     Dom prevSlope = firstSlope;
 
-    while (i < points.size())
+    for (auto it = points.begin(); it != points.end();)
     {
-        auto const x = points[i].first;
+        auto const x = it->first;
 
-        // Find the last point at this x (handles jumps).
-        size_t j = i;
-        while (j + 1 < points.size() && points[j + 1].first == x)
-            ++j;
+        // Find the first point past the current x (handles jumps).
+        auto right = it;
+        while (++right != points.end() && right->first == x)
+            ;
 
-        auto const yRight = points[j].second;
-        Dom slopeRight;
+        auto const yRight = std::prev(right)->second;
+        // Right extrapolation: same slope as last segment.
+        Dom slopeRight = prevSlope;
 
-        if (j + 1 < points.size())
+        if (right != points.end())
         {
-            auto const xNext = points[j + 1].first;
-            auto const yNextLeft = points[j + 1].second;
-            slopeRight = (yNextLeft - yRight) / (xNext - x);
+            slopeRight = (right->second - yRight) / (right->first - x);
             prevSlope = slopeRight;
-        }
-        else
-        {
-            // Right extrapolation: same slope as last segment.
-            slopeRight = prevSlope;
         }
 
         breakpoints_.push_back(x);
-        segments_.push_back({yRight - slopeRight * x, slopeRight});
+        segments_.emplace_back(yRight - slopeRight * x, slopeRight);
 
-        i = j + 1;
+        it = right;
     }
+
+    assert(!segments_.empty());
+    assert(breakpoints_.size() + 1 == segments_.size());
 }
 
 template <typename Dom, typename Co>
@@ -227,9 +209,9 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
 template <typename Dom, typename Co>
 Co PiecewiseLinearFunction<Dom, Co>::operator()(Dom x) const
 {
-    auto const idx = static_cast<size_t>(
-        std::upper_bound(breakpoints_.begin(), breakpoints_.end(), x)
-        - breakpoints_.begin());
+    auto const idx = std::distance(
+        breakpoints_.begin(),
+        std::upper_bound(breakpoints_.begin(), breakpoints_.end(), x));
     auto const [intercept, slope] = segments_[idx];
     return static_cast<Co>(intercept + slope * x);
 }
@@ -251,10 +233,8 @@ template <typename Dom, typename Co>
 bool PiecewiseLinearFunction<Dom, Co>::isMonotonicallyIncreasing() const
 {
     for (auto const &[_, slope] : segments_)
-    {
         if (slope < 0)
             return false;
-    }
 
     for (size_t idx = 0; idx != breakpoints_.size(); ++idx)
     {
