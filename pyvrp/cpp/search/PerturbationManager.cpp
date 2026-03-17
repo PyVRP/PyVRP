@@ -59,7 +59,7 @@ void PerturbationManager::perturb(Solution &solution,
     {
         // This node has already been touched by a previous perturbation, so
         // we skip it here.
-        if (perturbed[node->client()])
+        if (perturbed[node->idx()])
             return;
 
         // Remove if node is in a route and we are currently removing.
@@ -67,7 +67,7 @@ void PerturbationManager::perturb(Solution &solution,
         if (route && action == PerturbType::REMOVE)
         {
             searchSpace.markPromising(node);
-            route->remove(node->idx());
+            route->remove(node->pos());
             route->update();
         }
         // Insert if node is not in a route and we are currently inserting.
@@ -80,7 +80,7 @@ void PerturbationManager::perturb(Solution &solution,
         else  // no-op
             return;
 
-        perturbed[node->client()] = true;
+        perturbed[node->idx()] = true;
         movesLeft--;
     };
 
@@ -97,7 +97,7 @@ void PerturbationManager::perturb(Solution &solution,
         if (!movesLeft)
             return;
 
-        for (auto const vClient : searchSpace.neighboursOf(U->client()))
+        for (auto const vClient : searchSpace.neighboursOf(uClient))
         {
             auto *V = &solution.nodes[vClient];
             perturb(V, action);

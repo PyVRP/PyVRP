@@ -9,6 +9,7 @@ from pyvrp._pyvrp import (
     Client,
     ClientGroup,
     Depot,
+    Location,
     ProblemData,
     Solution,
     VehicleType,
@@ -37,8 +38,8 @@ class Edge:
 
     def __init__(
         self,
-        frm: Client | Depot,
-        to: Client | Depot,
+        frm: Location,
+        to: Location,
         distance: int,
         duration: int,
     ):
@@ -81,8 +82,8 @@ class Profile:
 
     def add_edge(
         self,
-        frm: Client | Depot,
-        to: Client | Depot,
+        frm: Location,
+        to: Location,
         distance: int,
         duration: int = 0,
     ) -> Edge:
@@ -103,6 +104,7 @@ class Model:
     """
 
     def __init__(self) -> None:
+        self._locations: list[Location] = []
         self._clients: list[Client] = []
         self._depots: list[Depot] = []
         self._edges: list[Edge] = []
@@ -125,13 +127,11 @@ class Model:
         return self._depots
 
     @property
-    def locations(self) -> list[Client | Depot]:
+    def locations(self) -> list[Location]:
         """
-        Returns all locations (depots and clients) in the current model. The
-        clients in the routes of the solution returned by :meth:`~solve` can be
-        used to index these locations.
+        Returns all locations in the current model.
         """
-        return self._depots + self._clients
+        return self._locations
 
     @property
     def groups(self) -> list[ClientGroup]:
@@ -177,9 +177,9 @@ class Model:
         Model
             A model instance representing the given data.
         """
+        locs = data.locations()
         depots = data.depots()
         clients = data.clients()
-        locs = depots + clients
 
         profiles = [Profile() for _ in range(data.num_profiles)]
         for idx, profile in enumerate(profiles):
@@ -197,6 +197,7 @@ class Model:
             ]
 
         self = Model()
+        self._locations = locs
         self._clients = clients
         self._depots = depots
         self._groups = data.groups()
@@ -205,10 +206,29 @@ class Model:
 
         return self
 
-    def add_client(
+    def add_location(
         self,
         x: float,
         y: float,
+        *,
+        name: str = "",
+    ) -> Location:
+        """
+        Adds a location with the given attributes to the model. Returns the
+        created :class:`~pyvrp._pyvrp.Location` instance.
+        """
+        loc = Location(
+            x=x,
+            y=y,
+            name=name,
+        )
+
+        self._locations.append(loc)
+        return loc
+
+    def add_client(
+        self,
+        location: Location,
         delivery: int | list[int] = [],
         pickup: int | list[int] = [],
         service_duration: int = 0,
@@ -239,14 +259,17 @@ class Model:
         else:
             raise ValueError("The given group is not in this model instance.")
 
+        if (location_idx := _idx_by_id(location, self._locations)) is None:
+            msg = "The given location is not in this model instance."
+            raise ValueError(msg)
+
         if required and group is not None and group.mutually_exclusive:
             # Required clients cannot be part of a mutually exclusive client
             # group, since then there's nothing to decide about.
             raise ValueError("Required client in mutually exclusive group.")
 
         client = Client(
-            x=x,
-            y=y,
+            location=location_idx,
             delivery=[delivery] if isinstance(delivery, int) else delivery,
             pickup=[pickup] if isinstance(pickup, int) else pickup,
             service_duration=service_duration,
@@ -260,7 +283,7 @@ class Model:
         )
 
         if group_idx is not None:
-            client_idx = len(self._depots) + len(self._clients)
+            client_idx = len(self._clients)
             self._groups[group_idx].add_client(client_idx)
 
         self._clients.append(client)
@@ -279,8 +302,7 @@ class Model:
 
     def add_depot(
         self,
-        x: float,
-        y: float,
+        location: Location,
         tw_early: int = 0,
         tw_late: int = np.iinfo(np.int64).max,
         service_duration: int = 0,
@@ -291,9 +313,12 @@ class Model:
         Adds a depot with the given attributes to the model. Returns the
         created :class:`~pyvrp._pyvrp.Depot` instance.
         """
+        if (location_idx := _idx_by_id(location, self._locations)) is None:
+            msg = "The given location is not in this model instance."
+            raise ValueError(msg)
+
         depot = Depot(
-            x=x,
-            y=y,
+            location=location_idx,
             tw_early=tw_early,
             tw_late=tw_late,
             service_duration=service_duration,
@@ -301,20 +326,12 @@ class Model:
         )
 
         self._depots.append(depot)
-
-        for group in self._groups:  # new depot invalidates client indices
-            group.clear()
-
-        for idx, client in enumerate(self._clients, len(self._depots)):
-            if client.group is not None:
-                self._groups[client.group].add_client(idx)
-
         return depot
 
     def add_edge(
         self,
-        frm: Client | Depot,
-        to: Client | Depot,
+        frm: Location,
+        to: Location,
         distance: int,
         duration: int = 0,
         profile: Profile | None = None,
@@ -462,7 +479,7 @@ class Model:
             :const:`~pyvrp.constants.MAX_VALUE`, a large number. Note that this
             value cannot exceed :const:`~pyvrp.constants.MAX_VALUE`.
         """
-        locs = self.locations
+        locs = self._locations
         loc2idx = {id(loc): idx for idx, loc in enumerate(locs)}
 
         # First we create the base distance and duration matrices. These are
@@ -503,6 +520,7 @@ class Model:
             durations = [base_duration]
 
         return ProblemData(
+            self._locations,
             self._clients,
             self._depots,
             self.vehicle_types,

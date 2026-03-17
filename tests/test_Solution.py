@@ -9,11 +9,11 @@ from pyvrp import (
     Client,
     ClientGroup,
     Depot,
+    Location,
     ProblemData,
     RandomNumberGenerator,
     Route,
     Solution,
-    Trip,
     VehicleType,
 )
 from tests.helpers import read
@@ -22,8 +22,8 @@ from tests.helpers import read
 @pytest.mark.parametrize(
     "routes",
     [
-        [[3, 4], [1, 2], []],
-        [[3, 4], [], [1, 2]],
+        [[2, 3], [0, 1], []],
+        [[2, 3], [], [0, 1]],
     ],
 )
 def test_route_constructor_raises_for_empty_routes(ok_small, routes):
@@ -45,19 +45,19 @@ def test_route_constructor_with_different_vehicle_types(ok_small):
         ]
     )
 
-    sol = Solution(data, [Route(data, [3, 4], 0), Route(data, [1, 2], 1)])
+    sol = Solution(data, [Route(data, [2, 3], 0), Route(data, [0, 1], 1)])
 
     # We expect Solution to return routes with the correct vehicle types.
     routes = sol.routes()
     assert_equal(len(routes), 2)
 
-    assert_equal(routes[0].visits(), [3, 4])
+    assert_equal(str(routes[0]), "C2 C3")
     assert_equal(routes[0].vehicle_type(), 0)
-    assert_equal(routes[0], Route(data, [3, 4], 0))
+    assert_equal(routes[0], Route(data, [2, 3], 0))
 
-    assert_equal(routes[1].visits(), [1, 2])
+    assert_equal(str(routes[1]), "C0 C1")
     assert_equal(routes[1].vehicle_type(), 1)
-    assert_equal(routes[1], Route(data, [1, 2], 1))
+    assert_equal(routes[1], Route(data, [0, 1], 1))
 
 
 def test_random_constructor_cycles_over_routes(ok_small):
@@ -77,7 +77,7 @@ def test_random_constructor_cycles_over_routes(ok_small):
     assert_equal(len(routes), 2)
 
     for idx, size in enumerate([2, 2]):
-        assert_equal(len(routes[idx]), size)
+        assert_equal(routes[idx].num_clients(), size)
 
 
 @pytest.mark.parametrize("num_vehicles", (4, 5, 1_000))
@@ -96,7 +96,7 @@ def test_random_constructor_uses_all_routes(ok_small, num_vehicles):
     routes = sol.routes()
 
     for route in routes:
-        assert_equal(len(route), 1)
+        assert_equal(route.num_clients(), 1)
 
     assert_equal(sol.num_routes(), data.num_clients)
     assert_equal(len(routes), data.num_clients)
@@ -146,15 +146,15 @@ def test_route_constructor_raises_too_many_vehicles(ok_small):
     assert_equal(ok_small.num_vehicles, 3)
 
     # Only two routes should not raise.
-    sol = Solution(ok_small, [[1, 2], [4, 3]])
+    sol = Solution(ok_small, [[0, 1], [3, 2]])
     assert_equal(len(sol.routes()), 2)
 
     # Three routes should not raise.
-    Solution(ok_small, [[1, 2], [4], [3]])
+    Solution(ok_small, [[0, 1], [3], [2]])
 
     # More than three routes should raise, since we only have three vehicles.
     with assert_raises(RuntimeError):
-        Solution(ok_small, [[1], [2], [3], [4]])
+        Solution(ok_small, [[0], [1], [2], [3]])
 
     # Now test the case with multiple vehicle types.
     data = ok_small.replace(
@@ -165,27 +165,27 @@ def test_route_constructor_raises_too_many_vehicles(ok_small):
     )
 
     # Only two routes (of type 0) should not raise.
-    sol = Solution(data, [[1, 2], [4, 3]])
+    sol = Solution(data, [[0, 1], [3, 2]])
     assert_equal(len(sol.routes()), 2)
 
     # One route of both vehicle types should not raise.
-    sol = Solution(data, [Route(data, [1, 2], 0), Route(data, [4, 3], 1)])
+    sol = Solution(data, [Route(data, [0, 1], 0), Route(data, [3, 2], 1)])
     assert_equal(len(sol.routes()), 2)
 
     # Two routes of type 1 and one of type 2 should not raise as we have those.
     sol = Solution(
         data,
-        [Route(data, [1], 0), Route(data, [2], 0), Route(data, [4, 3], 1)],
+        [Route(data, [0], 0), Route(data, [1], 0), Route(data, [3, 2], 1)],
     )
     assert_equal(len(sol.routes()), 3)
 
     # Two routes of vehicle type 1 should raise since we have only one.
     with assert_raises(RuntimeError):
-        sol = Solution(data, [Route(data, [1, 2], 1), Route(data, [4, 3], 1)])
+        sol = Solution(data, [Route(data, [0, 1], 1), Route(data, [3, 2], 1)])
 
     # Three routes should raise since they are considered to be type 0.
     with assert_raises(RuntimeError):
-        Solution(data, [[1, 2], [4], [3]])
+        Solution(data, [[0, 1], [3], [2]])
 
 
 def test_route_constructor_raises_for_multiple_visits(ok_small):
@@ -193,12 +193,10 @@ def test_route_constructor_raises_for_multiple_visits(ok_small):
     Tests that visiting the same client more than once raises.
     """
     with assert_raises(RuntimeError):
-        Solution(ok_small, [[1, 2], [1, 3, 4]])  # client 1 is visited twice
+        Solution(ok_small, [[0, 1], [0, 2, 3]])  # C0 is visited twice
 
-    with assert_raises(RuntimeError):
-        Solution(
-            ok_small, [[1, 2], [1, 3, 4], [1]]
-        )  # client 1 is visited thrice
+    with assert_raises(RuntimeError):  # C0 is visited thrice
+        Solution(ok_small, [[0, 1], [0, 2, 3], [0]])
 
 
 def test_route_constructor_allows_incomplete_solutions(ok_small_prizes):
@@ -208,98 +206,20 @@ def test_route_constructor_allows_incomplete_solutions(ok_small_prizes):
     for both prize collecting, and in LNS settings where an incomplete solution
     is subsequently repaired.
     """
-    # Client 1 is required but not visited.
-    sol = Solution(ok_small_prizes, [[2], [3, 4]])
+    # C0 is required but not visited.
+    sol = Solution(ok_small_prizes, [[1], [2, 3]])
     assert_(not sol.is_complete())
     assert_(not sol.is_feasible())
 
     # All required clients are visited, but the solution is not feasible.
-    sol = Solution(ok_small_prizes, [[1], [2, 3, 4]])
+    sol = Solution(ok_small_prizes, [[0], [1, 2, 3]])
     assert_(not sol.is_feasible())
     assert_(sol.is_complete())
 
     # All required clients are visited and the solution is feasible.
-    sol = Solution(ok_small_prizes, [[1]])
+    sol = Solution(ok_small_prizes, [[0]])
     assert_(sol.is_feasible())
     assert_(sol.is_complete())
-
-
-def test_neighbours(ok_small):
-    """
-    Tests that the neighbour structure of (pred, succ) pairs for each client in
-    the solution works correctly.
-    """
-    assert_equal(ok_small.num_clients, 4)
-
-    sol = Solution(ok_small, [[3], [1, 2]])  # client 4 is not in the solution
-    assert_(not sol.is_complete())
-
-    neighbours = sol.neighbours()
-    expected = [
-        None,  # 0: is depot
-        (0, 2),  # 1: between depot (0) and 2
-        (1, 0),  # 2: between 1 and depot (0)
-        (0, 0),  # 3: between depot (0) and depot (0)
-        None,  # 4: unassigned
-    ]
-
-    for loc in range(ok_small.num_locations):
-        assert_equal(neighbours[loc], expected[loc])
-
-
-def test_neighbours_includes_reload_depots(ok_small_multiple_trips):
-    """
-    Tests that the neighbours calculation accounts for reload depots.
-    """
-    trip1 = Trip(ok_small_multiple_trips, [1, 2], 0)
-    trip2 = Trip(ok_small_multiple_trips, [3, 4], 0)
-    route = Route(ok_small_multiple_trips, [trip1, trip2], 0)
-
-    sol = Solution(ok_small_multiple_trips, [route])
-    assert_equal(sol.num_routes(), 1)
-    assert_equal(sol.num_trips(), 2)
-
-    neighbours = sol.neighbours()
-    assert_(neighbours[0] is None)  # is depot
-    assert_equal(neighbours[1], (0, 2))  # (start, 2)
-    assert_equal(neighbours[2], (1, 0))  # (1, reload)
-    assert_equal(neighbours[3], (0, 4))  # (reload, 4)
-    assert_equal(neighbours[4], (3, 0))  # (3, end)
-
-
-def test_neighbours_multi_depot(ok_small):
-    """
-    Tests that the neighbour structure of (pred, succ) pairs for each client in
-    the solution works correctly when there are multiple depots.
-    """
-    # Make a two-depot instance by changing the first client in ok_small into
-    # a depot, and adding a vehicle type that operates out of that depot.
-    locations = ok_small.depots() + ok_small.clients()
-    locations[1] = Depot(locations[1].x, locations[1].y)
-
-    data = ok_small.replace(
-        depots=locations[:2],
-        clients=locations[2:],
-        vehicle_types=[
-            VehicleType(capacity=[10], start_depot=0, end_depot=0),
-            VehicleType(capacity=[10], start_depot=1, end_depot=1),
-        ],
-    )
-
-    sol = Solution(data, [Route(data, [4], 0), Route(data, [2, 3], 1)])
-    assert_(sol.is_complete())
-
-    neighbours = sol.neighbours()
-    expected = [
-        None,  # 0: is depot
-        None,  # 1: is depot
-        (1, 3),  # 2: between depot (1) and 3
-        (2, 1),  # 3: between 2 and depot (1)
-        (0, 0),  # 4: between depot (0) and depot (0)
-    ]
-
-    for loc in range(ok_small.num_locations):
-        assert_equal(neighbours[loc], expected[loc])
 
 
 def test_feasibility(ok_small):
@@ -308,18 +228,18 @@ def test_feasibility(ok_small):
     violations.
     """
     # This solution is infeasible due to both load and time window violations.
-    sol = Solution(ok_small, [[1, 2, 3, 4]])
+    sol = Solution(ok_small, [[0, 1, 2, 3]])
     assert_(not sol.is_feasible())
 
     # First route has total load 18, but vehicle capacity is only 10.
     assert_(sol.has_excess_load())
 
-    # Client 4 has TW [8400, 15300], but client 2 cannot be visited before
-    # 15600, so there must be time warp on the single-route solution.
+    # C3 has TW [8400, 15300], but C1 cannot be visited before 15600, so there
+    # must be time warp on the single-route solution.
     assert_(sol.has_time_warp())
 
     # Let's try another solution that's actually feasible.
-    sol = Solution(ok_small, [[1, 2], [3], [4]])
+    sol = Solution(ok_small, [[0, 1], [2], [3]])
     assert_(sol.is_feasible())
     assert_(not sol.has_excess_load())
     assert_(not sol.has_time_warp())
@@ -332,20 +252,20 @@ def test_feasibility_release_times():
     """
     data = read("data/OkSmallReleaseTimes.txt")
 
-    # Client 1 is released at 20'000, but client 2 time window ends at 19'500,
-    # so this solution must be infeasible due to time-warping. We arrive at
-    # client 1 at time 20'000 + 1'544 = 21'544 before the TW closes (22'500).
-    # We arrive at client 2 at 21'544 + 360 + 1'992 = 23'896, so we incur a
-    # time warp of 23'896 - 19'500 = 4'396.
-    sol = Solution(data, [[1, 2], [3], [4]])
+    # C0 is released at 20'000, but C1's time window ends at 19'500, so this
+    # solution must be infeasible due to time-warping. We arrive at C0 at time
+    # 20'000 + 1'544 = 21'544 before the TW closes (22'500). We arrive at C1 at
+    # 21'544 + 360 + 1'992 = 23'896, so we have a time warp of 23'896 - 19'500
+    # = 4'396.
+    sol = Solution(data, [[0, 1], [2], [3]])
     assert_(not sol.is_feasible())
     assert_equal(sol.time_warp(), 4396)
 
-    # Visiting clients 2 and 3 together is feasible: both clients are released
-    # at time 5'000. We arrive at client 2 at 5'000 + 1'944 and wait till the
-    # TW opens (12'000). We arrive at client 3 at 12'000 + 360 + 621 = 12'981,
-    # which is before the TW closes (15'300).
-    sol = Solution(data, [[1], [2, 3], [4]])
+    # Visiting C1 and C2 together is feasible: both clients are released at
+    # time 5'000. We arrive at C1 at 5'000 + 1'944 and wait till the TW opens
+    # (12'000). We arrive at C2 at 12'000 + 360 + 621 = 12'981, which is before
+    # the TW closes (15'300).
+    sol = Solution(data, [[0], [1, 2], [3]])
     assert_(sol.is_feasible())
 
 
@@ -355,7 +275,7 @@ def test_feasibility_shift_duration(ok_small):
     particular solutions.
     """
     # These two routes are feasible when there is no duration constraint.
-    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    sol = Solution(ok_small, [[0, 1], [2, 3]])
     assert_(sol.is_feasible())
 
     # Modify the data to impose a shift duration constraint of 3'000, and check
@@ -363,7 +283,7 @@ def test_feasibility_shift_duration(ok_small):
     vehicle_type = VehicleType(4, capacity=[10], shift_duration=3_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    sol = Solution(data, [[1, 2], [3, 4]])
+    sol = Solution(data, [[0, 1], [2, 3]])
     routes = sol.routes()
 
     # First route has duration 6'221, and the second route duration 5'004.
@@ -383,13 +303,13 @@ def test_feasibility_max_distance(ok_small):
     Tests that the maximum distance constraint affects solution and route
     feasibility when it is violated.
     """
-    sol = Solution(ok_small, [[1, 2], [3, 4]])
+    sol = Solution(ok_small, [[0, 1], [2, 3]])
     assert_(sol.is_feasible())
 
     vehicle_type = VehicleType(4, capacity=[10], max_distance=5_000)
     data = ok_small.replace(vehicle_types=[vehicle_type])
 
-    sol = Solution(data, [[1, 2], [3, 4]])
+    sol = Solution(data, [[0, 1], [2, 3]])
     routes = sol.routes()
 
     assert_equal(routes[0].distance(), 5501)
@@ -411,7 +331,7 @@ def test_distance_calculation(ok_small):
     Tests that route distance calculations are correct, and that the overall
     Solution's distance is the sum of the route distances.
     """
-    sol = Solution(ok_small, [[1, 2], [3], [4]])
+    sol = Solution(ok_small, [[0, 1], [2], [3]])
     routes = sol.routes()
 
     # Solution is feasible, so all its routes should also be feasible.
@@ -437,7 +357,7 @@ def test_excess_load_calculation(ok_small):
     """
     Tests the Solution's excess load calculation on a single-route case.
     """
-    sol = Solution(ok_small, [[4, 3, 1, 2]])
+    sol = Solution(ok_small, [[3, 2, 0, 1]])
     assert_(sol.has_excess_load())
     assert_(not sol.has_time_warp())
 
@@ -475,16 +395,14 @@ def test_excess_load_calculation_with_multiple_load_dimensions(
     calculated correctly.
     """
     data = ProblemData(
-        clients=[
-            Client(1, 0, delivery1),
-            Client(2, 0, delivery2),
-        ],
-        depots=[Depot(0, 0)],
+        locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
+        clients=[Client(1, delivery1), Client(2, delivery2)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(1, capacity=capacity)],
         distance_matrices=[[[0, 1, 2], [1, 0, 1], [2, 1, 0]]],
         duration_matrices=[[[0, 1, 2], [1, 0, 1], [2, 1, 0]]],
     )
-    solution = Solution(data, [[1, 2]])
+    solution = Solution(data, [[0, 1]])
 
     assert_(solution.has_excess_load())
     assert_equal(solution.excess_load(), expected_excess_load)
@@ -505,31 +423,29 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
     client.
     """
     dur_mat = [
-        [0, 1, 10],  # cannot get to 2 from depot within 2's time window
+        [0, 1, 10],  # cannot get to C1 from depot within its time window
         [1, 0, 1],
         [1, 1, 0],
     ]
 
     data = ProblemData(
-        clients=[
-            Client(x=1, y=0, tw_late=5),
-            Client(x=2, y=0, tw_late=5),
-        ],
-        depots=[Depot(x=0, y=0)],
+        locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
+        clients=[Client(1, tw_late=5), Client(2, tw_late=5)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(2, tw_late=10)],
         distance_matrices=[dist_mat],
         duration_matrices=[dur_mat],
     )
 
-    # This solution directly visits the second client from the depot, which is
-    # not time window feasible.
-    infeasible = Solution(data, [[1], [2]])
+    # This solution directly visits C1 from the depot, which is not time window
+    # feasible.
+    infeasible = Solution(data, [[0], [1]])
     assert_(infeasible.has_time_warp())
     assert_(not infeasible.has_excess_load())
     assert_(not infeasible.is_feasible())
 
     # But visiting the second client after the first is feasible.
-    feasible = Solution(data, [[1, 2]])
+    feasible = Solution(data, [[0, 1]])
     assert_(not feasible.has_time_warp())
     assert_(not feasible.has_excess_load())
     assert_(feasible.is_feasible())
@@ -546,14 +462,15 @@ def test_time_warp_return_to_depot():
     travel back to the depot.
     """
     data = ProblemData(
-        clients=[Client(x=1, y=0)],
-        depots=[Depot(x=0, y=0)],
+        locations=[Location(0, 0), Location(1, 0)],
+        clients=[Client(1)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(tw_late=1)],
         distance_matrices=[np.asarray([[0, 0], [0, 0]])],
         duration_matrices=[np.asarray([[0, 1], [1, 0]])],
     )
 
-    sol = Solution(data, [[1]])
+    sol = Solution(data, [[0]])
     route, *_ = sol.routes()
 
     # Travel from depot to client and back gives duration 1 + 1 = 2. This is 1
@@ -576,24 +493,24 @@ def tests_that_not_specifying_the_vehicle_type_assumes_a_default(ok_small):
         ]
     )
 
-    sol = Solution(data, [[1, 2, 3, 4]])
+    sol = Solution(data, [[0, 1, 2, 3]])
     assert_equal(sol.num_routes(), 1)
 
-    sol = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
+    sol = Solution(data, [Route(data, [0, 1, 2, 3], 0)])
     assert_equal(sol.num_routes(), 1)
 
-    sol = Solution(data, [[1, 2], [3, 4]])
+    sol = Solution(data, [[0, 1], [2, 3]])
     assert_equal(sol.num_routes(), 2)
 
     with assert_raises(RuntimeError):
         # This raises since we don't specify route types, which means we create
         # 3 routes of type 0 whereas we only have 2 available.
-        sol = Solution(data, [[1], [2], [3, 4]])
+        sol = Solution(data, [[0], [1], [2, 3]])
 
     # It works if we specify the correct vehicle types.
     sol = Solution(
         data,
-        [Route(data, [1], 0), Route(data, [2], 0), Route(data, [3, 4], 1)],
+        [Route(data, [0], 0), Route(data, [1], 0), Route(data, [2, 3], 1)],
     )
     assert_equal(sol.num_routes(), 3)
 
@@ -601,7 +518,7 @@ def tests_that_not_specifying_the_vehicle_type_assumes_a_default(ok_small):
     with assert_raises(RuntimeError):
         sol = Solution(
             data,
-            [Route(data, [1], 0), Route(data, [2], 1), Route(data, [3, 4], 1)],
+            [Route(data, [0], 0), Route(data, [1], 1), Route(data, [2, 3], 1)],
         )
 
 
@@ -610,7 +527,7 @@ def test_copy(ok_small):
     Tests that copied solutions are equal to the original solution, but not
     the exact same object.
     """
-    sol = Solution(ok_small, [[1, 2, 3, 4]])
+    sol = Solution(ok_small, [[0, 1, 2, 3]])
     copy_sol = copy(sol)
     deepcopy_sol = deepcopy(sol)
 
@@ -627,17 +544,17 @@ def test_eq(ok_small):
     """
     Tests the solution's equality operator.
     """
-    sol1 = Solution(ok_small, [[1, 2, 3, 4]])
-    sol2 = Solution(ok_small, [[1, 2], [3], [4]])
-    sol3 = Solution(ok_small, [[1, 2, 3, 4]])
+    sol1 = Solution(ok_small, [[0, 1, 2, 3]])
+    sol2 = Solution(ok_small, [[0, 1], [2], [3]])
+    sol3 = Solution(ok_small, [[0, 1, 2, 3]])
 
     assert_(sol1 == sol1)  # Solutions should be equal to themselves
     assert_(sol2 == sol2)
     assert_(sol1 != sol2)  # different routes, so should not be equal
     assert_(sol1 == sol3)  # same routes, different solution
 
-    sol4 = Solution(ok_small, [[1, 2, 3], [4]])
-    sol5 = Solution(ok_small, [[4], [1, 2, 3]])
+    sol4 = Solution(ok_small, [[0, 1, 2], [3]])
+    sol5 = Solution(ok_small, [[3], [0, 1, 2]])
 
     assert_(sol4 == sol5)  # routes are the same, but in different order
 
@@ -665,10 +582,10 @@ def test_eq_with_multiple_vehicle_types(ok_small):
     )
 
     # These two should be the same
-    sol1 = Solution(data, [[1, 2, 3, 4]])
-    sol2 = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
+    sol1 = Solution(data, [[0, 1, 2, 3]])
+    sol2 = Solution(data, [Route(data, [0, 1, 2, 3], 0)])
     # Create solution with different vehicle type
-    sol3 = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
+    sol3 = Solution(data, [Route(data, [0, 1, 2, 3], 1)])
 
     # First two solution have one route with the same vehicle type
     assert_(sol1 == sol2)
@@ -676,12 +593,12 @@ def test_eq_with_multiple_vehicle_types(ok_small):
     assert_(sol1 != sol3)
 
     # Order should not matter so these should be the same
-    sol1 = Solution(data, [Route(data, [1, 2], 0), Route(data, [3, 4], 1)])
-    sol2 = Solution(data, [Route(data, [3, 4], 1), Route(data, [1, 2], 0)])
+    sol1 = Solution(data, [Route(data, [0, 1], 0), Route(data, [2, 3], 1)])
+    sol2 = Solution(data, [Route(data, [2, 3], 1), Route(data, [0, 1], 0)])
     assert_(sol1 == sol2)
 
     # But changing the vehicle types should be different
-    sol3 = Solution(data, [Route(data, [1, 2], 1), Route(data, [3, 4], 0)])
+    sol3 = Solution(data, [Route(data, [0, 1], 1), Route(data, [2, 3], 0)])
     assert_(sol1 != sol3)
 
 
@@ -691,19 +608,17 @@ def test_eq_unassigned():
     """
     dist = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
     data = ProblemData(
-        clients=[
-            Client(x=0, y=1, required=False),
-            Client(x=1, y=0, required=False),
-        ],
-        depots=[Depot(x=0, y=0)],
+        locations=[Location(0, 0), Location(0, 1), Location(1, 0)],
+        clients=[Client(1, required=False), Client(2, required=False)],
+        depots=[Depot(0)],
         vehicle_types=[VehicleType(2)],
         distance_matrices=[dist],
         duration_matrices=[dist],
     )
 
-    sol1 = Solution(data, [[1]])
-    sol2 = Solution(data, [[1]])
-    sol3 = Solution(data, [[2]])
+    sol1 = Solution(data, [[0]])
+    sol2 = Solution(data, [[0]])
+    sol3 = Solution(data, [[1]])
 
     assert_(sol1 == sol2)
     assert_(sol1 != sol3)
@@ -718,8 +633,8 @@ def test_duplicate_vehicle_types(ok_small):
         vehicle_types=[VehicleType(capacity=[10]), VehicleType(capacity=[10])]
     )
 
-    sol1 = Solution(data, [Route(data, [1, 2, 3, 4], 0)])
-    sol2 = Solution(data, [Route(data, [1, 2, 3, 4], 1)])
+    sol1 = Solution(data, [Route(data, [0, 1, 2, 3], 0)])
+    sol2 = Solution(data, [Route(data, [0, 1, 2, 3], 1)])
 
     assert_(sol1 != sol2)
 
@@ -750,8 +665,9 @@ def test_str_contains_routes(ok_small, vehicle_types):
         # Each line should contain a route, where each route should contain
         # every client that is in the route as returned by routes().
         for route, str_route in zip(routes, str_representation):
-            for client in route:
-                assert_(str(client) in str_route)
+            activities = route.schedule()[1:-1]  # skip start/end depots
+            for activity in activities:
+                assert_(str(activity) in str_route)
 
 
 def test_hash(ok_small):
@@ -808,8 +724,8 @@ def test_fixed_vehicle_cost(
     )
 
     routes = [
-        Route(data, [1, 2], assignment[0]),
-        Route(data, [3, 4], assignment[1]),
+        Route(data, [0, 1], assignment[0]),
+        Route(data, [2, 3], assignment[1]),
     ]
 
     sol = Solution(data, routes)
@@ -819,9 +735,9 @@ def test_fixed_vehicle_cost(
 @pytest.mark.parametrize(
     ("routes", "feasible"),
     [
-        ([[1], [3, 4]], True),  # only one - OK
-        ([[2], [3, 4]], True),  # only one - OK
-        ([[3, 4]], False),  # none - not OK
+        ([[0], [2, 3]], True),  # only one - OK
+        ([[1], [2, 3]], True),  # only one - OK
+        ([[2, 3]], False),  # none - not OK
     ],
 )
 def test_solution_feasibility_with_mutually_exclusive_groups(
@@ -831,13 +747,13 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     Tests that the Solution class correctly accounts for feasibility regarding
     any mutually exclusive groups in the data.
     """
-    # Clients 1 and 2 are part of a mutually exclusive group. Of these clients,
+    # C0 and C1 are part of a mutually exclusive group. Of these clients,
     # exactly one must be part of a feasible solution.
     clients = ok_small.clients()
-    clients[0] = Client(1, 1, delivery=[0], required=False, group=0)
-    clients[1] = Client(2, 2, delivery=[0], required=False, group=0)
+    clients[0] = Client(1, delivery=[0], required=False, group=0)
+    clients[1] = Client(2, delivery=[0], required=False, group=0)
 
-    group = ClientGroup([1, 2], required=True)
+    group = ClientGroup([0, 1], required=True)
     assert_(group.required)
     assert_(group.mutually_exclusive)
 
@@ -856,15 +772,15 @@ def test_optional_mutually_exclusive_group(ok_small):
     # Clients 1 and 2 are part of a mutually exclusive group. Of these clients,
     # at most one must be part of a feasible solution.
     clients = ok_small.clients()
-    clients[0] = Client(1, 1, delivery=[0], required=False, group=0)
-    clients[1] = Client(2, 2, delivery=[0], required=False, group=0)
+    clients[0] = Client(1, delivery=[0], required=False, group=0)
+    clients[1] = Client(2, delivery=[0], required=False, group=0)
 
-    group = ClientGroup([1, 2], required=False)
+    group = ClientGroup([0, 1], required=False)
     assert_(not group.required)
     assert_(group.mutually_exclusive)
 
     data = ok_small.replace(clients=clients, groups=[group])
-    sol = Solution(data, [[3, 4]])
+    sol = Solution(data, [[2, 3]])
     assert_(sol.is_feasible())
     assert_equal(sol.num_missing_groups(), 0)
 
@@ -878,7 +794,7 @@ def test_distance_duration_cost_calculations(ok_small):
         VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=5),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
-    routes = [Route(data, [1, 2], 0), Route(data, [3, 4], 1)]
+    routes = [Route(data, [0, 1], 0), Route(data, [2, 3], 1)]
 
     sol = Solution(data, routes)
     assert_equal(sol.distance(), sum(r.distance() for r in routes))
@@ -894,7 +810,7 @@ def test_overtime(ok_small_overtime):
     # The vehicle has a shift duration of 5_000, and allows another 1_000
     # overtime, if needed. This route takes 5'229 to complete, so the route
     # should have 229 units of overtime.
-    route = Route(ok_small_overtime, [2, 4], 0)
+    route = Route(ok_small_overtime, [1, 3], 0)
 
     assert_(not route.has_time_warp())
     assert_equal(route.duration(), 5_229)
@@ -930,9 +846,9 @@ def test_raises_duplicate_group(ok_small_mutually_exclusive_groups):
 @pytest.mark.parametrize(
     ("visits", "is_complete"),
     [
-        ([1, 4], True),  # 1 is from a required group, 4 is a required client
-        ([1], False),  # missing the required client
-        ([4], False),  # missing the required group
+        ([0, 3], True),  # C0 is in a required group, C3 is a required client
+        ([0], False),  # missing the required client
+        ([3], False),  # missing the required group
     ],
 )
 def test_is_complete(

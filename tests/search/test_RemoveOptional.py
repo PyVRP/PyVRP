@@ -6,6 +6,7 @@ from pyvrp import (
     ClientGroup,
     CostEvaluator,
     Depot,
+    Location,
     ProblemData,
     VehicleType,
 )
@@ -19,21 +20,22 @@ def test_does_not_remove_required_clients():
     might result in a significant cost improvement.
     """
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 1), Location(2, 2)],
         clients=[
             # This client cannot be removed, even though it causes significant
             # load violations.
-            Client(x=1, y=1, delivery=[100], required=True),
+            Client(location=1, delivery=[100], required=True),
             # This client can and should be removed, because the prize is not
             # worth the detour.
-            Client(x=2, y=2, delivery=[0], prize=0, required=False),
+            Client(location=2, delivery=[0], prize=0, required=False),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType(1, capacity=[50])],
         distance_matrices=[np.where(np.eye(3), 0, 10)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    route = make_search_route(data, [1, 2])
+    route = make_search_route(data, ["C0", "C1"])
     cost_eval = CostEvaluator([100], 100, 0)
     op = RemoveOptional(data)
 
@@ -44,7 +46,7 @@ def test_does_not_remove_required_clients():
 
     # Should remove the second client.
     op.apply(route[2])
-    assert_equal(str(route), "1")
+    assert_equal(str(route), "C0")
 
 
 def test_supports(
@@ -60,12 +62,13 @@ def test_supports(
     assert_(RemoveOptional.supports(ok_small_prizes))
 
     data = ProblemData(  # instance with optional group
-        clients=[Client(x=0, y=0, group=0, required=False)],
-        depots=[Depot(x=0, y=0)],
+        locations=[Location(0, 0)],
+        clients=[Client(location=0, group=0, required=False)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType()],
-        distance_matrices=[np.zeros((2, 2), dtype=int)],
-        duration_matrices=[np.zeros((2, 2), dtype=int)],
-        groups=[ClientGroup(clients=[1], required=False)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
+        groups=[ClientGroup(clients=[0], required=False)],
     )
 
     # RemoveOptional does not support instances with required groups, but it
@@ -81,11 +84,12 @@ def test_fixed_vehicle_cost():
     """
     cost_eval = CostEvaluator([], 0, 0)
     data = ProblemData(
+        locations=[Location(0, 0), Location(1, 1), Location(1, 0)],
         clients=[
-            Client(x=1, y=1, required=False),
-            Client(x=1, y=0, required=False),
+            Client(location=1, required=False),
+            Client(location=2, required=False),
         ],
-        depots=[Depot(x=0, y=0)],
+        depots=[Depot(location=0)],
         vehicle_types=[VehicleType(fixed_cost=7), VehicleType(fixed_cost=13)],
         distance_matrices=[np.zeros((3, 3), dtype=int)],
         duration_matrices=[np.zeros((3, 3), dtype=int)],
@@ -97,12 +101,12 @@ def test_fixed_vehicle_cost():
     # can happen due to vehicle changes. In this, case we evaluate removing the
     # only client on a route. That makes the route empty, and removes the fixed
     # vehicle cost of 7 for this vehicle type.
-    route = make_search_route(data, [1], vehicle_type=0)
+    route = make_search_route(data, ["C0"], vehicle_type=0)
     assert_equal(op.evaluate(route[1], cost_eval), (-7, True))
 
     # Same story for this route, but now we have a different vehicle type with
     # fixed cost 13.
-    route = make_search_route(data, [1], vehicle_type=1)
+    route = make_search_route(data, ["C0"], vehicle_type=1)
     assert_equal(op.evaluate(route[1], cost_eval), (-13, True))
 
 
@@ -111,13 +115,13 @@ def test_remove(ok_small_prizes):
     Tests that RemoveOptional works correctly on a specific example.
     """
     cost_eval = CostEvaluator([1], 1, 0)
-    route = make_search_route(ok_small_prizes, [1, 2])
+    route = make_search_route(ok_small_prizes, ["C0", "C1"])
 
     op = RemoveOptional(ok_small_prizes)
 
-    # Purely distance. Removes arcs 1 -> 2 -> 0, adds arcs 1 -> 0. This change
-    # has delta distance of 1726 - 1992 - 1965 = -2231, and a prize delta of
-    # 15: -2231 + 15 = -2216.
+    # Purely distance. Removes C1 -> C2 -> D0, adds arcs C1 -> D0. This has
+    # delta distance of 1726 - 1992 - 1965 = -2231, and a prize delta of 15:
+    # -2231 + 15 = -2216.
     assert_equal(op.evaluate(route[2], cost_eval), (-2216, True))
 
 
@@ -134,8 +138,9 @@ def test_empty_route_delta_cost_bug():
         [1, 1, 0],
     ]
     data = ProblemData(
-        depots=[Depot(x=0, y=0), Depot(x=0, y=0)],
-        clients=[Client(x=0, y=0, required=False)],
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
+        depots=[Depot(location=0), Depot(location=1)],
+        clients=[Client(location=2, required=False)],
         vehicle_types=[
             # Vehicle type has time warp because just travelling between depots
             # violates the shift_duration constraint.
@@ -150,7 +155,7 @@ def test_empty_route_delta_cost_bug():
 
     # Similarly, if removing a client results in an empty route, then we should
     # not include the empty route's costs.
-    route = make_search_route(data, [2])
+    route = make_search_route(data, ["C0"])
     assert_equal(op.evaluate(route[1], cost_eval), (-4, True))
 
 
@@ -160,17 +165,18 @@ def test_cannot_remove_required_group():
     that could render the solution structurally infeasible.
     """
     data = ProblemData(
-        depots=[Depot(x=0, y=0)],
+        locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
+        depots=[Depot(location=0)],
         clients=[
-            Client(x=0, y=0, group=0, required=False),
-            Client(x=0, y=0, group=1, required=False),
+            Client(location=1, group=0, required=False),
+            Client(location=2, group=1, required=False),
         ],
         vehicle_types=[VehicleType()],
         duration_matrices=[np.where(np.eye(3), 0, 1)],
         distance_matrices=[np.where(np.eye(3), 0, 1)],
         groups=[
-            ClientGroup([1], required=False),
-            ClientGroup([2], required=True),
+            ClientGroup([0], required=False),
+            ClientGroup([1], required=True),
         ],
     )
 
@@ -179,7 +185,7 @@ def test_cannot_remove_required_group():
 
     op = RemoveOptional(data)
     cost_eval = CostEvaluator([], 1, 1)
-    route = make_search_route(data, [1, 2])
+    route = make_search_route(data, ["C0", "C1"])
 
     # The first client in the route is from the optional group and can be
     # removed. The second client is from the required group, and cannot.

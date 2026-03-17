@@ -1,0 +1,14 @@
+[wrap-file]
+directory = spdlog-1.17.0
+source_url = https://github.com/gabime/spdlog/archive/refs/tags/v1.17.0.tar.gz
+source_filename = spdlog-1.17.0.tar.gz
+source_hash = d8862955c6d74e5846b3f580b1605d2428b11d97a410d86e2fb13e857cd3a744
+source_fallback_url = https://wrapdb.mesonbuild.com/v2/spdlog_1.17.0-1/get_source/spdlog-1.17.0.tar.gz
+patch_filename = spdlog_1.17.0-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/spdlog_1.17.0-1/get_patch
+patch_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/spdlog_1.17.0-1/spdlog_1.17.0-1_patch.zip
+patch_hash = 295bcca990facdca84256b60aaa86ba2e2320895cad30bee997d7a463a30b40c
+wrapdb_version = 1.17.0-1
+
+[provide]
+dependency_names = spdlog

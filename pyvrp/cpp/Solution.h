@@ -9,7 +9,6 @@
 
 #include <functional>
 #include <iosfwd>
-#include <optional>
 #include <vector>
 
 namespace pyvrp
@@ -44,7 +43,6 @@ class Solution
     using VehicleType = size_t;
 
     using Routes = std::vector<Route>;
-    using Neighbours = std::vector<std::optional<std::pair<Client, Client>>>;
 
     size_t numClients_ = 0;         // Number of clients in the solution
     size_t numMissingClients_ = 0;  // Number of required but missing clients
@@ -62,10 +60,6 @@ class Solution
     Duration timeWarp_ = 0;         // Total time warp over all routes
 
     Routes routes_;
-    Neighbours neighbours_;  // client [pred, succ] pairs, null if unassigned
-
-    // Determines the [pred, succ] pairs for assigned clients.
-    void makeNeighbours();
 
     // Evaluates this solution's characteristics.
     void evaluate(ProblemData const &data);
@@ -121,18 +115,6 @@ public:
      *     but that is implicit: the depot is not part of the returned routes.
      */
     [[nodiscard]] Routes const &routes() const;
-
-    /**
-     * Returns a list of neighbours for each client, by index.
-     *
-     * Returns
-     * -------
-     * list
-     *     A list of ``(pred, succ)`` tuples that encode for each client their
-     *     predecessor and successors in this solutions's routes. ``None`` in
-     *     case the client is not in the solution (or is a depot).
-     */
-    [[nodiscard]] Neighbours const &neighbours() const;
 
     /**
      * Whether this solution is feasible.
@@ -272,8 +254,7 @@ public:
              Cost prizes,
              Cost uncollectedPrizes,
              Duration timeWarp,
-             Routes routes,
-             Neighbours neighbours);
+             Routes routes);
 };
 
 template <>  // specialisation for pyvrp::Solution

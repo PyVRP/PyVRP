@@ -8,13 +8,12 @@ using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 
 SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
-    : neighbours_(data.numLocations()),
-      promising_(data.numLocations()),
+    : neighbours_(data.numClients()),
+      promising_(data.numClients()),
       clientOrder_(data.numClients())
 {
     setNeighbours(neighbours);
-
-    std::iota(clientOrder_.begin(), clientOrder_.end(), data.numDepots());
+    std::iota(clientOrder_.begin(), clientOrder_.end(), 0);
 
     size_t offset = 0;
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
@@ -29,21 +28,17 @@ void SearchSpace::setNeighbours(Neighbours neighbours)
     if (neighbours.size() != neighbours_.size())
         throw std::runtime_error("Neighbourhood dimensions do not match.");
 
-    size_t numDepots = neighbours_.size() - clientOrder_.size();
-    for (size_t client = numDepots; client != neighbours.size(); ++client)
+    for (size_t client = 0; client != neighbours.size(); ++client)
     {
         auto const beginPos = neighbours[client].begin();
         auto const endPos = neighbours[client].end();
 
-        auto const pred
-            = [&](auto item) { return item == client || item < numDepots; };
+        auto const pred = [&](auto item) { return item == client; };
 
         if (std::any_of(beginPos, endPos, pred))
-        {
             throw std::runtime_error("Neighbourhood of client "
                                      + std::to_string(client)
-                                     + " contains itself or a depot.");
-        }
+                                     + " contains itself.");
     }
 
     neighbours_ = neighbours;
@@ -75,14 +70,14 @@ void SearchSpace::markPromising(Route::Node const *node)
 {
     assert(node->route());
 
-    if (!node->isDepot())
-        markPromising(node->client());
+    if (node->isClient())
+        markPromising(node->idx());
 
-    if (!node->isStartDepot() && !p(node)->isDepot())
-        markPromising(p(node)->client());
+    if (!node->isStartDepot() && p(node)->isClient())
+        markPromising(p(node)->idx());
 
-    if (!node->isEndDepot() && !n(node)->isDepot())
-        markPromising(n(node)->client());
+    if (!node->isEndDepot() && n(node)->isClient())
+        markPromising(n(node)->idx());
 }
 
 void SearchSpace::markAllPromising() { promising_.set(); }

@@ -20,34 +20,34 @@ jobs:
       matrix:
         include:
           - compiler: gcc  # minimum gcc version
-            compiler-version: '10'
+            compiler-version: '13'
             python-version: '3.11'
           - compiler: gcc  # recent gcc version
             compiler-version: '14'
             python-version: '3.14'
           - compiler: clang  # minimum clang version
-            compiler-version: '14'
+            compiler-version: '16'
             python-version: '3.11'
           - compiler: clang  # recent clang version
-            compiler-version: '19'
+            compiler-version: '20'
             python-version: '3.14'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           version: "0.7.5"
           enable-cache: true
       - name: Install Python dependencies
         run: uv sync --no-install-project
       - name: Cache pre-commit
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: cache-pre-commit
         with:
           path: ~/.cache/pre-commit/

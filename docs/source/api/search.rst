@@ -32,6 +32,9 @@ All search methods implement the :class:`SearchMethod` protocol.
    .. autoclass:: PerturbationManager
       :members:
       :exclude-members: perturb
+   
+   .. autoclass:: NeighbourhoodParams
+      :members:
 
 .. automodule:: pyvrp.search.neighbourhood
    :members:

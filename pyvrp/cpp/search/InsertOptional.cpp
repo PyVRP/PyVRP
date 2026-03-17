@@ -9,10 +9,10 @@ using pyvrp::search::InsertOptional;
 std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
-    assert(!U->isDepot());
+    assert(U->isClient());
     stats_.numEvaluations++;
 
-    ProblemData::Client const &uData = data.location(U->client());
+    auto const &uData = data.client(U->idx());
     if (U->route() || !V->route())
         return std::make_pair(0, false);
 
@@ -33,9 +33,9 @@ std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
         = Cost(route->empty()) * route->fixedVehicleCost() - uData.prize;
 
     costEvaluator.deltaCost(deltaCost,
-                            Route::Proposal(route->before(V->idx()),
-                                            ClientSegment(data, U->client()),
-                                            route->after(V->idx() + 1)));
+                            Route::Proposal(route->before(V->pos()),
+                                            ClientSegment(data, U->idx()),
+                                            route->after(V->pos() + 1)));
 
     return std::make_pair(deltaCost, deltaCost < 0);
 }
@@ -46,7 +46,7 @@ void InsertOptional::apply(Route::Node *U, Route::Node *V) const
     stats_.numApplications++;
 
     auto *route = V->route();
-    route->insert(V->idx() + 1, U);
+    route->insert(V->pos() + 1, U);
 }
 
 void InsertOptional::init(Solution &solution)

@@ -9,7 +9,7 @@ from numpy.testing import (
     assert_raises,
 )
 
-from pyvrp import CostEvaluator
+from pyvrp import Activity, CostEvaluator
 from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from tests.helpers import read, read_solution
@@ -70,9 +70,9 @@ def test_reading_OkSmall_instance():
         (1191, 639),
     ]
 
-    for loc in range(data.num_locations):
-        assert_equal(data.location(loc).x, expected[loc][0])
-        assert_equal(data.location(loc).y, expected[loc][1])
+    for idx, loc in enumerate(data.locations()):
+        assert_equal(loc.x, expected[idx][0])
+        assert_equal(loc.y, expected[idx][1])
 
     # From the EDGE_WEIGHT_SECTION in the file
     expected = [
@@ -90,35 +90,34 @@ def test_reading_OkSmall_instance():
     assert_equal(data.duration_matrix(profile=0), expected)
 
     # From the DEMAND_SECTION in the file
-    expected = [0, 5, 5, 3, 5]
+    expected = [5, 5, 3, 5]
 
-    for loc in range(1, data.num_locations):  # excl. depot (has no delivery)
-        assert_equal(data.location(loc).delivery, [expected[loc]])
+    for client in range(data.num_clients):
+        assert_equal(data.client(client).delivery, [expected[client]])
 
     # From the TIME_WINDOW_SECTION in the file
     expected = [
-        (0, 45000),
         (15600, 22500),
         (12000, 19500),
         (8400, 15300),
         (12000, 19500),
     ]
 
-    for loc in range(data.num_depots, data.num_locations):
-        assert_equal(data.location(loc).tw_early, expected[loc][0])
-        assert_equal(data.location(loc).tw_late, expected[loc][1])
+    for client in range(data.num_clients):
+        assert_equal(data.client(client).tw_early, expected[client][0])
+        assert_equal(data.client(client).tw_late, expected[client][1])
 
     # Vehicle time window is derived from the depot's time window in the
     # TIME_WINDOW_SECTION of the file.
     vehicle_type = data.vehicle_type(0)
-    assert_equal(vehicle_type.tw_early, expected[0][0])
-    assert_equal(vehicle_type.tw_late, expected[0][1])
+    assert_equal(vehicle_type.tw_early, 0)
+    assert_equal(vehicle_type.tw_late, 45000)
 
     # From the SERVICE_TIME_SECTION in the file
-    expected = [0, 360, 360, 420, 360]
+    expected = [360, 360, 420, 360]
 
-    for loc in range(1, data.num_locations):  # excl. depot (has no service)
-        assert_equal(data.location(loc).service_duration, expected[loc])
+    for client in range(data.num_clients):
+        assert_equal(data.client(client).service_duration, expected[client])
 
 
 def test_reading_vrplib_instance():
@@ -157,13 +156,14 @@ def test_reading_vrplib_instance():
     assert_equal(distances[1, 0], 493)
 
     # This is a CVRP instance, so all other fields should have default values.
-    for loc in range(1, data.num_locations):
-        assert_equal(data.location(loc).service_duration, 0)
-        assert_equal(data.location(loc).tw_early, 0)
-        assert_equal(data.location(loc).tw_late, np.iinfo(np.int64).max)
-        assert_equal(data.location(loc).release_time, 0)
-        assert_equal(data.location(loc).prize, 0)
-        assert_equal(data.location(loc).required, True)
+    for idx in range(data.num_clients):
+        client = data.client(idx)
+        assert_equal(client.service_duration, 0)
+        assert_equal(client.tw_early, 0)
+        assert_equal(client.tw_late, np.iinfo(np.int64).max)
+        assert_equal(client.release_time, 0)
+        assert_equal(client.prize, 0)
+        assert_equal(client.required, True)
 
 
 def test_warns_about_scaling_issues():
@@ -269,13 +269,14 @@ def test_multiple_depots():
     assert_equal(veh_type2.tw_early, 5_000)
     assert_equal(veh_type2.tw_late, 20_000)
 
-    depot1, depot2 = data.depots()
-
     # Test that the depot coordinates have been parsed correctly.
-    assert_equal(depot1.x, 2_334)
-    assert_equal(depot1.y, 726)
-    assert_equal(depot2.x, 226)
-    assert_equal(depot2.y, 1_297)
+    assert_equal(data.depot(0).location, 0)
+    assert_equal(data.location(0).x, 2_334)
+    assert_equal(data.location(0).y, 726)
+
+    assert_equal(data.depot(1).location, 1)
+    assert_equal(data.location(1).x, 226)
+    assert_equal(data.location(1).y, 1_297)
 
 
 def test_mdvrptw_instance():
@@ -422,10 +423,10 @@ def test_reading_mutually_exclusive_group():
 
     group = data.group(0)
     assert_equal(len(group), 3)
-    assert_equal(group.clients, [1, 2, 3])
+    assert_equal(group.clients, [0, 1, 2])
 
     for client in data.group(0):
-        client_data = data.location(client)  # type: ignore
+        client_data = data.client(client)
         assert_equal(client_data.required, False)
         assert_equal(client_data.group, 0)
 
@@ -511,8 +512,8 @@ def test_read_solution_single_vehicle_type(ok_small):
     solution = read_solution("data/OkSmall.sol", ok_small)
     routes = solution.routes()
 
-    assert_equal(routes[0].visits(), [1, 2])
-    assert_equal(routes[1].visits(), [3, 4])
+    assert_equal(str(routes[0]), "C0 C1")
+    assert_equal(str(routes[1]), "C2 C3")
 
     assert_equal(routes[0].vehicle_type(), 0)
     assert_equal(routes[1].vehicle_type(), 0)
@@ -529,8 +530,8 @@ def test_read_solution_multiple_vehicle_types(ok_small_multi_depot):
 
     # The solution file shows three routes, but empty routes are ignored.
     assert_equal(solution.num_routes(), 2)
-    assert_equal(routes[0].visits(), [2])
-    assert_equal(routes[1].visits(), [3, 4])
+    assert_equal(str(routes[0]), "C0")
+    assert_equal(str(routes[1]), "C1 C2")
 
     # The instance has two vehicle types: two of the first type and one of the
     # second type. Because the second route was empty, the second vehicle of
@@ -572,16 +573,12 @@ def test_read_solution_multiple_reload_depots():
     assert_equal(solution.num_trips(), 2)
 
     route = solution.routes()[0]
+    assert_equal(str(route), "C0 | C1 C2")
 
-    trip1 = route.trip(0)
-    assert_equal(trip1.visits(), [2])
-    assert_equal(trip1.start_depot(), 0)
-    assert_equal(trip1.end_depot(), 1)
-
-    trip2 = route.trip(1)
-    assert_equal(trip2.visits(), [3, 4])
-    assert_equal(trip2.start_depot(), 1)
-    assert_equal(trip2.end_depot(), 0)
+    # Start and end depots are D0, but the reload happens at D1.
+    assert_equal(route.start_depot(), 0)
+    assert_equal(route.end_depot(), 0)
+    assert_equal(route[2], Activity("D1"))
 
 
 def test_2d_data_sections_are_correctly_casted_from_1d():
@@ -658,8 +655,11 @@ def test_read_hfvrp_solution():
     sol = read_solution("data/X115-HVRP.sol", data)
     routes = sol.routes()
 
-    assert_equal(routes[1].visits(), [59, 35, 99, 49, 79, 47, 109, 18])
-    assert_equal(routes[-1].visits(), [5, 6, 3, 93, 42, 9])
+    def route2clients(route):
+        return [activity.idx for activity in route if activity.is_client()]
+
+    assert_equal(route2clients(routes[1]), [58, 34, 98, 48, 78, 46, 108, 17])
+    assert_equal(route2clients(routes[-1]), [4, 5, 2, 92, 41, 8])
 
     assert_equal(routes[1].vehicle_type(), 0)
     assert_equal(routes[-1].vehicle_type(), 2)

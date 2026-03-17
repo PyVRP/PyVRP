@@ -6,6 +6,7 @@ from pyvrp import (
     Client,
     ClientGroup,
     Depot,
+    Location,
     Model,
     PenaltyParams,
     Profile,
@@ -24,13 +25,17 @@ def test_model_data():
     instance representing the added data.
     """
     model = Model()
+    model.add_vehicle_type(capacity=1, num_available=1)
 
     # Let's add some data: a single client, and edges from/to the depot.
-    depot = model.add_depot(0, 0)
-    client = model.add_client(0, 1, delivery=1)
-    model.add_edge(depot, client, 1, 1)
-    model.add_edge(client, depot, 1, 1)
-    model.add_vehicle_type(capacity=1, num_available=1)
+    depot_loc = model.add_location(0, 0)
+    model.add_depot(location=depot_loc)
+
+    client_loc = model.add_location(0, 1)
+    model.add_client(location=client_loc, delivery=1)
+
+    model.add_edge(depot_loc, client_loc, 1, 1)
+    model.add_edge(client_loc, depot_loc, 1, 1)
 
     data = model.data()
     assert_equal(data.num_clients, 1)
@@ -44,16 +49,16 @@ def test_add_edge_raises_negative_distance_or_duration():
     such edges should raise an error.
     """
     model = Model()
-    depot = model.add_depot(0, 0)
-    client = model.add_client(0, 1)
+    loc1 = model.add_location(0, 0)
+    loc2 = model.add_location(0, 1)
 
-    model.add_edge(depot, client, distance=0, duration=0)  # zero should be OK
+    model.add_edge(loc1, loc2, distance=0, duration=0)  # zero should be OK
 
     with assert_raises(ValueError):  # negative distance should not be OK
-        model.add_edge(client, depot, distance=-1, duration=0)
+        model.add_edge(loc2, loc1, distance=-1, duration=0)
 
     with assert_raises(ValueError):  # negative duration should also not be OK
-        model.add_edge(client, depot, distance=0, duration=-1)
+        model.add_edge(loc2, loc1, distance=0, duration=-1)
 
 
 def test_add_edge_raises_self_connection_nonzero_distance_or_duration():
@@ -61,24 +66,24 @@ def test_add_edge_raises_self_connection_nonzero_distance_or_duration():
     Edges connecting a node to itself must have 0 distance and duration.
     """
     model = Model()
-    depot = model.add_depot(0, 0)
-    client = model.add_client(0, 1)
+    loc1 = model.add_location(0, 0)
+    loc2 = model.add_location(0, 1)
 
-    model.add_edge(depot, client, distance=1, duration=1)  # should be OK
-    model.add_edge(depot, depot, distance=0, duration=0)  # should be OK
-    model.add_edge(client, client, distance=0, duration=0)  # should be OK
-
-    with assert_raises(ValueError):  # self loop with nonzero distance not OK
-        model.add_edge(depot, depot, distance=1, duration=0)
-
-    with assert_raises(ValueError):  # self loop with nonzero duration not OK
-        model.add_edge(depot, depot, distance=0, duration=1)
+    model.add_edge(loc1, loc2, distance=1, duration=1)  # should be OK
+    model.add_edge(loc1, loc1, distance=0, duration=0)  # should be OK
+    model.add_edge(loc2, loc2, distance=0, duration=0)  # should be OK
 
     with assert_raises(ValueError):  # self loop with nonzero distance not OK
-        model.add_edge(client, client, distance=1, duration=0)
+        model.add_edge(loc1, loc1, distance=1, duration=0)
 
     with assert_raises(ValueError):  # self loop with nonzero duration not OK
-        model.add_edge(client, client, distance=0, duration=1)
+        model.add_edge(loc1, loc1, distance=0, duration=1)
+
+    with assert_raises(ValueError):  # self loop with nonzero distance not OK
+        model.add_edge(loc2, loc2, distance=1, duration=0)
+
+    with assert_raises(ValueError):  # self loop with nonzero duration not OK
+        model.add_edge(loc2, loc2, distance=0, duration=1)
 
 
 def test_add_client_attributes():
@@ -88,8 +93,7 @@ def test_add_client_attributes():
     """
     model = Model()
     client = model.add_client(
-        x=1,
-        y=2,
+        location=model.add_location(1, 2),
         delivery=3,
         pickup=9,
         service_duration=4,
@@ -100,8 +104,7 @@ def test_add_client_attributes():
         required=False,
     )
 
-    assert_equal(client.x, 1)
-    assert_equal(client.y, 2)
+    assert_equal(client.location, 0)
     assert_equal(client.delivery, [3])
     assert_equal(client.pickup, [9])
     assert_equal(client.service_duration, 4)
@@ -117,7 +120,8 @@ def test_add_client_with_multidimensional_load():
     Smoke test that checks if multidimensional load is set correctly.
     """
     model = Model()
-    client = model.add_client(x=1, y=2, delivery=[3, 4], pickup=[5, 6])
+    loc = model.add_location(x=1, y=2)
+    client = model.add_client(loc, delivery=[3, 4], pickup=[5, 6])
 
     assert_equal(client.delivery, [3, 4])
     assert_equal(client.pickup, [5, 6])
@@ -129,9 +133,9 @@ def test_add_depot_attributes():
     in.
     """
     model = Model()
-    depot = model.add_depot(x=1, y=0, tw_early=5, tw_late=7)
-    assert_equal(depot.x, 1)
-    assert_equal(depot.y, 0)
+    loc = model.add_location(x=1, y=0)
+    depot = model.add_depot(loc, tw_early=5, tw_late=7)
+    assert_equal(depot.location, 0)
     assert_equal(depot.tw_early, 5)
     assert_equal(depot.tw_late, 7)
 
@@ -141,12 +145,12 @@ def test_add_edge():
     Smoke test that checks edge attributes are the same as what was passed in.
     """
     model = Model()
-    depot = model.add_depot(0, 0)
-    client = model.add_client(0, 1)
-    edge = model.add_edge(depot, client, distance=15, duration=49)
+    loc1 = model.add_location(0, 0)
+    loc2 = model.add_location(0, 1)
+    edge = model.add_edge(loc1, loc2, distance=15, duration=49)
 
-    assert_(edge.frm is depot)
-    assert_(edge.to is client)
+    assert_(edge.frm is loc1)
+    assert_(edge.to is loc2)
     assert_equal(edge.distance, 15)
     assert_equal(edge.duration, 49)
 
@@ -186,20 +190,20 @@ def test_add_vehicle_type_default_depots():
     attributes on the vehicle type.
     """
     m = Model()
-    depot1 = m.add_depot(x=0, y=0)
-    depot2 = m.add_depot(x=1, y=1)
+    depot1 = m.add_depot(m.add_location(0, 0))
+    depot2 = m.add_depot(m.add_location(1, 1))
 
-    # No depot specified: should default to the first (location index 0).
+    # No depot specified: should default to the first (depot index 0).
     vehicle_type1 = m.add_vehicle_type()
     assert_equal(vehicle_type1.start_depot, 0)
     assert_equal(vehicle_type1.end_depot, 0)
 
-    # First depot specified, should set first (location index 0).
+    # First depot specified, should set first (depot index 0).
     vehicle_type2 = m.add_vehicle_type(start_depot=depot1, end_depot=depot1)
     assert_equal(vehicle_type2.start_depot, 0)
     assert_equal(vehicle_type2.end_depot, 0)
 
-    # Second depot specified, should set second (location index 1).
+    # Second depot specified, should set second (depot index 1).
     vehicle_type3 = m.add_vehicle_type(start_depot=depot2, end_depot=depot2)
     assert_equal(vehicle_type3.start_depot, 1)
     assert_equal(vehicle_type3.start_depot, 1)
@@ -216,7 +220,7 @@ def test_add_vehicle_type_raises_for_unknown_depot():
     raises a ValueError.
     """
     m = Model()
-    depot = Depot(x=0, y=0)
+    depot = Depot(location=0)
 
     with assert_raises(ValueError):
         m.add_vehicle_type(start_depot=depot)
@@ -230,8 +234,9 @@ def test_get_clients():
     Tests the ``clients`` property.
     """
     model = Model()
-    client1 = model.add_client(0, 0)
-    client2 = model.add_client(0, 0)
+    loc = model.add_location(0, 0)
+    client1 = model.add_client(location=loc)
+    client2 = model.add_client(location=loc)
 
     # Test that we can get the clients by index, or as a list.
     assert_equal(model.clients[0], client1)
@@ -244,8 +249,9 @@ def test_get_depots():
     Tests the ``depots`` property.
     """
     model = Model()
-    depot1 = model.add_depot(0, 0)
-    depot2 = model.add_depot(0, 0)
+    loc = model.add_location(0, 0)
+    depot1 = model.add_depot(location=loc)
+    depot2 = model.add_depot(location=loc)
 
     # Test that we can get the depots by index, or as a list.
     assert_equal(model.depots[0], depot1)
@@ -255,17 +261,15 @@ def test_get_depots():
 
 def test_get_locations():
     """
-    Checks that the ``locations`` property returns the depot and all clients.
+    Checks that the ``locations`` property returns all locations.
     """
     model = Model()
-    client1 = model.add_client(0, 1)
-    depot = model.add_depot(0, 0)
-    client2 = model.add_client(0, 2)
+    loc1 = model.add_location(0, 0)
+    loc2 = model.add_location(0, 1)
 
-    # Test that depot is always first and that we can get the clients by index.
-    assert_equal(model.locations[0], depot)
-    assert_equal(model.locations[1], client1)
-    assert_equal(model.locations[2], client2)
+    assert_equal(model.locations[0], loc1)
+    assert_equal(model.locations[1], loc2)
+    assert_equal(model.locations, [loc1, loc2])
 
 
 def test_get_vehicle_types():
@@ -338,13 +342,15 @@ def test_model_and_solve(ok_small):
         tw_late=45000,
     )
 
-    depot = model.add_depot(x=2334, y=726)
-    clients = [
-        model.add_client(226, 1297, 5, 0, 360, 15600, 22500),
-        model.add_client(590, 530, 5, 0, 360, 12000, 19500),
-        model.add_client(435, 718, 3, 0, 420, 8400, 15300),
-        model.add_client(1191, 639, 5, 0, 360, 12000, 19500),
-    ]
+    coords = [(2334, 726), (226, 1297), (590, 530), (435, 718), (1191, 639)]
+    for x, y in coords:
+        model.add_location(x, y)
+
+    model.add_depot(location=model.locations[0])
+    model.add_client(model.locations[1], 5, 0, 360, 15600, 22500)
+    model.add_client(model.locations[2], 5, 0, 360, 12000, 19500)
+    model.add_client(model.locations[3], 3, 0, 420, 8400, 15300)
+    model.add_client(model.locations[4], 5, 0, 360, 12000, 19500)
 
     edge_weights = [
         [0, 1544, 1944, 1931, 1476],
@@ -354,19 +360,10 @@ def test_model_and_solve(ok_small):
         [1475, 1594, 1090, 828, 0],
     ]
 
-    for idx, client in enumerate(clients, 1):
-        from_depot = edge_weights[0][idx]
-        to_depot = edge_weights[idx][0]
-
-        model.add_edge(depot, client, from_depot, from_depot)
-        model.add_edge(client, depot, to_depot, to_depot)
-
-        for other_idx, other in enumerate(clients, 1):
-            from_client = edge_weights[idx][other_idx]
-            to_client = edge_weights[other_idx][idx]
-
-            model.add_edge(client, other, from_client, from_client)
-            model.add_edge(other, client, to_client, to_client)
+    for idx_frm, frm in enumerate(model.locations):
+        for idx_to, to in enumerate(model.locations):
+            edge_weight = edge_weights[idx_frm][idx_to]
+            model.add_edge(frm, to, edge_weight, edge_weight)
 
     res = model.solve(stop=MaxIterations(100), seed=0)
 
@@ -413,14 +410,21 @@ def test_partial_distance_duration_matrix(missing_value):
     model = Model()
     model.add_vehicle_type()
 
-    depot = model.add_depot(0, 0)
-    clients = [model.add_client(0, 1), model.add_client(1, 0)]
+    locs = [
+        model.add_location(0, 0),
+        model.add_location(0, 1),
+        model.add_location(1, 0),
+    ]
+
+    model.add_depot(location=locs[0])
+    model.add_client(location=locs[1])
+    model.add_client(location=locs[2])
 
     # Only a subset of all possible edges exist. The model should be able to
     # handle that.
-    model.add_edge(depot, clients[0], distance=1)
-    model.add_edge(clients[0], clients[1], distance=2)
-    model.add_edge(clients[1], depot, distance=1)
+    model.add_edge(locs[0], locs[1], distance=1)
+    model.add_edge(locs[1], locs[2], distance=2)
+    model.add_edge(locs[2], locs[0], distance=1)
 
     # Edges that were not explicitly set should default to the missing value
     # argument, or MAX_VALUE, whichever is smaller.
@@ -443,21 +447,21 @@ def test_data_warns_about_scaling_issues(recwarn):
     """
     model = Model()
     model.add_vehicle_type(capacity=0, num_available=1)
-    depot = model.add_depot(0, 0)
-    client = model.add_client(1, 1)
+    loc1 = model.add_location(0, 0)
+    loc2 = model.add_location(1, 1)
 
     # Normal distance sizes; should all be OK.
     for distance in [1, 10, 100, 1_000, 10_000, 100_000, MAX_VALUE]:
-        model.add_edge(client, depot, distance=distance)
+        model.add_edge(loc2, loc1, distance=distance)
         assert_equal(len(recwarn), 0)
 
     # But a value exceeding the maximum value is not OK. This should warn (both
     # for distance and/or duration).
     with pytest.warns(ScalingWarning):
-        model.add_edge(depot, client, distance=MAX_VALUE + 1)
+        model.add_edge(loc1, loc2, distance=MAX_VALUE + 1)
 
     with pytest.warns(ScalingWarning):
-        model.add_edge(depot, client, distance=0, duration=MAX_VALUE + 1)
+        model.add_edge(loc1, loc2, distance=0, duration=MAX_VALUE + 1)
 
 
 def test_model_solves_instance_with_zero_or_one_clients():
@@ -467,21 +471,22 @@ def test_model_solves_instance_with_zero_or_one_clients():
     """
     m = Model()
     m.add_vehicle_type(num_available=1)
-    depot = m.add_depot(x=0, y=0)
+
+    depot_loc = m.add_location(0, 0)
+    m.add_depot(location=depot_loc)
 
     # Solve an instance with no clients.
     res = m.solve(stop=MaxIterations(1))
-    solution = [r.visits() for r in res.best.routes()]
-    assert_equal(solution, [])
+    assert_equal(res.best.num_clients(), 0)
 
     # Solve an instance with one client.
-    clients = [m.add_client(x=0, y=0)]
-    m.add_edge(depot, clients[0], distance=0)
-    m.add_edge(clients[0], depot, distance=0)
+    client_loc = m.add_location(0, 0)
+    m.add_client(location=client_loc)
+    m.add_edge(depot_loc, client_loc, distance=0)
+    m.add_edge(client_loc, depot_loc, distance=0)
 
     res = m.solve(stop=MaxIterations(1))
-    solution = [r.visits() for r in res.best.routes()]
-    assert_equal(solution, [[1]])
+    assert_equal(res.best.num_clients(), 1)
 
 
 def test_model_solves_small_instance_with_fixed_costs():
@@ -501,14 +506,19 @@ def test_model_solves_small_instance_with_fixed_costs():
             tw_late=40,
         )
 
-    m.add_depot(x=0, y=0)
+    m.add_depot(m.add_location(0, 0))
 
     for idx in range(5):
-        m.add_client(x=idx, y=idx, service_duration=1, tw_early=0, tw_late=20)
+        m.add_client(
+            location=m.add_location(x=idx, y=idx),
+            service_duration=1,
+            tw_early=0,
+            tw_late=20,
+        )
 
-    for frm in m.locations:
-        for to in m.locations:
-            if frm != to:
+    for idx_frm, frm in enumerate(m.locations):
+        for idx_to, to in enumerate(m.locations):
+            if idx_frm != idx_to:
                 m.add_edge(frm, to, distance=0, duration=5)
 
     res = m.solve(stop=MaxIterations(10))
@@ -533,7 +543,7 @@ def test_model_solves_small_instance_with_shift_durations():
             tw_late=tw_late,
         )
 
-    m.add_depot(x=0, y=0)
+    m.add_depot(location=m.add_location(0, 0))
 
     for idx in range(5):
         # Vehicles of the first type can visit a single client before having to
@@ -541,16 +551,15 @@ def test_model_solves_small_instance_with_shift_durations():
         # clients before having to return to the depot. So we need at least
         # three routes.
         m.add_client(
-            x=idx,
-            y=idx,
+            location=m.add_location(x=idx, y=idx),
             service_duration=1,
             tw_early=0,
             tw_late=20,
         )
 
-    for frm in m.locations:
-        for to in m.locations:
-            if frm != to:
+    for idx_frm, frm in enumerate(m.locations):
+        for idx_to, to in enumerate(m.locations):
+            if idx_frm != idx_to:
                 m.add_edge(frm, to, distance=0, duration=5)
 
     res = m.solve(stop=MaxIterations(100))
@@ -566,21 +575,20 @@ def test_model_solves_line_instance_with_multiple_depots():
     """
     m = Model()
 
-    depot1 = m.add_depot(x=0, y=0)  # location 0
-    depot2 = m.add_depot(x=5, y=0)  # location 1
+    depot1 = m.add_depot(location=m.add_location(0, 0))  # location 0
+    depot2 = m.add_depot(location=m.add_location(5, 0))  # location 1
 
     m.add_vehicle_type(1, capacity=2, start_depot=depot1, end_depot=depot1)
     m.add_vehicle_type(1, capacity=2, start_depot=depot2, end_depot=depot2)
 
     for idx in range(1, 5):  # locations 2, 3, 4, and 5
-        m.add_client(x=idx, delivery=1, y=0)
+        m.add_client(location=m.add_location(x=idx, y=0), delivery=1)
 
     # All locations are on a horizontal line, with the depots on each end. The
     # line is organised as follows:
-    #     D C C C C D   (depot or client)
-    #     0 2 3 4 5 1   (location index)
-    # Thus, clients 2 and 3 are closest to depot 0, and clients 4 and 5 are
-    # closest to depot 1.
+    #     D0 C0 C1 C2 C3 D1   (depot or client)
+    #      0  2  3  4  5  1   (location index)
+    # Thus, C0 and C1 are closest to D0, and C2 and C3 are closest to D1.
     for frm in m.locations:
         for to in m.locations:
             m.add_edge(frm, to, distance=abs(frm.x - to.x))
@@ -592,10 +600,12 @@ def test_model_solves_line_instance_with_multiple_depots():
     # Test that there are two routes, with the clients closest to depot 0
     # assigned to the first route, and clients closest to depot 1 assigned to
     # the second route. Route membership is compared using sets because the
-    # optimal visit order is not unique.
-    routes = res.best.routes()
-    assert_equal(set(routes[0].visits()), {2, 3})
-    assert_equal(set(routes[1].visits()), {4, 5})
+    # optimal route order is not unique.
+    route1, route2 = res.best.routes()
+    clients1 = {activity.idx for activity in route1 if activity.is_client()}
+    clients2 = {activity.idx for activity in route2 if activity.is_client()}
+    assert_equal(clients1, {0, 1})
+    assert_equal(clients2, {2, 3})
 
 
 def test_client_depot_and_vehicle_type_name_fields():
@@ -605,7 +615,7 @@ def test_client_depot_and_vehicle_type_name_fields():
     """
     m = Model()
 
-    depot = m.add_depot(1, 1, name="depot1")
+    depot = m.add_depot(m.add_location(1, 1), name="depot1")
     assert_equal(depot.name, "depot1")
     assert_equal(str(depot), "depot1")
 
@@ -613,7 +623,7 @@ def test_client_depot_and_vehicle_type_name_fields():
     assert_equal(veh_type.name, "veh_type1")
     assert_equal(str(veh_type), "veh_type1")
 
-    client = m.add_client(1, 2, name="client1")
+    client = m.add_client(m.add_location(1, 2), name="client1")
     assert_equal(client.name, "client1")
     assert_equal(str(client), "client1")
 
@@ -645,13 +655,16 @@ def test_model_solves_instances_with_pickups_and_deliveries(
     clients have pickups, deliveries, and sometimes both at the same time.
     """
     m = Model()
-    m.add_depot(0, 0)
     m.add_vehicle_type(capacity=10)
+    m.add_depot(location=m.add_location(0, 0))
 
-    m.add_client(x=1, y=1, delivery=deliveries[0], pickup=pickups[0])
-    m.add_client(x=2, y=2, delivery=deliveries[1], pickup=pickups[1])
-    m.add_client(x=3, y=3, delivery=deliveries[2], pickup=pickups[2])
-    m.add_client(x=4, y=4, delivery=deliveries[3], pickup=pickups[3])
+    for idx in range(4):
+        m.add_client(
+            location=m.add_location(idx + 1, idx + 1),
+            delivery=deliveries[idx],
+            pickup=pickups[idx],
+        )
+
     for frm in m.locations:
         for to in m.locations:
             manhattan = abs(frm.x - to.x) + abs(frm.y - to.y)
@@ -670,10 +683,11 @@ def test_add_client_raises_unknown_group():
     argument that is not known to the model.
     """
     m = Model()
+    loc = m.add_location(1, 1)
     group = ClientGroup()
 
     with assert_raises(ValueError):
-        m.add_client(1, 1, group=group)
+        m.add_client(location=loc, group=group)
 
 
 def test_from_data_client_group(ok_small):
@@ -682,10 +696,10 @@ def test_from_data_client_group(ok_small):
     correctly sets up the client groups in the model.
     """
     clients = ok_small.clients()
-    clients[0] = Client(1, 1, delivery=[1], required=False, group=0)
-    clients[1] = Client(1, 1, delivery=[1], required=False, group=0)
+    clients[0] = Client(1, delivery=[1], required=False, group=0)
+    clients[1] = Client(2, delivery=[1], required=False, group=0)
 
-    group = ClientGroup([1, 2])
+    group = ClientGroup([0, 1])
 
     data = ok_small.replace(clients=clients, groups=[group])
     model = Model.from_data(data)
@@ -700,7 +714,7 @@ def test_from_data_client_group(ok_small):
     group = model.groups[0]
     assert_(group.required)
     assert_equal(len(group), 2)
-    assert_equal(group.clients, [1, 2])
+    assert_equal(group.clients, [0, 1])
 
 
 def test_to_data_client_group():
@@ -709,12 +723,12 @@ def test_to_data_client_group():
     ProblemData instance that has the appropriate group memberships set up.
     """
     m = Model()
-    m.add_depot(1, 1)
     m.add_vehicle_type()
+    m.add_depot(location=m.add_location(1, 1))
 
     group = m.add_client_group()
-    m.add_client(1, 1, required=False, group=group)
-    m.add_client(2, 2, required=False, group=group)
+    m.add_client(location=m.add_location(1, 1), required=False, group=group)
+    m.add_client(location=m.add_location(2, 2), required=False, group=group)
 
     # Generate the data instance. There should be a single client group, and
     # the first two clients should be members of that group.
@@ -722,7 +736,7 @@ def test_to_data_client_group():
     assert_equal(data.num_groups, 1)
 
     group = data.group(0)
-    assert_equal(group.clients, [1, 2])
+    assert_equal(group.clients, [0, 1])
 
 
 def test_raises_mutually_exclusive_client_group_required_client():
@@ -731,42 +745,13 @@ def test_raises_mutually_exclusive_client_group_required_client():
     raises, because that does not make any sense.
     """
     m = Model()
+    loc = m.add_location(1, 1)
 
     group = m.add_client_group()
     assert_(group.mutually_exclusive)
 
     with assert_raises(ValueError):
-        m.add_client(1, 1, required=True, group=group)
-
-
-def test_client_group_membership_works_with_intermediate_changes():
-    """
-    Tests that repeatedly calling data() does not add clients more than once
-    to each client group they are in, and everything continues to work when
-    the model changes between calls to data().
-    """
-    m = Model()
-    m.add_depot(1, 1)
-    m.add_vehicle_type()
-
-    # Add three clients to the model, with (for now) indices 1, 2, 3.
-    group = m.add_client_group()
-    m.add_client(1, 1, required=False, group=group)
-    m.add_client(1, 1, required=False, group=group)
-    m.add_client(1, 1, required=False, group=group)
-
-    m.data()
-    assert_equal(len(group), 3)
-    assert_equal(group.clients, [1, 2, 3])
-
-    # Add another depot and another client. The clients now have indices 2, 3,
-    # 4, and 5.
-    m.add_depot(1, 2)
-    m.add_client(1, 1, required=False, group=group)
-
-    m.data()
-    assert_equal(len(group), 4)
-    assert_equal(group.clients, [2, 3, 4, 5])
+        m.add_client(location=loc, required=True, group=group)
 
 
 def test_tsp_instance_with_mutually_exclusive_groups(gtsp):
@@ -806,7 +791,7 @@ def test_minimise_distance_or_duration(ok_small):
     # thus no difference in actual travel time or distance. But the duration
     # objective should also count service duration along the route, and that
     # is something we can check.
-    service = sum(data.location(loc).service_duration for loc in [1, 4])
+    service = sum(data.client(client).service_duration for client in [0, 3])
     assert_equal(new_res.cost(), orig_res.cost() + service)
 
 
@@ -843,12 +828,12 @@ def test_adding_multiple_routing_profiles():
     veh_type2 = m.add_vehicle_type(profile=profile2)
     assert_equal(veh_type2.profile, 1)
 
-    m.add_depot(x=1, y=1)
-    m.add_client(x=2, y=2)
+    m.add_depot(location=m.add_location(1, 1))
+    m.add_client(location=m.add_location(2, 2))
 
-    for frm in m.locations:
-        for to in m.locations:
-            if frm != to:
+    for idx_frm, frm in enumerate(m.locations):
+        for idx_to, to in enumerate(m.locations):
+            if idx_frm != idx_to:
                 m.add_edge(frm, to, distance=10, duration=5, profile=profile1)
                 m.add_edge(frm, to, distance=5, duration=10, profile=profile2)
 
@@ -874,10 +859,13 @@ def test_profiles_build_on_base_edges():
     changes applied on top.
     """
     m = Model()
-
-    depot = m.add_depot(x=1, y=1)
-    client = m.add_client(x=2, y=2)
     m.add_vehicle_type()
+
+    depot_loc = m.add_location(1, 1)
+    m.add_depot(depot_loc)
+
+    client_loc = m.add_location(2, 2)
+    m.add_client(client_loc)
 
     # Add base edges. These edges are used to construct base matrices that the
     # profiles build on. Essentially, if an edge is not specifically provided
@@ -900,8 +888,8 @@ def test_profiles_build_on_base_edges():
 
     # Let's now add a few profile-specific edges and test that these overwrite
     # the base data in the new data instance.
-    m.add_edge(depot, client, distance=5, duration=10, profile=prof1)
-    m.add_edge(depot, client, distance=10, duration=5, profile=prof2)
+    m.add_edge(depot_loc, client_loc, distance=5, duration=10, profile=prof1)
+    m.add_edge(depot_loc, client_loc, distance=10, duration=5, profile=prof2)
 
     data = m.data()
     assert_equal(data.distance_matrix(0), [[0, 5], [2, 0]])
@@ -916,9 +904,10 @@ def test_model_solves_instances_with_multiple_profiles():
     multiple profiles.
     """
     m = Model()
-    m.add_depot(x=1, y=1)
-    m.add_client(x=1, y=2)
-    m.add_client(x=2, y=1)
+    m.add_depot(location=m.add_location(1, 1))
+
+    m.add_client(location=m.add_location(1, 2))
+    m.add_client(location=m.add_location(2, 1))
 
     prof1 = m.add_profile()  # this profile only cares about distance on x axis
     prof2 = m.add_profile()  # this one only about distance on y axis
@@ -938,8 +927,8 @@ def test_model_solves_instances_with_multiple_profiles():
     assert_equal(res.cost(), 0)
 
     route1, route2 = res.best.routes()
-    assert_equal(route1.visits(), [1])
-    assert_equal(route2.visits(), [2])
+    assert_equal(str(route1), "C0")
+    assert_equal(str(route2), "C1")
 
 
 def test_model_solves_instance_with_zero_load_dimensions():
@@ -948,10 +937,11 @@ def test_model_solves_instance_with_zero_load_dimensions():
     dimensions.
     """
     m = Model()
-    m.add_depot(x=1, y=1)
-    m.add_client(x=1, y=2)
-    m.add_client(x=2, y=1)
-    m.add_client(x=2, y=2)
+    m.add_depot(location=m.add_location(1, 1))
+
+    m.add_client(location=m.add_location(1, 2))
+    m.add_client(location=m.add_location(2, 1))
+    m.add_client(location=m.add_location(2, 2))
 
     for frm in m.locations:
         for to in m.locations:
@@ -982,15 +972,16 @@ def test_bug_client_group_indices():
     first client group rather than the each into one.
     """
     m = Model()
-    m.add_depot(x=0, y=0)
+    loc = m.add_location(0, 0)
+    m.add_depot(location=loc)
 
     group1 = m.add_client_group()
     group2 = m.add_client_group()
 
-    client1 = m.add_client(x=0, y=0, required=False, group=group2)
+    client1 = m.add_client(location=loc, required=False, group=group2)
     assert_equal(client1.group, 1)
 
-    client2 = m.add_client(x=0, y=0, required=False, group=group1)
+    client2 = m.add_client(location=loc, required=False, group=group1)
     assert_equal(client2.group, 0)
 
     assert_equal(len(group1), 1)
@@ -1021,8 +1012,8 @@ def test_adding_vehicle_reload_depots():
     correctly.
     """
     m = Model()
-    depot1 = m.add_depot(x=0, y=0)
-    depot2 = m.add_depot(x=1, y=1)
+    depot1 = m.add_depot(location=m.add_location(0, 0))
+    depot2 = m.add_depot(location=m.add_location(1, 1))
 
     veh_type1 = m.add_vehicle_type(reload_depots=[depot1])
     assert_equal(veh_type1.reload_depots, [0])
@@ -1037,7 +1028,7 @@ def test_adding_unknown_reload_depots_raises():
     type raises.
     """
     m = Model()
-    depot = Depot(x=0, y=0)  # not in model
+    depot = Depot(location=0)  # not in model
 
     with assert_raises(ValueError):
         m.add_vehicle_type(reload_depots=[depot])
@@ -1049,13 +1040,13 @@ def test_model_solves_multi_trip_instance():
     trips / reloading.
     """
     m = Model()
-    depot1 = m.add_depot(0, 0)
-    depot2 = m.add_depot(0, 0)
+    depot1 = m.add_depot(location=m.add_location(0, 0))
+    depot2 = m.add_depot(location=m.add_location(0, 0))
 
     m.add_vehicle_type(capacity=[5], reload_depots=[depot1, depot2])
 
     for idx in range(3):  # all locations are on a horizontal line
-        m.add_client(idx, 0, delivery=[5])
+        m.add_client(location=m.add_location(idx, 0), delivery=[5])
 
     for frm in m.locations:
         for to in m.locations:
@@ -1138,12 +1129,17 @@ def test_solution_satisfies_group_constraints():
     constraints.
     """
     m = Model()
-    m.add_depot(x=0, y=0)
+    m.add_depot(location=m.add_location(0, 0))
     m.add_vehicle_type()
 
     group = m.add_client_group(required=False)
     for _ in range(100):
-        m.add_client(x=0, y=0, prize=1000, required=False, group=group)
+        m.add_client(
+            location=m.add_location(0, 0),
+            prize=1000,
+            required=False,
+            group=group,
+        )
 
     for frm in m.locations:
         for to in m.locations:
@@ -1151,3 +1147,78 @@ def test_solution_satisfies_group_constraints():
 
     res = m.solve(stop=MaxIterations(1), seed=42)
     assert_equal(res.best.num_missing_groups(), 0)
+
+
+def test_raises_unknown_location():
+    """
+    Tests that the model interface raises when given a location argument that
+    it does not know about.
+    """
+    m = Model()
+    loc = Location(0, 0)  # unknown, created outside of the model
+
+    with assert_raises(ValueError):
+        m.add_depot(location=loc)
+
+    with assert_raises(ValueError):
+        m.add_client(location=loc)
+
+    # Now created via the model interface. This should be OK.
+    loc = m.add_location(0, 0)
+    m.add_depot(location=loc)
+    m.add_client(location=loc)
+
+
+def test_adding_location():
+    """
+    Tests adding and using a location.
+    """
+    m = Model()
+
+    # Add location and test the attributes.
+    loc = m.add_location(x=0.0, y=1.2, name="test")
+    assert_equal(loc.x, 0.0)
+    assert_equal(loc.y, 1.2)
+    assert_equal(loc.name, "test")
+
+    # Add a client at the location. Since the location is the first one, the
+    # client should have a location index of 0.
+    client = m.add_client(location=loc)
+    assert_equal(client.location, 0)
+
+    # Add another location and client. The client should have a location index
+    # of 1.
+    loc2 = m.add_location(x=1, y=1)
+    client2 = m.add_client(location=loc2)
+    assert_equal(client2.location, 1)
+
+
+def test_solve_clients_in_same_location():
+    """
+    Smoke test that checks if the model can solve an instance with clients in
+    the same location.
+    """
+    m = Model()
+    m.add_vehicle_type()
+
+    # Two clients in the same place.
+    loc = m.add_location(10, 10)
+    client1 = m.add_client(loc)
+    client2 = m.add_client(loc)
+    assert_equal(client1.location, 0)
+    assert_equal(client2.location, 0)
+
+    depot = m.add_depot(location=m.add_location(5, 5))
+    assert_equal(depot.location, 1)
+
+    for frm in m.locations:
+        for to in m.locations:
+            dist = abs(frm.x - to.x) + abs(frm.y - to.y)
+            m.add_edge(frm, to, dist)
+
+    res = m.solve(stop=MaxIterations(10))
+
+    best = res.best
+    assert_(best.is_feasible())
+    assert_equal(best.num_clients(), 2)
+    assert_equal(best.distance(), 20)  # depot loc to clients loc, and back

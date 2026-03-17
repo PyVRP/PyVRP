@@ -115,8 +115,7 @@ public:
 
     /**
      * Set neighbourhood structure to use by the local search. For each client,
-     * the neighbourhood structure is a vector of nearby clients. Depots have
-     * no nearby client.
+     * the neighbourhood structure is a vector of nearby clients.
      */
     void setNeighbours(SearchSpace::Neighbours neighbours);
 

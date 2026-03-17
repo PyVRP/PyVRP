@@ -11,7 +11,7 @@ from pyvrp.Statistics import Statistics
 
 @pytest.mark.parametrize(
     ("routes", "num_iterations", "runtime"),
-    [([[1, 2], [3], [4]], 1, 1.5), ([[1, 2, 3, 4]], 100, 54.2)],
+    [([[0, 1], [2], [3]], 1, 1.5), ([[0, 1, 2, 3]], 100, 54.2)],
 )
 def test_fields_are_correctly_set(ok_small, routes, num_iterations, runtime):
     """
@@ -42,7 +42,7 @@ def test_init_raises_invalid_arguments(ok_small, num_iterations, runtime):
     """
     Tests that invalid arguments are rejected.
     """
-    sol = Solution(ok_small, [[1, 2, 3, 4]])
+    sol = Solution(ok_small, [[0, 1, 2, 3]])
 
     with assert_raises(ValueError):
         Result(sol, Statistics(), num_iterations, runtime)
@@ -62,7 +62,7 @@ def test_num_iterations(ok_small, num_iterations: int):
 
 @pytest.mark.parametrize(
     "routes",
-    [[[1, 2], [3], [4]], [[1, 2, 3, 4]]],
+    [[[0, 1], [2], [3]], [[0, 1, 2, 3]]],
 )
 def test_summary_contains_essential_information(ok_small, routes):
     """
@@ -88,7 +88,7 @@ def test_summary_contains_essential_information(ok_small, routes):
 
 @pytest.mark.parametrize(
     "routes",
-    [[[1, 2], [3], [4]], [[1, 2, 3, 4]]],
+    [[[0, 1], [2], [3]], [[0, 1, 2, 3]]],
 )
 def test_str_contains_summary_and_routes(ok_small, routes):
     """
@@ -113,7 +113,7 @@ def test_result_can_be_pickled(ok_small, num_iterations: int):
     Tests that a ``Result`` object can be pickled: it can be serialised and
     unserialised. This is useful for e.g. storing results to disk.
     """
-    best = Solution(ok_small, [[1, 2], [3], [4]])
+    best = Solution(ok_small, [[0, 1], [2], [3]])
     cost_eval = CostEvaluator([20], 6, 6)
     stats = Statistics()
 

@@ -72,6 +72,12 @@ This object stores the best observed solution and detailed runtime statistics.
 
 .. automodule:: pyvrp._pyvrp
 
+   .. autoclass:: ActivityType
+      :members:
+
+   .. autoclass:: Activity
+      :members:
+
    .. autoclass:: CostEvaluator
       :members:
 
@@ -81,7 +87,7 @@ This object stores the best observed solution and detailed runtime statistics.
    .. autoclass:: Solution
       :members:
 
-   .. autoclass:: Trip
+   .. autoclass:: Location
       :members:
 
    .. autoclass:: Client
@@ -100,7 +106,7 @@ This object stores the best observed solution and detailed runtime statistics.
    .. autoclass:: ProblemData
       :members:
 
-   .. autoclass:: ScheduledVisit
+   .. autoclass:: ScheduledActivity
       :members:
 
    .. autoclass:: PiecewiseLinearFunction

@@ -1,7 +1,7 @@
 #include "LocalSearch.h"
 #include "DynamicBitset.h"
 #include "Measure.h"
-#include "Trip.h"
+#include "logging.h"
 
 #include <algorithm>
 #include <cassert>
@@ -18,6 +18,9 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
                                         CostEvaluator const &costEvaluator,
                                         bool exhaustive)
 {
+    PYVRP_DEBUG(
+        "pyvrp.search", "Applying local search (exhaustive={}).", exhaustive);
+
     std::fill(lastTest_.begin(), lastTest_.end(), -1);
     std::fill(lastUpdate_.begin(), lastUpdate_.end(), 0);
     numUpdates_ = 0;
@@ -38,6 +41,13 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
     ensureStructuralFeasibility(costEvaluator);
     search(costEvaluator);
 
+    [[maybe_unused]] auto const stats = statistics();
+    PYVRP_DEBUG("pyvrp.search",
+                "Completed local search: improving={}, updates={}, moves={}.",
+                stats.numImproving,
+                stats.numUpdates,
+                stats.numMoves);
+
     return solution_.unload();
 }
 
@@ -49,6 +59,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     searchCompleted_ = false;
     for (int step = 0; !searchCompleted_; ++step)
     {
+        PYVRP_DEBUG("pyvrp.search", "Entering search loop (step={}).", step);
         searchCompleted_ = true;
 
         for (auto const uClient : searchSpace_.clientOrder())
@@ -57,12 +68,12 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!searchSpace_.isPromising(uClient))
                 continue;
 
-            auto const lastTest = lastTest_[U->client()];
-            lastTest_[U->client()] = numUpdates_;
+            auto const lastTest = lastTest_[uClient];
+            lastTest_[uClient] = numUpdates_;
 
             applyUnaryOps(U, costEvaluator);
 
-            for (auto const vClient : searchSpace_.neighboursOf(U->client()))
+            for (auto const vClient : searchSpace_.neighboursOf(uClient))
             {
                 auto *V = &solution_.nodes[vClient];
 
@@ -111,6 +122,11 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
         auto const [deltaCost, shouldApply] = op->evaluate(U, costEvaluator);
         if (shouldApply)
         {
+            PYVRP_DEBUG("pyvrp.search",
+                        "Applying operator to U={} (delta={}).",
+                        U->idx(),
+                        deltaCost);
+
             auto *rU = U->route();
             if (rU)
                 searchSpace_.markPromising(U);
@@ -151,6 +167,12 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
         auto const [deltaCost, shouldApply] = op->evaluate(U, V, costEvaluator);
         if (shouldApply)
         {
+            PYVRP_DEBUG("pyvrp.search",
+                        "Applying operator to U={} and V={} (delta={}).",
+                        U->idx(),
+                        V->idx(),
+                        deltaCost);
+
             auto *rU = U->route();
             auto *rV = V->route();
             assert(rV);
@@ -215,7 +237,7 @@ void LocalSearch::ensureStructuralFeasibility(
     for (auto const client : searchSpace_.clientOrder())
     {
         auto &node = solution_.nodes[client];
-        ProblemData::Client const &clientData = data.location(client);
+        auto const &clientData = data.client(client);
 
         if (!node.route() && clientData.required)  // then we must insert
         {
@@ -244,7 +266,7 @@ void LocalSearch::ensureStructuralFeasibility(
             {
                 searchSpace_.markPromising(&node);
                 auto *route = node.route();
-                route->remove(node.idx());
+                route->remove(node.pos());
                 update(route, route);
                 groupCount[idx]--;
             }
@@ -253,10 +275,10 @@ void LocalSearch::ensureStructuralFeasibility(
 
 #ifndef NDEBUG
     // Debug checks to ensure we have restored structural feasibility.
-    for (size_t idx = data.numDepots(); idx != data.numLocations(); ++idx)
+    for (size_t idx = 0; idx != data.numClients(); ++idx)
     {
         auto const &node = solution_.nodes[idx];
-        ProblemData::Client const &clientData = data.location(idx);
+        auto const &clientData = data.client(idx);
         assert(node.route() || !clientData.required);
     }
 
@@ -343,7 +365,7 @@ LocalSearch::LocalSearch(ProblemData const &data,
       solution_(data),
       searchSpace_(data, neighbours),
       perturbationManager_(perturbationManager),
-      lastTest_(data.numLocations()),
+      lastTest_(data.numClients()),
       lastUpdate_(data.numVehicles())
 {
 }
