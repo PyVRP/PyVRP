@@ -98,7 +98,8 @@ public:
     /**
      * PiecewiseLinearFunction()
      *
-     * Creates the zero function represented by a single segment with zero slope and zero intercept.
+     * Creates the zero function represented by a single segment with zero slope
+     * and zero intercept.
      */
     PiecewiseLinearFunction();
 
@@ -166,8 +167,8 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
     // Left extrapolation: slope of first segment (between first two points).
     auto const firstSlope = (points[1].second - points[0].second)
                             / (points[1].first - points[0].first);
-    segments_.push_back({points[0].second - firstSlope * points[0].first,
-                         firstSlope});
+    segments_.push_back(
+        {points[0].second - firstSlope * points[0].first, firstSlope});
 
     // Add all distinct x-values as breakpoints, with the segment to the
     // right of each breakpoint.
@@ -249,7 +250,7 @@ PiecewiseLinearFunction<Dom, Co>::segments() const
 template <typename Dom, typename Co>
 bool PiecewiseLinearFunction<Dom, Co>::isMonotonicallyIncreasing() const
 {
-    for (auto const [_, slope] : segments_)
+    for (auto const &[_, slope] : segments_)
     {
         if (slope < 0)
             return false;

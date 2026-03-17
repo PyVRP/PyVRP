@@ -103,29 +103,20 @@ PYBIND11_MODULE(_pyvrp, m)
                          if (seq.size() != 2)
                              throw std::invalid_argument(
                                  "Each point must be a (x, f(x)) pair.");
-                         valuePoints.push_back({seq[0].cast<int64_t>(),
-                                                seq[1].cast<int64_t>()});
+                         valuePoints.push_back(
+                             {seq[0].cast<int64_t>(), seq[1].cast<int64_t>()});
                      }
                      return PiecewiseLinearFunction(valuePoints);
                  }),
              py::arg("points"),
-             DOC(pyvrp,
-                 PiecewiseLinearFunction,
-                 PiecewiseLinearFunction,
-                 1))
+             DOC(pyvrp, PiecewiseLinearFunction, PiecewiseLinearFunction, 1))
         .def(py::init<std::vector<int64_t>,
                       std::vector<PiecewiseLinearFunction::Segment>>(),
              py::arg("breakpoints"),
              py::arg("segments"),
-             DOC(pyvrp,
-                 PiecewiseLinearFunction,
-                 PiecewiseLinearFunction,
-                 2))
+             DOC(pyvrp, PiecewiseLinearFunction, PiecewiseLinearFunction, 2))
         .def(py::init<>(),
-             DOC(pyvrp,
-                 PiecewiseLinearFunction,
-                 PiecewiseLinearFunction,
-                 3))
+             DOC(pyvrp, PiecewiseLinearFunction, PiecewiseLinearFunction, 3))
         .def("__call__",
              &PiecewiseLinearFunction::operator(),
              py::arg("x"),
