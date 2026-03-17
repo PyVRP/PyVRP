@@ -41,31 +41,6 @@ using pyvrp::Trip;
 using PiecewiseLinearFunction
     = pyvrp::PiecewiseLinearFunction<int64_t, int64_t>;
 
-namespace
-{
-std::vector<PiecewiseLinearFunction::Point>
-parseSlopePoints(py::iterable const &points)
-{
-    std::vector<PiecewiseLinearFunction::Point> slopePoints;
-
-    for (auto const &point : points)
-    {
-        auto const seq = py::cast<py::sequence>(point);
-        auto const size = seq.size();
-        if (size != 2 && size != 3)
-            throw std::invalid_argument(
-                "Each point must be (breakpoint, slope) or "
-                "(breakpoint, slope, jump).");
-
-        slopePoints.push_back({seq[0].cast<int64_t>(),
-                               seq[1].cast<int64_t>(),
-                               size == 3 ? seq[2].cast<int64_t>() : 0});
-    }
-
-    return slopePoints;
-}
-}  // namespace
-
 PYBIND11_MODULE(_pyvrp, m)
 {
     py::class_<DynamicBitset>(m, "DynamicBitset", DOC(pyvrp, DynamicBitset))
@@ -118,15 +93,39 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<PiecewiseLinearFunction>(
         m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
-        .def(py::init<>())
+        .def(py::init(
+                 [](py::iterable points)
+                 {
+                     std::vector<PiecewiseLinearFunction::Point> valuePoints;
+                     for (auto const &point : points)
+                     {
+                         auto const seq = py::cast<py::sequence>(point);
+                         if (seq.size() != 2)
+                             throw std::invalid_argument(
+                                 "Each point must be a (x, f(x)) pair.");
+                         valuePoints.push_back({seq[0].cast<int64_t>(),
+                                                seq[1].cast<int64_t>()});
+                     }
+                     return PiecewiseLinearFunction(valuePoints);
+                 }),
+             py::arg("points"),
+             DOC(pyvrp,
+                 PiecewiseLinearFunction,
+                 PiecewiseLinearFunction,
+                 1))
         .def(py::init<std::vector<int64_t>,
                       std::vector<PiecewiseLinearFunction::Segment>>(),
              py::arg("breakpoints"),
-             py::arg("segments"))
-        .def(py::init(
-                 [](py::iterable points)
-                 { return PiecewiseLinearFunction(parseSlopePoints(points)); }),
-             py::arg("points"))
+             py::arg("segments"),
+             DOC(pyvrp,
+                 PiecewiseLinearFunction,
+                 PiecewiseLinearFunction,
+                 2))
+        .def(py::init<>(),
+             DOC(pyvrp,
+                 PiecewiseLinearFunction,
+                 PiecewiseLinearFunction,
+                 3))
         .def("__call__",
              &PiecewiseLinearFunction::operator(),
              py::arg("x"),
@@ -140,7 +139,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                py::return_value_policy::reference_internal,
                                DOC(pyvrp, PiecewiseLinearFunction, segments))
         .def("is_monotonically_increasing",
-             &PiecewiseLinearFunction::isMonotonicallyIncreasing)
+             &PiecewiseLinearFunction::isMonotonicallyIncreasing,
+             DOC(pyvrp, PiecewiseLinearFunction, isMonotonicallyIncreasing))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](PiecewiseLinearFunction const &function)  // __getstate__
@@ -150,9 +150,6 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t)  // __setstate__
             {
-                if (t.size() != 2)
-                    throw std::invalid_argument("Invalid state.");
-
                 using Breakpoints = std::vector<int64_t>;
                 using Segments = std::vector<PiecewiseLinearFunction::Segment>;
                 return PiecewiseLinearFunction(
