@@ -18,7 +18,7 @@ jobs:
       matrix:
         os: [ ubuntu-24.04, ubuntu-24.04-arm, windows-2022, macos-15 ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: Build wheels
@@ -26,7 +26,7 @@ jobs:
         with:
           package-dir: .
           output-dir: dist
-      - uses: actions/upload-artifact@v4  # upload all wheels
+      - uses: actions/upload-artifact@v7  # upload all wheels
         with:
           name: dist-${{ matrix.os }}
           path: ./dist/*
@@ -39,11 +39,11 @@ jobs:
     permissions:
       id-token: write  # for trusted publishing
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           version: "0.7.5"
           enable-cache: true
