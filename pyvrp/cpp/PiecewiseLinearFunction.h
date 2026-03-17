@@ -4,31 +4,50 @@
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
 namespace pyvrp
 {
+// clang-format off
 /**
- * PiecewiseLinearFunction
+ * PiecewiseLinearFunction(points: list[tuple[np.int64, np.int64]])
  *
- * Represents a piecewise linear function :math:`f`.
+ * Creates a piecewise linear function :math:`f` from :math:`(x, f(x))`
+ * points that are non-decreasing in :math:`x`.
  *
- * Internally, the function is represented via :math:`n` strictly increasing
- * breakpoints :math:`(b_i)_{i = 0, \ldots, n - 1}` and :math:`n + 1` linear
- * segments :math:`(f_i)_{i = 0, \ldots, n}`. Given :math:`x`, define
+ * .. note::
+ *    The interface follows
+ *    `Gurobi <https://docs.gurobi.com/projects/optimizer/en/current/concepts/modeling/objectives.html#linear-objectives>`_.
+ *    Jumps are supported, single points are not.
+ *
+ * The points are converted into an internal representation with breakpoints
+ * and segments. In particular, :math:`f` is represented via :math:`n - 1`
+ * strictly increasing breakpoints :math:`(b_i)_{i = 1, \ldots, n - 1}` and
+ * :math:`n` linear segments :math:`(f_i)_{i = 1, \ldots, n}`. Given :math:`x`,
+ * define
  *
  * .. math::
  *    f(x) =
  *    \begin{cases}
- *       f_0(x) & \text{ if } x < b_0, \\
+ *       f_1(x) & \text{ if } x < b_1, \\
  *       f_i(x) & \text{ if } b_{i - 1} \le x < b_i
- *                \text{ for } i = 1, \ldots, n - 1, \\
+ *                \text{ for } i = 2, \ldots, n - 1, \\
  *       f_n(x) & \text{ otherwise.}
  *    \end{cases}
  *
+ * Parameters
+ * ----------
+ * points
+ *     Ordered :math:`(x, f(x))` points defining the function :math:`f`.
+ *
+ * Raises
+ * ------
+ * ValueError
+ *     When fewer than two points are provided, when the points are decreasing
+ *     in :math:`x`, or when the implied slope between points is not integral.
  */
+// clang-format on
 template <typename Dom, typename Co> class PiecewiseLinearFunction
 {
 public:
@@ -40,58 +59,10 @@ private:
     std::vector<Segment> segments_;
 
 public:
-    /**
-     * PiecewiseLinearFunction(
-     *     points: list[tuple[np.int64, np.int64]],
-     * )
-     *
-     * Creates a piecewise linear function from ordered ``(x, f(x))`` points,
-     * following the same interface as Gurobi's piecewise linear objectives:
-     * https://docs.gurobi.com/projects/optimizer/en/current/concepts/modeling/objectives.html#piecewise-linear-objectives
-     *
-     * Points must be non-decreasing in ``x``. Jumps are represented by two
-     * consecutive points sharing the same ``x``-coordinate. The first two and
-     * last two points must have distinct ``x``-coordinates (jumps at the
-     * endpoints are not supported). The first and last segments are used for
-     * extrapolation beyond the endpoints.
-     *
-     * Parameters
-     * ----------
-     * points
-     *     Ordered ``(x, f(x))`` points defining the function.
-     *
-     * Raises
-     * ------
-     * ValueError
-     *     When fewer than two points are provided, when the first two or last
-     *     two points share an ``x``-coordinate, when points are not
-     *     non-decreasing in ``x``, or when the implied slope is not integral.
-     */
+    // Construct from points.
     PiecewiseLinearFunction(std::vector<Point> points);
 
-    /**
-     * PiecewiseLinearFunction(
-     *     breakpoints: list[np.int64],
-     *     segments: list[tuple[np.int64, np.int64]],
-     * )
-     *
-     * Creates a piecewise linear function from breakpoints and segments.
-     *
-     * Parameters
-     * ----------
-     * breakpoints
-     *     Ordered, strictly increasing breakpoints.
-     * segments
-     *     Segment ``(intercept, slope)`` pairs. Must contain exactly one more
-     *     segment than breakpoints.
-     *
-     * Raises
-     * ------
-     * ValueError
-     *     When ``segments`` is empty, when there is not exactly one more
-     *     segment than breakpoints, or when breakpoints are not strictly
-     *     increasing.
-     */
+    // Directly construct from breakpoints and segments.
     PiecewiseLinearFunction(std::vector<Dom> breakpoints,
                             std::vector<Segment> segments);
 
@@ -122,8 +93,6 @@ template <typename Dom, typename Co>
 PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
     std::vector<Point> points)
 {
-    // FIXME: ask Niels whether a minimum of two points is preferred or a
-    // single-point value should be supported.
     if (points.size() < 2)
         throw std::invalid_argument("Need at least two points.");
 
@@ -135,54 +104,29 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
         throw std::invalid_argument(
             "Last two points must have distinct x-coordinates.");
 
-    for (size_t idx = 0; idx + 1 < points.size(); ++idx)
+    for (size_t idx = 0; idx + 1 != points.size(); ++idx)
     {
-        if (points[idx + 1].first < points[idx].first)
+        auto const curr = points[idx];
+        auto const next = points[idx + 1];
+
+        if (curr.first == next.first)  // nothing to do; we have a jump at this
+            continue;                  // point, but not a new segment.
+
+        auto const dy = next.second - curr.second;
+        auto const dx = next.first - curr.first;
+
+        if (dx < 0)
             throw std::invalid_argument("Points must be non-decreasing in x.");
 
-        if (points[idx].first < points[idx + 1].first)
-        {
-            auto const dy = points[idx + 1].second - points[idx].second;
-            auto const dx = points[idx + 1].first - points[idx].first;
+        if (dy % dx != 0)
+            throw std::invalid_argument("Slope is not integral.");
 
-            if (dy % dx != 0)
-                throw std::invalid_argument("Implied slope is not integral.");
-        }
-    }
+        if (idx != 0)  // breakpoints separate segments
+            breakpoints_.push_back(curr.first);
 
-    // Left extrapolation: slope of first segment (between first two points).
-    auto const firstSlope = (points[1].second - points[0].second)
-                            / (points[1].first - points[0].first);
-    segments_.emplace_back(points[0].second - firstSlope * points[0].first,
-                           firstSlope);
-
-    // Add all distinct x-values as breakpoints, with the segment to the
-    // right of each breakpoint.
-    Dom prevSlope = firstSlope;
-
-    for (auto it = points.begin(); it != points.end();)
-    {
-        auto const x = it->first;
-
-        // Find the first point past the current x (handles jumps).
-        auto right = it;
-        while (++right != points.end() && right->first == x)
-            ;
-
-        auto const yRight = std::prev(right)->second;
-        // Right extrapolation: same slope as last segment.
-        Dom slopeRight = prevSlope;
-
-        if (right != points.end())
-        {
-            slopeRight = (right->second - yRight) / (right->first - x);
-            prevSlope = slopeRight;
-        }
-
-        breakpoints_.push_back(x);
-        segments_.emplace_back(yRight - slopeRight * x, slopeRight);
-
-        it = right;
+        auto const slope = dy / dx;
+        auto const intercept = curr.second - slope * curr.first;
+        segments_.emplace_back(intercept, slope);
     }
 
     assert(!segments_.empty());
@@ -212,6 +156,7 @@ Co PiecewiseLinearFunction<Dom, Co>::operator()(Dom x) const
     auto const idx = std::distance(
         breakpoints_.begin(),
         std::upper_bound(breakpoints_.begin(), breakpoints_.end(), x));
+
     auto const [intercept, slope] = segments_[idx];
     return static_cast<Co>(intercept + slope * x);
 }

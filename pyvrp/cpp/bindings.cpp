@@ -21,7 +21,6 @@
 #include <cstdint>
 #include <memory>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <variant>
 
@@ -94,13 +93,11 @@ PYBIND11_MODULE(_pyvrp, m)
     py::class_<PiecewiseLinearFunction>(
         m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
         .def(py::init<std::vector<PiecewiseLinearFunction::Point>>(),
-             py::arg("points"),
-             DOC(pyvrp, PiecewiseLinearFunction, PiecewiseLinearFunction, 1))
+             py::arg("points"))
         .def(py::init<std::vector<int64_t>,
                       std::vector<PiecewiseLinearFunction::Segment>>(),
              py::arg("breakpoints"),
-             py::arg("segments"),
-             DOC(pyvrp, PiecewiseLinearFunction, PiecewiseLinearFunction, 2))
+             py::arg("segments"))
         .def("__call__",
              &PiecewiseLinearFunction::operator(),
              py::arg("x"),
