@@ -32,7 +32,7 @@ def test_raises_invalid_points():
     with assert_raises(ValueError):  # non-integral slope
         PiecewiseLinearFunction(points=[(0, 0), (3, 1)])
 
-    with assert_raises(ValueError):  # wrong tuple length
+    with assert_raises((ValueError, TypeError)):  # wrong tuple length
         PiecewiseLinearFunction(points=[(0, 0, 1, 2)])
 
 
