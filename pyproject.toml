@@ -143,7 +143,7 @@ skip = "*_ppc64le *_i686 *_s390x *-win32"
 build-frontend = "build"
 test-groups = ["dev"]
 test-sources = ["tests"]
-test-command = "pytest ./tests"
+test-command = "pytest ./tests -v"
 
 
 [tool.cibuildwheel.windows]
