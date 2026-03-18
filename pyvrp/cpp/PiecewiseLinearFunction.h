@@ -31,7 +31,7 @@ namespace pyvrp
  *    f(x) =
  *    \begin{cases}
  *       f_1(x) & \text{ if } x < b_1, \\
- *       f_i(x) & \text{ if } b_{i - 1} \le x < b_i
+ *       f_i(x) & \text{ if } b_{i - 1} \le x \le b_i
  *                \text{ for } i = 2, \ldots, n - 1, \\
  *       f_n(x) & \text{ otherwise.}
  *    \end{cases}
