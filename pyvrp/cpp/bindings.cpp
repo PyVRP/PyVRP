@@ -134,6 +134,8 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<PiecewiseLinearFunction>(
         m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
+        .def(py::init<std::vector<PiecewiseLinearFunction::Point>>(),
+             py::arg("points"))
         .def(py::init<std::vector<int64_t>,
                       std::vector<PiecewiseLinearFunction::Segment>>(),
              py::arg("breakpoints"),
@@ -150,6 +152,9 @@ PYBIND11_MODULE(_pyvrp, m)
                                &PiecewiseLinearFunction::segments,
                                py::return_value_policy::reference_internal,
                                DOC(pyvrp, PiecewiseLinearFunction, segments))
+        .def("is_monotonically_increasing",
+             &PiecewiseLinearFunction::isMonotonicallyIncreasing,
+             DOC(pyvrp, PiecewiseLinearFunction, isMonotonicallyIncreasing))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](PiecewiseLinearFunction const &function)  // __getstate__
