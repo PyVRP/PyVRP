@@ -395,6 +395,16 @@ ProblemData::VehicleType::VehicleType(
 
     if (unitOvertimeCost < 0)
         throw std::invalid_argument("unit_overtime_cost must be >= 0.");
+
+    // NOTE: @N-Wouda:
+    // Currently, we use the monotonicity of the duration cost function, however,
+    // some use cases might require non-negativity instead. For example, if a user
+    // prefers medium duration routes over short and long routes, they might want a 
+    // duration cost function that has a minimum at some point greater than 0. 
+    // What is your preference? Do you prefer to enforce monotonicity, or non-negativity? 
+    if (!this->durationCost.isMonotonicallyIncreasing())
+        throw std::invalid_argument("duration_cost must be monotonically "
+                                    "increasing.");
 }
 
 ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
