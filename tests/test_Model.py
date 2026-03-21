@@ -9,6 +9,7 @@ from pyvrp import (
     Location,
     Model,
     PenaltyParams,
+    PiecewiseLinearFunction,
     Profile,
     SolveParams,
     VehicleType,
@@ -793,6 +794,17 @@ def test_minimise_distance_or_duration(ok_small):
     # is something we can check.
     service = sum(data.client(client).service_duration for client in [0, 3])
     assert_equal(new_res.cost(), orig_res.cost() + service)
+
+
+def test_add_vehicle_type_with_duration_cost():
+    """
+    Tests that add_vehicle_type() correctly passes a duration_cost PWL through
+    to the underlying VehicleType.
+    """
+    m = Model()
+    pwl = PiecewiseLinearFunction([(0, 0), (100, 100)])
+    veh_type = m.add_vehicle_type(duration_cost=pwl)
+    assert_equal(veh_type.duration_cost, pwl)
 
 
 def test_adding_vehicle_type_with_unknown_profile_raises():

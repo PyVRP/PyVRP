@@ -10,6 +10,7 @@ from pyvrp import (
     ClientGroup,
     Depot,
     Location,
+    PiecewiseLinearFunction,
     ProblemData,
     VehicleType,
 )
@@ -581,6 +582,16 @@ def test_vehicle_type_raises_negative_overtime_data(
         )
 
 
+def test_vehicle_type_raises_non_monotone_duration_cost():
+    """
+    Tests that the vehicle type constructor raises when the duration cost
+    function is not monotonically increasing.
+    """
+    non_monotone = PiecewiseLinearFunction([(0, 0), (5, 10), (10, 0)])
+    with assert_raises(ValueError):
+        VehicleType(duration_cost=non_monotone)
+
+
 def test_vehicle_type_does_not_raise_for_all_zero_edge_case():
     """
     The vehicle type constructor should allow the following edge case where all
@@ -729,6 +740,24 @@ def test_vehicle_type_replace():
     assert_equal(new.num_available, 5)
     assert_equal(new.capacity, [10])
     assert_equal(new.name, "new")
+
+
+def test_vehicle_type_duration_cost():
+    """
+    Tests that the duration_cost field is correctly stored, defaults to a zero
+    function, can be updated via replace(), and survives a pickle round-trip.
+    """
+    zero = PiecewiseLinearFunction([(0, 0), (1, 0)])
+    assert_equal(VehicleType().duration_cost, zero)
+
+    pwl = PiecewiseLinearFunction([(0, 0), (10, 10)])
+    veh_type = VehicleType(duration_cost=pwl)
+    assert_equal(veh_type.duration_cost, pwl)
+
+    replaced = veh_type.replace(duration_cost=zero)
+    assert_equal(replaced.duration_cost, zero)
+
+    assert_equal(pickle.loads(pickle.dumps(veh_type)), veh_type)
 
 
 def test_vehicle_type_multiple_capacities():
