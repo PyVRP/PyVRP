@@ -514,7 +514,7 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[14].cast<std::vector<size_t>>(),       // reload depots
                     t[15].cast<size_t>(),                    // max reloads
                     t[16].cast<pyvrp::Duration>(),           // max overtime
-                    t[17].cast<pyvrp::Cost>(),              // unit overtime cost
+                    t[17].cast<pyvrp::Cost>(),  // unit overtime cost
                     t[18].cast<PiecewiseLinearFunction>(),  // duration cost
                     t[19].cast<std::string>());             // name
 
