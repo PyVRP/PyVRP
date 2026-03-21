@@ -313,7 +313,7 @@ ProblemData::VehicleType::VehicleType(
     size_t maxReloads,
     Duration maxOvertime,
     Cost unitOvertimeCost,
-    std::optional<PiecewiseLinearFunction<Duration, Cost>> durationCost,
+    std::optional<PiecewiseLinearFunction<int64_t, int64_t>> durationCost,
     std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
@@ -343,7 +343,7 @@ ProblemData::VehicleType::VehicleType(
                       : std::numeric_limits<Duration>::max()),
       durationCost(durationCost.has_value()
                        ? std::move(*durationCost)
-                       : PiecewiseLinearFunction<Duration, Cost>(
+                       : PiecewiseLinearFunction<int64_t, int64_t>(
                              {}, {{Duration{0}, Duration{0}}})),
       hasDurationCost(std::any_of(this->durationCost.segments().begin(),
                                   this->durationCost.segments().end(),
@@ -482,7 +482,7 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
     std::optional<size_t> maxReloads,
     std::optional<Duration> maxOvertime,
     std::optional<Cost> unitOvertimeCost,
-    std::optional<PiecewiseLinearFunction<Duration, Cost>> durationCost,
+    std::optional<PiecewiseLinearFunction<int64_t, int64_t>> durationCost,
     std::optional<std::string> name) const
 {
     return {numAvailable.value_or(this->numAvailable),
