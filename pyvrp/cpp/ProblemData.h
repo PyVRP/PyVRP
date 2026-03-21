@@ -3,6 +3,7 @@
 
 #include "Matrix.h"
 #include "Measure.h"
+#include "PiecewiseLinearFunction.h"
 
 #include <cassert>
 #include <iosfwd>
@@ -509,9 +510,14 @@ public:
      *     :py:attr:`~shift_duration`.
      * unit_overtime_cost
      *     Additional cost of a unit of overtime.
+     * duration_cost
+     *     Piecewise linear duration cost function :math:`f(\text{duration})`.
      * max_duration
      *     Hard maximum route duration constraint, computed as the sum of
      *     :py:attr:`~shift_duration` and :py:attr:`~max_overtime`.
+     * has_duration_cost
+     *     Precomputed flag indicating whether any non-zero duration cost or
+     *     hard duration constraint applies to this vehicle type.
      * name
      *     Free-form name field for this vehicle type.
      */
@@ -536,28 +542,34 @@ public:
         Duration const maxOvertime;              // Maximum allowed overtime
         Cost const unitOvertimeCost;             // Cost per unit of overtime
         Duration const maxDuration;  // Maximum route duration, incl. overtime
-        char const *name;            // Type name (for reference)
+        PiecewiseLinearFunction<Duration, Cost> const
+            durationCost;  // Cost f(duration)
+        bool const
+            hasDurationCost;  // Any non-zero duration cost or hard constraint
+        char const *name;     // Type name (for reference)
 
-        VehicleType(size_t numAvailable = 1,
-                    std::vector<Load> capacity = {},
-                    size_t startDepot = 0,
-                    size_t endDepot = 0,
-                    Cost fixedCost = 0,
-                    Duration twEarly = 0,
-                    Duration twLate = std::numeric_limits<Duration>::max(),
-                    Duration shiftDuration
-                    = std::numeric_limits<Duration>::max(),
-                    Distance maxDistance = std::numeric_limits<Distance>::max(),
-                    Cost unitDistanceCost = 1,
-                    Cost unitDurationCost = 0,
-                    size_t profile = 0,
-                    std::optional<Duration> startLate = std::nullopt,
-                    std::vector<Load> initialLoad = {},
-                    std::vector<size_t> reloadDepots = {},
-                    size_t maxReloads = std::numeric_limits<size_t>::max(),
-                    Duration maxOvertime = 0,
-                    Cost unitOvertimeCost = 0,
-                    std::string name = "");
+        VehicleType(
+            size_t numAvailable = 1,
+            std::vector<Load> capacity = {},
+            size_t startDepot = 0,
+            size_t endDepot = 0,
+            Cost fixedCost = 0,
+            Duration twEarly = 0,
+            Duration twLate = std::numeric_limits<Duration>::max(),
+            Duration shiftDuration = std::numeric_limits<Duration>::max(),
+            Distance maxDistance = std::numeric_limits<Distance>::max(),
+            Cost unitDistanceCost = 1,
+            Cost unitDurationCost = 0,
+            size_t profile = 0,
+            std::optional<Duration> startLate = std::nullopt,
+            std::vector<Load> initialLoad = {},
+            std::vector<size_t> reloadDepots = {},
+            size_t maxReloads = std::numeric_limits<size_t>::max(),
+            Duration maxOvertime = 0,
+            Cost unitOvertimeCost = 0,
+            std::optional<PiecewiseLinearFunction<Duration, Cost>> durationCost
+            = std::nullopt,
+            std::string name = "");
 
         bool operator==(VehicleType const &other) const;
 
@@ -573,25 +585,27 @@ public:
          * Returns a new ``VehicleType`` with the same data as this one, except
          * for the given parameters, which are used instead.
          */
-        VehicleType replace(std::optional<size_t> numAvailable,
-                            std::optional<std::vector<Load>> capacity,
-                            std::optional<size_t> startDepot,
-                            std::optional<size_t> endDepot,
-                            std::optional<Cost> fixedCost,
-                            std::optional<Duration> twEarly,
-                            std::optional<Duration> twLate,
-                            std::optional<Duration> shiftDuration,
-                            std::optional<Distance> maxDistance,
-                            std::optional<Cost> unitDistanceCost,
-                            std::optional<Cost> unitDurationCost,
-                            std::optional<size_t> profile,
-                            std::optional<Duration> startLate,
-                            std::optional<std::vector<Load>> initialLoad,
-                            std::optional<std::vector<size_t>> reloadDepots,
-                            std::optional<size_t> maxReloads,
-                            std::optional<Duration> maxOvertime,
-                            std::optional<Cost> unitOvertimeCost,
-                            std::optional<std::string> name) const;
+        VehicleType replace(
+            std::optional<size_t> numAvailable,
+            std::optional<std::vector<Load>> capacity,
+            std::optional<size_t> startDepot,
+            std::optional<size_t> endDepot,
+            std::optional<Cost> fixedCost,
+            std::optional<Duration> twEarly,
+            std::optional<Duration> twLate,
+            std::optional<Duration> shiftDuration,
+            std::optional<Distance> maxDistance,
+            std::optional<Cost> unitDistanceCost,
+            std::optional<Cost> unitDurationCost,
+            std::optional<size_t> profile,
+            std::optional<Duration> startLate,
+            std::optional<std::vector<Load>> initialLoad,
+            std::optional<std::vector<size_t>> reloadDepots,
+            std::optional<size_t> maxReloads,
+            std::optional<Duration> maxOvertime,
+            std::optional<Cost> unitOvertimeCost,
+            std::optional<PiecewiseLinearFunction<Duration, Cost>> durationCost,
+            std::optional<std::string> name) const;
 
         /**
          * Returns the maximum number of trips these vehicle can execute.

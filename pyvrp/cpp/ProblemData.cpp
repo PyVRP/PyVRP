@@ -5,10 +5,12 @@
 #include <numeric>
 #include <stdexcept>
 
+using pyvrp::Cost;
 using pyvrp::Distance;
 using pyvrp::Duration;
 using pyvrp::Load;
 using pyvrp::Matrix;
+using pyvrp::PiecewiseLinearFunction;
 using pyvrp::ProblemData;
 
 namespace
@@ -292,25 +294,27 @@ bool ProblemData::Depot::operator==(Depot const &other) const
     // clang-format on
 }
 
-ProblemData::VehicleType::VehicleType(size_t numAvailable,
-                                      std::vector<Load> capacity,
-                                      size_t startDepot,
-                                      size_t endDepot,
-                                      Cost fixedCost,
-                                      Duration twEarly,
-                                      Duration twLate,
-                                      Duration shiftDuration,
-                                      Distance maxDistance,
-                                      Cost unitDistanceCost,
-                                      Cost unitDurationCost,
-                                      size_t profile,
-                                      std::optional<Duration> startLate,
-                                      std::vector<Load> initialLoad,
-                                      std::vector<size_t> reloadDepots,
-                                      size_t maxReloads,
-                                      Duration maxOvertime,
-                                      Cost unitOvertimeCost,
-                                      std::string name)
+ProblemData::VehicleType::VehicleType(
+    size_t numAvailable,
+    std::vector<Load> capacity,
+    size_t startDepot,
+    size_t endDepot,
+    Cost fixedCost,
+    Duration twEarly,
+    Duration twLate,
+    Duration shiftDuration,
+    Distance maxDistance,
+    Cost unitDistanceCost,
+    Cost unitDurationCost,
+    size_t profile,
+    std::optional<Duration> startLate,
+    std::vector<Load> initialLoad,
+    std::vector<size_t> reloadDepots,
+    size_t maxReloads,
+    Duration maxOvertime,
+    Cost unitOvertimeCost,
+    std::optional<PiecewiseLinearFunction<Duration, Cost>> durationCost,
+    std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
       endDepot(endDepot),
@@ -337,6 +341,16 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
                                                - shiftDuration
                       ? shiftDuration + maxOvertime
                       : std::numeric_limits<Duration>::max()),
+      durationCost(durationCost.has_value()
+                       ? std::move(*durationCost)
+                       : PiecewiseLinearFunction<Duration, Cost>(
+                             {}, {{Duration{0}, Duration{0}}})),
+      hasDurationCost(std::any_of(this->durationCost.segments().begin(),
+                                  this->durationCost.segments().end(),
+                                  [](auto const &seg)
+                                  { return seg.first != 0 || seg.second != 0; })
+                      || this->maxDuration
+                             != std::numeric_limits<Duration>::max()),
       name(duplicate(name.data()))
 {
     if (numAvailable == 0)
@@ -403,6 +417,8 @@ ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
       maxOvertime(vehicleType.maxOvertime),
       unitOvertimeCost(vehicleType.unitOvertimeCost),
       maxDuration(vehicleType.maxDuration),
+      durationCost(vehicleType.durationCost),
+      hasDurationCost(vehicleType.hasDurationCost),
       name(duplicate(vehicleType.name))
 {
 }
@@ -427,6 +443,8 @@ ProblemData::VehicleType::VehicleType(VehicleType &&vehicleType)
       maxOvertime(vehicleType.maxOvertime),
       unitOvertimeCost(vehicleType.unitOvertimeCost),
       maxDuration(vehicleType.maxDuration),
+      durationCost(std::move(vehicleType.durationCost)),
+      hasDurationCost(vehicleType.hasDurationCost),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen
@@ -453,6 +471,7 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
     std::optional<size_t> maxReloads,
     std::optional<Duration> maxOvertime,
     std::optional<Cost> unitOvertimeCost,
+    std::optional<PiecewiseLinearFunction<Duration, Cost>> durationCost,
     std::optional<std::string> name) const
 {
     return {numAvailable.value_or(this->numAvailable),
@@ -473,6 +492,7 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
             maxReloads.value_or(this->maxReloads),
             maxOvertime.value_or(this->maxOvertime),
             unitOvertimeCost.value_or(this->unitOvertimeCost),
+            durationCost.value_or(this->durationCost),
             name.value_or(this->name)};
 }
 
@@ -504,6 +524,7 @@ bool ProblemData::VehicleType::operator==(VehicleType const &other) const
         && maxReloads == other.maxReloads
         && maxOvertime == other.maxOvertime
         && unitOvertimeCost == other.unitOvertimeCost
+        && durationCost == other.durationCost
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }
