@@ -399,6 +399,7 @@ public:
      *     max_reloads: int = np.iinfo(np.uint64).max,
      *     max_overtime: int = 0,
      *     unit_overtime_cost: int = 0,
+     *     duration_cost: PiecewiseLinearFunction | None = None,
      *     *,
      *     name: str = "",
      * )
@@ -462,6 +463,9 @@ public:
      * unit_overtime_cost
      *     Cost of a unit of overtime. This is in addition to the regular
      *     :py:attr:`~unit_duration_cost` of route durations. Default 0.
+     * duration_cost
+     *     Piecewise linear duration cost function :math:`f(\text{duration})`.
+     *     When not provided, a zero-cost function is used.
      * name
      *     Free-form name field for this vehicle type. Default empty.
      *
@@ -515,9 +519,6 @@ public:
      * max_duration
      *     Hard maximum route duration constraint, computed as the sum of
      *     :py:attr:`~shift_duration` and :py:attr:`~max_overtime`.
-     * has_duration_cost
-     *     Precomputed flag indicating whether any non-zero duration cost or
-     *     hard duration constraint applies to this vehicle type.
      * name
      *     Free-form name field for this vehicle type.
      */
