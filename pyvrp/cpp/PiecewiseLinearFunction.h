@@ -87,6 +87,7 @@ public:
     [[nodiscard]] bool isMonotonicallyIncreasing() const;
 
     bool operator==(PiecewiseLinearFunction const &other) const = default;
+    auto operator<=>(PiecewiseLinearFunction const &other) const = default;
 };
 
 template <typename Dom, typename Co>
