@@ -386,6 +386,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       size_t,
                       pyvrp::Duration,
                       pyvrp::Cost,
+                      std::optional<PiecewiseLinearFunction>,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
@@ -407,6 +408,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_reloads") = std::numeric_limits<size_t>::max(),
              py::arg("max_overtime") = 0,
              py::arg("unit_overtime_cost") = 0,
+             py::arg("duration_cost") = py::none(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -437,6 +439,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("max_overtime", &ProblemData::VehicleType::maxOvertime)
         .def_readonly("unit_overtime_cost",
                       &ProblemData::VehicleType::unitOvertimeCost)
+        .def_readonly("duration_cost",
+                      &ProblemData::VehicleType::durationCost,
+                      py::return_value_policy::reference_internal)
         .def_readonly("max_duration", &ProblemData::VehicleType::maxDuration)
         .def_property_readonly("max_trips", &ProblemData::VehicleType::maxTrips)
         .def_readonly("name",
@@ -462,6 +467,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_reloads") = py::none(),
              py::arg("max_overtime") = py::none(),
              py::arg("unit_overtime_cost") = py::none(),
+             py::arg("duration_cost") = py::none(),
              py::kw_only(),
              py::arg("name") = py::none(),
              DOC(pyvrp, ProblemData, VehicleType, replace))
@@ -486,6 +492,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.maxReloads,
                                       vehicleType.maxOvertime,
                                       vehicleType.unitOvertimeCost,
+                                      vehicleType.durationCost,
                                       vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
@@ -507,8 +514,9 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[14].cast<std::vector<size_t>>(),       // reload depots
                     t[15].cast<size_t>(),                    // max reloads
                     t[16].cast<pyvrp::Duration>(),           // max overtime
-                    t[17].cast<pyvrp::Cost>(),   // unit overtime cost
-                    t[18].cast<std::string>());  // name
+                    t[17].cast<pyvrp::Cost>(),              // unit overtime cost
+                    t[18].cast<PiecewiseLinearFunction>(),  // duration cost
+                    t[19].cast<std::string>());             // name
 
                 return vehicleType;
             }))
