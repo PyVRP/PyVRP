@@ -344,7 +344,7 @@ ProblemData::VehicleType::VehicleType(
       durationCost(durationCost.has_value()
                        ? std::move(*durationCost)
                        : PiecewiseLinearFunction<int64_t, int64_t>(
-                             {}, {{Duration{0}, Duration{0}}})),
+                             {}, {std::make_pair(int64_t{Duration{0}}, int64_t{Duration{0}})})),
       hasDurationCost(std::any_of(this->durationCost.segments().begin(),
                                   this->durationCost.segments().end(),
                                   [](auto const &seg)
