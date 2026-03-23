@@ -44,14 +44,22 @@ Feature comparison
      - ✅
      - ✅
      - ✅
-   * - Breaks
+   * - Fixed breaks
      - ❌
-     - ✅ (fixed)
-     - ✅ (fixed)
+     - ✅
+     - ✅
+   * - EU and US hours-of-service regulations
+     - ✅ (enterprise)
+     - ❌
+     - ❌
    * - Duration objective
      - ✅
      - ⚠️ (not wait duration)
      - ✅
+   * - Flexible route start times
+     - ✅
+     - ❌
+     - ❌
    * - Alternative visits [#mutually_exclusive_groups]_
      - ✅
      - ❌
@@ -63,20 +71,19 @@ Feature comparison
    * - Time-dependent travel durations
      - ❌
      - ❌
-     - ✅  
-   * - Release times
      - ✅
-     - ❌
-     - ❌
    * - Optional visits
      - ✅
      - ✅
      - ✅
    * - Skills [#skills]_
-     - ✅ (via load constraints)
+     - ✅ (via load)
      - ✅
      - ✅
-
+   * - Fairness (load balancing, duration balancing)
+     - ✅ (enterprise)
+     - ❌
+     - ❌
 
 .. [#reloading]
    Have a look at our :doc:`../notebooks/reloading` tutorial to get started using this feature.

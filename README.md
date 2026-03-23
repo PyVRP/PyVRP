@@ -14,7 +14,10 @@ It currently supports VRPs with:
 - Multiple depots (multi-depot VRP);
 - Reloading along routes at different reload depots (multi-trip VRP);
 - Optional clients with prizes for visiting (prize collecting, team orienteering problem);
-- Client groups imposing additional restrictions on multiple clients jointly (generalised VRP, VRP with multiple time windows).
+- Client groups imposing additional restrictions on multiple clients jointly (generalised VRP, VRP with multiple time windows);
+- **[Enterprise]** Break planning, including support for EU and US hours-of-service regulation;
+- **[Enterprise]** Vehicle-client and client-client compatibility constraints and sequencing relations;
+- **[Enterprise]** Fairness constraints like load and shift duration balancing.
 
 PyVRP is available on the Python package index as `pyvrp`.
 It may be installed in the usual way as
@@ -25,7 +28,7 @@ pip install pyvrp
 The documentation is available [here][1].
 
 > [!TIP]
-> Looking for professional support? [RoutingLab](https://routinglab.tech) provides consulting, custom development, and FastVRP - a production-ready route optimisation API built on PyVRP.
+> Looking for professional support or enterprise features? [RoutingLab](https://routinglab.tech) provides consulting, custom development, and FastVRP - a production-ready route optimisation API built on PyVRP.
 
 ### Tutorials
 
