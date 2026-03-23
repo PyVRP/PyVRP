@@ -36,9 +36,6 @@ using pyvrp::RandomNumberGenerator;
 using pyvrp::Route;
 using pyvrp::Solution;
 
-using PiecewiseLinearFunction
-    = pyvrp::PiecewiseLinearFunction<int64_t, int64_t>;
-
 PYBIND11_MODULE(_pyvrp, m)
 {
     py::options options;
@@ -132,47 +129,47 @@ PYBIND11_MODULE(_pyvrp, m)
                                                          blocks.end());
             }));
 
-    py::class_<PiecewiseLinearFunction>(
+    using DurationCost = ProblemData::VehicleType::DurationCost;
+
+    py::class_<DurationCost>(
         m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
-        .def(py::init<std::vector<PiecewiseLinearFunction::Point>>(),
-             py::arg("points"))
-        .def(py::init<std::vector<int64_t>,
-                      std::vector<PiecewiseLinearFunction::Segment>>(),
+        .def(py::init<std::vector<DurationCost::Point>>(), py::arg("points"))
+        .def(py::init<std::vector<pyvrp::Duration>,
+                      std::vector<DurationCost::Segment>>(),
              py::arg("breakpoints"),
              py::arg("segments"))
         .def("__call__",
-             &PiecewiseLinearFunction::operator(),
+             &DurationCost::operator(),
              py::arg("x"),
              DOC(pyvrp, PiecewiseLinearFunction, __call__))
         .def_property_readonly("breakpoints",
-                               &PiecewiseLinearFunction::breakpoints,
+                               &DurationCost::breakpoints,
                                py::return_value_policy::reference_internal,
                                DOC(pyvrp, PiecewiseLinearFunction, breakpoints))
         .def_property_readonly("segments",
-                               &PiecewiseLinearFunction::segments,
+                               &DurationCost::segments,
                                py::return_value_policy::reference_internal,
                                DOC(pyvrp, PiecewiseLinearFunction, segments))
         .def("is_monotonically_increasing",
-             &PiecewiseLinearFunction::isMonotonicallyIncreasing,
+             &DurationCost::isMonotonicallyIncreasing,
              DOC(pyvrp, PiecewiseLinearFunction, isMonotonicallyIncreasing))
         .def("is_non_negative",
-             &PiecewiseLinearFunction::isNonNegative,
+             &DurationCost::isNonNegative,
              py::arg("lb"),
              DOC(pyvrp, PiecewiseLinearFunction, isNonNegative))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
-            [](PiecewiseLinearFunction const &function)  // __getstate__
+            [](DurationCost const &function)  // __getstate__
             {
                 return py::make_tuple(function.breakpoints(),
                                       function.segments());
             },
             [](py::tuple t)  // __setstate__
             {
-                using Breakpoints = std::vector<int64_t>;
-                using Segments = std::vector<PiecewiseLinearFunction::Segment>;
-                return PiecewiseLinearFunction(
-                    t[0].cast<Breakpoints>(),  // breakpoints
-                    t[1].cast<Segments>());    // segments
+                using Breakpoints = std::vector<pyvrp::Duration>;
+                using Segments = std::vector<DurationCost::Segment>;
+                return DurationCost(t[0].cast<Breakpoints>(),  // breakpoints
+                                    t[1].cast<Segments>());    // segments
             }));
 
     py::class_<ProblemData::Location>(
@@ -390,7 +387,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       size_t,
                       pyvrp::Duration,
                       pyvrp::Cost,
-                      PiecewiseLinearFunction,
+                      DurationCost,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
@@ -412,8 +409,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_reloads") = std::numeric_limits<size_t>::max(),
              py::arg("max_overtime") = 0,
              py::arg("unit_overtime_cost") = 0,
-             py::arg("duration_cost") = PiecewiseLinearFunction(
-                 {}, {PiecewiseLinearFunction::Segment{0, 0}}),
+             py::arg("duration_cost") = DurationCost(
+                 {}, {DurationCost::Segment{pyvrp::Cost{0}, pyvrp::Cost{0}}}),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)
@@ -519,9 +516,9 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[14].cast<std::vector<size_t>>(),       // reload depots
                     t[15].cast<size_t>(),                    // max reloads
                     t[16].cast<pyvrp::Duration>(),           // max overtime
-                    t[17].cast<pyvrp::Cost>(),  // unit overtime cost
-                    t[18].cast<PiecewiseLinearFunction>(),  // duration cost
-                    t[19].cast<std::string>());             // name
+                    t[17].cast<pyvrp::Cost>(),   // unit overtime cost
+                    t[18].cast<DurationCost>(),  // duration cost
+                    t[19].cast<std::string>());  // name
 
                 return vehicleType;
             }))

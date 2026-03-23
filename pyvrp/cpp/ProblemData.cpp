@@ -392,7 +392,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
     if (unitOvertimeCost < 0)
         throw std::invalid_argument("unit_overtime_cost must be >= 0.");
 
-    if (!this->durationCost.isNonNegative(int64_t{0}))
+    if (!this->durationCost.isNonNegative(Duration{0}))
         throw std::invalid_argument("duration_cost must be non-negative.");
 }
 

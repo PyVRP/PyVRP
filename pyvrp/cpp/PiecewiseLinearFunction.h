@@ -51,7 +51,7 @@ namespace pyvrp
 template <typename Dom, typename Co> class PiecewiseLinearFunction
 {
 public:
-    using Segment = std::pair<Dom, Dom>;
+    using Segment = std::pair<Co, Co>;
     using Point = std::pair<Dom, Co>;
 
 private:
@@ -124,14 +124,17 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
         if (dx < 0)
             throw std::invalid_argument("Points must be non-decreasing in x.");
 
-        if (dy % dx != 0)
+        auto const dxCo = static_cast<Co>(dx);
+
+        if (dy % dxCo != 0)
             throw std::invalid_argument("Slope is not integral.");
 
         if (idx != 0)  // breakpoints separate segments
             breakpoints_.push_back(curr.first);
 
-        auto const slope = dy / dx;
-        auto const intercept = curr.second - slope * curr.first;
+        auto const slope = dy / dxCo;
+        auto const intercept
+            = curr.second - slope * static_cast<Co>(curr.first);
         segments_.emplace_back(intercept, slope);
     }
 
@@ -164,7 +167,7 @@ Co PiecewiseLinearFunction<Dom, Co>::operator()(Dom x) const
         std::upper_bound(breakpoints_.begin(), breakpoints_.end(), x));
 
     auto const [intercept, slope] = segments_[idx];
-    return static_cast<Co>(intercept + slope * x);
+    return intercept + slope * static_cast<Co>(x);
 }
 
 template <typename Dom, typename Co>
@@ -193,8 +196,10 @@ bool PiecewiseLinearFunction<Dom, Co>::isMonotonicallyIncreasing() const
         auto const [prevIntercept, prevSlope] = segments_[idx];
         auto const [nextIntercept, nextSlope] = segments_[idx + 1];
 
-        auto const left = prevIntercept + prevSlope * breakpoint;
-        auto const right = nextIntercept + nextSlope * breakpoint;
+        auto const left
+            = prevIntercept + prevSlope * static_cast<Co>(breakpoint);
+        auto const right
+            = nextIntercept + nextSlope * static_cast<Co>(breakpoint);
 
         if (right < left)
             return false;
@@ -228,8 +233,10 @@ bool PiecewiseLinearFunction<Dom, Co>::isNonNegative(Dom lb) const
         auto const [prevIntercept, prevSlope] = segments_[idx];
         auto const [nextIntercept, nextSlope] = segments_[idx + 1];
 
-        auto const left = prevIntercept + prevSlope * breakpoint;
-        auto const right = nextIntercept + nextSlope * breakpoint;
+        auto const left
+            = prevIntercept + prevSlope * static_cast<Co>(breakpoint);
+        auto const right
+            = nextIntercept + nextSlope * static_cast<Co>(breakpoint);
 
         if (left < 0 || right < 0)
             return false;

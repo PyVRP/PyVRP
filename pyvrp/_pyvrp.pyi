@@ -202,7 +202,7 @@ class VehicleType:
         max_reloads: int = ...,
         max_overtime: int = 0,
         unit_overtime_cost: int = 0,
-        duration_cost: PiecewiseLinearFunction | None = None,
+        duration_cost: PiecewiseLinearFunction = ...,
         *,
         name: str = "",
     ) -> None: ...
