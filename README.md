@@ -15,7 +15,7 @@ It currently supports VRPs with:
 - Reloading along routes at different reload depots (multi-trip VRP);
 - Optional clients with prizes for visiting (prize collecting, team orienteering problem);
 - Client groups imposing additional restrictions on multiple clients jointly (generalised VRP, VRP with multiple time windows);
-- **[Enterprise]** Break planning, including support for EU and US hours-of-service regulation;
+- **[Enterprise]** Automatic break planning for EU and US hours-of-service regulations;
 - **[Enterprise]** Vehicle-client and client-client compatibility constraints and sequencing relations;
 - **[Enterprise]** Fairness constraints like load and shift duration balancing.
 
