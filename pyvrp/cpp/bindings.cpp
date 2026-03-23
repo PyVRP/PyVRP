@@ -386,7 +386,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       size_t,
                       pyvrp::Duration,
                       pyvrp::Cost,
-                      std::optional<PiecewiseLinearFunction>,
+                      PiecewiseLinearFunction,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
@@ -408,7 +408,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_reloads") = std::numeric_limits<size_t>::max(),
              py::arg("max_overtime") = 0,
              py::arg("unit_overtime_cost") = 0,
-             py::arg("duration_cost") = py::none(),
+             py::arg("duration_cost") = PiecewiseLinearFunction(
+                 {}, {PiecewiseLinearFunction::Segment{0, 0}}),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &ProblemData::VehicleType::numAvailable)

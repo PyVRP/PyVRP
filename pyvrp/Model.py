@@ -391,7 +391,9 @@ class Model:
         max_reloads: int = np.iinfo(np.uint64).max,
         max_overtime: int = 0,
         unit_overtime_cost: int = 0,
-        duration_cost: PiecewiseLinearFunction | None = None,
+        duration_cost: PiecewiseLinearFunction = PiecewiseLinearFunction(
+            [(np.int64(0), np.int64(0)), (np.int64(1), np.int64(0))]
+        ),
         *,
         name: str = "",
     ) -> VehicleType:
