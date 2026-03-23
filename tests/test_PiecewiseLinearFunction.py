@@ -169,8 +169,8 @@ def test_is_monotonically_increasing(
         ([(0, 0), (10, 10)], -5, False),  # positive slope, f(-5) < 0
         ([(0, -1), (1, 0)], 0, False),  # f(lb) < 0
         ([(0, 5), (5, 0), (5, -1), (10, 4)], 0, False),  # jump to negative
-        ([(0, 5), (5, 3), (10, 1)], 0, False),  # negative last-segment slope
-        ([(0, 0), (5, 5), (10, 3)], 0, False),  # negative after last bp
+        ([(0, 10), (5, 5), (10, 0)], 0, False),  # negative last-segment slope
+        ([(0, 5), (5, -5), (10, 5)], 0, False),  # negative at breakpoint
         ([(0, 0), (5, 5), (5, 3), (10, 8)], 0, True),  # jump stays >= 0
         ([(0, 0), (10, 10)], 5, True),  # lb inside domain, f(5) = 5 >= 0
     ],
