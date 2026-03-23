@@ -21,6 +21,11 @@ namespace pyvrp
  * ----------
  * seed
  *     Seed used to set the initial RNG state.
+ *
+ * .. warning::
+ *
+ *    This class is **not** thread-safe. Each thread must use its own
+ *    ``RandomNumberGenerator`` instance.
  */
 class RandomNumberGenerator
 {
@@ -77,7 +82,6 @@ public:
     /**
      * Returns the internal RNG state.
      */
-    // Could be useful for debugging.
     std::array<uint32_t, 4> const &state() const;
 };
 
@@ -94,7 +98,7 @@ constexpr size_t RandomNumberGenerator::max()
 template <typename T>
 RandomNumberGenerator::result_type RandomNumberGenerator::randint(T high)
 {
-    static_assert(std::is_integral<T>::value);
+    static_assert(std::is_integral_v<T>);
     return operator()() % high;
 }
 

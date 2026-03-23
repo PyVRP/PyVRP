@@ -138,12 +138,13 @@ exclude_lines = [
 
 [tool.cibuildwheel]
 # We do not support old Python versions and somewhat uncommon platforms.
-build = "cp311-* cp312-* cp313-* cp314-*"
+build = "cp311-* cp312-* cp313-* cp313t-* cp314-*"
 skip = "*_ppc64le *_i686 *_s390x *-win32"
 build-frontend = "build"
 test-groups = ["dev"]
 test-sources = ["tests"]
 test-command = "pytest ./tests -v"
+enable = ["cpython-freethreading"]
 
 
 [tool.cibuildwheel.windows]

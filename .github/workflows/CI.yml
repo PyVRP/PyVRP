@@ -113,3 +113,62 @@ jobs:
         run: |
           VALGRIND_CMD="pyvrp tests/data/RC208.vrp --round_func dimacs --max_runtime 0.5 --seed 1"
           uv run env PYTHONMALLOC=malloc valgrind --tool=memcheck --quiet $VALGRIND_CMD
+
+  free-threaded:
+    name: Test with free-threaded Python 3.13
+    runs-on: ubuntu-24.04
+    env:
+      GCC_VERSION: "14"
+      # Point uv at the free-threaded interpreter installed by setup-python,
+      # so it does not fall back to the system /usr/bin/python3 (3.12).
+      UV_PYTHON: python3.13t
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up free-threaded Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13t"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.7.5"
+          enable-cache: true
+      - name: Install Python dependencies
+        # pytest-codspeed pulls in cffi, which does not support
+        # free-threaded CPython 3.13. Exclude it from the dev group.
+        # gcovr pulls in lxml which fails to build on 3.13t.
+        # Exclude build group and install meson and ninja manually.
+        run: |
+          uv sync --no-install-project --no-group dev --no-group build
+          uv pip install meson ninja pytest pytest-cov pytest-xdist pytest-sugar docblock
+      - name: Set up GCC
+        run: |
+          sudo apt-get install -y gcc-${{ env.GCC_VERSION }} g++-${{ env.GCC_VERSION }}
+
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ env.GCC_VERSION }} 10
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${{ env.GCC_VERSION }} 10
+
+          echo "CC=gcc" >> $GITHUB_ENV
+          echo "CXX=g++" >> $GITHUB_ENV
+      - name: Build pyvrp
+        run: |
+          uv sync --no-group dev --no-group build
+          uv pip install meson ninja pytest pytest-cov pytest-xdist pytest-sugar docblock
+          uv run --no-sync buildtools/build_extensions.py --build_type debug --clean
+      - name: Verify GIL is disabled
+        env:
+          PYTHON_GIL: "0"
+        run: |
+          uv run --no-sync python -c "
+          import sys
+          import pyvrp._pyvrp
+          import pyvrp.search._search
+          assert not sys._is_gil_enabled(), 'GIL should be disabled'
+          print('GIL disabled: OK')
+          "
+      - name: Run tests
+        env:
+          PYTHON_GIL: "0"
+        run: uv run --no-sync pytest --no-cov

@@ -89,10 +89,10 @@ class PenaltyParams:
     max_penalty: float = 100_000.0
 
     def __post_init__(self):
-        if not self.solutions_between_updates >= 1:
+        if self.solutions_between_updates < 1:
             raise ValueError("Expected solutions_between_updates >= 1.")
 
-        if not self.penalty_increase >= 1.0:
+        if self.penalty_increase < 1.0:
             raise ValueError("Expected penalty_increase >= 1.")
 
         if not (0.0 <= self.penalty_decrease <= 1.0):
@@ -149,6 +149,12 @@ class PenaltyManager:
         :attr:`~pyvrp.PenaltyManager.PenaltyParams.max_penalty`].
     params
         PenaltyManager parameters. If not provided, a default will be used.
+
+    .. warning::
+
+       This class is **not** thread-safe. Do not share a single
+       ``PenaltyManager`` instance across multiple threads without
+       external synchronization. Each thread should use its own instance.
     """
 
     def __init__(
@@ -222,7 +228,7 @@ class PenaltyManager:
         Registers the feasibility dimensions of the given solution.
         """
         is_feasible = [
-            *[excess == 0 for excess in sol.excess_load()],
+            *(excess == 0 for excess in sol.excess_load()),
             not sol.has_time_warp(),
             not sol.has_excess_distance(),
         ]

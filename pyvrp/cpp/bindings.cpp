@@ -39,7 +39,7 @@ using pyvrp::Solution;
 using PiecewiseLinearFunction
     = pyvrp::PiecewiseLinearFunction<int64_t, int64_t>;
 
-PYBIND11_MODULE(_pyvrp, m)
+PYBIND11_MODULE(_pyvrp, m, py::mod_gil_not_used())
 {
     py::options options;
     options.disable_enum_members_docstring();

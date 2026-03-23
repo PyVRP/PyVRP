@@ -44,7 +44,7 @@ using pyvrp::search::supports;
 using pyvrp::search::SwapTails;
 using pyvrp::search::UnaryOperator;
 
-PYBIND11_MODULE(_search, m)
+PYBIND11_MODULE(_search, m, py::mod_gil_not_used())
 {
     pyvrp::registerLogger("pyvrp.search");
 

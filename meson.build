@@ -30,6 +30,14 @@ if compiler.has_argument('-Wno-stringop-overflow')
     add_project_link_arguments('-Wno-stringop-overflow', language: 'cpp')
 endif
 
+if compiler.get_id() == 'gcc'
+    # GCC 14 with LTO raises a false positive in pybind11's internals.h for
+    # the Py_GIL_DISABLED (free-threaded Python) code path. The allocation
+    # size is guarded but LTO inlining loses the proof. We use get_id()
+    # instead of has_argument() because the latter fails to detect this flag.
+    add_project_link_arguments('-Wno-alloc-size-larger-than', language: 'cpp')
+endif
+
 # Logging configuration and spdlog dependency.
 if get_option('buildtype') == 'debug'
     # Log everything in debug builds.
