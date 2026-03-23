@@ -173,6 +173,12 @@ def test_is_monotonically_increasing(
         ([(0, 5), (5, -5), (10, 5)], 0, False),  # negative at breakpoint
         ([(0, 0), (5, 5), (5, 3), (10, 8)], 0, True),  # jump stays >= 0
         ([(0, 0), (10, 10)], 5, True),  # lb inside domain, f(5) = 5 >= 0
+        # lb equals a breakpoint: the breakpoint at x=3 is skipped (<=lb),
+        # the one at x=6 is checked and stays non-negative.
+        ([(0, 2), (3, 5), (3, 6), (6, 9), (10, 13)], 3, True),
+        # lb equals a breakpoint: the breakpoint at x=3 is skipped (<=lb),
+        # the one at x=6 has a jump down to -1, so non-negativity fails.
+        ([(0, 2), (3, 5), (3, 6), (6, 9), (6, -1), (10, 3)], 3, False),
     ],
 )
 def test_is_non_negative(

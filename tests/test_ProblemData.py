@@ -754,6 +754,11 @@ def test_vehicle_type_duration_cost():
     veh_type = VehicleType(duration_cost=pwl)
     assert_equal(veh_type.duration_cost, pwl)
 
+    # PLF with non-zero intercept: covers the seg.first != 0 branch in the
+    # hasDurationCost check.
+    pwl2 = PiecewiseLinearFunction([(0, 5), (10, 15)])
+    assert_equal(VehicleType(duration_cost=pwl2).duration_cost, pwl2)
+
     replaced = veh_type.replace(duration_cost=zero)
     assert_equal(replaced.duration_cost, zero)
 
@@ -1080,6 +1085,10 @@ def test_vehicle_type_eq():
     # This vehicle type is equivalent to veh_type1.
     veh_type3 = VehicleType(num_available=3, profile=0)
     assert_(veh_type1 == veh_type3)
+
+    # Two types differing only in duration_cost are not equal.
+    pwl = PiecewiseLinearFunction([(0, 0), (10, 10)])
+    assert_(VehicleType() != VehicleType(duration_cost=pwl))
 
     # And some things that are not vehicle types.
     assert_(veh_type1 != "text")
