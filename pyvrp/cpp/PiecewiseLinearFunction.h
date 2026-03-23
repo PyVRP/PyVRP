@@ -118,21 +118,19 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
         if (curr.first == next.first)  // nothing to do; we have a jump at this
             continue;                  // point, but not a new segment.
 
-        auto const dy = next.second - curr.second;
-        auto const dx = next.first - curr.first;
+        auto const dy = static_cast<int64_t>(next.second - curr.second);
+        auto const dx = static_cast<int64_t>(next.first - curr.first);
 
         if (dx < 0)
             throw std::invalid_argument("Points must be non-decreasing in x.");
 
-        auto const dxCo = static_cast<Co>(dx);
-
-        if (dy % dxCo != 0)
+        if (dy % dx != 0)
             throw std::invalid_argument("Slope is not integral.");
 
         if (idx != 0)  // breakpoints separate segments
             breakpoints_.push_back(curr.first);
 
-        auto const slope = dy / dxCo;
+        auto const slope = static_cast<Co>(dy / dx);
         auto const intercept
             = curr.second - slope * static_cast<Co>(curr.first);
         segments_.emplace_back(intercept, slope);
