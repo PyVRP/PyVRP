@@ -392,14 +392,7 @@ ProblemData::VehicleType::VehicleType(size_t numAvailable,
     if (unitOvertimeCost < 0)
         throw std::invalid_argument("unit_overtime_cost must be >= 0.");
 
-    // NOTE: @N-Wouda:
-    // Currently, isNonNegative() checks the entire domain. However, in practice
-    // durations are always >= 0, so a user might define a PWL with a positive
-    // slope on the first segment (making it negative for x < 0) while still
-    // intending a non-negative cost on the actual domain [0, +inf). Should we
-    // pass a lower bound (e.g. 0) to isNonNegative() so the check is restricted
-    // to the meaningful domain?
-    if (!this->durationCost.isNonNegative())
+    if (!this->durationCost.isNonNegative(Duration{0}))
         throw std::invalid_argument("duration_cost must be non-negative.");
 }
 

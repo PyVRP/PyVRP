@@ -160,6 +160,32 @@ def test_is_monotonically_increasing(
     assert_equal(fn.is_monotonically_increasing(), expected)
 
 
+@pytest.mark.parametrize(
+    ("points", "lb", "expected"),
+    [
+        ([(0, 0), (10, 10)], 0, True),  # positive slope, f(0) = 0
+        ([(0, 0), (1, 0)], 0, True),  # constant zero function
+        ([(0, 5), (1, 5)], 0, True),  # constant positive function
+        ([(0, 0), (10, 10)], -5, False),  # positive slope, f(-5) < 0
+        ([(0, -1), (1, 0)], 0, False),  # f(lb) < 0
+        ([(0, 5), (5, 0), (5, -1), (10, 4)], 0, False),  # jump to negative
+        ([(0, 5), (5, 3), (10, 1)], 0, False),  # negative last-segment slope
+        ([(0, 0), (5, 5), (10, 3)], 0, False),  # negative after last bp
+        ([(0, 0), (5, 5), (5, 3), (10, 8)], 0, True),  # jump stays >= 0
+        ([(0, 0), (10, 10)], 5, True),  # lb inside domain, f(5) = 5 >= 0
+    ],
+)
+def test_is_non_negative(
+    points: list[tuple[int, int]], lb: int, expected: bool
+):
+    """
+    Tests is_non_negative for a range of cases, including positive slopes,
+    negative values at the lower bound, jumps, and varying lb values.
+    """
+    fn = PiecewiseLinearFunction(points=points)
+    assert_equal(fn.is_non_negative(lb), expected)
+
+
 def test_pickle():
     """
     Tests that piecewise linear functions can be pickled and unpickled

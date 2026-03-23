@@ -87,9 +87,9 @@ public:
     [[nodiscard]] bool isMonotonicallyIncreasing() const;
 
     /**
-     * Returns whether this function is non-negative everywhere.
+     * Returns whether this function is non-negative for all :math:`x \ge lb`.
      */
-    [[nodiscard]] bool isNonNegative() const;
+    [[nodiscard]] bool isNonNegative(Dom lb) const;
 
     bool operator==(PiecewiseLinearFunction const &other) const = default;
     auto operator<=>(PiecewiseLinearFunction const &other) const = default;
@@ -204,21 +204,27 @@ bool PiecewiseLinearFunction<Dom, Co>::isMonotonicallyIncreasing() const
 }
 
 template <typename Dom, typename Co>
-bool PiecewiseLinearFunction<Dom, Co>::isNonNegative() const
+bool PiecewiseLinearFunction<Dom, Co>::isNonNegative(Dom lb) const
 {
-    // The first segment extends to -inf. A positive slope would drive the
-    // function to -inf, violating non-negativity.
-    if (segments_.front().second > 0)
-        return false;
-
     // The last segment extends to +inf. A negative slope would drive the
     // function to -inf, violating non-negativity.
     if (segments_.back().second < 0)
         return false;
 
+    // Check the value at the lower bound of the domain.
+    if ((*this)(lb) < 0)
+        return false;
+
+    // Check all breakpoints strictly greater than lb. Since each segment is
+    // linear, its minimum over any interval is at one of the endpoints; those
+    // endpoints are lb (already checked) and the breakpoints below.
     for (size_t idx = 0; idx != breakpoints_.size(); ++idx)
     {
         auto const breakpoint = breakpoints_[idx];
+
+        if (breakpoint <= lb)
+            continue;
+
         auto const [prevIntercept, prevSlope] = segments_[idx];
         auto const [nextIntercept, nextSlope] = segments_[idx + 1];
 
@@ -228,12 +234,6 @@ bool PiecewiseLinearFunction<Dom, Co>::isNonNegative() const
         if (left < 0 || right < 0)
             return false;
     }
-
-    // When there are no breakpoints the function is constant (slope is zero
-    // after the checks above). Non-negativity then reduces to checking the
-    // intercept.
-    if (breakpoints_.empty() && segments_.front().first < 0)
-        return false;
 
     return true;
 }

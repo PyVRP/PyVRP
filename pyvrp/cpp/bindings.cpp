@@ -155,6 +155,10 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("is_monotonically_increasing",
              &PiecewiseLinearFunction::isMonotonicallyIncreasing,
              DOC(pyvrp, PiecewiseLinearFunction, isMonotonicallyIncreasing))
+        .def("is_non_negative",
+             &PiecewiseLinearFunction::isNonNegative,
+             py::arg("lb"),
+             DOC(pyvrp, PiecewiseLinearFunction, isNonNegative))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](PiecewiseLinearFunction const &function)  // __getstate__
