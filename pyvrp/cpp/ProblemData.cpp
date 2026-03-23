@@ -313,7 +313,7 @@ ProblemData::VehicleType::VehicleType(
     size_t maxReloads,
     Duration maxOvertime,
     Cost unitOvertimeCost,
-    std::optional<PiecewiseLinearFunction<int64_t, int64_t>> durationCost,
+    VehicleType::DurationCost durationCost,
     std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
@@ -341,10 +341,7 @@ ProblemData::VehicleType::VehicleType(
                                                - shiftDuration
                       ? shiftDuration + maxOvertime
                       : std::numeric_limits<Duration>::max()),
-      durationCost(durationCost.has_value()
-                       ? std::move(*durationCost)
-                       : PiecewiseLinearFunction<int64_t, int64_t>(
-                             {}, {{int64_t{0}, int64_t{0}}})),
+      durationCost(std::move(durationCost)),
       hasDurationCost(std::any_of(this->durationCost.segments().begin(),
                                   this->durationCost.segments().end(),
                                   [](auto const &seg)
@@ -397,15 +394,14 @@ ProblemData::VehicleType::VehicleType(
         throw std::invalid_argument("unit_overtime_cost must be >= 0.");
 
     // NOTE: @N-Wouda:
-    // Currently, we use the monotonicity of the duration cost function,
-    // however, some use cases might require non-negativity instead. For
-    // example, if a user prefers medium duration routes over short and long
-    // routes, they might want a duration cost function that has a minimum at
-    // some point greater than 0. What is your preference? Do you prefer to
-    // enforce monotonicity, or non-negativity?
-    if (!this->durationCost.isMonotonicallyIncreasing())
-        throw std::invalid_argument("duration_cost must be monotonically "
-                                    "increasing.");
+    // Currently, isNonNegative() checks the entire domain. However, in practice
+    // durations are always >= 0, so a user might define a PWL with a positive
+    // slope on the first segment (making it negative for x < 0) while still
+    // intending a non-negative cost on the actual domain [0, +inf). Should we
+    // pass a lower bound (e.g. 0) to isNonNegative() so the check is restricted
+    // to the meaningful domain?
+    if (!this->durationCost.isNonNegative())
+        throw std::invalid_argument("duration_cost must be non-negative.");
 }
 
 ProblemData::VehicleType::VehicleType(VehicleType const &vehicleType)
@@ -482,7 +478,7 @@ ProblemData::VehicleType ProblemData::VehicleType::replace(
     std::optional<size_t> maxReloads,
     std::optional<Duration> maxOvertime,
     std::optional<Cost> unitOvertimeCost,
-    std::optional<PiecewiseLinearFunction<int64_t, int64_t>> durationCost,
+    std::optional<VehicleType::DurationCost> durationCost,
     std::optional<std::string> name) const
 {
     return {numAvailable.value_or(this->numAvailable),

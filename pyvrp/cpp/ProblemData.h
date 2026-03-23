@@ -524,6 +524,8 @@ public:
      */
     struct VehicleType
     {
+        using DurationCost = PiecewiseLinearFunction<int64_t, int64_t>;
+
         size_t const numAvailable;         // Available vehicles of this type
         size_t const startDepot;           // Departure depot location
         size_t const endDepot;             // Return depot location
@@ -543,8 +545,7 @@ public:
         Duration const maxOvertime;              // Maximum allowed overtime
         Cost const unitOvertimeCost;             // Cost per unit of overtime
         Duration const maxDuration;  // Maximum route duration, incl. overtime
-        PiecewiseLinearFunction<int64_t, int64_t> const
-            durationCost;  // Cost f(duration)
+        DurationCost const durationCost;  // Cost f(duration)
         bool const
             hasDurationCost;  // Any non-zero duration cost or hard constraint
         char const *name;     // Type name (for reference)
@@ -568,9 +569,8 @@ public:
                     size_t maxReloads = std::numeric_limits<size_t>::max(),
                     Duration maxOvertime = 0,
                     Cost unitOvertimeCost = 0,
-                    std::optional<PiecewiseLinearFunction<int64_t, int64_t>>
-                        durationCost
-                    = std::nullopt,
+                    DurationCost durationCost = DurationCost(
+                        {}, {DurationCost::Segment{0, 0}}),
                     std::string name = "");
 
         bool operator==(VehicleType const &other) const;
@@ -606,8 +606,7 @@ public:
                 std::optional<size_t> maxReloads,
                 std::optional<Duration> maxOvertime,
                 std::optional<Cost> unitOvertimeCost,
-                std::optional<PiecewiseLinearFunction<int64_t, int64_t>>
-                    durationCost,
+                std::optional<DurationCost> durationCost,
                 std::optional<std::string> name) const;
 
         /**

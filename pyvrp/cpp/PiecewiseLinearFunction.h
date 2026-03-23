@@ -86,6 +86,11 @@ public:
      */
     [[nodiscard]] bool isMonotonicallyIncreasing() const;
 
+    /**
+     * Returns whether this function is non-negative everywhere.
+     */
+    [[nodiscard]] bool isNonNegative() const;
+
     bool operator==(PiecewiseLinearFunction const &other) const = default;
     auto operator<=>(PiecewiseLinearFunction const &other) const = default;
 };
@@ -194,6 +199,41 @@ bool PiecewiseLinearFunction<Dom, Co>::isMonotonicallyIncreasing() const
         if (right < left)
             return false;
     }
+
+    return true;
+}
+
+template <typename Dom, typename Co>
+bool PiecewiseLinearFunction<Dom, Co>::isNonNegative() const
+{
+    // The first segment extends to -inf. A positive slope would drive the
+    // function to -inf, violating non-negativity.
+    if (segments_.front().second > 0)
+        return false;
+
+    // The last segment extends to +inf. A negative slope would drive the
+    // function to -inf, violating non-negativity.
+    if (segments_.back().second < 0)
+        return false;
+
+    for (size_t idx = 0; idx != breakpoints_.size(); ++idx)
+    {
+        auto const breakpoint = breakpoints_[idx];
+        auto const [prevIntercept, prevSlope] = segments_[idx];
+        auto const [nextIntercept, nextSlope] = segments_[idx + 1];
+
+        auto const left = prevIntercept + prevSlope * breakpoint;
+        auto const right = nextIntercept + nextSlope * breakpoint;
+
+        if (left < 0 || right < 0)
+            return false;
+    }
+
+    // When there are no breakpoints the function is constant (slope is zero
+    // after the checks above). Non-negativity then reduces to checking the
+    // intercept.
+    if (breakpoints_.empty() && segments_.front().first < 0)
+        return false;
 
     return true;
 }
