@@ -56,7 +56,7 @@ Feature comparison
      - ✅
      - ⚠️ (not wait duration)
      - ✅
-   * - Start time optimisation
+   * - Flexible route start times
      - ✅
      - ❌
      - ❌
