@@ -17,6 +17,7 @@ namespace pyvrp
 template <typename T>
 concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
     { arg.route() };
+    { arg.empty() } -> std::same_as<bool>;
     { arg.distance() } -> std::convertible_to<std::pair<Cost, Distance>>;
     { arg.duration() } -> std::convertible_to<std::pair<Cost, Duration>>;
     { arg.excessLoad(dimension) } -> std::same_as<Load>;
@@ -232,28 +233,31 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
         out -= twPenalty(route->timeWarp());
     }
 
-    if (route->hasDistanceCost())
+    if (!proposal.empty())
     {
-        auto const [cost, excess] = proposal.distance();
-        out += cost;
-        out += excessDistPenalty(excess);
-    }
+        if (route->hasDistanceCost())
+        {
+            auto const [cost, excess] = proposal.distance();
+            out += cost;
+            out += excessDistPenalty(excess);
+        }
 
-    auto const &capacity = route->capacity();
-    for (size_t dim = 0; dim != capacity.size(); ++dim)
-    {
-        if constexpr (!exact)
-            if (out >= 0)
-                return false;
+        auto const &capacity = route->capacity();
+        for (size_t dim = 0; dim != capacity.size(); ++dim)
+        {
+            if constexpr (!exact)
+                if (out >= 0)
+                    return false;
 
-        out += loadPenalty(proposal.excessLoad(dim), 0, dim);
-    }
+            out += loadPenalty(proposal.excessLoad(dim), 0, dim);
+        }
 
-    if (route->hasDurationCost())
-    {
-        auto const [cost, timeWarp] = proposal.duration();
-        out += cost;
-        out += twPenalty(timeWarp);
+        if (route->hasDurationCost())
+        {
+            auto const [cost, timeWarp] = proposal.duration();
+            out += cost;
+            out += twPenalty(timeWarp);
+        }
     }
 
     return true;
@@ -294,56 +298,66 @@ bool CostEvaluator::deltaCost(Cost &out,
         out -= twPenalty(vRoute->timeWarp());
     }
 
-    if (uRoute->hasDistanceCost())
+    if (!uProposal.empty())
     {
-        auto const [cost, excess] = uProposal.distance();
-        out += cost;
-        out += excessDistPenalty(excess);
-    }
+        if (uRoute->hasDistanceCost())
+        {
+            auto const [cost, excess] = uProposal.distance();
+            out += cost;
+            out += excessDistPenalty(excess);
+        }
 
-    if (vRoute->hasDistanceCost())
-    {
-        auto const [cost, excess] = vProposal.distance();
-        out += cost;
-        out += excessDistPenalty(excess);
-    }
+        auto const &uCapacity = uRoute->capacity();
+        for (size_t dim = 0; dim != uCapacity.size(); ++dim)
+        {
+            if constexpr (!exact)
+                if (out >= 0)
+                    return false;
 
-    auto const &uCapacity = uRoute->capacity();
-    for (size_t dim = 0; dim != uCapacity.size(); ++dim)
-    {
+            out += loadPenalty(uProposal.excessLoad(dim), 0, dim);
+        }
+
         if constexpr (!exact)
             if (out >= 0)
                 return false;
 
-        out += loadPenalty(uProposal.excessLoad(dim), 0, dim);
+        if (uRoute->hasDurationCost())
+        {
+            auto const [cost, timeWarp] = uProposal.duration();
+            out += cost;
+            out += twPenalty(timeWarp);
+        }
     }
 
-    auto const &vCapacity = vRoute->capacity();
-    for (size_t dim = 0; dim != vCapacity.size(); ++dim)
+    if (!vProposal.empty())
     {
+        if (vRoute->hasDistanceCost())
+        {
+            auto const [cost, excess] = vProposal.distance();
+            out += cost;
+            out += excessDistPenalty(excess);
+        }
+
+        auto const &vCapacity = vRoute->capacity();
+        for (size_t dim = 0; dim != vCapacity.size(); ++dim)
+        {
+            if constexpr (!exact)
+                if (out >= 0)
+                    return false;
+
+            out += loadPenalty(vProposal.excessLoad(dim), 0, dim);
+        }
+
         if constexpr (!exact)
             if (out >= 0)
                 return false;
 
-        out += loadPenalty(vProposal.excessLoad(dim), 0, dim);
-    }
-
-    if constexpr (!exact)
-        if (out >= 0)
-            return false;
-
-    if (uRoute->hasDurationCost())
-    {
-        auto const [cost, timeWarp] = uProposal.duration();
-        out += cost;
-        out += twPenalty(timeWarp);
-    }
-
-    if (vRoute->hasDurationCost())
-    {
-        auto const [cost, timeWarp] = vProposal.duration();
-        out += cost;
-        out += twPenalty(timeWarp);
+        if (vRoute->hasDurationCost())
+        {
+            auto const [cost, timeWarp] = vProposal.duration();
+            out += cost;
+            out += twPenalty(timeWarp);
+        }
     }
 
     return true;

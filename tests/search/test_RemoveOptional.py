@@ -191,3 +191,24 @@ def test_cannot_remove_required_group():
     # removed. The second client is from the required group, and cannot.
     assert_equal(op.evaluate(route[1], cost_eval), (-1, True))
     assert_equal(op.evaluate(route[2], cost_eval), (0, False))
+
+
+def test_removing_last_client_in_route_with_reload_depots_and_service():
+    """
+    TODO
+    """
+    data = ProblemData(
+        locations=[Location(0, 0)],
+        depots=[Depot(0, service_duration=50)],
+        clients=[Client(0, required=False)],
+        vehicle_types=[VehicleType(unit_duration_cost=1, reload_depots=[0])],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
+    )
+
+    route = make_search_route(data, ["C0", "D0"])
+    assert_equal(route.duration(), 100)
+
+    op = RemoveOptional(data)
+    cost_eval = CostEvaluator([], 0, 0)
+    assert_equal(op.evaluate(route[1], cost_eval), (-100, True))

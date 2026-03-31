@@ -94,16 +94,6 @@ public:
     {
         std::tuple<Segments...> segments_;
 
-        /**
-         * Returns the number of activities in the proposed route.
-         */
-        size_t size() const;
-
-        /**
-         * Returns whether the proposed route is empty.
-         */
-        bool empty() const;
-
     public:
         Proposal(Segments &&...segments);
 
@@ -113,6 +103,16 @@ public:
          * used when evaluating the proposal.
          */
         Route const *route() const;
+
+        /**
+         * Returns the number of activities in the proposed route.
+         */
+        size_t size() const;
+
+        /**
+         * Returns whether the proposed route is empty.
+         */
+        bool empty() const;
 
         /**
          * Returns the (distance cost, excess distance) attributes of the
@@ -1075,9 +1075,6 @@ Route const *Route::Proposal<Segments...>::route() const
 template <Segment... Segments>
 std::pair<Cost, Distance> Route::Proposal<Segments...>::distance() const
 {
-    if (empty())
-        return std::make_pair(0, 0);
-
     auto const &data = route()->data;
     auto const unitDistanceCost = route()->unitDistanceCost();
     auto const maxDistance = route()->maxDistance();
@@ -1112,9 +1109,6 @@ std::pair<Cost, Distance> Route::Proposal<Segments...>::distance() const
 template <Segment... Segments>
 std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
 {
-    if (empty())
-        return std::make_pair(0, 0);
-
     auto const &data = route()->data;
     auto const unitDurationCost = route()->unitDurationCost();
     auto const unitOvertimeCost = route()->unitOvertimeCost();
@@ -1186,9 +1180,6 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
 template <Segment... Segments>
 Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 {
-    if (empty())
-        return 0;
-
     auto const &capacities = route()->capacity();
     auto const capacity = capacities[dimension];
 
