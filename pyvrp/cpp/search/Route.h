@@ -105,11 +105,6 @@ public:
         Route const *route() const;
 
         /**
-         * Returns the number of activities in the proposed route.
-         */
-        size_t size() const;
-
-        /**
          * Returns whether the proposed route is empty.
          */
         bool empty() const;
@@ -1055,15 +1050,12 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     assert(last.back().activity() == route[route.size() - 1]->activity());
 }
 
-template <Segment... Segments> size_t Route::Proposal<Segments...>::size() const
-{
-    return std::apply([](auto &&...args) { return (args.size() + ...); },
-                      segments_);
-}
-
 template <Segment... Segments> bool Route::Proposal<Segments...>::empty() const
 {
-    return size() == 2;  // empty if proposal only contains start and end depot
+    auto const size = std::apply(
+        [](auto &&...args) { return (args.size() + ...); }, segments_);
+
+    return size == 2;  // empty if proposal only contains start and end depot
 }
 
 template <Segment... Segments>
