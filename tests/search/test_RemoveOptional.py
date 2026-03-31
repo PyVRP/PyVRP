@@ -212,7 +212,7 @@ def test_removing_last_client_in_route_with_reload_depots_and_service():
     assert_equal(route.duration_cost(), 100)
 
     # Removing C0 turns the route empty, despite there still being depot visits
-    # with associated service duration. Since no clients are visits, the route
+    # with associated service duration. Since no clients are visited, the route
     # has no cost, and that should be reflected in the cost delta.
     op = RemoveOptional(data)
     cost_eval = CostEvaluator([], 0, 0)
