@@ -1094,6 +1094,9 @@ Route const *Route::Proposal<Segments...>::route() const
 template <Segment... Segments>
 std::pair<Cost, Distance> Route::Proposal<Segments...>::distance() const
 {
+    if (empty())
+        return std::make_pair(0, 0);
+
     auto const &data = route()->data;
     auto const unitDistanceCost = route()->unitDistanceCost();
     auto const maxDistance = route()->maxDistance();
@@ -1128,6 +1131,9 @@ std::pair<Cost, Distance> Route::Proposal<Segments...>::distance() const
 template <Segment... Segments>
 std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
 {
+    if (empty())
+        return std::make_pair(0, 0);
+
     auto const &data = route()->data;
     auto const unitDurationCost = route()->unitDurationCost();
     auto const unitOvertimeCost = route()->unitOvertimeCost();
@@ -1199,6 +1205,9 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
 template <Segment... Segments>
 Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 {
+    if (empty())
+        return 0;
+
     auto const &capacities = route()->capacity();
     auto const capacity = capacities[dimension];
 

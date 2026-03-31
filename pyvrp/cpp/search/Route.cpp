@@ -189,7 +189,7 @@ void Route::update()
             locations.emplace_back(data.client(node->idx()).location);
     }
 
-    // Clients
+    // Client counter.
     numClients_.resize(nodes.size());
     numClients_[0] = 0;
     for (size_t idx = 1; idx != nodes.size(); ++idx)
