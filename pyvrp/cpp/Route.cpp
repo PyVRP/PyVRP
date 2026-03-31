@@ -335,10 +335,7 @@ Route::Route(Schedule schedule,
 {
 }
 
-bool Route::empty() const
-{
-    return size() == 2;  // only start and end depot activities
-}
+bool Route::empty() const { return numClients() == 0; }
 
 size_t Route::size() const { return schedule_.size(); }
 

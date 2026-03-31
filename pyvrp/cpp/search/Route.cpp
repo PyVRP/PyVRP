@@ -189,6 +189,12 @@ void Route::update()
             locations.emplace_back(data.client(node->idx()).location);
     }
 
+    // Client counter.
+    numClients_.resize(nodes.size());
+    numClients_[0] = 0;
+    for (size_t idx = 1; idx != nodes.size(); ++idx)
+        numClients_[idx] = numClients_[idx - 1] + nodes[idx]->isClient();
+
     // Distance.
     auto const &distMat = data.distanceMatrix(profile());
 
