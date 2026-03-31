@@ -209,6 +209,6 @@ def test_removing_last_client_in_route_with_reload_depots_and_service():
     route = make_search_route(data, ["C0", "D0"])
     assert_equal(route.duration(), 100)
 
-    # op = RemoveOptional(data)
-    # cost_eval = CostEvaluator([], 0, 0)
-    # assert_equal(op.evaluate(route[1], cost_eval), (-100, True))
+    op = RemoveOptional(data)
+    cost_eval = CostEvaluator([], 0, 0)
+    assert_equal(op.evaluate(route[1], cost_eval), (-100, True))

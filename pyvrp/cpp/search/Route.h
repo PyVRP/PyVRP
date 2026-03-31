@@ -25,6 +25,7 @@ concept Segment
           { arg.front() } -> std::convertible_to<SegmentProxy>;
           { arg.back() } -> std::convertible_to<SegmentProxy>;
           { arg.size() } -> std::same_as<size_t>;
+          { arg.numClients() } -> std::same_as<size_t>;
           { arg.startsAtReloadDepot() } -> std::same_as<bool>;
           { arg.endsAtReloadDepot() } -> std::same_as<bool>;
           { arg.distance(profile) } -> std::convertible_to<Distance>;
@@ -233,6 +234,7 @@ private:
         inline SegmentProxy back() const;   // at end depot
 
         inline size_t size() const;
+        inline size_t numClients() const;
 
         inline bool startsAtReloadDepot() const;
         inline bool endsAtReloadDepot() const;
@@ -259,6 +261,7 @@ private:
         inline SegmentProxy back() const;   // at end
 
         inline size_t size() const;
+        inline size_t numClients() const;
 
         inline bool startsAtReloadDepot() const;
         inline bool endsAtReloadDepot() const;
@@ -287,6 +290,7 @@ private:
         inline SegmentProxy back() const;   // at end
 
         inline size_t size() const;
+        inline size_t numClients() const;
 
         inline bool startsAtReloadDepot() const;
         inline bool endsAtReloadDepot() const;
@@ -312,6 +316,8 @@ private:
 
     std::vector<Node *> nodes;      // Nodes in this route
     std::vector<size_t> locations;  // Visited locations in this route
+
+    std::vector<size_t> numClients_;  // Clients on start -> node (incl.)
 
     std::vector<Distance> cumDist;  // Dist of start -> node (incl.)
 
@@ -754,6 +760,11 @@ SegmentProxy Route::SegmentBefore::back() const
 
 size_t Route::SegmentBefore::size() const { return end + 1; }
 
+size_t Route::SegmentBefore::numClients() const
+{
+    return route_.numClients_[end];
+}
+
 bool Route::SegmentBefore::startsAtReloadDepot() const { return false; }
 
 bool Route::SegmentBefore::endsAtReloadDepot() const
@@ -775,6 +786,14 @@ SegmentProxy Route::SegmentAfter::back() const
 
 size_t Route::SegmentAfter::size() const { return route_.size() - start; }
 
+size_t Route::SegmentAfter::numClients() const
+{
+    // fromStart is (start, end]. So we need to check if start itself is also
+    // a client, and add 1 if it is.
+    auto const fromStart = route_.numClients() - route_.numClients_[start];
+    return fromStart + route_[start]->isClient();
+}
+
 bool Route::SegmentAfter::startsAtReloadDepot() const
 {
     return route_.nodes[start]->isReloadDepot();
@@ -794,6 +813,14 @@ SegmentProxy Route::SegmentBetween::back() const
 }
 
 size_t Route::SegmentBetween::size() const { return end - start + 1; }
+
+size_t Route::SegmentBetween::numClients() const
+{
+    // fromStart is (start, end]. So we need to check if start itself is also
+    // a client, and add 1 if it is.
+    auto const fromStart = route_.numClients_[end] - route_.numClients_[start];
+    return fromStart + route_[start]->isClient();
+}
 
 bool Route::SegmentBetween::startsAtReloadDepot() const
 {
@@ -1052,10 +1079,10 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
 
 template <Segment... Segments> bool Route::Proposal<Segments...>::empty() const
 {
-    auto const size = std::apply(
-        [](auto &&...args) { return (args.size() + ...); }, segments_);
+    auto const numClients = std::apply(
+        [](auto &&...args) { return (args.numClients() + ...); }, segments_);
 
-    return size == 2;  // empty if proposal only contains start and end depot
+    return numClients == 0;
 }
 
 template <Segment... Segments>
