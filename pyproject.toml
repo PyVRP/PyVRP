@@ -83,6 +83,7 @@ examples = [
 
 
 [tool.uv]
+exclude-newer = "P7D"
 default-groups = ["build", "dev"]
 package = true
 
