@@ -61,3 +61,4 @@ jobs:
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
           run: uv run pytest benchmarks/ --codspeed
+          mode: simulation
