@@ -57,8 +57,7 @@ jobs:
           uv run buildtools/build_extensions.py --build_type debugoptimized --clean
       - name: Run benchmarks
         # We evaluate the microbenchmarks using the release build.
-        uses: CodSpeedHQ/action@d872884a306dd4853acf0f584f4b706cf0cc72a2 # v4.13.0
+        uses: CodSpeedHQ/action@76578c2a7ddd928664caa737f0e962e3085d4e7c # v3.8.1
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
           run: uv run pytest benchmarks/ --codspeed
-          mode: simulation
