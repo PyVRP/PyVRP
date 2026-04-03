@@ -296,17 +296,21 @@ void LocalSearch::update(Route *U, Route *V)
     numUpdates_++;
     searchCompleted_ = false;
 
-    if (U)
+    auto const update = [&](Route *route)
     {
-        U->update();
-        lastUpdate_[std::distance(solution_.routes.data(), U)] = numUpdates_;
-    }
+        route->update();
+        if (route->empty())  // if route turned empty we clear it to remove any
+            route->clear();  // lingering non-client nodes.
+
+        auto const idx = std::distance(solution_.routes.data(), route);
+        lastUpdate_[idx] = numUpdates_;
+    };
+
+    if (U)
+        update(U);
 
     if (U != V)
-    {
-        V->update();
-        lastUpdate_[std::distance(solution_.routes.data(), V)] = numUpdates_;
-    }
+        update(V);
 }
 
 void LocalSearch::addOperator(UnaryOperator &op)
