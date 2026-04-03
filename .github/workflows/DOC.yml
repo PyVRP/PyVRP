@@ -3,6 +3,7 @@ name: DOC
 on:
   push:
     branches: [ main ]
+  pull_request:
 
 concurrency:
   group: "pages"
@@ -51,19 +52,19 @@ jobs:
         with:
           path: 'docs/build/html'
 
-  deploy:
-    name: "Deploy documentation"
-    needs: [ build ]
-    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-24.04
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Deploy documentation
-        id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
+  # deploy:
+  #   name: "Deploy documentation"
+  #   needs: [ build ]
+  #   # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+  #   permissions:
+  #     pages: write
+  #     id-token: write
+  #   environment:
+  #     name: github-pages
+  #     url: ${{ steps.deployment.outputs.page_url }}
+  #   runs-on: ubuntu-24.04
+  #   if: github.ref == 'refs/heads/main'
+  #   steps:
+  #     - name: Deploy documentation
+  #       id: deployment
+  #       uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
