@@ -34,7 +34,7 @@ OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     SwapTails,
     RelocateWithDepot,
     RemoveAdjacentDepot,
-    RemoveOptional,
+    # RemoveOptional,
     InsertOptional,
     ReplaceOptional,
     ReplaceGroup,
