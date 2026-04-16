@@ -14,7 +14,7 @@ namespace pyvrp::search
  */
 class DepotSegment
 {
-    ProblemData::Depot const &depot_;
+    Depot const &depot_;
     size_t const idx_;
 
 public:

@@ -303,7 +303,7 @@ private:
 
     ProblemData const &data;
 
-    ProblemData::VehicleType const &vehicleType_;
+    VehicleType const &vehicleType_;
 
     Distance distance_;  // Separately cached cost components
     Cost distanceCost_;

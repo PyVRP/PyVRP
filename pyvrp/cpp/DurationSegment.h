@@ -149,19 +149,17 @@ public:
     [[nodiscard]] Duration slack() const;
 
     // Construct from attributes of the given client.
-    DurationSegment(ProblemData::Client const &client);
+    DurationSegment(Client const &client);
 
     /**
      * Construct from attributes of the given depot and service duration.
      */
-    DurationSegment(ProblemData::Depot const &depot,
-                    Duration const serviceDuration);
+    DurationSegment(Depot const &depot, Duration const serviceDuration);
 
     /**
      * Construct from attributes of the given vehicle type and latest finish.
      */
-    DurationSegment(ProblemData::VehicleType const &vehicleType,
-                    Duration const twLate);
+    DurationSegment(VehicleType const &vehicleType, Duration const twLate);
 
     // Construct from raw data.
     inline DurationSegment(Duration duration = 0,

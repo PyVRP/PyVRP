@@ -14,7 +14,7 @@ namespace pyvrp::search
  */
 class ClientSegment
 {
-    ProblemData::Client const &client_;
+    Client const &client_;
     size_t const idx_;
 
 public:
