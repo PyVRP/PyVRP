@@ -11,14 +11,14 @@ Load LoadSegment::pickup() const { return pickup_; }
 
 Load LoadSegment::load() const { return load_; }
 
-LoadSegment::LoadSegment(ProblemData::Client const &client, size_t dimension)
+LoadSegment::LoadSegment(Client const &client, size_t dimension)
     : delivery_(client.delivery[dimension]),
       pickup_(client.pickup[dimension]),
       load_(std::max<Load>(delivery_, pickup_))
 {
 }
 
-LoadSegment::LoadSegment(ProblemData::VehicleType const &vehicleType,
+LoadSegment::LoadSegment(VehicleType const &vehicleType,
                          size_t dimension)
     :  // Initial load is always a pickup quantity: it's already on the vehicle,
        // and needs to be dropped off at a (reload) depot.
