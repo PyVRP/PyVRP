@@ -983,24 +983,6 @@ def test_replacing_client_groups(ok_small):
     assert_equal(data.group(0).clients, [0])
 
 
-def test_location_eq():
-    """
-    Tests the location's equality operator.
-    """
-    loc1 = Location(x=0, y=0, name="")
-    loc2 = Location(x=0, y=1, name="")
-    assert_(loc1 == loc1)
-    assert_(loc2 != loc1)
-
-    # Equivalent to loc1.
-    loc3 = Location(x=0, y=0, name="")
-    assert_(loc3 == loc1)
-
-    # And some things that are not locations at all.
-    assert_(loc1 != "test")
-    assert_(loc1 != 1)
-
-
 def test_client_eq():
     """
     Tests the client's equality operator.
@@ -1082,7 +1064,6 @@ def test_eq_checks_names():
     Tests that the equality operators on named objects also considers the name
     when determining equality.
     """
-    assert_(Location(0, 0, name="1") != Location(0, 0, name="2"))
     assert_(Client(0, name="1") != Client(0, name="2"))
     assert_(Depot(0, name="1") != Depot(0, name="2"))
     assert_(VehicleType(name="1") != VehicleType(name="2"))
