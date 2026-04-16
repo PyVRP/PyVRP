@@ -1,15 +1,20 @@
 #include "bindings.h"
 #include "Activity.h"
+#include "Client.h"
+#include "ClientGroup.h"
 #include "CostEvaluator.h"
+#include "Depot.h"
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
 #include "LoadSegment.h"
+#include "Location.h"
 #include "Matrix.h"
 #include "PiecewiseLinearFunction.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
 #include "Solution.h"
+#include "VehicleType.h"
 #include "pyvrp_docs.h"
 
 #include <pybind11/functional.h>
@@ -26,15 +31,20 @@
 namespace py = pybind11;
 
 using pyvrp::Activity;
+using pyvrp::Client;
+using pyvrp::ClientGroup;
 using pyvrp::CostEvaluator;
+using pyvrp::Depot;
 using pyvrp::DurationSegment;
 using pyvrp::DynamicBitset;
 using pyvrp::LoadSegment;
+using pyvrp::Location;
 using pyvrp::Matrix;
 using pyvrp::ProblemData;
 using pyvrp::RandomNumberGenerator;
 using pyvrp::Route;
 using pyvrp::Solution;
+using pyvrp::VehicleType;
 
 using PiecewiseLinearFunction
     = pyvrp::PiecewiseLinearFunction<int64_t, int64_t>;
@@ -357,8 +367,7 @@ PYBIND11_MODULE(_pyvrp, m)
             [](ClientGroup const &group) { return group.name; },
             py::return_value_policy::reference_internal);
 
-    py::class_<VehicleType>(
-        m, "VehicleType", DOC(pyvrp, VehicleType))
+    py::class_<VehicleType>(m, "VehicleType", DOC(pyvrp, VehicleType))
         .def(py::init<size_t,
                       std::vector<pyvrp::Load>,
                       size_t,
@@ -409,13 +418,10 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("fixed_cost", &VehicleType::fixedCost)
         .def_readonly("tw_early", &VehicleType::twEarly)
         .def_readonly("tw_late", &VehicleType::twLate)
-        .def_readonly("shift_duration",
-                      &VehicleType::shiftDuration)
+        .def_readonly("shift_duration", &VehicleType::shiftDuration)
         .def_readonly("max_distance", &VehicleType::maxDistance)
-        .def_readonly("unit_distance_cost",
-                      &VehicleType::unitDistanceCost)
-        .def_readonly("unit_duration_cost",
-                      &VehicleType::unitDurationCost)
+        .def_readonly("unit_distance_cost", &VehicleType::unitDistanceCost)
+        .def_readonly("unit_duration_cost", &VehicleType::unitDurationCost)
         .def_readonly("profile", &VehicleType::profile)
         .def_readonly("start_late", &VehicleType::startLate)
         .def_readonly("initial_load",
@@ -426,10 +432,9 @@ PYBIND11_MODULE(_pyvrp, m)
                       py::return_value_policy::reference_internal)
         .def_readonly("max_reloads", &VehicleType::maxReloads)
         .def_readonly("max_overtime", &VehicleType::maxOvertime)
-        .def_readonly("unit_overtime_cost",
-                      &VehicleType::unitOvertimeCost)
+        .def_readonly("unit_overtime_cost", &VehicleType::unitOvertimeCost)
         .def_readonly("max_duration", &VehicleType::maxDuration)
-        .def_property_readonly("max_trips", &:VehicleType::maxTrips)
+        .def_property_readonly("max_trips", &VehicleType::maxTrips)
         .def_readonly("name",
                       &VehicleType::name,
                       py::return_value_policy::reference_internal)
@@ -505,8 +510,7 @@ PYBIND11_MODULE(_pyvrp, m)
             }))
         .def(
             "__str__",
-            [](VehicleType const &vehType)
-            { return vehType.name; },
+            [](VehicleType const &vehType) { return vehType.name; },
             py::return_value_policy::reference_internal);
 
     py::class_<ProblemData>(m, "ProblemData", DOC(pyvrp, ProblemData))

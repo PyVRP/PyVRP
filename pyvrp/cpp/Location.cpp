@@ -4,13 +4,28 @@
 
 using pyvrp::Location;
 
+namespace
+{
+// Small local helper for what is essentially strdup() from the C23 standard,
+// which my compiler does not (yet) have. See here for the actual recipe:
+// https://stackoverflow.com/a/252802/4316405 (modified to use new instead of
+// malloc). We do all this so we can use C-style strings, rather than C++'s
+// std::string, which are much larger objects.
+static char *duplicate(char const *src)
+{
+    char *dst = new char[std::strlen(src) + 1];  // space for src + null
+    std::strcpy(dst, src);
+    return dst;
+}
+}  // namespace
+
 Location::Location(Coordinate x, Coordinate y, std::string name)
-    : x(x), y(y), name(std::strdup(name.data()))
+    : x(x), y(y), name(duplicate(name.data()))
 {
 }
 
 Location::Location(Location const &location)
-    : x(location.x), y(location.y), name(std::strdup(location.name))
+    : x(location.x), y(location.y), name(duplicate(location.name))
 {
 }
 

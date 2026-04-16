@@ -4,6 +4,21 @@
 
 using pyvrp::Depot;
 
+namespace
+{
+// Small local helper for what is essentially strdup() from the C23 standard,
+// which my compiler does not (yet) have. See here for the actual recipe:
+// https://stackoverflow.com/a/252802/4316405 (modified to use new instead of
+// malloc). We do all this so we can use C-style strings, rather than C++'s
+// std::string, which are much larger objects.
+static char *duplicate(char const *src)
+{
+    char *dst = new char[std::strlen(src) + 1];  // space for src + null
+    std::strcpy(dst, src);
+    return dst;
+}
+}  // namespace
+
 Depot::Depot(size_t location,
              Duration twEarly,
              Duration twLate,
@@ -13,7 +28,7 @@ Depot::Depot(size_t location,
       serviceDuration(serviceDuration),
       twEarly(twEarly),
       twLate(twLate),
-      name(std::strdup(name.data()))
+      name(duplicate(name.data()))
 {
     if (serviceDuration < 0)
         throw std::invalid_argument("service_duration must be >= 0.");
@@ -30,7 +45,7 @@ Depot::Depot(Depot const &depot)
       serviceDuration(depot.serviceDuration),
       twEarly(depot.twEarly),
       twLate(depot.twLate),
-      name(std::strdup(depot.name))
+      name(duplicate(depot.name))
 {
 }
 

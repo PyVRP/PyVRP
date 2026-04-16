@@ -4,10 +4,25 @@
 
 using pyvrp::ClientGroup;
 
+namespace
+{
+// Small local helper for what is essentially strdup() from the C23 standard,
+// which my compiler does not (yet) have. See here for the actual recipe:
+// https://stackoverflow.com/a/252802/4316405 (modified to use new instead of
+// malloc). We do all this so we can use C-style strings, rather than C++'s
+// std::string, which are much larger objects.
+static char *duplicate(char const *src)
+{
+    char *dst = new char[std::strlen(src) + 1];  // space for src + null
+    std::strcpy(dst, src);
+    return dst;
+}
+}  // namespace
+
 ClientGroup::ClientGroup(std::vector<size_t> clients,
                          bool required,
                          std::string name)
-    : required(required), name(std::strdup(name.data()))
+    : required(required), name(duplicate(name.data()))
 {
     for (auto const client : clients)
         addClient(client);
@@ -16,7 +31,7 @@ ClientGroup::ClientGroup(std::vector<size_t> clients,
 ClientGroup::ClientGroup(ClientGroup const &group)
     : clients_(group.clients_),
       required(group.required),
-      name(std::strdup(group.name))
+      name(duplicate(group.name))
 {
 }
 

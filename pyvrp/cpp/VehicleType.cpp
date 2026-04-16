@@ -6,6 +6,18 @@ using pyvrp::VehicleType;
 
 namespace
 {
+// Small local helper for what is essentially strdup() from the C23 standard,
+// which my compiler does not (yet) have. See here for the actual recipe:
+// https://stackoverflow.com/a/252802/4316405 (modified to use new instead of
+// malloc). We do all this so we can use C-style strings, rather than C++'s
+// std::string, which are much larger objects.
+static char *duplicate(char const *src)
+{
+    char *dst = new char[std::strlen(src) + 1];  // space for src + null
+    std::strcpy(dst, src);
+    return dst;
+}
+
 // Pad vec1 with zeroes to the size of vec1 and vec2, whichever is larger.
 auto &pad(auto &vec1, auto const &vec2)
 {
@@ -61,7 +73,7 @@ VehicleType::VehicleType(size_t numAvailable,
                                                - shiftDuration
                       ? shiftDuration + maxOvertime
                       : std::numeric_limits<Duration>::max()),
-      name(std::strdup(name.data()))
+      name(duplicate(name.data()))
 {
     if (numAvailable == 0)
         throw std::invalid_argument("num_available must be > 0.");
@@ -127,7 +139,7 @@ VehicleType::VehicleType(VehicleType const &vehicleType)
       maxOvertime(vehicleType.maxOvertime),
       unitOvertimeCost(vehicleType.unitOvertimeCost),
       maxDuration(vehicleType.maxDuration),
-      name(std::strdup(vehicleType.name))
+      name(duplicate(vehicleType.name))
 {
 }
 

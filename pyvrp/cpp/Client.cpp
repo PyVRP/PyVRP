@@ -7,6 +7,18 @@ using pyvrp::Client;
 
 namespace
 {
+// Small local helper for what is essentially strdup() from the C23 standard,
+// which my compiler does not (yet) have. See here for the actual recipe:
+// https://stackoverflow.com/a/252802/4316405 (modified to use new instead of
+// malloc). We do all this so we can use C-style strings, rather than C++'s
+// std::string, which are much larger objects.
+static char *duplicate(char const *src)
+{
+    char *dst = new char[std::strlen(src) + 1];  // space for src + null
+    std::strcpy(dst, src);
+    return dst;
+}
+
 // Pad vec1 with zeroes to the size of vec1 and vec2, whichever is larger.
 auto &pad(auto &vec1, auto const &vec2)
 {
@@ -38,7 +50,7 @@ Client::Client(size_t location,
       prize(prize),
       required(required),
       group(group),
-      name(std::strdup(name.data()))
+      name(duplicate(name.data()))
 {
     assert(delivery.size() == pickup.size());
 
@@ -78,7 +90,7 @@ Client::Client(Client const &client)
       prize(client.prize),
       required(client.required),
       group(client.group),
-      name(std::strdup(client.name))
+      name(duplicate(client.name))
 {
 }
 
