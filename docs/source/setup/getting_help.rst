@@ -46,6 +46,6 @@ RoutingLab provides the following services:
 - **Consulting:** Expert guidance on using PyVRP effectively, including problem modelling and solver performance tuning.
 - **Feature development:** We develop features that align with RoutingLab's product roadmap and prioritise features that receive funding from users.
   Browse `the list of fundable features <https://github.com/PyVRP/PyVRP/issues?q=sort%3Aupdated-desc%20is%3Aissue%20is%3Aopen%20label%3A%22waiting%20for%20funding%22>`_, or submit your own feature request.
-- **FastVRP API:** Need a production-ready solution? Try `FastVRP <https://routinglab.tech#fastvrp>`_, our route optimisation API built on PyVRP.
+- **PyVRP Enterprise:** Need more? Contact us about PyVRP Enterprise, an extended and production-ready version of PyVRP.
 
 Reach us at `info@routinglab.tech <mailto:info@routinglab.tech>`_.

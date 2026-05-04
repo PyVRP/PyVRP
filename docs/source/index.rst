@@ -25,7 +25,7 @@ It can be installed through *pip* via
 
 .. tip::
 
-   Looking for professional support or enterprise features? `RoutingLab <https://routinglab.tech>`_ provides consulting, custom development, and FastVRP - a production-ready route optimisation API built on PyVRP.
+   Looking for professional support or enterprise features? `RoutingLab <https://routinglab.tech>`_ provides consulting, custom development, and PyVRP Enterprise - an extended and production-ready version of PyVRP.
 
 Contents
 --------
