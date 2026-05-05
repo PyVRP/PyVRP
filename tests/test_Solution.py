@@ -6,6 +6,7 @@ import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
+    Activity,
     Client,
     ClientGroup,
     Depot,
@@ -878,3 +879,20 @@ def test_make_random(ok_small_mutually_exclusive_groups, gtsp):
         rng = RandomNumberGenerator(seed=seed)
         sol = Solution.make_random(gtsp, rng)
         assert_(sol.is_complete())
+
+
+@pytest.mark.parametrize(
+    ("visits", "unplanned"),
+    [
+        ([0, 1], [Activity("C2"), Activity("C3")]),
+        ([1, 2], [Activity("C0"), Activity("C3")]),
+        ([0, 1, 2, 3], []),
+    ],
+)
+def test_unplanned(ok_small, visits: list[int], unplanned: list[Activity]):
+    """
+    Tests that the unplanned() method returns the correct unplanned activities.
+    """
+    sol = Solution(ok_small, [visits])
+    assert_equal(sol.num_missing_clients(), len(unplanned))  # all required
+    assert_equal(sol.unplanned(), unplanned)
