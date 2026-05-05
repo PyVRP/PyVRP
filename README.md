@@ -28,7 +28,7 @@ pip install pyvrp
 The documentation is available [here][1].
 
 > [!TIP]
-> Looking for professional support or enterprise features? [RoutingLab](https://routinglab.tech) provides consulting, custom development, and FastVRP - a production-ready route optimisation API built on PyVRP.
+> Looking for professional support or enterprise features? [RoutingLab](https://routinglab.tech) provides consulting, custom development, and PyVRP Enterprise - an extended and production-ready version of PyVRP.
 
 ### Tutorials
 
