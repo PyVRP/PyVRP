@@ -1,6 +1,7 @@
 #ifndef PYVRP_SOLUTION_H
 #define PYVRP_SOLUTION_H
 
+#include "Activity.h"
 #include "CostEvaluator.h"
 #include "Measure.h"
 #include "ProblemData.h"
@@ -43,6 +44,7 @@ class Solution
     using VehicleType = size_t;
 
     using Routes = std::vector<Route>;
+    using Unplanned = std::vector<Activity>;
 
     size_t numClients_ = 0;         // Number of clients in the solution
     size_t numMissingClients_ = 0;  // Number of required but missing clients
@@ -60,6 +62,7 @@ class Solution
     Duration timeWarp_ = 0;         // Total time warp over all routes
 
     Routes routes_;
+    Unplanned unplanned_;
 
     // Evaluates this solution's characteristics.
     void evaluate(ProblemData const &data);
@@ -115,6 +118,16 @@ public:
      *     but that is implicit: the depot is not part of the returned routes.
      */
     [[nodiscard]] Routes const &routes() const;
+
+    /**
+     * Returns all unplanned clients.
+     *
+     * Returns
+     * -------
+     * list
+     *     A list of client activities that are not in this solution.
+     */
+    [[nodiscard]] Unplanned const &unplanned() const;
 
     /**
      * Whether this solution is feasible.

@@ -910,6 +910,10 @@ PYBIND11_MODULE(_pyvrp, m)
              &Solution::routes,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, Solution, routes))
+        .def("unplanned",
+             &Solution::unplanned,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, Solution, unplanned))
         .def("is_feasible",
              &Solution::isFeasible,
              DOC(pyvrp, Solution, isFeasible))

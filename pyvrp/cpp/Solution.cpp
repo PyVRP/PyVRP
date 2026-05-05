@@ -13,8 +13,8 @@ using pyvrp::Load;
 using pyvrp::Route;
 using pyvrp::Solution;
 
-using Client = size_t;
 using Routes = std::vector<Route>;
+using Unplanned = std::vector<pyvrp::Activity>;
 
 void Solution::evaluate(ProblemData const &data)
 {
@@ -65,6 +65,8 @@ size_t Solution::numMissingClients() const { return numMissingClients_; }
 size_t Solution::numMissingGroups() const { return numMissingGroups_; }
 
 Routes const &Solution::routes() const { return routes_; }
+
+Unplanned const &Solution::unplanned() const { return unplanned_; }
 
 bool Solution::isFeasible() const
 {
@@ -251,10 +253,12 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
     }
 
     for (size_t client = 0; client != data.numClients(); ++client)
-        if (!isVisited[client])  // not visited; is the client visit required?
+        if (!isVisited[client])
         {
             auto const &clientData = data.client(client);
             numMissingClients_ += clientData.required;
+
+            unplanned_.emplace_back(Activity::ActivityType::CLIENT, client);
         }
 
     for (size_t idx = 0; idx != data.numGroups(); ++idx)
