@@ -50,3 +50,15 @@ Debugging
       PyVRP internally uses a large ``missing_value`` argument to set the distance and duration attributes of missing edges.
       This sometimes results in integer overflow, which can cause the solver to get stuck.
       Passing a smaller ``missing_value`` to :meth:`~pyvrp.Model.Model.solve` should fix this problem.
+
+Extending
+---------
+
+.. glossary::
+
+   Can I modify the implementation if I only know Python but not C++?
+
+      While this depends on what you aim to modify, our critical components are written in C++.
+      It is likely that you need to touch them at some point.
+      Our codebase is well tested and documented, and not too difficult for AI tooling (for example, Claude Code) to understand and modify.
+      Using the assistance of such tooling can be a good way to get started modifying PyVRP's C++ components.
