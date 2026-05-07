@@ -58,6 +58,7 @@ Extending
 
    Can I modify the implementation if I only know Python but not C++?
 
-      While this depends on what you aim to modify, our critical components are written in C++ and it is likely that you need to touch them.
+      While this depends on what you aim to modify, our critical components are written in C++.
+      It is likely that you need to touch them at some point.
       Our codebase is well tested and documented, and not too difficult for AI tooling (for example, Claude Code) to understand and modify.
-      That could be a good way to get started modifying PyVRP's C++ components.
+      Using the assistance of such tooling can be a good way to get started modifying PyVRP's C++ components.
