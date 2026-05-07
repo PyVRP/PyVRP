@@ -1,17 +1,10 @@
-
 # Contributor Covenant Code of Conduct
 
 ## Our Pledge
 
 We as members, contributors, and leaders pledge to make participation in our
-community a harassment-free experience for everyone, regardless of age, body
-size, visible or invisible disability, ethnicity, sex characteristics, gender
-identity and expression, level of experience, education, socio-economic status,
-nationality, personal appearance, race, caste, color, religion, or sexual
-identity and orientation.
-
-We pledge to act and interact in ways that contribute to an open, welcoming,
-diverse, inclusive, and healthy community.
+community a harassment-free experience for everyone. We pledge to act and
+interact in ways that contribute to a healthy community.
 
 ## Our Standards
 
@@ -19,7 +12,7 @@ Examples of behavior that contributes to a positive environment for our
 community include:
 
 * Demonstrating empathy and kindness toward other people
-* Being respectful of differing opinions, viewpoints, and experiences
+* Being respectful of differing opinions, experiences, and each other's time
 * Giving and gracefully accepting constructive feedback
 * Accepting responsibility and apologizing to those affected by our mistakes,
   and learning from the experience
@@ -36,6 +29,21 @@ Examples of unacceptable behavior include:
   without their explicit permission
 * Other conduct which could reasonably be considered inappropriate in a
   professional setting
+
+## AI Policy
+
+Using LLMs to assist in writing, translation, and software development is fine,
+as long as the final output - whether that be code or text - is correct and up
+to standards.
+
+Please do not submit PRs largely based on "AI slop" code. If you cannot explain
+an implementation without going back to the LLM, do not submit it. Maintainer
+time is scarce, and we ask that you respect that by not forcing maintainers to
+be the human-reviewer-in-the-loop for a code generation tool. In any case,
+non-trivial code generation tool use must be disclosed in the PR.
+
+Issues and PRs that look like unreviewed LLM output will be closed without
+detailed feedback, and constitute a violation of this Code of Conduct.
 
 ## Enforcement Responsibilities
 

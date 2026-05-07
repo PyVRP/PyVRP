@@ -18,5 +18,6 @@ In particular:
 - Docstring additions must render correctly, including escapes and LaTeX.
 - Finally, it is essential that all contributions in this PR are license-compatible with PyVRP's MIT license.
   Please check that this PR can be included into PyVRP under the MIT license.
+- You must disclose the use of LLMs/generative AI if you used such tools to write code.
 
 </details>

@@ -191,6 +191,7 @@ This greatly reduces the job of maintaining and releasing the software.
 - If you are adding new functionality, you need to add it to the documentation by editing (or creating) the appropriate file in ``docs/source/``.
 - Make sure your documentation changes parse correctly.
   See the documentation in the ``docs/`` directory for details on how to build the documentation locally.
+- Disclose the use of LLMs/generative AI if you used such tools to develop the feature in your pull request.
 
 .. note::
 
