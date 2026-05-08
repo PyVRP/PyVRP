@@ -172,3 +172,13 @@ object_description_options = [
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"
+
+
+def setup(app):
+    # Set up Rybbit analytics.
+    kwargs = {"data-site-id": "aeb758c34279"}
+    app.add_js_file(
+        "https://app.rybbit.io/api/script.js",
+        loading_method="defer",
+        **kwargs,
+    )
