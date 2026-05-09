@@ -5,7 +5,7 @@
 PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver developed by `RoutingLab <https://routinglab.tech>`_.
 It currently supports VRPs with:
 
-* Pickups and deliveries between depots and clients (capacitated VRP, VRP with simultaneous pickup and delivery, VRP with backhaul);
+* Pickups and deliveries (capacitated VRP, VRP with simultaneous pickup and delivery, VRP with backhaul, pickup and delivery VRP);
 * Vehicles of different capacities, costs, shift durations, routing profiles, and maximum distance and duration constraints (heterogeneous fleet VRP, site-dependent VRP);
 * Time windows, client service durations, and release times (VRP with time windows and release times);
 * Multiple depots (multi-depot VRP);
