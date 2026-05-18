@@ -258,6 +258,81 @@ void Route::setLoad(ProblemData const &data)
     }
 }
 
+void Route::setElevationCost(ProblemData const &data)
+{
+    auto const &vehData = data.vehicleType(vehicleType_);
+    if (vehData.unitElevationCost == 0)
+        return;
+
+    auto const numDims = data.numLoadDimensions();
+
+    // Precompute total deliveries for each trip (between consecutive depots).
+    // The last activity is the end depot, which closes the final trip; trips
+    // are the segments between schedule entries that are depots.
+    std::vector<std::vector<Load>> tripDeliveries;
+    tripDeliveries.emplace_back(numDims, 0);
+    for (size_t i = 1; i + 1 < schedule_.size(); ++i)
+    {
+        auto const &activity = schedule_[i];
+        if (activity.isDepot())
+            tripDeliveries.emplace_back(numDims, 0);
+        else
+        {
+            auto const &client = data.client(activity.idx());
+            for (size_t dim = 0; dim != numDims; ++dim)
+                tripDeliveries.back()[dim] += client.delivery[dim];
+        }
+    }
+
+    // Track current load through the route, computing arc cost as
+    //   sum_of_dimensions(load) × elevation_gain.
+    std::vector<Load> load(numDims, 0);
+    for (size_t dim = 0; dim != numDims; ++dim)
+        load[dim] = vehData.initialLoad[dim] + tripDeliveries[0][dim];
+
+    auto const locationOf = [&](auto const &activity)
+    {
+        return activity.isDepot() ? data.depot(activity.idx()).location
+                                  : data.client(activity.idx()).location;
+    };
+
+    Cost rawElev = 0;
+    size_t tripIdx = 0;
+    for (size_t i = 1; i != schedule_.size(); ++i)
+    {
+        auto const fromLoc = locationOf(schedule_[i - 1]);
+        auto const toLoc = locationOf(schedule_[i]);
+
+        Load total = 0;
+        for (auto const &dim : load)
+            total += dim;
+
+        auto const gain = data.elevationGain(fromLoc, toLoc);
+        rawElev += total.get() * gain.get();
+
+        if (schedule_[i].isDepot())
+        {
+            ++tripIdx;
+            if (tripIdx < tripDeliveries.size())
+                for (size_t dim = 0; dim != numDims; ++dim)
+                    load[dim] = tripDeliveries[tripIdx][dim];
+            else
+                std::fill(load.begin(), load.end(), 0);
+        }
+        else
+        {
+            auto const &client = data.client(schedule_[i].idx());
+            for (size_t dim = 0; dim != numDims; ++dim)
+            {
+                load[dim] -= client.delivery[dim];
+                load[dim] += client.pickup[dim];
+            }
+        }
+    }
+
+    elevationCost_ = vehData.unitElevationCost * rawElev;
+}
+
 void Route::setOtherStatistics(ProblemData const &data)
 {
     auto const &vehData = data.vehicleType(vehicleType_);
@@ -293,6 +368,7 @@ Route::Route(ProblemData const &data,
     setSchedule(data, activities);  // duration statistics and route schedule
     setDistance(data);              // distance statistics
     setLoad(data);                  // load statistics
+    setElevationCost(data);         // elevation cost
     setOtherStatistics(data);       // e.g. prizes, fixed cost
 }
 
@@ -313,6 +389,7 @@ Route::Route(Schedule schedule,
              Duration releaseTime,
              Duration slack,
              Cost prizes,
+             Cost elevationCost,
              size_t vehicleType)
     : schedule_(std::move(schedule)),
       distance_(distance),
@@ -331,6 +408,7 @@ Route::Route(Schedule schedule,
       releaseTime_(releaseTime),
       slack_(slack),
       prizes_(prizes),
+      elevationCost_(elevationCost),
       vehicleType_(vehicleType)
 {
 }
@@ -400,6 +478,8 @@ Duration Route::releaseTime() const { return releaseTime_; }
 
 Cost Route::prizes() const { return prizes_; }
 
+Cost Route::elevationCost() const { return elevationCost_; }
+
 size_t Route::vehicleType() const { return vehicleType_; }
 
 size_t Route::startDepot() const
@@ -456,6 +536,7 @@ template <> Cost pyvrp::CostEvaluator::penalisedCost(Route const &route) const
     return route.distanceCost()
          + route.durationCost()
          + route.fixedVehicleCost()
+         + route.elevationCost()
          + excessLoadPenalties(route.excessLoad())
          + twPenalty(route.timeWarp())
          + distPenalty(route.excessDistance(), 0);

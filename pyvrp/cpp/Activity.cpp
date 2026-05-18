@@ -37,7 +37,8 @@ Activity::Activity(ActivityType type, size_t idx) : type_(type), idx_(idx) {}
 
 Activity::Activity(std::string const &description)
     : type_(char2type(description.empty() ? ' ' : description[0])),
-      idx_(std::stol(description.empty() ? 0 : description.substr(1)))
+      idx_(std::stol(description.empty() ? std::string("0")
+                                         : description.substr(1)))
 {
     assert(description.size() >= 2);  // sanity check; type/idx do validation
 }

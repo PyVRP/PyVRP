@@ -59,6 +59,7 @@ class Solution
     Cost fixedVehicleCost_ = 0;     // Fixed cost of all used vehicles
     Cost prizes_ = 0;               // Total collected prize value
     Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
+    Cost elevationCost_ = 0;        // Total elevation cost over all routes
     Duration timeWarp_ = 0;         // Total time warp over all routes
 
     Routes routes_;
@@ -216,6 +217,11 @@ public:
     [[nodiscard]] Cost uncollectedPrizes() const;
 
     /**
+     * Total elevation cost over all routes in this solution.
+     */
+    [[nodiscard]] Cost elevationCost() const;
+
+    /**
      * Returns the total time warp load over all routes.
      */
     [[nodiscard]] Duration timeWarp() const;
@@ -266,6 +272,7 @@ public:
              Cost fixedVehicleCost,
              Cost prizes,
              Cost uncollectedPrizes,
+             Cost elevationCost,
              Duration timeWarp,
              Routes routes);
 };

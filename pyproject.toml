@@ -1,6 +1,6 @@
 [project]
 name = "pyvrp"
-version = "0.14.0a0"
+version = "0.14.0a1"
 description = "A state-of-the-art vehicle routing problem solver."
 authors = [
     { name = "Niels Wouda", email = "nielswouda@gmail.com" },
@@ -66,6 +66,8 @@ dev = [
     "pytest-xdist>=3.6.1",
     "pytest-sugar>=1.0.0",
     "codecov",
+    "ipykernel>=7.2.0",
+    "ipywidgets>=8.1.8",
 ]
 
 docs = [

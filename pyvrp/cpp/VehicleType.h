@@ -30,6 +30,7 @@ namespace pyvrp
  *     max_reloads: int = np.iinfo(np.uint64).max,
  *     max_overtime: int = 0,
  *     unit_overtime_cost: int = 0,
+ *     unit_elevation_cost: int = 0,
  *     *,
  *     name: str = "",
  * )
@@ -93,6 +94,9 @@ namespace pyvrp
  * unit_overtime_cost
  *     Cost of a unit of overtime. This is in addition to the regular
  *     :py:attr:`~unit_duration_cost` of route durations. Default 0.
+ * unit_elevation_cost
+ *     Cost per unit of elevation (in meters of climb) weighted by the load on
+ *     each arc, in vehicle-load × meter-of-climb units. Default 0.
  * name
  *     Free-form name field for this vehicle type. Default empty.
  *
@@ -141,6 +145,9 @@ namespace pyvrp
  *     :py:attr:`~shift_duration`.
  * unit_overtime_cost
  *     Additional cost of a unit of overtime.
+ * unit_elevation_cost
+ *     Cost per unit of elevation climb on each arc, weighted by the load
+ *     carried.
  * max_duration
  *     Hard maximum route duration constraint, computed as the sum of
  *     :py:attr:`~shift_duration` and :py:attr:`~max_overtime`.
@@ -167,6 +174,7 @@ struct VehicleType
     size_t const maxReloads;                 // Maximum number of reloads
     Duration const maxOvertime;              // Maximum allowed overtime
     Cost const unitOvertimeCost;             // Cost per unit of overtime
+    Cost const unitElevationCost;            // Cost per unit of load × climb
     Duration const maxDuration;  // Maximum route duration, incl. overtime
     char const *name;            // Type name (for reference)
 
@@ -188,6 +196,7 @@ struct VehicleType
                 size_t maxReloads = std::numeric_limits<size_t>::max(),
                 Duration maxOvertime = 0,
                 Cost unitOvertimeCost = 0,
+                Cost unitElevationCost = 0,
                 std::string name = "");
 
     bool operator==(VehicleType const &other) const;
@@ -222,6 +231,7 @@ struct VehicleType
                         std::optional<size_t> maxReloads,
                         std::optional<Duration> maxOvertime,
                         std::optional<Cost> unitOvertimeCost,
+                        std::optional<Cost> unitElevationCost,
                         std::optional<std::string> name) const;
 
     /**

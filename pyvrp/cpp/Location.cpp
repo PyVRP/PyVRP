@@ -19,25 +19,35 @@ static char *duplicate(char const *src)
 }
 }  // namespace
 
-Location::Location(Coordinate x, Coordinate y, std::string name)
-    : x(x), y(y), name(duplicate(name.data()))
+Location::Location(Coordinate x,
+                   Coordinate y,
+                   Distance elevation,
+                   std::string name)
+    : x(x), y(y), elevation(elevation), name(duplicate(name.data()))
 {
 }
 
 Location::Location(Location const &location)
-    : x(location.x), y(location.y), name(duplicate(location.name))
+    : x(location.x),
+      y(location.y),
+      elevation(location.elevation),
+      name(duplicate(location.name))
 {
 }
 
 Location::Location(Location &&location)
-    : x(location.x), y(location.y), name(location.name)  // we can steal
+    : x(location.x),
+      y(location.y),
+      elevation(location.elevation),
+      name(location.name)  // we can steal
 {
     location.name = nullptr;  // stolen
 }
 
 bool Location::operator==(Location const &other) const
 {
-    return x == other.x && y == other.y && std::strcmp(name, other.name) == 0;
+    return x == other.x && y == other.y && elevation == other.elevation
+           && std::strcmp(name, other.name) == 0;
 }
 
 Location::~Location() { delete[] name; }

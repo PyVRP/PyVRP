@@ -182,25 +182,32 @@ PYBIND11_MODULE(_pyvrp, m)
             }));
 
     py::class_<Location>(m, "Location", DOC(pyvrp, Location))
-        .def(py::init<pyvrp::Coordinate, pyvrp::Coordinate, char const *>(),
+        .def(py::init<pyvrp::Coordinate,
+                      pyvrp::Coordinate,
+                      pyvrp::Distance,
+                      char const *>(),
              py::arg("x"),
              py::arg("y"),
+             py::arg("elevation") = 0,
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("x", &Location::x)
         .def_readonly("y", &Location::y)
+        .def_readonly("elevation", &Location::elevation)
         .def_readonly("name",
                       &Location::name,
                       py::return_value_policy::reference_internal)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](Location const &location) {  // __getstate__
-                return py::make_tuple(location.x, location.y, location.name);
+                return py::make_tuple(
+                    location.x, location.y, location.elevation, location.name);
             },
             [](py::tuple t) {  // __setstate__
                 Location location(t[0].cast<pyvrp::Coordinate>(),  // x
                                   t[1].cast<pyvrp::Coordinate>(),  // y
-                                  t[2].cast<std::string>());       // name
+                                  t[2].cast<pyvrp::Distance>(),    // elevation
+                                  t[3].cast<std::string>());       // name
 
                 return location;
             }))
@@ -386,6 +393,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       size_t,
                       pyvrp::Duration,
                       pyvrp::Cost,
+                      pyvrp::Cost,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
@@ -407,6 +415,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_reloads") = std::numeric_limits<size_t>::max(),
              py::arg("max_overtime") = 0,
              py::arg("unit_overtime_cost") = 0,
+             py::arg("unit_elevation_cost") = 0,
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &VehicleType::numAvailable)
@@ -433,6 +442,7 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("max_reloads", &VehicleType::maxReloads)
         .def_readonly("max_overtime", &VehicleType::maxOvertime)
         .def_readonly("unit_overtime_cost", &VehicleType::unitOvertimeCost)
+        .def_readonly("unit_elevation_cost", &VehicleType::unitElevationCost)
         .def_readonly("max_duration", &VehicleType::maxDuration)
         .def_property_readonly("max_trips", &VehicleType::maxTrips)
         .def_readonly("name",
@@ -458,6 +468,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_reloads") = py::none(),
              py::arg("max_overtime") = py::none(),
              py::arg("unit_overtime_cost") = py::none(),
+             py::arg("unit_elevation_cost") = py::none(),
              py::kw_only(),
              py::arg("name") = py::none(),
              DOC(pyvrp, VehicleType, replace))
@@ -482,6 +493,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.maxReloads,
                                       vehicleType.maxOvertime,
                                       vehicleType.unitOvertimeCost,
+                                      vehicleType.unitElevationCost,
                                       vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
@@ -504,7 +516,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[15].cast<size_t>(),                    // max reloads
                     t[16].cast<pyvrp::Duration>(),           // max overtime
                     t[17].cast<pyvrp::Cost>(),   // unit overtime cost
-                    t[18].cast<std::string>());  // name
+                    t[18].cast<pyvrp::Cost>(),   // unit elevation cost
+                    t[19].cast<std::string>());  // name
 
                 return vehicleType;
             }))
@@ -649,6 +662,11 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("has_time_windows",
              &ProblemData::hasTimeWindows,
              DOC(pyvrp, ProblemData, hasTimeWindows))
+        .def("elevation_gain",
+             &ProblemData::elevationGain,
+             py::arg("from"),
+             py::arg("to"),
+             DOC(pyvrp, ProblemData, elevationGain))
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData const &data) {  // __getstate__
@@ -777,6 +795,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(
             "release_time", &Route::releaseTime, DOC(pyvrp, Route, releaseTime))
         .def("prizes", &Route::prizes, DOC(pyvrp, Route, prizes))
+        .def("elevation_cost",
+             &Route::elevationCost,
+             DOC(pyvrp, Route, elevationCost))
         .def(
             "vehicle_type", &Route::vehicleType, DOC(pyvrp, Route, vehicleType))
         .def("start_depot", &Route::startDepot, DOC(pyvrp, Route, startDepot))
@@ -831,6 +852,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.releaseTime(),
                                       route.slack(),
                                       route.prizes(),
+                                      route.elevationCost(),
                                       route.vehicleType());
             },
             [](py::tuple t) {  // __setstate__
@@ -854,7 +876,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[14].cast<pyvrp::Duration>(),          // release time
                     t[15].cast<pyvrp::Duration>(),          // slack
                     t[16].cast<pyvrp::Cost>(),              // prizes
-                    t[17].cast<size_t>());                  // vehicle type
+                    t[17].cast<pyvrp::Cost>(),              // elevation cost
+                    t[18].cast<size_t>());                  // vehicle type
 
                 return route;
             }))
@@ -952,6 +975,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("uncollected_prizes",
              &Solution::uncollectedPrizes,
              DOC(pyvrp, Solution, uncollectedPrizes))
+        .def("elevation_cost",
+             &Solution::elevationCost,
+             DOC(pyvrp, Solution, elevationCost))
         .def("__copy__", [](Solution const &sol) { return Solution(sol); })
         .def(
             "__deepcopy__",
@@ -976,6 +1002,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       sol.fixedVehicleCost(),
                                       sol.prizes(),
                                       sol.uncollectedPrizes(),
+                                      sol.elevationCost(),
                                       sol.timeWarp(),
                                       sol.routes());
             },
@@ -996,8 +1023,9 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[10].cast<pyvrp::Cost>(),              // fixed veh cost
                     t[11].cast<pyvrp::Cost>(),              // prizes
                     t[12].cast<pyvrp::Cost>(),              // uncollected
-                    t[13].cast<pyvrp::Duration>(),          // time warp
-                    t[14].cast<Routes>());                  // routes
+                    t[13].cast<pyvrp::Cost>(),              // elevation cost
+                    t[14].cast<pyvrp::Duration>(),          // time warp
+                    t[15].cast<Routes>());                  // routes
 
                 return sol;
             }))

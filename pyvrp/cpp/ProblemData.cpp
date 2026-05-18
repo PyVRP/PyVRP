@@ -101,6 +101,14 @@ size_t ProblemData::numProfiles() const
 
 size_t ProblemData::numLoadDimensions() const { return numLoadDimensions_; }
 
+Distance ProblemData::elevationGain(size_t from, size_t to) const
+{
+    assert(from < numLocations() && to < numLocations());
+
+    auto const diff = locations_[to].elevation - locations_[from].elevation;
+    return std::max<Distance>(diff, 0);
+}
+
 void ProblemData::validate() const
 {
     // Client checks.

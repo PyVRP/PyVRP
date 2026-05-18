@@ -263,6 +263,19 @@ public:
     [[nodiscard]] size_t numLoadDimensions() const;
 
     /**
+     * Computes the elevation gain (positive climb only) from location ``from``
+     * to location ``to``. Returns 0 if going downhill or flat.
+     *
+     * Parameters
+     * ----------
+     * from
+     *     Index of the starting location.
+     * to
+     *     Index of the destination location.
+     */
+    [[nodiscard]] Distance elevationGain(size_t from, size_t to) const;
+
+    /**
      * Returns a new ProblemData instance with the same data as this instance,
      * except for the given parameters, which are used instead.
      *

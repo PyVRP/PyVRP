@@ -11,6 +11,7 @@ namespace pyvrp
  * Location(
  *     x: float,
  *     y: float,
+ *     elevation: int = 0,
  *     *,
  *     name: str = "",
  * )
@@ -25,6 +26,8 @@ namespace pyvrp
  * y
  *     Vertical coordinate of this location. This can for example be a
  *     latitude value.
+ * elevation
+ *     Elevation of this location in meters. Default 0.
  * name
  *     Free-form name field for this location. Default empty.
  *
@@ -34,6 +37,8 @@ namespace pyvrp
  *     Horizontal location coordinate.
  * y
  *     Vertical location coordinate.
+ * elevation
+ *     Elevation of this location in meters.
  * name
  *     Free-form name field for this location.
  */
@@ -41,9 +46,13 @@ struct Location
 {
     Coordinate const x;
     Coordinate const y;
+    Distance const elevation;
     char const *name;
 
-    Location(Coordinate x, Coordinate y, std::string name = "");
+    Location(Coordinate x,
+             Coordinate y,
+             Distance elevation = 0,
+             std::string name = "");
 
     bool operator==(Location const &other) const;
 

@@ -126,6 +126,13 @@ public:
          * Returns the excess load of the proposed route.
          */
         Load excessLoad(size_t dimension) const;
+
+        /**
+         * Returns the elevation cost of the proposed route. Always 0 because
+         * search-time evaluation does not track elevation; it is computed at
+         * the :class:`pyvrp::Route` level instead.
+         */
+        Cost elevationCost() const;
     };
 
     /**
@@ -467,6 +474,12 @@ public:
      * @return Cost per unit of overtime on this route.
      */
     [[nodiscard]] inline Cost unitOvertimeCost() const;
+
+    /**
+     * @return Elevation cost on this route. Always 0 for ``search::Route`` —
+     * elevation costs are computed at the :class:`pyvrp::Route` level.
+     */
+    [[nodiscard]] inline Cost elevationCost() const;
 
     /**
      * Returns true if this route has duration-related cost components, either
@@ -998,6 +1011,14 @@ Cost Route::durationCost() const
 Cost Route::unitDurationCost() const { return vehicleType_.unitDurationCost; }
 
 Cost Route::unitOvertimeCost() const { return vehicleType_.unitOvertimeCost; }
+
+Cost Route::elevationCost() const { return 0; }
+
+template <Segment... Segments>
+Cost Route::Proposal<Segments...>::elevationCost() const
+{
+    return 0;
+}
 
 bool Route::hasDurationCost() const
 {

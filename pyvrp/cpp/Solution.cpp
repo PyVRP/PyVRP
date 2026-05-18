@@ -36,6 +36,7 @@ void Solution::evaluate(ProblemData const &data)
         excessDistance_ += route.excessDistance();
         timeWarp_ += route.timeWarp();
         fixedVehicleCost_ += route.fixedVehicleCost();
+        elevationCost_ += route.elevationCost();
 
         auto const &excessLoad = route.excessLoad();
         for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
@@ -113,6 +114,8 @@ Cost Solution::fixedVehicleCost() const { return fixedVehicleCost_; }
 Cost Solution::prizes() const { return prizes_; }
 
 Cost Solution::uncollectedPrizes() const { return uncollectedPrizes_; }
+
+Cost Solution::elevationCost() const { return elevationCost_; }
 
 Duration Solution::timeWarp() const { return timeWarp_; }
 
@@ -305,6 +308,7 @@ Solution::Solution(size_t numClients,
                    Cost fixedVehicleCost,
                    Cost prizes,
                    Cost uncollectedPrizes,
+                   Cost elevationCost,
                    Duration timeWarp,
                    Routes routes)
     : numClients_(numClients),
@@ -320,6 +324,7 @@ Solution::Solution(size_t numClients,
       fixedVehicleCost_(fixedVehicleCost),
       prizes_(prizes),
       uncollectedPrizes_(uncollectedPrizes),
+      elevationCost_(elevationCost),
       timeWarp_(timeWarp),
       routes_(std::move(routes))
 {

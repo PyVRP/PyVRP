@@ -386,6 +386,7 @@ pyvrp::CostEvaluator::penalisedCost(pyvrp::search::Route const &route) const
     return route.distanceCost()
          + route.durationCost()
          + route.fixedVehicleCost()
+         + route.elevationCost()
          + excessLoadPenalties(route.excessLoad())
          + twPenalty(route.timeWarp())
          + distPenalty(route.excessDistance(), 0);

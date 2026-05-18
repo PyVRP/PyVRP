@@ -46,6 +46,7 @@ VehicleType::VehicleType(size_t numAvailable,
                          size_t maxReloads,
                          Duration maxOvertime,
                          Cost unitOvertimeCost,
+                         Cost unitElevationCost,
                          std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
@@ -65,6 +66,7 @@ VehicleType::VehicleType(size_t numAvailable,
       maxReloads(maxReloads),
       maxOvertime(maxOvertime),
       unitOvertimeCost(unitOvertimeCost),
+      unitElevationCost(unitElevationCost),
       // We need to check >= 0 here to avoid overflow. If the arguments are
       // negative the validation checks further below will raise, so it doesn't
       // matter what we set as long as we get to those checks.
@@ -117,6 +119,9 @@ VehicleType::VehicleType(size_t numAvailable,
 
     if (unitOvertimeCost < 0)
         throw std::invalid_argument("unit_overtime_cost must be >= 0.");
+
+    if (unitElevationCost < 0)
+        throw std::invalid_argument("unit_elevation_cost must be >= 0.");
 }
 
 VehicleType::VehicleType(VehicleType const &vehicleType)
@@ -138,6 +143,7 @@ VehicleType::VehicleType(VehicleType const &vehicleType)
       maxReloads(vehicleType.maxReloads),
       maxOvertime(vehicleType.maxOvertime),
       unitOvertimeCost(vehicleType.unitOvertimeCost),
+      unitElevationCost(vehicleType.unitElevationCost),
       maxDuration(vehicleType.maxDuration),
       name(duplicate(vehicleType.name))
 {
@@ -162,6 +168,7 @@ VehicleType::VehicleType(VehicleType &&vehicleType)
       maxReloads(vehicleType.maxReloads),
       maxOvertime(vehicleType.maxOvertime),
       unitOvertimeCost(vehicleType.unitOvertimeCost),
+      unitElevationCost(vehicleType.unitElevationCost),
       maxDuration(vehicleType.maxDuration),
       name(vehicleType.name)  // we can steal
 {
@@ -189,6 +196,7 @@ VehicleType::replace(std::optional<size_t> numAvailable,
                      std::optional<size_t> maxReloads,
                      std::optional<Duration> maxOvertime,
                      std::optional<Cost> unitOvertimeCost,
+                     std::optional<Cost> unitElevationCost,
                      std::optional<std::string> name) const
 {
     return {numAvailable.value_or(this->numAvailable),
@@ -209,6 +217,7 @@ VehicleType::replace(std::optional<size_t> numAvailable,
             maxReloads.value_or(this->maxReloads),
             maxOvertime.value_or(this->maxOvertime),
             unitOvertimeCost.value_or(this->unitOvertimeCost),
+            unitElevationCost.value_or(this->unitElevationCost),
             name.value_or(this->name)};
 }
 
@@ -240,6 +249,7 @@ bool VehicleType::operator==(VehicleType const &other) const
         && maxReloads == other.maxReloads
         && maxOvertime == other.maxOvertime
         && unitOvertimeCost == other.unitOvertimeCost
+        && unitElevationCost == other.unitElevationCost
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }

@@ -28,6 +28,7 @@ class Route
     void setSchedule(ProblemData const &data, Activities const &activities);
     void setDistance(ProblemData const &data);
     void setLoad(ProblemData const &data);
+    void setElevationCost(ProblemData const &data);
     void setOtherStatistics(ProblemData const &data);
 
 public:
@@ -103,6 +104,7 @@ private:
     Duration slack_ = 0;            // Total time slack on this route
     Cost fixedVehicleCost_ = 0;     // Fixed cost of vehicle used on this route
     Cost prizes_ = 0;               // Total value of prizes on this route
+    Cost elevationCost_ = 0;        // Weighted elevation cost on this route
 
     VehicleType vehicleType_;  // Type of vehicle
 
@@ -260,6 +262,14 @@ public:
     [[nodiscard]] Cost prizes() const;
 
     /**
+     * Total elevation cost on this route. This is the sum over all arcs of
+     * ``load × elevation_gain``, weighted by the vehicle type's
+     * :py:attr:`~unit_elevation_cost`. Only positive elevation gains
+     * contribute; downhill travel costs nothing.
+     */
+    [[nodiscard]] Cost elevationCost() const;
+
+    /**
      * Index of the type of vehicle used on this route.
      */
     [[nodiscard]] VehicleType vehicleType() const;
@@ -331,6 +341,7 @@ public:
           Duration releaseTime,
           Duration slack,
           Cost prizes,
+          Cost elevationCost,
           VehicleType vehicleType);
 };
 
