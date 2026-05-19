@@ -34,7 +34,7 @@ class Edge:
         loops have nonzero distance or duration values.
     """
 
-    __slots__ = ["distance", "duration", "frm", "to"]
+    __slots__ = ["distance", "duration", "edge_demands", "frm", "to"]
 
     def __init__(
         self,
@@ -42,6 +42,7 @@ class Edge:
         to: Location,
         distance: int,
         duration: int,
+        edge_demands: Sequence[int] | None = None,
     ):
         if distance < 0 or duration < 0:
             raise ValueError("Cannot have negative edge distance or duration.")
@@ -56,10 +57,18 @@ class Edge:
             """
             warn(msg, ScalingWarning)
 
+        if edge_demands is not None and any(
+            demand < 0 for demand in edge_demands
+        ):
+            raise ValueError("Edge demands must be >= 0.")
+
         self.frm = frm
         self.to = to
         self.distance = distance
         self.duration = duration
+        self.edge_demands = (
+            list(edge_demands) if edge_demands is not None else None
+        )
 
 
 class Profile:
@@ -86,11 +95,12 @@ class Profile:
         to: Location,
         distance: int,
         duration: int = 0,
+        edge_demands: Sequence[int] | None = None,
     ) -> Edge:
         """
         Adds a new edge to this routing profile.
         """
-        edge = Edge(frm, to, distance, duration)
+        edge = Edge(frm, to, distance, duration, edge_demands)
         self.edges.append(edge)
         return edge
 
@@ -335,12 +345,13 @@ class Model:
         distance: int,
         duration: int = 0,
         profile: Profile | None = None,
+        edge_demands: Sequence[int] | None = None,
     ) -> Edge:
         """
         Adds an edge :math:`(i, j)` between ``frm`` (:math:`i`) and ``to``
         (:math:`j`). The edge can be given distance and duration attributes.
-        Distance is required, but the default duration is zero. Returns the
-        created edge.
+        Distance is required, but the default duration is zero. Optionally, the
+        edge can also store ``edge_demands``. Returns the created edge.
 
         .. note::
 
@@ -356,9 +367,15 @@ class Model:
            support multigraphs.
         """
         if profile is not None:
-            return profile.add_edge(frm, to, distance, duration)
+            return profile.add_edge(frm, to, distance, duration, edge_demands)
 
-        edge = Edge(frm=frm, to=to, distance=distance, duration=duration)
+        edge = Edge(
+            frm=frm,
+            to=to,
+            distance=distance,
+            duration=duration,
+            edge_demands=edge_demands,
+        )
         self._edges.append(edge)
         return edge
 

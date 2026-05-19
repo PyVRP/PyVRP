@@ -153,6 +153,52 @@ def test_add_edge():
     assert_(edge.to is loc2)
     assert_equal(edge.distance, 15)
     assert_equal(edge.duration, 49)
+    assert_equal(edge.edge_demands, None)
+
+
+def test_add_edge_with_edge_demands():
+    """
+    Smoke test that checks edge demand attributes are correctly stored.
+    """
+    model = Model()
+    loc1 = model.add_location(0, 0)
+    loc2 = model.add_location(0, 1)
+    edge = model.add_edge(
+        loc1, loc2, distance=15, duration=49, edge_demands=[1, 2]
+    )
+
+    assert_equal(edge.edge_demands, [1, 2])
+
+
+def test_add_edge_with_edge_demands_in_profile():
+    """
+    Tests that profile-specific edges also store edge demands.
+    """
+    model = Model()
+    profile = model.add_profile()
+
+    loc1 = model.add_location(0, 0)
+    loc2 = model.add_location(0, 1)
+
+    edge = model.add_edge(
+        loc1, loc2, distance=15, duration=49, profile=profile, edge_demands=[3]
+    )
+
+    assert_equal(edge.edge_demands, [3])
+
+
+def test_add_edge_raises_negative_edge_demands():
+    """
+    Negative edge demands are not understood.
+    """
+    model = Model()
+    loc1 = model.add_location(0, 0)
+    loc2 = model.add_location(0, 1)
+
+    with assert_raises(ValueError):
+        model.add_edge(
+            loc1, loc2, distance=1, duration=1, edge_demands=[0, -1]
+        )
 
 
 def test_add_vehicle_type():
