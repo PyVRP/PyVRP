@@ -85,6 +85,11 @@ def test_add_edge_raises_self_connection_nonzero_distance_or_duration():
     with assert_raises(ValueError):  # self loop with nonzero duration not OK
         model.add_edge(loc2, loc2, distance=0, duration=1)
 
+    with assert_raises(
+        ValueError
+    ):  # self loop with nonzero edge demand not OK
+        model.add_edge(loc1, loc1, distance=0, duration=0, edge_demands=[1])
+
 
 def test_add_client_attributes():
     """

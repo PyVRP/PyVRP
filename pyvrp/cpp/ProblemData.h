@@ -23,6 +23,7 @@ namespace pyvrp
  *     distance_matrices: list[numpy.ndarray[int]],
  *     duration_matrices: list[numpy.ndarray[int]],
  *     groups: list[ClientGroup] = [],
+ *     edge_demand_matrices: list[list[numpy.ndarray[int]]] = [],
  * )
  *
  * Creates a problem data instance. This instance contains all information
@@ -53,6 +54,16 @@ namespace pyvrp
  *     List of client groups. Client groups have certain restrictions - see the
  *     definition for details. By default there are no groups, and empty groups
  *     must not be passed.
+ * edge_demand_matrices
+ *     Optional edge demand matrices, indexed by routing profile and load
+ *     dimension. Entry ``[profile][dimension](i, j)`` denotes non-negative
+ *     demand consumed when traversing arc ``i -> j``. Diagonals must be zero.
+ *
+ * .. note::
+ *
+ *    Edge demands model monotone resource consumption over a route. When routes
+ *    include reload depots, reloads reset pickup/delivery load semantics, but
+ *    do not reset edge-demand consumption.
  *
  * Raises
  * ------

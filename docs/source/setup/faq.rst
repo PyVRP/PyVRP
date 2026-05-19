@@ -40,6 +40,11 @@ Modelling
       Set zero distance and duration on edges leaving (for start depots) or entering (for end depots) the dummy depots.
       You can then drop these dummy depots from PyVRP's solution in a post-processing step. 
 
+   How are edge demands interpreted when using reload depots?
+
+      Edge demands are treated as monotone route-level resource consumption and are not reset by reloading.
+      Reload depots only reset pickup/delivery load semantics.
+
 Debugging
 ---------
 

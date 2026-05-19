@@ -50,6 +50,13 @@ class Edge:
         if id(frm) == id(to) and (distance != 0 or duration != 0):
             raise ValueError("A self loop must have 0 distance and duration.")
 
+        if (
+            id(frm) == id(to)
+            and edge_demands is not None
+            and any(edge_demands)
+        ):
+            raise ValueError("A self loop must have 0 edge demands.")
+
         if max(distance, duration) > MAX_VALUE:
             msg = """
             The given distance or duration value is very large. This may impact
