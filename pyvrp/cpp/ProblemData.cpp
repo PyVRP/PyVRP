@@ -63,6 +63,12 @@ std::vector<Matrix<Duration>> const &ProblemData::durationMatrices() const
     return durs_;
 }
 
+std::vector<std::vector<Matrix<Load>>> const &
+ProblemData::edgeDemandMatrices() const
+{
+    return edgeDemands_;
+}
+
 Location const &ProblemData::location(size_t location) const
 {
     assert(location < numLocations());
@@ -241,16 +247,56 @@ void ProblemData::validate() const
                                             "all zero.");
         }
     }
+
+    if (edgeDemands_.empty())
+        return;
+
+    if (edgeDemands_.size() != numProfiles())
+        throw std::invalid_argument("Inconsistent number of edge demand "
+                                    "matrix profiles.");
+
+    for (size_t profile = 0; profile != edgeDemands_.size(); ++profile)
+    {
+        auto const &edgeDemands = edgeDemands_[profile];
+        auto const numLocs = numLocations();
+
+        if (edgeDemands.size() != numLoadDimensions_)
+            throw std::invalid_argument("Edge demand matrix dimensions do not "
+                                        "match the number of load dimensions.");
+
+        for (auto const &edgeDemand : edgeDemands)
+        {
+            if (edgeDemand.numRows() != numLocs
+                || edgeDemand.numCols() != numLocs)
+            {
+                throw std::invalid_argument("Edge demand matrix shape does not "
+                                            "match the problem size.");
+            }
+
+            for (size_t frm = 0; frm != numLocs; ++frm)
+            {
+                if (edgeDemand(frm, frm) != 0)
+                    throw std::invalid_argument("Edge demand matrix diagonals "
+                                                "must be all zero.");
+
+                for (size_t to = 0; to != numLocs; ++to)
+                    if (edgeDemand(frm, to) < 0)
+                        throw std::invalid_argument(
+                            "Edge demands must be >= 0.");
+            }
+        }
+    }
 }
 
-ProblemData
-ProblemData::replace(std::optional<std::vector<Location>> &locations,
-                     std::optional<std::vector<Client>> &clients,
-                     std::optional<std::vector<Depot>> &depots,
-                     std::optional<std::vector<VehicleType>> &vehicleTypes,
-                     std::optional<std::vector<Matrix<Distance>>> &distMats,
-                     std::optional<std::vector<Matrix<Duration>>> &durMats,
-                     std::optional<std::vector<ClientGroup>> &groups) const
+ProblemData ProblemData::replace(
+    std::optional<std::vector<Location>> &locations,
+    std::optional<std::vector<Client>> &clients,
+    std::optional<std::vector<Depot>> &depots,
+    std::optional<std::vector<VehicleType>> &vehicleTypes,
+    std::optional<std::vector<Matrix<Distance>>> &distMats,
+    std::optional<std::vector<Matrix<Duration>>> &durMats,
+    std::optional<std::vector<ClientGroup>> &groups,
+    std::optional<std::vector<std::vector<Matrix<Load>>>> &edgeDemandMats) const
 {
     return {locations.value_or(locations_),
             clients.value_or(clients_),
@@ -258,7 +304,8 @@ ProblemData::replace(std::optional<std::vector<Location>> &locations,
             vehicleTypes.value_or(vehicleTypes_),
             distMats.value_or(dists_),
             durMats.value_or(durs_),
-            groups.value_or(groups_)};
+            groups.value_or(groups_),
+            edgeDemandMats.value_or(edgeDemands_)};
 }
 
 ProblemData::ProblemData(std::vector<Location> locations,
@@ -267,9 +314,11 @@ ProblemData::ProblemData(std::vector<Location> locations,
                          std::vector<VehicleType> vehicleTypes,
                          std::vector<Matrix<Distance>> distMats,
                          std::vector<Matrix<Duration>> durMats,
-                         std::vector<ClientGroup> groups)
+                         std::vector<ClientGroup> groups,
+                         std::vector<std::vector<Matrix<Load>>> edgeDemandMats)
     : dists_(std::move(distMats)),
       durs_(std::move(durMats)),
+      edgeDemands_(std::move(edgeDemandMats)),
       locations_(std::move(locations)),
       clients_(std::move(clients)),
       depots_(std::move(depots)),
@@ -293,7 +342,8 @@ ProblemData::ProblemData(std::vector<Location> locations,
           || std::any_of(depots_.begin(), depots_.end(), hasTimeWindow<Depot>)
           || std::any_of(vehicleTypes_.begin(),
                          vehicleTypes_.end(),
-                         hasTimeWindow<VehicleType>))
+                         hasTimeWindow<VehicleType>)),
+      hasEdgeDemands_(!edgeDemands_.empty())
 {
     validate();
 }

@@ -64,8 +64,9 @@ namespace pyvrp
  */
 class ProblemData
 {
-    std::vector<Matrix<Distance>> const dists_;    // Distance matrices
-    std::vector<Matrix<Duration>> const durs_;     // Duration matrices
+    std::vector<Matrix<Distance>> const dists_;  // Distance matrices
+    std::vector<Matrix<Duration>> const durs_;   // Duration matrices
+    std::vector<std::vector<Matrix<Load>>> const edgeDemands_;
     std::vector<Location> const locations_;        // Location information
     std::vector<Client> const clients_;            // Client information
     std::vector<Depot> const depots_;              // Depot information
@@ -75,6 +76,7 @@ class ProblemData
     size_t const numVehicles_;
     size_t const numLoadDimensions_;
     bool const hasTimeWindows_;
+    bool const hasEdgeDemands_;
 
     // Validates the consistency of the constructed instance.
     void validate() const;
@@ -128,6 +130,16 @@ public:
      *    way!
      */
     [[nodiscard]] std::vector<Matrix<Duration>> const &durationMatrices() const;
+
+    /**
+     * Returns all profile-specific edge demand matrices in the problem
+     * instance, if any.
+     *
+     * The first index corresponds to routing profile, the second to load
+     * dimension.
+     */
+    [[nodiscard]] std::vector<std::vector<Matrix<Load>>> const &
+    edgeDemandMatrices() const;
 
     /**
      * Returns the location at the given index.
@@ -216,11 +228,23 @@ public:
     durationMatrix(size_t profile) const;
 
     /**
+     * Returns edge demand matrix data for the given routing profile and load
+     * dimension.
+     */
+    [[nodiscard]] inline Matrix<Load> const &
+    edgeDemandMatrix(size_t profile, size_t dimension) const;
+
+    /**
      * Determines whether any of the :meth:`~clients` or :meth:`~depots` in this
      * instance have nonstandard time windows, or if any :meth:`~vehicle_types`
      * have nonstandard shift time windows or latest start constraints.
      */
     [[nodiscard]] inline bool hasTimeWindows() const;
+
+    /**
+     * Determines whether edge demand matrices are provided.
+     */
+    [[nodiscard]] inline bool hasEdgeDemands() const;
 
     /**
      * Number of clients in this problem instance.
@@ -294,7 +318,9 @@ public:
                         std::optional<std::vector<VehicleType>> &vehicleTypes,
                         std::optional<std::vector<Matrix<Distance>>> &distMats,
                         std::optional<std::vector<Matrix<Duration>>> &durMats,
-                        std::optional<std::vector<ClientGroup>> &groups) const;
+                        std::optional<std::vector<ClientGroup>> &groups,
+                        std::optional<std::vector<std::vector<Matrix<Load>>>>
+                            &edgeDemandMats) const;
 
     ProblemData(std::vector<Location> locations,
                 std::vector<Client> clients,
@@ -302,7 +328,8 @@ public:
                 std::vector<VehicleType> vehicleTypes,
                 std::vector<Matrix<Distance>> distMats,
                 std::vector<Matrix<Duration>> durMats,
-                std::vector<ClientGroup> groups = {});
+                std::vector<ClientGroup> groups = {},
+                std::vector<std::vector<Matrix<Load>>> edgeDemandMats = {});
 
     ProblemData() = delete;
 };
@@ -331,7 +358,17 @@ Matrix<Duration> const &ProblemData::durationMatrix(size_t profile) const
     return durs_[profile];
 }
 
+Matrix<Load> const &ProblemData::edgeDemandMatrix(size_t profile,
+                                                  size_t dimension) const
+{
+    assert(profile < edgeDemands_.size());
+    assert(dimension < edgeDemands_[profile].size());
+    return edgeDemands_[profile][dimension];
+}
+
 bool ProblemData::hasTimeWindows() const { return hasTimeWindows_; }
+
+bool ProblemData::hasEdgeDemands() const { return hasEdgeDemands_; }
 }  // namespace pyvrp
 
 #endif  // PYVRP_PROBLEMDATA_H

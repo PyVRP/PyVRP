@@ -279,6 +279,99 @@ def test_matrix_access():
     assert_equal(data.duration_matrix(profile=0), dur_mat)
 
 
+def test_edge_demand_matrices_default_empty():
+    """
+    Tests that edge demand matrices are optional and default to empty.
+    """
+    data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0)],
+        clients=[Client(location=1, delivery=[0])],
+        depots=[Depot(location=0)],
+        vehicle_types=[VehicleType(capacity=[1])],
+        distance_matrices=[np.array([[0, 1], [1, 0]])],
+        duration_matrices=[np.array([[0, 1], [1, 0]])],
+    )
+
+    assert_(not data.has_edge_demands())
+    assert_equal(data.edge_demand_matrices(), [])
+    with assert_raises(ValueError):
+        data.edge_demand_matrix(0, 0)
+
+
+def test_edge_demand_matrix_access():
+    """
+    Tests that edge demand matrices can be read by profile and dimension.
+    """
+    data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0)],
+        clients=[Client(location=1, delivery=[0, 0])],
+        depots=[Depot(location=0)],
+        vehicle_types=[VehicleType(capacity=[1, 1])],
+        distance_matrices=[
+            np.array([[0, 1], [1, 0]]),
+            np.array([[0, 2], [2, 0]]),
+        ],
+        duration_matrices=[
+            np.array([[0, 1], [1, 0]]),
+            np.array([[0, 2], [2, 0]]),
+        ],
+        edge_demand_matrices=[
+            [np.array([[0, 1], [2, 0]]), np.array([[0, 3], [4, 0]])],
+            [np.array([[0, 5], [6, 0]]), np.array([[0, 7], [8, 0]])],
+        ],
+    )
+
+    assert_(data.has_edge_demands())
+    assert_equal(data.edge_demand_matrix(0, 0), [[0, 1], [2, 0]])
+    assert_equal(data.edge_demand_matrix(0, 1), [[0, 3], [4, 0]])
+    assert_equal(data.edge_demand_matrix(1, 0), [[0, 5], [6, 0]])
+    assert_equal(data.edge_demand_matrix(1, 1), [[0, 7], [8, 0]])
+
+
+def test_edge_demand_matrices_validation():
+    """
+    Tests validation of edge demand matrix shapes and values.
+    """
+    base = dict(
+        locations=[Location(0, 0), Location(1, 0)],
+        clients=[Client(location=1, delivery=[0])],
+        depots=[Depot(location=0)],
+        vehicle_types=[VehicleType(capacity=[1])],
+        distance_matrices=[np.array([[0, 1], [1, 0]])],
+        duration_matrices=[np.array([[0, 1], [1, 0]])],
+    )
+
+    with assert_raises(ValueError):
+        ProblemData(
+            **base,
+            edge_demand_matrices=[],
+        ).replace(edge_demand_matrices=[[np.array([[0, 1], [1, 0]])]] * 2)
+
+    with assert_raises(ValueError):
+        ProblemData(
+            **base,
+            edge_demand_matrices=[[np.array([[0, 1], [1, 0]])] * 2],
+        )
+
+    with assert_raises(ValueError):
+        ProblemData(
+            **base,
+            edge_demand_matrices=[[np.array([[0, 1, 0], [1, 0, 0]])]],
+        )
+
+    with assert_raises(ValueError):
+        ProblemData(
+            **base,
+            edge_demand_matrices=[[np.array([[1, 1], [1, 0]])]],
+        )
+
+    with assert_raises(ValueError):
+        ProblemData(
+            **base,
+            edge_demand_matrices=[[np.array([[0, -1], [1, 0]])]],
+        )
+
+
 def test_matrices_are_not_writeable():
     """
     Tests that the data matrices provided by ``distance_matrix()`` and

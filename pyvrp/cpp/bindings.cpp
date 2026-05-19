@@ -520,14 +520,16 @@ PYBIND11_MODULE(_pyvrp, m)
                       std::vector<VehicleType>,
                       std::vector<Matrix<pyvrp::Distance>>,
                       std::vector<Matrix<pyvrp::Duration>>,
-                      std::vector<ClientGroup>>(),
+                      std::vector<ClientGroup>,
+                      std::vector<std::vector<Matrix<pyvrp::Load>>>>(),
              py::arg("locations"),
              py::arg("clients"),
              py::arg("depots"),
              py::arg("vehicle_types"),
              py::arg("distance_matrices"),
              py::arg("duration_matrices"),
-             py::arg("groups") = py::list())
+             py::arg("groups") = py::list(),
+             py::arg("edge_demand_matrices") = py::list())
         .def("replace",
              &ProblemData::replace,
              py::arg("locations") = py::none(),
@@ -537,6 +539,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("distance_matrices") = py::none(),
              py::arg("duration_matrices") = py::none(),
              py::arg("groups") = py::none(),
+             py::arg("edge_demand_matrices") = py::none(),
              DOC(pyvrp, ProblemData, replace))
         .def_property_readonly("num_clients",
                                &ProblemData::numClients,
@@ -590,6 +593,9 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::durationMatrices,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, durationMatrices))
+        .def("edge_demand_matrices",
+             &ProblemData::edgeDemandMatrices,
+             py::return_value_policy::reference_internal)
         .def(
             "location",
             [](ProblemData const &data, size_t location)
@@ -646,9 +652,26 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("profile"),
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, durationMatrix))
+        .def(
+            "edge_demand_matrix",
+            [](ProblemData const &data, size_t profile, size_t dimension)
+            {
+                if (!data.hasEdgeDemands())
+                    throw py::value_error("No edge demand matrices available.");
+
+                auto const &mats = data.edgeDemandMatrices();
+                if (profile >= mats.size() || dimension >= mats[profile].size())
+                    throw py::index_error();
+
+                return data.edgeDemandMatrix(profile, dimension);
+            },
+            py::arg("profile"),
+            py::arg("dimension"),
+            py::return_value_policy::reference_internal)
         .def("has_time_windows",
              &ProblemData::hasTimeWindows,
              DOC(pyvrp, ProblemData, hasTimeWindows))
+        .def("has_edge_demands", &ProblemData::hasEdgeDemands)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
             [](ProblemData const &data) {  // __getstate__
@@ -658,7 +681,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                       data.vehicleTypes(),
                                       data.distanceMatrices(),
                                       data.durationMatrices(),
-                                      data.groups());
+                                      data.groups(),
+                                      data.edgeDemandMatrices());
             },
             [](py::tuple t) {  // __setstate__
                 using Locations = std::vector<Location>;
@@ -668,6 +692,8 @@ PYBIND11_MODULE(_pyvrp, m)
                 using DistMats = std::vector<pyvrp::Matrix<pyvrp::Distance>>;
                 using DurMats = std::vector<pyvrp::Matrix<pyvrp::Duration>>;
                 using Groups = std::vector<ClientGroup>;
+                using EdgeDemandMats
+                    = std::vector<std::vector<pyvrp::Matrix<pyvrp::Load>>>;
 
                 ProblemData data(t[0].cast<Locations>(),
                                  t[1].cast<Clients>(),
@@ -675,7 +701,9 @@ PYBIND11_MODULE(_pyvrp, m)
                                  t[3].cast<VehicleTypes>(),
                                  t[4].cast<DistMats>(),
                                  t[5].cast<DurMats>(),
-                                 t[6].cast<Groups>());
+                                 t[6].cast<Groups>(),
+                                 t.size() >= 8 ? t[7].cast<EdgeDemandMats>()
+                                               : EdgeDemandMats{});
 
                 return data;
             }));
