@@ -125,7 +125,7 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
             PYVRP_DEBUG("pyvrp.search",
                         "Applying operator to U={} (delta={}).",
                         U->idx(),
-                        deltaCost);
+                        deltaCost.get());
 
             auto *rU = U->route();
             if (rU)
@@ -171,7 +171,7 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
                         "Applying operator to U={} and V={} (delta={}).",
                         U->idx(),
                         V->idx(),
-                        deltaCost);
+                        deltaCost.get());
 
             auto *rU = U->route();
             auto *rV = V->route();

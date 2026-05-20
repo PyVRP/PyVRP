@@ -274,6 +274,7 @@ void Route::update()
     }
 
     // Load.
+    auto const hasEdgeDemands = data.hasEdgeDemands();
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
         auto const capacity = vehicleType_.capacity[dim];
@@ -302,8 +303,7 @@ void Route::update()
         }
 
         load_[dim] = 0;
-        excessLoad_[dim]
-            = loadBefore[dim][nodes.size() - 1].excessLoad(capacity);
+        excessLoad_[dim] = 0;
         for (auto it = depots_.begin() + 1; it != depots_.end(); ++it)
             load_[dim] += loadBefore[dim][it->pos()].load();
 
@@ -318,6 +318,33 @@ void Route::update()
             else
                 loadAfter[dim][prev] = LoadSegment::merge(loadAt[dim][prev],
                                                           loadAfter[dim][idx]);
+        }
+
+        if (!hasEdgeDemands)
+        {
+            excessLoad_[dim]
+                = loadBefore[dim][nodes.size() - 1].excessLoad(capacity);
+            continue;
+        }
+
+        auto const &edgeDemands = data.edgeDemandMatrix(profile(), dim);
+        Load edgeDemand = 0;
+
+        auto tripExcess
+            = std::max<Load>(loadBefore[dim][0].load() - capacity, 0);
+        for (size_t idx = 1; idx != nodes.size(); ++idx)
+        {
+            edgeDemand += edgeDemands(locations[idx - 1], locations[idx]);
+            tripExcess = std::max<Load>(
+                tripExcess,
+                std::max<Load>(
+                    loadBefore[dim][idx].load() + edgeDemand - capacity, 0));
+
+            if (nodes[idx]->isDepot())
+            {
+                excessLoad_[dim] += tripExcess;
+                tripExcess = std::max<Load>(edgeDemand - capacity, 0);
+            }
         }
     }
 

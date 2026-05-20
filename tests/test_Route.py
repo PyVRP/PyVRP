@@ -1,5 +1,6 @@
 import pickle
 
+import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
@@ -717,6 +718,61 @@ def test_multi_trip_initial_load(ok_small_multiple_trips):
     activities = map(Activity, ["C0", "C1", "D0", "C2", "C3"])
     route = Route(data, activities, 0)
     assert_equal(route.excess_load(), [5])
+
+
+def test_route_excess_load_includes_edge_demands():
+    """
+    Tests that route excess load includes edge demand consumption.
+    """
+    zeros = np.zeros((2, 2), dtype=int)
+    edge_demands = np.array([[0, 3], [4, 0]])
+
+    data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0)],
+        clients=[Client(1, delivery=[5])],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType(capacity=[10])],
+        distance_matrices=[zeros],
+        duration_matrices=[zeros],
+        edge_demand_matrices=[[edge_demands]],
+    )
+
+    route = Route(data, [0], 0)
+    assert_equal(route.delivery(), [5])
+    assert_equal(route.excess_load(), [2])  # 5 delivery + (3 + 4) edge demand
+    assert_(route.has_excess_load())
+
+
+def test_route_edge_demands_not_reset_by_reloading():
+    """
+    Tests that reload depot visits do not reset accumulated edge demand usage.
+    """
+    zeros = np.zeros((3, 3), dtype=int)
+    edge_demands = np.array(
+        [
+            [0, 4, 4],
+            [4, 0, 0],
+            [4, 0, 0],
+        ]
+    )
+
+    data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
+        clients=[Client(1, delivery=[0]), Client(2, delivery=[0])],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType(capacity=[10], reload_depots=[0])],
+        distance_matrices=[zeros],
+        duration_matrices=[zeros],
+        edge_demand_matrices=[[edge_demands]],
+    )
+
+    activities = map(Activity, ["C0", "D0", "C1"])
+    route = Route(data, activities, 0)
+    assert_equal(route.num_trips(), 2)
+    assert_equal(
+        route.excess_load(),
+        [6],  # total edge demand 16 - capacity 10
+    )
 
 
 def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):

@@ -231,30 +231,53 @@ void Route::setDistance(ProblemData const &data)
 void Route::setLoad(ProblemData const &data)
 {
     auto const &vehData = data.vehicleType(vehicleType_);
+    auto const hasEdgeDemands = data.hasEdgeDemands();
 
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
     {
+        auto const capacity = vehData.capacity[dim];
         LoadSegment ls;
+        Load edgeDemand = 0;
 
         if (vehData.initialLoad[dim] > 0)  // start with initial vehicle load
             ls = {vehData, dim};
 
+        auto tripExcess = std::max<Load>(ls.load() + edgeDemand - capacity, 0);
+        auto frmLoc = data.depot(startDepot()).location;
+
         for (size_t idx = 1; idx != schedule_.size(); ++idx)
         {
             auto const &activity = schedule_[idx];
+            auto const toLoc = activity.isDepot()
+                                   ? data.depot(activity.idx()).location
+                                   : data.client(activity.idx()).location;
+
+            if (hasEdgeDemands)
+            {
+                auto const &edgeDemands
+                    = data.edgeDemandMatrix(vehData.profile, dim);
+                edgeDemand += edgeDemands(frmLoc, toLoc);
+            }
+
+            if (activity.isClient())
+                ls = LoadSegment::merge(ls, {data.client(activity.idx()), dim});
+
+            tripExcess = std::max<Load>(
+                tripExcess,
+                std::max<Load>(ls.load() + edgeDemand - capacity, 0));
 
             if (activity.isDepot())
             {
                 delivery_[dim] += ls.delivery();
                 pickup_[dim] += ls.pickup();
-                ls = ls.finalise(vehData.capacity[dim]);
+                excessLoad_[dim] += tripExcess;
+
+                ls = {};
+                tripExcess = std::max<Load>(edgeDemand - capacity, 0);
             }
 
-            if (activity.isClient())
-                ls = LoadSegment::merge(ls, {data.client(activity.idx()), dim});
+            frmLoc = toLoc;
         }
-
-        excessLoad_[dim] = ls.excessLoad(vehData.capacity[dim]);
     }
 }
 

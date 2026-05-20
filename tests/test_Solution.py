@@ -409,6 +409,28 @@ def test_excess_load_calculation_with_multiple_load_dimensions(
     assert_equal(solution.excess_load(), expected_excess_load)
 
 
+def test_excess_load_includes_edge_demands():
+    """
+    Tests that edge demand consumption contributes to solution excess load.
+    """
+    zeros = np.zeros((2, 2), dtype=int)
+    edge_demands = np.array([[0, 3], [4, 0]])
+
+    data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0)],
+        clients=[Client(1, delivery=[5])],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType(capacity=[10])],
+        distance_matrices=[zeros],
+        duration_matrices=[zeros],
+        edge_demand_matrices=[[edge_demands]],
+    )
+
+    solution = Solution(data, [[0]])
+    assert_(solution.has_excess_load())
+    assert_equal(solution.excess_load(), [2])  # 5 + (3 + 4) - 10
+
+
 @pytest.mark.parametrize(
     "dist_mat",
     [

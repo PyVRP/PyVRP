@@ -949,6 +949,59 @@ def test_multi_trip_initial_load(ok_small_multiple_trips):
     assert_equal(route.load_after(3).load(), 8)
 
 
+def test_edge_demands_increase_excess_load():
+    """
+    Tests that search routes include edge demands in excess load evaluation.
+    """
+    zeros = np.zeros((2, 2), dtype=int)
+    edge_demands = np.array([[0, 3], [4, 0]])
+
+    data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0)],
+        clients=[Client(1, delivery=[5])],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType(capacity=[10])],
+        distance_matrices=[zeros],
+        duration_matrices=[zeros],
+        edge_demand_matrices=[[edge_demands]],
+    )
+
+    route = make_search_route(data, ["C0"])
+    assert_equal(route.excess_load(), [2])  # 5 delivery + (3 + 4) edge demand
+    assert_(route.has_excess_load())
+
+
+def test_edge_demands_not_reset_at_reload_depots():
+    """
+    Tests that edge demand usage remains cumulative across reload trips.
+    """
+    zeros = np.zeros((3, 3), dtype=int)
+    edge_demands = np.array(
+        [
+            [0, 4, 4],
+            [4, 0, 0],
+            [4, 0, 0],
+        ]
+    )
+
+    data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
+        clients=[Client(1, delivery=[0]), Client(2, delivery=[0])],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType(capacity=[10], reload_depots=[0])],
+        distance_matrices=[zeros],
+        duration_matrices=[zeros],
+        edge_demand_matrices=[[edge_demands]],
+    )
+
+    route = make_search_route(data, ["C0", "D0", "C1"])
+    assert_equal(route.num_trips(), 2)
+    assert_equal(
+        route.excess_load(),
+        [6],  # total edge demand 16 - capacity 10
+    )
+
+
 def test_multi_trip_with_release_times():
     """
     Test a small example with multiple trips and (binding) release times. See
