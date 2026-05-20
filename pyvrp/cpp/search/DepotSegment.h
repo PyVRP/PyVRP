@@ -6,6 +6,8 @@
 #include "LoadSegment.h"
 #include "ProblemData.h"
 
+#include <vector>
+
 namespace pyvrp::search
 {
 /**
@@ -55,6 +57,8 @@ public:
     {
         return {};
     }
+
+    std::vector<SegmentProxy> activities() const { return {front()}; }
 };
 }  // namespace pyvrp::search
 

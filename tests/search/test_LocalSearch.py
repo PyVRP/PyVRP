@@ -410,6 +410,61 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
     assert_equal(str(routes[1]), "C1 C3")
 
 
+def test_local_search_uses_edge_demands_in_move_evaluation():
+    """
+    Tests that local-search move evaluation accounts for edge demands when
+    computing capacity penalties.
+    """
+    zeros = np.zeros((4, 4), dtype=int)
+    edge_demands = np.array(
+        [
+            [0, 0, 0, 0],
+            [0, 0, 20, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+        ]
+    )
+
+    data = ProblemData(
+        locations=[
+            Location(0, 0),
+            Location(1, 0),
+            Location(2, 0),
+            Location(3, 0),
+        ],
+        clients=[
+            Client(1, delivery=[0]),
+            Client(2, delivery=[0]),
+            Client(3, delivery=[0]),
+        ],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType(capacity=[10])],
+        distance_matrices=[zeros],
+        duration_matrices=[zeros],
+        edge_demand_matrices=[[edge_demands]],
+    )
+
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(
+        data,
+        rng,
+        [[2], [], [0]],
+        PerturbationManager(PerturbationParams(0, 0)),
+    )
+    ls.add_operator(Exchange11(data))
+
+    # Route C0 -> C1 -> C2 incurs edge demand 20 on C0 -> C1 and is thus
+    # infeasible. Swapping C0 and C2 removes that excess.
+    sol = Solution(data, [[0, 1, 2]])
+    cost_eval = CostEvaluator([1], 0, 0)
+    improved = ls(sol, cost_eval, exhaustive=True)
+
+    assert_(sol.has_excess_load())
+    assert_(not improved.has_excess_load())
+    assert_(not improved.routes()[0].has_excess_load())
+    assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
+
+
 def test_search_statistics(ok_small):
     """
     Tests that the local search's search statistics return meaningful
