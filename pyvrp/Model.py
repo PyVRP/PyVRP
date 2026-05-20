@@ -31,7 +31,8 @@ class Edge:
     ------
     ValueError
         When either distance or duration is a negative value, or when self
-        loops have nonzero distance or duration values.
+        loops have nonzero distance, duration, or edge demand values, or when
+        edge demands contain negative values.
     """
 
     __slots__ = ["distance", "duration", "edge_demands", "frm", "to"]
@@ -369,6 +370,10 @@ class Model:
         Distance is required, but the default duration is zero. Optionally, the
         edge can also store ``edge_demands``. Returns the created edge.
 
+        Edge demands represent directed, non-negative resource consumption on
+        arc traversals. When used, all edges that specify ``edge_demands``
+        should use the same number of demand dimensions.
+
         .. note::
 
            If ``profile`` is not provided, the edge is a base edge that will be
@@ -381,6 +386,12 @@ class Model:
            If called repeatedly with the same ``frm``, ``to``, and ``profile``
            arguments, only the edge constructed last is used. PyVRP does not
            support multigraphs.
+
+        .. note::
+
+           Edge demands contribute to route capacity consumption together with
+           client pickup/delivery demands. They are not route costs by
+           themselves.
         """
         if profile is not None:
             return profile.add_edge(frm, to, distance, duration, edge_demands)

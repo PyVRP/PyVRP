@@ -15,6 +15,11 @@ This object stores the best observed solution and detailed runtime statistics.
 
    Have a look at the examples to see how these classes relate!
 
+.. seealso::
+
+   For transition-based resource modelling, see
+   :doc:`../setup/edge_demands`.
+
 .. automodule:: pyvrp.Model
 
    .. autoclass:: Model

@@ -45,3 +45,14 @@ The following figure explains this graphically.
 .. figure:: ../assets/images/duration-vehicletype.svg
    :alt: Duration attributes of ``VehicleType`` objects.
    :figwidth: 100%
+
+
+Edge-demand consumption
+-----------------------
+
+PyVRP can also model resource consumption on travelled arcs.
+These edge demands are directed and profile-specific, and contribute to route
+capacity usage in addition to client pickup/delivery demand.
+
+Reload depots do not reset this edge-demand consumption.
+For full modelling examples and caveats, see :doc:`edge_demands`.

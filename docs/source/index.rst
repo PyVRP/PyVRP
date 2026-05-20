@@ -10,6 +10,7 @@ It currently supports VRPs with:
 * Time windows, client service durations, and release times (VRP with time windows and release times);
 * Multiple depots (multi-depot VRP);
 * Reloading along routes at different reload depots (multi-trip VRP);
+* Route-dependent resource consumption through directed, profile-specific edge demands;
 * Optional clients with prizes for visiting (prize collecting, team orienteering problem);
 * Client groups imposing additional restrictions on multiple clients jointly (generalised VRP, VRP with multiple time windows);
 * **[Enterprise]** Automatic break planning for EU and US hours-of-service regulations;
@@ -40,6 +41,7 @@ Contents
    setup/getting_help
    setup/faq
    setup/concepts
+   setup/edge_demands
    setup/benchmarks
 
 .. toctree::

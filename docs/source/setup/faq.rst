@@ -44,6 +44,7 @@ Modelling
 
       Edge demands are treated as monotone route-level resource consumption and are not reset by reloading.
       Reload depots only reset pickup/delivery load semantics.
+      See :doc:`edge_demands` for full examples and caveats.
 
 Debugging
 ---------
