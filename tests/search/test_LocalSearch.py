@@ -465,6 +465,90 @@ def test_local_search_uses_edge_demands_in_move_evaluation():
     assert_(cost_eval.penalised_cost(improved) < cost_eval.penalised_cost(sol))
 
 
+def test_local_search_zero_edge_demands_matches_no_edge_demands():
+    """
+    Regression test: adding zero edge-demand matrices must not change local
+    search behaviour compared to instances without edge-demand matrices.
+    """
+    distances = np.array(
+        [
+            [0, 10, 10, 10],
+            [10, 0, 3, 1],
+            [10, 1, 0, 3],
+            [10, 3, 1, 0],
+        ]
+    )
+    durations = np.zeros((4, 4), dtype=int)
+    edge_demands = np.zeros((4, 4), dtype=int)
+
+    kwargs = dict(
+        locations=[
+            Location(0, 0),
+            Location(1, 0),
+            Location(2, 0),
+            Location(3, 0),
+        ],
+        clients=[
+            Client(1, delivery=[0]),
+            Client(2, delivery=[0]),
+            Client(3, delivery=[0]),
+        ],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType(capacity=[10])],
+        distance_matrices=[distances],
+        duration_matrices=[durations],
+    )
+
+    data_without = ProblemData(**kwargs)
+    data_with_zero = ProblemData(
+        **kwargs, edge_demand_matrices=[[edge_demands]]
+    )
+
+    neighbours = [[1, 2], [0, 2], [0, 1]]
+    ls_without = LocalSearch(
+        data_without,
+        RandomNumberGenerator(seed=42),
+        neighbours,
+        PerturbationManager(PerturbationParams(0, 0)),
+    )
+    ls_with_zero = LocalSearch(
+        data_with_zero,
+        RandomNumberGenerator(seed=42),
+        neighbours,
+        PerturbationManager(PerturbationParams(0, 0)),
+    )
+
+    ls_without.add_operator(Exchange10(data_without))
+    ls_without.add_operator(Exchange11(data_without))
+
+    ls_with_zero.add_operator(Exchange10(data_with_zero))
+    ls_with_zero.add_operator(Exchange11(data_with_zero))
+
+    cost_eval = CostEvaluator([1], 0, 0)
+    init_without = Solution(data_without, [[0, 1, 2]])
+    init_with_zero = Solution(data_with_zero, [[0, 1, 2]])
+
+    improved_without = ls_without(init_without, cost_eval, exhaustive=True)
+    improved_with_zero = ls_with_zero(
+        init_with_zero,
+        cost_eval,
+        exhaustive=True,
+    )
+
+    assert_equal(
+        [str(route) for route in improved_without.routes()],
+        [str(route) for route in improved_with_zero.routes()],
+    )
+    assert_equal(
+        cost_eval.penalised_cost(improved_without),
+        cost_eval.penalised_cost(improved_with_zero),
+    )
+    assert_equal(
+        improved_without.excess_load(),
+        improved_with_zero.excess_load(),
+    )
+
+
 def test_search_statistics(ok_small):
     """
     Tests that the local search's search statistics return meaningful

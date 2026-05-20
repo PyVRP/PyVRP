@@ -654,7 +654,9 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, ProblemData, durationMatrix))
         .def(
             "edge_demand_matrix",
-            [](ProblemData const &data, size_t profile, size_t dimension)
+            [](ProblemData const &data,
+               size_t profile,
+               size_t dimension) -> Matrix<pyvrp::Load> const &
             {
                 if (!data.hasEdgeDemands())
                     throw py::value_error("No edge demand matrices available.");

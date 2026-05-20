@@ -431,6 +431,60 @@ def test_excess_load_includes_edge_demands():
     assert_equal(solution.excess_load(), [2])  # 5 + (3 + 4) - 10
 
 
+def test_excess_load_uses_profile_specific_edge_demands():
+    """
+    Tests that profile-specific edge demands are used in solution excess load.
+    """
+    zeros = np.zeros((4, 4), dtype=int)
+    edge_demands_profile0 = np.array(
+        [
+            [0, 5, 0, 0],
+            [0, 0, 7, 0],
+            [11, 0, 0, 0],
+            [0, 0, 0, 0],
+        ]
+    )
+    edge_demands_profile1 = np.array(
+        [
+            [0, 0, 0, 2],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [3, 0, 0, 0],
+        ]
+    )
+
+    data = ProblemData(
+        locations=[
+            Location(0, 0),
+            Location(1, 0),
+            Location(2, 0),
+            Location(3, 0),
+        ],
+        clients=[
+            Client(1, delivery=[0]),
+            Client(2, delivery=[0]),
+            Client(3, delivery=[0]),
+        ],
+        depots=[Depot(0)],
+        vehicle_types=[
+            VehicleType(capacity=[15], profile=0),
+            VehicleType(capacity=[15], profile=1),
+        ],
+        distance_matrices=[zeros, zeros],
+        duration_matrices=[zeros, zeros],
+        edge_demand_matrices=[
+            [edge_demands_profile0],
+            [edge_demands_profile1],
+        ],
+    )
+
+    # Route [C0, C1] with profile 0 has excess 8, route [C2] with profile 1
+    # has no excess.
+    solution = Solution(data, [Route(data, [0, 1], 0), Route(data, [2], 1)])
+    assert_equal(solution.excess_load(), [8])
+    assert_(solution.has_excess_load())
+
+
 @pytest.mark.parametrize(
     "dist_mat",
     [

@@ -775,6 +775,51 @@ def test_route_edge_demands_not_reset_by_reloading():
     )
 
 
+def test_route_uses_profile_specific_edge_demands():
+    """
+    Tests that route excess load uses edge demands of the vehicle profile.
+    """
+    zeros = np.zeros((3, 3), dtype=int)
+    edge_demands_profile0 = np.array(
+        [
+            [0, 5, 0],
+            [0, 0, 7],
+            [11, 0, 0],
+        ]
+    )
+    edge_demands_profile1 = np.array(
+        [
+            [0, 2, 0],
+            [0, 0, 3],
+            [4, 0, 0],
+        ]
+    )
+
+    data = ProblemData(
+        locations=[Location(0, 0), Location(1, 0), Location(2, 0)],
+        clients=[Client(1, delivery=[0]), Client(2, delivery=[0])],
+        depots=[Depot(0)],
+        vehicle_types=[
+            VehicleType(capacity=[15], profile=0),
+            VehicleType(capacity=[15], profile=1),
+        ],
+        distance_matrices=[zeros, zeros],
+        duration_matrices=[zeros, zeros],
+        edge_demand_matrices=[
+            [edge_demands_profile0],
+            [edge_demands_profile1],
+        ],
+    )
+
+    route0 = Route(data, [0, 1], 0)
+    route1 = Route(data, [0, 1], 1)
+
+    # Profile 0 total edge demand on D -> C0 -> C1 -> D is 23, so excess 8.
+    assert_equal(route0.excess_load(), [8])
+    # Profile 1 total edge demand on the same route is 9, so no excess.
+    assert_equal(route1.excess_load(), [0])
+
+
 def test_bug_iterating_with_empty_last_trip(ok_small_multiple_trips):
     """
     Ensures that the bug identified in #812 stays fixed. Before the fix, this

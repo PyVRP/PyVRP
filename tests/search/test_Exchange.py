@@ -716,6 +716,75 @@ def test_relocate_overtime(ok_small_overtime):
     )
 
 
+def test_exchange11_edge_demand_delta_consistency():
+    """
+    Tests that (1, 1)-exchange delta costs are consistent under edge demands.
+    """
+    data = ProblemData(
+        locations=[
+            Location(0, 0),
+            Location(1, 0),
+            Location(2, 0),
+            Location(3, 0),
+        ],
+        clients=[
+            Client(location=1, delivery=[0]),
+            Client(location=2, delivery=[0]),
+            Client(location=3, delivery=[0]),
+        ],
+        depots=[Depot(location=0)],
+        vehicle_types=[VehicleType(capacity=[10])],
+        distance_matrices=[np.where(np.eye(4), 0, 1)],
+        duration_matrices=[np.zeros((4, 4), dtype=int)],
+        edge_demand_matrices=[
+            [
+                np.array(
+                    [
+                        [0, 6, 1, 1],
+                        [1, 0, 6, 1],
+                        [1, 1, 0, 6],
+                        [6, 1, 1, 0],
+                    ]
+                )
+            ]
+        ],
+    )
+
+    route1 = make_search_route(data, ["C0", "C1"])
+    route2 = make_search_route(data, ["C2"])
+
+    op = Exchange11(data)
+    cost_eval = CostEvaluator([3], 0, 0)
+
+    def route_penalised_cost(route):
+        load_penalty = sum(
+            cost_eval.load_penalty(load, cap, dim)
+            for dim, (load, cap) in enumerate(
+                zip(route.load(), route.capacity())
+            )
+        )
+
+        return (
+            route.fixed_vehicle_cost()
+            + route.distance_cost()
+            + route.duration_cost()
+            + cost_eval.tw_penalty(route.time_warp())
+            + cost_eval.dist_penalty(route.distance(), route.max_distance())
+            + load_penalty
+        )
+
+    before = route_penalised_cost(route1) + route_penalised_cost(route2)
+    delta, should_apply = op.evaluate(route1[2], route2[1], cost_eval)
+
+    op.apply(route1[2], route2[1])
+    route1.update()
+    route2.update()
+
+    after = route_penalised_cost(route1) + route_penalised_cost(route2)
+    assert_equal(after - before, delta)
+    assert_equal(should_apply, delta < 0)
+
+
 @pytest.mark.parametrize("operator", [Exchange10, Exchange11])
 def test_skip_unassigned_clients(operator, ok_small):
     """
