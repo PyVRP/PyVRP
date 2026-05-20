@@ -199,6 +199,10 @@ class Model:
         clients = data.clients()
 
         profiles = [Profile() for _ in range(data.num_profiles)]
+        edge_demand_mats = (
+            data.edge_demand_matrices() if data.has_edge_demands() else None
+        )
+
         for idx, profile in enumerate(profiles):
             distances = data.distance_matrix(profile=idx)
             durations = data.duration_matrix(profile=idx)
@@ -208,6 +212,11 @@ class Model:
                     to=locs[to],
                     distance=distances[frm, to],
                     duration=durations[frm, to],
+                    edge_demands=(
+                        [mats[frm, to] for mats in edge_demand_mats[idx]]
+                        if edge_demand_mats is not None
+                        else None
+                    ),
                 )
                 for frm in range(data.num_locations)
                 for to in range(data.num_locations)
@@ -543,6 +552,54 @@ class Model:
             distances = [base_distance]
             durations = [base_duration]
 
+        edge_demand_dims: int | None = None
+        all_edges = [
+            *self._edges,
+            *(edge for profile in self._profiles for edge in profile.edges),
+        ]
+        for edge in all_edges:
+            if edge.edge_demands is None:
+                continue
+
+            edge_dims = len(edge.edge_demands)
+            if edge_demand_dims is None:
+                edge_demand_dims = edge_dims
+            elif edge_dims != edge_demand_dims:
+                raise ValueError("Edge demands must all have equal dimension.")
+
+        edge_demand_matrices: list[list[np.ndarray]] = []
+        if edge_demand_dims is not None:
+            base_edge_demand = [
+                np.zeros((len(locs), len(locs)), np.int64)
+                for _ in range(edge_demand_dims)
+            ]
+
+            for edge in self._edges:
+                if edge.edge_demands is None:
+                    continue
+
+                frm = loc2idx[id(edge.frm)]
+                to = loc2idx[id(edge.to)]
+                for dim, demand in enumerate(edge.edge_demands):
+                    base_edge_demand[dim][frm, to] = demand
+
+            for profile in self._profiles:
+                prof_edge_demand = [mat.copy() for mat in base_edge_demand]
+
+                for edge in profile.edges:
+                    if edge.edge_demands is None:
+                        continue
+
+                    frm = loc2idx[id(edge.frm)]
+                    to = loc2idx[id(edge.to)]
+                    for dim, demand in enumerate(edge.edge_demands):
+                        prof_edge_demand[dim][frm, to] = demand
+
+                edge_demand_matrices.append(prof_edge_demand)
+
+            if not self._profiles:
+                edge_demand_matrices = [base_edge_demand]
+
         return ProblemData(
             self._locations,
             self._clients,
@@ -551,6 +608,7 @@ class Model:
             distances,
             durations,
             self._groups,
+            edge_demand_matrices,
         )
 
     def solve(

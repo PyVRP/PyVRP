@@ -949,6 +949,162 @@ def test_profiles_build_on_base_edges():
     assert_equal(data.duration_matrix(1), [[0, 5], [0, 0]])
 
 
+def test_edge_demands_build_on_base_edges():
+    """
+    Tests that edge demand matrices are inherited from base edges, with
+    profile-specific edge demands overriding those base values.
+    """
+    m = Model()
+    m.add_vehicle_type(capacity=[10])
+
+    depot_loc = m.add_location(1, 1)
+    m.add_depot(depot_loc)
+
+    client_loc = m.add_location(2, 2)
+    m.add_client(client_loc, delivery=1)
+
+    for frm in m.locations:
+        for to in m.locations:
+            if frm is not to:
+                m.add_edge(frm, to, distance=1, duration=1, edge_demands=[2])
+
+    prof1 = m.add_profile()
+    prof2 = m.add_profile()
+
+    # Without profile-specific edge demands, both profiles inherit base values.
+    data = m.data()
+    assert_(data.has_edge_demands())
+    assert_equal(data.edge_demand_matrix(0, 0), [[0, 2], [2, 0]])
+    assert_equal(data.edge_demand_matrix(1, 0), [[0, 2], [2, 0]])
+
+    # Override one directed edge in each profile.
+    m.add_edge(
+        depot_loc,
+        client_loc,
+        distance=1,
+        duration=1,
+        profile=prof1,
+        edge_demands=[5],
+    )
+    m.add_edge(
+        depot_loc,
+        client_loc,
+        distance=1,
+        duration=1,
+        profile=prof2,
+        edge_demands=[7],
+    )
+
+    data = m.data()
+    assert_equal(data.edge_demand_matrix(0, 0), [[0, 5], [2, 0]])
+    assert_equal(data.edge_demand_matrix(1, 0), [[0, 7], [2, 0]])
+
+
+def test_edge_demands_inconsistent_dimensions_raise():
+    """
+    Tests that edge demands must all have the same dimensionality.
+    """
+    m = Model()
+    m.add_vehicle_type(capacity=[10, 10])
+
+    loc1 = m.add_location(0, 0)
+    loc2 = m.add_location(0, 1)
+    m.add_depot(location=loc1)
+    m.add_client(location=loc2, delivery=[1, 1])
+
+    m.add_edge(loc1, loc2, distance=1, duration=1, edge_demands=[1])
+    m.add_edge(loc2, loc1, distance=1, duration=1, edge_demands=[1, 2])
+
+    with assert_raises(ValueError):
+        m.data()
+
+
+def test_edge_demands_allow_none_on_some_edges():
+    """
+    Tests that edge demand construction skips edges that do not define edge
+    demands, both for base and profile-specific edges.
+    """
+    m = Model()
+    profile = m.add_profile()
+    m.add_vehicle_type(capacity=[10], profile=profile)
+
+    loc1 = m.add_location(0, 0)
+    loc2 = m.add_location(0, 1)
+    m.add_depot(location=loc1)
+    m.add_client(location=loc2, delivery=1)
+
+    # Base edges: one has edge demands, one has none.
+    m.add_edge(loc1, loc2, distance=1, duration=1, edge_demands=[2])
+    m.add_edge(loc2, loc1, distance=1, duration=1)
+
+    # Profile edges: one has edge demands, one has none.
+    m.add_edge(
+        loc1,
+        loc2,
+        distance=1,
+        duration=1,
+        profile=profile,
+        edge_demands=[3],
+    )
+    m.add_edge(loc2, loc1, distance=1, duration=1, profile=profile)
+
+    data = m.data()
+    assert_(data.has_edge_demands())
+    assert_equal(data.edge_demand_matrices()[0][0], [[0, 3], [0, 0]])
+
+
+def test_edge_demands_with_implicit_single_profile():
+    """
+    Tests that base edge demands are exported with an implicit profile when no
+    routing profiles are explicitly added.
+    """
+    m = Model()
+    m.add_vehicle_type(capacity=[10])
+
+    loc1 = m.add_location(0, 0)
+    loc2 = m.add_location(0, 1)
+    m.add_depot(location=loc1)
+    m.add_client(location=loc2, delivery=1)
+
+    m.add_edge(loc1, loc2, distance=1, duration=1, edge_demands=[4])
+    m.add_edge(loc2, loc1, distance=1, duration=1, edge_demands=[5])
+
+    data = m.data()
+    assert_equal(data.num_profiles, 1)
+    assert_(data.has_edge_demands())
+    assert_equal(data.edge_demand_matrices()[0][0], [[0, 4], [5, 0]])
+
+
+def test_model_from_data_roundtrips_edge_demands():
+    """
+    Tests that converting ProblemData -> Model -> ProblemData preserves edge
+    demand matrices.
+    """
+    m = Model()
+    m.add_vehicle_type(capacity=[10])
+
+    loc1 = m.add_location(0, 0)
+    loc2 = m.add_location(0, 1)
+    m.add_depot(location=loc1)
+    m.add_client(location=loc2, delivery=1)
+
+    for frm in m.locations:
+        for to in m.locations:
+            if frm is not to:
+                m.add_edge(frm, to, distance=1, duration=1)
+
+    data = m.data().replace(
+        edge_demand_matrices=[[np.array([[0, 3], [5, 0]])]]
+    )
+    roundtripped = Model.from_data(data).data()
+
+    assert_(roundtripped.has_edge_demands())
+    assert_equal(
+        roundtripped.edge_demand_matrices(),
+        data.edge_demand_matrices(),
+    )
+
+
 def test_model_solves_instances_with_multiple_profiles():
     """
     Smoke test to check that the model knows how to solve an instance with
