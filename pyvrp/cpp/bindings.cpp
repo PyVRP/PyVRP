@@ -13,6 +13,7 @@
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
+#include "Shipment.h"
 #include "Solution.h"
 #include "VehicleType.h"
 #include "pyvrp_docs.h"
@@ -43,6 +44,7 @@ using pyvrp::Matrix;
 using pyvrp::ProblemData;
 using pyvrp::RandomNumberGenerator;
 using pyvrp::Route;
+using pyvrp::Shipment;
 using pyvrp::Solution;
 using pyvrp::VehicleType;
 
@@ -335,6 +337,107 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(
             "__str__",
             [](Depot const &depot) { return depot.name; },
+            py::return_value_policy::reference_internal);
+
+    py::class_<Shipment::Step>(m, "ShipmentStep", DOC(pyvrp, Shipment, Step))
+        .def(py::init<size_t,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration>(),
+             py::arg("location"),
+             py::arg("tw_early") = 0,
+             py::arg("tw_late") = std::numeric_limits<pyvrp::Duration>::max(),
+             py::arg("service_duration") = 0)
+        .def_readonly("location", &Shipment::Step::location)
+        .def_readonly("tw_early", &Shipment::Step::twEarly)
+        .def_readonly("tw_late", &Shipment::Step::twLate)
+        .def_readonly("service_duration", &Shipment::Step::serviceDuration)
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](Shipment::Step const &step)  // __getstate__
+            {
+                return py::make_tuple(step.location,
+                                      step.twEarly,
+                                      step.twLate,
+                                      step.serviceDuration);
+            },
+            [](py::tuple t)  // __setstate__
+            {
+                Shipment::Step step(t[0].cast<size_t>(),            // location
+                                    t[1].cast<pyvrp::Duration>(),   // tw early
+                                    t[2].cast<pyvrp::Duration>(),   // tw late
+                                    t[3].cast<pyvrp::Duration>());  // service
+
+                return step;
+            }));
+
+    py::class_<Shipment>(m, "Shipment", DOC(pyvrp, Shipment))
+        .def(py::init<size_t,
+                      size_t,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      pyvrp::Duration,
+                      std::vector<pyvrp::Load>,
+                      pyvrp::Cost,
+                      bool,
+                      std::string>(),
+             py::arg("pickup_location"),
+             py::arg("delivery_location"),
+             py::arg("pickup_tw_early") = 0,
+             py::arg("pickup_tw_late")
+             = std::numeric_limits<pyvrp::Duration>::max(),
+             py::arg("pickup_service_duration") = 0,
+             py::arg("delivery_tw_early") = 0,
+             py::arg("delivery_tw_late")
+             = std::numeric_limits<pyvrp::Duration>::max(),
+             py::arg("delivery_service_duration") = 0,
+             py::arg("amount") = py::list(),
+             py::arg("prize") = 0,
+             py::arg("required") = true,
+             py::kw_only(),
+             py::arg("name") = "")
+        .def_readonly("pickup",
+                      &Shipment::pickup,
+                      py::return_value_policy::reference_internal)
+        .def_readonly("delivery",
+                      &Shipment::delivery,
+                      py::return_value_policy::reference_internal)
+        .def_readonly("amount",
+                      &Shipment::amount,
+                      py::return_value_policy::reference_internal)
+        .def_readonly("prize", &Shipment::prize)
+        .def_readonly("required", &Shipment::required)
+        .def_readonly("name",
+                      &Shipment::name,
+                      py::return_value_policy::reference_internal)
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](Shipment const &shipment)  // __getstate__
+            {
+                return py::make_tuple(shipment.pickup,
+                                      shipment.delivery,
+                                      shipment.amount,
+                                      shipment.prize,
+                                      shipment.required,
+                                      shipment.name);
+            },
+            [](py::tuple t)  // __setstate__
+            {
+                Shipment shipment(t[0].cast<Shipment::Step>(),
+                                  t[1].cast<Shipment::Step>(),
+                                  t[2].cast<std::vector<pyvrp::Load>>(),
+                                  t[3].cast<pyvrp::Cost>(),
+                                  t[4].cast<bool>(),
+                                  t[5].cast<std::string>());
+
+                return shipment;
+            }))
+        .def(
+            "__str__",
+            [](Shipment const &shipment) { return shipment.name; },
             py::return_value_policy::reference_internal);
 
     py::class_<ClientGroup>(m, "ClientGroup", DOC(pyvrp, ClientGroup))

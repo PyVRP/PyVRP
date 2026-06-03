@@ -164,6 +164,49 @@ class Depot:
     def __getstate__(self) -> tuple: ...
     def __setstate__(self, state: tuple, /) -> None: ...
 
+class ShipmentStep:
+    location: int
+    tw_early: int
+    tw_late: int
+    service_duration: int
+    def __init__(
+        self,
+        location: int,
+        tw_early: int = 0,
+        tw_late: int = ...,
+        service_duration: int = 0,
+    ) -> None: ...
+    def __eq__(self, other: object) -> bool: ...
+    def __getstate__(self) -> tuple: ...
+    def __setstate__(self, state: tuple, /) -> None: ...
+
+class Shipment:
+    pickup: ShipmentStep
+    delivery: ShipmentStep
+    amount: list[int]
+    prize: int
+    required: bool
+    name: str
+    def __init__(
+        self,
+        pickup_location: int,
+        delivery_location: int,
+        pickup_tw_early: int = 0,
+        pickup_tw_late: int = ...,
+        pickup_service_duration: int = 0,
+        delivery_tw_early: int = 0,
+        delivery_tw_late: int = ...,
+        delivery_service_duration: int = 0,
+        amount: list[int] = [],
+        prize: int = 0,
+        required: bool = True,
+        *,
+        name: str = "",
+    ) -> None: ...
+    def __eq__(self, other: object) -> bool: ...
+    def __getstate__(self) -> tuple: ...
+    def __setstate__(self, state: tuple, /) -> None: ...
+
 class VehicleType:
     num_available: int
     start_depot: int
