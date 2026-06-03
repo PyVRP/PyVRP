@@ -185,11 +185,11 @@ void ProblemData::validate() const
     for (auto const &shipment : shipments_)
     {
         if (shipment.pickup.location >= numLocations())
-            throw std::invalid_argument(
+            throw std::out_of_range(
                 "Shipment pickup references invalid location.");
 
         if (shipment.delivery.location >= numLocations())
-            throw std::invalid_argument(
+            throw std::out_of_range(
                 "Shipment delivery references invalid location.");
 
         if (shipment.amount.size() != numLoadDimensions_)
