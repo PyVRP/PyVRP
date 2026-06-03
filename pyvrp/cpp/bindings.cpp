@@ -65,7 +65,9 @@ PYBIND11_MODULE(_pyvrp, m)
     py::enum_<Activity::ActivityType>(
         m, "ActivityType", DOC(pyvrp, Activity, ActivityType))
         .value("DEPOT", Activity::ActivityType::DEPOT)
-        .value("CLIENT", Activity::ActivityType::CLIENT);
+        .value("CLIENT", Activity::ActivityType::CLIENT)
+        .value("PICKUP", Activity::ActivityType::PICKUP)
+        .value("DELIVERY", Activity::ActivityType::DELIVERY);
 
     py::class_<Activity>(m, "Activity", DOC(pyvrp, Activity))
         .def(py::init<Activity::ActivityType, size_t>(),
@@ -77,6 +79,13 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("idx", &Activity::idx)
         .def("is_client", &Activity::isClient, DOC(pyvrp, Activity, isClient))
         .def("is_depot", &Activity::isDepot, DOC(pyvrp, Activity, isDepot))
+        .def("is_shipment",
+             &Activity::isShipment,
+             DOC(pyvrp, Activity, isShipment))
+        .def("is_pickup", &Activity::isPickup, DOC(pyvrp, Activity, isPickup))
+        .def("is_delivery",
+             &Activity::isDelivery,
+             DOC(pyvrp, Activity, isDelivery))
         .def(py::pickle(
             [](Activity const &activity) {  // __getstate__
                 return py::make_tuple(activity.type(), activity.idx());

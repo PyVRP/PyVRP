@@ -59,7 +59,7 @@ def test_description_init():
     assert_equal(str(activity), "C100")
 
 
-@pytest.mark.parametrize("description", ("", "D", "U0", "UA"))
+@pytest.mark.parametrize("description", ("", "D", "V0", "VA"))
 def test_raises_unknown_description(description: str):
     """
     Tests that the description-based constructor raises for unknown or
@@ -67,3 +67,22 @@ def test_raises_unknown_description(description: str):
     """
     with assert_raises(ValueError):
         Activity(description)
+
+
+def test_shipment():
+    """
+    Tests shipment activities, in particular pickup and delivery activities.
+    """
+    pickup = Activity("L0")
+    assert_(pickup.is_shipment())
+    assert_(pickup.is_pickup())
+    assert_(not pickup.is_delivery())
+    assert_equal(pickup.idx, 0)
+    assert_equal(str(pickup), "L0")
+
+    delivery = Activity("U0")
+    assert_(delivery.is_shipment())
+    assert_(not delivery.is_pickup())
+    assert_(delivery.is_delivery())
+    assert_equal(delivery.idx, 0)
+    assert_equal(str(delivery), "U0")
