@@ -1275,3 +1275,26 @@ def test_model_shipment_data():
     assert_equal(data.num_shipments, 1)
     assert_equal(data.shipment(0), shipment)
     assert_equal(data.shipments(), [shipment])
+
+
+def test_model_raises_unknown_location_when_adding_shipments():
+    """
+    Tests that ``add_shipment()`` raises when provided with a location argument
+    that is not known to the model.
+    """
+    m = Model()
+
+    loc1 = m.add_location(0, 0)  # via model
+    loc2 = Location(0, 0)  # outside model
+    assert_equal(len(m.locations), 1)
+
+    with assert_raises(ValueError):  # delivery loc is outside model
+        m.add_shipment(pickup_location=loc1, delivery_location=loc2)
+
+    with assert_raises(ValueError):  # pickup loc is outside model
+        m.add_shipment(pickup_location=loc2, delivery_location=loc1)
+
+    # But this should work, because loc1 is created via the model and used for
+    # both locations.
+    m.add_shipment(pickup_location=loc1, delivery_location=loc1)
+    assert_equal(len(m.shipments), 1)
