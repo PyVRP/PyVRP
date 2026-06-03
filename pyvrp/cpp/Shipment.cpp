@@ -65,6 +65,10 @@ Shipment::Shipment(size_t pickupLocation,
       required(required),
       name(duplicate(name.data()))
 {
+    if (delivery.twLate < pickup.twEarly)
+        throw std::invalid_argument(
+            "delivery_tw_late must be >= pickup_tw_early.");
+
     if (std::any_of(amount.begin(), amount.end(), isNegative<Load>))
         throw std::invalid_argument("shipment amounts must be >= 0.");
 

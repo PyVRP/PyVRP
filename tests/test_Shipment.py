@@ -47,6 +47,7 @@ def test_raises_invalid_shipment_step(
         (0, 0, 0, 1, 0, 0, [], 0),  # delivery tw_early < tw_late
         (0, 0, 0, -1, 0, 0, [], 0),  # delivery tw_early < 0
         (0, 0, 0, 0, 0, -1, [], 0),  # delivery service_duration < 0
+        (10, 15, 0, 0, 5, 0, [], 0),  # delivery tw_late < pickup tw_early
         (0, 0, 0, 0, 0, 0, [-1], 0),  # amount < 0
         (0, 0, 0, 0, 0, 0, [], -1),  # prize < 0
     ],
