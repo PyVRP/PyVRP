@@ -163,6 +163,9 @@ def test_shipment_eq():
     shipment3 = Shipment(0, 1, prize=5, required=False, name="test")
     assert_(shipment1 == shipment3)  # shipment3 is the same as shipment1
 
+    assert_(shipment1 != object())
+    assert_(shipment1 != "123")
+
 
 def test_pickle():
     """
