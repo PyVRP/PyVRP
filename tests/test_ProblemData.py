@@ -342,10 +342,10 @@ def test_matrices_are_not_copies():
     assert_(dur1.base is dur2.base)
 
 
-def test_depot_client_raises_invalid_index(ok_small):
+def test_raises_when_accessing_an_invalid_index(ok_small):
     """
-    Tests that calling depot(idx) and client(idx) raises when the index is out
-    of bounds.
+    Tests that calling depot(idx), client(idx), and shipment(idx) raises when
+    the index is out of bounds.
     """
     assert_equal(ok_small.num_depots, 1)
     with assert_raises(IndexError):
@@ -354,6 +354,10 @@ def test_depot_client_raises_invalid_index(ok_small):
     assert_equal(ok_small.num_clients, 4)
     with assert_raises(IndexError):
         ok_small.client(4)
+
+    assert_equal(ok_small.num_shipments, 0)
+    with assert_raises(IndexError):
+        ok_small.shipment(0)
 
 
 @pytest.mark.parametrize(

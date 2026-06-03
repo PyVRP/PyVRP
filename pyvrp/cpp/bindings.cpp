@@ -754,10 +754,18 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("group"),
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, group))
-        .def("shipment",
-             &ProblemData::shipment,
-             py::arg("shipment"),
-             DOC(pyvrp, ProblemData, shipment))
+        .def(
+            "shipment",
+            [](ProblemData const &data, size_t shipment)
+            {
+                if (shipment >= data.numShipments())
+                    throw py::index_error();
+
+                return data.shipment(shipment);
+            },
+            py::arg("shipment"),
+            py::return_value_policy::reference_internal,
+            DOC(pyvrp, ProblemData, shipment))
         .def("vehicle_type",
              &ProblemData::vehicleType,
              py::arg("vehicle_type"),
