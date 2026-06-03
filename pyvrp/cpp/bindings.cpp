@@ -426,12 +426,13 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t)  // __setstate__
             {
-                Shipment shipment(t[0].cast<Shipment::Step>(),
-                                  t[1].cast<Shipment::Step>(),
-                                  t[2].cast<std::vector<pyvrp::Load>>(),
-                                  t[3].cast<pyvrp::Cost>(),
-                                  t[4].cast<bool>(),
-                                  t[5].cast<std::string>());
+                Shipment shipment(
+                    t[0].cast<Shipment::Step>(),            // pickup
+                    t[1].cast<Shipment::Step>(),            // delivery
+                    t[2].cast<std::vector<pyvrp::Load>>(),  // amount
+                    t[3].cast<pyvrp::Cost>(),               // prize
+                    t[4].cast<bool>(),                      // required
+                    t[5].cast<std::string>());              // name
 
                 return shipment;
             }))

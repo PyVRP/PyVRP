@@ -93,7 +93,7 @@ Shipment::Shipment(Shipment const &shipment)
       amount(shipment.amount),
       prize(shipment.prize),
       required(shipment.required),
-      name(duplicate(shipment.name))  // TODO duplicate
+      name(duplicate(shipment.name))
 {
 }
 
@@ -102,7 +102,7 @@ Shipment::Shipment(Shipment &&shipment)
       delivery(std::move(shipment.delivery)),
       amount(std::move(shipment.amount)),
       prize(shipment.prize),
-      required(shipment.prize),
+      required(shipment.required),
       name(shipment.name)  // we can steal
 {
     shipment.name = nullptr;  // stolen
