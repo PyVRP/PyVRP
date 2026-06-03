@@ -1222,3 +1222,79 @@ def test_solve_clients_in_same_location():
     assert_(best.is_feasible())
     assert_equal(best.num_clients(), 2)
     assert_equal(best.distance(), 20)  # depot loc to clients loc, and back
+
+
+def test_add_shipment_attributes():
+    """
+    Smoke test that checks, for a single shipment, that the model adds a
+    shipment whose attributes are the same as what was passed in.
+    """
+    model = Model()
+    shipment = model.add_shipment(
+        pickup_location=model.add_location(0, 0),
+        delivery_location=model.add_location(0, 0),
+        pickup_tw_early=1,
+        pickup_tw_late=2,
+        pickup_service_duration=3,
+        delivery_tw_early=4,
+        delivery_tw_late=5,
+        delivery_service_duration=6,
+        prize=8,
+        required=False,
+        name="test",
+    )
+
+    assert_equal(shipment.pickup.location, 0)
+    assert_equal(shipment.pickup.tw_early, 1)
+    assert_equal(shipment.pickup.tw_late, 2)
+    assert_equal(shipment.pickup.service_duration, 3)
+    assert_equal(shipment.delivery.location, 1)
+    assert_equal(shipment.delivery.tw_early, 4)
+    assert_equal(shipment.delivery.tw_late, 5)
+    assert_equal(shipment.delivery.service_duration, 6)
+    assert_equal(shipment.prize, 8)
+    assert_(not shipment.required)
+    assert_equal(shipment.name, "test")
+
+
+def test_model_shipment_data():
+    """
+    Tests that calling the ``data()`` member on a model with shipments returns
+    a data instance with shipments.
+    """
+    model = Model()
+    model.add_vehicle_type(num_available=1)
+
+    depot_loc = model.add_location(0, 0)
+    model.add_depot(location=depot_loc)
+
+    shipment_loc = model.add_location(0, 1)
+    shipment = model.add_shipment(shipment_loc, shipment_loc)
+
+    data = model.data()
+    assert_equal(data.num_shipments, 1)
+    assert_equal(data.shipment(0), shipment)
+    assert_equal(data.shipments(), [shipment])
+
+
+def test_model_raises_unknown_location_when_adding_shipments():
+    """
+    Tests that ``add_shipment()`` raises when provided with a location argument
+    that is not known to the model.
+    """
+    m = Model()
+
+    loc1 = m.add_location(0, 0)  # via model
+    loc2 = Location(0, 0)  # outside model
+    assert_equal(len(m.locations), 1)
+
+    with assert_raises(ValueError):  # delivery loc is outside model
+        m.add_shipment(pickup_location=loc1, delivery_location=loc2)
+
+    with assert_raises(ValueError):  # pickup loc is outside model
+        m.add_shipment(pickup_location=loc2, delivery_location=loc1)
+
+    # But this should work, because loc1 is created via the model and used for
+    # both locations.
+    m.add_shipment(pickup_location=loc1, delivery_location=loc1)
+    assert_equal(len(m.shipments), 1)

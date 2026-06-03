@@ -633,14 +633,16 @@ PYBIND11_MODULE(_pyvrp, m)
                       std::vector<VehicleType>,
                       std::vector<Matrix<pyvrp::Distance>>,
                       std::vector<Matrix<pyvrp::Duration>>,
-                      std::vector<ClientGroup>>(),
+                      std::vector<ClientGroup>,
+                      std::vector<Shipment>>(),
              py::arg("locations"),
              py::arg("clients"),
              py::arg("depots"),
              py::arg("vehicle_types"),
              py::arg("distance_matrices"),
              py::arg("duration_matrices"),
-             py::arg("groups") = py::list())
+             py::arg("groups") = py::list(),
+             py::arg("shipments") = py::list())
         .def("replace",
              &ProblemData::replace,
              py::arg("locations") = py::none(),
@@ -650,6 +652,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("distance_matrices") = py::none(),
              py::arg("duration_matrices") = py::none(),
              py::arg("groups") = py::none(),
+             py::arg("shipments") = py::none(),
              DOC(pyvrp, ProblemData, replace))
         .def_property_readonly("num_clients",
                                &ProblemData::numClients,
@@ -660,6 +663,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("num_groups",
                                &ProblemData::numGroups,
                                DOC(pyvrp, ProblemData, numGroups))
+        .def_property_readonly("num_shipments",
+                               &ProblemData::numShipments,
+                               DOC(pyvrp, ProblemData, numShipments))
         .def_property_readonly("num_locations",
                                &ProblemData::numLocations,
                                DOC(pyvrp, ProblemData, numLocations))
@@ -691,6 +697,10 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::groups,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, groups))
+        .def("shipments",
+             &ProblemData::shipments,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, shipments))
         .def("vehicle_types",
              &ProblemData::vehicleTypes,
              py::return_value_policy::reference_internal,
@@ -744,6 +754,18 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("group"),
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, group))
+        .def(
+            "shipment",
+            [](ProblemData const &data, size_t shipment)
+            {
+                if (shipment >= data.numShipments())
+                    throw py::index_error();
+
+                return data.shipment(shipment);
+            },
+            py::arg("shipment"),
+            py::return_value_policy::reference_internal,
+            DOC(pyvrp, ProblemData, shipment))
         .def("vehicle_type",
              &ProblemData::vehicleType,
              py::arg("vehicle_type"),
@@ -771,7 +793,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                       data.vehicleTypes(),
                                       data.distanceMatrices(),
                                       data.durationMatrices(),
-                                      data.groups());
+                                      data.groups(),
+                                      data.shipments());
             },
             [](py::tuple t) {  // __setstate__
                 using Locations = std::vector<Location>;
@@ -781,6 +804,7 @@ PYBIND11_MODULE(_pyvrp, m)
                 using DistMats = std::vector<pyvrp::Matrix<pyvrp::Distance>>;
                 using DurMats = std::vector<pyvrp::Matrix<pyvrp::Duration>>;
                 using Groups = std::vector<ClientGroup>;
+                using Shipments = std::vector<Shipment>;
 
                 ProblemData data(t[0].cast<Locations>(),
                                  t[1].cast<Clients>(),
@@ -788,7 +812,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                  t[3].cast<VehicleTypes>(),
                                  t[4].cast<DistMats>(),
                                  t[5].cast<DurMats>(),
-                                 t[6].cast<Groups>());
+                                 t[6].cast<Groups>(),
+                                 t[7].cast<Shipments>());
 
                 return data;
             }));
