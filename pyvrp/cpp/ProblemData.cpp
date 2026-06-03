@@ -14,6 +14,7 @@ using pyvrp::Load;
 using pyvrp::Location;
 using pyvrp::Matrix;
 using pyvrp::ProblemData;
+using pyvrp::Shipment;
 using pyvrp::VehicleType;
 
 namespace
@@ -47,6 +48,11 @@ std::vector<Client> const &ProblemData::clients() const { return clients_; }
 std::vector<Depot> const &ProblemData::depots() const { return depots_; }
 
 std::vector<ClientGroup> const &ProblemData::groups() const { return groups_; }
+
+std::vector<Shipment> const &ProblemData::shipments() const
+{
+    return shipments_;
+}
 
 std::vector<VehicleType> const &ProblemData::vehicleTypes() const
 {
@@ -88,6 +94,8 @@ size_t ProblemData::numDepots() const { return depots_.size(); }
 size_t ProblemData::numGroups() const { return groups_.size(); }
 
 size_t ProblemData::numLocations() const { return locations_.size(); }
+
+size_t ProblemData::numShipments() const { return shipments_.size(); }
 
 size_t ProblemData::numVehicleTypes() const { return vehicleTypes_.size(); }
 
@@ -173,6 +181,22 @@ void ProblemData::validate() const
         }
     }
 
+    // Shipment checks.
+    for (auto const &shipment : shipments_)
+    {
+        if (shipment.pickup.location >= numLocations())
+            throw std::invalid_argument(
+                "Shipment pickup references invalid location.");
+
+        if (shipment.delivery.location >= numLocations())
+            throw std::invalid_argument(
+                "Shipment delivery references invalid location.");
+
+        if (shipment.amount.size() != numLoadDimensions_)
+            throw std::invalid_argument(
+                "Shipment has inconsistent amount size.");
+    }
+
     // Vehicle type checks.
     if (vehicleTypes_.empty())
         throw std::invalid_argument("Expected at least one vehicle type.");
@@ -250,7 +274,8 @@ ProblemData::replace(std::optional<std::vector<Location>> &locations,
                      std::optional<std::vector<VehicleType>> &vehicleTypes,
                      std::optional<std::vector<Matrix<Distance>>> &distMats,
                      std::optional<std::vector<Matrix<Duration>>> &durMats,
-                     std::optional<std::vector<ClientGroup>> &groups) const
+                     std::optional<std::vector<ClientGroup>> &groups,
+                     std::optional<std::vector<Shipment>> &shipments) const
 {
     return {locations.value_or(locations_),
             clients.value_or(clients_),
@@ -258,7 +283,8 @@ ProblemData::replace(std::optional<std::vector<Location>> &locations,
             vehicleTypes.value_or(vehicleTypes_),
             distMats.value_or(dists_),
             durMats.value_or(durs_),
-            groups.value_or(groups_)};
+            groups.value_or(groups_),
+            shipments.value_or(shipments_)};
 }
 
 ProblemData::ProblemData(std::vector<Location> locations,
@@ -267,7 +293,8 @@ ProblemData::ProblemData(std::vector<Location> locations,
                          std::vector<VehicleType> vehicleTypes,
                          std::vector<Matrix<Distance>> distMats,
                          std::vector<Matrix<Duration>> durMats,
-                         std::vector<ClientGroup> groups)
+                         std::vector<ClientGroup> groups,
+                         std::vector<Shipment> shipments)
     : dists_(std::move(distMats)),
       durs_(std::move(durMats)),
       locations_(std::move(locations)),
@@ -275,6 +302,7 @@ ProblemData::ProblemData(std::vector<Location> locations,
       depots_(std::move(depots)),
       vehicleTypes_(std::move(vehicleTypes)),
       groups_(std::move(groups)),
+      shipments_(std::move(shipments)),
       numVehicles_(std::accumulate(vehicleTypes_.begin(),
                                    vehicleTypes_.end(),
                                    0,
@@ -293,7 +321,13 @@ ProblemData::ProblemData(std::vector<Location> locations,
           || std::any_of(depots_.begin(), depots_.end(), hasTimeWindow<Depot>)
           || std::any_of(vehicleTypes_.begin(),
                          vehicleTypes_.end(),
-                         hasTimeWindow<VehicleType>))
+                         hasTimeWindow<VehicleType>)
+          || std::any_of(shipments_.begin(),
+                         shipments_.end(),
+                         [](Shipment const &shipment) {
+                             return hasTimeWindow(shipment.pickup)
+                                    || hasTimeWindow(shipment.delivery);
+                         }))
 {
     validate();
 }
