@@ -13,8 +13,6 @@ using pyvrp::Duration;
 using pyvrp::Load;
 using pyvrp::Route;
 
-using Client = size_t;
-
 Route::ScheduledActivity::ScheduledActivity(Activity activity,
                                             size_t trip,
                                             Duration startTime,
@@ -269,8 +267,8 @@ void Route::setOtherStatistics(ProblemData const &data)
 }
 
 Route::Route(ProblemData const &data,
-             std::vector<Client> const &visits,
-             VehicleType vehicleType)
+             std::vector<size_t> const &visits,
+             size_t vehicleType)
 {
     std::vector<Activity> activities;
     activities.reserve(visits.size());
@@ -283,11 +281,11 @@ Route::Route(ProblemData const &data,
 
 Route::Route(ProblemData const &data,
              Activities const &activities,
-             size_t vehType)
+             size_t vehicleType)
     : delivery_(data.numLoadDimensions(), 0),
       pickup_(data.numLoadDimensions(), 0),
       excessLoad_(data.numLoadDimensions(), 0),
-      vehicleType_(vehType)
+      vehicleType_(vehicleType)
 {
     validate(data, activities);
     setSchedule(data, activities);  // duration statistics and route schedule

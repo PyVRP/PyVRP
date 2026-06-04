@@ -19,9 +19,6 @@ namespace pyvrp
  */
 class Route
 {
-    using Client = size_t;
-    using Depot = size_t;
-    using VehicleType = size_t;
     using Activities = std::vector<Activity>;
 
     void validate(ProblemData const &data, Activities const &activities) const;
@@ -104,7 +101,7 @@ private:
     Cost fixedVehicleCost_ = 0;     // Fixed cost of vehicle used on this route
     Cost prizes_ = 0;               // Total value of prizes on this route
 
-    VehicleType vehicleType_;  // Type of vehicle
+    size_t vehicleType_;  // Type of vehicle
 
 public:
     [[nodiscard]] bool empty() const;
@@ -262,17 +259,17 @@ public:
     /**
      * Index of the type of vehicle used on this route.
      */
-    [[nodiscard]] VehicleType vehicleType() const;
+    [[nodiscard]] size_t vehicleType() const;
 
     /**
      * Index of the route's starting depot.
      */
-    [[nodiscard]] Depot startDepot() const;
+    [[nodiscard]] size_t startDepot() const;
 
     /**
      * Index of the route's ending depot.
      */
-    [[nodiscard]] Depot endDepot() const;
+    [[nodiscard]] size_t endDepot() const;
 
     /**
      * Returns whether this route is feasible.
@@ -306,12 +303,12 @@ public:
     Route(Route &&other) = default;
 
     Route(ProblemData const &data,
-          std::vector<Client> const &visits,
-          VehicleType vehicleType);
+          std::vector<size_t> const &visits,
+          size_t vehicleType);
 
     Route(ProblemData const &data,
           Activities const &activities,
-          VehicleType vehicleType);
+          size_t vehicleType);
 
     // This constructor does *no* validation. Useful when unserialising objects.
     Route(Schedule schedule,
@@ -331,7 +328,7 @@ public:
           Duration releaseTime,
           Duration slack,
           Cost prizes,
-          VehicleType vehicleType);
+          size_t vehicleType);
 };
 
 template <>  // specialisation for pyvrp::Route
