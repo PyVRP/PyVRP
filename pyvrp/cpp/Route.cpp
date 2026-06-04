@@ -92,8 +92,9 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
     auto ds = DurationSegment::merge({end, 0}, {vehData, vehData.twLate});
     size_t nextLoc = end.location;
     for (auto it = activities.rbegin(); it != activities.rend(); ++it)
-    {
-        if (it->isDepot())
+        switch (it->type())
+        {
+        case Activity::ActivityType::DEPOT:
         {
             auto const &depot = data.depot(it->idx());
 
@@ -108,19 +109,48 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
 
             ds = ds.finaliseFront();
             nextLoc = depot.location;
+            break;
         }
-        else
-        {
-            auto const &clientData = data.client(it->idx());
-            service_ += clientData.serviceDuration;
 
-            auto const edgeDur = durations(clientData.location, nextLoc);
+        case Activity::ActivityType::CLIENT:
+        {
+            auto const &client = data.client(it->idx());
+            service_ += client.serviceDuration;
+
+            auto const edgeDur = durations(client.location, nextLoc);
             travel_ += edgeDur;
 
-            ds = DurationSegment::merge(edgeDur, {clientData}, ds);
-            nextLoc = clientData.location;
+            ds = DurationSegment::merge(edgeDur, {client}, ds);
+            nextLoc = client.location;
+            break;
         }
-    }
+
+        case Activity::ActivityType::PICKUP:
+        {
+            auto const &pickup = data.shipment(it->idx()).pickup;
+            service_ += pickup.serviceDuration;
+
+            auto const edgeDur = durations(pickup.location, nextLoc);
+            travel_ += edgeDur;
+
+            ds = DurationSegment::merge(edgeDur, {pickup}, ds);
+            nextLoc = pickup.location;
+            break;
+        }
+
+        case Activity::ActivityType::DELIVERY:
+        {
+            auto const &delivery = data.shipment(it->idx()).delivery;
+            service_ += delivery.serviceDuration;
+
+            auto const edgeDur = durations(delivery.location, nextLoc);
+            travel_ += edgeDur;
+
+            ds = DurationSegment::merge(edgeDur, {delivery}, ds);
+            nextLoc = delivery.location;
+            break;
+        }
+        }
 
     auto const &start = data.depot(vehData.startDepot);
     auto const edgeDur = durations(start.location, nextLoc);
@@ -168,7 +198,9 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
 
     size_t prevLoc = start.location;
     for (size_t tripIdx = 0; auto const &activity : activities)
-        if (activity.isDepot())
+        switch (activity.type())
+        {
+        case Activity::ActivityType::DEPOT:
         {
             auto const releaseTime = releaseTimes[++tripIdx];
 
@@ -182,19 +214,53 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
                    depot.serviceDuration);
 
             prevLoc = depot.location;
+            break;
         }
-        else
+
+        case Activity::ActivityType::CLIENT:
         {
-            auto const &clientData = data.client(activity.idx());
-            now += durations(prevLoc, clientData.location);
+            auto const &client = data.client(activity.idx());
+            now += durations(prevLoc, client.location);
 
             handle(activity,
                    tripIdx,
-                   clientData.twEarly,
-                   clientData.twLate,
-                   clientData.serviceDuration);
+                   client.twEarly,
+                   client.twLate,
+                   client.serviceDuration);
 
-            prevLoc = clientData.location;
+            prevLoc = client.location;
+            break;
+        }
+
+        case Activity::ActivityType::PICKUP:
+        {
+            auto const &pickup = data.shipment(activity.idx()).pickup;
+            now += durations(prevLoc, pickup.location);
+
+            handle(activity,
+                   tripIdx,
+                   pickup.twEarly,
+                   pickup.twLate,
+                   pickup.serviceDuration);
+
+            prevLoc = pickup.location;
+            break;
+        }
+
+        case Activity::ActivityType::DELIVERY:
+        {
+            auto const &delivery = data.shipment(activity.idx()).delivery;
+            now += durations(prevLoc, delivery.location);
+
+            handle(activity,
+                   tripIdx,
+                   delivery.twEarly,
+                   delivery.twLate,
+                   delivery.serviceDuration);
+
+            prevLoc = delivery.location;
+            break;
+        }
         }
 
     now += durations(prevLoc, end.location);
@@ -214,9 +280,26 @@ void Route::setDistance(ProblemData const &data)
     for (size_t idx = 1; idx != schedule_.size(); ++idx)
     {
         auto const &activity = schedule_[idx];
-        auto const toLoc = activity.isDepot()
-                               ? data.depot(activity.idx()).location
-                               : data.client(activity.idx()).location;
+
+        auto toLoc = frmLoc;
+        switch (activity.type())
+        {
+        case Activity::ActivityType::DEPOT:
+            toLoc = data.depot(activity.idx()).location;
+            break;
+
+        case Activity::ActivityType::CLIENT:
+            toLoc = data.client(activity.idx()).location;
+            break;
+
+        case Activity::ActivityType::PICKUP:
+            toLoc = data.shipment(activity.idx()).pickup.location;
+            break;
+
+        case Activity::ActivityType::DELIVERY:
+            toLoc = data.shipment(activity.idx()).delivery.location;
+            break;
+        };
 
         distance_ += distances(frmLoc, toLoc);
         frmLoc = toLoc;
@@ -241,15 +324,28 @@ void Route::setLoad(ProblemData const &data)
         {
             auto const &activity = schedule_[idx];
 
-            if (activity.isDepot())
+            switch (activity.type())
+            {
+            case Activity::ActivityType::DEPOT:
             {
                 delivery_[dim] += ls.delivery();
                 pickup_[dim] += ls.pickup();
                 ls = ls.finalise(vehData.capacity[dim]);
+                break;
             }
 
-            if (activity.isClient())
+            case Activity::ActivityType::CLIENT:
                 ls = LoadSegment::merge(ls, {data.client(activity.idx()), dim});
+                break;
+
+            case Activity::ActivityType::PICKUP:
+                // TODO
+                break;
+
+            case Activity::ActivityType::DELIVERY:
+                // TODO
+                break;
+            }
         }
 
         excessLoad_[dim] = ls.excessLoad(vehData.capacity[dim]);
@@ -262,8 +358,13 @@ void Route::setOtherStatistics(ProblemData const &data)
     fixedVehicleCost_ = vehData.fixedCost;
 
     for (auto const &activity : schedule_)
+    {
         if (activity.isClient())
             prizes_ += data.client(activity.idx()).prize;
+
+        if (activity.isPickup())
+            prizes_ += data.shipment(activity.idx()).prize;
+    }
 }
 
 Route::Route(ProblemData const &data,

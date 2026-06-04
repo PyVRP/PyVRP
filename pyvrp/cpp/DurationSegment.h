@@ -157,6 +157,11 @@ public:
     DurationSegment(Depot const &depot, Duration const serviceDuration);
 
     /**
+     * Construct from attributes of the given shipment step.
+     */
+    DurationSegment(Shipment::Step const &step);
+
+    /**
      * Construct from attributes of the given vehicle type and latest finish.
      */
     DurationSegment(VehicleType const &vehicleType, Duration const twLate);

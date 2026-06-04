@@ -25,7 +25,7 @@ namespace pyvrp
  *     Data instance.
  * routes
  *     Route list to use. Can be a list of :class:`~Route` objects, or a lists
- *     of client visits. In case of the latter, all routes are assigned
+ *     of client indices. In case of the latter, all routes are assigned
  *     vehicles of the first type. That need not be a feasible assignment!
  *
  * Raises
@@ -35,7 +35,8 @@ namespace pyvrp
  *     particular when the number of routes in the ``routes`` argument exceeds
  *     :py:attr:`~ProblemData.num_vehicles`, when an empty route has been
  *     passed as part of ``routes``, when too many vehicles of a particular
- *     type have been used, or when a client is visited more than once.
+ *     type have been used, or when a client or shipment is served more than
+ *     once.
  */
 class Solution
 {
