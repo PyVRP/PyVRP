@@ -822,3 +822,24 @@ def test_schedule_trip_count(ok_small_multiple_trips):
     assert_equal(route[1].trip, 0)  # client, so no increment
     assert_equal(route[2].trip, 1)  # reload depot, increment
     assert_equal(route[3].trip, 2)  # end depot, increment
+
+
+@pytest.mark.parametrize(
+    "activities",
+    [
+        ([Activity("L1")]),  # only pickup
+        ([Activity("U1")]),  # only delivery
+        ([Activity("L1"), Activity("U1"), Activity("U1")]),  # two deliveries
+        ([Activity("U1"), Activity("L1")]),  # delivery before pickup
+    ],
+)
+def test_raises_unpaired_shipment(
+    small_shipments,
+    activities: list[Activity],
+):
+    """
+    Tests that the route constructor raises for invalid or unpaired shipments
+    in the given activity list.
+    """
+    with assert_raises(ValueError):
+        Route(small_shipments, activities, 0)

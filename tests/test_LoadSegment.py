@@ -63,8 +63,8 @@ def test_excess_load_capacity():
     """
     Tests that excess load is correctly evaluated and merged.
     """
-    before = LoadSegment(5, 5, 5, 30)
-    after = LoadSegment(2, 2, 2, 5)
+    before = LoadSegment(5, 5, 5, excess_load=30)
+    after = LoadSegment(2, 2, 2, excess_load=5)
     merged = LoadSegment.merge(before, after)
 
     # There's seven load on this segment, but 30 excess load from some part of
@@ -83,7 +83,7 @@ def test_finalise(capacity: int, exp_excess: int):
     """
     Tests that excess load is correctly tracked by finalised load segments.
     """
-    segment = LoadSegment(5, 5, 5, 20)  # 20 excess load, and 5 segment load
+    segment = LoadSegment(5, 5, 5, 0, 0, 20)  # 20 excess, and 5 segment load
     finalised = segment.finalise(capacity)
 
     # Finalised segments track cumulative excess load - the rest resets.
@@ -103,3 +103,43 @@ def test_str():
     assert_("pickup=3" in str(segment))
     assert_("load=5" in str(segment))
     assert_("excess_load=7" in str(segment))
+
+
+def test_mixed_clients_and_shipments():
+    """
+    Tests that the load segment's attributes are correct when evaluating a
+    segment containing a mix of clients and shipments.
+    """
+    # Pickup shipments 1 and 2. Shipment 1 has load 5, shipment 2 load 3.
+    pickup1 = LoadSegment(0, 0, 0, QSum=5, QMax=5)
+    pickup2 = LoadSegment(0, 0, 0, QSum=3, QMax=3)
+    merged = LoadSegment.merge(pickup1, pickup2)
+    assert_equal(merged.QSum(), 8)
+    assert_equal(merged.QMax(), 8)
+    assert_equal(merged.load(), 8)
+
+    # Now add a delivery for client 1, adding 5 load from the depot to this
+    # client. That brings the total load to 13.
+    client1 = LoadSegment(5, 0, 0)
+    merged = LoadSegment.merge(merged, client1)
+    assert_equal(merged.load(), 13)
+
+    # Add a pickup for client 2, adding five load from this client to the
+    # depot. That should not increase load further.
+    client2 = LoadSegment(0, 5, 0)
+    merged = LoadSegment.merge(merged, client2)
+    assert_equal(merged.load(), 13)
+
+    # Now deliver the first shipment.
+    delivery1 = LoadSegment(0, 0, 0, QSum=-5, QMax=0)
+    merged = LoadSegment.merge(merged, delivery1)
+    assert_equal(merged.load(), 13)
+
+    # Now finalise the segment. This should clear all client load, but not
+    # affect shipment load since those do not go through depots and are thus
+    # not finalised.
+    finalised = merged.finalise(capacity=11)
+    assert_equal(finalised.QSum(), 3)
+    assert_equal(finalised.QMax(), 8)
+    assert_equal(finalised.load(), 8)
+    assert_equal(finalised.excess_load(capacity=11), 2)

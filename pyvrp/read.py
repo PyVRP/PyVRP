@@ -17,6 +17,7 @@ from pyvrp._pyvrp import (
     Location,
     ProblemData,
     Route,
+    Shipment,
     Solution,
     VehicleType,
 )
@@ -330,6 +331,17 @@ class _InstanceParser:
         # in keeping them.
         return [group for group in raw_groups if len(group) > 1]
 
+    def shipments(self) -> np.ndarray:
+        if "pickup_and_delivery" not in self.instance:
+            return np.array([])
+
+        # Round demand, time windows, and service duration. Skip the pickup
+        # and delivery index fields; we need those unchanged.
+        shipments = self.instance["pickup_and_delivery"]
+        shipments[:, :4] = self.round_func(shipments[:, :4])
+
+        return shipments
+
 
 class _ProblemDataBuilder:
     """
@@ -347,6 +359,7 @@ class _ProblemDataBuilder:
         vehicle_types = self._vehicle_types()
         distance_matrices = self._distance_matrices()
         groups = self._groups()
+        shipments = self._shipments()
 
         return ProblemData(
             locations=locations,
@@ -358,6 +371,7 @@ class _ProblemDataBuilder:
             # instead assume duration == distance.
             duration_matrices=distance_matrices,
             groups=groups,
+            shipments=shipments,
         )
 
     def _locations(self) -> list[Location]:
@@ -540,6 +554,33 @@ class _ProblemDataBuilder:
     def _groups(self) -> list[ClientGroup]:
         groups = self.parser.mutually_exclusive_groups()
         return [ClientGroup(group) for group in groups]
+
+    def _shipments(self) -> list[Shipment]:
+        num_depots = self.parser.num_depots
+        data = self.parser.shipments()
+
+        shipments = []
+        for idx, pickup_data in enumerate(data):
+            *_, pick_idx, deliv_idx = pickup_data
+
+            if pick_idx == 0 and deliv_idx > 0:  # parse PD pair
+                delivery_data = data[deliv_idx - num_depots]
+                shipments.append(
+                    Shipment(
+                        pickup_location=idx,
+                        delivery_location=deliv_idx - num_depots,
+                        pickup_tw_early=pickup_data[1],
+                        pickup_tw_late=pickup_data[2],
+                        pickup_service_duration=pickup_data[3],
+                        delivery_tw_early=delivery_data[1],
+                        delivery_tw_late=delivery_data[2],
+                        delivery_service_duration=delivery_data[3],
+                        amount=[pickup_data[0]],
+                        name=f"{pick_idx} -> {deliv_idx}",
+                    )
+                )
+
+        return shipments
 
     def _allowed2profile(self) -> dict[tuple[int, ...], int]:
         allowed_clients2profile_idx = {}

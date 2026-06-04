@@ -1177,16 +1177,25 @@ PYBIND11_MODULE(_pyvrp, m)
              DOC(pyvrp, CostEvaluator, cost));
 
     py::class_<LoadSegment>(m, "LoadSegment", DOC(pyvrp, LoadSegment))
-        .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load, pyvrp::Load>(),
+        .def(py::init<pyvrp::Load,
+                      pyvrp::Load,
+                      pyvrp::Load,
+                      pyvrp::Load,
+                      pyvrp::Load,
+                      pyvrp::Load>(),
              py::arg("delivery"),
              py::arg("pickup"),
              py::arg("load"),
+             py::arg("QSum") = 0,
+             py::arg("QMax") = 0,
              py::arg("excess_load") = 0)
         .def("delivery",
              &LoadSegment::delivery,
              DOC(pyvrp, LoadSegment, delivery))
         .def("pickup", &LoadSegment::pickup, DOC(pyvrp, LoadSegment, pickup))
         .def("load", &LoadSegment::load, DOC(pyvrp, LoadSegment, load))
+        .def("QSum", &LoadSegment::QSum, DOC(pyvrp, LoadSegment, QSum))
+        .def("QMax", &LoadSegment::QMax, DOC(pyvrp, LoadSegment, QMax))
         .def("excess_load",
              &LoadSegment::excessLoad,
              py::arg("capacity"),

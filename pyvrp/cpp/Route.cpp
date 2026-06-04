@@ -53,6 +53,7 @@ void Route::validate(ProblemData const &data,
     auto const &vehData = data.vehicleType(vehicleType_);
 
     size_t numTrips = 1;
+    std::vector<size_t> shipmentVisits(data.numShipments(), 0);
     for (auto const &activity : activities)  // some quick checks up front
     {
         if (activity.isDepot())
@@ -73,7 +74,46 @@ void Route::validate(ProblemData const &data,
             msg << "Client " << activity << " is not understood.";
             throw std::invalid_argument(msg.str());
         }
+
+        if (activity.isShipment() && activity.idx() >= data.numShipments())
+        {
+            std::ostringstream msg;
+            msg << "Shipment " << activity << " is not understood.";
+            throw std::invalid_argument(msg.str());
+        }
+
+        if (activity.isPickup())  // check if it's not been visited before and
+        {                         // increase visit counter
+            if (shipmentVisits[activity.idx()] != 0)
+            {
+                std::ostringstream msg;
+                msg << "Pickup " << activity << "must happen before delivery.";
+                throw std::invalid_argument(msg.str());
+            }
+
+            shipmentVisits[activity.idx()]++;
+        }
+
+        if (activity.isDelivery())  // check that it's been visited once before
+        {                           // and decrease visit counter
+            if (shipmentVisits[activity.idx()] != 1)
+            {
+                std::ostringstream msg;
+                msg << "Delivery " << activity << "must follow after pickup.";
+                throw std::invalid_argument(msg.str());
+            }
+
+            shipmentVisits[activity.idx()]--;
+        }
     }
+
+    for (size_t idx = 0; idx != data.numShipments(); ++idx)
+        if (shipmentVisits[idx] != 0)  // all shipment visits should match
+        {                              // within this route, so zero count
+            std::ostringstream msg;
+            msg << "Shipment " << idx << " has unpaired pickup and delivery.";
+            throw std::invalid_argument(msg.str());
+        }
 
     if (numTrips > vehData.maxTrips())
         throw std::invalid_argument("Vehicle cannot perform this many trips.");
@@ -339,11 +379,10 @@ void Route::setLoad(ProblemData const &data)
                 break;
 
             case Activity::ActivityType::PICKUP:
-                // TODO
-                break;
-
+                [[fallthrough]];
             case Activity::ActivityType::DELIVERY:
-                // TODO
+                ls = LoadSegment::merge(
+                    ls, {data.shipment(activity.idx()), activity.type(), dim});
                 break;
             }
         }
