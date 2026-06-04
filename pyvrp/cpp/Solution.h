@@ -39,10 +39,6 @@ namespace pyvrp
  */
 class Solution
 {
-    using Client = size_t;
-    using Depot = size_t;
-    using VehicleType = size_t;
-
     using Routes = std::vector<Route>;
     using Unplanned = std::vector<Activity>;
 
@@ -247,7 +243,7 @@ public:
     // This constructs from the given lists of client indices. Assumes all
     // routes are intended to use vehicles of the first vehicle type.
     Solution(ProblemData const &data,
-             std::vector<std::vector<Client>> const &routes);
+             std::vector<std::vector<size_t>> const &routes);
 
     // This constructs from the given list of Routes.
     Solution(ProblemData const &data, Routes routes);

@@ -206,7 +206,7 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
 }
 
 Solution::Solution(ProblemData const &data,
-                   std::vector<std::vector<Client>> const &routes)
+                   std::vector<std::vector<size_t>> const &routes)
 {
     Routes transformedRoutes;
     transformedRoutes.reserve(routes.size());
