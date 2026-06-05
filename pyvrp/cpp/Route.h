@@ -101,7 +101,8 @@ private:
     Cost fixedVehicleCost_ = 0;     // Fixed cost of vehicle used on this route
     Cost prizes_ = 0;               // Total value of prizes on this route
 
-    size_t vehicleType_;  // Type of vehicle
+    size_t vehicleType_;       // Type of vehicle
+    size_t numShipments_ = 0;  // Number of shipments in this route
 
 public:
     [[nodiscard]] bool empty() const;
@@ -115,6 +116,11 @@ public:
      * Returns the number of clients in this route.
      */
     [[nodiscard]] size_t numClients() const;
+
+    /**
+     * Returns the number of shipments in this route.
+     */
+    [[nodiscard]] size_t numShipments() const;
 
     /**
      * Returns the number of depots in this route.
@@ -328,7 +334,8 @@ public:
           Duration releaseTime,
           Duration slack,
           Cost prizes,
-          size_t vehicleType);
+          size_t vehicleType,
+          size_t numShipments);
 };
 
 template <>  // specialisation for pyvrp::Route

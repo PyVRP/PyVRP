@@ -843,3 +843,55 @@ def test_raises_unpaired_shipment(
     """
     with assert_raises(ValueError):
         Route(small_shipments, activities, 0)
+
+
+def test_route_with_shipments(small_shipments):
+    """
+    Tests the distance, duration and load attributes of a short route with
+    three shipments.
+    """
+    activities = [
+        Activity("L0"),
+        Activity("L1"),
+        Activity("L2"),
+        Activity("U2"),
+        Activity("U1"),
+        Activity("U0"),
+    ]
+
+    route = Route(small_shipments, activities, 0)
+    assert_equal(route.num_clients(), 0)
+    assert_equal(route.num_shipments(), 3)
+
+    # The follow edges are used:
+    #  - D0 -> L0: 2109,
+    #  - L0 -> L1: 9811,
+    #  - L1 -> L2: 11200,
+    #  - L2 -> U2: 6198,
+    #  - U2 -> U1: 8249,
+    #  - U1 -> U0: 5780,
+    #  - U0 -> D0: 3785,
+    # for a total distance of 47_132.
+    assert_equal(route.distance(), 47_132)
+
+    # There is time warp on the section between L0 and L1. We arrive at L0 as
+    # early as we can, and begin service when its time window opens at 12_800.
+    # Service takes 900, and we depart at 13_700 for L1. We arrive there at
+    # 13_700 + 9_811 = 23_511, after its time window closes at 21_900. So we
+    # have 23_511 - 21_900 = 1_611 time warp.
+    assert_equal(route.time_warp(), 1_611)
+
+    # Route duration is travel duration (47_132, same as distance), 6 * 900
+    # service, and wait duration at L2 and U2. We leave L1 at 22_800, and
+    # arrive at L2 at 22_800 + 11_200 = 34_000, before its time window opens at
+    # 47_800. So we wait for 47_800 - 34_000 = 13_800. We leave L2 at 48_700,
+    # and arrive at U2 at 48_700 + 6_198 = 54_898, before its time window opens
+    # at 55_300. Thus, we have an additional 55_300 - 54_898 = 402 wait
+    # duration.
+    assert_equal(route.duration(), 47_132 + 6 * 900 + 13800 + 402)
+
+    # L0 loads 20, L1 loads 30, and L2 loads 20. The vehicle can only carry 50,
+    # so there is 70 - 50 = 20 excess load.
+    assert_(route.has_excess_load())
+    assert_equal(small_shipments.vehicle_type(0).capacity, [50])
+    assert_equal(route.excess_load(), [20])

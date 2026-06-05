@@ -871,6 +871,9 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("vehicle_type"))
         .def("num_clients", &Route::numClients, DOC(pyvrp, Route, numClients))
         .def("num_depots", &Route::numDepots, DOC(pyvrp, Route, numDepots))
+        .def("num_shipments",
+             &Route::numShipments,
+             DOC(pyvrp, Route, numShipments))
         .def("num_trips", &Route::numTrips, DOC(pyvrp, Route, numTrips))
         .def("fixed_vehicle_cost",
              &Route::fixedVehicleCost,
@@ -969,7 +972,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.releaseTime(),
                                       route.slack(),
                                       route.prizes(),
-                                      route.vehicleType());
+                                      route.vehicleType(),
+                                      route.numShipments());
             },
             [](py::tuple t) {  // __setstate__
                 using Schedule = std::vector<Route::ScheduledActivity>;
@@ -992,7 +996,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[14].cast<pyvrp::Duration>(),          // release time
                     t[15].cast<pyvrp::Duration>(),          // slack
                     t[16].cast<pyvrp::Cost>(),              // prizes
-                    t[17].cast<size_t>());                  // vehicle type
+                    t[17].cast<size_t>(),                   // vehicle type
+                    t[18].cast<size_t>());                  // num shipments
 
                 return route;
             }))

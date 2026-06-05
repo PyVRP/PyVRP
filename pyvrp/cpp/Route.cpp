@@ -402,7 +402,10 @@ void Route::setOtherStatistics(ProblemData const &data)
             prizes_ += data.client(activity.idx()).prize;
 
         if (activity.isPickup())
+        {
             prizes_ += data.shipment(activity.idx()).prize;
+            numShipments_++;
+        }
     }
 }
 
@@ -451,7 +454,8 @@ Route::Route(Schedule schedule,
              Duration releaseTime,
              Duration slack,
              Cost prizes,
-             size_t vehicleType)
+             size_t vehicleType,
+             size_t numShipments)
     : schedule_(std::move(schedule)),
       distance_(distance),
       distanceCost_(distanceCost),
@@ -469,15 +473,23 @@ Route::Route(Schedule schedule,
       releaseTime_(releaseTime),
       slack_(slack),
       prizes_(prizes),
-      vehicleType_(vehicleType)
+      vehicleType_(vehicleType),
+      numShipments_(numShipments)
 {
 }
 
-bool Route::empty() const { return numClients() == 0; }
+bool Route::empty() const { return numClients() + numShipments() == 0; }
 
 size_t Route::size() const { return schedule_.size(); }
 
-size_t Route::numClients() const { return size() - numDepots(); }
+size_t Route::numClients() const
+{
+    // All activities that are not shipments (pickup and delivery are separate
+    // activities) or depots.
+    return size() - 2 * numShipments() - numDepots();
+}
+
+size_t Route::numShipments() const { return numShipments_; }
 
 size_t Route::numDepots() const { return numTrips() + 1; }
 

@@ -137,7 +137,12 @@ Load LoadSegment::excessLoad(Load capacity) const
 
 LoadSegment LoadSegment::finalise(Load capacity) const
 {
-    return {0, 0, 0, QSum_, QMax_, excessLoad(capacity)};
+    return {0,
+            0,
+            0,
+            QSum_,
+            QMax_,
+            excessLoad_ + std::max<Load>(load_ - capacity, 0)};
 }
 
 LoadSegment::LoadSegment(Load delivery,

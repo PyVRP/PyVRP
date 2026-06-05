@@ -157,4 +157,4 @@ def small_shipments():
     """
     Fixture that returns a small instance with four shipments.
     """
-    return read("data/SmallShipments.txt", round_func="exact")
+    return read("data/SmallShipments.txt")

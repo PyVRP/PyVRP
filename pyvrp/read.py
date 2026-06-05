@@ -576,7 +576,7 @@ class _ProblemDataBuilder:
                         delivery_tw_late=delivery_data[2],
                         delivery_service_duration=delivery_data[3],
                         amount=[pickup_data[0]],
-                        name=f"{pick_idx} -> {deliv_idx}",
+                        name=f"{delivery_data[-2]} -> {deliv_idx}",
                     )
                 )
 
