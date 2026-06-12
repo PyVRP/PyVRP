@@ -150,3 +150,11 @@ def ok_small_overtime(ok_small):
     )
 
     return ok_small.replace(vehicle_types=[veh_type])
+
+
+@pytest.fixture(scope="session")
+def small_shipments():
+    """
+    Fixture that returns a small instance with four shipments.
+    """
+    return read("data/SmallShipments.txt")
