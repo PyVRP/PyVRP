@@ -483,7 +483,7 @@ Route::Route(Schedule schedule,
 {
 }
 
-bool Route::empty() const { return numClients() + numShipments() == 0; }
+bool Route::empty() const { return numClients() == 0 && numShipments() == 0; }
 
 size_t Route::size() const { return schedule_.size(); }
 
