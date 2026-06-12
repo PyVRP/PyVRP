@@ -675,6 +675,7 @@ def test_reading_small_shipments():
     """
     data = read("data/SmallShipments.txt")
     assert_equal(data.num_shipments, 4)
+    assert_equal(data.num_clients, 0)
 
     shipments = data.shipments()
 

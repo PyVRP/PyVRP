@@ -165,7 +165,14 @@ class _InstanceParser:
 
     @property
     def num_clients(self) -> int:
-        return self.num_locations - self.num_depots
+        return self.num_locations - self.num_depots - self.num_shipments
+
+    @property
+    def num_shipments(self) -> int:
+        if "pickup_and_delivery" not in self.instance:
+            return 0
+
+        return len(self.instance["pickup_and_delivery"]) - self.num_depots
 
     @property
     def num_vehicles(self) -> int:

@@ -27,6 +27,7 @@ void Solution::evaluate(ProblemData const &data)
     {
         // Whole solution statistics.
         numClients_ += route.numClients();
+        numShipments_ += route.numShipments();
         prizes_ += route.prizes();
         distance_ += route.distance();
         distanceCost_ += route.distanceCost();
@@ -45,7 +46,10 @@ void Solution::evaluate(ProblemData const &data)
     uncollectedPrizes_ = allPrizes - prizes_;
 }
 
-bool Solution::empty() const { return numClients() == 0 && numRoutes() == 0; }
+bool Solution::empty() const
+{
+    return numClients() == 0 && numShipments() == 0 && numRoutes() == 0;
+}
 
 size_t Solution::numRoutes() const { return routes_.size(); }
 
@@ -60,9 +64,13 @@ size_t Solution::numTrips() const
 
 size_t Solution::numClients() const { return numClients_; }
 
+size_t Solution::numShipments() const { return numShipments_; }
+
 size_t Solution::numMissingClients() const { return numMissingClients_; }
 
 size_t Solution::numMissingGroups() const { return numMissingGroups_; }
+
+size_t Solution::numMissingShipments() const { return numMissingShipments_; }
 
 Routes const &Solution::routes() const { return routes_; }
 
@@ -80,7 +88,11 @@ bool Solution::isFeasible() const
 
 bool Solution::isComplete() const
 {
-    return numMissingClients_ == 0 && numMissingGroups_ == 0;
+    // clang-format off
+    return numMissingClients_ == 0
+        && numMissingGroups_ == 0
+        && numMissingShipments_ == 0;
+    // clang-format on
 }
 
 bool Solution::hasExcessLoad() const
@@ -124,7 +136,8 @@ bool Solution::operator==(Solution const &other) const
                               && distanceCost_ == other.distanceCost_
                               && durationCost_ == other.durationCost_
                               && timeWarp_ == other.timeWarp_
-                              && numClients_ == other.numClients_;
+                              && numClients_ == other.numClients_
+                              && numShipments_ == other.numShipments_;
     // clang-format on
 
     if (!attributeChecks)
@@ -225,7 +238,8 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         throw std::runtime_error(msg);
     }
 
-    DynamicBitset isVisited(data.numClients());
+    DynamicBitset isClientVisited(data.numClients());
+    DynamicBitset isShipmentVisited(data.numShipments());
     std::vector<size_t> usedVehicles(data.numVehicleTypes(), 0);
     for (auto const &route : routes_)
     {
@@ -237,23 +251,45 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
         usedVehicles[route.vehicleType()]++;
         for (auto const &activity : route)
         {
-            if (!activity.isClient())
-                continue;
-
-            auto const client = activity.idx();
-            if (isVisited[client])
+            switch (activity.type())
             {
-                std::ostringstream msg;
-                msg << "Client " << client << " is visited more than once.";
-                throw std::runtime_error(msg.str());
+            case Activity::ActivityType::CLIENT:
+            {
+                auto const client = activity.idx();
+                if (isClientVisited[client])
+                {
+                    std::ostringstream msg;
+                    msg << "Client " << client << " is visited more than once.";
+                    throw std::runtime_error(msg.str());
+                }
+
+                isClientVisited[client] = true;
+                break;
             }
 
-            isVisited[client] = true;
+            case Activity::ActivityType::PICKUP:
+            {
+                auto const shipment = activity.idx();
+                if (isShipmentVisited[shipment])  // then we've seen this
+                {                                 // pickup before
+                    std::ostringstream msg;
+                    msg << "Shipment " << shipment
+                        << " is visited more than once.";
+                    throw std::runtime_error(msg.str());
+                }
+
+                isShipmentVisited[shipment] = true;
+                break;
+            }
+
+            default:
+                break;
+            }
         }
     }
 
     for (size_t client = 0; client != data.numClients(); ++client)
-        if (!isVisited[client])
+        if (!isClientVisited[client])
         {
             auto const &clientData = data.client(client);
             numMissingClients_ += clientData.required;
@@ -261,12 +297,24 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
             unplanned_.emplace_back(Activity::ActivityType::CLIENT, client);
         }
 
+    for (size_t shipment = 0; shipment != data.numShipments(); ++shipment)
+    {
+        if (!isShipmentVisited[shipment])
+        {
+            auto const &shipmentData = data.shipment(shipment);
+            numMissingShipments_ += shipmentData.required;
+
+            unplanned_.emplace_back(Activity::ActivityType::PICKUP, shipment);
+            unplanned_.emplace_back(Activity::ActivityType::DELIVERY, shipment);
+        }
+    }
+
     for (size_t idx = 0; idx != data.numGroups(); ++idx)
     {
         auto const &group = data.group(idx);
         assert(group.mutuallyExclusive);
 
-        auto const inSol = [&](auto client) { return isVisited[client]; };
+        auto const inSol = [&](auto client) { return isClientVisited[client]; };
         auto const count = std::count_if(group.begin(), group.end(), inSol);
         if (count > 1)
         {
@@ -293,8 +341,10 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
 }
 
 Solution::Solution(size_t numClients,
+                   size_t numShipments,
                    size_t numMissingClients,
                    size_t numMissingGroups,
+                   size_t numMissingShipments,
                    Distance distance,
                    Cost distanceCost,
                    Duration duration,
@@ -308,8 +358,10 @@ Solution::Solution(size_t numClients,
                    Duration timeWarp,
                    Routes routes)
     : numClients_(numClients),
+      numShipments_(numShipments),
       numMissingClients_(numMissingClients),
       numMissingGroups_(numMissingGroups),
+      numMissingShipments_(numMissingShipments),
       distance_(distance),
       distanceCost_(distanceCost),
       duration_(duration),

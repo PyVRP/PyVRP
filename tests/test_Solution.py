@@ -896,3 +896,40 @@ def test_unplanned(ok_small, visits: list[int], unplanned: list[Activity]):
     sol = Solution(ok_small, [visits])
     assert_equal(sol.num_missing_clients(), len(unplanned))  # all required
     assert_equal(sol.unplanned(), unplanned)
+
+
+def test_shipments(small_shipments):
+    """
+    Tests a small solution with two singleton shipment routes.
+    """
+    route1 = Route(small_shipments, [Activity("L1"), Activity("U1")], 0)
+    route2 = Route(small_shipments, [Activity("L2"), Activity("U2")], 0)
+    sol = Solution(small_shipments, [route1, route2])
+
+    # There should be two shipments, but no clients.
+    assert_equal(sol.num_clients(), 0)
+    assert_equal(sol.num_shipments(), 2)
+
+    # The solution is not complete - this instance has two more required
+    # shipments that are not in the solution.
+    assert_equal(sol.num_missing_shipments(), 2)
+    assert_(not sol.is_complete())
+    assert_(not sol.is_feasible())
+
+    # We can see these missing shipments in the unplanned activity list.
+    assert_equal(
+        sol.unplanned(),
+        [Activity("L0"), Activity("U0"), Activity("L3"), Activity("U3")],
+    )
+
+
+def test_raises_multiple_shipment_visits(small_shipments):
+    """
+    Tests that the solution constructor does not allow the same shipment to
+    be visited multiple times.
+    """
+    route = Route(small_shipments, [Activity("L0"), Activity("U0")], 0)
+    assert_(route.is_feasible())
+
+    with assert_raises(RuntimeError):  # cannot visit shipment 0 twice
+        Solution(small_shipments, [route, route])

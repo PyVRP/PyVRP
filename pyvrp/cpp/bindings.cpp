@@ -1043,12 +1043,18 @@ PYBIND11_MODULE(_pyvrp, m)
         .def("num_clients",
              &Solution::numClients,
              DOC(pyvrp, Solution, numClients))
+        .def("num_shipments",
+             &Solution::numShipments,
+             DOC(pyvrp, Solution, numShipments))
         .def("num_missing_clients",
              &Solution::numMissingClients,
              DOC(pyvrp, Solution, numMissingClients))
         .def("num_missing_groups",
              &Solution::numMissingGroups,
              DOC(pyvrp, Solution, numMissingGroups))
+        .def("num_missing_shipments",
+             &Solution::numMissingShipments,
+             DOC(pyvrp, Solution, numMissingShipments))
         .def("routes",
              &Solution::routes,
              py::return_value_policy::reference_internal,
@@ -1107,8 +1113,10 @@ PYBIND11_MODULE(_pyvrp, m)
             [](Solution const &sol) {  // __getstate__
                 // Returns a tuple that completely encodes the solution's state.
                 return py::make_tuple(sol.numClients(),
+                                      sol.numShipments(),
                                       sol.numMissingClients(),
                                       sol.numMissingGroups(),
+                                      sol.numMissingShipments(),
                                       sol.distance(),
                                       sol.distanceCost(),
                                       sol.duration(),
@@ -1126,21 +1134,23 @@ PYBIND11_MODULE(_pyvrp, m)
                 using Routes = std::vector<Route>;
 
                 Solution sol(
-                    t[0].cast<size_t>(),                    // num clients
-                    t[1].cast<size_t>(),                    // num miss clients
-                    t[2].cast<size_t>(),                    // num miss groups
-                    t[3].cast<pyvrp::Distance>(),           // distance
-                    t[4].cast<pyvrp::Cost>(),               // distance cost
-                    t[5].cast<pyvrp::Duration>(),           // duration
-                    t[6].cast<pyvrp::Duration>(),           // overtime
-                    t[7].cast<pyvrp::Cost>(),               // duration cost
-                    t[8].cast<pyvrp::Distance>(),           // excess distance
-                    t[9].cast<std::vector<pyvrp::Load>>(),  // excess load
-                    t[10].cast<pyvrp::Cost>(),              // fixed veh cost
-                    t[11].cast<pyvrp::Cost>(),              // prizes
-                    t[12].cast<pyvrp::Cost>(),              // uncollected
-                    t[13].cast<pyvrp::Duration>(),          // time warp
-                    t[14].cast<Routes>());                  // routes
+                    t[0].cast<size_t>(),            // num clients
+                    t[1].cast<size_t>(),            // num shipments
+                    t[2].cast<size_t>(),            // num miss clients
+                    t[3].cast<size_t>(),            // num miss groups
+                    t[4].cast<size_t>(),            // num miss shipment
+                    t[5].cast<pyvrp::Distance>(),   // distance
+                    t[6].cast<pyvrp::Cost>(),       // distance cost
+                    t[7].cast<pyvrp::Duration>(),   // duration
+                    t[8].cast<pyvrp::Duration>(),   // overtime
+                    t[9].cast<pyvrp::Cost>(),       // duration cost
+                    t[10].cast<pyvrp::Distance>(),  // excess distance
+                    t[11].cast<std::vector<pyvrp::Load>>(),  // excess load
+                    t[12].cast<pyvrp::Cost>(),               // fixed veh cost
+                    t[13].cast<pyvrp::Cost>(),               // prizes
+                    t[14].cast<pyvrp::Cost>(),               // uncollected
+                    t[15].cast<pyvrp::Duration>(),           // time warp
+                    t[16].cast<Routes>());                   // routes
 
                 return sol;
             }))
