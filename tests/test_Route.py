@@ -839,6 +839,7 @@ def test_schedule_trip_count(ok_small_multiple_trips):
         ([Activity("L1")]),  # only pickup
         ([Activity("U1")]),  # only delivery
         ([Activity("L1"), Activity("U1"), Activity("U1")]),  # two deliveries
+        ([Activity("L1"), Activity("L1")]),  # two pickups
         ([Activity("U1"), Activity("L1")]),  # delivery before pickup
     ],
 )
