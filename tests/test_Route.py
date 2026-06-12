@@ -785,6 +785,15 @@ def test_raises_invalid_depot_or_client(ok_small_multiple_trips):
     Route(data, [Activity("C3"), Activity("D0")], vehicle_type=0)
 
 
+def test_raises_invalid_shipment(small_shipments):
+    """
+    Tests that the route constructor raises for invalid shipments activities.
+    """
+    assert_equal(small_shipments.num_shipments, 4)
+    with assert_raises(ValueError):  # L4 and U4 do not exist
+        Route(small_shipments, [Activity("L4"), Activity("U4")], 0)
+
+
 def test_schedule_str(ok_small):
     """
     Tests ScheduledActivity's __str__ implementation.
