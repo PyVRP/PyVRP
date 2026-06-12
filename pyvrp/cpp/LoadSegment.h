@@ -20,11 +20,11 @@ namespace pyvrp
  * Parameters
  * ----------
  * initial
- *     TODO
+ *     Initial load on the segment, loaded at the last depot visit.
  * delta
- *     TODO
+ *     Load delta since last depot visit.
  * increase
- *     Maximum load on this segment.
+ *     Maximum load increase since last depot visit.
  * excess_load
  *     Cumulative excess load on this segment, possibly from earlier trips.
  */
@@ -48,22 +48,24 @@ public:
     [[nodiscard]] inline LoadSegment finalise(Load capacity) const;
 
     /**
-     * TODO
+     * Initial load on this segment. This is the amount loaded at the last
+     * depot visit.
      */
     [[nodiscard]] Load initial() const;
 
     /**
-     * TODO
+     * This is the amount by which load has maximally increased since the last
+     * depot visit.
      */
     [[nodiscard]] Load increase() const;
 
     /**
-     * TODO
+     * Actual load delta since the last depot visit.
      */
     [[nodiscard]] Load delta() const;
 
     /**
-     * Returns the maximum load encountered on this segment.
+     * Returns the maximum load encountered since the last depot visit.
      */
     [[nodiscard]] inline Load load() const;
 
@@ -73,7 +75,7 @@ public:
      * Parameters
      * ----------
      * capacity
-     *     Segment capacity, if any.
+     *     Vehicle capacity.
      */
     [[nodiscard]] inline Load excessLoad(Load capacity) const;
 
