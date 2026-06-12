@@ -358,7 +358,10 @@ void Route::setLoad(ProblemData const &data)
         LoadSegment ls;
 
         if (vehData.initialLoad[dim] > 0)  // start with initial vehicle load
+        {
             ls = {vehData, dim};
+            pickup_[dim] += vehData.initialLoad[dim];
+        }
 
         for (size_t idx = 1; idx != schedule_.size(); ++idx)
         {
@@ -367,16 +370,18 @@ void Route::setLoad(ProblemData const &data)
             switch (activity.type())
             {
             case Activity::ActivityType::DEPOT:
-            {
-                delivery_[dim] += ls.delivery();
-                pickup_[dim] += ls.pickup();
                 ls = ls.finalise(vehData.capacity[dim]);
                 break;
-            }
 
             case Activity::ActivityType::CLIENT:
-                ls = LoadSegment::merge(ls, {data.client(activity.idx()), dim});
+            {
+                auto const &client = data.client(activity.idx());
+                ls = LoadSegment::merge(ls, {client, dim});
+
+                delivery_[dim] += client.delivery[dim];
+                pickup_[dim] += client.pickup[dim];
                 break;
+            }
 
             case Activity::ActivityType::PICKUP:
                 [[fallthrough]];

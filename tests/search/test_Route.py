@@ -602,14 +602,15 @@ def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
         before = route.load_before(idx)
         between_before = route.load_between(0, idx)
         assert_equal(before.load(), between_before.load())
-        assert_equal(before.pickup(), between_before.pickup())
-        assert_equal(before.delivery(), between_before.delivery())
+        assert_equal(before.initial(), between_before.initial())
+        assert_equal(before.increase(), between_before.increase())
+        assert_equal(before.delta(), between_before.delta())
 
         after = route.load_after(idx)
         between_after = route.load_between(idx, len(route) - 1)
-        assert_equal(after.load(), between_after.load())
-        assert_equal(after.pickup(), between_after.pickup())
-        assert_equal(after.delivery(), between_after.delivery())
+        assert_equal(after.initial(), between_after.initial())
+        assert_equal(after.increase(), between_after.increase())
+        assert_equal(after.delta(), between_after.delta())
 
 
 @pytest.mark.parametrize(
@@ -669,15 +670,17 @@ def test_load_between_equal_to_before_after_when_one_is_depot_different_dims(
             between_before = route.load_between(0, idx, dim)
 
             assert_equal(before.load(), between_before.load())
-            assert_equal(before.pickup(), between_before.pickup())
-            assert_equal(before.delivery(), between_before.delivery())
+            assert_equal(before.initial(), between_before.initial())
+            assert_equal(before.delta(), between_before.delta())
+            assert_equal(before.increase(), between_before.increase())
 
             after = route.load_after(idx, dim)
             between_after = route.load_between(idx, len(route) - 1, dim)
 
             assert_equal(after.load(), between_after.load())
-            assert_equal(after.pickup(), between_after.pickup())
-            assert_equal(after.delivery(), between_after.delivery())
+            assert_equal(after.initial(), between_after.initial())
+            assert_equal(after.delta(), between_after.delta())
+            assert_equal(after.increase(), between_after.increase())
 
 
 def test_distance_different_profiles(ok_small_two_profiles):
@@ -907,11 +910,10 @@ def test_route_raises_too_many_trips(ok_small_multiple_trips):
         route.append(Node("D0"))
 
 
-def test_bug_reload_swaps_pickup_delivery_swap(small_spd):
+def test_bug_reload_swaps_load_arguments(small_spd):
     """
     Tests a bug that materialised when reloading, where the reload depot
-    segment accidentally swapped delivery and pickup arguments, causing a
-    wrong load evaluation.
+    segment accidentally swapped arguments, causing a wrong load evaluation.
     """
     veh_type = small_spd.vehicle_type(0)
     new_type = veh_type.replace(reload_depots=[0], max_reloads=2)
@@ -923,12 +925,12 @@ def test_bug_reload_swaps_pickup_delivery_swap(small_spd):
     assert_equal(client3.delivery[0] + client4.delivery[0], 34)
     assert_equal(client3.pickup[0] + client4.pickup[0], 50)
 
-    assert_equal(route.load_before(5).delivery(), 34)
-    assert_equal(route.load_before(5).pickup(), 50)
+    assert_equal(route.load_before(5).initial(), 34)
+    assert_equal(route.load_before(5).delta(), 16)
     assert_equal(route.load_before(5).load(), 50)
 
-    assert_equal(route.load_after(2).delivery(), 34)
-    assert_equal(route.load_after(2).pickup(), 50)
+    assert_equal(route.load_after(2).initial(), 34)
+    assert_equal(route.load_after(2).delta(), 16)
     assert_equal(route.load_after(2).load(), 50)
 
 

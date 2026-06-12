@@ -26,7 +26,7 @@ namespace pyvrp
  *
  * Duration segments can be efficiently concatenated, and track statistics
  * about route and trip duration and time warp resulting from visiting clients
- * in the concatenated order.
+ * and shipments in the concatenated order.
  *
  * Parameters
  * ----------

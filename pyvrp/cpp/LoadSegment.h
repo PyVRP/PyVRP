@@ -10,31 +10,29 @@
 namespace pyvrp
 {
 /**
- * LoadSegment(delivery: int, pickup: int, load: int, excess_load: int = 0)
+ * LoadSegment(initial: int, delta: int, increase: int, excess_load: int = 0)
  *
  * Creates a new load segment for delivery and pickup loads in a single
  * dimension. These load segments can be efficiently concatenated, and track
- * statistics about capacity violations resulting from visiting clients in the
- * concatenated order.
+ * statistics about capacity violations resulting from visiting clients and
+ * shipments in the concatenated order.
  *
  * Parameters
  * ----------
- * delivery
- *     Total delivery amount on this segment.
- * pickup
- *     Total pickup amount on this segment.
- * load
+ * initial
+ *     TODO
+ * delta
+ *     TODO
+ * increase
  *     Maximum load on this segment.
  * excess_load
  *     Cumulative excess load on this segment, possibly from earlier trips.
  */
 class LoadSegment
 {
-    Load delivery_ = 0;  // of client demand on current trip
-    Load pickup_ = 0;    // of client demand on current trip
-    Load load_ = 0;      // on current trip
-    Load QSum_ = 0;
-    Load QMax_ = 0;
+    Load initial_ = 0;     // loaded at last depot visit
+    Load delta_ = 0;       // delta since last depot visit
+    Load increase_ = 0;    // additional load added during the trip
     Load excessLoad_ = 0;  // cumulative excess load over other trips in segment
 
 public:
@@ -50,30 +48,24 @@ public:
     [[nodiscard]] inline LoadSegment finalise(Load capacity) const;
 
     /**
-     * Returns the delivery amount, that is, the total amount of load delivered
-     * to clients on this segment.
+     * TODO
      */
-    [[nodiscard]] Load delivery() const;
+    [[nodiscard]] Load initial() const;
 
     /**
-     * Returns the amount picked up from clients on this segment.
+     * TODO
      */
-    [[nodiscard]] Load pickup() const;
+    [[nodiscard]] Load increase() const;
+
+    /**
+     * TODO
+     */
+    [[nodiscard]] Load delta() const;
 
     /**
      * Returns the maximum load encountered on this segment.
      */
-    [[nodiscard]] Load load() const;
-
-    /**
-     * TODO
-     */
-    [[nodiscard]] Load QSum() const;
-
-    /**
-     * TODO
-     */
-    [[nodiscard]] Load QMax() const;
+    [[nodiscard]] inline Load load() const;
 
     /**
      * Returns the load violation on this segment.
@@ -100,11 +92,9 @@ public:
     LoadSegment(VehicleType const &vehicleType, size_t dimension);
 
     // Construct from raw data.
-    inline LoadSegment(Load delivery,
-                       Load pickup,
-                       Load load,
-                       Load QSum = 0,
-                       Load QMax = 0,
+    inline LoadSegment(Load initial,
+                       Load delta,
+                       Load increase,
                        Load excessLoad = 0);
 
     // Move or copy construct from the other load segment.
@@ -121,41 +111,31 @@ LoadSegment LoadSegment::merge(LoadSegment const &first,
 {
     // See Vidal et al. (2014) for details. This function implements equations
     // (9) -- (11) of https://doi.org/10.1016/j.ejor.2013.09.045.
-    return {
-        first.delivery_ + second.delivery_,
-        first.pickup_ + second.pickup_,
-        std::max(first.load_ + second.delivery_, second.load_ + first.pickup_),
-        first.QSum_ + second.QSum_,
-        std::max(first.QMax_, first.QSum_ + second.QMax_),
-        first.excessLoad_ + second.excessLoad_};
+    return {first.initial_ + second.initial_,
+            first.delta_ + second.delta_,
+            std::max(first.increase_, first.delta_ + second.increase_),
+            first.excessLoad_ + second.excessLoad_};
 }
+
+Load LoadSegment::load() const { return initial_ + increase_; }
 
 Load LoadSegment::excessLoad(Load capacity) const
 {
-    return excessLoad_ + std::max<Load>(QMax_ + load_ - capacity, 0);
+    return excessLoad_ + std::max<Load>(load() - capacity, 0);
 }
 
 LoadSegment LoadSegment::finalise(Load capacity) const
 {
-    return {0,
-            0,
-            0,
-            QSum_,
-            QMax_,
-            excessLoad_ + std::max<Load>(load_ - capacity, 0)};
+    return {0, 0, 0, excessLoad(capacity)};
 }
 
-LoadSegment::LoadSegment(Load delivery,
-                         Load pickup,
-                         Load load,
-                         Load QSum,
-                         Load QMax,
+LoadSegment::LoadSegment(Load initial,
+                         Load delta,
+                         Load increase,
                          Load excessLoad)
-    : delivery_(delivery),
-      pickup_(pickup),
-      load_(load),
-      QSum_(QSum),
-      QMax_(QMax),
+    : initial_(initial),
+      delta_(delta),
+      increase_(increase),
       excessLoad_(excessLoad)
 {
 }
