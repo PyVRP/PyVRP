@@ -87,7 +87,7 @@ void Route::validate(ProblemData const &data,
             if (shipmentVisits[activity.idx()] != 0)
             {
                 std::ostringstream msg;
-                msg << "Pickup " << activity << "must happen before delivery.";
+                msg << "Pickup " << activity << " must happen before delivery.";
                 throw std::invalid_argument(msg.str());
             }
 
@@ -99,7 +99,7 @@ void Route::validate(ProblemData const &data,
             if (shipmentVisits[activity.idx()] != 1)
             {
                 std::ostringstream msg;
-                msg << "Delivery " << activity << "must follow after pickup.";
+                msg << "Delivery " << activity << " must follow after pickup.";
                 throw std::invalid_argument(msg.str());
             }
 

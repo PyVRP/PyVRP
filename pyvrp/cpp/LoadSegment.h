@@ -111,8 +111,9 @@ public:
 LoadSegment LoadSegment::merge(LoadSegment const &first,
                                LoadSegment const &second)
 {
-    // See Vidal et al. (2014) for details. This function implements equations
-    // (9) -- (11) of https://doi.org/10.1016/j.ejor.2013.09.045.
+    // Loosely based on Hiermann and Schiffer (2026), equations (12) -- (15).
+    // See https://doi.org/10.1016/j.ejor.2026.01.037. We add initial client
+    // deliveries, pickup quantities, and excess load.
     return {first.initial_ + second.initial_,
             first.delta_ + second.delta_,
             std::max(first.increase_, first.delta_ + second.increase_),
