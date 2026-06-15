@@ -133,17 +133,17 @@ def test_group_skip_duplicates():
 
     # Group is not yet in the solution. Inserting it via the first client
     # yields a prize value, and is thus an improving move.
-    node = solution.nodes[0]
+    client = solution.clients[0]
     cost_eval = CostEvaluator([], 0, 0)
-    assert_equal(op.evaluate(node, route[0], cost_eval), (-1, True))
-    op.apply(node, route[0])
+    assert_equal(op.evaluate(client, route[0], cost_eval), (-1, True))
+    op.apply(client, route[0])
     route.update()
 
     # Trying this again, now with the second client (in the same group) is not
     # possible, because the group is already in the solution.
-    node = solution.nodes[1]
+    client = solution.clients[1]
     cost_eval = CostEvaluator([], 0, 0)
-    assert_equal(op.evaluate(node, route[0], cost_eval), (0, False))
+    assert_equal(op.evaluate(client, route[0], cost_eval), (0, False))
 
 
 def test_insert_in_empty_routes_considers_fixed_vehicle_cost():
