@@ -9,8 +9,8 @@ If you benefit from our work, please consider supporting us in one of the follow
 
 * Sponsoring the project on `GitHub <https://github.com/sponsors/PyVRP>`_.
 * Funding the development of new features.
-  Please contact us at `info@routinglab.tech <mailto:info@routinglab.tech>`_ if you wish to fund a specific feature.
-* Using `RoutingLab <https://routinglab.tech/>`_'s products or services.
+  Please contact us at `info@appliedrouting.com <mailto:info@appliedrouting.com>`_ if you wish to fund a specific feature.
+* Using `Applied Routing <https://appliedrouting.com/>`_'s products or services.
 
 .. important::
 
