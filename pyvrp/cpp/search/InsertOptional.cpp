@@ -23,9 +23,9 @@ std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
         if (group.required)  // then we have already inserted a client in the LS
             return std::make_pair(0, false);
 
-        for (auto const client : group)            // if any client is already
-            if (solution_->nodes[client].route())  // in solution we cannot
-                return std::make_pair(0, false);   // insert another
+        for (auto const client : group)              // if any client is already
+            if (solution_->clients[client].route())  // in solution we cannot
+                return std::make_pair(0, false);     // insert another
     }
 
     auto *route = V->route();

@@ -54,7 +54,7 @@ void PerturbationManager::perturb(Solution &solution,
     // set of promising nodes for further (local search) improvement.
     searchSpace.unmarkAllPromising();
 
-    DynamicBitset perturbed = {solution.nodes.size()};
+    DynamicBitset perturbed = {solution.clients.size()};
     auto const perturb = [&](auto *node, PerturbType action)
     {
         // This node has already been touched by a previous perturbation, so
@@ -90,7 +90,7 @@ void PerturbationManager::perturb(Solution &solution,
     // removal or insertion counts as one perturbation.
     for (auto const uClient : searchSpace.clientOrder())
     {
-        auto *U = &solution.nodes[uClient];
+        auto *U = &solution.clients[uClient];
         auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
         perturb(U, action);
 
@@ -99,7 +99,7 @@ void PerturbationManager::perturb(Solution &solution,
 
         for (auto const vClient : searchSpace.neighboursOf(uClient))
         {
-            auto *V = &solution.nodes[vClient];
+            auto *V = &solution.clients[vClient];
             perturb(V, action);
 
             if (!movesLeft)

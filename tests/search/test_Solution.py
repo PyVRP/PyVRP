@@ -33,25 +33,25 @@ def test_loading_twice_in_a_row(ok_small):
     assert_equal(search_sol.unload(), pyvrp_sol)
 
 
-def test_nodes_routes_access(ok_small):
+def test_clients_routes_access(ok_small):
     """
-    Tests nodes and routes access.
+    Tests clients and routes access.
     """
     pyvrp_sol = pyvrp.Solution(ok_small, [[0, 1], [2, 3]])
     search_sol = Solution(ok_small)
     search_sol.load(pyvrp_sol)
 
-    # There should be #clients nodes, and #vehicles routes.
-    assert_equal(len(search_sol.nodes), ok_small.num_clients)
+    # There should be #clients clients, and #vehicles routes.
+    assert_equal(len(search_sol.clients), ok_small.num_clients)
     assert_equal(len(search_sol.routes), ok_small.num_vehicles)
 
-    for client in [0, 1]:  # [0, 1] are in the first route
-        assert_equal(search_sol.nodes[client].activity, Activity(f"C{client}"))
-        assert_equal(search_sol.nodes[client].route, search_sol.routes[0])
+    for idx in [0, 1]:  # [0, 1] are in the first route
+        assert_equal(search_sol.clients[idx].activity, Activity(f"C{idx}"))
+        assert_equal(search_sol.clients[idx].route, search_sol.routes[0])
 
-    for client in [2, 3]:  # [2, 3] are in the second route
-        assert_equal(search_sol.nodes[client].activity, Activity(f"C{client}"))
-        assert_equal(search_sol.nodes[client].route, search_sol.routes[1])
+    for idx in [2, 3]:  # [2, 3] are in the second route
+        assert_equal(search_sol.clients[idx].activity, Activity(f"C{idx}"))
+        assert_equal(search_sol.clients[idx].route, search_sol.routes[1])
 
 
 def test_insert_required(ok_small):
@@ -67,5 +67,5 @@ def test_insert_required(ok_small):
     # requiring an insert. Inserting should fail: it's not worth it, since the
     # client has no prize. However, inserting should succeed when required.
     sol = Solution(data)
-    assert_(not sol.insert(sol.nodes[1], search_space, cost_eval, False))
-    assert_(sol.insert(sol.nodes[1], search_space, cost_eval, True))
+    assert_(not sol.insert(sol.clients[1], search_space, cost_eval, False))
+    assert_(sol.insert(sol.clients[1], search_space, cost_eval, True))

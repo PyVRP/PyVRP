@@ -445,7 +445,8 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
-        .def_readonly("nodes", &Solution::nodes)
+        .def_readonly("clients", &Solution::clients)
+        .def_readonly("shipments", &Solution::shipments)
         .def_readonly("routes", &Solution::routes)
         .def("load", &Solution::load, py::arg("solution"))
         .def("unload", &Solution::unload)

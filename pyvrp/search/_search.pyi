@@ -137,7 +137,8 @@ class LocalSearch:
     def shuffle(self, rng: RandomNumberGenerator) -> None: ...
 
 class Solution:
-    nodes: list[Node]
+    clients: list[Node]
+    shipments: list[tuple[Node, Node]]
     routes: list[Route]
     def __init__(self, data: ProblemData) -> None: ...
     def load(self, solution: pyvrp.Solution) -> None: ...
