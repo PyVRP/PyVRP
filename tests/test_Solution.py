@@ -933,3 +933,15 @@ def test_raises_multiple_shipment_visits(small_shipments):
 
     with assert_raises(RuntimeError):  # cannot visit shipment 0 twice
         Solution(small_shipments, [route, route])
+
+
+def test_random_sol_with_shipments(small_shipments):
+    """
+    Tests constructing a random solution for an instance with shipments.
+    """
+    for seed in range(10):
+        rng = RandomNumberGenerator(seed=seed)
+        sol = Solution.make_random(small_shipments, rng)
+        assert_equal(sol.num_shipments(), 4)
+        assert_equal(sol.num_missing_shipments(), 0)
+        assert_(sol.is_complete())

@@ -153,48 +153,70 @@ bool Solution::operator==(Solution const &other) const
 
 Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
 {
-    // Add all required and randomly selected optional clients. For required
-    // groups we insert a random client, for optional groups we choose randomly
-    // whether to insert at all.
-    std::vector<size_t> clients;
-    clients.reserve(data.numClients());
+    // Add all required and randomly selected optional client and pickup
+    // activities. For required groups we insert a random client, for optional
+    // groups we choose randomly whether to insert at all.
+    std::vector<Activity> activities;
+    activities.reserve(data.numClients() + data.numShipments());
 
     for (auto const &group : data.groups())  // first handle groups
         if (group.required || rng.rand() < 0.5)
         {
-            auto const &groupMembers = group.clients();
-            auto const idx = rng.randint(groupMembers.size());
-            clients.push_back(groupMembers[idx]);
+            auto const &members = group.clients();
+            auto const idx = rng.randint(members.size());
+            activities.emplace_back(Activity::ActivityType::CLIENT,
+                                    members[idx]);
         }
 
     for (size_t idx = 0; idx != data.numClients(); ++idx)
     {
-        auto const &clientData = data.client(idx);
-        if (clientData.group)  // already handled groups above, skip here
+        auto const &client = data.client(idx);
+        if (client.group)  // already handled groups above, skip here
             continue;
 
-        if (clientData.required || rng.rand() < 0.5)
-            clients.push_back(idx);
+        if (client.required || rng.rand() < 0.5)
+            activities.emplace_back(Activity::ActivityType::CLIENT, idx);
     }
 
-    // Shuffle clients to create random routes.
-    rng.shuffle(clients.begin(), clients.end());
+    for (size_t idx = 0; idx != data.numShipments(); ++idx)
+    {
+        auto const &shipment = data.shipment(idx);
 
-    // Distribute clients evenly over the routes: the total number of
-    // clients per vehicle, with an adjustment in case the division is not
-    // perfect and there are not enough vehicles for single-client routes.
+        if (shipment.required || rng.rand() < 0.5)
+            activities.emplace_back(Activity::ActivityType::PICKUP, idx);
+    }
+
+    // Shuffle the activities to create random routes.
+    rng.shuffle(activities.begin(), activities.end());
+
+    // Distribute activities evenly over the routes: the total number of
+    // activities per vehicle, with an adjustment in case the division is not
+    // perfect and there are not enough vehicles for singleton routes.
     auto const numVehicles = data.numVehicles();
-    auto const numClients = clients.size();
-    auto const perVehicle = std::max<size_t>(numClients / numVehicles, 1);
+    auto const numActivities = activities.size();
+    auto const perVehicle = std::max<size_t>(numActivities / numVehicles, 1);
     auto const adjustment
-        = numClients > numVehicles && numClients % numVehicles != 0;
+        = numActivities > numVehicles && numActivities % numVehicles != 0;
     auto const perRoute = perVehicle + adjustment;
-    auto const numRoutes = (numClients + perRoute - 1) / perRoute;
+    auto const numRoutes = (numActivities + perRoute - 1) / perRoute;
 
     std::vector<std::vector<Activity>> routes(numRoutes);
-    for (size_t idx = 0; idx != numClients; ++idx)
-        routes[idx / perRoute].emplace_back(Activity::ActivityType::CLIENT,
-                                            clients[idx]);
+    for (size_t idx = 0; idx != numActivities; ++idx)
+    {
+        auto const &activity = activities[idx];
+        auto &route = routes[idx / perRoute];
+
+        if (activity.isClient())
+            route.emplace_back(activity);
+
+        if (activity.isPickup())  // then we insert the pickup somewhere in the
+        {                         // route, and emplace the delivery at the end
+            auto const pos = rng.randint(route.size() + 1);
+            route.insert(route.begin() + pos, activity);
+            route.emplace_back(Activity::ActivityType::DELIVERY,
+                               activity.idx());
+        }
+    }
 
     std::vector<size_t> vehTypes;
     vehTypes.reserve(data.numVehicles());
