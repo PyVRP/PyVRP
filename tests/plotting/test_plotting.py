@@ -185,3 +185,16 @@ def test_plot_solution_shipments(small_shipments):
     solution = Solution(small_shipments, [route1, route2])
     plotting.plot_solution(solution, small_shipments)
     plotting.plot_solution(solution, small_shipments, plot_locations=True)
+
+
+@img_comp(["plot_solution_unplanned_shipments"], **IMG_KWARGS)
+def test_plot_solution_unplanned_shipments(small_shipments):
+    """
+    Tests ``plot_solution`` on a solution with missing shipments. Those should
+    also be displayed.
+    """
+    route = Route(small_shipments, [Activity("L3"), Activity("U3")], 0)
+    solution = Solution(small_shipments, [route])
+    assert_equal(len(solution.unplanned()), 6)  # three missing shipments
+
+    plotting.plot_solution(solution, small_shipments, plot_locations=True)
