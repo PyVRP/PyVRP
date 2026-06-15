@@ -29,7 +29,7 @@ def test_plot_solution():
     sol = read_solution("data/RC208.sol", data)
 
     plotting.plot_solution(sol, data)
-    plotting.plot_solution(sol, data, plot_clients=True)
+    plotting.plot_solution(sol, data, plot_locations=True)
 
 
 @img_comp(["plot_solution_multiple_depots"], **IMG_KWARGS)
@@ -64,7 +64,7 @@ def test_plot_solution_multiple_trips(ok_small_multiple_trips):
 def test_plot_solution_optional_clients(ok_small_prizes):
     """
     Tests that plot_solution() correctly displays unvisited locations when the
-    instance contains optional clients and ``plot_clients`` is True.
+    instance contains optional clients and ``plot_locations`` is True.
     """
     routes = [
         Route(ok_small_prizes, [1, 2], vehicle_type=0),
@@ -73,7 +73,7 @@ def test_plot_solution_optional_clients(ok_small_prizes):
     plotting.plot_solution(
         Solution(ok_small_prizes, routes),
         ok_small_prizes,
-        plot_clients=True,
+        plot_locations=True,
     )
 
 
@@ -148,3 +148,53 @@ def test_plot_demands_raises_for_out_of_bounds_load_dimension():
 
     with assert_raises(ValueError):
         plotting.plot_demands(data)
+
+
+@img_comp(["plot_route_schedule_shipments"], **IMG_KWARGS)
+def test_plot_route_schedule_shipments(small_shipments):
+    """
+    Tests ``plot_route_schedule`` on a route with shipments.
+    """
+    activities = map(Activity, ["L0", "L1", "U0", "L2", "U1", "U2"])
+    route = Route(small_shipments, activities, 0)
+    plotting.plot_route_schedule(small_shipments, route)
+
+
+@img_comp(["plot_coordinates_shipments"], **IMG_KWARGS)
+def test_plot_coordinates_shipments(small_shipments):
+    """
+    Tests ``plot_coordinates`` on an instance with shipments.
+    """
+    plotting.plot_coordinates(small_shipments)
+
+
+@img_comp(
+    ["plot_solution_shipments", "plot_solution_shipment_locations"],
+    **IMG_KWARGS,
+)
+def test_plot_solution_shipments(small_shipments):
+    """
+    Tests ``plot_solution`` on an instance with shipments.
+    """
+    activities1 = map(Activity, ["L0", "L1", "U0", "L2", "U1", "U2"])
+    route1 = Route(small_shipments, activities1, 0)
+
+    activities2 = map(Activity, ["L3", "U3"])
+    route2 = Route(small_shipments, activities2, 0)
+
+    solution = Solution(small_shipments, [route1, route2])
+    plotting.plot_solution(solution, small_shipments)
+    plotting.plot_solution(solution, small_shipments, plot_locations=True)
+
+
+@img_comp(["plot_solution_unplanned_shipments"], **IMG_KWARGS)
+def test_plot_solution_unplanned_shipments(small_shipments):
+    """
+    Tests ``plot_solution`` on a solution with missing shipments. Those should
+    also be displayed.
+    """
+    route = Route(small_shipments, [Activity("L3"), Activity("U3")], 0)
+    solution = Solution(small_shipments, [route])
+    assert_equal(len(solution.unplanned()), 6)  # three missing shipments
+
+    plotting.plot_solution(solution, small_shipments, plot_locations=True)
