@@ -40,12 +40,12 @@ If it has not, please open a new issue in the repository, using the "Feature req
 Professional support
 --------------------
 
-PyVRP is maintained by `RoutingLab <https://routinglab.tech>`_, a startup developing next-generation route optimisation software.
-RoutingLab provides the following services:
+PyVRP is maintained by `Applied Routing <https://appliedrouting.com>`_, a startup developing next-generation route optimisation software.
+Applied Routing provides the following services:
 
 - **Consulting:** Expert guidance on using PyVRP effectively, including problem modelling and solver performance tuning.
-- **Feature development:** We develop features that align with RoutingLab's product roadmap and prioritise features that receive funding from users.
+- **Feature development:** We develop features that align with Applied Routing's product roadmap and prioritise features that receive funding from users.
   Browse `the list of fundable features <https://github.com/PyVRP/PyVRP/issues?q=sort%3Aupdated-desc%20is%3Aissue%20is%3Aopen%20label%3A%22waiting%20for%20funding%22>`_, or submit your own feature request.
 - **PyVRP Enterprise:** Need more? Contact us about PyVRP Enterprise, an extended and production-ready version of PyVRP.
 
-Reach us at `info@routinglab.tech <mailto:info@routinglab.tech>`_.
+Reach us at `info@appliedrouting.com <mailto:info@appliedrouting.com>`_.

@@ -2,7 +2,7 @@
    :alt: PyVRP logo
    :figwidth: 100%
 
-PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver developed by `RoutingLab <https://routinglab.tech>`_.
+PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver developed by `Applied Routing <https://appliedrouting.com>`_.
 It currently supports VRPs with:
 
 * Pickups and deliveries (capacitated VRP, VRP with simultaneous pickup and delivery, VRP with backhaul, pickup and delivery VRP);
@@ -25,7 +25,7 @@ It can be installed through *pip* via
 
 .. tip::
 
-   Looking for professional support or enterprise features? `RoutingLab <https://routinglab.tech>`_ provides consulting, custom development, and PyVRP Enterprise - an extended and production-ready version of PyVRP.
+   Looking for professional support or enterprise features? `Applied Routing <https://appliedrouting.com>`_ provides consulting, custom development, and PyVRP Enterprise - an extended and production-ready version of PyVRP.
 
 Contents
 --------

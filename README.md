@@ -6,7 +6,7 @@
 [![codecov](https://img.shields.io/codecov/c/github/PyVRP/PyVRP?style=flat-square&logo=codecov&label=Codecov)](https://codecov.io/gh/PyVRP/PyVRP)
 [![DOI:10.1287/ijoc.2023.0055](https://img.shields.io/badge/DOI-ijoc.2023.0055-green?style=flat-square&color=blue)](https://doi.org/10.1287/ijoc.2023.0055)
 
-PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver developed by [RoutingLab](https://routinglab.tech).
+PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver developed by [Applied Routing](https://appliedrouting.com).
 It currently supports VRPs with:
 - Pickups and deliveries (capacitated VRP, VRP with simultaneous pickup and delivery, VRP with backhaul, pickup and delivery VRP);
 - Vehicles of different capacities, costs, shift durations, routing profiles, and maximum distance and duration constraints (heterogeneous fleet VRP, site-dependent VRP);
@@ -28,7 +28,7 @@ pip install pyvrp
 The documentation is available [here][1].
 
 > [!TIP]
-> Looking for professional support or enterprise features? [RoutingLab](https://routinglab.tech) provides consulting, custom development, and PyVRP Enterprise - an extended and production-ready version of PyVRP.
+> Looking for professional support or enterprise features? [Applied Routing](https://appliedrouting.com) provides consulting, custom development, and PyVRP Enterprise - an extended and production-ready version of PyVRP.
 
 ### Tutorials
 
@@ -49,7 +49,7 @@ For those interested in PyVRP's underlying algorithm, see [this page][11] for a 
 
 Feel free to open an issue or a new discussion thread here on GitHub.
 When writing your issue or discussion, please follow the instructions [here][3].
-For professional support, contact us at [info@routinglab.tech](mailto:info@routinglab.tech).
+For professional support, contact us at [info@appliedrouting.com](mailto:info@appliedrouting.com).
 
 ### Contributing
 
