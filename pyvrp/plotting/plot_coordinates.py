@@ -10,7 +10,7 @@ def plot_coordinates(
     ax: plt.Axes | None = None,
 ):
     """
-    Plots coordinates for clients and depot.
+    Plots coordinates for clients, shipments and depot.
 
     Parameters
     ----------
@@ -43,6 +43,16 @@ def plot_coordinates(
         y_coords[client_locs],
         s=50,
         label="Clients",
+    )
+
+    pickup_locs = [ship.pickup.location for ship in data.shipments()]
+    delivery_locs = [ship.delivery.location for ship in data.shipments()]
+    shipment_locs = pickup_locs + delivery_locs
+    ax.scatter(
+        x_coords[shipment_locs],
+        y_coords[shipment_locs],
+        s=50,
+        label="Shipments",
     )
 
     ax.grid(color="grey", linestyle="solid", linewidth=0.2)
