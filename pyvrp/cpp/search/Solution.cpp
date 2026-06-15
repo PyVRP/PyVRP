@@ -65,8 +65,13 @@ bool operator==(pyvrp::Route const &pyvrp, pyvrp::search::Route const &search)
 Solution::Solution(ProblemData const &data) : data_(data)
 {
     clients.reserve(data.numClients());
-    for (size_t loc = 0; loc != data.numClients(); ++loc)
-        clients.emplace_back(Activity::ActivityType::CLIENT, loc);
+    for (size_t client = 0; client != data.numClients(); ++client)
+        clients.emplace_back(Activity::ActivityType::CLIENT, client);
+
+    shipments.reserve(data.numShipments());
+    for (size_t shipment = 0; shipment != data.numShipments(); ++shipment)
+        shipments.push_back({{Activity::ActivityType::PICKUP, shipment},
+                             {Activity::ActivityType::DELIVERY, shipment}});
 
     routes.reserve(data.numVehicles());
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); ++vehType)
@@ -106,15 +111,32 @@ void Solution::load(pyvrp::Solution const &solution)
         for (size_t idx = 1; idx != solRoute.size() - 1; ++idx)
         {
             auto const &activity = solRoute[idx];
-            if (activity.isDepot())
+            switch (activity.type())
+            {
+            case Activity::ActivityType::DEPOT:
             {
                 Route::Node depot = activity;
                 route.push_back(&depot);
+                break;
             }
-            else
+
+            case Activity::ActivityType::CLIENT:
             {
-                assert(activity.isClient());
                 route.push_back(&clients[activity.idx()]);
+                break;
+            }
+
+            case Activity::ActivityType::PICKUP:
+            {
+                route.push_back(&shipments[activity.idx()].first);
+                break;
+            }
+
+            case Activity::ActivityType::DELIVERY:
+            {
+                route.push_back(&shipments[activity.idx()].second);
+                break;
+            }
             }
         }
 
@@ -227,6 +249,10 @@ pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
     for (size_t idx = 0; idx != data.numClients(); ++idx)
         if (!solution.clients[idx].route())
             cost += data.client(idx).prize;
+
+    for (size_t idx = 0; idx != data.numShipments(); ++idx)
+        if (!solution.shipments[idx].first.route())
+            cost += data.shipment(idx).prize;
 
     for (auto const &route : solution.routes)
         cost += penalisedCost(route);
