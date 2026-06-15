@@ -46,13 +46,19 @@ def plot_coordinates(
     )
 
     pickup_locs = [ship.pickup.location for ship in data.shipments()]
-    delivery_locs = [ship.delivery.location for ship in data.shipments()]
-    shipment_locs = pickup_locs + delivery_locs
     ax.scatter(
-        x_coords[shipment_locs],
-        y_coords[shipment_locs],
+        x_coords[pickup_locs],
+        y_coords[pickup_locs],
         s=50,
-        label="Shipments",
+        label="Pickups",
+    )
+
+    delivery_locs = [ship.delivery.location for ship in data.shipments()]
+    ax.scatter(
+        x_coords[delivery_locs],
+        y_coords[delivery_locs],
+        s=50,
+        label="Deliveries",
     )
 
     ax.grid(color="grey", linestyle="solid", linewidth=0.2)

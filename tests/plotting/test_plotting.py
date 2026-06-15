@@ -148,3 +148,40 @@ def test_plot_demands_raises_for_out_of_bounds_load_dimension():
 
     with assert_raises(ValueError):
         plotting.plot_demands(data)
+
+
+@img_comp(["plot_route_schedule_shipments"], **IMG_KWARGS)
+def test_plot_route_schedule_shipments(small_shipments):
+    """
+    Tests ``plot_route_schedule`` on a route with shipments.
+    """
+    activities = map(Activity, ["L0", "L1", "U0", "L2", "U1", "U2"])
+    route = Route(small_shipments, activities, 0)
+    plotting.plot_route_schedule(small_shipments, route)
+
+
+@img_comp(["plot_coordinates_shipments"], **IMG_KWARGS)
+def test_plot_coordinates_shipments(small_shipments):
+    """
+    Tests ``plot_coordinates`` on an instance with shipments.
+    """
+    plotting.plot_coordinates(small_shipments)
+
+
+@img_comp(
+    ["plot_solution_shipments", "plot_solution_shipment_locations"],
+    **IMG_KWARGS,
+)
+def test_plot_solution_shipments(small_shipments):
+    """
+    Tests ``plot_solution`` on an instance with shipments.
+    """
+    activities1 = map(Activity, ["L0", "L1", "U0", "L2", "U1", "U2"])
+    route1 = Route(small_shipments, activities1, 0)
+
+    activities2 = map(Activity, ["L3", "U3"])
+    route2 = Route(small_shipments, activities2, 0)
+
+    solution = Solution(small_shipments, [route1, route2])
+    plotting.plot_solution(solution, small_shipments)
+    plotting.plot_solution(solution, small_shipments, plot_locations=True)
