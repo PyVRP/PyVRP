@@ -29,7 +29,7 @@ def test_plot_solution():
     sol = read_solution("data/RC208.sol", data)
 
     plotting.plot_solution(sol, data)
-    plotting.plot_solution(sol, data, plot_clients=True)
+    plotting.plot_solution(sol, data, plot_locations=True)
 
 
 @img_comp(["plot_solution_multiple_depots"], **IMG_KWARGS)
@@ -64,7 +64,7 @@ def test_plot_solution_multiple_trips(ok_small_multiple_trips):
 def test_plot_solution_optional_clients(ok_small_prizes):
     """
     Tests that plot_solution() correctly displays unvisited locations when the
-    instance contains optional clients and ``plot_clients`` is True.
+    instance contains optional clients and ``plot_locations`` is True.
     """
     routes = [
         Route(ok_small_prizes, [1, 2], vehicle_type=0),
@@ -73,7 +73,7 @@ def test_plot_solution_optional_clients(ok_small_prizes):
     plotting.plot_solution(
         Solution(ok_small_prizes, routes),
         ok_small_prizes,
-        plot_clients=True,
+        plot_locations=True,
     )
 
 
