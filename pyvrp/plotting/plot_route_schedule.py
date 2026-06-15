@@ -85,20 +85,23 @@ def plot_route_schedule(
                 client = data.client(activity.idx)
                 stop = client  # type: ignore
 
-                load_diff -= client.delivery[load_dimension]
-                load_diff += client.pickup[load_dimension]
+                if track_load:
+                    load_diff -= client.delivery[load_dimension]
+                    load_diff += client.pickup[load_dimension]
 
             case ActivityType.PICKUP:
                 shipment = data.shipment(activity.idx)
                 stop = shipment.pickup  # type: ignore
 
-                load_diff += shipment.amount[load_dimension]
+                if track_load:
+                    load_diff += shipment.amount[load_dimension]
 
             case ActivityType.DELIVERY:
                 shipment = data.shipment(activity.idx)
                 stop = shipment.delivery  # type: ignore
 
-                load_diff -= shipment.amount[load_dimension]
+                if track_load:
+                    load_diff -= shipment.amount[load_dimension]
 
         drive_time += durations[prev_loc, stop.location]
         dist += distances[prev_loc, stop.location]
@@ -110,8 +113,7 @@ def plot_route_schedule(
             true_arrive = activity.start_time + activity.time_warp
             timewarp_lines.append(((dist, true_arrive), (dist, stop.tw_late)))
 
-        if track_load:
-            load += load_diff
+        load += load_diff
 
         add_traces(dist, activity.start_time, drive_time, serv_time, load)
 
