@@ -10,7 +10,7 @@ def plot_coordinates(
     ax: plt.Axes | None = None,
 ):
     """
-    Plots coordinates for clients, shipments and depot.
+    Plots coordinates for clients, shipments and depots.
 
     Parameters
     ----------
