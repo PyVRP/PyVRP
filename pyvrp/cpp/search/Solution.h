@@ -7,6 +7,7 @@
 #include "Route.h"  // pyvrp::search::Route
 #include "SearchSpace.h"
 
+#include <utility>
 #include <vector>
 
 namespace pyvrp::search
