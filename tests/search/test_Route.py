@@ -116,11 +116,15 @@ def test_route_append_increases_route_len(ok_small):
 
     node = Node("C0")
     route.append(node)
+    route.update()
+
     assert_equal(route.num_clients(), 1)
     assert_(route[1] is node)  # pointers, so must be same object
 
     node = Node("C1")
     route.append(node)
+    route.update()
+
     assert_equal(route.num_clients(), 2)
     assert_(route[2] is node)  # pointers, so must be same object
 
@@ -137,12 +141,16 @@ def test_route_insert(ok_small):
     # Insert a few nodes so we have an actual route.
     route.append(Node("C0"))
     route.append(Node("C1"))
+    route.update()
+
     assert_equal(route.num_clients(), 2)
     assert_equal(route[1].activity, Activity("C0"))
     assert_equal(route[2].activity, Activity("C1"))
 
     # # Now insert a new nodes at index 1.
     route.insert(1, Node("C2"))
+    route.update()
+
     assert_equal(route.num_clients(), 3)
     assert_equal(route[1].activity, Activity("C2"))
     assert_equal(route[2].activity, Activity("C0"))
@@ -186,9 +194,13 @@ def test_route_add_and_delete_client_leaves_route_empty(ok_small):
     route = Route(ok_small, vehicle_type=0)
 
     route.append(Node("C0"))
+    route.update()
+
     assert_equal(route.num_clients(), 1)
 
     del route[1]
+    route.update()
+
     assert_equal(route.num_clients(), 0)
 
 
@@ -200,9 +212,13 @@ def test_route_delete_reduces_size_by_one(ok_small):
 
     route.append(Node("C0"))
     route.append(Node("C1"))
+    route.update()
+
     assert_equal(route.num_clients(), 2)
 
     del route[1]
+    route.update()
+
     assert_equal(route.num_clients(), 1)
     assert_equal(route[1].activity, Activity("C1"))
 
@@ -218,6 +234,7 @@ def test_route_clear_empties_entire_route(ok_small, num_nodes: int):
     for client in range(num_nodes):
         route.append(Node(f"C{client}"))
 
+    route.update()
     assert_equal(route.num_clients(), num_nodes)
 
     route.clear()

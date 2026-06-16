@@ -1055,7 +1055,11 @@ bool Route::empty() const { return numClients() == 0 && numShipments() == 0; }
 
 size_t Route::size() const { return nodes.size(); }
 
-size_t Route::numClients() const { return numClients_.back(); }
+size_t Route::numClients() const
+{
+    assert(!dirty);
+    return numClients_.back();
+}
 
 size_t Route::numShipments() const
 {
