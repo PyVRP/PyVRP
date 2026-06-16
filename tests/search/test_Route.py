@@ -1199,3 +1199,18 @@ def test_node_is_client_and_is_depot():
     node = Node("C0")
     assert_(node.is_client())
     assert_(not node.is_depot())
+
+
+def test_node_is_pickup_and_is_delivery():
+    """
+    Tests Node's is_pickup(), is_delivery(), and is_shipment() members.
+    """
+    node = Node("L0")
+    assert_(node.is_pickup())
+    assert_(node.is_shipment())
+    assert_(not node.is_delivery())
+
+    node = Node("U0")
+    assert_(node.is_delivery())
+    assert_(node.is_shipment())
+    assert_(not node.is_pickup())

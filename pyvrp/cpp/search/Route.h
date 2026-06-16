@@ -204,6 +204,21 @@ public:
         [[nodiscard]] inline bool isReloadDepot() const;
 
         /**
+         * TODO
+         */
+        [[nodiscard]] inline bool isShipment() const;
+
+        /**
+         * TODO
+         */
+        [[nodiscard]] inline bool isPickup() const;
+
+        /**
+         * TODO
+         */
+        [[nodiscard]] inline bool isDelivery() const;
+
+        /**
          * Assigns the node to the given route, at the given position, in the
          * given trip.
          */
@@ -684,6 +699,12 @@ bool Route::Node::isReloadDepot() const
 {
     return isDepot() && !isStartDepot() && !isEndDepot();
 }
+
+bool Route::Node::isShipment() const { return activity_.isShipment(); }
+
+bool Route::Node::isPickup() const { return activity_.isPickup(); }
+
+bool Route::Node::isDelivery() const { return activity_.isDelivery(); }
 
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
     : route_(route), start(start)

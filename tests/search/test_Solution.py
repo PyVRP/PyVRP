@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 
 import pyvrp
-from pyvrp import Activity, CostEvaluator
+from pyvrp import Activity, CostEvaluator, RandomNumberGenerator
 from pyvrp.search import compute_neighbours
 from pyvrp.search._search import SearchSpace, Solution
 
@@ -69,3 +69,24 @@ def test_insert_required(ok_small):
     sol = Solution(data)
     assert_(not sol.insert(sol.clients[1], search_space, cost_eval, False))
     assert_(sol.insert(sol.clients[1], search_space, cost_eval, True))
+
+
+def test_load_unload_shipments(small_shipments):
+    """
+    Tests loading and unloading a solution for an instance with shipments.
+    """
+    sol = Solution(small_shipments)
+    assert_equal(len(sol.clients), small_shipments.num_clients)
+    assert_equal(len(sol.shipments), small_shipments.num_shipments)
+
+    # The solution stores shipment nodes as (pickup, delivery) pairs.
+    pickup, delivery = sol.shipments[0]
+    assert_equal(str(pickup), "L0")
+    assert_equal(str(delivery), "U0")
+
+    rng = RandomNumberGenerator(seed=42)
+    pyvrp_sol = pyvrp.Solution.make_random(small_shipments, rng)
+
+    # Let's test if loading and unloading results in the same solution.
+    sol.load(pyvrp_sol)
+    assert_equal(sol.unload(), pyvrp_sol)

@@ -631,6 +631,9 @@ PYBIND11_MODULE(_search, m)
         .def("is_start_depot", &Route::Node::isStartDepot)
         .def("is_end_depot", &Route::Node::isEndDepot)
         .def("is_reload_depot", &Route::Node::isReloadDepot)
+        .def("is_shipment", &Route::Node::isShipment)
+        .def("is_pickup", &Route::Node::isPickup)
+        .def("is_delivery", &Route::Node::isDelivery)
         .def("__str__",
              [](Route::Node const &node)
              {
