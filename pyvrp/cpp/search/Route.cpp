@@ -90,9 +90,10 @@ void Route::reserve(size_t size) { nodes.reserve(size); }
 void Route::insert(size_t idx, Node *node)
 {
     assert(0 < idx && idx < nodes.size());
-    auto const isDepot = node->isDepot();
 
-    if (isDepot)  // is depot, so we need to insert a copy into our own memory
+    switch (node->type())
+    {
+    case Activity::ActivityType::DEPOT:  // insert copy into owned memory
     {
         if (depots_.size() == depots_.capacity())  // then we reallocate and
         {                                          // must update references
@@ -102,6 +103,11 @@ void Route::insert(size_t idx, Node *node)
         }
 
         node = &depots_.emplace_back(node->activity());
+        break;
+    }
+
+    default:
+        break;
     }
 
     if (numTrips() > maxTrips())
@@ -113,9 +119,13 @@ void Route::insert(size_t idx, Node *node)
     for (size_t after = idx; after != nodes.size(); ++after)
     {
         nodes[after]->pos_ = after;
-        if (isDepot)  // then we need to bump each following trip index
+        if (node->isDepot())  // then we need to bump each following trip index
             nodes[after]->trip_++;
     }
+
+#ifndef NDEBUG
+    dirty = true;
+#endif
 }
 
 void Route::push_back(Node *node) { insert(nodes.size() - 1, node); }
@@ -180,14 +190,30 @@ void Route::update()
 {
     locations.clear();
     for (auto const *node : nodes)
-    {
-        assert(node->isDepot() || node->isClient());
-
-        if (node->isDepot())
+        switch (node->type())
+        {
+        case Activity::ActivityType::DEPOT:
             locations.emplace_back(data.depot(node->idx()).location);
-        else
+            break;
+
+        case Activity::ActivityType::CLIENT:
             locations.emplace_back(data.client(node->idx()).location);
-    }
+            break;
+
+        case Activity::ActivityType::PICKUP:
+        {
+            auto const &pickup = data.shipment(node->idx()).pickup;
+            locations.emplace_back(pickup.location);
+            break;
+        }
+
+        case Activity::ActivityType::DELIVERY:
+        {
+            auto const &delivery = data.shipment(node->idx()).delivery;
+            locations.emplace_back(delivery.location);
+            break;
+        }
+        }
 
     // Client counter.
     numClients_.resize(nodes.size());
@@ -220,11 +246,24 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
     {
         auto const *node = nodes[idx];
-
-        if (!node->isReloadDepot())
-            durAt[idx] = {data.client(node->idx())};
-        else
+        switch (node->type())
+        {
+        case Activity::ActivityType::DEPOT:
             durAt[idx] = {data.depot(node->idx()), 0};
+            break;
+
+        case Activity::ActivityType::CLIENT:
+            durAt[idx] = {data.client(node->idx())};
+            break;
+
+        case Activity::ActivityType::PICKUP:
+            durAt[idx] = {data.shipment(node->idx()).pickup};
+            break;
+
+        case Activity::ActivityType::DELIVERY:
+            durAt[idx] = {data.shipment(node->idx()).delivery};
+            break;
+        }
     }
 
     auto const &durations = data.durationMatrix(profile());
@@ -282,11 +321,26 @@ void Route::update()
         loadAt[dim][0] = {vehicleType_, dim};  // initial load
         loadAt[dim][nodes.size() - 1] = {};
 
-        for (size_t idx = 1; idx != nodes.size() - 1; ++idx)
-            loadAt[dim][idx]
-                = nodes[idx]->isReloadDepot()
-                      ? LoadSegment{}
-                      : LoadSegment{data.client(nodes[idx]->idx()), dim};
+        for (size_t pos = 1; pos != nodes.size() - 1; ++pos)
+            switch (nodes[pos]->type())
+            {
+            case Activity::ActivityType::DEPOT:
+                loadAt[dim][pos] = {};
+                break;
+
+            case Activity::ActivityType::CLIENT:
+                loadAt[dim][pos] = {data.client(nodes[pos]->idx()), dim};
+                break;
+
+            case Activity::ActivityType::PICKUP:
+                [[fallthrough]];
+            case Activity::ActivityType::DELIVERY:
+            {
+                auto const &shipment = data.shipment(nodes[pos]->idx());
+                loadAt[dim][pos] = {shipment, nodes[pos]->type(), dim};
+                break;
+            }
+            }
 
         loadBefore[dim].resize(nodes.size());
         loadBefore[dim][0] = loadAt[dim][0];

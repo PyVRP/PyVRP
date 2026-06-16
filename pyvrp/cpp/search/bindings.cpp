@@ -445,8 +445,15 @@ PYBIND11_MODULE(_search, m)
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
-        .def_readonly("nodes", &Solution::nodes)
-        .def_readonly("routes", &Solution::routes)
+        .def_readonly("clients",
+                      &Solution::clients,
+                      py::return_value_policy::reference_internal)
+        .def_readonly("shipments",
+                      &Solution::shipments,
+                      py::return_value_policy::reference_internal)
+        .def_readonly("routes",
+                      &Solution::routes,
+                      py::return_value_policy::reference_internal)
         .def("load", &Solution::load, py::arg("solution"))
         .def("unload", &Solution::unload)
         .def("insert",
@@ -463,6 +470,7 @@ PYBIND11_MODULE(_search, m)
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("vehicle_type", &Route::vehicleType)
         .def("num_clients", &Route::numClients)
+        .def("num_shipments", &Route::numShipments)
         .def("num_depots", &Route::numDepots)
         .def("num_trips", &Route::numTrips)
         .def("max_trips", &Route::maxTrips)
@@ -630,6 +638,9 @@ PYBIND11_MODULE(_search, m)
         .def("is_start_depot", &Route::Node::isStartDepot)
         .def("is_end_depot", &Route::Node::isEndDepot)
         .def("is_reload_depot", &Route::Node::isReloadDepot)
+        .def("is_shipment", &Route::Node::isShipment)
+        .def("is_pickup", &Route::Node::isPickup)
+        .def("is_delivery", &Route::Node::isDelivery)
         .def("__str__",
              [](Route::Node const &node)
              {

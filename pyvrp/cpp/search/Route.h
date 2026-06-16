@@ -204,6 +204,21 @@ public:
         [[nodiscard]] inline bool isReloadDepot() const;
 
         /**
+         * Returns whether this node is part of a shipment.
+         */
+        [[nodiscard]] inline bool isShipment() const;
+
+        /**
+         * Returns whether this node is a pickup step of a shipment.
+         */
+        [[nodiscard]] inline bool isPickup() const;
+
+        /**
+         * Returns whether this node is a delivery step of a shipment.
+         */
+        [[nodiscard]] inline bool isDelivery() const;
+
+        /**
          * Assigns the node to the given route, at the given position, in the
          * given trip.
          */
@@ -524,6 +539,11 @@ public:
     [[nodiscard]] inline size_t numClients() const;
 
     /**
+     * Number of shipments in this route.
+     */
+    [[nodiscard]] inline size_t numShipments() const;
+
+    /**
      * Returns the number of start, end, and reload depots in this route.
      */
     [[nodiscard]] inline size_t numDepots() const;
@@ -684,6 +704,12 @@ bool Route::Node::isReloadDepot() const
 {
     return isDepot() && !isStartDepot() && !isEndDepot();
 }
+
+bool Route::Node::isShipment() const { return activity_.isShipment(); }
+
+bool Route::Node::isPickup() const { return activity_.isPickup(); }
+
+bool Route::Node::isDelivery() const { return activity_.isDelivery(); }
 
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
     : route_(route), start(start)
@@ -1025,11 +1051,21 @@ Duration Route::timeWarp() const
 
 size_t Route::profile() const { return vehicleType_.profile; }
 
-bool Route::empty() const { return numClients() == 0; }
+bool Route::empty() const { return numClients() == 0 && numShipments() == 0; }
 
 size_t Route::size() const { return nodes.size(); }
 
-size_t Route::numClients() const { return size() - numDepots(); }
+size_t Route::numClients() const
+{
+    assert(!dirty);
+    return numClients_.back();
+}
+
+size_t Route::numShipments() const
+{
+    auto const numPairs = size() - numClients() - numDepots();
+    return numPairs / 2;
+}
 
 size_t Route::numDepots() const { return depots_.size(); }
 

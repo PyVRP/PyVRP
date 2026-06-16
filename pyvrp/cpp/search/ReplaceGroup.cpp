@@ -22,10 +22,10 @@ ReplaceGroup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
 
     Cost deltaCost = 0;
     for (auto const client : group)
-        if (solution_->nodes[client].route())
+        if (solution_->clients[client].route())
         {
             assert(client != U->idx());
-            V_ = &solution_->nodes[client];
+            V_ = &solution_->clients[client];
             auto *route = V_->route();
 
             costEvaluator.deltaCost(  // evaluate replacing V with U

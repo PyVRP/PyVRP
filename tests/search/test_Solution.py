@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 
 import pyvrp
-from pyvrp import Activity, CostEvaluator
+from pyvrp import Activity, CostEvaluator, RandomNumberGenerator
 from pyvrp.search import compute_neighbours
 from pyvrp.search._search import SearchSpace, Solution
 
@@ -33,25 +33,25 @@ def test_loading_twice_in_a_row(ok_small):
     assert_equal(search_sol.unload(), pyvrp_sol)
 
 
-def test_nodes_routes_access(ok_small):
+def test_clients_routes_access(ok_small):
     """
-    Tests nodes and routes access.
+    Tests clients and routes access.
     """
     pyvrp_sol = pyvrp.Solution(ok_small, [[0, 1], [2, 3]])
     search_sol = Solution(ok_small)
     search_sol.load(pyvrp_sol)
 
-    # There should be #clients nodes, and #vehicles routes.
-    assert_equal(len(search_sol.nodes), ok_small.num_clients)
+    # There should be #clients clients, and #vehicles routes.
+    assert_equal(len(search_sol.clients), ok_small.num_clients)
     assert_equal(len(search_sol.routes), ok_small.num_vehicles)
 
-    for client in [0, 1]:  # [0, 1] are in the first route
-        assert_equal(search_sol.nodes[client].activity, Activity(f"C{client}"))
-        assert_equal(search_sol.nodes[client].route, search_sol.routes[0])
+    for idx in [0, 1]:  # [0, 1] are in the first route
+        assert_equal(search_sol.clients[idx].activity, Activity(f"C{idx}"))
+        assert_equal(search_sol.clients[idx].route, search_sol.routes[0])
 
-    for client in [2, 3]:  # [2, 3] are in the second route
-        assert_equal(search_sol.nodes[client].activity, Activity(f"C{client}"))
-        assert_equal(search_sol.nodes[client].route, search_sol.routes[1])
+    for idx in [2, 3]:  # [2, 3] are in the second route
+        assert_equal(search_sol.clients[idx].activity, Activity(f"C{idx}"))
+        assert_equal(search_sol.clients[idx].route, search_sol.routes[1])
 
 
 def test_insert_required(ok_small):
@@ -67,5 +67,26 @@ def test_insert_required(ok_small):
     # requiring an insert. Inserting should fail: it's not worth it, since the
     # client has no prize. However, inserting should succeed when required.
     sol = Solution(data)
-    assert_(not sol.insert(sol.nodes[1], search_space, cost_eval, False))
-    assert_(sol.insert(sol.nodes[1], search_space, cost_eval, True))
+    assert_(not sol.insert(sol.clients[1], search_space, cost_eval, False))
+    assert_(sol.insert(sol.clients[1], search_space, cost_eval, True))
+
+
+def test_load_unload_shipments(small_shipments):
+    """
+    Tests loading and unloading a solution for an instance with shipments.
+    """
+    sol = Solution(small_shipments)
+    assert_equal(len(sol.clients), small_shipments.num_clients)
+    assert_equal(len(sol.shipments), small_shipments.num_shipments)
+
+    # The solution stores shipment nodes as (pickup, delivery) pairs.
+    pickup, delivery = sol.shipments[0]
+    assert_equal(str(pickup), "L0")
+    assert_equal(str(delivery), "U0")
+
+    rng = RandomNumberGenerator(seed=42)
+    pyvrp_sol = pyvrp.Solution.make_random(small_shipments, rng)
+
+    # Let's test if loading and unloading results in the same solution.
+    sol.load(pyvrp_sol)
+    assert_equal(sol.unload(), pyvrp_sol)

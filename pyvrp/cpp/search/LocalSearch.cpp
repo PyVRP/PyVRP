@@ -64,7 +64,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
         for (auto const uClient : searchSpace_.clientOrder())
         {
-            auto *U = &solution_.nodes[uClient];
+            auto *U = &solution_.clients[uClient];
             if (!searchSpace_.isPromising(uClient))
                 continue;
 
@@ -75,7 +75,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
             for (auto const vClient : searchSpace_.neighboursOf(uClient))
             {
-                auto *V = &solution_.nodes[vClient];
+                auto *V = &solution_.clients[vClient];
 
                 if (!V->route())
                     continue;
@@ -229,14 +229,14 @@ void LocalSearch::ensureStructuralFeasibility(
     {
         auto const &group = data.group(idx);
         for (auto const client : group)
-            if (solution_.nodes[client].route())
+            if (solution_.clients[client].route())
                 groupCount[idx]++;
     }
 
     // Ensure all required clients and groups are present in the solution.
     for (auto const client : searchSpace_.clientOrder())
     {
-        auto &node = solution_.nodes[client];
+        auto &node = solution_.clients[client];
         auto const &clientData = data.client(client);
 
         if (!node.route() && clientData.required)  // then we must insert
@@ -277,7 +277,7 @@ void LocalSearch::ensureStructuralFeasibility(
     // Debug checks to ensure we have restored structural feasibility.
     for (size_t idx = 0; idx != data.numClients(); ++idx)
     {
-        auto const &node = solution_.nodes[idx];
+        auto const &node = solution_.clients[idx];
         auto const &clientData = data.client(idx);
         assert(node.route() || !clientData.required);
     }
