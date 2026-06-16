@@ -898,7 +898,7 @@ def test_route_with_shipments(small_shipments):
     # and arrive at U2 at 48_700 + 6_198 = 54_898, before its time window opens
     # at 55_300. Thus, we have an additional 55_300 - 54_898 = 402 wait
     # duration.
-    assert_equal(route.duration(), 47_132 + 6 * 900 + 13800 + 402)
+    assert_equal(route.duration(), 47_132 + 6 * 900 + 13_800 + 402)
 
     # L0 loads 20, L1 loads 30, and L2 loads 20. The vehicle can only carry 50,
     # so there is 70 - 50 = 20 excess load.

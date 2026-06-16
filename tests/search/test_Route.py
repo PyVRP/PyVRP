@@ -1214,3 +1214,20 @@ def test_node_is_pickup_and_is_delivery():
     assert_(node.is_delivery())
     assert_(node.is_shipment())
     assert_(not node.is_pickup())
+
+
+def test_route_statistics_with_shipments(small_shipments):
+    """
+    Tests the route statistics of a route with shipments.
+    """
+    activities = ["L0", "L1", "L2", "U2", "U1", "U0"]
+    route = make_search_route(small_shipments, activities, 0)
+    assert_equal(route.num_shipments(), 3)
+    assert_equal(route.num_clients(), 0)
+
+    # These numbers are explained in the ``test_route_with_shipments`` test
+    # for pyvrp.Route; see there for details.
+    assert_equal(route.distance(), 47_132)
+    assert_equal(route.duration(), 47_132 + 6 * 900 + 13_800 + 402)
+    assert_equal(route.time_warp(), 1_611)
+    assert_equal(route.excess_load(), [20])

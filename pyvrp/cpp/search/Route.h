@@ -204,17 +204,17 @@ public:
         [[nodiscard]] inline bool isReloadDepot() const;
 
         /**
-         * TODO
+         * Returns whether this node is part of a shipment.
          */
         [[nodiscard]] inline bool isShipment() const;
 
         /**
-         * TODO
+         * Returns whether this node is a pickup step of a shipment.
          */
         [[nodiscard]] inline bool isPickup() const;
 
         /**
-         * TODO
+         * Returns whether this node is a delivery step of a shipment.
          */
         [[nodiscard]] inline bool isDelivery() const;
 
@@ -537,6 +537,11 @@ public:
      * Number of clients in this route.
      */
     [[nodiscard]] inline size_t numClients() const;
+
+    /**
+     * Number of shipments in this route.
+     */
+    [[nodiscard]] inline size_t numShipments() const;
 
     /**
      * Returns the number of start, end, and reload depots in this route.
@@ -1046,11 +1051,17 @@ Duration Route::timeWarp() const
 
 size_t Route::profile() const { return vehicleType_.profile; }
 
-bool Route::empty() const { return numClients() == 0; }
+bool Route::empty() const { return numClients() == 0 && numShipments() == 0; }
 
 size_t Route::size() const { return nodes.size(); }
 
-size_t Route::numClients() const { return size() - numDepots(); }
+size_t Route::numClients() const { return numClients_.back(); }
+
+size_t Route::numShipments() const
+{
+    auto const numPairs = size() - numClients() - numDepots();
+    return numPairs / 2;
+}
 
 size_t Route::numDepots() const { return depots_.size(); }
 
