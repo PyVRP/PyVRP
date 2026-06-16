@@ -27,14 +27,14 @@ public:
 
     SegmentProxy front() const
     {
-        return {{Activity::ActivityType::DELIVERY, idx_},
-                shipment_.delivery.location};
+        return {{Activity::ActivityType::PICKUP, idx_},
+                shipment_.pickup.location};
     }
 
     SegmentProxy back() const
     {
-        return {{Activity::ActivityType::DELIVERY, idx_},
-                shipment_.delivery.location};
+        return {{Activity::ActivityType::PICKUP, idx_},
+                shipment_.pickup.location};
     }
 
     size_t size() const { return 1; }
@@ -50,12 +50,12 @@ public:
 
     pyvrp::DurationSegment duration([[maybe_unused]] size_t profile) const
     {
-        return {shipment_.delivery};
+        return {shipment_.pickup};
     }
 
     pyvrp::LoadSegment load(size_t dimension) const
     {
-        return {shipment_, Activity::ActivityType::DELIVERY, dimension};
+        return {shipment_, Activity::ActivityType::PICKUP, dimension};
     }
 };
 }  // namespace pyvrp::search
