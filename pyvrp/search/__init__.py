@@ -12,7 +12,7 @@ from ._search import Exchange30 as Exchange30
 from ._search import Exchange31 as Exchange31
 from ._search import Exchange32 as Exchange32
 from ._search import Exchange33 as Exchange33
-from ._search import InsertOptional as InsertOptional
+from ._search import InsertOptionalClient as InsertOptionalClient
 from ._search import NeighbourhoodParams as NeighbourhoodParams
 from ._search import PerturbationManager as PerturbationManager
 from ._search import PerturbationParams as PerturbationParams
@@ -35,7 +35,7 @@ OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     RelocateWithDepot,
     RemoveAdjacentDepot,
     RemoveOptional,
-    InsertOptional,
+    InsertOptionalClient,
     ReplaceOptional,
     ReplaceGroup,
 ]

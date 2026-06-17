@@ -1,6 +1,6 @@
 #include "bindings.h"
 #include "Exchange.h"
-#include "InsertOptional.h"
+#include "InsertOptionalClient.h"
 #include "LocalSearch.h"
 #include "PerturbationManager.h"
 #include "RelocateWithDepot.h"
@@ -26,7 +26,7 @@ namespace py = pybind11;
 
 using pyvrp::search::BinaryOperator;
 using pyvrp::search::Exchange;
-using pyvrp::search::InsertOptional;
+using pyvrp::search::InsertOptionalClient;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NeighbourhoodParams;
 using pyvrp::search::OperatorStatistics;
@@ -105,22 +105,23 @@ PYBIND11_MODULE(_search, m)
         .def("init", &ReplaceGroup::init, py::arg("solution"))
         .def_static("supports", &supports<ReplaceGroup>, py::arg("data"));
 
-    py::class_<InsertOptional, BinaryOperator>(
-        m, "InsertOptional", DOC(pyvrp, search, InsertOptional))
+    py::class_<InsertOptionalClient, BinaryOperator>(
+        m, "InsertOptionalClient", DOC(pyvrp, search, InsertOptionalClient))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &InsertOptional::statistics,
+                               &InsertOptionalClient::statistics,
                                py::return_value_policy::reference_internal)
         .def("evaluate",
-             &InsertOptional::evaluate,
+             &InsertOptionalClient::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &InsertOptional::apply, py::arg("U"), py::arg("V"))
-        .def("init", &InsertOptional::init, py::arg("solution"))
-        .def_static("supports", &supports<InsertOptional>, py::arg("data"));
+        .def("apply", &InsertOptionalClient::apply, py::arg("U"), py::arg("V"))
+        .def("init", &InsertOptionalClient::init, py::arg("solution"))
+        .def_static(
+            "supports", &supports<InsertOptionalClient>, py::arg("data"));
 
     py::class_<ReplaceOptional, BinaryOperator>(
         m, "ReplaceOptional", DOC(pyvrp, search, ReplaceOptional))

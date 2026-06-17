@@ -78,7 +78,7 @@ libpyvrp = static_library(
 libsearch = static_library(
     'search',
     [
-        SRC_DIR / 'search' / 'InsertOptional.cpp',
+        SRC_DIR / 'search' / 'InsertOptionalClient.cpp',
         SRC_DIR / 'search' / 'LocalSearch.cpp',
         SRC_DIR / 'search' / 'neighbourhood.cpp',
         SRC_DIR / 'search' / 'PerturbationManager.cpp',

@@ -95,7 +95,7 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
    .. autoclass:: RemoveOptional
       :exclude-members: evaluate, apply, statistics, supports, init
 
-   .. autoclass:: InsertOptional
+   .. autoclass:: InsertOptionalClient
       :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: ReplaceGroup
