@@ -92,7 +92,7 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
    .. autoclass:: RemoveAdjacentDepot
       :exclude-members: evaluate, apply, statistics, supports, init
 
-   .. autoclass:: RemoveOptional
+   .. autoclass:: RemoveOptionalClient
       :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: InsertOptionalClient
@@ -102,6 +102,15 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
       :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: ReplaceOptionalClient
+      :exclude-members: evaluate, apply, statistics, supports, init
+
+   .. autoclass:: InsertOptionalShipment
+      :exclude-members: evaluate, apply, statistics, supports, init
+
+   .. autoclass:: RemoveOptionalShipment
+      :exclude-members: evaluate, apply, statistics, supports, init
+
+   .. autoclass:: ReplaceOptionalShipment
       :exclude-members: evaluate, apply, statistics, supports, init
 
    .. autoclass:: SwapTails

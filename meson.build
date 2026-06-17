@@ -79,6 +79,7 @@ libsearch = static_library(
     'search',
     [
         SRC_DIR / 'search' / 'InsertOptionalClient.cpp',
+        SRC_DIR / 'search' / 'InsertOptionalShipment.cpp',
         SRC_DIR / 'search' / 'LocalSearch.cpp',
         SRC_DIR / 'search' / 'neighbourhood.cpp',
         SRC_DIR / 'search' / 'PerturbationManager.cpp',
@@ -86,8 +87,10 @@ libsearch = static_library(
         SRC_DIR / 'search' / 'RelocateWithDepot.cpp',
         SRC_DIR / 'search' / 'RemoveAdjacentDepot.cpp',
         SRC_DIR / 'search' / 'RemoveOptionalClient.cpp',
+        SRC_DIR / 'search' / 'RemoveOptionalShipment.cpp',
         SRC_DIR / 'search' / 'ReplaceGroup.cpp',
         SRC_DIR / 'search' / 'ReplaceOptionalClient.cpp',
+        SRC_DIR / 'search' / 'ReplaceOptionalShipment.cpp',
         SRC_DIR / 'search' / 'SearchSpace.cpp',
         SRC_DIR / 'search' / 'Solution.cpp',
         SRC_DIR / 'search' / 'SwapTails.cpp',

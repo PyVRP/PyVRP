@@ -1,13 +1,16 @@
 #include "bindings.h"
 #include "Exchange.h"
 #include "InsertOptionalClient.h"
+#include "InsertOptionalShipment.h"
 #include "LocalSearch.h"
 #include "PerturbationManager.h"
 #include "RelocateWithDepot.h"
 #include "RemoveAdjacentDepot.h"
 #include "RemoveOptionalClient.h"
+#include "RemoveOptionalShipment.h"
 #include "ReplaceGroup.h"
 #include "ReplaceOptionalClient.h"
+#include "ReplaceOptionalShipment.h"
 #include "Route.h"
 #include "SearchSpace.h"
 #include "Solution.h"
@@ -27,6 +30,7 @@ namespace py = pybind11;
 using pyvrp::search::BinaryOperator;
 using pyvrp::search::Exchange;
 using pyvrp::search::InsertOptionalClient;
+using pyvrp::search::InsertOptionalShipment;
 using pyvrp::search::LocalSearch;
 using pyvrp::search::NeighbourhoodParams;
 using pyvrp::search::OperatorStatistics;
@@ -35,8 +39,10 @@ using pyvrp::search::PerturbationParams;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::RemoveAdjacentDepot;
 using pyvrp::search::RemoveOptionalClient;
+using pyvrp::search::RemoveOptionalShipment;
 using pyvrp::search::ReplaceGroup;
 using pyvrp::search::ReplaceOptionalClient;
+using pyvrp::search::ReplaceOptionalShipment;
 using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 using pyvrp::search::Solution;
@@ -90,6 +96,23 @@ PYBIND11_MODULE(_search, m)
         .def_static(
             "supports", &supports<RemoveOptionalClient>, py::arg("data"));
 
+    py::class_<RemoveOptionalShipment, UnaryOperator>(
+        m, "RemoveOptionalShipment", DOC(pyvrp, search, RemoveOptionalShipment))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &RemoveOptionalShipment::statistics,
+                               py::return_value_policy::reference_internal)
+        .def("evaluate",
+             &RemoveOptionalShipment::evaluate,
+             py::arg("U"),
+             py::arg("cost_evaluator"))
+        .def("apply", &RemoveOptionalShipment::apply, py::arg("U"))
+        .def("init", &RemoveOptionalShipment::init, py::arg("solution"))
+        .def_static(
+            "supports", &supports<RemoveOptionalShipment>, py::arg("data"));
+
     py::class_<ReplaceGroup, UnaryOperator>(
         m, "ReplaceGroup", DOC(pyvrp, search, ReplaceGroup))
         .def(py::init<pyvrp::ProblemData const &>(),
@@ -124,6 +147,25 @@ PYBIND11_MODULE(_search, m)
         .def_static(
             "supports", &supports<InsertOptionalClient>, py::arg("data"));
 
+    py::class_<InsertOptionalShipment, BinaryOperator>(
+        m, "InsertOptionalShipment", DOC(pyvrp, search, InsertOptionalShipment))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &InsertOptionalShipment::statistics,
+                               py::return_value_policy::reference_internal)
+        .def("evaluate",
+             &InsertOptionalShipment::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def(
+            "apply", &InsertOptionalShipment::apply, py::arg("U"), py::arg("V"))
+        .def("init", &InsertOptionalShipment::init, py::arg("solution"))
+        .def_static(
+            "supports", &supports<InsertOptionalShipment>, py::arg("data"));
+
     py::class_<ReplaceOptionalClient, BinaryOperator>(
         m, "ReplaceOptionalClient", DOC(pyvrp, search, ReplaceOptionalClient))
         .def(py::init<pyvrp::ProblemData const &>(),
@@ -141,6 +183,29 @@ PYBIND11_MODULE(_search, m)
         .def("init", &ReplaceOptionalClient::init, py::arg("solution"))
         .def_static(
             "supports", &supports<ReplaceOptionalClient>, py::arg("data"));
+
+    py::class_<ReplaceOptionalShipment, BinaryOperator>(
+        m,
+        "ReplaceOptionalShipment",
+        DOC(pyvrp, search, ReplaceOptionalShipment))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &ReplaceOptionalShipment::statistics,
+                               py::return_value_policy::reference_internal)
+        .def("evaluate",
+             &ReplaceOptionalShipment::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply",
+             &ReplaceOptionalShipment::apply,
+             py::arg("U"),
+             py::arg("V"))
+        .def("init", &ReplaceOptionalShipment::init, py::arg("solution"))
+        .def_static(
+            "supports", &supports<ReplaceOptionalShipment>, py::arg("data"));
 
     py::class_<Exchange<1, 0>, BinaryOperator>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))
