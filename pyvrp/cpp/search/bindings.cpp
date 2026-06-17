@@ -5,7 +5,7 @@
 #include "PerturbationManager.h"
 #include "RelocateWithDepot.h"
 #include "RemoveAdjacentDepot.h"
-#include "RemoveOptional.h"
+#include "RemoveOptionalClient.h"
 #include "ReplaceGroup.h"
 #include "ReplaceOptionalClient.h"
 #include "Route.h"
@@ -34,7 +34,7 @@ using pyvrp::search::PerturbationManager;
 using pyvrp::search::PerturbationParams;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::RemoveAdjacentDepot;
-using pyvrp::search::RemoveOptional;
+using pyvrp::search::RemoveOptionalClient;
 using pyvrp::search::ReplaceGroup;
 using pyvrp::search::ReplaceOptionalClient;
 using pyvrp::search::Route;
@@ -73,21 +73,22 @@ PYBIND11_MODULE(_search, m)
         .def_static(
             "supports", &supports<RemoveAdjacentDepot>, py::arg("data"));
 
-    py::class_<RemoveOptional, UnaryOperator>(
-        m, "RemoveOptional", DOC(pyvrp, search, RemoveOptional))
+    py::class_<RemoveOptionalClient, UnaryOperator>(
+        m, "RemoveOptionalClient", DOC(pyvrp, search, RemoveOptionalClient))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &RemoveOptional::statistics,
+                               &RemoveOptionalClient::statistics,
                                py::return_value_policy::reference_internal)
         .def("evaluate",
-             &RemoveOptional::evaluate,
+             &RemoveOptionalClient::evaluate,
              py::arg("U"),
              py::arg("cost_evaluator"))
-        .def("apply", &RemoveOptional::apply, py::arg("U"))
-        .def("init", &RemoveOptional::init, py::arg("solution"))
-        .def_static("supports", &supports<RemoveOptional>, py::arg("data"));
+        .def("apply", &RemoveOptionalClient::apply, py::arg("U"))
+        .def("init", &RemoveOptionalClient::init, py::arg("solution"))
+        .def_static(
+            "supports", &supports<RemoveOptionalClient>, py::arg("data"));
 
     py::class_<ReplaceGroup, UnaryOperator>(
         m, "ReplaceGroup", DOC(pyvrp, search, ReplaceGroup))

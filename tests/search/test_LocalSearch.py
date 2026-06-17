@@ -26,7 +26,7 @@ from pyvrp.search import (
     PerturbationParams,
     RelocateWithDepot,
     RemoveAdjacentDepot,
-    RemoveOptional,
+    RemoveOptionalClient,
     ReplaceGroup,
     compute_neighbours,
 )
@@ -612,7 +612,7 @@ def test_does_not_insert_optional_groups():
     rng = RandomNumberGenerator(seed=2)
     ls = LocalSearch(data, rng, compute_neighbours(data))
     ls.add_operator(InsertOptionalClient(data))
-    ls.add_operator(RemoveOptional(data))
+    ls.add_operator(RemoveOptionalClient(data))
 
     # Start with the group present. After local search, the solution should be
     # empty because the group is not worth keeping around.

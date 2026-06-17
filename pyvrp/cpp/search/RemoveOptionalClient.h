@@ -1,16 +1,16 @@
-#ifndef PYVRP_SEARCH_REMOVEOPTIONAL_H
-#define PYVRP_SEARCH_REMOVEOPTIONAL_H
+#ifndef PYVRP_SEARCH_REMOVEOPTIONALCLIENT_H
+#define PYVRP_SEARCH_REMOVEOPTIONALCLIENT_H
 
 #include "LocalSearchOperator.h"
 
 namespace pyvrp::search
 {
 /**
- * RemoveOptional(data: ProblemData)
+ * RemoveOptionalClient(data: ProblemData)
  *
  * Evaluates removing an optional client node :math:`U`.
  */
-class RemoveOptional : public UnaryOperator
+class RemoveOptionalClient : public UnaryOperator
 {
     using UnaryOperator::UnaryOperator;
 
@@ -21,7 +21,7 @@ public:
     void apply(Route::Node *U) const override;
 };
 
-template <> bool supports<RemoveOptional>(ProblemData const &data);
+template <> bool supports<RemoveOptionalClient>(ProblemData const &data);
 }  // namespace pyvrp::search
 
-#endif  // PYVRP_SEARCH_REMOVEOPTIONAL_H
+#endif  // PYVRP_SEARCH_REMOVEOPTIONALCLIENT_H

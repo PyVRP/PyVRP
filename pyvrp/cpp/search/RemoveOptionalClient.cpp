@@ -1,11 +1,12 @@
-#include "RemoveOptional.h"
+#include "RemoveOptionalClient.h"
 
 #include <cassert>
 
-using pyvrp::search::RemoveOptional;
+using pyvrp::search::RemoveOptionalClient;
 
 std::pair<pyvrp::Cost, bool>
-RemoveOptional::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
+RemoveOptionalClient::evaluate(Route::Node *U,
+                               CostEvaluator const &costEvaluator)
 {
     stats_.numEvaluations++;
 
@@ -31,7 +32,7 @@ RemoveOptional::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
     return std::make_pair(deltaCost, deltaCost < 0);
 }
 
-void RemoveOptional::apply(Route::Node *U) const
+void RemoveOptionalClient::apply(Route::Node *U) const
 {
     assert(U->isClient());
     stats_.numApplications++;
@@ -39,7 +40,7 @@ void RemoveOptional::apply(Route::Node *U) const
 }
 
 template <>
-bool pyvrp::search::supports<RemoveOptional>(ProblemData const &data)
+bool pyvrp::search::supports<RemoveOptionalClient>(ProblemData const &data)
 {
     for (auto const &group : data.groups())  // if the group is not required
         if (!group.required)                 // its clients are not either

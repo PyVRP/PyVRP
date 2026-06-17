@@ -18,7 +18,7 @@ from ._search import PerturbationManager as PerturbationManager
 from ._search import PerturbationParams as PerturbationParams
 from ._search import RelocateWithDepot as RelocateWithDepot
 from ._search import RemoveAdjacentDepot as RemoveAdjacentDepot
-from ._search import RemoveOptional as RemoveOptional
+from ._search import RemoveOptionalClient as RemoveOptionalClient
 from ._search import ReplaceGroup as ReplaceGroup
 from ._search import ReplaceOptionalClient as ReplaceOptionalClient
 from ._search import SwapTails as SwapTails
@@ -34,7 +34,7 @@ OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     SwapTails,
     RelocateWithDepot,
     RemoveAdjacentDepot,
-    RemoveOptional,
+    RemoveOptionalClient,
     InsertOptionalClient,
     ReplaceOptionalClient,
     ReplaceGroup,
