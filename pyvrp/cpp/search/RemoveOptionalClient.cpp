@@ -34,7 +34,7 @@ RemoveOptionalClient::evaluate(Route::Node *U,
 
 void RemoveOptionalClient::apply(Route::Node *U) const
 {
-    assert(U->isClient());
+    assert(U->isClient() && U->route());
     stats_.numApplications++;
     U->route()->remove(U->pos());
 }
