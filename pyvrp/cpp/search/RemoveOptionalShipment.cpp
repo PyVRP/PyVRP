@@ -4,9 +4,9 @@
 
 using pyvrp::search::RemoveOptionalShipment;
 
-std::pair<pyvrp::Cost, bool> RemoveOptionalShipment::evaluate(
-    [[maybe_unused]] Route::Node *U,
-    [[maybe_unused]] CostEvaluator const &costEvaluator)
+std::pair<pyvrp::Cost, bool>
+RemoveOptionalShipment::evaluate(Route::Node *U,
+                                 CostEvaluator const &costEvaluator)
 {
     stats_.numEvaluations++;
 
@@ -49,7 +49,7 @@ std::pair<pyvrp::Cost, bool> RemoveOptionalShipment::evaluate(
     return std::make_pair(0, false);
 }
 
-void RemoveOptionalShipment::apply([[maybe_unused]] Route::Node *U) const
+void RemoveOptionalShipment::apply(Route::Node *U) const
 {
     stats_.numApplications++;
 
