@@ -7,7 +7,7 @@
 #include "RemoveAdjacentDepot.h"
 #include "RemoveOptional.h"
 #include "ReplaceGroup.h"
-#include "ReplaceOptional.h"
+#include "ReplaceOptionalClient.h"
 #include "Route.h"
 #include "SearchSpace.h"
 #include "Solution.h"
@@ -36,7 +36,7 @@ using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::RemoveAdjacentDepot;
 using pyvrp::search::RemoveOptional;
 using pyvrp::search::ReplaceGroup;
-using pyvrp::search::ReplaceOptional;
+using pyvrp::search::ReplaceOptionalClient;
 using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 using pyvrp::search::Solution;
@@ -123,22 +123,23 @@ PYBIND11_MODULE(_search, m)
         .def_static(
             "supports", &supports<InsertOptionalClient>, py::arg("data"));
 
-    py::class_<ReplaceOptional, BinaryOperator>(
-        m, "ReplaceOptional", DOC(pyvrp, search, ReplaceOptional))
+    py::class_<ReplaceOptionalClient, BinaryOperator>(
+        m, "ReplaceOptionalClient", DOC(pyvrp, search, ReplaceOptionalClient))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &ReplaceOptional::statistics,
+                               &ReplaceOptionalClient::statistics,
                                py::return_value_policy::reference_internal)
         .def("evaluate",
-             &ReplaceOptional::evaluate,
+             &ReplaceOptionalClient::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &ReplaceOptional::apply, py::arg("U"), py::arg("V"))
-        .def("init", &ReplaceOptional::init, py::arg("solution"))
-        .def_static("supports", &supports<ReplaceOptional>, py::arg("data"));
+        .def("apply", &ReplaceOptionalClient::apply, py::arg("U"), py::arg("V"))
+        .def("init", &ReplaceOptionalClient::init, py::arg("solution"))
+        .def_static(
+            "supports", &supports<ReplaceOptionalClient>, py::arg("data"));
 
     py::class_<Exchange<1, 0>, BinaryOperator>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))

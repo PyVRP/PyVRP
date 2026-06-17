@@ -87,7 +87,7 @@ libsearch = static_library(
         SRC_DIR / 'search' / 'RemoveAdjacentDepot.cpp',
         SRC_DIR / 'search' / 'RemoveOptional.cpp',
         SRC_DIR / 'search' / 'ReplaceGroup.cpp',
-        SRC_DIR / 'search' / 'ReplaceOptional.cpp',
+        SRC_DIR / 'search' / 'ReplaceOptionalClient.cpp',
         SRC_DIR / 'search' / 'SearchSpace.cpp',
         SRC_DIR / 'search' / 'Solution.cpp',
         SRC_DIR / 'search' / 'SwapTails.cpp',
