@@ -7,19 +7,21 @@ using pyvrp::search::RemoveOptional;
 std::pair<pyvrp::Cost, bool>
 RemoveOptional::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
 {
-    assert(U->isClient());
     stats_.numEvaluations++;
 
-    auto const &uData = data.client(U->idx());
-    if (!U->route() || uData.required)
+    if (!U->isClient() || !U->route())
         return std::make_pair(0, false);
 
-    if (uData.group && data.group(*uData.group).required)  // cannot remove
-        return std::make_pair(0, false);                   // required member
+    auto const &client = data.client(U->idx());
+    if (client.required)
+        return std::make_pair(0, false);
+
+    if (client.group && data.group(*client.group).required)  // cannot remove
+        return std::make_pair(0, false);                     // required member
 
     auto *route = U->route();
     Cost deltaCost
-        = uData.prize
+        = client.prize
           - Cost(route->numClients() == 1) * route->fixedVehicleCost();
 
     costEvaluator.deltaCost(deltaCost,
@@ -31,6 +33,7 @@ RemoveOptional::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
 
 void RemoveOptional::apply(Route::Node *U) const
 {
+    assert(U->isClient());
     stats_.numApplications++;
     U->route()->remove(U->pos());
 }

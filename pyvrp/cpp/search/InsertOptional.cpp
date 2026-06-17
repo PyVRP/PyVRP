@@ -9,13 +9,12 @@ using pyvrp::search::InsertOptional;
 std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
-    assert(U->isClient());
     stats_.numEvaluations++;
 
-    auto const &uData = data.client(U->idx());
-    if (U->route() || !V->route())
+    if (!U->isClient() || U->route() || !V->route())
         return std::make_pair(0, false);
 
+    auto const &uData = data.client(U->idx());
     if (uData.group)
     {
         assert(solution_);
@@ -42,7 +41,7 @@ std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
 
 void InsertOptional::apply(Route::Node *U, Route::Node *V) const
 {
-    assert(!U->route() && V->route());
+    assert(U->isClient() && !U->route() && V->route());
     stats_.numApplications++;
 
     auto *route = V->route();
