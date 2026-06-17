@@ -3,7 +3,7 @@ from numpy.testing import assert_
 from pyvrp.search import ReplaceOptionalShipment
 
 
-def test_replace_adjacent(small_optional_shipments):
+def test_replace_adjacent():
     """
     TODO
     """
