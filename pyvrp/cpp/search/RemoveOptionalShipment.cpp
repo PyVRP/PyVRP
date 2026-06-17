@@ -10,7 +10,41 @@ std::pair<pyvrp::Cost, bool> RemoveOptionalShipment::evaluate(
 {
     stats_.numEvaluations++;
 
-    // TODO
+    if (!U->route() || !U->isShipment())
+        return std::make_pair(0, false);
+
+    auto const &shipment = data.shipment(U->idx());
+    if (shipment.required)
+        return std::make_pair(0, false);
+
+    Route::Node *pickup, *delivery;
+    if (U->isPickup())
+    {
+        pickup = U;
+        delivery = U + 1;
+    }
+    else
+    {
+        delivery = U;
+        pickup = U - 1;
+    }
+
+    assert(pickup->pos() < delivery->pos());
+    auto const *route = U->route();
+
+    Cost deltaCost = shipment.prize;
+    if (n(pickup) == delivery)
+        costEvaluator.deltaCost(
+            deltaCost,
+            Route::Proposal(route->before(pickup->pos() - 1),
+                            route->after(delivery->pos() + 1)));
+    else
+        costEvaluator.deltaCost(
+            deltaCost,
+            Route::Proposal(
+                route->before(pickup->pos() - 1),
+                route->between(pickup->pos() + 1, delivery->pos() - 1),
+                route->after(delivery->pos() + 1)));
 
     return std::make_pair(0, false);
 }
@@ -19,7 +53,21 @@ void RemoveOptionalShipment::apply([[maybe_unused]] Route::Node *U) const
 {
     stats_.numApplications++;
 
-    // TODO
+    Route::Node *pickup, *delivery;
+    if (U->isPickup())
+    {
+        pickup = U;
+        delivery = U + 1;
+    }
+    else
+    {
+        delivery = U;
+        pickup = U - 1;
+    }
+
+    auto *route = U->route();
+    route->remove(delivery->pos());
+    route->remove(pickup->pos());
 }
 
 template <>
