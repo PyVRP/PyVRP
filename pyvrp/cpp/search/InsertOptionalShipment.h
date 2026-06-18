@@ -17,6 +17,13 @@ class InsertOptionalShipment : public BinaryOperator
 {
     using BinaryOperator::BinaryOperator;
 
+    struct Move
+    {
+        size_t pos = 0;
+    };
+
+    Move move_;
+
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
                                    Route::Node *V,
