@@ -19,19 +19,22 @@ std::pair<pyvrp::Cost, bool> InsertOptionalShipment::evaluate(
     move_ = {};
 
     auto const &shipment = data.shipment(U->idx());
-    auto const *route = V->route();
+    auto const &route = *V->route();
 
     if (U->isPickup())  // pickup after V, delivery later in the route
-        for (size_t pos = V->pos() + 1; pos != route->size() - 1; ++pos)
+        for (size_t pos = V->pos() + 1; pos != route.size() - 1; ++pos)
         {
+            if (route[pos]->isDepot())  // shipments cannot cross depots
+                break;
+
             Cost deltaCost = -shipment.prize;
             costEvaluator.deltaCost(
                 deltaCost,
-                Route::Proposal(route->before(V->pos()),
+                Route::Proposal(route.before(V->pos()),
                                 PickupSegment(data, U->idx()),
-                                route->between(V->pos() + 1, pos),
+                                route.between(V->pos() + 1, pos),
                                 DeliverySegment(data, U->idx()),
-                                route->after(pos + 1)));
+                                route.after(pos + 1)));
 
             if (deltaCost < 0)
             {
@@ -40,16 +43,19 @@ std::pair<pyvrp::Cost, bool> InsertOptionalShipment::evaluate(
             }
         }
     else if (!V->isStartDepot())  // delivery after V, pickup earlier in route
-        for (size_t pos = 1; pos != V->pos(); ++pos)
+        for (size_t pos = V->pos() - 1; pos != 0; --pos)
         {
+            if (route[pos]->isDepot())  // shipments cannot cross depots
+                break;
+
             Cost deltaCost = -shipment.prize;
             costEvaluator.deltaCost(
                 deltaCost,
-                Route::Proposal(route->before(pos - 1),
+                Route::Proposal(route.before(pos - 1),
                                 PickupSegment(data, U->idx()),
-                                route->between(pos, V->pos()),
+                                route.between(pos, V->pos()),
                                 DeliverySegment(data, U->idx()),
-                                route->after(V->pos() + 1)));
+                                route.after(V->pos() + 1)));
 
             if (deltaCost < 0)
             {
