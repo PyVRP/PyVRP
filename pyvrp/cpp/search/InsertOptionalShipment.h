@@ -8,7 +8,10 @@ namespace pyvrp::search
 /**
  * InsertOptionalShipment(data: ProblemData)
  *
- * TODO
+ * Evaluates inserting the optional shipment :math:`U` after :math:`V`. The
+ * node :math:`U` is placed directly after :math:`V`, the other node of the
+ * shipment pair is inserted in the first improving location of :math:`V`'s
+ * route.
  */
 class InsertOptionalShipment : public BinaryOperator
 {

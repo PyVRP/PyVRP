@@ -8,7 +8,7 @@ namespace pyvrp::search
 /**
  * ReplaceOptionalShipment(data: ProblemData)
  *
- * TODO
+ * Evaluates replacing the optional shipment :math:`V` with :math:`U`.
  */
 class ReplaceOptionalShipment : public BinaryOperator
 {

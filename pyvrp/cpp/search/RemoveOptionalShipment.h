@@ -8,7 +8,7 @@ namespace pyvrp::search
 /**
  * RemoveOptionalShipment(data: ProblemData)
  *
- * TODO
+ * Evaluates removing the optional shipment :math:`U`.
  */
 class RemoveOptionalShipment : public UnaryOperator
 {
