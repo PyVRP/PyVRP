@@ -19,6 +19,8 @@ public:
                                    CostEvaluator const &costEvaluator) override;
 
     void apply(Route::Node *U) const override;
+
+    std::string name() const override;
 };
 
 template <> bool supports<RemoveOptional>(ProblemData const &data);

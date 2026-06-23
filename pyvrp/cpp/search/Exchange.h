@@ -52,6 +52,8 @@ public:
                                    CostEvaluator const &costEvaluator) override;
 
     void apply(Route::Node *U, Route::Node *V) const override;
+
+    std::string name() const override;
 };
 
 template <size_t N, size_t M>
@@ -253,6 +255,11 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
         U = n(U);
         V = n(V);
     }
+}
+
+template <size_t N, size_t M> std::string Exchange<N, M>::name() const
+{
+    return "Exchange" + std::to_string(N) + std::to_string(M);
 }
 }  // namespace pyvrp::search
 

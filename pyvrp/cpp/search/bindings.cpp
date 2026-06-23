@@ -64,6 +64,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &RemoveAdjacentDepot::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &RemoveAdjacentDepot::name)
         .def("evaluate",
              &RemoveAdjacentDepot::evaluate,
              py::arg("U"),
@@ -81,6 +82,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &RemoveOptional::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &RemoveOptional::name)
         .def("evaluate",
              &RemoveOptional::evaluate,
              py::arg("U"),
@@ -97,6 +99,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &ReplaceGroup::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &ReplaceGroup::name)
         .def("evaluate",
              &ReplaceGroup::evaluate,
              py::arg("U"),
@@ -113,6 +116,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &InsertOptional::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &InsertOptional::name)
         .def("evaluate",
              &InsertOptional::evaluate,
              py::arg("U"),
@@ -130,6 +134,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &ReplaceOptional::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &ReplaceOptional::name)
         .def("evaluate",
              &ReplaceOptional::evaluate,
              py::arg("U"),
@@ -147,6 +152,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &Exchange<1, 0>::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &Exchange<1, 0>::name)
         .def("evaluate",
              &Exchange<1, 0>::evaluate,
              py::arg("U"),
@@ -164,6 +170,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &Exchange<2, 0>::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &Exchange<2, 0>::name)
         .def("evaluate",
              &Exchange<2, 0>::evaluate,
              py::arg("U"),
@@ -181,6 +188,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &Exchange<3, 0>::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &Exchange<3, 0>::name)
         .def("evaluate",
              &Exchange<3, 0>::evaluate,
              py::arg("U"),
@@ -198,6 +206,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &Exchange<1, 1>::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &Exchange<1, 1>::name)
         .def("evaluate",
              &Exchange<1, 1>::evaluate,
              py::arg("U"),
@@ -215,6 +224,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &Exchange<2, 1>::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &Exchange<2, 1>::name)
         .def("evaluate",
              &Exchange<2, 1>::evaluate,
              py::arg("U"),
@@ -232,6 +242,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &Exchange<3, 1>::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &Exchange<3, 1>::name)
         .def("evaluate",
              &Exchange<3, 1>::evaluate,
              py::arg("U"),
@@ -249,6 +260,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &Exchange<2, 2>::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &Exchange<2, 2>::name)
         .def("evaluate",
              &Exchange<2, 2>::evaluate,
              py::arg("U"),
@@ -266,6 +278,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &Exchange<3, 2>::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &Exchange<3, 2>::name)
         .def("evaluate",
              &Exchange<3, 2>::evaluate,
              py::arg("U"),
@@ -283,6 +296,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &Exchange<3, 3>::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &Exchange<3, 3>::name)
         .def("evaluate",
              &Exchange<3, 3>::evaluate,
              py::arg("U"),
@@ -300,6 +314,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &SwapTails::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &SwapTails::name)
         .def("evaluate",
              &SwapTails::evaluate,
              py::arg("U"),
@@ -317,6 +332,7 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("statistics",
                                &RelocateWithDepot::statistics,
                                py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &RelocateWithDepot::name)
         .def("evaluate",
              &RelocateWithDepot::evaluate,
              py::arg("U"),

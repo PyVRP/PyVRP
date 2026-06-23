@@ -41,6 +41,8 @@ void ReplaceOptional::apply(Route::Node *U, Route::Node *V) const
     route->insert(idx, U);
 }
 
+std::string ReplaceOptional::name() const { return "ReplaceOptional"; }
+
 template <>
 bool pyvrp::search::supports<ReplaceOptional>(ProblemData const &data)
 {

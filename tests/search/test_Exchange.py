@@ -727,3 +727,11 @@ def test_skip_unassigned_clients(operator, ok_small):
     operator = Exchange10(ok_small)
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(operator.evaluate(node, route[0], cost_eval), (0, False))
+
+
+def test_name(ok_small):
+    """
+    Tests accessing the operator's name attribute.
+    """
+    assert_equal(Exchange10(ok_small).name, "Exchange10")
+    assert_equal(Exchange11(ok_small).name, "Exchange11")
