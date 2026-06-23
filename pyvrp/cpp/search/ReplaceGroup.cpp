@@ -59,6 +59,8 @@ void ReplaceGroup::init(Solution &solution)
     solution_ = &solution;
 }
 
+std::string ReplaceGroup::name() const { return "ReplaceGroup"; }
+
 template <> bool pyvrp::search::supports<ReplaceGroup>(ProblemData const &data)
 {
     return data.numGroups() > 0;

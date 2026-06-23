@@ -65,6 +65,8 @@ void RemoveAdjacentDepot::apply(Route::Node *U) const
         route->remove(U->pos() + 1);
 }
 
+std::string RemoveAdjacentDepot::name() const { return "RemoveAdjacentDepot"; }
+
 template <>
 bool pyvrp::search::supports<RemoveAdjacentDepot>(ProblemData const &data)
 {

@@ -7,6 +7,10 @@ This page lists benchmark results obtained by recent versions of the PyVRP packa
 
    See the :doc:`benchmarking instructions <../dev/benchmarking>` for details on how we benchmark. 
 
+.. info::
+
+   Hans Mittelmann tracks the performance of various CVRP solvers (including PyVRP) `here <https://plato.asu.edu/ftp/hex_hgs.html>`_.
+
 PyVRP
 -----
 

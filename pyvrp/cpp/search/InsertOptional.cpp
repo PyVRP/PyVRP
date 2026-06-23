@@ -55,6 +55,8 @@ void InsertOptional::init(Solution &solution)
     solution_ = &solution;
 }
 
+std::string InsertOptional::name() const { return "InsertOptional"; }
+
 template <>
 bool pyvrp::search::supports<InsertOptional>(ProblemData const &data)
 {
