@@ -20,6 +20,8 @@ public:
                                    CostEvaluator const &costEvaluator) override;
 
     void apply(Route::Node *U, Route::Node *V) const override;
+
+    std::string name() const override;
 };
 
 template <> bool supports<ReplaceOptional>(ProblemData const &data);

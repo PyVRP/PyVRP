@@ -35,6 +35,8 @@ void RemoveOptional::apply(Route::Node *U) const
     U->route()->remove(U->pos());
 }
 
+std::string RemoveOptional::name() const { return "RemoveOptional"; }
+
 template <>
 bool pyvrp::search::supports<RemoveOptional>(ProblemData const &data)
 {
