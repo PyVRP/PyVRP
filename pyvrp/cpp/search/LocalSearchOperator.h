@@ -7,6 +7,7 @@
 #include "Route.h"
 #include "Solution.h"  // pyvrp::search::Solution
 
+#include <string>
 #include <utility>
 
 namespace pyvrp::search
@@ -65,6 +66,11 @@ public:
     {
         stats_ = {};  // reset call statistics
     };
+
+    /**
+     * Operator name.
+     */
+    virtual std::string name() const = 0;
 
     /**
      * Returns evaluation and application statistics collected since the last

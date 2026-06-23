@@ -40,6 +40,11 @@ void ReplaceOptionalClient::apply(Route::Node *U, Route::Node *V) const
     route->insert(idx, U);
 }
 
+std::string ReplaceOptionalClient::name() const
+{
+    return "ReplaceOptionalClient";
+}
+
 template <>
 bool pyvrp::search::supports<ReplaceOptionalClient>(ProblemData const &data)
 {

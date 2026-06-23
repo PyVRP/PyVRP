@@ -70,6 +70,11 @@ void RemoveOptionalShipment::apply(Route::Node *U) const
     route->remove(pickup->pos());
 }
 
+std::string RemoveOptionalShipment::name() const
+{
+    return "RemoveOptionalShipment";
+}
+
 template <>
 bool pyvrp::search::supports<RemoveOptionalShipment>(ProblemData const &data)
 {

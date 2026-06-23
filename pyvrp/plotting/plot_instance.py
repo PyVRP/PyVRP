@@ -29,5 +29,3 @@ def plot_instance(data: ProblemData, fig: plt.Figure | None = None):
     plot_time_windows(data, ax=fig.add_subplot(gs[0, 0]))
     plot_demands(data, ax=fig.add_subplot(gs[1, 0]))
     plot_coordinates(data, ax=fig.add_subplot(gs[:, 1]))
-
-    plt.tight_layout()

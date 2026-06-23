@@ -54,6 +54,11 @@ void InsertOptionalClient::init(Solution &solution)
     solution_ = &solution;
 }
 
+std::string InsertOptionalClient::name() const
+{
+    return "InsertOptionalClient";
+}
+
 template <>
 bool pyvrp::search::supports<InsertOptionalClient>(ProblemData const &data)
 {

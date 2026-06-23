@@ -39,6 +39,11 @@ void RemoveOptionalClient::apply(Route::Node *U) const
     U->route()->remove(U->pos());
 }
 
+std::string RemoveOptionalClient::name() const
+{
+    return "RemoveOptionalClient";
+}
+
 template <>
 bool pyvrp::search::supports<RemoveOptionalClient>(ProblemData const &data)
 {

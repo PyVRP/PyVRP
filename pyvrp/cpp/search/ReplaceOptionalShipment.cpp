@@ -91,6 +91,11 @@ void ReplaceOptionalShipment::apply(Route::Node *U, Route::Node *V) const
     Route::swap(vDelivery, uDelivery);
 }
 
+std::string ReplaceOptionalShipment::name() const
+{
+    return "ReplaceOptionalShipment";
+}
+
 template <>
 bool pyvrp::search::supports<ReplaceOptionalShipment>(ProblemData const &data)
 {

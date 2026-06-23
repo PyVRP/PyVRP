@@ -25,6 +25,8 @@ public:
     void apply(Route::Node *U) const override;
 
     void init(Solution &solution) override;
+
+    std::string name() const override;
 };
 
 template <> bool supports<ReplaceGroup>(ProblemData const &data);

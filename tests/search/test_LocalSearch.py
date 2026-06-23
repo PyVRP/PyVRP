@@ -713,7 +713,7 @@ def test_debug_operator_logs(prize_collecting, caplog):
     # captured logs list.
     expected = [
         (0, "Applying local search (exhaustive=true)."),
-        (2, "Applying operator to U=9 and V=48 (delta=-300)."),
+        (2, "Applying operator Exchange10 to U=9 and V=48 (delta=-300)."),
         (-2, "Entering search loop (step=3)."),
         (-1, "Completed local search: improving=71, updates=71, moves=5671."),
     ]

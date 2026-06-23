@@ -87,6 +87,11 @@ void InsertOptionalShipment::apply(Route::Node *U, Route::Node *V) const
     }
 }
 
+std::string InsertOptionalShipment::name() const
+{
+    return "InsertOptionalShipment";
+}
+
 template <>
 bool pyvrp::search::supports<InsertOptionalShipment>(ProblemData const &data)
 {

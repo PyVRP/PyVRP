@@ -190,6 +190,8 @@ void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
     }
 }
 
+std::string RelocateWithDepot::name() const { return "RelocateWithDepot"; }
+
 template <>
 bool pyvrp::search::supports<RelocateWithDepot>(ProblemData const &data)
 {
