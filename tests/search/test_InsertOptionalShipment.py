@@ -61,7 +61,7 @@ def test_insert_into_empty_route(small_optional_shipments):
     assert_equal(op.evaluate(delivery, route[0], cost_eval), (0, False))
 
 
-def test_insert_delivery_in_first_improving_place(small_optional_shipments):
+def test_insert_delivery_in_improving_place(small_optional_shipments):
     """
     Tests that U's delivery is inserted in the first improving place following
     pickup.
@@ -73,14 +73,14 @@ def test_insert_delivery_in_first_improving_place(small_optional_shipments):
     sol = Solution(small_optional_shipments)
     pickup, _ = sol.shipments[0]
 
-    # Insert pickup just after start depot, and delivery in an improving place
-    # (immediately thereafter). This results in a new distance of 30_857, but
-    # gets a prize of 10_000, for a delta of -6_875.
+    # Insert pickup just after start depot, and delivery immediately after.
+    # This results in a new distance of 30_857, but gets a prize of 10_000, for
+    # a delta of -6_875.
     op = InsertOptionalShipment(small_optional_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(pickup, route[0], cost_eval), (-6_875, True))
+    assert_equal(op.evaluate(pickup, route[0], cost_eval), (-6875, True))
 
-    # Should insert U0 after U1, and L0 immediately after the start depot.
+    # Should insert L0 U0 immediately after the start depot.
     op.apply(pickup, route[0])
     route.update()
 

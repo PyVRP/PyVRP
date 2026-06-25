@@ -23,61 +23,52 @@ std::pair<pyvrp::Cost, bool> InsertOptionalShipment::evaluate(
 
     if (U->isPickup())  // pickup after V, delivery later in the route
     {
-        if (route.empty())  // then V is the start depot, and we want to insert
-        {                   // U's pickup and delivery directly after
-            Cost deltaCost = -shipment.prize;
-            costEvaluator.deltaCost(
-                deltaCost,
-                Route::Proposal(route.before(V->pos()),
-                                PickupSegment(data, U->idx()),
-                                DeliverySegment(data, U->idx()),
-                                route.after(V->pos() + 1)));
+        Cost deltaCost = -shipment.prize;  // delivery directly after pickup
+        costEvaluator.deltaCost(deltaCost,
+                                Route::Proposal(route.before(V->pos()),
+                                                PickupSegment(data, U->idx()),
+                                                DeliverySegment(data, U->idx()),
+                                                route.after(V->pos() + 1)));
 
-            if (deltaCost < 0)
-                move_ = {V->pos() + 1};
-
+        if (deltaCost < 0)
+        {
+            move_ = {V->pos() + 1};
             return std::make_pair(deltaCost, deltaCost < 0);
         }
 
-        for (size_t pos = V->pos() + 1; pos != route.size() - 1; ++pos)
+        for (auto const *node = n(V); !node->isDepot(); node = n(node))
         {
-            if (route[pos]->isDepot())  // shipments cannot cross depots
-                break;
-
             Cost deltaCost = -shipment.prize;
             costEvaluator.deltaCost(
                 deltaCost,
                 Route::Proposal(route.before(V->pos()),
                                 PickupSegment(data, U->idx()),
-                                route.between(V->pos() + 1, pos),
+                                route.between(V->pos() + 1, node->pos()),
                                 DeliverySegment(data, U->idx()),
-                                route.after(pos + 1)));
+                                route.after(node->pos() + 1)));
 
             if (deltaCost < 0)
             {
-                move_ = {pos};
+                move_ = {node->pos() + 1};  // after node
                 return std::make_pair(deltaCost, true);
             }
         }
     }
     else if (!V->isStartDepot())  // delivery after V, pickup earlier in route
-        for (size_t pos = V->pos() - 1; pos != 0; --pos)
+        for (auto const *node = p(V); !node->isDepot(); node = p(node))
         {
-            if (route[pos]->isDepot())  // shipments cannot cross depots
-                break;
-
             Cost deltaCost = -shipment.prize;
             costEvaluator.deltaCost(
                 deltaCost,
-                Route::Proposal(route.before(pos - 1),
+                Route::Proposal(route.before(node->pos() - 1),
                                 PickupSegment(data, U->idx()),
-                                route.between(pos, V->pos()),
+                                route.between(node->pos(), V->pos()),
                                 DeliverySegment(data, U->idx()),
                                 route.after(V->pos() + 1)));
 
             if (deltaCost < 0)
             {
-                move_ = {pos};
+                move_ = {node->pos()};  // before node
                 return std::make_pair(deltaCost, true);
             }
         }
