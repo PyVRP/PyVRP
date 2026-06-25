@@ -46,11 +46,12 @@ RemoveOptionalShipment::evaluate(Route::Node *U,
                 route->between(pickup->pos() + 1, delivery->pos() - 1),
                 route->after(delivery->pos() + 1)));
 
-    return std::make_pair(0, false);
+    return std::make_pair(deltaCost, deltaCost < 0);
 }
 
 void RemoveOptionalShipment::apply(Route::Node *U) const
 {
+    assert(U->isShipment());
     stats_.numApplications++;
 
     Route::Node *pickup, *delivery;
