@@ -22,6 +22,23 @@ std::pair<pyvrp::Cost, bool> InsertOptionalShipment::evaluate(
     auto const &route = *V->route();
 
     if (U->isPickup())  // pickup after V, delivery later in the route
+    {
+        if (route.empty())  // then V is the start depot, and we want to insert
+        {                   // U's pickup and delivery directly after
+            Cost deltaCost = -shipment.prize;
+            costEvaluator.deltaCost(
+                deltaCost,
+                Route::Proposal(route.before(V->pos()),
+                                PickupSegment(data, U->idx()),
+                                DeliverySegment(data, U->idx()),
+                                route.after(V->pos() + 1)));
+
+            if (deltaCost < 0)
+                move_ = {V->pos() + 1};
+
+            return std::make_pair(deltaCost, deltaCost < 0);
+        }
+
         for (size_t pos = V->pos() + 1; pos != route.size() - 1; ++pos)
         {
             if (route[pos]->isDepot())  // shipments cannot cross depots
@@ -42,6 +59,7 @@ std::pair<pyvrp::Cost, bool> InsertOptionalShipment::evaluate(
                 return std::make_pair(deltaCost, true);
             }
         }
+    }
     else if (!V->isStartDepot())  // delivery after V, pickup earlier in route
         for (size_t pos = V->pos() - 1; pos != 0; --pos)
         {
@@ -70,20 +88,21 @@ std::pair<pyvrp::Cost, bool> InsertOptionalShipment::evaluate(
 void InsertOptionalShipment::apply(Route::Node *U, Route::Node *V) const
 {
     assert(U->isShipment() && !U->route() && V->route());
-    assert(V->pos() < move_.pos);
     stats_.numApplications++;
 
     auto *route = V->route();
 
     if (U->isPickup())
     {
+        assert(move_.pos > V->pos());  // delivery at pos, after pickup
         route->insert(move_.pos, U + 1);
-        route->insert(V->pos(), U);
+        route->insert(V->pos() + 1, U);
     }
     else
     {
+        assert(move_.pos < V->pos());  // pickup at pos, before delivery
+        route->insert(V->pos() + 1, U);
         route->insert(move_.pos, U - 1);
-        route->insert(V->pos(), U);
     }
 }
 

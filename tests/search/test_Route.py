@@ -1240,6 +1240,7 @@ def test_route_statistics_with_shipments(small_shipments):
     activities = ["L0", "L1", "L2", "U2", "U1", "U0"]
     route = make_search_route(small_shipments, activities, 0)
     assert_equal(route.num_shipments(), 3)
+    assert_equal(route.num_pickups(), 3)
     assert_equal(route.num_clients(), 0)
 
     # These numbers are explained in the ``test_route_with_shipments`` test

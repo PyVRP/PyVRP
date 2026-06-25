@@ -39,6 +39,7 @@ public:
 
     size_t size() const { return 1; }
     size_t numClients() const { return 0; }
+    size_t numPickups() const { return 1; }
 
     bool startsAtReloadDepot() const { return false; }
     bool endsAtReloadDepot() const { return false; }
