@@ -1,20 +1,19 @@
-#include "ReplaceOptional.h"
+#include "ReplaceOptionalClient.h"
 
 #include "ClientSegment.h"
 
 #include <cassert>
 
-using pyvrp::search::ReplaceOptional;
+using pyvrp::search::ReplaceOptionalClient;
 
-std::pair<pyvrp::Cost, bool> ReplaceOptional::evaluate(
+std::pair<pyvrp::Cost, bool> ReplaceOptionalClient::evaluate(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     stats_.numEvaluations++;
 
-    if (U->route() || !V->route() || V->isDepot())
+    if (U->route() || !V->route() || !U->isClient() || !V->isClient())
         return std::make_pair(0, false);
 
-    assert(U->isClient() && V->isClient());
     auto const &uData = data.client(U->idx());
     auto const &vData = data.client(V->idx());
     if (vData.required || uData.group || vData.group)
@@ -30,9 +29,9 @@ std::pair<pyvrp::Cost, bool> ReplaceOptional::evaluate(
     return std::make_pair(deltaCost, deltaCost < 0);
 }
 
-void ReplaceOptional::apply(Route::Node *U, Route::Node *V) const
+void ReplaceOptionalClient::apply(Route::Node *U, Route::Node *V) const
 {
-    assert(!U->route() && V->route());
+    assert(!U->route() && V->route() && U->isClient() && V->isClient());
     stats_.numApplications++;
 
     auto *route = V->route();
@@ -41,10 +40,13 @@ void ReplaceOptional::apply(Route::Node *U, Route::Node *V) const
     route->insert(idx, U);
 }
 
-std::string ReplaceOptional::name() const { return "ReplaceOptional"; }
+std::string ReplaceOptionalClient::name() const
+{
+    return "ReplaceOptionalClient";
+}
 
 template <>
-bool pyvrp::search::supports<ReplaceOptional>(ProblemData const &data)
+bool pyvrp::search::supports<ReplaceOptionalClient>(ProblemData const &data)
 {
     for (auto const &client : data.clients())   // need at least one optional
         if (!client.required && !client.group)  // client not in a group

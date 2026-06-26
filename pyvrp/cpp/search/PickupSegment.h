@@ -1,5 +1,5 @@
-#ifndef PYVRP_SEARCH_CLIENTSEGMENT_H
-#define PYVRP_SEARCH_CLIENTSEGMENT_H
+#ifndef PYVRP_SEARCH_PICKUPSEGMENT_H
+#define PYVRP_SEARCH_PICKUPSEGMENT_H
 
 #include "Activity.h"
 #include "DurationSegment.h"
@@ -10,16 +10,16 @@ namespace pyvrp::search
 {
 /**
  * Simple wrapper class that implements the required evaluation interface for
- * a single client that might not currently be in the solution.
+ * a shipment pickup step.
  */
-class ClientSegment
+class PickupSegment
 {
-    Client const &client_;
+    Shipment const &shipment_;
     size_t const idx_;
 
 public:
-    ClientSegment(pyvrp::ProblemData const &data, size_t client)
-        : client_(data.client(client)), idx_(client)
+    PickupSegment(pyvrp::ProblemData const &data, size_t shipment)
+        : shipment_(data.shipment(shipment)), idx_(shipment)
     {
     }
 
@@ -27,17 +27,19 @@ public:
 
     SegmentProxy front() const
     {
-        return {{Activity::ActivityType::CLIENT, idx_}, client_.location};
+        return {{Activity::ActivityType::PICKUP, idx_},
+                shipment_.pickup.location};
     }
 
     SegmentProxy back() const
     {
-        return {{Activity::ActivityType::CLIENT, idx_}, client_.location};
+        return {{Activity::ActivityType::PICKUP, idx_},
+                shipment_.pickup.location};
     }
 
     size_t size() const { return 1; }
-    size_t numClients() const { return 1; }
-    size_t numPickups() const { return 0; }
+    size_t numClients() const { return 0; }
+    size_t numPickups() const { return 1; }
 
     bool startsAtReloadDepot() const { return false; }
     bool endsAtReloadDepot() const { return false; }
@@ -49,14 +51,14 @@ public:
 
     pyvrp::DurationSegment duration([[maybe_unused]] size_t profile) const
     {
-        return {client_};
+        return {shipment_.pickup};
     }
 
     pyvrp::LoadSegment load(size_t dimension) const
     {
-        return {client_, dimension};
+        return {shipment_, Activity::ActivityType::PICKUP, dimension};
     }
 };
 }  // namespace pyvrp::search
 
-#endif  // PYVRP_SEARCH_CLIENTSEGMENT_H
+#endif  // PYVRP_SEARCH_PICKUPSEGMENT_H

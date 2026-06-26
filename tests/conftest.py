@@ -1,6 +1,6 @@
 import pytest
 
-from pyvrp import VehicleType
+from pyvrp import Shipment, VehicleType
 from tests.helpers import read
 
 
@@ -158,3 +158,31 @@ def small_shipments():
     Fixture that returns a small instance with four shipments.
     """
     return read("data/SmallShipments.txt")
+
+
+@pytest.fixture(scope="session")
+def small_optional_shipments(small_shipments):
+    """
+    Fixture that returns the small instance with four shipments, but where
+    those shipments are marked optional and assigned various prizes.
+    """
+    prizes = [10_000, 2_000, 10_000, 1_000]
+    shipments = [
+        Shipment(
+            shipment.pickup.location,
+            shipment.delivery.location,
+            shipment.pickup.tw_early,
+            shipment.pickup.tw_late,
+            shipment.pickup.service_duration,
+            shipment.delivery.tw_early,
+            shipment.delivery.tw_late,
+            shipment.delivery.service_duration,
+            shipment.amount,
+            prize=prize,
+            required=False,
+            name=shipment.name,
+        )
+        for shipment, prize in zip(small_shipments.shipments(), prizes)
+    ]
+
+    return small_shipments.replace(shipments=shipments)

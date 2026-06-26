@@ -1,25 +1,28 @@
-#include "RemoveOptional.h"
+#include "RemoveOptionalClient.h"
 
 #include <cassert>
 
-using pyvrp::search::RemoveOptional;
+using pyvrp::search::RemoveOptionalClient;
 
 std::pair<pyvrp::Cost, bool>
-RemoveOptional::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
+RemoveOptionalClient::evaluate(Route::Node *U,
+                               CostEvaluator const &costEvaluator)
 {
-    assert(U->isClient());
     stats_.numEvaluations++;
 
-    auto const &uData = data.client(U->idx());
-    if (!U->route() || uData.required)
+    if (!U->isClient() || !U->route())
         return std::make_pair(0, false);
 
-    if (uData.group && data.group(*uData.group).required)  // cannot remove
-        return std::make_pair(0, false);                   // required member
+    auto const &client = data.client(U->idx());
+    if (client.required)
+        return std::make_pair(0, false);
+
+    if (client.group && data.group(*client.group).required)  // cannot remove
+        return std::make_pair(0, false);                     // required member
 
     auto *route = U->route();
     Cost deltaCost
-        = uData.prize
+        = client.prize
           - Cost(route->numClients() == 1) * route->fixedVehicleCost();
 
     costEvaluator.deltaCost(deltaCost,
@@ -29,16 +32,20 @@ RemoveOptional::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
     return std::make_pair(deltaCost, deltaCost < 0);
 }
 
-void RemoveOptional::apply(Route::Node *U) const
+void RemoveOptionalClient::apply(Route::Node *U) const
 {
+    assert(U->isClient() && U->route());
     stats_.numApplications++;
     U->route()->remove(U->pos());
 }
 
-std::string RemoveOptional::name() const { return "RemoveOptional"; }
+std::string RemoveOptionalClient::name() const
+{
+    return "RemoveOptionalClient";
+}
 
 template <>
-bool pyvrp::search::supports<RemoveOptional>(ProblemData const &data)
+bool pyvrp::search::supports<RemoveOptionalClient>(ProblemData const &data)
 {
     for (auto const &group : data.groups())  // if the group is not required
         if (!group.required)                 // its clients are not either

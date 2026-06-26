@@ -1,21 +1,20 @@
-#include "InsertOptional.h"
+#include "InsertOptionalClient.h"
 
 #include "ClientSegment.h"
 
 #include <cassert>
 
-using pyvrp::search::InsertOptional;
+using pyvrp::search::InsertOptionalClient;
 
-std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
+std::pair<pyvrp::Cost, bool> InsertOptionalClient::evaluate(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
-    assert(U->isClient());
     stats_.numEvaluations++;
 
-    auto const &uData = data.client(U->idx());
-    if (U->route() || !V->route())
+    if (!U->isClient() || U->route() || !V->route())
         return std::make_pair(0, false);
 
+    auto const &uData = data.client(U->idx());
     if (uData.group)
     {
         assert(solution_);
@@ -40,25 +39,28 @@ std::pair<pyvrp::Cost, bool> InsertOptional::evaluate(
     return std::make_pair(deltaCost, deltaCost < 0);
 }
 
-void InsertOptional::apply(Route::Node *U, Route::Node *V) const
+void InsertOptionalClient::apply(Route::Node *U, Route::Node *V) const
 {
-    assert(!U->route() && V->route());
+    assert(U->isClient() && !U->route() && V->route());
     stats_.numApplications++;
 
     auto *route = V->route();
     route->insert(V->pos() + 1, U);
 }
 
-void InsertOptional::init(Solution &solution)
+void InsertOptionalClient::init(Solution &solution)
 {
     stats_ = {};
     solution_ = &solution;
 }
 
-std::string InsertOptional::name() const { return "InsertOptional"; }
+std::string InsertOptionalClient::name() const
+{
+    return "InsertOptionalClient";
+}
 
 template <>
-bool pyvrp::search::supports<InsertOptional>(ProblemData const &data)
+bool pyvrp::search::supports<InsertOptionalClient>(ProblemData const &data)
 {
     for (auto const &group : data.groups())  // if the group is not required
         if (!group.required)                 // its clients are not either

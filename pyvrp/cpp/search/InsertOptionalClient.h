@@ -1,16 +1,16 @@
-#ifndef PYVRP_SEARCH_INSERTOPTIONAL_H
-#define PYVRP_SEARCH_INSERTOPTIONAL_H
+#ifndef PYVRP_SEARCH_INSERTOPTIONALCLIENT_H
+#define PYVRP_SEARCH_INSERTOPTIONALCLIENT_H
 
 #include "LocalSearchOperator.h"
 
 namespace pyvrp::search
 {
 /**
- * InsertOptional(data: ProblemData)
+ * InsertOptionalClient(data: ProblemData)
  *
  * Evaluates inserting an optional client node :math:`U` after :math:`V`.
  */
-class InsertOptional : public BinaryOperator
+class InsertOptionalClient : public BinaryOperator
 {
     using BinaryOperator::BinaryOperator;
 
@@ -28,7 +28,7 @@ public:
     std::string name() const override;
 };
 
-template <> bool supports<InsertOptional>(ProblemData const &data);
+template <> bool supports<InsertOptionalClient>(ProblemData const &data);
 }  // namespace pyvrp::search
 
-#endif  // PYVRP_SEARCH_INSERTOPTIONAL_H
+#endif  // PYVRP_SEARCH_INSERTOPTIONALCLIENT_H

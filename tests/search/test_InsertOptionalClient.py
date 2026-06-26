@@ -10,21 +10,21 @@ from pyvrp import (
     ProblemData,
     VehicleType,
 )
-from pyvrp.search import InsertOptional
+from pyvrp.search import InsertOptionalClient
 from pyvrp.search._search import Node, Solution
 from tests.helpers import make_search_route
 
 
 def test_inserts_when_makes_sense(prize_collecting):
     """
-    Tests that InsertOptional inserts optional clients when that is an
+    Tests that InsertOptionalClient inserts optional clients when that is an
     improving move.
     """
     route = make_search_route(prize_collecting, ["C0", "C1", "C2"])
     assert_equal(str(route), "C0 C1 C2")
 
     node = Node("C5")
-    op = InsertOptional(prize_collecting)
+    op = InsertOptionalClient(prize_collecting)
     cost_eval = CostEvaluator([0], 0, 0)
 
     # dist - prize = dist(C2, C5) + dist(C5, D0) - dist(C2, D0) - prize
@@ -40,15 +40,15 @@ def test_inserts_when_makes_sense(prize_collecting):
 
 def test_skips_assigned_or_missing(ok_small_prizes):
     """
-    Tests that InsertOptional skips assigned clients, or when the other client
-    is missing.
+    Tests that InsertOptionalClient skips assigned clients, or when the other
+    client is missing.
     """
     route = make_search_route(ok_small_prizes, ["C0", "C1"])
     assert_(route[1].route)
     assert_(route[2].route)
 
     # Client 1 is already assigned, cannot be inserted again.
-    op = InsertOptional(ok_small_prizes)
+    op = InsertOptionalClient(ok_small_prizes)
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(op.evaluate(route[1], route[2], cost_eval), (0, False))
 
@@ -64,11 +64,12 @@ def test_supports(
     ok_small_mutually_exclusive_groups,
 ):
     """
-    Tests that InsertOptional supports instances with optional clients, if
-    those are not in a required group.
+    Tests that InsertOptionalClient supports instances with optional clients,
+    if those are not in a required group.
     """
-    assert_(not InsertOptional.supports(ok_small))
-    assert_(InsertOptional.supports(ok_small_prizes))
+    op = InsertOptionalClient
+    assert_(not op.supports(ok_small))
+    assert_(op.supports(ok_small_prizes))
 
     data = ProblemData(  # instance with optional group
         locations=[Location(0, 0)],
@@ -80,16 +81,16 @@ def test_supports(
         groups=[ClientGroup(clients=[0], required=False)],
     )
 
-    # InsertOptional does not support instances with required groups, but it
-    # does support those with optional groups.
-    assert_(not InsertOptional.supports(ok_small_mutually_exclusive_groups))
-    assert_(InsertOptional.supports(data))
+    # Operator does not support instances with required groups, but it does
+    # support those with optional groups.
+    assert_(not op.supports(ok_small_mutually_exclusive_groups))
+    assert_(op.supports(data))
 
 
 def test_group_skip_required(ok_small_mutually_exclusive_groups):
     """
-    Tests that InsertOptional skips inserting for required groups, since those
-    are already handled via the local search.
+    Tests that InsertOptionalClient skips inserting for required groups, since
+    those are already handled via the local search.
     """
     data = ok_small_mutually_exclusive_groups
     assert_(data.group(0).required)
@@ -97,7 +98,7 @@ def test_group_skip_required(ok_small_mutually_exclusive_groups):
     solution = Solution(data)
     route = solution.routes[0]
 
-    op = InsertOptional(data)
+    op = InsertOptionalClient(data)
     op.init(solution)
 
     # The group is required, and that means the operator skips it: required
@@ -109,8 +110,8 @@ def test_group_skip_required(ok_small_mutually_exclusive_groups):
 
 def test_group_skip_duplicates():
     """
-    Tests that InsertOptional skips inserting for groups when they are already
-    present in the solution.
+    Tests that InsertOptionalClient skips inserting for groups when they are
+    already present in the solution.
     """
     data = ProblemData(
         locations=[Location(0, 0)],
@@ -128,7 +129,7 @@ def test_group_skip_duplicates():
     solution = Solution(data)
     route = solution.routes[0]
 
-    op = InsertOptional(data)
+    op = InsertOptionalClient(data)
     op.init(solution)
 
     # Group is not yet in the solution. Inserting it via the first client
@@ -148,8 +149,8 @@ def test_group_skip_duplicates():
 
 def test_insert_in_empty_routes_considers_fixed_vehicle_cost():
     """
-    Tests that InsertOptional considers fixed vehicle costs when routes are
-    empty.
+    Tests that InsertOptionalClient considers fixed vehicle costs when routes
+    are empty.
     """
     cost_eval = CostEvaluator([], 0, 0)
     data = ProblemData(
@@ -164,7 +165,7 @@ def test_insert_in_empty_routes_considers_fixed_vehicle_cost():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    op = InsertOptional(data)
+    op = InsertOptionalClient(data)
 
     # All distances, durations, and loads are equal. So the only cost change
     # can happen due to vehicle changes. In this, case we evaluate inserting a
