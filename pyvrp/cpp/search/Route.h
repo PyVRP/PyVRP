@@ -26,6 +26,7 @@ concept Segment
           { arg.back() } -> std::convertible_to<SegmentProxy>;
           { arg.size() } -> std::same_as<size_t>;
           { arg.numClients() } -> std::same_as<size_t>;
+          { arg.numPickups() } -> std::same_as<size_t>;
           { arg.startsAtReloadDepot() } -> std::same_as<bool>;
           { arg.endsAtReloadDepot() } -> std::same_as<bool>;
           { arg.distance(profile) } -> std::convertible_to<Distance>;
@@ -204,6 +205,21 @@ public:
         [[nodiscard]] inline bool isReloadDepot() const;
 
         /**
+         * Returns whether this node is part of a shipment.
+         */
+        [[nodiscard]] inline bool isShipment() const;
+
+        /**
+         * Returns whether this node is a pickup step of a shipment.
+         */
+        [[nodiscard]] inline bool isPickup() const;
+
+        /**
+         * Returns whether this node is a delivery step of a shipment.
+         */
+        [[nodiscard]] inline bool isDelivery() const;
+
+        /**
          * Assigns the node to the given route, at the given position, in the
          * given trip.
          */
@@ -235,6 +251,7 @@ private:
 
         inline size_t size() const;
         inline size_t numClients() const;
+        inline size_t numPickups() const;
 
         inline bool startsAtReloadDepot() const;
         inline bool endsAtReloadDepot() const;
@@ -262,6 +279,7 @@ private:
 
         inline size_t size() const;
         inline size_t numClients() const;
+        inline size_t numPickups() const;
 
         inline bool startsAtReloadDepot() const;
         inline bool endsAtReloadDepot() const;
@@ -291,6 +309,7 @@ private:
 
         inline size_t size() const;
         inline size_t numClients() const;
+        inline size_t numPickups() const;
 
         inline bool startsAtReloadDepot() const;
         inline bool endsAtReloadDepot() const;
@@ -318,6 +337,7 @@ private:
     std::vector<size_t> locations;  // Visited locations in this route
 
     std::vector<size_t> numClients_;  // Clients on start -> node (incl.)
+    std::vector<size_t> numPickups_;  // Pickups on start -> node (incl.)
 
     std::vector<Distance> cumDist;  // Dist of start -> node (incl.)
 
@@ -524,6 +544,12 @@ public:
     [[nodiscard]] inline size_t numClients() const;
 
     /**
+     * Number of shipments in this route.
+     */
+    [[nodiscard]] inline size_t numShipments() const;
+    [[nodiscard]] inline size_t numPickups() const;  // same; for convenience
+
+    /**
      * Returns the number of start, end, and reload depots in this route.
      */
     [[nodiscard]] inline size_t numDepots() const;
@@ -685,6 +711,12 @@ bool Route::Node::isReloadDepot() const
     return isDepot() && !isStartDepot() && !isEndDepot();
 }
 
+bool Route::Node::isShipment() const { return activity_.isShipment(); }
+
+bool Route::Node::isPickup() const { return activity_.isPickup(); }
+
+bool Route::Node::isDelivery() const { return activity_.isDelivery(); }
+
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
     : route_(route), start(start)
 {
@@ -765,6 +797,11 @@ size_t Route::SegmentBefore::numClients() const
     return route_.numClients_[end];
 }
 
+size_t Route::SegmentBefore::numPickups() const
+{
+    return route_.numPickups_[end];
+}
+
 bool Route::SegmentBefore::startsAtReloadDepot() const { return false; }
 
 bool Route::SegmentBefore::endsAtReloadDepot() const
@@ -794,6 +831,14 @@ size_t Route::SegmentAfter::numClients() const
     return fromStart + route_[start]->isClient();
 }
 
+size_t Route::SegmentAfter::numPickups() const
+{
+    // fromStart is (start, end]. So we need to check if start itself is also
+    // a pickup, and add 1 if it is.
+    auto const fromStart = route_.numPickups() - route_.numPickups_[start];
+    return fromStart + route_[start]->isPickup();
+}
+
 bool Route::SegmentAfter::startsAtReloadDepot() const
 {
     return route_.nodes[start]->isReloadDepot();
@@ -820,6 +865,14 @@ size_t Route::SegmentBetween::numClients() const
     // a client, and add 1 if it is.
     auto const fromStart = route_.numClients_[end] - route_.numClients_[start];
     return fromStart + route_[start]->isClient();
+}
+
+size_t Route::SegmentBetween::numPickups() const
+{
+    // fromStart is (start, end]. So we need to check if start itself is also
+    // a pickup, and add 1 if it is.
+    auto const fromStart = route_.numPickups_[end] - route_.numPickups_[start];
+    return fromStart + route_[start]->isPickup();
 }
 
 bool Route::SegmentBetween::startsAtReloadDepot() const
@@ -1025,11 +1078,27 @@ Duration Route::timeWarp() const
 
 size_t Route::profile() const { return vehicleType_.profile; }
 
-bool Route::empty() const { return numClients() == 0; }
+bool Route::empty() const { return numClients() == 0 && numShipments() == 0; }
 
 size_t Route::size() const { return nodes.size(); }
 
-size_t Route::numClients() const { return size() - numDepots(); }
+size_t Route::numClients() const
+{
+    assert(!dirty);
+    return numClients_.back();
+}
+
+size_t Route::numShipments() const
+{
+    assert(!dirty);
+    return numPickups_.back();
+}
+
+size_t Route::numPickups() const
+{
+    assert(!dirty);
+    return numPickups_.back();
+}
 
 size_t Route::numDepots() const { return depots_.size(); }
 
@@ -1079,10 +1148,12 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
 
 template <Segment... Segments> bool Route::Proposal<Segments...>::empty() const
 {
-    auto const numClients = std::apply(
-        [](auto &&...args) { return (args.numClients() + ...); }, segments_);
+    auto const numVisits = std::apply(  // visits to clients and shipments
+        [](auto &&...args)
+        { return (args.numClients() + ...) + (args.numPickups() + ...); },
+        segments_);
 
-    return numClients == 0;
+    return numVisits == 0;
 }
 
 template <Segment... Segments>

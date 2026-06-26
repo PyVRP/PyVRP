@@ -20,13 +20,13 @@ from pyvrp import (
 from pyvrp.search import (
     Exchange10,
     Exchange11,
-    InsertOptional,
+    InsertOptionalClient,
     LocalSearch,
     PerturbationManager,
     PerturbationParams,
     RelocateWithDepot,
     RemoveAdjacentDepot,
-    RemoveOptional,
+    RemoveOptionalClient,
     ReplaceGroup,
     compute_neighbours,
 )
@@ -297,7 +297,7 @@ def test_mutually_exclusive_group_not_in_solution(
     neighbours = compute_neighbours(ok_small_mutually_exclusive_groups)
 
     ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
-    ls.add_operator(InsertOptional(ok_small_mutually_exclusive_groups))
+    ls.add_operator(InsertOptionalClient(ok_small_mutually_exclusive_groups))
 
     sol = Solution(ok_small_mutually_exclusive_groups, [[3]])
     assert_equal(sol.num_missing_groups(), 1)
@@ -572,7 +572,7 @@ def test_local_search_inserts_into_empty_solutions():
     rng = RandomNumberGenerator(seed=2)
     cost_eval = CostEvaluator([], 0, 0)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_operator(InsertOptional(data))
+    ls.add_operator(InsertOptionalClient(data))
 
     empty = Solution(data, [])
     assert_equal(empty.num_clients(), 0)
@@ -611,8 +611,8 @@ def test_does_not_insert_optional_groups():
 
     rng = RandomNumberGenerator(seed=2)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_operator(InsertOptional(data))
-    ls.add_operator(RemoveOptional(data))
+    ls.add_operator(InsertOptionalClient(data))
+    ls.add_operator(RemoveOptionalClient(data))
 
     # Start with the group present. After local search, the solution should be
     # empty because the group is not worth keeping around.

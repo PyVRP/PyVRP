@@ -1,6 +1,7 @@
 #ifndef PYVRP_LOADSEGMENT_H
 #define PYVRP_LOADSEGMENT_H
 
+#include "Activity.h"
 #include "Measure.h"
 #include "ProblemData.h"
 
@@ -9,29 +10,29 @@
 namespace pyvrp
 {
 /**
- * LoadSegment(delivery: int, pickup: int, load: int, excess_load: int = 0)
+ * LoadSegment(initial: int, delta: int, increase: int, excess_load: int = 0)
  *
  * Creates a new load segment for delivery and pickup loads in a single
  * dimension. These load segments can be efficiently concatenated, and track
- * statistics about capacity violations resulting from visiting clients in the
- * concatenated order.
+ * statistics about capacity violations resulting from visiting clients and
+ * shipments in the concatenated order.
  *
  * Parameters
  * ----------
- * delivery
- *     Total delivery amount on this segment.
- * pickup
- *     Total pickup amount on this segment.
- * load
- *     Maximum load on this segment.
+ * initial
+ *     Initial load on the segment, loaded at the last depot visit.
+ * delta
+ *     Load delta since last depot visit.
+ * increase
+ *     Maximum load increase since last depot visit.
  * excess_load
  *     Cumulative excess load on this segment, possibly from earlier trips.
  */
 class LoadSegment
 {
-    Load delivery_ = 0;    // of client demand on current trip
-    Load pickup_ = 0;      // of client demand on current trip
-    Load load_ = 0;        // on current trip
+    Load initial_ = 0;     // loaded at last depot visit
+    Load delta_ = 0;       // delta since last depot visit
+    Load increase_ = 0;    // additional load added during the trip
     Load excessLoad_ = 0;  // cumulative excess load over other trips in segment
 
 public:
@@ -47,20 +48,26 @@ public:
     [[nodiscard]] inline LoadSegment finalise(Load capacity) const;
 
     /**
-     * Returns the delivery amount, that is, the total amount of load delivered
-     * to clients on this segment.
+     * Initial load on this segment. This is the amount loaded at the last
+     * depot visit.
      */
-    [[nodiscard]] Load delivery() const;
+    [[nodiscard]] Load initial() const;
 
     /**
-     * Returns the amount picked up from clients on this segment.
+     * This is the amount by which load has maximally increased since the last
+     * depot visit.
      */
-    [[nodiscard]] Load pickup() const;
+    [[nodiscard]] Load increase() const;
 
     /**
-     * Returns the maximum load encountered on this segment.
+     * Actual load delta since the last depot visit.
      */
-    [[nodiscard]] Load load() const;
+    [[nodiscard]] Load delta() const;
+
+    /**
+     * Returns the maximum load encountered since the last depot visit.
+     */
+    [[nodiscard]] inline Load load() const;
 
     /**
      * Returns the load violation on this segment.
@@ -68,7 +75,7 @@ public:
      * Parameters
      * ----------
      * capacity
-     *     Segment capacity, if any.
+     *     Vehicle capacity.
      */
     [[nodiscard]] inline Load excessLoad(Load capacity) const;
 
@@ -77,14 +84,19 @@ public:
     // Construct from load attributes of the given client and dimension.
     LoadSegment(Client const &client, size_t dimension);
 
+    // Construct from load attributes of the given shipment and dimension.
+    LoadSegment(Shipment const &shipment,
+                Activity::ActivityType type,
+                size_t dimension);
+
     // Construct from initial load attributes of the given vehicle type and
     // dimension.
     LoadSegment(VehicleType const &vehicleType, size_t dimension);
 
     // Construct from raw data.
-    inline LoadSegment(Load delivery,
-                       Load pickup,
-                       Load load,
+    inline LoadSegment(Load initial,
+                       Load delta,
+                       Load increase,
                        Load excessLoad = 0);
 
     // Move or copy construct from the other load segment.
@@ -99,18 +111,20 @@ public:
 LoadSegment LoadSegment::merge(LoadSegment const &first,
                                LoadSegment const &second)
 {
-    // See Vidal et al. (2014) for details. This function implements equations
-    // (9) -- (11) of https://doi.org/10.1016/j.ejor.2013.09.045.
-    return {
-        first.delivery_ + second.delivery_,
-        first.pickup_ + second.pickup_,
-        std::max(first.load_ + second.delivery_, second.load_ + first.pickup_),
-        first.excessLoad_ + second.excessLoad_};
+    // Loosely based on Hiermann and Schiffer (2026), equations (12) -- (15).
+    // See https://doi.org/10.1016/j.ejor.2026.01.037. We add initial client
+    // deliveries, pickup quantities, and excess load.
+    return {first.initial_ + second.initial_,
+            first.delta_ + second.delta_,
+            std::max(first.increase_, first.delta_ + second.increase_),
+            first.excessLoad_ + second.excessLoad_};
 }
+
+Load LoadSegment::load() const { return initial_ + increase_; }
 
 Load LoadSegment::excessLoad(Load capacity) const
 {
-    return excessLoad_ + std::max<Load>(load_ - capacity, 0);
+    return excessLoad_ + std::max<Load>(load() - capacity, 0);
 }
 
 LoadSegment LoadSegment::finalise(Load capacity) const
@@ -118,8 +132,14 @@ LoadSegment LoadSegment::finalise(Load capacity) const
     return {0, 0, 0, excessLoad(capacity)};
 }
 
-LoadSegment::LoadSegment(Load delivery, Load pickup, Load load, Load excessLoad)
-    : delivery_(delivery), pickup_(pickup), load_(load), excessLoad_(excessLoad)
+LoadSegment::LoadSegment(Load initial,
+                         Load delta,
+                         Load increase,
+                         Load excessLoad)
+    : initial_(initial),
+      delta_(delta),
+      increase_(increase),
+      excessLoad_(excessLoad)
 {
 }
 }  // namespace pyvrp

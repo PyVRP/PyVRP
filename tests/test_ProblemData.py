@@ -11,6 +11,7 @@ from pyvrp import (
     Depot,
     Location,
     ProblemData,
+    Shipment,
     VehicleType,
 )
 
@@ -341,10 +342,10 @@ def test_matrices_are_not_copies():
     assert_(dur1.base is dur2.base)
 
 
-def test_depot_client_raises_invalid_index(ok_small):
+def test_raises_when_accessing_an_invalid_index(ok_small):
     """
-    Tests that calling depot(idx) and client(idx) raises when the index is out
-    of bounds.
+    Tests that calling depot(idx), client(idx), and shipment(idx) raises when
+    the index is out of bounds.
     """
     assert_equal(ok_small.num_depots, 1)
     with assert_raises(IndexError):
@@ -353,6 +354,10 @@ def test_depot_client_raises_invalid_index(ok_small):
     assert_equal(ok_small.num_clients, 4)
     with assert_raises(IndexError):
         ok_small.client(4)
+
+    assert_equal(ok_small.num_shipments, 0)
+    with assert_raises(IndexError):
+        ok_small.shipment(0)
 
 
 @pytest.mark.parametrize(
@@ -773,3 +778,53 @@ def test_raises_unknown_location():
         distance_matrices=[np.zeros((2, 2), dtype=int)],
         duration_matrices=[np.zeros((2, 2), dtype=int)],
     )
+
+
+@pytest.mark.parametrize(
+    ("pickup_location", "delivery_location", "amount", "exp_exception"),
+    [
+        (1, 0, [], IndexError),  # pickup location 1 does not exist
+        (0, 1, [], IndexError),  # delivery location 1 does not exist
+        (0, 0, [1], ValueError),  # number of load dimension is 0, not 1
+    ],
+)
+def test_raises_invalid_shipments(
+    pickup_location: int,
+    delivery_location: int,
+    amount: list[int],
+    exp_exception: Exception,
+):
+    """
+    Tests that the ProblemData constructor raises when shipments reference
+    invalid locations, or have an inconsistent number of load dimensions.
+    """
+    with assert_raises(exp_exception):
+        ProblemData(
+            locations=[Location(0, 0)],
+            clients=[],
+            depots=[Depot(0)],
+            vehicle_types=[VehicleType(1)],
+            distance_matrices=[np.zeros((2, 2), dtype=int)],
+            duration_matrices=[np.zeros((2, 2), dtype=int)],
+            shipments=[
+                Shipment(pickup_location, delivery_location, amount=amount),
+            ],
+        )
+
+
+def test_replace_shipments(ok_small):
+    """
+    Tests replacing shipments on a data instance.
+    """
+    assert_equal(ok_small.num_shipments, 0)
+
+    shipments = [
+        Shipment(0, 1, amount=[1], name="1st"),
+        Shipment(1, 0, amount=[0], name="2nd"),
+    ]
+
+    data = ok_small.replace(shipments=shipments)
+    assert_equal(data.num_shipments, 2)
+    assert_equal(data.shipment(0), shipments[0])
+    assert_equal(data.shipment(1), shipments[1])
+    assert_equal(data.shipments(), shipments)

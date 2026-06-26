@@ -1,15 +1,16 @@
 from itertools import pairwise
+from typing import Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pyvrp import Activity, ProblemData, Solution
+from pyvrp import Activity, ActivityType, ProblemData, Solution
 
 
 def plot_solution(
     solution: Solution,
     data: ProblemData,
-    plot_clients: bool = False,
+    plot_locations: bool = False,
     ax: plt.Axes | None = None,
 ):
     """
@@ -21,8 +22,8 @@ def plot_solution(
         Solution to plot.
     data
         Data instance underlying the solution.
-    plot_clients
-        Whether to plot all clients as dots. Default False, which plots only
+    plot_locations
+        Whether to plot all locations as dots. Default False, which plots only
         the solution's routes.
     ax
         Axes object to draw the plot on. One will be created if not provided.
@@ -33,37 +34,38 @@ def plot_solution(
     x_coords = np.array([loc.x for loc in data.locations()])
     y_coords = np.array([loc.y for loc in data.locations()])
 
-    depot_locs = np.array([depot.location for depot in data.depots()], int)
-    client_locs = np.array([client.location for client in data.clients()], int)
-
     # These are the depots, as big red stars.
     kwargs = dict(label="Depot", c="tab:red", marker="*", zorder=3, s=500)
+    depot_locs = np.array([depot.location for depot in data.depots()], int)
     ax.scatter(x_coords[depot_locs], y_coords[depot_locs], **kwargs)
 
     colors = plt.get_cmap("tab10")
-    in_solution = np.zeros(data.num_clients, dtype=bool)
     for idx, route in enumerate(solution.routes()):
         color = colors(idx % colors.N)
 
-        activities = route.schedule()
-        client_activities = filter(Activity.is_client, activities)
-        depot_activities = filter(Activity.is_depot, activities)
-
-        depots = [activity.idx for activity in depot_activities]
-        clients = [activity.idx for activity in client_activities]
-        in_solution[clients] = True
+        activities: Sequence[Activity] = route.schedule()
+        depots = [act.idx for act in activities if act.is_depot()]
 
         trips: list[list[int]] = []  # as lists of client locations
         for activity in activities[:-1]:
-            if activity.is_depot():
-                trips.append([])
-            else:
-                trips[-1].append(client_locs[activity.idx])
+            match activity.type:
+                case ActivityType.DEPOT:
+                    trips.append([])
 
-        if route.num_clients() == 1 or plot_clients:
-            kwargs = dict(label=f"Route {idx + 1}", zorder=3, s=75)
-            locs = client_locs[clients]
-            ax.scatter(x_coords[locs], y_coords[locs], **kwargs, color=color)
+                case ActivityType.CLIENT:
+                    client = data.client(activity.idx)
+                    trips[-1].append(client.location)
+
+                case ActivityType.PICKUP:
+                    pickup = data.shipment(activity.idx).pickup
+                    trips[-1].append(pickup.location)
+
+                case ActivityType.DELIVERY:
+                    delivery = data.shipment(activity.idx).delivery
+                    trips[-1].append(delivery.location)
+
+                case _:
+                    continue
 
         for locations, (start, end) in zip(trips, pairwise(depots)):
             if len(locations) == 0:
@@ -74,9 +76,11 @@ def plot_solution(
 
             # Clients visited by this trip, as a line segment or single dot (in
             # case of a singleton trip). Trips of the same route share colour.
-            if len(locations) == 1:
-                ax.scatter(x, y, zorder=3, s=75, color=color)
-            else:
+            if plot_locations or len(locations) == 1:
+                kwargs = dict(label=f"Route {idx + 1}", zorder=3, s=75)
+                ax.scatter(x, y, **kwargs, color=color)
+
+            if len(locations) > 1:
                 ax.plot(x, y, color=color)
 
             # Thin edges from and to the depot. The edge from the depot to the
@@ -101,12 +105,27 @@ def plot_solution(
                 zorder=1,
             )
 
-    if plot_clients and not in_solution.all():
-        # Then we also plot the unvisited clients as grey dots. This is helpful
-        # in understanding solutions for problems with optional clients.
-        unvisited = np.flatnonzero(~in_solution)
-        x = x_coords[client_locs[unvisited]]
-        y = y_coords[client_locs[unvisited]]
+    if plot_locations and len(solution.unplanned()) != 0:
+        unplanned = []
+        for activity in solution.unplanned():
+            match activity.type:
+                case ActivityType.CLIENT:
+                    client = data.client(activity.idx)
+                    unplanned.append(client.location)
+
+                case ActivityType.PICKUP:
+                    shipment = data.shipment(activity.idx)
+                    unplanned.append(shipment.pickup.location)
+
+                case ActivityType.DELIVERY:
+                    shipment = data.shipment(activity.idx)
+                    unplanned.append(shipment.delivery.location)
+
+                case _:
+                    continue
+
+        x = x_coords[unplanned]
+        y = y_coords[unplanned]
         ax.scatter(x, y, label="Unvisited", zorder=3, s=75, c="grey")
 
     ax.grid(color="grey", linestyle="solid", linewidth=0.2)

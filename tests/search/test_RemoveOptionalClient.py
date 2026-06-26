@@ -10,14 +10,14 @@ from pyvrp import (
     ProblemData,
     VehicleType,
 )
-from pyvrp.search import RemoveOptional
+from pyvrp.search import RemoveOptionalClient
 from tests.helpers import make_search_route
 
 
 def test_does_not_remove_required_clients():
     """
-    Tests that RemoveOptional does not remove required clients, even when that
-    might result in a significant cost improvement.
+    Tests that RemoveOptionalClient does not remove required clients, even when
+    that might result in a significant cost improvement.
     """
     data = ProblemData(
         locations=[Location(0, 0), Location(1, 1), Location(2, 2)],
@@ -37,7 +37,7 @@ def test_does_not_remove_required_clients():
 
     route = make_search_route(data, ["C0", "C1"])
     cost_eval = CostEvaluator([100], 100, 0)
-    op = RemoveOptional(data)
+    op = RemoveOptionalClient(data)
 
     # Test that the the operator cannot remove the first required client, but
     # does want to remove the second.
@@ -55,11 +55,12 @@ def test_supports(
     ok_small_mutually_exclusive_groups,
 ):
     """
-    Tests that RemoveOptional supports prize-collecting instances, but not
-    instances with only required clients or groups.
+    Tests that RemoveOptionalClient supports prize-collecting instances, but
+    not instances with only required clients or groups.
     """
-    assert_(not RemoveOptional.supports(ok_small))
-    assert_(RemoveOptional.supports(ok_small_prizes))
+    op = RemoveOptionalClient
+    assert_(not op.supports(ok_small))
+    assert_(op.supports(ok_small_prizes))
 
     data = ProblemData(  # instance with optional group
         locations=[Location(0, 0)],
@@ -73,14 +74,14 @@ def test_supports(
 
     # RemoveOptional does not support instances with required groups, but it
     # does support those with optional groups.
-    assert_(not RemoveOptional.supports(ok_small_mutually_exclusive_groups))
-    assert_(RemoveOptional.supports(data))
+    assert_(not op.supports(ok_small_mutually_exclusive_groups))
+    assert_(op.supports(data))
 
 
 def test_fixed_vehicle_cost():
     """
-    Tests that RemoveOptional subtracts the fixed vehicle cost if the route
-    will become empty.
+    Tests that RemoveOptionalClient subtracts the fixed vehicle cost if the
+    route will become empty.
     """
     cost_eval = CostEvaluator([], 0, 0)
     data = ProblemData(
@@ -95,7 +96,7 @@ def test_fixed_vehicle_cost():
         duration_matrices=[np.zeros((3, 3), dtype=int)],
     )
 
-    op = RemoveOptional(data)
+    op = RemoveOptionalClient(data)
 
     # All distances, durations, and loads are equal. So the only cost change
     # can happen due to vehicle changes. In this, case we evaluate removing the
@@ -112,12 +113,12 @@ def test_fixed_vehicle_cost():
 
 def test_remove(ok_small_prizes):
     """
-    Tests that RemoveOptional works correctly on a specific example.
+    Tests that RemoveOptionalClient works correctly on a specific example.
     """
     cost_eval = CostEvaluator([1], 1, 0)
     route = make_search_route(ok_small_prizes, ["C0", "C1"])
 
-    op = RemoveOptional(ok_small_prizes)
+    op = RemoveOptionalClient(ok_small_prizes)
 
     # Purely distance. Removes C1 -> C2 -> D0, adds arcs C1 -> D0. This has
     # delta distance of 1726 - 1992 - 1965 = -2231, and a prize delta of 15:
@@ -150,7 +151,7 @@ def test_empty_route_delta_cost_bug():
         distance_matrices=[mat],
     )
 
-    op = RemoveOptional(data)
+    op = RemoveOptionalClient(data)
     cost_eval = CostEvaluator([], 1, 1)
 
     # Similarly, if removing a client results in an empty route, then we should
@@ -161,8 +162,8 @@ def test_empty_route_delta_cost_bug():
 
 def test_cannot_remove_required_group():
     """
-    Tests that RemoveOptional cannot remove members from required groups, since
-    that could render the solution structurally infeasible.
+    Tests that RemoveOptionalClient cannot remove members from required groups,
+    since that could render the solution structurally infeasible.
     """
     data = ProblemData(
         locations=[Location(0, 0), Location(0, 0), Location(0, 0)],
@@ -181,9 +182,9 @@ def test_cannot_remove_required_group():
     )
 
     # Mix of required and optional groups. RemoveOptional supports this.
-    assert_(RemoveOptional.supports(data))
+    assert_(RemoveOptionalClient.supports(data))
 
-    op = RemoveOptional(data)
+    op = RemoveOptionalClient(data)
     cost_eval = CostEvaluator([], 1, 1)
     route = make_search_route(data, ["C0", "C1"])
 
@@ -214,6 +215,6 @@ def test_removing_last_client_in_route_with_reload_depots_and_service():
     # Removing C0 turns the route empty, despite there still being depot visits
     # with associated service duration. Since no clients are visited, the route
     # has no cost, and that should be reflected in the cost delta.
-    op = RemoveOptional(data)
+    op = RemoveOptionalClient(data)
     cost_eval = CostEvaluator([], 0, 0)
     assert_equal(op.evaluate(route[1], cost_eval), (-100, True))

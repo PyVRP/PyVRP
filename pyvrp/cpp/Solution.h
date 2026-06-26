@@ -25,7 +25,7 @@ namespace pyvrp
  *     Data instance.
  * routes
  *     Route list to use. Can be a list of :class:`~Route` objects, or a lists
- *     of client visits. In case of the latter, all routes are assigned
+ *     of client indices. In case of the latter, all routes are assigned
  *     vehicles of the first type. That need not be a feasible assignment!
  *
  * Raises
@@ -35,31 +35,30 @@ namespace pyvrp
  *     particular when the number of routes in the ``routes`` argument exceeds
  *     :py:attr:`~ProblemData.num_vehicles`, when an empty route has been
  *     passed as part of ``routes``, when too many vehicles of a particular
- *     type have been used, or when a client is visited more than once.
+ *     type have been used, or when a client or shipment is served more than
+ *     once.
  */
 class Solution
 {
-    using Client = size_t;
-    using Depot = size_t;
-    using VehicleType = size_t;
-
     using Routes = std::vector<Route>;
     using Unplanned = std::vector<Activity>;
 
-    size_t numClients_ = 0;         // Number of clients in the solution
-    size_t numMissingClients_ = 0;  // Number of required but missing clients
-    size_t numMissingGroups_ = 0;   // Number of required but missing groups
-    Distance distance_ = 0;         // Total travel distance over all routes
-    Cost distanceCost_ = 0;         // Total cost of all routes' travel distance
-    Duration duration_ = 0;         // Total duration over all routes
-    Duration overtime_ = 0;         // Total overtime over all routes
-    Cost durationCost_ = 0;         // Total cost of all routes' duration
-    Distance excessDistance_ = 0;   // Total excess distance over all routes
-    std::vector<Load> excessLoad_;  // Total excess load over all routes
-    Cost fixedVehicleCost_ = 0;     // Fixed cost of all used vehicles
-    Cost prizes_ = 0;               // Total collected prize value
-    Cost uncollectedPrizes_ = 0;    // Total uncollected prize value
-    Duration timeWarp_ = 0;         // Total time warp over all routes
+    size_t numClients_ = 0;           // # clients in the solution
+    size_t numShipments_ = 0;         // # shipments in the solution
+    size_t numMissingClients_ = 0;    // # required but missing clients
+    size_t numMissingGroups_ = 0;     // # required but missing groups
+    size_t numMissingShipments_ = 0;  // # required but missing shipments
+    Distance distance_ = 0;           // Total travel distance over all routes
+    Cost distanceCost_ = 0;           // Total distance cost of all routes
+    Duration duration_ = 0;           // Total duration over all routes
+    Duration overtime_ = 0;           // Total overtime over all routes
+    Cost durationCost_ = 0;           // Total cost of all routes' duration
+    Distance excessDistance_ = 0;     // Total excess distance over all routes
+    std::vector<Load> excessLoad_;    // Total excess load over all routes
+    Cost fixedVehicleCost_ = 0;       // Fixed cost of all used vehicles
+    Cost prizes_ = 0;                 // Total collected prize value
+    Cost uncollectedPrizes_ = 0;      // Total uncollected prize value
+    Duration timeWarp_ = 0;           // Total time warp over all routes
 
     Routes routes_;
     Unplanned unplanned_;
@@ -73,7 +72,7 @@ class Solution
     Solution &operator=(Solution &&other) = default;
 
 public:
-    // Solution is empty when it has no routes and no clients.
+    // Solution is empty when it has no routes, clients or shipments.
     [[nodiscard]] bool empty() const;
 
     /**
@@ -99,6 +98,11 @@ public:
     [[nodiscard]] size_t numClients() const;
 
     /**
+     * Number of shipments in this solution.
+     */
+    [[nodiscard]] size_t numShipments() const;
+
+    /**
      * Number of required clients that are not in this solution.
      */
     [[nodiscard]] size_t numMissingClients() const;
@@ -107,6 +111,11 @@ public:
      * Number of required groups that are not in this solution.
      */
     [[nodiscard]] size_t numMissingGroups() const;
+
+    /**
+     * Number of required shipments that are not in this solution.
+     */
+    [[nodiscard]] size_t numMissingShipments() const;
 
     /**
      * The solution's routing decisions.
@@ -120,12 +129,13 @@ public:
     [[nodiscard]] Routes const &routes() const;
 
     /**
-     * Returns all unplanned clients.
+     * Returns all unplanned client and shipment activities.
      *
      * Returns
      * -------
      * list
-     *     A list of client activities that are not in this solution.
+     *     A list of client and shipm,ent activities that are not in this
+     *     solution.
      */
     [[nodiscard]] Unplanned const &unplanned() const;
 
@@ -136,7 +146,7 @@ public:
 
     /**
      * Returns whether this solution is complete, which it is when it has all
-     * required clients and groups.
+     * required clients, groups, and shipments.
      */
     [[nodiscard]] bool isComplete() const;
 
@@ -247,15 +257,17 @@ public:
     // This constructs from the given lists of client indices. Assumes all
     // routes are intended to use vehicles of the first vehicle type.
     Solution(ProblemData const &data,
-             std::vector<std::vector<Client>> const &routes);
+             std::vector<std::vector<size_t>> const &routes);
 
     // This constructs from the given list of Routes.
     Solution(ProblemData const &data, Routes routes);
 
     // This constructor does *no* validation. Useful when unserialising objects.
     Solution(size_t numClients,
+             size_t numShipments,
              size_t numMissingClients,
              size_t numMissingGroups,
+             size_t numMissingShipments,
              Distance distance,
              Cost distanceCost,
              Duration duration,

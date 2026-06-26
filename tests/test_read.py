@@ -666,3 +666,53 @@ def test_read_hfvrp_solution():
 
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(cost_eval.cost(sol), 1941256006)
+
+
+def test_reading_small_shipments():
+    """
+    Tests that reading the SmallShipments instance correctly parses all the
+    pickup and delivery pairs.
+    """
+    data = read("data/SmallShipments.txt")
+    assert_equal(data.num_shipments, 4)
+    assert_equal(data.num_clients, 0)
+
+    shipments = data.shipments()
+
+    # This data is all parsed from the PICKUP_AND_DELIVERY_SECTION of the
+    # instance.
+    assert_equal(shipments[0].pickup.location, 2)
+    assert_equal(shipments[0].pickup.tw_early, 12_800)
+    assert_equal(shipments[0].pickup.tw_late, 17_900)
+    assert_equal(shipments[0].pickup.service_duration, 900)
+    assert_equal(shipments[0].delivery.location, 1)
+    assert_equal(shipments[0].delivery.tw_early, 7_500)
+    assert_equal(shipments[0].delivery.tw_late, 80_900)
+    assert_equal(shipments[0].delivery.service_duration, 900)
+
+    assert_equal(shipments[1].pickup.location, 3)
+    assert_equal(shipments[1].pickup.tw_early, 14_700)
+    assert_equal(shipments[1].pickup.tw_late, 21_900)
+    assert_equal(shipments[1].pickup.service_duration, 900)
+    assert_equal(shipments[1].delivery.location, 4)
+    assert_equal(shipments[1].delivery.tw_early, 61_600)
+    assert_equal(shipments[1].delivery.tw_late, 66_100)
+    assert_equal(shipments[1].delivery.service_duration, 900)
+
+    assert_equal(shipments[2].pickup.location, 5)
+    assert_equal(shipments[2].pickup.tw_early, 47_800)
+    assert_equal(shipments[2].pickup.tw_late, 53_100)
+    assert_equal(shipments[2].pickup.service_duration, 900)
+    assert_equal(shipments[2].delivery.location, 6)
+    assert_equal(shipments[2].delivery.tw_early, 55_300)
+    assert_equal(shipments[2].delivery.tw_late, 60_200)
+    assert_equal(shipments[2].delivery.service_duration, 900)
+
+    assert_equal(shipments[3].pickup.location, 8)
+    assert_equal(shipments[3].pickup.tw_early, 35_100)
+    assert_equal(shipments[3].pickup.tw_late, 38_600)
+    assert_equal(shipments[3].pickup.service_duration, 900)
+    assert_equal(shipments[3].delivery.location, 7)
+    assert_equal(shipments[3].delivery.tw_early, 61_600)
+    assert_equal(shipments[3].delivery.tw_late, 68_000)
+    assert_equal(shipments[3].delivery.service_duration, 900)

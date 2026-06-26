@@ -11,6 +11,7 @@ from pyvrp._pyvrp import (
     Depot,
     Location,
     ProblemData,
+    Shipment,
     Solution,
     VehicleType,
 )
@@ -109,6 +110,7 @@ class Model:
         self._depots: list[Depot] = []
         self._edges: list[Edge] = []
         self._groups: list[ClientGroup] = []
+        self._shipments: list[Shipment] = []
         self._profiles: list[Profile] = []
         self._vehicle_types: list[VehicleType] = []
 
@@ -139,6 +141,13 @@ class Model:
         Returns all client groups currently in the model.
         """
         return self._groups
+
+    @property
+    def shipments(self) -> list[Shipment]:
+        """
+        Returns all shipments currently in the model.
+        """
+        return self._shipments
 
     @property
     def profiles(self) -> list[Profile]:
@@ -178,8 +187,6 @@ class Model:
             A model instance representing the given data.
         """
         locs = data.locations()
-        depots = data.depots()
-        clients = data.clients()
 
         profiles = [Profile() for _ in range(data.num_profiles)]
         for idx, profile in enumerate(profiles):
@@ -198,9 +205,10 @@ class Model:
 
         self = Model()
         self._locations = locs
-        self._clients = clients
-        self._depots = depots
+        self._clients = data.clients()
+        self._depots = data.depots()
         self._groups = data.groups()
+        self._shipments = data.shipments()
         self._profiles = profiles
         self._vehicle_types = data.vehicle_types()
 
@@ -288,6 +296,53 @@ class Model:
 
         self._clients.append(client)
         return client
+
+    def add_shipment(
+        self,
+        pickup_location: Location,
+        delivery_location: Location,
+        pickup_tw_early: int = 0,
+        pickup_tw_late: int = np.iinfo(np.int64).max,
+        pickup_service_duration: int = 0,
+        delivery_tw_early: int = 0,
+        delivery_tw_late: int = np.iinfo(np.int64).max,
+        delivery_service_duration: int = 0,
+        amount: list[int] = [],
+        prize: int = 0,
+        required: bool = True,
+        *,
+        name: str = "",
+    ) -> Shipment:
+        """
+        Adds a shipment with the given attributes to the model. Returns the
+        created :class:`~pyvrp._pyvrp.Shipment` instance.
+        """
+        locs = self._locations
+        if (pickup_loc := _idx_by_id(pickup_location, locs)) is None:
+            msg = "The given pickup location is not in this model instance."
+            raise ValueError(msg)
+
+        if (delivery_loc := _idx_by_id(delivery_location, locs)) is None:
+            msg = "The given delivery location is not in this model instance."
+            raise ValueError(msg)
+
+        shipment = Shipment(
+            pickup_location=pickup_loc,
+            delivery_location=delivery_loc,
+            pickup_tw_early=pickup_tw_early,
+            pickup_tw_late=pickup_tw_late,
+            pickup_service_duration=pickup_service_duration,
+            delivery_tw_early=delivery_tw_early,
+            delivery_tw_late=delivery_tw_late,
+            delivery_service_duration=delivery_service_duration,
+            amount=amount,
+            prize=prize,
+            required=required,
+            name=name,
+        )
+
+        self._shipments.append(shipment)
+        return shipment
 
     def add_client_group(
         self, required: bool = True, *, name: str = ""
@@ -527,6 +582,7 @@ class Model:
             distances,
             durations,
             self._groups,
+            self._shipments,
         )
 
     def solve(
