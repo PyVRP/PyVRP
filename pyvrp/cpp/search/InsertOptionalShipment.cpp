@@ -21,10 +21,12 @@ std::pair<pyvrp::Cost, bool> InsertOptionalShipment::evaluate(
     auto const &shipment = data.shipment(U->idx());
     auto const &route = *V->route();
 
+    Cost const fixedCost = route.empty() ? route.fixedVehicleCost() : 0;
+
     if (U->isPickup())  // pickup after V, delivery later in the route
     {
-        Cost deltaCost = -shipment.prize;  // delivery directly after pickup
-        costEvaluator.deltaCost(deltaCost,
+        Cost deltaCost = fixedCost - shipment.prize;
+        costEvaluator.deltaCost(deltaCost,  // delivery directly after pickup
                                 Route::Proposal(route.before(V->pos()),
                                                 PickupSegment(data, U->idx()),
                                                 DeliverySegment(data, U->idx()),
@@ -33,12 +35,12 @@ std::pair<pyvrp::Cost, bool> InsertOptionalShipment::evaluate(
         if (deltaCost < 0)
         {
             move_ = {V->pos() + 1};
-            return std::make_pair(deltaCost, deltaCost < 0);
+            return std::make_pair(deltaCost, true);
         }
 
         for (auto const *node = n(V); !node->isDepot(); node = n(node))
         {
-            Cost deltaCost = -shipment.prize;
+            Cost deltaCost = fixedCost - shipment.prize;
             costEvaluator.deltaCost(
                 deltaCost,
                 Route::Proposal(route.before(V->pos()),
@@ -54,10 +56,10 @@ std::pair<pyvrp::Cost, bool> InsertOptionalShipment::evaluate(
             }
         }
     }
-    else if (!V->isDepot())  // delivery after V, pickup earlier in route
-        for (auto const *node = p(V); !node->isDepot(); node = p(node))
+    else  // delivery after V, pickup earlier in route
+        for (auto const *node = V; !node->isDepot(); node = p(node))
         {
-            Cost deltaCost = -shipment.prize;
+            Cost deltaCost = fixedCost - shipment.prize;
             costEvaluator.deltaCost(
                 deltaCost,
                 Route::Proposal(route.before(node->pos() - 1),
@@ -91,7 +93,7 @@ void InsertOptionalShipment::apply(Route::Node *U, Route::Node *V) const
     }
     else
     {
-        assert(move_.pos < V->pos());  // pickup at pos, before delivery
+        assert(move_.pos <= V->pos());  // pickup at pos, before delivery
         route->insert(V->pos() + 1, U);
         route->insert(move_.pos, U - 1);
     }

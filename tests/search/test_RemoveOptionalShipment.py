@@ -35,6 +35,29 @@ def test_remove(small_optional_shipments):
     assert_equal(str(route), "")
 
 
+def test_fixed_cost_empty_routes(small_optional_shipments):
+    """
+    Tests that the operator correctly removes fixed vehicle costs when removing
+    the shipment leaves the route empty.
+    """
+    old_data = small_optional_shipments
+    veh_type = old_data.vehicle_type(0).replace(fixed_cost=10_000)
+    data = old_data.replace(vehicle_types=[veh_type])
+
+    sol = Solution(data)
+    route = Route(data, 0)
+    route.append(sol.shipments[1][0])
+    route.append(sol.shipments[1][1])
+    route.update()
+
+    # See also the test above. The regular cost delta from distance and prizes
+    # is -25_732, now increased by the fixed cost of 10_000 that we also lose
+    # after removing the only shipment in the route.
+    op = RemoveOptionalShipment(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(route[1], cost_eval), (-35_732, True))
+
+
 def test_cannot_remove_required_shipment(small_shipments):
     """
     Tests that the operator cannot remove required shipments.

@@ -33,6 +33,9 @@ RemoveOptionalShipment::evaluate(Route::Node *U,
     auto const *route = U->route();
 
     Cost deltaCost = shipment.prize;
+    if (route->numShipments() == 1 && route->numClients() == 0)
+        deltaCost -= route->fixedVehicleCost();
+
     if (n(pickup) == delivery)
         costEvaluator.deltaCost(
             deltaCost,

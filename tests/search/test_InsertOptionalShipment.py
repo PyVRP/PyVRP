@@ -20,21 +20,21 @@ def test_insert_pickup_in_improving_place(small_optional_shipments):
     assert_(pickup.is_pickup())
     assert_(delivery.is_delivery())
 
-    # Insert delivery just before end depot, and pickup in an improving place
-    # (first location). This results in a new distance of 32_401, but gets a
-    # prize of 10_000, for a delta of -5_331.
+    # Insert delivery just after U1, and pickup in the first improving place,
+    # just before U1. This results in a new distance of 34_369, but gets a
+    # prize of 10_000, for a delta of -3_363.
     op = InsertOptionalShipment(small_optional_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(delivery, route[-2], cost_eval), (-5_331, True))
+    assert_equal(op.evaluate(delivery, route[-2], cost_eval), (-3_363, True))
 
-    # Should insert U0 after U1, and L0 immediately after the start depot.
+    # Should insert U0 after U1, and L0 immediately before.
     op.apply(delivery, route[-2])
     route.update()
 
     assert_equal(route.num_shipments(), 2)
-    assert_equal(route.distance(), 32_401)
+    assert_equal(route.distance(), 34_369)
     assert_equal(small_optional_shipments.shipment(0).prize, 10_000)
-    assert_equal(str(route), "L0 L1 U1 U0")
+    assert_equal(str(route), "L1 L0 U1 U0")
 
 
 def test_insert_into_empty_route(small_optional_shipments):
@@ -59,6 +59,27 @@ def test_insert_into_empty_route(small_optional_shipments):
     #   distance - prize = 9_571 - 10_000 = -429.
     assert_equal(op.evaluate(pickup, route[0], cost_eval), (-429, True))
     assert_equal(op.evaluate(delivery, route[0], cost_eval), (0, False))
+
+
+def test_fixed_cost_empty_routes(small_optional_shipments):
+    """
+    Tests that the operator correctly accounts for fixed vehicle costs when
+    inserting into empty routes.
+    """
+    old_data = small_optional_shipments
+    veh_type = old_data.vehicle_type(0).replace(fixed_cost=250)
+    data = old_data.replace(vehicle_types=[veh_type])
+
+    sol = Solution(data)
+    pickup, _ = sol.shipments[0]
+    route = Route(data, 0)
+
+    # See also the test above. The cost delta of this move is -429 from
+    # distance and prizes, but we now also need to account for 250 fixed cost.
+    # Thus, the actual delta is -429 + 250 = -179.
+    op = InsertOptionalShipment(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(pickup, route[0], cost_eval), (-179, True))
 
 
 def test_insert_delivery_in_improving_place(small_optional_shipments):
