@@ -104,6 +104,40 @@ def test_skip_if_shipment_already_in_route(small_shipments):
     assert_equal(op.evaluate(route[1], route[3], cost_eval), (0, False))
 
 
+def test_does_not_insert_across_depots(small_optional_shipments):
+    """
+    Tests that the operator skips moves where the shipment nodes cross a depot
+    visit.
+    """
+    old_data = small_optional_shipments
+    veh_type = old_data.vehicle_type(0).replace(reload_depots=[0])
+    data = old_data.replace(vehicle_types=[veh_type])
+
+    route = make_search_route(data, ["L1", "U1", "D0", "L2", "U2"])
+    assert_(route[3].is_depot())
+
+    op = InsertOptionalShipment(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+
+    # The first shipment has a high prize, and is worth inserting in some parts
+    # of this route. But we cannot insert the delivery just after the reload
+    # depot at idx 3, since then pickup needs to be before that depot, and that
+    # would mean the shipment crosses depots.
+    sol = Solution(data)
+    pickup, delivery = sol.shipments[0]
+    assert_equal(op.evaluate(delivery, route[3], cost_eval), (0, False))
+
+    # For the pickup node we evaluate a direct sequence first, that is,
+    # inserting the pickup and delivery nodes directly after each other. In
+    # this case that's an improving move, and it does not cross depots.
+    assert_equal(op.evaluate(pickup, route[2], cost_eval), (-4_361, True))
+
+    op.apply(pickup, route[2])
+    route.update()
+
+    assert_equal(str(route), "L1 U1 L0 U0 | L2 U2")
+
+
 def test_supports(small_optional_shipments, small_shipments):
     """
     Tests that the operator supports instances with optional shipments.

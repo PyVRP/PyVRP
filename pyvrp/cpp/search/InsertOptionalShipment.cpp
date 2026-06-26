@@ -54,7 +54,7 @@ std::pair<pyvrp::Cost, bool> InsertOptionalShipment::evaluate(
             }
         }
     }
-    else if (!V->isStartDepot())  // delivery after V, pickup earlier in route
+    else if (!V->isDepot())  // delivery after V, pickup earlier in route
         for (auto const *node = p(V); !node->isDepot(); node = p(node))
         {
             Cost deltaCost = -shipment.prize;
