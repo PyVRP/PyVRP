@@ -414,8 +414,7 @@ PYBIND11_MODULE(_search, m)
         .def_static("supports", &supports<RelocateWithDepot>, py::arg("data"));
 
     py::class_<SearchSpace>(m, "SearchSpace", DOC(pyvrp, search, SearchSpace))
-        .def(py::init<pyvrp::ProblemData const &,
-                      std::vector<std::vector<size_t>>>(),
+        .def(py::init<pyvrp::ProblemData const &, SearchSpace::Neighbours>(),
              py::arg("data"),
              py::arg("neighbours"))
         .def_property("neighbours",
@@ -495,7 +494,7 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
-                      std::vector<std::vector<size_t>>,
+                      SearchSpace::Neighbours,
                       PerturbationManager &>(),
              py::arg("data"),
              py::arg("neighbours"),
