@@ -424,15 +424,16 @@ PYBIND11_MODULE(_search, m)
                       py::return_value_policy::reference_internal)
         .def("neighbours_of",
              &SearchSpace::neighboursOf,
-             py::arg("client"),
+             py::arg("activity"),
              DOC(pyvrp, search, SearchSpace, neighboursOf))
         .def("is_promising",
              &SearchSpace::isPromising,
-             py::arg("client"),
+             py::arg("activity"),
              DOC(pyvrp, search, SearchSpace, isPromising))
         .def("mark_promising",
-             py::overload_cast<size_t>(&SearchSpace::markPromising),
-             py::arg("client"),
+             py::overload_cast<pyvrp::Activity const &>(
+                 &SearchSpace::markPromising),
+             py::arg("activity"),
              DOC(pyvrp, search, SearchSpace, markPromising, 1))
         .def(
             "mark_promising",
@@ -445,9 +446,9 @@ PYBIND11_MODULE(_search, m)
         .def("unmark_all_promising",
              &SearchSpace::unmarkAllPromising,
              DOC(pyvrp, search, SearchSpace, unmarkAllPromising))
-        .def("client_order",
-             &SearchSpace::clientOrder,
-             DOC(pyvrp, search, SearchSpace, clientOrder))
+        .def("activity_order",
+             &SearchSpace::activityOrder,
+             DOC(pyvrp, search, SearchSpace, activityOrder))
         .def("veh_type_order",
              &SearchSpace::vehTypeOrder,
              DOC(pyvrp, search, SearchSpace, vehTypeOrder))

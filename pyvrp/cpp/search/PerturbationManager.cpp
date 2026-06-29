@@ -88,8 +88,12 @@ void PerturbationManager::perturb(Solution &solution,
     // randomly selected clients U: if U is in the solution, we remove it and
     // its neighbours, while if it is not, we try to insert instead. Each
     // removal or insertion counts as one perturbation.
-    for (auto const uClient : searchSpace.clientOrder())
+    for (auto const &uActivity : searchSpace.activityOrder())
     {
+        if (!uActivity.isClient())
+            continue;
+
+        auto const uClient = uActivity.idx();
         auto *U = &solution.clients[uClient];
         auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
         perturb(U, action);
@@ -97,8 +101,12 @@ void PerturbationManager::perturb(Solution &solution,
         if (!movesLeft)
             return;
 
-        for (auto const vClient : searchSpace.neighboursOf(uClient))
+        for (auto const &vActivity : searchSpace.neighboursOf(uActivity))
         {
+            if (!vActivity.isClient())
+                continue;
+
+            auto const vClient = vActivity.idx();
             auto *V = &solution.clients[vClient];
             perturb(V, action);
 

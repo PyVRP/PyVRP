@@ -97,6 +97,8 @@ PYBIND11_MODULE(_pyvrp, m)
                 return {t[0].cast<Activity::ActivityType>(),  // type
                         t[1].cast<size_t>()};                 // idx
             }))
+        .def("__hash__",
+             [](Activity const &activity) { return std::hash<Activity>()(activity); })
         .def("__str__",
              [](Activity const &activity)
              {

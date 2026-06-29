@@ -7,7 +7,7 @@
 #include "RandomNumberGenerator.h"
 #include "Route.h"
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 namespace pyvrp::search
@@ -24,7 +24,7 @@ namespace pyvrp::search
 class SearchSpace
 {
 public:
-    using Neighbours = std::map<Activity, std::vector<Activity>>;
+    using Neighbours = std::unordered_map<Activity, std::vector<Activity>>;
 
 private:
     // Neighbourhood restrictions: list of nearby clients for each client.

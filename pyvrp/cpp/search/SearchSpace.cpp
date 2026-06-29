@@ -1,7 +1,6 @@
 #include "SearchSpace.h"
 
 #include <cassert>
-#include <numeric>
 #include <sstream>
 #include <stdexcept>
 
@@ -10,11 +9,15 @@ using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 
 SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
-    : promising_(data.numClients()),
-      activityOrder_(data.numClients() + data.numShipments())
+    : promising_(data.numClients())
 {
     setNeighbours(neighbours);
-    std::iota(activityOrder_.begin(), activityOrder_.end(), 0);
+
+    activityOrder_.reserve(data.numClients() + data.numShipments());
+    for (size_t idx = 0; idx != data.numClients(); ++idx)
+        activityOrder_.emplace_back(Activity::ActivityType::CLIENT, idx);
+    for (size_t idx = 0; idx != data.numShipments(); ++idx)
+        activityOrder_.emplace_back(Activity::ActivityType::PICKUP, idx);
 
     size_t offset = 0;
     for (size_t vehType = 0; vehType != data.numVehicleTypes(); vehType++)
@@ -64,9 +67,9 @@ bool SearchSpace::isPromising(Activity const &activity) const
     return false;  // TODO
 }
 
-void SearchSpace::markPromising(Activity const &activity)
+void SearchSpace::markPromising([[maybe_unused]] Activity const &activity)
 {
-    promising_[activity] = true;
+    // promising_[activity] = true;  TODO
 }
 
 void SearchSpace::markPromising(Route::Node const *node)

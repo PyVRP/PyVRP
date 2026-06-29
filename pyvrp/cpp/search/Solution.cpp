@@ -193,8 +193,12 @@ bool Solution::insert(Route::Node *U,
 
     // First attempt a neighbourhood search to place U into routes that are
     // already in use.
-    for (auto const vClient : searchSpace.neighboursOf(U->idx()))
+    for (auto const &vActivity : searchSpace.neighboursOf(U->activity()))
     {
+        if (!vActivity.isClient())
+            continue;
+
+        auto const vClient = vActivity.idx();
         auto *V = &clients[vClient];
 
         if (!V->route())
