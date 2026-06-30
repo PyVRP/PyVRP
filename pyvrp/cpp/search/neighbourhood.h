@@ -1,8 +1,10 @@
 #ifndef PYVRP_SEARCH_NEIGHBOURHOOD_H
 #define PYVRP_SEARCH_NEIGHBOURHOOD_H
 
+#include "Activity.h"
 #include "ProblemData.h"
 
+#include <unordered_map>
 #include <vector>
 
 namespace pyvrp::search
@@ -51,7 +53,7 @@ struct NeighbourhoodParams
 /**
  * Computes neighbours defining the neighbourhood for a problem instance.
  */
-std::vector<std::vector<size_t>>
+std::unordered_map<Activity, std::vector<Activity>>
 computeNeighbours(ProblemData const &data, NeighbourhoodParams const &params);
 }  // namespace pyvrp::search
 
