@@ -6,12 +6,12 @@ from pyvrp.search._search import NeighbourhoodParams
 from pyvrp.search._search import compute_neighbours as _compute_neighbours
 
 if TYPE_CHECKING:
-    from pyvrp import ProblemData
+    from pyvrp import Activity, ProblemData
 
 
 def compute_neighbours(
     data: ProblemData, params: NeighbourhoodParams = NeighbourhoodParams()
-) -> list[list[int]]:
+) -> dict[Activity, list[Activity]]:
     """
     Computes neighbours defining the neighbourhood for a problem instance.
 
@@ -24,7 +24,8 @@ def compute_neighbours(
 
     Returns
     -------
-    list
-        A list of list of integers representing the neighbours for each client.
+    dict
+        A mapping from activities to neighbouring activities for each client
+        and pickup.
     """
     return _compute_neighbours(data, params)  # delegate to C++ implementation

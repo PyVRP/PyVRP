@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <tuple>
 
+using pyvrp::Activity;
 using pyvrp::Matrix;
 using pyvrp::ProblemData;
 using pyvrp::search::NeighbourhoodParams;
@@ -97,7 +98,7 @@ NeighbourhoodParams::NeighbourhoodParams(double weightWaitTime,
         throw std::invalid_argument("num_neighbours == 0 not understood.");
 }
 
-std::vector<std::vector<size_t>>
+std::unordered_map<Activity, std::vector<Activity>>
 pyvrp::search::computeNeighbours(ProblemData const &data,
                                  NeighbourhoodParams const &params)
 {
@@ -127,11 +128,13 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
     size_t const numClients = std::max<size_t>(data.numClients(), 1);
     size_t const numNeighbours = std::min(params.numNeighbours, numClients - 1);
 
-    std::vector<std::vector<size_t>> neighbours(data.numClients());
+    std::unordered_map<Activity, std::vector<Activity>> neighbours;
 
     std::vector<size_t> indices(data.numClients());
     for (size_t client = 0; client != data.numClients(); ++client)
     {
+        Activity const activity = {Activity::ActivityType::CLIENT, client};
+
         auto const comp = [&](auto const a, auto const b)
         { return prox(client, a) < prox(client, b); };
 
@@ -140,7 +143,10 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
         std::stable_sort(indices.begin(), indices.end(), comp);
 
         // Neighbourhood of client is set to the first numNeighbours indices.
-        neighbours[client] = {indices.begin(), indices.begin() + numNeighbours};
+        neighbours[activity] = {};
+        for (size_t idx = 0; idx != numNeighbours; ++idx)
+            neighbours[activity].emplace_back(Activity::ActivityType::CLIENT,
+                                              indices[idx]);
     }
 
     return neighbours;

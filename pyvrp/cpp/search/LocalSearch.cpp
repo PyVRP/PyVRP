@@ -62,10 +62,15 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
         PYVRP_DEBUG("pyvrp.search", "Entering search loop (step={}).", step);
         searchCompleted_ = true;
 
-        for (auto const uClient : searchSpace_.clientOrder())
+        for (auto const &uActivity : searchSpace_.activityOrder())
         {
+            if (!uActivity.isClient())
+                continue;
+
+            auto const uClient = uActivity.idx();
             auto *U = &solution_.clients[uClient];
-            if (!searchSpace_.isPromising(uClient))
+
+            if (!searchSpace_.isPromising(uActivity))
                 continue;
 
             auto const lastTest = lastTest_[uClient];
@@ -73,9 +78,12 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
             applyUnaryOps(U, costEvaluator);
 
-            for (auto const vClient : searchSpace_.neighboursOf(uClient))
+            for (auto const &vActivity : searchSpace_.neighboursOf(uActivity))
             {
-                auto *V = &solution_.clients[vClient];
+                if (!vActivity.isClient())
+                    continue;
+
+                auto *V = &solution_.clients[vActivity.idx()];
 
                 if (!V->route())
                     continue;
@@ -236,8 +244,12 @@ void LocalSearch::ensureStructuralFeasibility(
     }
 
     // Ensure all required clients and groups are present in the solution.
-    for (auto const client : searchSpace_.clientOrder())
+    for (auto const &activity : searchSpace_.activityOrder())
     {
+        if (!activity.isClient())
+            continue;
+
+        auto const client = activity.idx();
         auto &node = solution_.clients[client];
         auto const &clientData = data.client(client);
 
