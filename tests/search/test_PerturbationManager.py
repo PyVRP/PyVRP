@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 import pyvrp
-from pyvrp import CostEvaluator, RandomNumberGenerator
+from pyvrp import Activity, CostEvaluator, RandomNumberGenerator
 from pyvrp.search import (
     PerturbationManager,
     PerturbationParams,
@@ -159,7 +159,8 @@ def test_perturb_inserts_into_new_routes(ok_small):
     # Start with an empty solution, and an empty granular neighbourhood. So
     # there is no way to insert clients next to their neighbours.
     sol = Solution(data)
-    search_space = SearchSpace(data, [[] for _ in range(data.num_clients)])
+    neighbours = {Activity(f"C{idx}"): [] for idx in range(data.num_clients)}
+    search_space = SearchSpace(data, neighbours)
     cost_eval = CostEvaluator([2000], 0, 0)  # heavily penalise load violations
 
     # Perturb exactly three times. No clients are currently in the solution, so
