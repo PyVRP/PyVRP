@@ -2,12 +2,12 @@
 #define PYVRP_SEARCH_SEARCHSPACE_H
 
 #include "Activity.h"
-#include "DynamicBitset.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace pyvrp::search
@@ -25,14 +25,11 @@ class SearchSpace
 {
 public:
     using Neighbours = std::unordered_map<Activity, std::vector<Activity>>;
+    using Promising = std::unordered_set<Activity>;
 
 private:
     // Neighbourhood restrictions: list of nearby clients for each client.
     Neighbours neighbours_;
-
-    // Tracks clients and shipments that can likely be improved by local search
-    // operators.
-    DynamicBitset promising_;
 
     // Activity order used for node-based search.
     std::vector<Activity> activityOrder_;
@@ -40,6 +37,11 @@ private:
     // Vehicle type order - pairs of [veh type, offset] - used for empty route
     // search.
     std::vector<std::pair<size_t, size_t>> vehTypeOrder_;
+
+    // Tracks clients and shipments that can likely be improved by local search
+    // operators.
+    Promising promising_;
+    bool allPromising_ = false;
 
 public:
     SearchSpace(ProblemData const &data, Neighbours neighbours);

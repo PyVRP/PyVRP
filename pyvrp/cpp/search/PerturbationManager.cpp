@@ -1,5 +1,7 @@
 #include "PerturbationManager.h"
 
+#include "DynamicBitset.h"
+
 #include <cassert>
 #include <stdexcept>
 

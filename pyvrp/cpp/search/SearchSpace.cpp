@@ -9,8 +9,11 @@ using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 
 SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
-    : promising_(data.numClients())
 {
+    if (neighbours.size() != data.numClients() + data.numShipments())
+        throw std::runtime_error(
+            "Neighbourhood dimension does not match problem dimension.");
+
     setNeighbours(neighbours);
 
     activityOrder_.reserve(data.numClients() + data.numShipments());
@@ -29,11 +32,19 @@ SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
 
 void SearchSpace::setNeighbours(Neighbours neighbours)
 {
-    if (neighbours.size() != neighbours_.size())
+    if (!neighbours_.empty() && neighbours.size() != neighbours_.size())
         throw std::runtime_error("Neighbourhood dimensions do not match.");
 
     for (auto const &[activity, neighbourhood] : neighbours)
     {
+        if (!activity.isClient() && !activity.isPickup())
+        {
+            std::ostringstream msg;
+            msg << "Expected neighbourhoods for clients and pickups, not "
+                << activity << ".";
+            throw std::runtime_error(msg.str());
+        }
+
         auto const beginPos = neighbourhood.begin();
         auto const endPos = neighbourhood.end();
 
@@ -64,12 +75,12 @@ SearchSpace::neighboursOf(Activity const &activity) const
 bool SearchSpace::isPromising(Activity const &activity) const
 {
     assert(activity.isClient() || activity.isShipment());
-    return false;  // TODO
+    return allPromising_ || promising_.contains(activity);
 }
 
-void SearchSpace::markPromising([[maybe_unused]] Activity const &activity)
+void SearchSpace::markPromising(Activity const &activity)
 {
-    // promising_[activity] = true;  TODO
+    promising_.insert(activity);
 }
 
 void SearchSpace::markPromising(Route::Node const *node)
@@ -86,9 +97,17 @@ void SearchSpace::markPromising(Route::Node const *node)
         markPromising(n(node)->activity());
 }
 
-void SearchSpace::markAllPromising() { promising_.set(); }
+void SearchSpace::markAllPromising()
+{
+    promising_.clear();
+    allPromising_ = true;
+}
 
-void SearchSpace::unmarkAllPromising() { promising_.reset(); }
+void SearchSpace::unmarkAllPromising()
+{
+    promising_.clear();
+    allPromising_ = false;
+}
 
 std::vector<Activity> const &SearchSpace::activityOrder() const
 {
