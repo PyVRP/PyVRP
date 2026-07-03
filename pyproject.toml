@@ -181,6 +181,11 @@ packages = [
 generate-setup-file = false
 script = "buildtools/build_wrapper.py"
 
+[tool.cibuildwheel.pyodide]
+environment = { CFLAGS = "-Wno-error=unused-command-line-argument", CXXFLAGS = "-Wno-error=unused-command-line-argument" }
+test-environment = { MPLBACKEND = "Agg" }
+test-requires = ["pytest"]
+test-command = "python -m pytest -k \"not test_plotting\" -n 0 {project}/tests -x"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "meson", "ninja", "docblock"]
