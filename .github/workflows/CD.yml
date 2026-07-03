@@ -32,10 +32,30 @@ jobs:
         with:
           name: dist-${{ matrix.os }}
           path: ./dist/*
+    
+  build_wheel_wasm:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install correct python version
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: 3.14
+
+      - name: Build wheel
+        run: |
+          python3 -m pip install cibuildwheel
+          python3 -m cibuildwheel --only cp314-pyodide_wasm32 --output-dir dist
+
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: dist-wasm
+          path: ./dist/*
 
   deploy:
     name: Deploy to PyPI
-    needs: [ build ]
+    needs: [ build, build_wheel_wasm ]
     runs-on: ubuntu-24.04
     if: github.event_name == 'release' && github.event.action == 'created'
     permissions:
@@ -60,5 +80,6 @@ jobs:
       - name: List packaged distributions
         run: ls -la dist/
       - name: Deploy to PyPI
-        run: |
-          uv publish
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1
+        with:
+          packages-dir: dist/
