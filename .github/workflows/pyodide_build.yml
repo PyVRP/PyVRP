@@ -1,0 +1,34 @@
+name: Pyodide Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  build_wheel_wasm:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install correct python version
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.14
+
+      - name: Build wheel
+        run: |
+          python3 -m pip install cibuildwheel==4.1.0
+          python3 -m cibuildwheel --only cp314-pyodide_wasm32 --output-dir dist
+
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: dist-wasm
+          path: ./dist/*
