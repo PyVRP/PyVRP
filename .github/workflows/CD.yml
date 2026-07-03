@@ -45,7 +45,7 @@ jobs:
 
       - name: Build wheel
         run: |
-          python3 -m pip install cibuildwheel
+          python3 -m pip install cibuildwheel==4.1.0
           python3 -m cibuildwheel --only cp314-pyodide_wasm32 --output-dir dist
 
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
