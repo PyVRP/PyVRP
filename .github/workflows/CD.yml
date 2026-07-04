@@ -18,13 +18,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-24.04, ubuntu-24.04-arm, windows-2022, macos-15, pyodide ]
+        os: [ pyodide, ubuntu-24.04, ubuntu-24.04-arm, windows-2022, macos-15 ]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
       - name: Build wheels
-        uses: pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084 # v3.4.1
+        uses: pypa/cibuildwheel@v4.1.0
         with:
           package-dir: .
           output-dir: dist
