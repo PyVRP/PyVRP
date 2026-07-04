@@ -24,7 +24,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Build wheels
-        uses: pypa/cibuildwheel@v4.1.0
+        uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55 # v4.1.0
         with:
           package-dir: .
           output-dir: dist
@@ -37,10 +37,10 @@ jobs:
     name: Build wheels for pyodide
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install correct python version
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 #v6.3.0
         with:
           python-version: 3.14
 
