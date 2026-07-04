@@ -12,6 +12,7 @@ _MAX_SIZE = np.iinfo(np.uint64).max
 if sys.platform == "emscripten":
     _MAX_SIZE = np.iinfo(np.uint32).max
 
+
 @pytest.mark.parametrize(
     (
         "capacity",
