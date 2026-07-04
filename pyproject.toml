@@ -183,11 +183,9 @@ script = "buildtools/build_wrapper.py"
 
 [tool.cibuildwheel.pyodide]
 build = "cp314-*"
-environment = { 
-    CFLAGS = "-Wno-error=unused-command-line-argument", 
-    CXXFLAGS = "-Wno-error=unused-command-line-argument",
-    CIBW_PLATFORM = "pyodide" 
-    }
+environment.CFLAGS = "-Wno-error=unused-command-line-argument"
+environment.CXXFLAGS = "-Wno-error=unused-command-line-argument"
+environment.CIBW_PLATFORM = "pyodide"
 test-requires = ["pytest"]
 test-command = "python -m pytest -k \"not test_plotting\" -n 0 {project}/tests -x"
 
