@@ -111,7 +111,7 @@ def test_negative_fixed_cost_uses_all_vehicles(ok_small):
     res = solve(ok_small, stop=MaxIterations(10))
     assert_equal(res.best.num_routes(), 2)
 
-    # Let's not set a large, negative fixed cost. This should result in all
+    # Let's now set a large, negative fixed cost. This should result in all
     # vehicles being used.
     veh_type = ok_small.vehicle_type(0).replace(fixed_cost=-10_000)
     data = ok_small.replace(vehicle_types=[veh_type])
