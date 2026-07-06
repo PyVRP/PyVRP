@@ -40,6 +40,11 @@ Modelling
       Set zero distance and duration on edges leaving (for start depots) or entering (for end depots) the dummy depots.
       You can then drop these dummy depots from PyVRP's solution in a post-processing step. 
 
+   How can I make sure PyVRP uses all my vehicles?
+
+      By specifying a negative fixed cost for each vehicle.
+      This incentivises PyVRP to use more vehicles than it normally would.
+
 Debugging
 ---------
 
