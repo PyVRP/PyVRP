@@ -54,7 +54,9 @@ def test_OkSmall_multiple_vehicle_types(
     cost_evaluator = CostEvaluator([10_000], 6, 0)  # large load penalty
     rng = RandomNumberGenerator(seed=42)
 
-    neighbours = {Activity(f"C{idx}"): [] for idx in range(data.num_clients)}
+    neighbours: dict[Activity, list[Activity]] = {
+        Activity(f"C{idx}"): [] for idx in range(data.num_clients)
+    }
     neighbours[Activity("C0")] = [Activity("C1")]  # only C0 -> C1
 
     ls = LocalSearch(data, rng, neighbours)

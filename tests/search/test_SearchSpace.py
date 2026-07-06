@@ -72,10 +72,10 @@ def test_set_get_neighbours(
     # Check that the bindings make a copy (in both directions)
     assert_(search_space.neighbours is not neighbours)
     search_space_neighbours = search_space.neighbours
-    search_space_neighbours[1] = []
+    search_space_neighbours[Activity("C1")] = []
     assert_(search_space.neighbours != search_space_neighbours)
     assert_equal(search_space.neighbours, neighbours)
-    neighbours[1] = []
+    neighbours[Activity("C1")] = []
     assert_(search_space.neighbours != neighbours)
 
 
