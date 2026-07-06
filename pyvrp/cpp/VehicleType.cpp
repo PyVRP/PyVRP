@@ -96,9 +96,6 @@ VehicleType::VehicleType(size_t numAvailable,
     if (maxDistance < 0)
         throw std::invalid_argument("max_distance must be >= 0.");
 
-    if (fixedCost < 0)
-        throw std::invalid_argument("fixed_cost must be >= 0.");
-
     if (unitDistanceCost < 0)
         throw std::invalid_argument("unit_distance_cost must be >= 0.");
 
