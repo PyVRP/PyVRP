@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Depot, Location, ProblemData, VehicleType
+from pyvrp import Activity, Depot, Location, ProblemData, VehicleType
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 
 
@@ -58,9 +58,13 @@ def test_compute_neighbours(
 
     # We compare sets because the expected data (from the old C++
     # implementation) sorts by client ID (ascending), not proximity.
-    assert_equal(set(neighbours[idx_check]), expected_neighbours_check)
+    activity = Activity(f"C{idx_check}")
+    assert_equal(
+        set(act.idx for act in neighbours[activity]),
+        expected_neighbours_check,
+    )
 
-    for neighb in neighbours:
+    for neighb in neighbours.values():
         assert_equal(len(neighb), num_neighbours)
 
 
@@ -84,7 +88,8 @@ def test_neighbours_are_sorted_by_proximity(small_cvrp):
         valid = np.array([other for other in clients if other != client])
         dists = distances[client, valid]
         by_proximity = valid[np.argsort(dists, kind="stable")]
-        assert_equal(by_proximity, neighbours[client])
+        as_activities = [Activity(f"C{idx}") for idx in by_proximity]
+        assert_equal(as_activities, neighbours[Activity(f"C{client}")])
 
 
 def test_more_neighbours_than_instance_size(rc208):
@@ -95,7 +100,7 @@ def test_more_neighbours_than_instance_size(rc208):
     params = NeighbourhoodParams(num_neighbours=rc208.num_clients)
     neighbours = compute_neighbours(rc208, params)
 
-    for neighb in neighbours[1:]:
+    for neighb in neighbours.values():
         assert_equal(len(neighb), rc208.num_clients - 1)
 
 
@@ -113,8 +118,8 @@ def test_proximity_with_prizes(prize_collecting):
     # biggest difference is in prizes: client 19 has a prize of 33, whereas
     # client 35 only yields 8. As a consequence, 35 should be in many fewer
     # neighbourhoods than 19.
-    count_19 = sum(19 in n for n in neighbours)
-    count_35 = sum(35 in n for n in neighbours)
+    count_19 = sum(Activity("C19") in n for n in neighbours.values())
+    count_35 = sum(Activity("C35") in n for n in neighbours.values())
     assert_(count_19 > count_35)
 
 
@@ -131,7 +136,11 @@ def test_proximity_with_mutually_exclusive_groups(
     group = ok_small_mutually_exclusive_groups.group(0)
     members = group.clients
     for client in members:
-        assert_(all(other not in neighbours[client] for other in members))
+        act = Activity(f"C{client}")
+        assert_(
+            all(Activity(f"C{other}") not in neighbours[act]
+            for other in members)
+        )
 
 
 def test_different_routing_costs(ok_small):
@@ -201,4 +210,4 @@ def test_zero_clients():
         duration_matrices=[np.zeros((1, 1), dtype=int)],
     )
 
-    assert_equal(compute_neighbours(data), [])
+    assert_equal(compute_neighbours(data), {})
