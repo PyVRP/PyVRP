@@ -34,7 +34,6 @@ _MAX_SIZE = np.iinfo(np.uint64).max
         (0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0),  # negative late
         (0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0),  # negative shift_duration
         (0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0),  # negative max_distance
-        (0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0),  # negative fixed_cost
         (0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 0),  # negative unit_distance_cost
         (0, 1, 0, 0, 0, 0, 0, 0, -1, 0, 0),  # negative unit_duration_cost
         (0, 1, 0, 0, 0, 0, 0, 0, 0, -1, 0),  # negative start late
@@ -329,3 +328,12 @@ def test_max_trips_is_one_if_no_reload_depots(ok_small):
     assert_equal(veh_type.reload_depots, [])
     assert_equal(veh_type.max_reloads, _MAX_SIZE)
     assert_equal(veh_type.max_trips, 1)
+
+
+def test_allows_negative_fixed_cost():
+    """
+    Tests that the vehicle type allows negative fixed costs. This was initially
+    not allowed.
+    """
+    veh_type = VehicleType(fixed_cost=-100)
+    assert_equal(veh_type.fixed_cost, -100)

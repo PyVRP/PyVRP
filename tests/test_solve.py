@@ -99,3 +99,21 @@ def test_solve_custom_params(rc208):
     # is skipped because it's an empty initial solution with penalised cost 0.
     costs = [datum.current_cost for datum in res.stats.data[1:]]
     assert_(monotonically_decreasing(costs))
+
+
+def test_negative_fixed_cost_uses_all_vehicles(ok_small):
+    """
+    Tests that setting a large, negative fixed cost incentivises the solver to
+    use more vehicles than it otherwise would.
+    """
+    # The regular instance has zero fixed cost, and normally uses only two
+    # vehicles.
+    res = solve(ok_small, stop=MaxIterations(10))
+    assert_equal(res.best.num_routes(), 2)
+
+    # Let's now set a large, negative fixed cost. This should result in all
+    # vehicles being used.
+    veh_type = ok_small.vehicle_type(0).replace(fixed_cost=-10_000)
+    data = ok_small.replace(vehicle_types=[veh_type])
+    res = solve(data, stop=MaxIterations(10))
+    assert_equal(res.best.num_routes(), 3)
