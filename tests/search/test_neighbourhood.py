@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Activity, Depot, Location, ProblemData, VehicleType
+from pyvrp import Activity, Client, Depot, Location, ProblemData, VehicleType
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 
 
@@ -233,3 +233,33 @@ def test_shipments_exclude_either_activity_in_neighbourhood(small_shipments):
         # The neighbourhood contains pickup and delivery activities for each 
         # shipment, but excludes its own.
         assert_equal(len(neighbourhood), 2 * small_shipments.num_shipments - 2)
+
+
+def test_mixed_client_shipments(small_shipments):
+    """
+    Tests the neighbourhood of a small instance with mixed clients and
+    shipments.
+    """
+    # Create a mixed instance, with clients and shipments.
+    clients = [Client(2, delivery=[0]), Client(5, delivery=[1])]
+    data = small_shipments.replace(clients=clients)
+    assert_equal(data.num_clients, 2)
+    assert_equal(data.num_shipments, 4)
+
+    neighbours = compute_neighbours(data)
+    assert_equal(len(neighbours), 6)  # for each client and shipment pickup
+
+    # We should have neighbours for both clients and shipments.
+    assert_(Activity("C0") in neighbours)
+    assert_(Activity("L0") in neighbours)
+
+    # The shipment is at location 2, which is also where the first shipment's
+    # pickup happens. So, L0 should be the first entry in C0's neighbourhood,
+    # and vice versa.
+    assert_equal(neighbours[Activity("C0")][0], Activity("L0"))
+    assert_equal(neighbours[Activity("L0")][0], Activity("C0"))
+
+    # The neighbourhood can contain all other shipments and clients. In this
+    # case, there is always one other client, and three other shipments. Thus,
+    # a total of seven activities can be in the neighbourhood.
+    assert_equal(len(neighbours[Activity("C0")]), 7)

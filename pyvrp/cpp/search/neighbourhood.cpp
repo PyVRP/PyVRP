@@ -109,7 +109,7 @@ Matrix<double> computeProximity(ProblemData const &data,
         // From shipment pickups.
         for (size_t frm = data.numClients(); frm != prox.numRows(); ++frm)
         {
-            auto const &frmData = data.shipment(frm).pickup;
+            auto const &frmData = data.shipment(frm - data.numClients()).pickup;
 
             // To clients.
             for (size_t client = 0; client != data.numClients(); ++client)
@@ -180,14 +180,14 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
         prox(idx, idx + data.numShipments())  // excl. own delivery
             = std::numeric_limits<double>::infinity();
 
-    // Adjust the neigbhourhood size to the minimum of the number of other
+    // Adjust the neighbourhood size to the minimum of the number of other
     // clients and shipments, and the default neighbourhood size. We need to
     // make sure we do not wrap-around in case the there are no clients or
     // shipments. Since we have both pickup and delivery nodes for shipments,
     // we count those double.
     auto const numClients = std::max<size_t>(data.numClients(), 1) - 1;
     auto const numShipments = std::max<size_t>(2 * data.numShipments(), 2) - 2;
-    auto const maxNeighbours = std::max(numClients, numShipments);
+    auto const maxNeighbours = numClients + numShipments;
     auto const numNeighbours = std::min(params.numNeighbours, maxNeighbours);
 
     std::unordered_map<Activity, std::vector<Activity>> neighbours;
