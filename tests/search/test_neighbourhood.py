@@ -197,9 +197,10 @@ def test_multiple_routing_profiles(ok_small):
     assert_equal(compute_neighbours(data), compute_neighbours(ok_small))
 
 
-def test_zero_clients():
+def test_zero_clients_or_shipments():
     """
-    Tests that the neighbourhood for an instance with zero clients is empty.
+    Tests that the neighbourhood for an instance with zero clients and
+    shipments is empty.
     """
     data = ProblemData(
         locations=[Location(0, 0)],
@@ -208,6 +209,27 @@ def test_zero_clients():
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
+        shipments=[],
     )
 
     assert_equal(compute_neighbours(data), {})
+
+
+def test_shipments_exclude_either_activity_in_neighbourhood(small_shipments):
+    """
+    Tests that shipments exclude their own activities from the neighbourhood.
+    """
+    neighbours = compute_neighbours(small_shipments)
+
+    for shipment in range(small_shipments.num_shipments):
+        delivery = Activity(f"U{shipment}")
+        assert_(delivery not in neighbours)  # only includes pickup activities
+
+        pickup = Activity(f"L{shipment}")
+        neighbourhood = neighbours[pickup]
+        assert_(pickup not in neighbourhood)  # cannot be in own neighbourhood
+        assert_(delivery not in neighbourhood)  # nor can delivery
+
+        # The neighbourhood contains pickup and delivery activities for each 
+        # shipment, but excludes its own.
+        assert_equal(len(neighbourhood), 2 * small_shipments.num_shipments - 2)

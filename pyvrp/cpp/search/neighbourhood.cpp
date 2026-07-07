@@ -160,7 +160,7 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
 
     if (params.symmetricProximity)  // then we symmetrise the proximity matrix
         for (size_t frm = 0; frm != prox.numRows(); ++frm)
-            for (size_t to = frm; to != prox.numCols(); ++to)
+            for (size_t to = frm; to != prox.numRows(); ++to)
                 prox(frm, to) = prox(to, frm)
                     = std::min(prox(frm, to), prox(to, frm));
 
@@ -177,16 +177,17 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
         prox(idx, idx) = std::numeric_limits<double>::infinity();
 
     for (size_t idx = data.numClients(); idx != prox.numRows(); ++idx)
-        prox(idx, idx + data.numShipments())  // excl. delivery
+        prox(idx, idx + data.numShipments())  // excl. own delivery
             = std::numeric_limits<double>::infinity();
 
     // Adjust the neigbhourhood size to the minimum of the number of other
     // clients and shipments, and the default neighbourhood size. We need to
     // make sure we do not wrap-around in case the there are no clients or
-    // shipments.
-    auto const numClients = std::max<size_t>(data.numClients(), 1);
-    auto const numShipments = std::max<size_t>(data.numShipments(), 1);
-    auto const maxNeighbours = std::max(numClients, numShipments) - 1;
+    // shipments. Since we have both pickup and delivery nodes for shipments,
+    // we count those double.
+    auto const numClients = std::max<size_t>(data.numClients(), 1) - 1;
+    auto const numShipments = std::max<size_t>(2 * data.numShipments(), 2) - 2;
+    auto const maxNeighbours = std::max(numClients, numShipments);
     auto const numNeighbours = std::min(params.numNeighbours, maxNeighbours);
 
     std::unordered_map<Activity, std::vector<Activity>> neighbours;
