@@ -27,7 +27,8 @@ class LocalSearch:
     rng
         Random number generator.
     neighbours
-        Mapping that defines the local search neighbourhood.
+        Mapping from each client or pickup activity to the activities in its
+        granular neighbourhood.
     perturbation_manager
         Perturbation manager that handles perturbation during each invocation.
     """

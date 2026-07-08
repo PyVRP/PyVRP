@@ -28,7 +28,8 @@ public:
     using Promising = std::unordered_set<Activity>;
 
 private:
-    // Neighbourhood restrictions: list of nearby clients for each client.
+    // Neighbourhood restrictions: list of nearby activities for each client
+    // and pickup activity.
     Neighbours neighbours_;
 
     // Activity order used for node-based search.
@@ -68,7 +69,7 @@ public:
     bool isPromising(Activity const &activity) const;
 
     /**
-     * Marks the given client as promising.
+     * Marks the given activity as promising.
      */
     void markPromising(Activity const &activity);
 
