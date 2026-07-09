@@ -220,7 +220,11 @@ def test_raises_neighbourhood_keys_other_than_clients_pickups(small_shipments):
     other than clients and pickups (as keys).
     """
     neighbours = compute_neighbours(small_shipments)
-    neighbours[Activity("U0")] = []  # add entry for a delivery
+
+    # Replace first shipment's entry with its delivery, rather than pickup.
+    del neighbours[Activity("L0")]
+    neighbours[Activity("U0")] = []
+    assert_equal(len(neighbours), small_shipments.num_shipments)
 
     with assert_raises(RuntimeError):
         SearchSpace(small_shipments, neighbours)
