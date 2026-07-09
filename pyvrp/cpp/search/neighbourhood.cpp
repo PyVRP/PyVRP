@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <tuple>
 
+using pyvrp::Activity;
 using pyvrp::Matrix;
 using pyvrp::ProblemData;
 using pyvrp::search::NeighbourhoodParams;
@@ -29,8 +30,10 @@ namespace
 Matrix<double> computeProximity(ProblemData const &data,
                                 NeighbourhoodParams const &params)
 {
-    Matrix<double> prox(data.numClients(),
-                        data.numClients(),
+    // Rows (from) are #clients + #pickups. Columns (to) are #clients
+    // + #pickups + #deliveries.
+    Matrix<double> prox(data.numClients() + data.numShipments(),
+                        data.numClients() + 2 * data.numShipments(),
                         std::numeric_limits<double>::max());
 
     std::set<std::tuple<pyvrp::Cost, pyvrp::Cost, size_t>> seen = {};
@@ -47,37 +50,89 @@ Matrix<double> computeProximity(ProblemData const &data,
         auto const &dists = data.distanceMatrix(vehType.profile);
         auto const &durs = data.durationMatrix(vehType.profile);
 
+        auto const cost = [&](auto const &from, auto const &to)
+        {
+            auto const frmServ = static_cast<double>(from.serviceDuration);
+            auto const frmEarly = static_cast<double>(from.twEarly);
+            auto const frmLate = static_cast<double>(from.twLate);
+
+            auto const toEarly = static_cast<double>(to.twEarly);
+            auto const toLate = static_cast<double>(to.twLate);
+
+            auto const dur = durs(from.location, to.location);
+            auto const edgeDur = static_cast<double>(dur);
+
+            if (frmEarly + frmServ + edgeDur > toLate)      // then this edge
+                return std::numeric_limits<double>::max();  // is not feasible
+
+            auto const dist = dists(from.location, to.location);
+            auto const distance = static_cast<double>(dist);
+
+            auto const minWait = toEarly - edgeDur - frmServ - frmLate;
+            auto const duration = edgeDur + std::max(minWait, 0.0);
+
+            return static_cast<double>(vehType.unitDistanceCost) * distance
+                   + static_cast<double>(vehType.unitDurationCost) * duration
+                   + params.weightWaitTime * std::max(minWait, 0.0);
+        };
+
+        // From clients.
         for (size_t frm = 0; frm != data.numClients(); ++frm)
         {
             auto const &frmData = data.client(frm);
-            auto const frmServ = static_cast<double>(frmData.serviceDuration);
-            auto const frmEarly = static_cast<double>(frmData.twEarly);
-            auto const frmLate = static_cast<double>(frmData.twLate);
 
-            for (size_t to = 0; to != data.numClients(); ++to)
+            // To clients.
+            for (size_t client = 0; client != data.numClients(); ++client)
             {
-                auto const &toData = data.client(to);
-                auto const toEarly = static_cast<double>(toData.twEarly);
-                auto const toLate = static_cast<double>(toData.twLate);
+                auto const idx = client;
+                auto const &to = data.client(client);
+                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
+            }
 
-                auto const dur = durs(frmData.location, toData.location);
-                auto const edgeDur = static_cast<double>(dur);
+            // To shipment pickups.
+            for (size_t pick = 0; pick != data.numShipments(); ++pick)
+            {
+                auto const idx = data.numClients() + pick;
+                auto const &to = data.shipment(pick).pickup;
+                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
+            }
 
-                if (frmEarly + frmServ + edgeDur > toLate)  // then this edge
-                    continue;                               // is not feasible
+            // To shipment deliveries.
+            for (size_t del = 0; del != data.numShipments(); ++del)
+            {
+                auto const idx = data.numClients() + data.numShipments() + del;
+                auto const &to = data.shipment(del).delivery;
+                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
+            }
+        }
 
-                auto const dist = dists(frmData.location, toData.location);
-                auto const distance = static_cast<double>(dist);
+        // From shipment pickups.
+        for (size_t frm = data.numClients(); frm != prox.numRows(); ++frm)
+        {
+            auto const &frmData = data.shipment(frm - data.numClients()).pickup;
 
-                auto const minWait = toEarly - edgeDur - frmServ - frmLate;
-                auto const duration = edgeDur + std::max(minWait, 0.0);
+            // To clients.
+            for (size_t client = 0; client != data.numClients(); ++client)
+            {
+                auto const idx = client;
+                auto const &to = data.client(client);
+                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
+            }
 
-                auto const cost  // minimum edge cost using this vehicle type
-                    = static_cast<double>(vehType.unitDistanceCost) * distance
-                      + static_cast<double>(vehType.unitDurationCost) * duration
-                      + params.weightWaitTime * std::max(minWait, 0.0);
+            // To shipment pickups.
+            for (size_t pick = 0; pick != data.numShipments(); ++pick)
+            {
+                auto const idx = data.numClients() + pick;
+                auto const &to = data.shipment(pick).pickup;
+                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
+            }
 
-                prox(frm, to) = std::min(cost, prox(frm, to));
+            // To shipment deliveries.
+            for (size_t del = 0; del != data.numShipments(); ++del)
+            {
+                auto const idx = data.numClients() + data.numShipments() + del;
+                auto const &to = data.shipment(del).delivery;
+                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
             }
         }
     }
@@ -97,15 +152,15 @@ NeighbourhoodParams::NeighbourhoodParams(double weightWaitTime,
         throw std::invalid_argument("num_neighbours == 0 not understood.");
 }
 
-std::vector<std::vector<size_t>>
+std::unordered_map<Activity, std::vector<Activity>>
 pyvrp::search::computeNeighbours(ProblemData const &data,
                                  NeighbourhoodParams const &params)
 {
     auto prox = computeProximity(data, params);
 
     if (params.symmetricProximity)  // then we symmetrise the proximity matrix
-        for (size_t frm = 0; frm != data.numClients(); ++frm)
-            for (size_t to = frm; to != data.numClients(); ++to)
+        for (size_t frm = 0; frm != prox.numRows(); ++frm)
+            for (size_t to = frm; to != prox.numRows(); ++to)
                 prox(frm, to) = prox(to, frm)
                     = std::min(prox(frm, to), prox(to, frm));
 
@@ -118,29 +173,92 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
                 // not too problematic if we need to have them.
                 prox(frmClient, toClient) = std::numeric_limits<double>::max();
 
-    for (size_t idx = 0; idx != data.numClients(); ++idx)  // excl. self
+    for (size_t idx = 0; idx != prox.numRows(); ++idx)  // excl. self
         prox(idx, idx) = std::numeric_limits<double>::infinity();
 
-    // Adjust the neigbhourhood size to the minimum of the number of other
-    // clients and the default neighbourhood size. We need to make sure we do
-    // not wrap-around in case the there are no clients.
-    size_t const numClients = std::max<size_t>(data.numClients(), 1);
-    size_t const numNeighbours = std::min(params.numNeighbours, numClients - 1);
+    for (size_t idx = data.numClients(); idx != prox.numRows(); ++idx)
+        prox(idx, idx + data.numShipments())  // excl. own delivery
+            = std::numeric_limits<double>::infinity();
 
-    std::vector<std::vector<size_t>> neighbours(data.numClients());
+    // Adjust the neighbourhood size to the minimum of the number of other
+    // clients and shipments, and the default neighbourhood size. We need to
+    // make sure we do not wrap-around in case the there are no clients or
+    // shipments. Since we have both pickup and delivery nodes for shipments,
+    // we count those double.
+    auto const numClients = std::max<size_t>(data.numClients(), 1) - 1;
+    auto const numShipments = std::max<size_t>(2 * data.numShipments(), 2) - 2;
+    auto const maxNeighbours = numClients + numShipments;
+    auto const numNeighbours = std::min(params.numNeighbours, maxNeighbours);
 
-    std::vector<size_t> indices(data.numClients());
-    for (size_t client = 0; client != data.numClients(); ++client)
+    std::unordered_map<Activity, std::vector<Activity>> neighbours;
+
+    std::vector<size_t> indices(prox.numCols());
+    for (size_t idx = 0; idx != data.numClients(); ++idx)
     {
+        Activity const activity = {Activity::ActivityType::CLIENT, idx};
+
         auto const comp = [&](auto const a, auto const b)
-        { return prox(client, a) < prox(client, b); };
+        { return prox(idx, a) < prox(idx, b); };
 
         // Reset the vector and then re-sort for this client.
         std::iota(indices.begin(), indices.end(), 0);
         std::stable_sort(indices.begin(), indices.end(), comp);
 
         // Neighbourhood of client is set to the first numNeighbours indices.
-        neighbours[client] = {indices.begin(), indices.begin() + numNeighbours};
+        neighbours[activity] = {};
+        for (size_t neighbour = 0; neighbour != numNeighbours; ++neighbour)
+        {
+            auto &neighbourhood = neighbours[activity];
+
+            if (indices[neighbour] < data.numClients())
+                neighbourhood.emplace_back(Activity::ActivityType::CLIENT,
+                                           indices[neighbour]);
+            else if (indices[neighbour]
+                     < data.numClients() + data.numShipments())
+                neighbourhood.emplace_back(Activity::ActivityType::PICKUP,
+                                           indices[neighbour]
+                                               - data.numClients());
+            else
+                neighbourhood.emplace_back(Activity::ActivityType::DELIVERY,
+                                           indices[neighbour]
+                                               - data.numClients()
+                                               - data.numShipments());
+        }
+    }
+
+    for (size_t idx = 0; idx != data.numShipments(); ++idx)
+    {
+        Activity const activity = {Activity::ActivityType::PICKUP, idx};
+
+        auto const comp = [&](auto const a, auto const b) {
+            return prox(data.numClients() + idx, a)
+                   < prox(data.numClients() + idx, b);
+        };
+
+        // Reset the vector and then re-sort for this pickup.
+        std::iota(indices.begin(), indices.end(), 0);
+        std::stable_sort(indices.begin(), indices.end(), comp);
+
+        // Neighbourhood of pickup is set to the first numNeighbours indices.
+        neighbours[activity] = {};
+        for (size_t neighbour = 0; neighbour != numNeighbours; ++neighbour)
+        {
+            auto &neighbourhood = neighbours[activity];
+
+            if (indices[neighbour] < data.numClients())
+                neighbourhood.emplace_back(Activity::ActivityType::CLIENT,
+                                           indices[neighbour]);
+            else if (indices[neighbour]
+                     < data.numClients() + data.numShipments())
+                neighbourhood.emplace_back(Activity::ActivityType::PICKUP,
+                                           indices[neighbour]
+                                               - data.numClients());
+            else
+                neighbourhood.emplace_back(Activity::ActivityType::DELIVERY,
+                                           indices[neighbour]
+                                               - data.numClients()
+                                               - data.numShipments());
+        }
     }
 
     return neighbours;

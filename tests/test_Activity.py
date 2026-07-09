@@ -86,3 +86,17 @@ def test_shipment():
     assert_(delivery.is_delivery())
     assert_equal(delivery.idx, 0)
     assert_equal(str(delivery), "U0")
+
+
+def test_hash():
+    """
+    Tests that hashing activities results in different keys for different
+    activities.
+    """
+    depot = Activity("D0")
+    assert_equal(hash(depot), hash(depot))
+
+    client1 = Activity("C0")
+    client2 = Activity("C1")
+    assert_(hash(client1) != hash(depot))
+    assert_(hash(client1) != hash(client2))

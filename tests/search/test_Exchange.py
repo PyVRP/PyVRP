@@ -3,6 +3,7 @@ import pytest
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import (
+    Activity,
     Client,
     CostEvaluator,
     Depot,
@@ -294,8 +295,8 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
     # client moves allowed by it will not improve the initial solution created
     # below. So the only improvements (1, 0)-exchange can make must come from
     # moving clients behind the depot of a route.
-    neighbours = [[] for _ in range(data.num_clients)]
-    neighbours[1].append(0)
+    neighbours = {Activity(f"C{idx}"): [] for idx in range(data.num_clients)}
+    neighbours[Activity("C1")].append(Activity("C0"))
 
     ls = LocalSearch(data, rng, neighbours)
     ls.add_operator(Exchange10(data))

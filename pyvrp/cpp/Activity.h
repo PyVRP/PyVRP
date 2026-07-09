@@ -110,4 +110,16 @@ bool Activity::isDelivery() const { return type_ == ActivityType::DELIVERY; }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::Activity const &activity);
 
+template <> struct std::hash<pyvrp::Activity>
+{
+    size_t operator()(pyvrp::Activity const &activity) const
+    {
+        size_t res = 17;
+        res = res * 31 + static_cast<size_t>(activity.type());
+        res = res * 31 + activity.idx();
+
+        return res;
+    }
+};
+
 #endif  // PYVRP_ACTIVITY_H
