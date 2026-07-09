@@ -48,7 +48,7 @@ void SearchSpace::setNeighbours(Neighbours neighbours)
         auto const beginPos = neighbourhood.begin();
         auto const endPos = neighbourhood.end();
 
-        auto const pred = [&](auto item) { return item == activity; };
+        auto const pred = [&](auto const &item) { return item == activity; };
 
         if (std::any_of(beginPos, endPos, pred))
         {

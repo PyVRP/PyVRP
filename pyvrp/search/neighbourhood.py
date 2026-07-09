@@ -26,6 +26,6 @@ def compute_neighbours(
     -------
     dict
         A mapping from activities to neighbouring activities for each client
-        and pickup.
+        and pickup activity.
     """
     return _compute_neighbours(data, params)  # delegate to C++ implementation
