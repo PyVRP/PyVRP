@@ -197,3 +197,30 @@ def test_search_order_and_shuffle(ok_small_two_profiles):
     search_space.shuffle(rng)
     exp_order = [activities[idx] for idx in [3, 2, 1, 0]]
     assert_equal(search_space.activity_order(), exp_order)
+
+
+def test_small_shipments(small_shipments):
+    """
+    Tests the neighbourhood and activity orders of an instance with shipments.
+    """
+    neighbours = compute_neighbours(small_shipments)
+    search_space = SearchSpace(small_shipments, neighbours)
+
+    activity = Activity("L0")
+    assert_(activity in search_space.activity_order())
+    assert_(not search_space.is_promising(activity))
+
+    search_space.mark_promising(activity)
+    assert_(search_space.is_promising(activity))
+
+
+def test_raises_neighbourhood_keys_other_than_clients_pickups(small_shipments):
+    """
+    Tests that the constructor raises for neighbourhoods that contain anything
+    other than clients and pickups (as keys).
+    """
+    neighbours = compute_neighbours(small_shipments)
+    neighbours[Activity("U0")] = []  # add entry for a delivery
+
+    with assert_raises(RuntimeError):
+        SearchSpace(small_shipments, neighbours)
