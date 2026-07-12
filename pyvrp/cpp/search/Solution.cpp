@@ -243,6 +243,16 @@ bool Solution::insert(Route::Node *U,
     return false;
 }
 
+bool Solution::insert(Route::Node *pickup,
+                      Route::Node *delivery,
+                      SearchSpace const &searchSpace,
+                      CostEvaluator const &costEvaluator,
+                      bool required)
+{
+    // TODO
+    return false;
+}
+
 template <>
 pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
     pyvrp::search::Solution const &solution) const

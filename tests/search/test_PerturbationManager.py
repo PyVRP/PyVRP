@@ -173,3 +173,58 @@ def test_perturb_inserts_into_new_routes(ok_small):
 
     perturbed = sol.unload()
     assert_equal(perturbed.num_routes(), 3)
+
+
+def test_perturb_shipments_remove(small_shipments):
+    """
+    Tests perturbing an instance with shipments where the perturbation involves
+    removing shipments.
+    """
+    data = small_shipments
+    rng = RandomNumberGenerator(seed=42)
+
+    rnd_sol = pyvrp.Solution.make_random(data, rng)
+    assert_(rnd_sol.is_complete())
+    assert_equal(rnd_sol.num_shipments(), 4)
+
+    sol = Solution(data)
+    sol.load(rnd_sol)
+
+    search_space = SearchSpace(data, compute_neighbours(data))
+    cost_eval = CostEvaluator([1], 1, 0)
+
+    # The random solution is complete, so all we can do is remove shipments.
+    # We should remove only one, because we haven't shuffled yet and we default
+    # to min_perturbations in that case.
+    perturbation = PerturbationManager()
+    assert_equal(perturbation.num_perturbations(), 1)
+
+    perturbation.perturb(sol, search_space, cost_eval)
+    perturbed = sol.unload()
+
+    assert_(not perturbed.is_complete())
+    assert_equal(perturbed.num_shipments(), 3)
+
+
+# def test_perturb_shipments_insert(small_shipments):
+#     """
+#     TODO
+#     """
+#     data = small_shipments
+
+#     activities = [Activity("L1"), Activity("U1")]
+#     route = pyvrp.Route(data, activities, 0)
+
+#     sol = Solution(data)
+#     sol.load(pyvrp.Solution(data, [route]))
+
+#     search_space = SearchSpace(data, compute_neighbours(data))
+#     cost_eval = CostEvaluator([1], 1, 0)
+
+#     perturbation = PerturbationManager()
+#     perturbation.perturb(sol, search_space, cost_eval)
+
+#     perturbed = sol.unload()
+#     print(perturbed)
+
+#     assert 0

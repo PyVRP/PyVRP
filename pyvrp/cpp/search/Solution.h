@@ -50,11 +50,21 @@ public:
     // Converts from our representation to a proper solution.
     pyvrp::Solution unload() const;
 
-    // Inserts the given node into the solution - either in its neighbourhood,
-    // or in an empty route, if improving or required. Returns true if the node
-    // was successfully inserted, false otherwise. Updating the search space and
-    // inserted route is left to the calling code.
-    bool insert(Route::Node *node,
+    // Inserts the given client node into the solution - either in its
+    // neighbourhood, or in an empty route, if improving or required. Returns
+    // true if the client was successfully inserted, false otherwise. Updating
+    // the search space and inserted route is left to the calling code.
+    bool insert(Route::Node *client,
+                SearchSpace const &searchSpace,
+                CostEvaluator const &costEvaluator,
+                bool required);
+
+    // Inserts the given pickup and delivery pair into the solution - either in
+    // its neighbourhood, or in an empty route, if improving or required.
+    // Returns true if the shipment was successfully inserted, false otherwise.
+    // Updating the search space an inserted route is left to the calling code.
+    bool insert(Route::Node *pickup,
+                Route::Node *delivery,
                 SearchSpace const &searchSpace,
                 CostEvaluator const &costEvaluator,
                 bool required);
