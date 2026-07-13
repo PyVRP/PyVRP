@@ -20,8 +20,6 @@ std::pair<pyvrp::Cost, bool> RelocateWithAlternative::evaluate(
     if (!uRoute || !vRoute || !uData.group || U == V || U == n(V))
         return std::make_pair(0, false);
 
-    // Evaluating across reload trips in the same route is not supported by
-    // the concatenated route segments below.
     if (uRoute == vRoute && U->trip() != V->trip())
         return std::make_pair(0, false);
 

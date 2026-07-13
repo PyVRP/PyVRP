@@ -15,9 +15,7 @@ from pyvrp.search import RelocateWithAlternative
 from pyvrp.search._search import Solution
 
 
-def test_relocates_with_alternative(
-    ok_small_mutually_exclusive_groups,
-):
+def test_relocates_with_alternative(ok_small_mutually_exclusive_groups):
     """
     Tests that RelocateWithAlternative selects the best group alternative.
     """
