@@ -1,10 +1,11 @@
 #include "Solution.h"
 
 #include "ClientSegment.h"
+#include "DeliverySegment.h"
+#include "PickupSegment.h"
 
 #include <algorithm>
 #include <cassert>
-#include <iterator>
 
 using pyvrp::Cost;
 using pyvrp::Distance;
@@ -186,7 +187,6 @@ bool Solution::insert(Route::Node *U,
                       bool required)
 {
     assert(U->isClient());
-    assert(size_t(std::distance(clients.data(), U)) < clients.size());
 
     Route::Node *UAfter = routes[0][0];  // fallback option
     auto bestCost = insertCost(U, UAfter, data_, costEvaluator);
@@ -249,7 +249,114 @@ bool Solution::insert(Route::Node *pickup,
                       CostEvaluator const &costEvaluator,
                       bool required)
 {
-    // TODO
+    assert(pickup->isPickup() && delivery->isDelivery());
+    assert(pickup->idx() == delivery->idx());
+    assert(!pickup->route() && !delivery->route());
+
+    auto const &shipment = data_.shipment(pickup->idx());
+
+    // Fallback.
+    Route::Node *pickupAfter = routes[0][0];
+    size_t pos = 1;
+    Cost bestCost = std::numeric_limits<Cost>::max();
+
+    // Neighbourhood.
+    for (auto const &vActivity : searchSpace.neighboursOf(pickup->activity()))
+    {
+        Route::Node *V = nullptr;
+        switch (vActivity.type())
+        {
+        case Activity::ActivityType::CLIENT:
+            V = &clients[vActivity.idx()];
+            break;
+
+        case Activity::ActivityType::PICKUP:
+            V = &shipments[vActivity.idx()].first;
+            break;
+
+        case Activity::ActivityType::DELIVERY:
+            V = &shipments[vActivity.idx()].second;
+            break;
+
+        default:
+            continue;
+        }
+
+        auto *route = V->route();
+        if (!route)
+            continue;
+
+        Cost deltaCost = -shipment.prize;
+        costEvaluator.deltaCost(
+            deltaCost,  // delivery directly after pickup
+            Route::Proposal(route->before(V->pos()),
+                            PickupSegment(data_, pickup->idx()),
+                            DeliverySegment(data_, delivery->idx()),
+                            route->after(V->pos() + 1)));
+
+        if (deltaCost < bestCost)
+        {
+            pickupAfter = V;
+            pos = V->pos() + 1;
+            bestCost = deltaCost;
+        }
+
+        for (auto const *node = n(V); !node->isDepot(); node = n(node))
+        {
+            Cost deltaCost = -shipment.prize;
+            costEvaluator.deltaCost(
+                deltaCost,
+                Route::Proposal(route->before(V->pos()),
+                                PickupSegment(data_, pickup->idx()),
+                                route->between(V->pos() + 1, node->pos()),
+                                DeliverySegment(data_, delivery->idx()),
+                                route->after(node->pos() + 1)));
+
+            if (deltaCost < bestCost)
+            {
+                pickupAfter = V;
+                pos = node->pos() + 1;
+                bestCost = deltaCost;
+            }
+        }
+    }
+
+    // Empty route.
+    for (auto const &[vehType, offset] : searchSpace.vehTypeOrder())
+    {
+        auto const begin = routes.begin() + offset;
+        auto const end = begin + data_.vehicleType(vehType).numAvailable;
+        auto const pred = [](auto const &route) { return route.empty(); };
+        auto empty = std::find_if(begin, end, pred);
+
+        if (empty == end)
+            continue;
+
+        Cost deltaCost = -shipment.prize;
+        costEvaluator.deltaCost(
+            deltaCost,
+            Route::Proposal(empty->before(0),
+                            PickupSegment(data_, pickup->idx()),
+                            DeliverySegment(data_, delivery->idx()),
+                            empty->after(1)));
+
+        if (deltaCost < bestCost)
+        {
+            pickupAfter = (*empty)[0];
+            pos = 1;
+            bestCost = deltaCost;
+            break;
+        }
+    }
+
+    if (required || bestCost < 0)
+    {
+        auto *route = pickupAfter->route();
+        route->insert(pos, delivery);
+        route->insert(pickupAfter->pos() + 1, pickup);
+        return true;
+    }
+
     return false;
 }
 

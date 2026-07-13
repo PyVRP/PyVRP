@@ -206,25 +206,25 @@ def test_perturb_shipments_remove(small_shipments):
     assert_equal(perturbed.num_shipments(), 3)
 
 
-# def test_perturb_shipments_insert(small_shipments):
-#     """
-#     TODO
-#     """
-#     data = small_shipments
+def test_perturb_shipments_insert(small_shipments):
+    """
+    TODO
+    """
+    data = small_shipments
 
-#     activities = [Activity("L1"), Activity("U1")]
-#     route = pyvrp.Route(data, activities, 0)
+    activities = [Activity("L1"), Activity("U1")]
+    route = pyvrp.Route(data, activities, 0)
 
-#     sol = Solution(data)
-#     sol.load(pyvrp.Solution(data, [route]))
+    sol = Solution(data)
+    sol.load(pyvrp.Solution(data, [route]))
 
-#     search_space = SearchSpace(data, compute_neighbours(data))
-#     cost_eval = CostEvaluator([1], 1, 0)
+    search_space = SearchSpace(data, compute_neighbours(data))
+    cost_eval = CostEvaluator([1], 1, 0)
 
-#     perturbation = PerturbationManager()
-#     perturbation.perturb(sol, search_space, cost_eval)
+    perturbation = PerturbationManager()
+    perturbation.perturb(sol, search_space, cost_eval)
 
-#     perturbed = sol.unload()
-#     print(perturbed)
+    perturbed = sol.unload()
+    print(perturbed)
 
-#     assert 0
+    assert 0
