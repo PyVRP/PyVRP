@@ -16,6 +16,7 @@ from ._search import InsertOptional as InsertOptional
 from ._search import NeighbourhoodParams as NeighbourhoodParams
 from ._search import PerturbationManager as PerturbationManager
 from ._search import PerturbationParams as PerturbationParams
+from ._search import RelocateWithAlternative as RelocateWithAlternative
 from ._search import RelocateWithDepot as RelocateWithDepot
 from ._search import RemoveAdjacentDepot as RemoveAdjacentDepot
 from ._search import RemoveOptional as RemoveOptional
@@ -32,6 +33,7 @@ OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     Exchange21,
     Exchange22,
     SwapTails,
+    RelocateWithAlternative,
     RelocateWithDepot,
     RemoveAdjacentDepot,
     RemoveOptional,
