@@ -210,21 +210,44 @@ def test_perturb_shipments_insert(small_shipments):
     """
     TODO
     """
-    data = small_shipments
-
     activities = [Activity("L1"), Activity("U1")]
-    route = pyvrp.Route(data, activities, 0)
+    route = pyvrp.Route(small_shipments, activities, 0)
+    pyvrp_sol = pyvrp.Solution(small_shipments, [route])
 
-    sol = Solution(data)
-    sol.load(pyvrp.Solution(data, [route]))
+    sol = Solution(small_shipments)
+    sol.load(pyvrp_sol)
 
-    search_space = SearchSpace(data, compute_neighbours(data))
+    params = PerturbationParams(1, 1)
+    perturbation = PerturbationManager(params)
+
+    neighbours = compute_neighbours(small_shipments)
+    search_space = SearchSpace(small_shipments, neighbours)
     cost_eval = CostEvaluator([1], 1, 0)
-
-    perturbation = PerturbationManager()
     perturbation.perturb(sol, search_space, cost_eval)
 
     perturbed = sol.unload()
-    print(perturbed)
+    assert_equal(perturbed.num_shipments(), 2)
+    assert_(Activity("L0") not in perturbed.unplanned())
+    assert_(Activity("L2") in perturbed.unplanned())
 
-    assert 0
+
+def test_perturb_shipment_empty_route(small_shipments):
+    """
+    TODO
+    """
+    sol = Solution(small_shipments)
+    empty = sol.unload()
+    assert_equal(empty.num_shipments(), 0)
+    assert_(not empty.is_complete())
+
+    params = PerturbationParams(min_perturbations=4)
+    perturbation = PerturbationManager(params)
+
+    neighbours = compute_neighbours(small_shipments)
+    search_space = SearchSpace(small_shipments, neighbours)
+    cost_eval = CostEvaluator([1], 1, 0)
+    perturbation.perturb(sol, search_space, cost_eval)
+
+    perturbed = sol.unload()
+    assert_equal(perturbed.num_shipments(), 4)
+    assert_(perturbed.is_complete())
