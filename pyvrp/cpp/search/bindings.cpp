@@ -3,6 +3,7 @@
 #include "InsertOptional.h"
 #include "LocalSearch.h"
 #include "PerturbationManager.h"
+#include "RelocateAlternative.h"
 #include "RelocateWithDepot.h"
 #include "RemoveAdjacentDepot.h"
 #include "RemoveOptional.h"
@@ -32,6 +33,7 @@ using pyvrp::search::NeighbourhoodParams;
 using pyvrp::search::OperatorStatistics;
 using pyvrp::search::PerturbationManager;
 using pyvrp::search::PerturbationParams;
+using pyvrp::search::RelocateAlternative;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::RemoveAdjacentDepot;
 using pyvrp::search::RemoveOptional;
@@ -107,6 +109,25 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &ReplaceGroup::apply, py::arg("U"))
         .def("init", &ReplaceGroup::init, py::arg("solution"))
         .def_static("supports", &supports<ReplaceGroup>, py::arg("data"));
+
+    py::class_<RelocateAlternative, BinaryOperator>(
+        m, "RelocateAlternative", DOC(pyvrp, search, RelocateAlternative))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &RelocateAlternative::statistics,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &RelocateAlternative::name)
+        .def("evaluate",
+             &RelocateAlternative::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &RelocateAlternative::apply, py::arg("U"), py::arg("V"))
+        .def("init", &RelocateAlternative::init, py::arg("solution"))
+        .def_static(
+            "supports", &supports<RelocateAlternative>, py::arg("data"));
 
     py::class_<InsertOptional, BinaryOperator>(
         m, "InsertOptional", DOC(pyvrp, search, InsertOptional))
