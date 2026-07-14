@@ -70,12 +70,16 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
 
 
 def test_supports(
-    ok_small, ok_small_prizes, ok_small_mutually_exclusive_groups
+    gtsp,
+    ok_small,
+    ok_small_prizes,
+    ok_small_mutually_exclusive_groups,
 ):
     """
-    Tests that RelocateAlternative only supports data with client groups.
+    Tests that RelocateAlternative only supports data with mutually exclusive
+    client groups.
     """
-    op = RelocateAlternative
-    assert_(op.supports(ok_small_mutually_exclusive_groups))
-    assert_(not op.supports(ok_small))
-    assert_(not op.supports(ok_small_prizes))
+    assert_(RelocateAlternative.supports(gtsp))
+    assert_(RelocateAlternative.supports(ok_small_mutually_exclusive_groups))
+    assert_(not RelocateAlternative.supports(ok_small))
+    assert_(not RelocateAlternative.supports(ok_small_prizes))

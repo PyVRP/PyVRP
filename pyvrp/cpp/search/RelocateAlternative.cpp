@@ -95,13 +95,14 @@ void RelocateAlternative::init(Solution &solution)
     solution_ = &solution;
 }
 
-std::string RelocateAlternative::name() const
-{
-    return "RelocateAlternative";
-}
+std::string RelocateAlternative::name() const { return "RelocateAlternative"; }
 
 template <>
 bool pyvrp::search::supports<RelocateAlternative>(ProblemData const &data)
 {
-    return data.numGroups() > 0;
+    for (auto const &group : data.groups())
+        if (group.mutuallyExclusive)
+            return true;
+
+    return false;
 }
