@@ -4,7 +4,9 @@ from pyvrp import CostEvaluator, RandomNumberGenerator, Solution
 from pyvrp.search import OPERATORS, LocalSearch, compute_neighbours
 
 
-@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr"])
+@pytest.mark.parametrize(
+    "instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr", "gtsp"]
+)
 def test_all_operators(instance, benchmark, request):
     """
     Tests performance of the local search (with all default operators) on a few
@@ -40,7 +42,9 @@ def test_all_operators_on_vrptw_from_bks(benchmark, vrptw, vrptw_bks):
 
 
 @pytest.mark.parametrize("op", OPERATORS)
-@pytest.mark.parametrize("instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr"])
+@pytest.mark.parametrize(
+    "instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr", "gtsp"]
+)
 def test_each_operator(op, instance, benchmark, request):
     """
     Tests performance of each operator on a few instances.
