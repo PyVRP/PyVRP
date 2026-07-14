@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_equal
 
 import pyvrp
-from pyvrp import Activity, CostEvaluator, RandomNumberGenerator
+from pyvrp import Activity, Client, CostEvaluator, RandomNumberGenerator
 from pyvrp.search import compute_neighbours
 from pyvrp.search._search import SearchSpace, Solution
 
@@ -90,3 +90,52 @@ def test_load_unload_shipments(small_shipments):
     # Let's test if loading and unloading results in the same solution.
     sol.load(pyvrp_sol)
     assert_equal(sol.unload(), pyvrp_sol)
+
+
+def test_insert_shipment(small_shipments):
+    """
+    Tests inserting a shipment into an empty solution.
+    """
+    sol = Solution(small_shipments)
+
+    pickup, delivery = sol.shipments[0]
+    neighbours = compute_neighbours(small_shipments)
+    search_space = SearchSpace(small_shipments, neighbours)
+    cost_eval = CostEvaluator([0], 0, 0)
+
+    # This shipment does not offer a prize, so when inserting is not required,
+    # there is no incentive to do so. Only when we force an insert is the
+    # shipment actually inserted.
+    assert_(not sol.insert(pickup, delivery, search_space, cost_eval, False))
+    assert_(sol.insert(pickup, delivery, search_space, cost_eval, True))
+    assert_(pickup.route and delivery.route)
+    pickup.route.update()
+
+    # First route contains the first shipment, the second route remains empty.
+    assert_equal(str(sol), """Route #1: L0 U0\nRoute #2: \n""")
+
+
+def test_insert_mixed_client_and_shipment(small_shipments):
+    """
+    Tests inserting a shipment and a client in a mixed instance.
+    """
+    data = small_shipments.replace(clients=[Client(location=2, delivery=[0])])
+    sol = Solution(data)
+
+    neighbours = compute_neighbours(data)
+    search_space = SearchSpace(data, neighbours)
+    cost_eval = CostEvaluator([0], 0, 0)
+
+    pickup, delivery = sol.shipments[1]  # first insert the second shipment
+    assert_(sol.insert(pickup, delivery, search_space, cost_eval, True))
+    assert_(pickup.route and delivery.route)
+    pickup.route.update()
+
+    client = sol.clients[0]  # now insert the only client
+    assert_(not sol.insert(client, search_space, cost_eval, False))
+    assert_(sol.insert(client, search_space, cost_eval, True))
+    assert_(client.route)
+    client.route.update()
+
+    # C0 is much closer to U1 than to L1, so it is inserted after U1.
+    assert_equal(str(sol.routes[0]), "L1 U1 C0")

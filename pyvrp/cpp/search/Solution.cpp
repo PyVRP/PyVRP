@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <ostream>
 
 using pyvrp::Cost;
 using pyvrp::Distance;
@@ -195,12 +196,26 @@ bool Solution::insert(Route::Node *U,
     // already in use.
     for (auto const &vActivity : searchSpace.neighboursOf(U->activity()))
     {
-        if (!vActivity.isClient())
+        Route::Node *V = nullptr;
+        switch (vActivity.type())
+        {
+        case Activity::ActivityType::CLIENT:
+            V = &clients[vActivity.idx()];
+            break;
+
+        case Activity::ActivityType::PICKUP:
+            V = &shipments[vActivity.idx()].first;
+            break;
+
+        case Activity::ActivityType::DELIVERY:
+            V = &shipments[vActivity.idx()].second;
+            break;
+
+        default:
             continue;
+        }
 
-        auto const vClient = vActivity.idx();
-        auto *V = &clients[vClient];
-
+        assert(V);
         if (!V->route())
             continue;
 
@@ -282,7 +297,8 @@ bool Solution::insert(Route::Node *pickup,
             continue;
         }
 
-        auto *route = V->route();
+        assert(V);
+        auto const *route = V->route();
         if (!route)
             continue;
 
@@ -358,6 +374,13 @@ bool Solution::insert(Route::Node *pickup,
     }
 
     return false;
+}
+
+std::ostream &operator<<(std::ostream &out, pyvrp::search::Solution const &sol)
+{
+    for (size_t idx = 0; idx != sol.routes.size(); ++idx)
+        out << "Route #" << idx + 1 << ": " << sol.routes[idx] << '\n';
+    return out;
 }
 
 template <>

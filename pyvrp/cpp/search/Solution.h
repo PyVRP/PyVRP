@@ -7,6 +7,7 @@
 #include "Route.h"  // pyvrp::search::Route
 #include "SearchSpace.h"
 
+#include <iosfwd>
 #include <utility>
 #include <vector>
 
@@ -70,6 +71,8 @@ public:
                 bool required);
 };
 }  // namespace pyvrp::search
+
+std::ostream &operator<<(std::ostream &out, pyvrp::search::Solution const &sol);
 
 template <>  // specialisation for pyvrp::search::Solution
 pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
