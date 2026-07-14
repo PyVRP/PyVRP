@@ -27,8 +27,8 @@ ReplaceGroup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
             assert(client != U->idx());
             V_ = &solution_->nodes[client];
             auto *route = V_->route();
-            deltaCost = data.client(client).prize - uData.prize;
 
+            deltaCost = data.client(client).prize - uData.prize;
             costEvaluator.deltaCost(  // evaluate replacing V with U
                 deltaCost,
                 Route::Proposal(route->before(V_->pos() - 1),
