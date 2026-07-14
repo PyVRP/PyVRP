@@ -159,7 +159,7 @@ MACOSX_DEPLOYMENT_TARGET = "13.3"
 [tool.poetry]
 include = [
     { path = "benchmarks/", format = "sdist" },
-    { path = "docs/", format = "sdist" },
+    { path = "docs/source", format = "sdist" },
     { path = "tests/", format = "sdist" },
 
     { path = "pyvrp/cpp", format = "sdist"},
@@ -171,7 +171,6 @@ include = [
     { path = "pyvrp/**/*.pyd", format = "wheel" },
 ]
 exclude = [
-    "docs/build",
     "pyvrp/cpp",
 ]
 packages = [
