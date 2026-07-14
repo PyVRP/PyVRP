@@ -208,7 +208,8 @@ def test_perturb_shipments_remove(small_shipments):
 
 def test_perturb_shipments_insert(small_shipments):
     """
-    TODO
+    Tests perturbing a shipment solution once, by inserting the first missing
+    shipment into the non-empty solution.
     """
     activities = [Activity("L1"), Activity("U1")]
     route = pyvrp.Route(small_shipments, activities, 0)
@@ -233,7 +234,8 @@ def test_perturb_shipments_insert(small_shipments):
 
 def test_perturb_shipment_empty_route(small_shipments):
     """
-    TODO
+    Tests perturbing an empty shipment solution, so shipments must be inserted
+    into empty routes.
     """
     sol = Solution(small_shipments)
     empty = sol.unload()
