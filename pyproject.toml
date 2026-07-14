@@ -162,6 +162,7 @@ include = [
     { path = "docs/", format = "sdist" },
     { path = "tests/", format = "sdist" },
 
+    { path = "pyvrp/cpp", format = "sdist"},
     { path = "meson.build", format = "sdist" },
     { path = "buildtools/*.py", format = "sdist" },
     { path = "subprojects/*.wrap", format = "sdist" },
@@ -171,6 +172,7 @@ include = [
 ]
 exclude = [
     "docs/build",
+    "pyvrp/cpp",
 ]
 packages = [
     { include = "pyvrp" },
