@@ -127,8 +127,8 @@ std::pair<pyvrp::Cost, bool> RelocateAlternative::evaluate(
 
 void RelocateAlternative::apply(Route::Node *U, Route::Node *V) const
 {
-    assert(U->route() && V->route() && move_.alternative
-           && !move_.alternative->route());
+    assert(U->route() && V->route());
+    assert(move_.alternative && !move_.alternative->route());
     stats_.numApplications++;
 
     U->route()->remove(U->pos());
