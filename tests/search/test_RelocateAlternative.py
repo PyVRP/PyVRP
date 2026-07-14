@@ -57,6 +57,8 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
         duration_matrices=[matrix],
         groups=[ClientGroup([0, 1], required=True)],
     )
+
+    # First scenario, with C0 and C2 on separate routes.
     sol = Solution(data)
     sol.load(PyVRPSolution(data, [[0], [2]]))
 
@@ -67,6 +69,19 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
     # alternative collects four more units of prize.
     move = op.evaluate(sol.nodes[0], sol.nodes[2], CostEvaluator([], 0, 0))
     assert_equal(move, (-104, True))
+
+    # Second scenario, with C0 and C2 on the same route.
+    sol = Solution(data)
+    sol.load(PyVRPSolution(data, [[0, 2]]))
+    op.init(sol)
+
+    empty = sol.routes[1]
+    assert_equal(empty.num_clients(), 0)
+
+    # Moving to the empty second route adds one fixed vehicle cost (100),
+    # while the cheaper alternative still collects four more units of prize.
+    move = op.evaluate(sol.nodes[0], empty[0], CostEvaluator([], 0, 0))
+    assert_equal(move, (96, False))
 
 
 def test_supports(
