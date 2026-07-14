@@ -79,8 +79,8 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
     data = ProblemData(
         locations=[Location(0, 0)],
         clients=[
-            Client(0, prize=1, required=False, group=0),
-            Client(0, prize=5, required=False, group=0),
+            Client(0, prize=100, required=False, group=0),
+            Client(0, prize=250, required=False, group=0),
             Client(0),
         ],
         depots=[Depot(0)],
@@ -98,9 +98,9 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
     op.init(sol)
 
     # Moving to the second route saves one fixed vehicle cost (100), and the
-    # alternative collects four more units of prize.
+    # alternative collects 150 more units of prize.
     move = op.evaluate(sol.nodes[0], sol.nodes[2], CostEvaluator([], 0, 0))
-    assert_equal(move, (-104, True))
+    assert_equal(move, (-250, True))
 
     # Second scenario, with C0 and C2 on the same route.
     sol = Solution(data)
@@ -111,9 +111,9 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
     assert_equal(empty.num_clients(), 0)
 
     # Moving to the empty second route adds one fixed vehicle cost (100),
-    # while the cheaper alternative still collects four more units of prize.
+    # while the cheaper alternative collects 150 more units of prize.
     move = op.evaluate(sol.nodes[0], empty[0], CostEvaluator([], 0, 0))
-    assert_equal(move, (96, False))
+    assert_equal(move, (-50, True))
 
 
 def test_supports(
