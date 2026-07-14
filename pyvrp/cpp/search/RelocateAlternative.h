@@ -3,6 +3,8 @@
 
 #include "LocalSearchOperator.h"
 
+#include <limits>
+
 namespace pyvrp::search
 {
 /**
@@ -15,8 +17,24 @@ class RelocateAlternative : public BinaryOperator
 {
     using BinaryOperator::BinaryOperator;
 
+    struct Move
+    {
+        Cost cost = std::numeric_limits<Cost>::max();
+        Route::Node *alternative = nullptr;
+    };
+
+    Move move_;
     Solution *solution_ = nullptr;
-    Route::Node *alternative_ = nullptr;
+
+    void evalWithinRoute(Route::Node *U,
+                         Route::Node *V,
+                         ClientGroup const &group,
+                         CostEvaluator const &costEvaluator);
+
+    void evalBetweenRoutes(Route::Node *U,
+                           Route::Node *V,
+                           ClientGroup const &group,
+                           CostEvaluator const &costEvaluator);
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
