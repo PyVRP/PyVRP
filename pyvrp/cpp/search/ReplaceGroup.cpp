@@ -28,6 +28,7 @@ ReplaceGroup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
             V_ = &solution_->nodes[client];
             auto *route = V_->route();
 
+            deltaCost = data.client(client).prize - uData.prize;
             costEvaluator.deltaCost(  // evaluate replacing V with U
                 deltaCost,
                 Route::Proposal(route->before(V_->pos() - 1),
@@ -63,5 +64,9 @@ std::string ReplaceGroup::name() const { return "ReplaceGroup"; }
 
 template <> bool pyvrp::search::supports<ReplaceGroup>(ProblemData const &data)
 {
-    return data.numGroups() > 0;
+    for (auto const &group : data.groups())
+        if (group.mutuallyExclusive)
+            return true;
+
+    return false;
 }
