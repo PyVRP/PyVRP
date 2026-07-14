@@ -27,53 +27,84 @@ std::pair<pyvrp::Cost, bool> RelocateAlternative::evaluate(
     assert(group.mutuallyExclusive);
 
     Cost bestCost = std::numeric_limits<Cost>::max();
-    for (auto const client : group)
+    if (uRoute != vRoute)
     {
-        auto *alternative = &solution_->nodes[client];
-        if (alternative == U)
-            continue;
+        Cost fixedCost = 0;
+        if (uRoute->numClients() == 1)
+            fixedCost -= uRoute->fixedVehicleCost();
 
-        auto const &alternativeData = data.client(client);
-        Cost deltaCost = uData.prize - alternativeData.prize;
+        if (vRoute->empty())
+            fixedCost += vRoute->fixedVehicleCost();
 
-        if (uRoute != vRoute)
+        auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
+                                               uRoute->after(U->pos() + 1));
+
+        for (auto const client : group)
         {
-            if (uRoute->numClients() == 1)
-                deltaCost -= uRoute->fixedVehicleCost();
+            auto *alternative = &solution_->nodes[client];
+            if (alternative == U)
+                continue;
 
-            if (vRoute->empty())
-                deltaCost += vRoute->fixedVehicleCost();
-
-            auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
-                                                   uRoute->after(U->pos() + 1));
+            auto const &alternativeData = data.client(client);
+            Cost deltaCost = uData.prize - alternativeData.prize + fixedCost;
             auto const vProposal = Route::Proposal(vRoute->before(V->pos()),
                                                    ClientSegment(data, client),
                                                    vRoute->after(V->pos() + 1));
             costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+
+            if (deltaCost < bestCost)
+            {
+                bestCost = deltaCost;
+                alternative_ = alternative;
+            }
         }
-        else if (U->pos() < V->pos())
+    }
+    else if (U->pos() < V->pos())
+    {
+        for (auto const client : group)
         {
+            auto *alternative = &solution_->nodes[client];
+            if (alternative == U)
+                continue;
+
+            auto const &alternativeData = data.client(client);
+            Cost deltaCost = uData.prize - alternativeData.prize;
             costEvaluator.deltaCost(
                 deltaCost,
                 Route::Proposal(uRoute->before(U->pos() - 1),
                                 uRoute->between(U->pos() + 1, V->pos()),
                                 ClientSegment(data, client),
                                 uRoute->after(V->pos() + 1)));
+
+            if (deltaCost < bestCost)
+            {
+                bestCost = deltaCost;
+                alternative_ = alternative;
+            }
         }
-        else
+    }
+    else
+    {
+        for (auto const client : group)
         {
+            auto *alternative = &solution_->nodes[client];
+            if (alternative == U)
+                continue;
+
+            auto const &alternativeData = data.client(client);
+            Cost deltaCost = uData.prize - alternativeData.prize;
             costEvaluator.deltaCost(
                 deltaCost,
                 Route::Proposal(uRoute->before(V->pos()),
                                 ClientSegment(data, client),
                                 uRoute->between(V->pos() + 1, U->pos() - 1),
                                 uRoute->after(U->pos() + 1)));
-        }
 
-        if (deltaCost < bestCost)
-        {
-            bestCost = deltaCost;
-            alternative_ = alternative;
+            if (deltaCost < bestCost)
+            {
+                bestCost = deltaCost;
+                alternative_ = alternative;
+            }
         }
     }
 
