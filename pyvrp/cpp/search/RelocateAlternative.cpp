@@ -16,6 +16,9 @@ void RelocateAlternative::evalWithinRoute(Route::Node *U,
     auto const &group = data.group(*uData.group);
     assert(group.mutuallyExclusive);
 
+    if (U->trip() != V->trip())
+        return;
+
     if (U->pos() < V->pos())
         for (auto const client : group)
         {
@@ -71,9 +74,6 @@ void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
     auto const &uData = data.client(U->idx());
     auto const &group = data.group(*uData.group);
     assert(group.mutuallyExclusive);
-
-    if (uRoute == vRoute && U->trip() != V->trip())
-        return;
 
     Cost fixedCost = 0;
     if (uRoute->numClients() == 1)
