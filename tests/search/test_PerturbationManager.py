@@ -218,7 +218,7 @@ def test_perturb_shipments_insert(small_shipments):
     sol = Solution(small_shipments)
     sol.load(pyvrp_sol)
 
-    params = PerturbationParams(1, 1)
+    params = PerturbationParams(1, 1)  # perturb exactly once
     perturbation = PerturbationManager(params)
 
     neighbours = compute_neighbours(small_shipments)
@@ -226,6 +226,8 @@ def test_perturb_shipments_insert(small_shipments):
     cost_eval = CostEvaluator([1], 1, 0)
     perturbation.perturb(sol, search_space, cost_eval)
 
+    # We should have inserted the first missing shipment into the solution.
+    # Since nothing was shuffled, that first missing shipment is L0/U0.
     perturbed = sol.unload()
     assert_equal(perturbed.num_shipments(), 2)
     assert_(Activity("L0") not in perturbed.unplanned())
@@ -242,6 +244,7 @@ def test_perturb_shipment_empty_route(small_shipments):
     assert_equal(empty.num_shipments(), 0)
     assert_(not empty.is_complete())
 
+    # Perturbation should insert all missing shipments into the empty solution.
     params = PerturbationParams(min_perturbations=4)
     perturbation = PerturbationManager(params)
 
@@ -250,6 +253,7 @@ def test_perturb_shipment_empty_route(small_shipments):
     cost_eval = CostEvaluator([1], 1, 0)
     perturbation.perturb(sol, search_space, cost_eval)
 
+    # And thus, after perturbation we expect a complete solution.
     perturbed = sol.unload()
     assert_equal(perturbed.num_shipments(), 4)
     assert_(perturbed.is_complete())
