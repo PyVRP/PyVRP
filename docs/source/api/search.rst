@@ -86,7 +86,7 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
    .. autoclass:: Exchange33
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: RelocateWithAlternative
+   .. autoclass:: RelocateAlternative
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
    .. autoclass:: RelocateWithDepot

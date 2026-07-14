@@ -1,13 +1,13 @@
-#include "RelocateWithAlternative.h"
+#include "RelocateAlternative.h"
 
 #include "ClientSegment.h"
 
 #include <cassert>
 #include <limits>
 
-using pyvrp::search::RelocateWithAlternative;
+using pyvrp::search::RelocateAlternative;
 
-std::pair<pyvrp::Cost, bool> RelocateWithAlternative::evaluate(
+std::pair<pyvrp::Cost, bool> RelocateAlternative::evaluate(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     assert(!U->isDepot() && !V->isEndDepot() && solution_);
@@ -80,7 +80,7 @@ std::pair<pyvrp::Cost, bool> RelocateWithAlternative::evaluate(
     return std::make_pair(bestCost, alternative_ && bestCost < 0);
 }
 
-void RelocateWithAlternative::apply(Route::Node *U, Route::Node *V) const
+void RelocateAlternative::apply(Route::Node *U, Route::Node *V) const
 {
     assert(U->route() && V->route() && alternative_ && !alternative_->route());
     stats_.numApplications++;
@@ -89,19 +89,19 @@ void RelocateWithAlternative::apply(Route::Node *U, Route::Node *V) const
     V->route()->insert(V->pos() + 1, alternative_);
 }
 
-void RelocateWithAlternative::init(Solution &solution)
+void RelocateAlternative::init(Solution &solution)
 {
     stats_ = {};
     solution_ = &solution;
 }
 
-std::string RelocateWithAlternative::name() const
+std::string RelocateAlternative::name() const
 {
-    return "RelocateWithAlternative";
+    return "RelocateAlternative";
 }
 
 template <>
-bool pyvrp::search::supports<RelocateWithAlternative>(ProblemData const &data)
+bool pyvrp::search::supports<RelocateAlternative>(ProblemData const &data)
 {
     return data.numGroups() > 0;
 }

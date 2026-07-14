@@ -11,13 +11,13 @@ from pyvrp import (
     VehicleType,
 )
 from pyvrp import Solution as PyVRPSolution
-from pyvrp.search import RelocateWithAlternative
+from pyvrp.search import RelocateAlternative
 from pyvrp.search._search import Solution
 
 
-def test_relocates_with_alternative(ok_small_mutually_exclusive_groups):
+def test_relocate_alternative(ok_small_mutually_exclusive_groups):
     """
-    Tests that RelocateWithAlternative selects the best group alternative.
+    Tests that RelocateAlternative selects the best group alternative.
     """
     data = ok_small_mutually_exclusive_groups
     cost_eval = CostEvaluator([0], 0, 0)
@@ -26,7 +26,7 @@ def test_relocates_with_alternative(ok_small_mutually_exclusive_groups):
     sol.load(PyVRPSolution(data, [[0, 3]]))
     assert_equal(str(sol.routes[0]), "C0 C3")
 
-    op = RelocateWithAlternative(data)
+    op = RelocateAlternative(data)
     op.init(sol)
 
     # Replaces C0 by the best group alternative, C2, and moves it after C3.
@@ -60,7 +60,7 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
     sol = Solution(data)
     sol.load(PyVRPSolution(data, [[0], [2]]))
 
-    op = RelocateWithAlternative(data)
+    op = RelocateAlternative(data)
     op.init(sol)
 
     # Moving to the second route saves one fixed vehicle cost (100), and the
@@ -73,9 +73,9 @@ def test_supports(
     ok_small, ok_small_prizes, ok_small_mutually_exclusive_groups
 ):
     """
-    Tests that RelocateWithAlternative only supports data with client groups.
+    Tests that RelocateAlternative only supports data with client groups.
     """
-    op = RelocateWithAlternative
+    op = RelocateAlternative
     assert_(op.supports(ok_small_mutually_exclusive_groups))
     assert_(not op.supports(ok_small))
     assert_(not op.supports(ok_small_prizes))

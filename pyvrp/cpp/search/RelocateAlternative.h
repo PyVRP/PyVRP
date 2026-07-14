@@ -6,12 +6,12 @@
 namespace pyvrp::search
 {
 /**
- * RelocateWithAlternative(data: ProblemData)
+ * RelocateAlternative(data: ProblemData)
  *
  * Evaluates replacing the current mutually exclusive group member :math:`U` by
  * another member of the same group, while relocating it after :math:`V`.
  */
-class RelocateWithAlternative : public BinaryOperator
+class RelocateAlternative : public BinaryOperator
 {
     using BinaryOperator::BinaryOperator;
 
@@ -30,7 +30,7 @@ public:
     std::string name() const override;
 };
 
-template <> bool supports<RelocateWithAlternative>(ProblemData const &data);
+template <> bool supports<RelocateAlternative>(ProblemData const &data);
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_RELOCATEWITHALTERNATIVE_H
