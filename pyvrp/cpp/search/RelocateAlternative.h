@@ -1,5 +1,5 @@
-#ifndef PYVRP_SEARCH_RELOCATEWITHALTERNATIVE_H
-#define PYVRP_SEARCH_RELOCATEWITHALTERNATIVE_H
+#ifndef PYVRP_SEARCH_RELOCATEALTERNATIVE_H
+#define PYVRP_SEARCH_RELOCATEALTERNATIVE_H
 
 #include "LocalSearchOperator.h"
 
@@ -50,4 +50,4 @@ public:
 template <> bool supports<RelocateAlternative>(ProblemData const &data);
 }  // namespace pyvrp::search
 
-#endif  // PYVRP_SEARCH_RELOCATEWITHALTERNATIVE_H
+#endif  // PYVRP_SEARCH_RELOCATEALTERNATIVE_H
