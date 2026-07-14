@@ -9,7 +9,7 @@ namespace pyvrp::search
  * RelocateWithAlternative(data: ProblemData)
  *
  * Evaluates replacing the current mutually exclusive group member :math:`U` by
- * an unrouted member of the same group, while relocating it after :math:`V`.
+ * another member of the same group, while relocating it after :math:`V`.
  */
 class RelocateWithAlternative : public BinaryOperator
 {
