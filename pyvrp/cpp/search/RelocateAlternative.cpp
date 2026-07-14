@@ -8,14 +8,15 @@ using pyvrp::search::RelocateAlternative;
 
 void RelocateAlternative::evalWithinRoute(Route::Node *U,
                                           Route::Node *V,
-                                          ClientGroup const &group,
                                           CostEvaluator const &costEvaluator)
 {
+
     auto const *route = U->route();
     auto const &uData = data.client(U->idx());
+    auto const &group = data.group(*uData.group);
+    assert(group.mutuallyExclusive);
 
     if (U->pos() < V->pos())
-    {
         for (auto const client : group)
         {
             auto *alternative = &solution_->nodes[client];
@@ -31,13 +32,13 @@ void RelocateAlternative::evalWithinRoute(Route::Node *U,
                                 ClientSegment(data, client),
                                 route->after(V->pos() + 1)));
 
-            move_ = {deltaCost, alternative};
             if (deltaCost < 0)
+            {
+                move_ = {deltaCost, alternative};
                 return;
+            }
         }
-    }
     else
-    {
         for (auto const client : group)
         {
             auto *alternative = &solution_->nodes[client];
@@ -53,21 +54,26 @@ void RelocateAlternative::evalWithinRoute(Route::Node *U,
                                 route->between(V->pos() + 1, U->pos() - 1),
                                 route->after(U->pos() + 1)));
 
-            move_ = {deltaCost, alternative};
             if (deltaCost < 0)
+            {
+                move_ = {deltaCost, alternative};
                 return;
+            }
         }
-    }
 }
 
 void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
                                             Route::Node *V,
-                                            ClientGroup const &group,
                                             CostEvaluator const &costEvaluator)
 {
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
     auto const &uData = data.client(U->idx());
+    auto const &group = data.group(*uData.group);
+    assert(group.mutuallyExclusive);
+
+    if (uRoute == vRoute && U->trip() != V->trip())
+        return;
 
     Cost fixedCost = 0;
     if (uRoute->numClients() == 1)
@@ -92,9 +98,11 @@ void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
                                                vRoute->after(V->pos() + 1));
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
 
-        move_ = {deltaCost, alternative};
         if (deltaCost < 0)
+        {
+            move_ = {deltaCost, alternative};
             return;
+        }
     }
 }
 
@@ -111,16 +119,10 @@ std::pair<pyvrp::Cost, bool> RelocateAlternative::evaluate(
     if (!uRoute || !vRoute || !uData.group || U == V || U == n(V))
         return std::make_pair(0, false);
 
-    if (uRoute == vRoute && U->trip() != V->trip())
-        return std::make_pair(0, false);
-
-    auto const &group = data.group(*uData.group);
-    assert(group.mutuallyExclusive);
-
     if (uRoute == vRoute)
-        evalWithinRoute(U, V, group, costEvaluator);
+        evalWithinRoute(U, V, costEvaluator);
     else
-        evalBetweenRoutes(U, V, group, costEvaluator);
+        evalBetweenRoutes(U, V, costEvaluator);
 
     return std::make_pair(move_.cost, move_.cost < 0);
 }

@@ -27,12 +27,10 @@ class RelocateAlternative : public BinaryOperator
 
     void evalWithinRoute(Route::Node *U,
                          Route::Node *V,
-                         ClientGroup const &group,
                          CostEvaluator const &costEvaluator);
 
     void evalBetweenRoutes(Route::Node *U,
                            Route::Node *V,
-                           ClientGroup const &group,
                            CostEvaluator const &costEvaluator);
 
 public:
