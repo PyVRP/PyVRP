@@ -31,8 +31,9 @@ void RelocateAlternative::evalWithinRoute(Route::Node *U,
                                 ClientSegment(data, client),
                                 route->after(V->pos() + 1)));
 
-            if (deltaCost < move_.cost)
-                move_ = {deltaCost, alternative};
+            move_ = {deltaCost, alternative};
+            if (deltaCost < 0)
+                return;
         }
     }
     else
@@ -52,8 +53,9 @@ void RelocateAlternative::evalWithinRoute(Route::Node *U,
                                 route->between(V->pos() + 1, U->pos() - 1),
                                 route->after(U->pos() + 1)));
 
-            if (deltaCost < move_.cost)
-                move_ = {deltaCost, alternative};
+            move_ = {deltaCost, alternative};
+            if (deltaCost < 0)
+                return;
         }
     }
 }
@@ -90,8 +92,9 @@ void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
                                                vRoute->after(V->pos() + 1));
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
 
-        if (deltaCost < move_.cost)
-            move_ = {deltaCost, alternative};
+        move_ = {deltaCost, alternative};
+        if (deltaCost < 0)
+            return;
     }
 }
 

@@ -15,9 +15,9 @@ from pyvrp.search import RelocateAlternative
 from pyvrp.search._search import Solution
 
 
-def test_relocate_alternative(ok_small_mutually_exclusive_groups):
+def test_relocate_alternative_within_route(ok_small_mutually_exclusive_groups):
     """
-    Tests that RelocateAlternative selects the best group alternative.
+    Tests RelocateAlternative within the same route.
     """
     data = ok_small_mutually_exclusive_groups
     cost_eval = CostEvaluator([0], 0, 0)
@@ -29,14 +29,46 @@ def test_relocate_alternative(ok_small_mutually_exclusive_groups):
     op = RelocateAlternative(data)
     op.init(sol)
 
-    # Replaces C0 by the best group alternative, C2, and moves it after C3.
-    # The old route costs 1544 + 1593 + 1475 = 4612. The proposed route
-    # C3 -> C2 costs 1476 + 828 + 2063 = 4367, for a delta of -245.
+    # C1 is the first improving alternative of C0:
+    # delta = dist(D0, C3) + dist(C3, C1) + dist(C1, D0)
+    #       - dist(D0, C0) - dist(C0, C3) - dist(C3, D0)
+    #       = 1476 + 1090 + 1965 - 1544 - 1593 - 1475
+    #       = -81.
     move = op.evaluate(sol.nodes[0], sol.nodes[3], cost_eval)
-    assert_equal(move, (-245, True))
+    assert_equal(move, (-81, True))
 
     op.apply(sol.nodes[0], sol.nodes[3])
-    assert_equal(str(sol.routes[0]), "C3 C2")
+    assert_equal(str(sol.routes[0]), "C3 C1")
+
+
+def test_relocate_alternative_between_routes(
+    ok_small_mutually_exclusive_groups,
+):
+    """
+    Tests RelocateAlternative between two routes.
+    """
+    data = ok_small_mutually_exclusive_groups
+    cost_eval = CostEvaluator([0], 0, 0)
+
+    sol = Solution(data)
+    sol.load(PyVRPSolution(data, [[0], [3]]))
+    assert_equal(str(sol.routes[0]), "C0")
+    assert_equal(str(sol.routes[1]), "C3")
+
+    op = RelocateAlternative(data)
+    op.init(sol)
+
+    # C1 is the first improving alternative of C0:
+    # delta = dist(C3, C1) + dist(C1, D0) - dist(C3, D0)
+    #       - dist(D0, C0) - dist(C0, D0)
+    #       = 1090 + 1965 - 1475 - 1544 - 1726
+    #       = -1690.
+    move = op.evaluate(sol.nodes[0], sol.nodes[3], cost_eval)
+    assert_equal(move, (-1690, True))
+
+    op.apply(sol.nodes[0], sol.nodes[3])
+    assert_equal(sol.routes[0].num_clients(), 0)
+    assert_equal(str(sol.routes[1]), "C3 C1")
 
 
 def test_accounts_for_prizes_and_fixed_vehicle_costs():

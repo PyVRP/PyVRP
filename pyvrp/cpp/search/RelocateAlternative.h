@@ -3,15 +3,14 @@
 
 #include "LocalSearchOperator.h"
 
-#include <limits>
-
 namespace pyvrp::search
 {
 /**
  * RelocateAlternative(data: ProblemData)
  *
- * Evaluates replacing the current mutually exclusive group member :math:`U` by
- * another member of the same group, while relocating it after :math:`V`.
+ * Evaluates replacing mutually exclusive group member :math:`U` with another
+ * member of the same group and relocating the replacement after :math:`V`.
+ * Group members are evaluated in order until an improving move is found.
  */
 class RelocateAlternative : public BinaryOperator
 {
@@ -19,7 +18,7 @@ class RelocateAlternative : public BinaryOperator
 
     struct Move
     {
-        Cost cost = std::numeric_limits<Cost>::max();
+        Cost cost = 0;
         Route::Node *alternative = nullptr;
     };
 
