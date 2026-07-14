@@ -111,9 +111,7 @@ PYBIND11_MODULE(_search, m)
         .def_static("supports", &supports<ReplaceGroup>, py::arg("data"));
 
     py::class_<RelocateAlternative, BinaryOperator>(
-        m,
-        "RelocateAlternative",
-        DOC(pyvrp, search, RelocateAlternative))
+        m, "RelocateAlternative", DOC(pyvrp, search, RelocateAlternative))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
@@ -126,10 +124,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply",
-             &RelocateAlternative::apply,
-             py::arg("U"),
-             py::arg("V"))
+        .def("apply", &RelocateAlternative::apply, py::arg("U"), py::arg("V"))
         .def("init", &RelocateAlternative::init, py::arg("solution"))
         .def_static(
             "supports", &supports<RelocateAlternative>, py::arg("data"));
