@@ -565,11 +565,32 @@ PYBIND11_MODULE(_search, m)
         .def("load", &Solution::load, py::arg("solution"))
         .def("unload", &Solution::unload)
         .def("insert",
-             &Solution::insert,
-             py::arg("node"),
+             py::overload_cast<Route::Node *,
+                               SearchSpace const &,
+                               pyvrp::CostEvaluator const &,
+                               bool>(&Solution::insert),
+             py::arg("client"),
              py::arg("search_space"),
              py::arg("cost_evaluator"),
-             py::arg("required"));
+             py::arg("required"))
+        .def("insert",
+             py::overload_cast<Route::Node *,
+                               Route::Node *,
+                               SearchSpace const &,
+                               pyvrp::CostEvaluator const &,
+                               bool>(&Solution::insert),
+             py::arg("pickup"),
+             py::arg("delivery"),
+             py::arg("search_space"),
+             py::arg("cost_evaluator"),
+             py::arg("required"))
+        .def("__str__",
+             [](Solution const &solution)
+             {
+                 std::stringstream stream;
+                 stream << solution;
+                 return stream.str();
+             });
 
     py::class_<Route>(m, "Route", DOC(pyvrp, search, Route))
         .def(py::init<pyvrp::ProblemData const &, size_t>(),

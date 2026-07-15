@@ -7,6 +7,7 @@
 #include "Route.h"  // pyvrp::search::Route
 #include "SearchSpace.h"
 
+#include <iosfwd>
 #include <utility>
 #include <vector>
 
@@ -34,6 +35,11 @@ class Solution
 
     friend class pyvrp::CostEvaluator;
 
+    // Maps from an activity to a client or shipment node pointer in this
+    // solution. Returns a nullptr if the activity is not represented via
+    // a solution-level node.
+    inline Route::Node *activity2node(Activity const &activity);
+
 public:
     using Clients = std::vector<Route::Node>;
     using Shipments = std::vector<std::pair<Route::Node, Route::Node>>;
@@ -50,16 +56,46 @@ public:
     // Converts from our representation to a proper solution.
     pyvrp::Solution unload() const;
 
-    // Inserts the given node into the solution - either in its neighbourhood,
-    // or in an empty route, if improving or required. Returns true if the node
-    // was successfully inserted, false otherwise. Updating the search space and
-    // inserted route is left to the calling code.
-    bool insert(Route::Node *node,
+    // Inserts the given client node into the solution - either in its
+    // neighbourhood, or in an empty route, if improving or required. Returns
+    // true if the client was successfully inserted, false otherwise. Updating
+    // the search space and inserted route is left to the calling code.
+    bool insert(Route::Node *client,
+                SearchSpace const &searchSpace,
+                CostEvaluator const &costEvaluator,
+                bool required);
+
+    // Inserts the given pickup and delivery pair into the solution - either in
+    // its neighbourhood, or in an empty route, if improving or required.
+    // Returns true if the shipment was successfully inserted, false otherwise.
+    // Updating the search space an inserted route is left to the calling code.
+    bool insert(Route::Node *pickup,
+                Route::Node *delivery,
                 SearchSpace const &searchSpace,
                 CostEvaluator const &costEvaluator,
                 bool required);
 };
+
+Route::Node *Solution::activity2node(Activity const &activity)
+{
+    switch (activity.type())
+    {
+    case Activity::ActivityType::CLIENT:
+        return &clients[activity.idx()];
+
+    case Activity::ActivityType::PICKUP:
+        return &shipments[activity.idx()].first;
+
+    case Activity::ActivityType::DELIVERY:
+        return &shipments[activity.idx()].second;
+
+    default:
+        return nullptr;
+    }
+}
 }  // namespace pyvrp::search
+
+std::ostream &operator<<(std::ostream &out, pyvrp::search::Solution const &sol);
 
 template <>  // specialisation for pyvrp::search::Solution
 pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(

@@ -724,3 +724,22 @@ def test_debug_operator_logs(prize_collecting, caplog):
 
     for idx, exp_msg in expected:
         assert_equal(caplog.records[idx].message, exp_msg)
+
+
+def test_shipment_structural_feasibility(small_shipments):
+    """
+    Tests that the LocalSearch restores structural feasibility for instances
+    with required shipments.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbourhood = compute_neighbours(small_shipments)
+    ls = LocalSearch(small_shipments, rng, neighbourhood)
+
+    empty = Solution(small_shipments, [])
+    assert_equal(empty.num_shipments(), 0)
+    assert_(not empty.is_complete())
+
+    cost_eval = CostEvaluator([0], 0, 0)
+    complete = ls(empty, cost_eval)
+    assert_equal(complete.num_shipments(), 4)
+    assert_(complete.is_complete())

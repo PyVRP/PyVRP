@@ -56,12 +56,18 @@ void PerturbationManager::perturb(Solution &solution,
     // set of promising nodes for further (local search) improvement.
     searchSpace.unmarkAllPromising();
 
-    DynamicBitset perturbed = {solution.clients.size()};
-    auto const perturb = [&](auto *node, PerturbType action)
+    DynamicBitset perturbed
+        = {solution.clients.size() + solution.shipments.size()};
+    auto const perturb = [&](Route::Node *node, PerturbType action)
     {
+        assert(node->isClient() || node->isPickup());
+        auto const idx = node->isClient()
+                             ? node->idx()
+                             : solution.clients.size() + node->idx();
+
         // This node has already been touched by a previous perturbation, so
         // we skip it here.
-        if (perturbed[node->idx()])
+        if (perturbed[idx])
             return;
 
         // Remove if node is in a route and we are currently removing.
@@ -70,33 +76,72 @@ void PerturbationManager::perturb(Solution &solution,
         {
             searchSpace.markPromising(node);
             route->remove(node->pos());
+
+            if (node->isPickup())  // then we also remove the associated
+            {                      // delivery node
+                auto const *delivery = node + 1;
+                assert(delivery->route() == route);
+
+                searchSpace.markPromising(delivery);
+                route->remove(delivery->pos());
+            }
+
             route->update();
         }
         // Insert if node is not in a route and we are currently inserting.
         else if (!route && action == PerturbType::INSERT)
         {
-            solution.insert(node, searchSpace, costEvaluator, true);
-            node->route()->update();
-            searchSpace.markPromising(node);
+            if (node->isClient())
+            {
+                solution.insert(node, searchSpace, costEvaluator, true);
+                node->route()->update();
+                searchSpace.markPromising(node);
+            }
+            else if (node->isPickup())
+            {
+                auto *pickup = node;
+                auto *delivery = node + 1;
+                solution.insert(
+                    pickup, delivery, searchSpace, costEvaluator, true);
+
+                auto *route = pickup->route();
+                assert(delivery->route() == route);
+
+                route->update();
+                searchSpace.markPromising(pickup);
+                searchSpace.markPromising(delivery);
+            }
         }
         else  // no-op
             return;
 
-        perturbed[node->idx()] = true;
+        perturbed[idx] = true;
         movesLeft--;
     };
 
     // We do numPerturbations if we can. We perturb the local neighbourhood of
-    // randomly selected clients U: if U is in the solution, we remove it and
-    // its neighbours, while if it is not, we try to insert instead. Each
-    // removal or insertion counts as one perturbation.
+    // a randomly selected clients or pickups: if a selected client or pickup U
+    // is in the solution, we remove it and its neighbours V. If it is not, we
+    // try to insert instead. Each removal or insertion counts as one
+    // perturbation.
     for (auto const &uActivity : searchSpace.activityOrder())
     {
-        if (!uActivity.isClient())
-            continue;
+        Route::Node *U = nullptr;
+        switch (uActivity.type())
+        {
+        case Activity::ActivityType::CLIENT:
+            U = &solution.clients[uActivity.idx()];
+            break;
 
-        auto const uClient = uActivity.idx();
-        auto *U = &solution.clients[uClient];
+        case Activity::ActivityType::PICKUP:
+            U = &solution.shipments[uActivity.idx()].first;
+            break;
+
+        default:
+            continue;
+        }
+
+        assert(U);
         auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
         perturb(U, action);
 
@@ -105,11 +150,24 @@ void PerturbationManager::perturb(Solution &solution,
 
         for (auto const &vActivity : searchSpace.neighboursOf(uActivity))
         {
-            if (!vActivity.isClient())
-                continue;
+            Route::Node *V = nullptr;
+            switch (vActivity.type())
+            {
+            case Activity::ActivityType::CLIENT:
+                V = &solution.clients[vActivity.idx()];
+                break;
 
-            auto const vClient = vActivity.idx();
-            auto *V = &solution.clients[vClient];
+            case Activity::ActivityType::PICKUP:  // with shipments we perturb
+                [[fallthrough]];                  // the pickup, not delivery
+            case Activity::ActivityType::DELIVERY:
+                V = &solution.shipments[vActivity.idx()].first;
+                break;
+
+            default:
+                continue;
+            }
+
+            assert(V);
             perturb(V, action);
 
             if (!movesLeft)

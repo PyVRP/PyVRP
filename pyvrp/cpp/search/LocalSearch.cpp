@@ -243,47 +243,73 @@ void LocalSearch::ensureStructuralFeasibility(
                 groupCount[idx]++;
     }
 
-    // Ensure all required clients and groups are present in the solution.
+    // Ensure all required clients, groups and shipments are present in the
+    // solution.
     for (auto const &activity : searchSpace_.activityOrder())
     {
-        if (!activity.isClient())
-            continue;
-
-        auto const client = activity.idx();
-        auto &node = solution_.clients[client];
-        auto const &clientData = data.client(client);
-
-        if (!node.route() && clientData.required)  // then we must insert
+        switch (activity.type())
         {
-            solution_.insert(&node, searchSpace_, costEvaluator, true);
-            update(node.route(), node.route());
-            searchSpace_.markPromising(&node);
-            continue;
-        }
-
-        if (clientData.group)
+        case Activity::ActivityType::CLIENT:
         {
-            auto const idx = *clientData.group;
-            auto const &group = data.group(idx);
+            auto &node = solution_.clients[activity.idx()];
+            auto const &client = data.client(activity.idx());
 
-            if (group.required && groupCount[idx] == 0)  // then we must insert
+            if (!node.route() && client.required)  // must insert
             {
-                assert(!node.route());
                 solution_.insert(&node, searchSpace_, costEvaluator, true);
                 update(node.route(), node.route());
                 searchSpace_.markPromising(&node);
-                groupCount[idx]++;
                 continue;
             }
 
-            if (node.route() && groupCount[idx] > 1)  // then we must remove
+            if (client.group)
             {
-                searchSpace_.markPromising(&node);
-                auto *route = node.route();
-                route->remove(node.pos());
-                update(route, route);
-                groupCount[idx]--;
+                auto const idx = *client.group;
+                auto const &group = data.group(idx);
+
+                if (group.required && groupCount[idx] == 0)  // must insert
+                {
+                    assert(!node.route());
+                    solution_.insert(&node, searchSpace_, costEvaluator, true);
+                    update(node.route(), node.route());
+                    searchSpace_.markPromising(&node);
+                    groupCount[idx]++;
+                    continue;
+                }
+
+                if (node.route() && groupCount[idx] > 1)  // must remove
+                {
+                    searchSpace_.markPromising(&node);
+                    auto *route = node.route();
+                    route->remove(node.pos());
+                    update(route, route);
+                    groupCount[idx]--;
+                }
             }
+
+            break;
+        }
+
+        case Activity::ActivityType::PICKUP:
+        {
+            auto const idx = activity.idx();
+            auto &[pickup, delivery] = solution_.shipments[idx];
+            auto const &shipment = data.shipment(idx);
+
+            if (!pickup.route() && shipment.required)
+            {
+                solution_.insert(
+                    &pickup, &delivery, searchSpace_, costEvaluator, true);
+                update(pickup.route(), delivery.route());
+                searchSpace_.markPromising(&pickup);
+                searchSpace_.markPromising(&delivery);
+            }
+
+            break;
+        }
+
+        default:
+            continue;
         }
     }
 
@@ -300,6 +326,14 @@ void LocalSearch::ensureStructuralFeasibility(
     {
         auto const &group = data.group(idx);
         assert(group.required ? groupCount[idx] == 1 : groupCount[idx] <= 1);
+    }
+
+    for (size_t idx = 0; idx != data.numShipments(); ++idx)
+    {
+        auto const &[pickup, delivery] = solution_.shipments[idx];
+        auto const &shipment = data.shipment(idx);
+        assert(pickup.route() == delivery.route());
+        assert(pickup.route() || !shipment.required);
     }
 #endif
 }

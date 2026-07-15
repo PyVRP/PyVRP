@@ -157,9 +157,19 @@ class Solution:
     def __init__(self, data: ProblemData) -> None: ...
     def load(self, solution: pyvrp.Solution) -> None: ...
     def unload(self) -> pyvrp.Solution: ...
+    @overload
     def insert(
         self,
-        node: Node,
+        client: Node,
+        search_space: SearchSpace,
+        cost_evaluator: CostEvaluator,
+        required: bool,
+    ) -> bool: ...
+    @overload
+    def insert(
+        self,
+        pickup: Node,
+        delivery: Node,
         search_space: SearchSpace,
         cost_evaluator: CostEvaluator,
         required: bool,
