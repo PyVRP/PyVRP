@@ -303,7 +303,7 @@ bool Solution::insert(Route::Node *pickup,
         if (empty == end)
             continue;
 
-        Cost deltaCost = -shipment.prize;
+        Cost deltaCost = empty->fixedVehicleCost() - shipment.prize;
         costEvaluator.deltaCost<true>(
             deltaCost,
             Route::Proposal(empty->before(0),

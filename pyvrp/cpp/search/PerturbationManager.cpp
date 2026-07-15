@@ -151,7 +151,7 @@ void PerturbationManager::perturb(Solution &solution,
         for (auto const &vActivity : searchSpace.neighboursOf(uActivity))
         {
             Route::Node *V = nullptr;
-            switch (uActivity.type())
+            switch (vActivity.type())
             {
             case Activity::ActivityType::CLIENT:
                 V = &solution.clients[vActivity.idx()];
