@@ -26,3 +26,8 @@ def vrpb():
 @pytest.fixture(scope="session")
 def mtvrptwr():
     return read("data/C201R0.25.vrp", round_func="dimacs")
+
+
+@pytest.fixture(scope="session")
+def gtsp():
+    return read("data/50pr439.gtsp", round_func="round")
