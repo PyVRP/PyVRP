@@ -242,7 +242,7 @@ bool Solution::insert(Route::Node *pickup,
     auto const &shipment = data_.shipment(pickup->idx());
 
     Route::Node *pickupAfter = routes[0][0];  // fallback option
-    size_t pos = 1;
+    size_t deliveryPos = 1;
     Cost bestCost = std::numeric_limits<Cost>::max();
 
     // First we search the shipment's neighbourhood to insert the pickup and
@@ -267,7 +267,7 @@ bool Solution::insert(Route::Node *pickup,
         if (deltaCost < bestCost)
         {
             pickupAfter = V;
-            pos = V->pos() + 1;
+            deliveryPos = V->pos() + 1;
             bestCost = deltaCost;
         }
 
@@ -285,7 +285,7 @@ bool Solution::insert(Route::Node *pickup,
             if (deltaCost < bestCost)
             {
                 pickupAfter = V;
-                pos = node->pos() + 1;
+                deliveryPos = node->pos() + 1;
                 bestCost = deltaCost;
             }
         }
@@ -314,7 +314,7 @@ bool Solution::insert(Route::Node *pickup,
         if (deltaCost < bestCost)
         {
             pickupAfter = (*empty)[0];
-            pos = 1;
+            deliveryPos = 1;
             bestCost = deltaCost;
             break;
         }
@@ -323,7 +323,7 @@ bool Solution::insert(Route::Node *pickup,
     if (required || bestCost < 0)
     {
         auto *route = pickupAfter->route();
-        route->insert(pos, delivery);
+        route->insert(deliveryPos, delivery);
         route->insert(pickupAfter->pos() + 1, pickup);
         return true;
     }
