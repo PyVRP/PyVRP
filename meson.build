@@ -84,6 +84,7 @@ libsearch = static_library(
         SRC_DIR / 'search' / 'neighbourhood.cpp',
         SRC_DIR / 'search' / 'PerturbationManager.cpp',
         SRC_DIR / 'search' / 'Route.cpp',
+        SRC_DIR / 'search' / 'RelocateAlternative.cpp',
         SRC_DIR / 'search' / 'RelocateWithDepot.cpp',
         SRC_DIR / 'search' / 'RemoveAdjacentDepot.cpp',
         SRC_DIR / 'search' / 'RemoveOptionalClient.cpp',
