@@ -64,9 +64,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
         for (auto const &uActivity : searchSpace_.activityOrder())
         {
-            if (!uActivity.isClient())
-                continue;
-
             auto const uClient = uActivity.idx();
             auto *U = &solution_.clients[uClient];
 
@@ -80,9 +77,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
             for (auto const &vActivity : searchSpace_.neighboursOf(uActivity))
             {
-                if (!vActivity.isClient())
-                    continue;
-
                 auto *V = &solution_.clients[vActivity.idx()];
 
                 if (!V->route())
