@@ -120,9 +120,10 @@ void PerturbationManager::perturb(Solution &solution,
     };
 
     // We do numPerturbations if we can. We perturb the local neighbourhood of
-    // randomly selected clients U: if U is in the solution, we remove it and
-    // its neighbours, while if it is not, we try to insert instead. Each
-    // removal or insertion counts as one perturbation.
+    // a randomly selected clients or pickups: if a selected client or pickup U
+    // is in the solution, we remove it and its neighbours V. If it is not, we
+    // try to insert instead. Each removal or insertion counts as one
+    // perturbation.
     for (auto const &uActivity : searchSpace.activityOrder())
     {
         Route::Node *U = nullptr;
