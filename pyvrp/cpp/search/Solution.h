@@ -35,6 +35,11 @@ class Solution
 
     friend class pyvrp::CostEvaluator;
 
+    // Maps from an activity to a client or shipment node pointer in this
+    // solution. Returns a nullptr if the activity is not represented via
+    // a solution-level node.
+    inline Route::Node *activity2node(Activity const &activity);
+
 public:
     using Clients = std::vector<Route::Node>;
     using Shipments = std::vector<std::pair<Route::Node, Route::Node>>;
@@ -70,6 +75,24 @@ public:
                 CostEvaluator const &costEvaluator,
                 bool required);
 };
+
+Route::Node *Solution::activity2node(Activity const &activity)
+{
+    switch (activity.type())
+    {
+    case Activity::ActivityType::CLIENT:
+        return &clients[activity.idx()];
+
+    case Activity::ActivityType::PICKUP:
+        return &shipments[activity.idx()].first;
+
+    case Activity::ActivityType::DELIVERY:
+        return &shipments[activity.idx()].second;
+
+    default:
+        return nullptr;
+    }
+}
 }  // namespace pyvrp::search
 
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Solution const &sol);

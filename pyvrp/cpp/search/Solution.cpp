@@ -113,33 +113,21 @@ void Solution::load(pyvrp::Solution const &solution)
         for (size_t idx = 1; idx != solRoute.size() - 1; ++idx)
         {
             auto const &activity = solRoute[idx];
-            switch (activity.type())
-            {
-            case Activity::ActivityType::DEPOT:
-            {
-                Route::Node depot = activity;
-                route.push_back(&depot);
-                break;
-            }
+            if (auto *ptr = activity2node(activity))  // client or shipment
+                route.push_back(ptr);                 // visit
+            else
+                switch (activity.type())  // an activity of which the route
+                {                         //  needs to take ownership
+                case Activity::ActivityType::DEPOT:
+                {
+                    Route::Node depot = activity;
+                    route.push_back(&depot);
+                    break;
+                }
 
-            case Activity::ActivityType::CLIENT:
-            {
-                route.push_back(&clients[activity.idx()]);
-                break;
-            }
-
-            case Activity::ActivityType::PICKUP:
-            {
-                route.push_back(&shipments[activity.idx()].first);
-                break;
-            }
-
-            case Activity::ActivityType::DELIVERY:
-            {
-                route.push_back(&shipments[activity.idx()].second);
-                break;
-            }
-            }
+                default:
+                    break;
+                }
         }
 
         route.update();
@@ -196,26 +184,9 @@ bool Solution::insert(Route::Node *U,
     // already in use.
     for (auto const &vActivity : searchSpace.neighboursOf(U->activity()))
     {
-        Route::Node *V = nullptr;
-        switch (vActivity.type())
-        {
-        case Activity::ActivityType::CLIENT:
-            V = &clients[vActivity.idx()];
-            break;
-
-        case Activity::ActivityType::PICKUP:
-            V = &shipments[vActivity.idx()].first;
-            break;
-
-        case Activity::ActivityType::DELIVERY:
-            V = &shipments[vActivity.idx()].second;
-            break;
-
-        default:
-            continue;
-        }
-
+        Route::Node *V = activity2node(vActivity);
         assert(V);
+
         if (!V->route())
             continue;
 
@@ -270,40 +241,23 @@ bool Solution::insert(Route::Node *pickup,
 
     auto const &shipment = data_.shipment(pickup->idx());
 
-    // Fallback.
-    Route::Node *pickupAfter = routes[0][0];
+    Route::Node *pickupAfter = routes[0][0];  // fallback option
     size_t pos = 1;
     Cost bestCost = std::numeric_limits<Cost>::max();
 
-    // Neighbourhood.
+    // First we search the shipment's neighbourhood to insert the pickup and
+    // delivery in a route that's already in use.
     for (auto const &vActivity : searchSpace.neighboursOf(pickup->activity()))
     {
-        Route::Node *V = nullptr;
-        switch (vActivity.type())
-        {
-        case Activity::ActivityType::CLIENT:
-            V = &clients[vActivity.idx()];
-            break;
-
-        case Activity::ActivityType::PICKUP:
-            V = &shipments[vActivity.idx()].first;
-            break;
-
-        case Activity::ActivityType::DELIVERY:
-            V = &shipments[vActivity.idx()].second;
-            break;
-
-        default:
-            continue;
-        }
-
+        Route::Node *V = activity2node(vActivity);
         assert(V);
+
         auto const *route = V->route();
         if (!route)
             continue;
 
         Cost deltaCost = -shipment.prize;
-        costEvaluator.deltaCost(
+        costEvaluator.deltaCost<true>(
             deltaCost,  // delivery directly after pickup
             Route::Proposal(route->before(V->pos()),
                             PickupSegment(data_, pickup->idx()),
@@ -320,7 +274,7 @@ bool Solution::insert(Route::Node *pickup,
         for (auto const *node = n(V); !node->isDepot(); node = n(node))
         {
             Cost deltaCost = -shipment.prize;
-            costEvaluator.deltaCost(
+            costEvaluator.deltaCost<true>(
                 deltaCost,
                 Route::Proposal(route->before(V->pos()),
                                 PickupSegment(data_, pickup->idx()),
@@ -337,7 +291,8 @@ bool Solution::insert(Route::Node *pickup,
         }
     }
 
-    // Empty route.
+    // Finally, we consider inserting into an empty route. We insert into the
+    // first improving one.
     for (auto const &[vehType, offset] : searchSpace.vehTypeOrder())
     {
         auto const begin = routes.begin() + offset;
@@ -349,7 +304,7 @@ bool Solution::insert(Route::Node *pickup,
             continue;
 
         Cost deltaCost = -shipment.prize;
-        costEvaluator.deltaCost(
+        costEvaluator.deltaCost<true>(
             deltaCost,
             Route::Proposal(empty->before(0),
                             PickupSegment(data_, pickup->idx()),
