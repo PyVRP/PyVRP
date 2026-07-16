@@ -139,3 +139,35 @@ def test_insert_mixed_client_and_shipment(small_shipments):
 
     # C0 is much closer to U1 than to L1, so it is inserted after U1.
     assert_equal(str(sol.routes[0]), "L1 U1 C0")
+
+
+def test_getitem(ok_small, small_shipments):
+    """
+    Tests getting a client or shipment node by indexing the solution.
+    """
+    sol = Solution(ok_small)
+
+    # Indexing a client activity should return the associated client node.
+    client = sol[Activity("C1")]
+    assert_(client is sol.clients[1])
+    assert_(client.is_client())
+    assert_equal(client.idx, 1)
+
+    # Depots are not tracked at the solution level, and indexing them returns
+    # a null pointer/None.
+    depot = sol[Activity("D0")]
+    assert_(depot is None)
+
+    sol = Solution(small_shipments)
+
+    # Indexing a pickup activity returns the associated pickup node.
+    pickup = sol[Activity("L2")]
+    assert_(pickup is sol.shipments[2][0])
+    assert_(pickup.is_pickup())
+    assert_equal(pickup.idx, 2)
+
+    # And likewise for delivery activities.
+    delivery = sol[Activity("U3")]
+    assert_(delivery is sol.shipments[3][1])
+    assert_(delivery.is_delivery())
+    assert_equal(delivery.idx, 3)

@@ -113,21 +113,13 @@ void Solution::load(pyvrp::Solution const &solution)
         for (size_t idx = 1; idx != solRoute.size() - 1; ++idx)
         {
             auto const &activity = solRoute[idx];
-            if (auto *ptr = activity2node(activity))  // client or shipment
-                route.push_back(ptr);                 // visit
+            if (auto *ptr = this->operator[](activity))  // client or shipment
+                route.push_back(ptr);                    // visit
             else
-                switch (activity.type())  // an activity of which the route
-                {                         //  needs to take ownership
-                case Activity::ActivityType::DEPOT:
-                {
-                    Route::Node depot = activity;
-                    route.push_back(&depot);
-                    break;
-                }
-
-                default:
-                    break;
-                }
+            {                                 // an activity of which the route
+                Route::Node node = activity;  // needs to take ownership
+                route.push_back(&node);
+            }
         }
 
         route.update();
@@ -184,7 +176,7 @@ bool Solution::insert(Route::Node *U,
     // already in use.
     for (auto const &vActivity : searchSpace.neighboursOf(U->activity()))
     {
-        Route::Node *V = activity2node(vActivity);
+        Route::Node *V = this->operator[](vActivity);
         assert(V);
 
         if (!V->route())
@@ -249,7 +241,7 @@ bool Solution::insert(Route::Node *pickup,
     // delivery in a route that's already in use.
     for (auto const &vActivity : searchSpace.neighboursOf(pickup->activity()))
     {
-        Route::Node *V = activity2node(vActivity);
+        Route::Node *V = this->operator[](vActivity);
         assert(V);
 
         auto const *route = V->route();

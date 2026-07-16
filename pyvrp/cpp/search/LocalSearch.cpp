@@ -64,20 +64,24 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
         for (auto const &uActivity : searchSpace_.activityOrder())
         {
-            auto const uClient = uActivity.idx();
-            auto *U = &solution_.clients[uClient];
-
             if (!searchSpace_.isPromising(uActivity))
                 continue;
 
-            auto const lastTest = lastTest_[uClient];
-            lastTest_[uClient] = numUpdates_;
+            auto *U = solution_[uActivity];
+            assert(U);
+
+            // lastTest_ is ordered - #clients (lower indices) and #pickups
+            // (upper indices).
+            auto const idx = (U->isClient() ? 0 : data.numClients()) + U->idx();
+            auto const lastTest = lastTest_[idx];
+            lastTest_[idx] = numUpdates_;
 
             applyUnaryOps(U, costEvaluator);
 
             for (auto const &vActivity : searchSpace_.neighboursOf(uActivity))
             {
-                auto *V = &solution_.clients[vActivity.idx()];
+                auto *V = solution_[vActivity];
+                assert(V);
 
                 if (!V->route())
                     continue;
@@ -411,7 +415,7 @@ LocalSearch::LocalSearch(ProblemData const &data,
       solution_(data),
       searchSpace_(data, neighbours),
       perturbationManager_(perturbationManager),
-      lastTest_(data.numClients()),
+      lastTest_(data.numClients() + data.numShipments()),
       lastUpdate_(data.numVehicles())
 {
 }

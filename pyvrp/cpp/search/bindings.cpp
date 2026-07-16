@@ -584,6 +584,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("search_space"),
              py::arg("cost_evaluator"),
              py::arg("required"))
+        .def("__getitem__",
+             &Solution::operator[],
+             py::arg("activity"),
+             py::return_value_policy::reference_internal)
         .def("__str__",
              [](Solution const &solution)
              {
