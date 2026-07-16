@@ -13,6 +13,7 @@ from pyvrp import (
 from pyvrp import Solution as PyVRPSolution
 from pyvrp.search import RelocateAlternative
 from pyvrp.search._search import Solution
+from tests.helpers import make_search_route
 
 
 def test_relocate_alternative_within_route(ok_small_mutually_exclusive_groups):
@@ -117,6 +118,23 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
     # while the cheaper alternative collects 150 more units of prize.
     move = op.evaluate(sol.clients[0], empty[0], CostEvaluator([], 0, 0))
     assert_equal(move, (-50, True))
+
+
+def test_skips_client_not_in_group(ok_small_mutually_exclusive_groups):
+    """
+    Tests that the operator skips clients that are not in a group.
+    """
+    data = ok_small_mutually_exclusive_groups
+    assert_(not data.client(3).group)
+
+    sol = Solution(data)
+    op = RelocateAlternative(data)
+    op.init(sol)
+
+    # C3 is not in a group, so the operator should skip it.
+    route = make_search_route(data, ["C3", "C0"])
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(route[1], route[2], cost_eval), (0, False))
 
 
 def test_supports(
