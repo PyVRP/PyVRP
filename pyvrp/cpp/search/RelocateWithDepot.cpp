@@ -143,6 +143,13 @@ std::pair<pyvrp::Cost, bool> RelocateWithDepot::evaluate(
     if (uRoute == vRoute && U->trip() != V->trip())
         return std::make_pair(0, false);
 
+    // Cannot evaluate this move because it would insert a depot after V, but
+    // there is an uncompleted shipment loaded before V that would then need to
+    // visit a reload depot before delivery, which makes the load segment
+    // concatenation more complex and is not handled.
+    if (V->numPickups() != V->numDeliveries())
+        return std::make_pair(0, false);
+
     move_ = {};
 
     Cost fixedCost = 0;

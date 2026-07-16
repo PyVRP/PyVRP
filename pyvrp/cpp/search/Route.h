@@ -174,6 +174,18 @@ public:
         [[nodiscard]] inline size_t trip() const;
 
         /**
+         * Returns the number of pickup nodes preceding this node in its route.
+         * Returns ``0`` if the node is *not* in a route.
+         */
+        [[nodiscard]] inline size_t numPickups() const;
+
+        /**
+         * Returns the number of delivery nodes preceding this node in its
+         * route. Returns ``0`` if the node is *not* in a route.
+         */
+        [[nodiscard]] inline size_t numDeliveries() const;
+
+        /**
          * Returns the route this node is currently in. If the node is not in
          * a route, this returns ``None`` (C++: ``nullptr``).
          */
@@ -336,8 +348,9 @@ private:
     std::vector<Node *> nodes;      // Nodes in this route
     std::vector<size_t> locations;  // Visited locations in this route
 
-    std::vector<size_t> numClients_;  // Clients on start -> node (incl.)
-    std::vector<size_t> numPickups_;  // Pickups on start -> node (incl.)
+    std::vector<size_t> numClients_;     // Clients on start -> node (incl.)
+    std::vector<size_t> numPickups_;     // Pickups on start -> node (incl.)
+    std::vector<size_t> numDeliveries_;  // Deliveries on start -> node (incl.)
 
     std::vector<Distance> cumDist;  // Dist of start -> node (incl.)
 
@@ -689,6 +702,16 @@ Activity::ActivityType Route::Node::type() const { return activity_.type(); }
 size_t Route::Node::pos() const { return pos_; }
 
 size_t Route::Node::trip() const { return trip_; }
+
+size_t Route::Node::numPickups() const
+{
+    return route_ ? route_->numPickups_[pos_] : 0;
+}
+
+size_t Route::Node::numDeliveries() const
+{
+    return route_ ? route_->numDeliveries_[pos_] : 0;
+}
 
 Route *Route::Node::route() const { return route_; }
 

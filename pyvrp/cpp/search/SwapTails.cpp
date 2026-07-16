@@ -13,6 +13,11 @@ bool onLastTrip(pyvrp::search::Route::Node *node)
     auto const *route = node->route();
     return node->trip() + 1 == route->numTrips();
 }
+
+bool crossesShipment(pyvrp::search::Route::Node *node)
+{
+    return node->numPickups() != node->numDeliveries();
+}
 }  // namespace
 
 std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
@@ -34,6 +39,11 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
     if (!onLastTrip(U) || !onLastTrip(V))
         // We cannot move reload depots, so we only evaluate a move if it does
         // not include a reload depot.
+        return std::make_pair(0, false);
+
+    if (crossesShipment(U) || crossesShipment(V))
+        // Cannot evaluate this move because it would leave part of a shipment
+        // in the other route.
         return std::make_pair(0, false);
 
     Cost deltaCost = 0;
