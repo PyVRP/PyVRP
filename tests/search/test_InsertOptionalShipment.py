@@ -6,6 +6,36 @@ from pyvrp.search._search import Route, Solution
 from tests.helpers import make_search_route
 
 
+def test_insert_not_adjacent(small_optional_shipments):
+    """
+    Tests that the delivery node is inserted in the first improving place
+    following pickup.
+    """
+    data = small_optional_shipments
+    route = make_search_route(data, ["L0", "U0", "L1", "U1"])
+    assert_equal(route.num_shipments(), 2)
+    assert_equal(route.distance(), 30_857)
+
+    sol = Solution(data)
+    pickup, _ = sol.shipments[2]
+
+    # Insert L2 just after L1, and delivery in the first improving place,
+    # just after U1. This results in a new distance of 37_343, but gets a
+    # prize of 10_000, for a delta of -3_514.
+    op = InsertOptionalShipment(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(pickup, route[3], cost_eval), (-3_514, True))
+
+    # Should insert U2 after U1, and L2 immediately after L1. U1 is in-between.
+    op.apply(pickup, route[3])
+    route.update()
+
+    assert_equal(route.num_shipments(), 3)
+    assert_equal(route.distance(), 37_343)
+    assert_equal(data.shipment(2).prize, 10_000)
+    assert_equal(str(route), "L0 U0 L1 L2 U1 U2")
+
+
 def test_insert_into_empty_route(small_optional_shipments):
     """
     Tests that shipments can be inserted into an empty route.
@@ -47,7 +77,7 @@ def test_fixed_cost_empty_routes(small_optional_shipments):
     assert_equal(op.evaluate(pickup, route[0], cost_eval), (-179, True))
 
 
-def test_insert_delivery_in_improving_place(small_optional_shipments):
+def test_insert_delivery_in_first_improving_place(small_optional_shipments):
     """
     Tests that U's delivery is inserted in the first improving place following
     pickup.
