@@ -171,3 +171,28 @@ def test_getitem(ok_small, small_shipments):
     assert_(delivery is sol.shipments[3][1])
     assert_(delivery.is_delivery())
     assert_equal(delivery.idx, 3)
+
+
+def test_insert_pick_delivery_non_adjacent(small_shipments):
+    """
+    Tests that insert() can insert the pickup and delivery nodes in
+    non-adjacent places.
+    """
+    sol = Solution(small_shipments)
+
+    route = sol.routes[0]
+    for descr in ["L0", "L1", "L3", "U0", "U1", "U3"]:
+        node = sol[Activity(descr)]
+        route.append(node)
+    route.update()
+
+    neighbours = compute_neighbours(small_shipments)
+    search_space = SearchSpace(small_shipments, neighbours)
+    cost_eval = CostEvaluator([0], 0, 0)
+    pickup, delivery = sol.shipments[2]
+
+    sol.insert(pickup, delivery, search_space, cost_eval, True)
+    route.update()
+
+    # The solution should have inserted L2 and U2, but not next to each other.
+    assert_equal(str(route), "L0 L1 L3 U0 L2 U1 U3 U2")
