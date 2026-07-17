@@ -24,7 +24,7 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     stats_.numEvaluations++;
-    assert(!U->isEndDepot() && !U->isReloadDepot());
+    assert(!U->isDepot());
     assert(!V->isEndDepot() && !V->isReloadDepot());
 
     auto const *uRoute = U->route();
@@ -48,18 +48,12 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
 
     Cost deltaCost = 0;
 
-    // We're going to incur fixed cost if a route is currently empty but
+    // We're going to incur fixed cost if V's route is currently empty but
     // becomes non-empty due to the proposed move.
-    if (uRoute->empty() && !n(V)->isEndDepot())
-        deltaCost += uRoute->fixedVehicleCost();
-
     if (vRoute->empty() && !n(U)->isEndDepot())
         deltaCost += vRoute->fixedVehicleCost();
 
-    // We lose fixed cost if a route becomes empty due to the proposed move.
-    if (!uRoute->empty() && U->isStartDepot() && n(V)->isEndDepot())
-        deltaCost -= uRoute->fixedVehicleCost();
-
+    // We lose fixed cost if V's route becomes empty due to the proposed move.
     if (!vRoute->empty() && V->isStartDepot() && n(U)->isEndDepot())
         deltaCost -= vRoute->fixedVehicleCost();
 
@@ -111,7 +105,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
     auto *nU = n(U);
     auto *nV = n(V);
 
-    auto insertIdx = U->pos() + 1;
+    auto insertIdx = nU->pos();
     while (!nV->isEndDepot())
     {
         auto *node = nV;

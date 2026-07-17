@@ -173,7 +173,7 @@ def test_getitem(ok_small, small_shipments):
     assert_equal(delivery.idx, 3)
 
 
-def test_insert_pick_delivery_non_adjacent(small_shipments):
+def test_insert_pickup_delivery_non_adjacent(small_shipments):
     """
     Tests that insert() can insert the pickup and delivery nodes in
     non-adjacent places.
