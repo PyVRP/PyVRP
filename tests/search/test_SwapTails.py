@@ -209,12 +209,13 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (delta, True))
 
 
-def test_supports(ok_small, pr107):
+def test_supports(ok_small, pr107, small_shipments):
     """
-    Tests that SwapTails does not support TSP instances.
+    Tests that SwapTails does not support TSP or pure shipment instances.
     """
     assert_(SwapTails.supports(ok_small))  # is a regular VRP
     assert_(not SwapTails.supports(pr107))  # is a TSP
+    assert_(not SwapTails.supports(small_shipments))  # is pure shipment
 
 
 def test_skips_move_if_shipment_is_split_between_routes(small_shipments):
