@@ -147,8 +147,7 @@ void RelocateAlternative::init(Solution &solution)
 
 std::string RelocateAlternative::name() const { return "RelocateAlternative"; }
 
-template <>
-bool pyvrp::search::supports<RelocateAlternative>(ProblemData const &data)
+bool RelocateAlternative::supports(ProblemData const &data)
 {
     for (auto const &group : data.groups())
         if (group.mutuallyExclusive)

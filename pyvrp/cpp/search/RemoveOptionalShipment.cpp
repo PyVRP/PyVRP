@@ -56,8 +56,7 @@ std::string RemoveOptionalShipment::name() const
     return "RemoveOptionalShipment";
 }
 
-template <>
-bool pyvrp::search::supports<RemoveOptionalShipment>(ProblemData const &data)
+bool RemoveOptionalShipment::supports(ProblemData const &data)
 {
     for (auto const &shipment : data.shipments())  // need at least one
         if (!shipment.required)                    // optional shipment

@@ -67,8 +67,7 @@ void RemoveAdjacentDepot::apply(Route::Node *U) const
 
 std::string RemoveAdjacentDepot::name() const { return "RemoveAdjacentDepot"; }
 
-template <>
-bool pyvrp::search::supports<RemoveAdjacentDepot>(ProblemData const &data)
+bool RemoveAdjacentDepot::supports(ProblemData const &data)
 {
     // We need at least one vehicle type for which reloading is enabled.
     for (auto const &vehType : data.vehicleTypes())

@@ -74,8 +74,7 @@ std::string InsertOptionalShipment::name() const
     return "InsertOptionalShipment";
 }
 
-template <>
-bool pyvrp::search::supports<InsertOptionalShipment>(ProblemData const &data)
+bool InsertOptionalShipment::supports(ProblemData const &data)
 {
     for (auto const &shipment : data.shipments())  // need at least one
         if (!shipment.required)                    // optional shipment

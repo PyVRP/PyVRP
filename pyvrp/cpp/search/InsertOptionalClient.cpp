@@ -59,8 +59,7 @@ std::string InsertOptionalClient::name() const
     return "InsertOptionalClient";
 }
 
-template <>
-bool pyvrp::search::supports<InsertOptionalClient>(ProblemData const &data)
+bool InsertOptionalClient::supports(ProblemData const &data)
 {
     for (auto const &group : data.groups())  // if the group is not required
         if (!group.required)                 // its clients are not either

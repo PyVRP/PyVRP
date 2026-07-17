@@ -200,8 +200,7 @@ void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
 
 std::string RelocateWithDepot::name() const { return "RelocateWithDepot"; }
 
-template <>
-bool pyvrp::search::supports<RelocateWithDepot>(ProblemData const &data)
+bool RelocateWithDepot::supports(ProblemData const &data)
 {
     // We need at least one vehicle type for which reloading is enabled.
     for (auto const &vehType : data.vehicleTypes())

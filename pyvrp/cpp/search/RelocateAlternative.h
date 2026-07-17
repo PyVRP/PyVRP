@@ -43,9 +43,9 @@ public:
     void init(Solution &solution) override;
 
     std::string name() const override;
-};
 
-template <> bool supports<RelocateAlternative>(ProblemData const &data);
+    static bool supports(ProblemData const &data);
+};
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_RELOCATEALTERNATIVE_H

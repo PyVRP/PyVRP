@@ -65,7 +65,7 @@ void ReplaceGroup::init(Solution &solution)
 
 std::string ReplaceGroup::name() const { return "ReplaceGroup"; }
 
-template <> bool pyvrp::search::supports<ReplaceGroup>(ProblemData const &data)
+bool ReplaceGroup::supports(ProblemData const &data)
 {
     for (auto const &group : data.groups())
         if (group.mutuallyExclusive)

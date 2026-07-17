@@ -58,6 +58,8 @@ public:
     void apply(Route::Node *U, Route::Node *V) const override;
 
     std::string name() const override;
+
+    static bool supports(ProblemData const &data);
 };
 
 template <size_t N, size_t M>
@@ -98,7 +100,8 @@ bool Exchange<N, M>::splitsShipment(Route::Node *node, size_t segLength) const
     // Moving this segment certainly does not split a shipment if there is not
     // currently a shipment on the vehicle (at node), or if one is loaded, it
     // is delivered within this segment.
-    return node->numPickups() != node->numDeliveries() + node->isPickup()
+    return node->isDelivery()
+           || node->numPickups() != node->numDeliveries() + node->isPickup()
            || last->numPickups() != last->numDeliveries();
 }
 
@@ -277,6 +280,16 @@ void Exchange<N, M>::apply(Route::Node *U, Route::Node *V) const
 template <size_t N, size_t M> std::string Exchange<N, M>::name() const
 {
     return "Exchange" + std::to_string(N) + std::to_string(M);
+}
+
+template <size_t N, size_t M>
+bool Exchange<N, M>::supports(ProblemData const &data)
+{
+    if (data.numClients() == 0 && data.numShipments() > 0)
+        if constexpr (N & 1 || M & 1)  // cannot move uneven number of nodes
+            return false;              // if the instance has only shipments
+
+    return true;
 }
 }  // namespace pyvrp::search
 

@@ -611,12 +611,34 @@ def test_bug_evaluating_move_with_initial_load():
 
 @pytest.mark.parametrize("operator", [Exchange10, Exchange21, Exchange33])
 @pytest.mark.parametrize("instance", ["ok_small", "pr107", "prize_collecting"])
-def test_supports(operator, instance, request):
+def test_supports_clients(operator, instance, request):
     """
-    Tests that the Exchange operators support any type of data instance.
+    Tests that the Exchange operators support any type of data instance with
+    regular clients.
     """
     data = request.getfixturevalue(instance)
     assert_(operator.supports(data))
+
+
+def test_supports_shipments(small_shipments):
+    """
+    Tests that only the even Exchange operators support instances with pure
+    shipments.
+    """
+    # This is an instance with pure shipments - there are no clients.
+    assert_equal(small_shipments.num_clients, 0)
+    assert_equal(small_shipments.num_shipments, 4)
+
+    # These move an even number of nodes between routes, and thus support
+    # instances with pure shipments.
+    assert_(Exchange20.supports(small_shipments))
+    assert_(Exchange22.supports(small_shipments))
+
+    # But these operators move an odd number of nodes between routes, and that
+    # is not supported.
+    assert_(not Exchange10.supports(small_shipments))
+    assert_(not Exchange11.supports(small_shipments))
+    assert_(not Exchange21.supports(small_shipments))
 
 
 def test_bug_release_time_shift_time_windows():

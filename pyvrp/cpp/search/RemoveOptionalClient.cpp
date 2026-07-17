@@ -44,8 +44,7 @@ std::string RemoveOptionalClient::name() const
     return "RemoveOptionalClient";
 }
 
-template <>
-bool pyvrp::search::supports<RemoveOptionalClient>(ProblemData const &data)
+bool RemoveOptionalClient::supports(ProblemData const &data)
 {
     for (auto const &group : data.groups())  // if the group is not required
         if (!group.required)                 // its clients are not either

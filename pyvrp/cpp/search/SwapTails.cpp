@@ -132,7 +132,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
 
 std::string SwapTails::name() const { return "SwapTails"; }
 
-template <> bool pyvrp::search::supports<SwapTails>(ProblemData const &data)
+bool SwapTails::supports(ProblemData const &data)
 {
     // Does not work for TSP, since the operator needs at least two routes.
     return data.numVehicles() > 1;
