@@ -222,7 +222,8 @@ def test_skips_move_if_shipment_is_split_between_routes(small_shipments):
     Tests that SwapTails skips a move if it would leave part of a shipment
     in another route.
     """
-    data = small_shipments
+    data = small_shipments.replace(clients=[Client(0, delivery=[0])])
+    assert_(SwapTails.supports(data))
 
     route1 = SolRoute(data, [Activity("L0"), Activity("U0")], 0)
     route2 = SolRoute(data, [Activity("L1"), Activity("U1")], 0)

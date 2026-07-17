@@ -105,7 +105,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
     auto *nU = n(U);
     auto *nV = n(V);
 
-    auto insertIdx = nU->pos();
+    auto insertIdx = U->pos() + 1;
     while (!nV->isEndDepot())
     {
         auto *node = nV;
@@ -128,6 +128,8 @@ std::string SwapTails::name() const { return "SwapTails"; }
 
 bool SwapTails::supports(ProblemData const &data)
 {
-    // Does not work for TSP, since the operator needs at least two routes.
-    return data.numVehicles() > 1;
+    // Does not work for TSP, since the operator needs two routes. Also requires
+    // at least one client, as swapping whole tails does not make much sense
+    // for pure shipments since it likely breaks pickup-and-delivery pairs.
+    return data.numVehicles() > 1 && data.numClients() > 0;
 }
