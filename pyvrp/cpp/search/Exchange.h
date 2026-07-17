@@ -25,22 +25,26 @@ template <size_t N, size_t M> class Exchange : public BinaryOperator
 
     static_assert(N >= M && N > 0, "N < M or N == 0 does not make sense");
 
-    // Tests if the segment starting at node of given length contains the depot
+    // Tests if the segment starting at node of given length contains the depot.
     bool containsDepot(Route::Node *node, size_t segLength) const;
 
-    // Tests if the segments of U and V overlap in the same route
+    // Tests if the segment starting at node of given length would split a
+    // shipment if exchanged.
+    bool splitsShipment(Route::Node *node, size_t segLength) const;
+
+    // Tests if the segments of U and V overlap in the same route.
     bool overlap(Route::Node *U, Route::Node *V) const;
 
-    // Tests if the segments of U and V are adjacent in the same route
+    // Tests if the segments of U and V are adjacent in the same route.
     bool adjacent(Route::Node *U, Route::Node *V) const;
 
-    // Special case that's applied when M == 0
+    // Special case that's applied when M == 0.
     std::pair<Cost, bool>
     evalRelocateMove(Route::Node *U,
                      Route::Node *V,
                      CostEvaluator const &costEvaluator) const;
 
-    // Applied when M != 0
+    // Applied when M != 0.
     std::pair<Cost, bool>
     evalSwapMove(Route::Node *U,
                  Route::Node *V,
@@ -86,6 +90,19 @@ bool Exchange<N, M>::adjacent(Route::Node *U, Route::Node *V) const
 }
 
 template <size_t N, size_t M>
+bool Exchange<N, M>::splitsShipment(Route::Node *node, size_t segLength) const
+{
+    auto const &route = *node->route();
+    auto const *last = route[node->pos() + segLength - 1];
+
+    // Moving this segment certainly does not split a shipment if there is not
+    // currently a shipment on the vehicle (at node), or if one is loaded, it
+    // is delivered within this segment.
+    return node->numPickups() != node->numDeliveries() + node->isPickup()
+           || last->numPickups() != last->numDeliveries();
+}
+
+template <size_t N, size_t M>
 std::pair<Cost, bool> Exchange<N, M>::evalRelocateMove(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator) const
 {
@@ -102,8 +119,9 @@ std::pair<Cost, bool> Exchange<N, M>::evalRelocateMove(
         if (V->isStartDepot() && vRoute->empty())
             deltaCost += vRoute->fixedVehicleCost();
 
-        // We lose U's fixed cost if we're moving all U's clients.
-        if (uRoute->numClients() == N)
+        // We lose U's fixed cost if we're moving all U's clients or shipment
+        // nodes (pickup + delivery).
+        if (uRoute->numClients() + 2 * uRoute->numShipments() == N)
             deltaCost -= uRoute->fixedVehicleCost();
 
         auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
@@ -196,12 +214,11 @@ std::pair<Cost, bool> Exchange<N, M>::evaluate(
 {
     stats_.numEvaluations++;
 
-    if (!U->route() || containsDepot(U, N) || overlap(U, V))
+    if (!U->route() || !V->route())
         return std::make_pair(0, false);
 
-    if constexpr (M > 0)
-        if (containsDepot(V, M))
-            return std::make_pair(0, false);
+    if (containsDepot(U, N) || splitsShipment(U, N) || overlap(U, V))
+        return std::make_pair(0, false);
 
     // We cannot easily evaluate across trips, so we cannot determine this move.
     if (U->route() == V->route() && U->trip() != V->trip())
@@ -222,7 +239,7 @@ std::pair<Cost, bool> Exchange<N, M>::evaluate(
                 return std::make_pair(0, false);
         }
 
-        if (adjacent(U, V))
+        if (containsDepot(V, M) || splitsShipment(V, M) || adjacent(U, V))
             return std::make_pair(0, false);
 
         return evalSwapMove(U, V, costEvaluator);

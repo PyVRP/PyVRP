@@ -14,7 +14,7 @@ bool onLastTrip(pyvrp::search::Route::Node *node)
     return node->trip() + 1 == route->numTrips();
 }
 
-bool crossesShipment(pyvrp::search::Route::Node *node)
+bool splitsShipment(pyvrp::search::Route::Node *node)
 {
     return node->numPickups() != node->numDeliveries();
 }
@@ -41,7 +41,7 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
         // not include a reload depot.
         return std::make_pair(0, false);
 
-    if (crossesShipment(U) || crossesShipment(V))
+    if (splitsShipment(U) || splitsShipment(V))
         // Cannot evaluate this move because it would leave part of a shipment
         // in the other route.
         return std::make_pair(0, false);
