@@ -45,7 +45,10 @@ def write_solution(where: Path, data: ProblemData, result: Result):
             # Map activities back to VRPLIB's format.  VRPLIB uses a format
             # where the route visits are numbered with [0, ..., num_depots) for
             # the depots, and [num_depots, ..., num_depots + num_clients) for
-            # the clients.
+            # the clients. For the shipments we use the indices from their
+            # names and substract the depots. Note that this gets confusing
+            # fast if we have instances with mixed clients and shipments, but
+            # we do not typically have those.
             match activity.type:
                 case ActivityType.DEPOT:
                     visits.append(activity.idx)
