@@ -227,6 +227,13 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size(); ++idx)
         numPickups_[idx] = numPickups_[idx - 1] + nodes[idx]->isPickup();
 
+    // Delivery counter.
+    numDeliveries_.resize(nodes.size());
+    numDeliveries_[0] = 0;
+    for (size_t idx = 1; idx != nodes.size(); ++idx)
+        numDeliveries_[idx]
+            = numDeliveries_[idx - 1] + nodes[idx]->isDelivery();
+
     // Distance.
     auto const &distMat = data.distanceMatrix(profile());
 

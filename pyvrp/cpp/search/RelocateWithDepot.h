@@ -60,9 +60,9 @@ public:
     void apply(Route::Node *U, Route::Node *V) const override;
 
     std::string name() const override;
-};
 
-template <> bool supports<RelocateWithDepot>(ProblemData const &data);
+    static bool supports(ProblemData const &data);
+};
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_RELOCATEWITHDEPOT_H

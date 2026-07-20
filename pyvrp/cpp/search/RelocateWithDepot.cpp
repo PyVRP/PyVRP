@@ -132,7 +132,7 @@ std::pair<pyvrp::Cost, bool> RelocateWithDepot::evaluate(
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 
-    if (!uRoute || U == n(V) || vRoute->empty())
+    if (!U->isClient() || !uRoute || U == n(V) || vRoute->empty())
         return std::make_pair(0, false);
 
     if (vRoute->numTrips() == vRoute->maxTrips())
@@ -143,10 +143,18 @@ std::pair<pyvrp::Cost, bool> RelocateWithDepot::evaluate(
     if (uRoute == vRoute && U->trip() != V->trip())
         return std::make_pair(0, false);
 
+    // Cannot evaluate this move because it would insert a depot after V, but
+    // there is an uncompleted shipment loaded before V that would then need to
+    // visit a reload depot before delivery, which makes the load segment
+    // concatenation more complex and is not handled.
+    if (vRoute->numPickups(V->pos()) != vRoute->numDeliveries(V->pos()))
+        return std::make_pair(0, false);
+
     move_ = {};
 
     Cost fixedCost = 0;
-    if (uRoute != vRoute && uRoute->numClients() == 1)  // empty after move
+    if (uRoute != vRoute  // empty after move
+        && uRoute->numClients() == 1 && uRoute->numShipments() == 0)
         fixedCost -= uRoute->fixedVehicleCost();
 
     if (!V->isReloadDepot())
@@ -192,8 +200,7 @@ void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
 
 std::string RelocateWithDepot::name() const { return "RelocateWithDepot"; }
 
-template <>
-bool pyvrp::search::supports<RelocateWithDepot>(ProblemData const &data)
+bool RelocateWithDepot::supports(ProblemData const &data)
 {
     // We need at least one vehicle type for which reloading is enabled.
     for (auto const &vehType : data.vehicleTypes())

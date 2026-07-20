@@ -336,8 +336,9 @@ private:
     std::vector<Node *> nodes;      // Nodes in this route
     std::vector<size_t> locations;  // Visited locations in this route
 
-    std::vector<size_t> numClients_;  // Clients on start -> node (incl.)
-    std::vector<size_t> numPickups_;  // Pickups on start -> node (incl.)
+    std::vector<size_t> numClients_;     // Clients on start -> node (incl.)
+    std::vector<size_t> numPickups_;     // Pickups on start -> node (incl.)
+    std::vector<size_t> numDeliveries_;  // Deliveries on start -> node (incl.)
 
     std::vector<Distance> cumDist;  // Dist of start -> node (incl.)
 
@@ -548,6 +549,16 @@ public:
      */
     [[nodiscard]] inline size_t numShipments() const;
     [[nodiscard]] inline size_t numPickups() const;  // same; for convenience
+
+    /**
+     * Returns the number of pickup nodes before (and including) end.
+     */
+    [[nodiscard]] inline size_t numPickups(size_t end) const;
+
+    /**
+     * Returns the number of delivery nodes before (and including) end.
+     */
+    [[nodiscard]] inline size_t numDeliveries(size_t end) const;
 
     /**
      * Returns the number of start, end, and reload depots in this route.
@@ -1098,6 +1109,20 @@ size_t Route::numPickups() const
 {
     assert(!dirty);
     return numPickups_.back();
+}
+
+size_t Route::numPickups(size_t end) const
+{
+    assert(!dirty);
+    assert(end < size());
+    return numPickups_[end];
+}
+
+size_t Route::numDeliveries(size_t end) const
+{
+    assert(!dirty);
+    assert(end < size());
+    return numDeliveries_[end];
 }
 
 size_t Route::numDepots() const { return depots_.size(); }

@@ -48,7 +48,6 @@ using pyvrp::search::ReplaceOptionalShipment;
 using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 using pyvrp::search::Solution;
-using pyvrp::search::supports;
 using pyvrp::search::SwapTails;
 using pyvrp::search::UnaryOperator;
 
@@ -80,7 +79,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &RemoveAdjacentDepot::apply, py::arg("U"))
         .def("init", &RemoveAdjacentDepot::init, py::arg("solution"))
         .def_static(
-            "supports", &supports<RemoveAdjacentDepot>, py::arg("data"));
+            "supports", &RemoveAdjacentDepot::supports, py::arg("data"));
 
     py::class_<RemoveOptionalClient, UnaryOperator>(
         m, "RemoveOptionalClient", DOC(pyvrp, search, RemoveOptionalClient))
@@ -98,7 +97,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &RemoveOptionalClient::apply, py::arg("U"))
         .def("init", &RemoveOptionalClient::init, py::arg("solution"))
         .def_static(
-            "supports", &supports<RemoveOptionalClient>, py::arg("data"));
+            "supports", &RemoveOptionalClient::supports, py::arg("data"));
 
     py::class_<RemoveOptionalShipment, UnaryOperator>(
         m, "RemoveOptionalShipment", DOC(pyvrp, search, RemoveOptionalShipment))
@@ -116,7 +115,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &RemoveOptionalShipment::apply, py::arg("U"))
         .def("init", &RemoveOptionalShipment::init, py::arg("solution"))
         .def_static(
-            "supports", &supports<RemoveOptionalShipment>, py::arg("data"));
+            "supports", &RemoveOptionalShipment::supports, py::arg("data"));
 
     py::class_<ReplaceGroup, UnaryOperator>(
         m, "ReplaceGroup", DOC(pyvrp, search, ReplaceGroup))
@@ -133,7 +132,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &ReplaceGroup::apply, py::arg("U"))
         .def("init", &ReplaceGroup::init, py::arg("solution"))
-        .def_static("supports", &supports<ReplaceGroup>, py::arg("data"));
+        .def_static("supports", &ReplaceGroup::supports, py::arg("data"));
 
     py::class_<RelocateAlternative, BinaryOperator>(
         m, "RelocateAlternative", DOC(pyvrp, search, RelocateAlternative))
@@ -152,7 +151,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &RelocateAlternative::apply, py::arg("U"), py::arg("V"))
         .def("init", &RelocateAlternative::init, py::arg("solution"))
         .def_static(
-            "supports", &supports<RelocateAlternative>, py::arg("data"));
+            "supports", &RelocateAlternative::supports, py::arg("data"));
 
     py::class_<InsertOptionalClient, BinaryOperator>(
         m, "InsertOptionalClient", DOC(pyvrp, search, InsertOptionalClient))
@@ -171,7 +170,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &InsertOptionalClient::apply, py::arg("U"), py::arg("V"))
         .def("init", &InsertOptionalClient::init, py::arg("solution"))
         .def_static(
-            "supports", &supports<InsertOptionalClient>, py::arg("data"));
+            "supports", &InsertOptionalClient::supports, py::arg("data"));
 
     py::class_<InsertOptionalShipment, BinaryOperator>(
         m, "InsertOptionalShipment", DOC(pyvrp, search, InsertOptionalShipment))
@@ -191,7 +190,7 @@ PYBIND11_MODULE(_search, m)
             "apply", &InsertOptionalShipment::apply, py::arg("U"), py::arg("V"))
         .def("init", &InsertOptionalShipment::init, py::arg("solution"))
         .def_static(
-            "supports", &supports<InsertOptionalShipment>, py::arg("data"));
+            "supports", &InsertOptionalShipment::supports, py::arg("data"));
 
     py::class_<ReplaceOptionalClient, BinaryOperator>(
         m, "ReplaceOptionalClient", DOC(pyvrp, search, ReplaceOptionalClient))
@@ -210,7 +209,7 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &ReplaceOptionalClient::apply, py::arg("U"), py::arg("V"))
         .def("init", &ReplaceOptionalClient::init, py::arg("solution"))
         .def_static(
-            "supports", &supports<ReplaceOptionalClient>, py::arg("data"));
+            "supports", &ReplaceOptionalClient::supports, py::arg("data"));
 
     py::class_<ReplaceOptionalShipment, BinaryOperator>(
         m,
@@ -234,7 +233,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("V"))
         .def("init", &ReplaceOptionalShipment::init, py::arg("solution"))
         .def_static(
-            "supports", &supports<ReplaceOptionalShipment>, py::arg("data"));
+            "supports", &ReplaceOptionalShipment::supports, py::arg("data"));
 
     py::class_<Exchange<1, 0>, BinaryOperator>(
         m, "Exchange10", DOC(pyvrp, search, Exchange))
@@ -252,7 +251,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<1, 0>::apply, py::arg("U"), py::arg("V"))
         .def("init", &Exchange<1, 0>::init, py::arg("solution"))
-        .def_static("supports", &supports<Exchange<1, 0>>, py::arg("data"));
+        .def_static("supports", &Exchange<1, 0>::supports, py::arg("data"));
 
     py::class_<Exchange<2, 0>, BinaryOperator>(
         m, "Exchange20", DOC(pyvrp, search, Exchange))
@@ -270,7 +269,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<2, 0>::apply, py::arg("U"), py::arg("V"))
         .def("init", &Exchange<2, 0>::init, py::arg("solution"))
-        .def_static("supports", &supports<Exchange<2, 0>>, py::arg("data"));
+        .def_static("supports", &Exchange<2, 0>::supports, py::arg("data"));
 
     py::class_<Exchange<3, 0>, BinaryOperator>(
         m, "Exchange30", DOC(pyvrp, search, Exchange))
@@ -288,7 +287,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 0>::apply, py::arg("U"), py::arg("V"))
         .def("init", &Exchange<3, 0>::init, py::arg("solution"))
-        .def_static("supports", &supports<Exchange<3, 0>>, py::arg("data"));
+        .def_static("supports", &Exchange<3, 0>::supports, py::arg("data"));
 
     py::class_<Exchange<1, 1>, BinaryOperator>(
         m, "Exchange11", DOC(pyvrp, search, Exchange))
@@ -306,7 +305,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<1, 1>::apply, py::arg("U"), py::arg("V"))
         .def("init", &Exchange<1, 1>::init, py::arg("solution"))
-        .def_static("supports", &supports<Exchange<1, 1>>, py::arg("data"));
+        .def_static("supports", &Exchange<1, 1>::supports, py::arg("data"));
 
     py::class_<Exchange<2, 1>, BinaryOperator>(
         m, "Exchange21", DOC(pyvrp, search, Exchange))
@@ -324,7 +323,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<2, 1>::apply, py::arg("U"), py::arg("V"))
         .def("init", &Exchange<2, 1>::init, py::arg("solution"))
-        .def_static("supports", &supports<Exchange<2, 1>>, py::arg("data"));
+        .def_static("supports", &Exchange<2, 1>::supports, py::arg("data"));
 
     py::class_<Exchange<3, 1>, BinaryOperator>(
         m, "Exchange31", DOC(pyvrp, search, Exchange))
@@ -342,7 +341,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 1>::apply, py::arg("U"), py::arg("V"))
         .def("init", &Exchange<3, 1>::init, py::arg("solution"))
-        .def_static("supports", &supports<Exchange<3, 1>>, py::arg("data"));
+        .def_static("supports", &Exchange<3, 1>::supports, py::arg("data"));
 
     py::class_<Exchange<2, 2>, BinaryOperator>(
         m, "Exchange22", DOC(pyvrp, search, Exchange))
@@ -360,7 +359,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<2, 2>::apply, py::arg("U"), py::arg("V"))
         .def("init", &Exchange<2, 2>::init, py::arg("solution"))
-        .def_static("supports", &supports<Exchange<2, 2>>, py::arg("data"));
+        .def_static("supports", &Exchange<2, 2>::supports, py::arg("data"));
 
     py::class_<Exchange<3, 2>, BinaryOperator>(
         m, "Exchange32", DOC(pyvrp, search, Exchange))
@@ -378,7 +377,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 2>::apply, py::arg("U"), py::arg("V"))
         .def("init", &Exchange<3, 2>::init, py::arg("solution"))
-        .def_static("supports", &supports<Exchange<3, 2>>, py::arg("data"));
+        .def_static("supports", &Exchange<3, 2>::supports, py::arg("data"));
 
     py::class_<Exchange<3, 3>, BinaryOperator>(
         m, "Exchange33", DOC(pyvrp, search, Exchange))
@@ -396,7 +395,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"))
         .def("init", &Exchange<3, 3>::init, py::arg("solution"))
-        .def_static("supports", &supports<Exchange<3, 3>>, py::arg("data"));
+        .def_static("supports", &Exchange<3, 3>::supports, py::arg("data"));
 
     py::class_<SwapTails, BinaryOperator>(
         m, "SwapTails", DOC(pyvrp, search, SwapTails))
@@ -414,7 +413,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &SwapTails::apply, py::arg("U"), py::arg("V"))
         .def("init", &SwapTails::init, py::arg("solution"))
-        .def_static("supports", &supports<SwapTails>, py::arg("data"));
+        .def_static("supports", &SwapTails::supports, py::arg("data"));
 
     py::class_<RelocateWithDepot, BinaryOperator>(
         m, "RelocateWithDepot", DOC(pyvrp, search, RelocateWithDepot))
@@ -432,7 +431,7 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &RelocateWithDepot::apply, py::arg("U"), py::arg("V"))
         .def("init", &RelocateWithDepot::init, py::arg("solution"))
-        .def_static("supports", &supports<RelocateWithDepot>, py::arg("data"));
+        .def_static("supports", &RelocateWithDepot::supports, py::arg("data"));
 
     py::class_<SearchSpace>(m, "SearchSpace", DOC(pyvrp, search, SearchSpace))
         .def(py::init<pyvrp::ProblemData const &, SearchSpace::Neighbours>(),
@@ -584,6 +583,10 @@ PYBIND11_MODULE(_search, m)
              py::arg("search_space"),
              py::arg("cost_evaluator"),
              py::arg("required"))
+        .def("__getitem__",
+             &Solution::operator[],
+             py::arg("activity"),
+             py::return_value_policy::reference_internal)
         .def("__str__",
              [](Solution const &solution)
              {
@@ -600,7 +603,8 @@ PYBIND11_MODULE(_search, m)
         .def_property_readonly("vehicle_type", &Route::vehicleType)
         .def("num_clients", &Route::numClients)
         .def("num_shipments", &Route::numShipments)
-        .def("num_pickups", &Route::numPickups)
+        .def("num_pickups",
+             [](Route const &route) { return route.numPickups(); })
         .def("num_depots", &Route::numDepots)
         .def("num_trips", &Route::numTrips)
         .def("max_trips", &Route::maxTrips)

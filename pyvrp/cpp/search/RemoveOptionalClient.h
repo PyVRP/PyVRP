@@ -21,9 +21,9 @@ public:
     void apply(Route::Node *U) const override;
 
     std::string name() const override;
-};
 
-template <> bool supports<RemoveOptionalClient>(ProblemData const &data);
+    static bool supports(ProblemData const &data);
+};
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_REMOVEOPTIONALCLIENT_H

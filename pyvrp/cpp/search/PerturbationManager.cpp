@@ -126,22 +126,9 @@ void PerturbationManager::perturb(Solution &solution,
     // perturbation.
     for (auto const &uActivity : searchSpace.activityOrder())
     {
-        Route::Node *U = nullptr;
-        switch (uActivity.type())
-        {
-        case Activity::ActivityType::CLIENT:
-            U = &solution.clients[uActivity.idx()];
-            break;
-
-        case Activity::ActivityType::PICKUP:
-            U = &solution.shipments[uActivity.idx()].first;
-            break;
-
-        default:
-            continue;
-        }
-
+        Route::Node *U = solution[uActivity];
         assert(U);
+
         auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
         perturb(U, action);
 

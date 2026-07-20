@@ -6,35 +6,34 @@ from pyvrp.search._search import Route, Solution
 from tests.helpers import make_search_route
 
 
-def test_insert_pickup_in_improving_place(small_optional_shipments):
+def test_insert_not_adjacent(small_optional_shipments):
     """
-    Tests that U's pickup is inserted in the first improving place preceding
-    delivery.
+    Tests that the delivery node is inserted in the first improving place
+    following pickup.
     """
-    route = make_search_route(small_optional_shipments, ["L1", "U1"])
-    assert_equal(route.num_shipments(), 1)
-    assert_equal(route.distance(), 27_732)
+    data = small_optional_shipments
+    route = make_search_route(data, ["L0", "U0", "L1", "U1"])
+    assert_equal(route.num_shipments(), 2)
+    assert_equal(route.distance(), 30_857)
 
-    sol = Solution(small_optional_shipments)
-    pickup, delivery = sol.shipments[0]
-    assert_(pickup.is_pickup())
-    assert_(delivery.is_delivery())
+    sol = Solution(data)
+    pickup, _ = sol.shipments[2]
 
-    # Insert delivery just after U1, and pickup in the first improving place,
-    # just before U1. This results in a new distance of 34_369, but gets a
-    # prize of 10_000, for a delta of -3_363.
-    op = InsertOptionalShipment(small_optional_shipments)
+    # Insert L2 just after L1, and delivery in the first improving place,
+    # just after U1. This results in a new distance of 37_343, but gets a
+    # prize of 10_000, for a delta of -3_514.
+    op = InsertOptionalShipment(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(delivery, route[-2], cost_eval), (-3_363, True))
+    assert_equal(op.evaluate(pickup, route[3], cost_eval), (-3_514, True))
 
-    # Should insert U0 after U1, and L0 immediately before.
-    op.apply(delivery, route[-2])
+    # Should insert U2 after U1, and L2 immediately after L1. U1 is in-between.
+    op.apply(pickup, route[3])
     route.update()
 
-    assert_equal(route.num_shipments(), 2)
-    assert_equal(route.distance(), 34_369)
-    assert_equal(small_optional_shipments.shipment(0).prize, 10_000)
-    assert_equal(str(route), "L1 L0 U1 U0")
+    assert_equal(route.num_shipments(), 3)
+    assert_equal(route.distance(), 37_343)
+    assert_equal(data.shipment(2).prize, 10_000)
+    assert_equal(str(route), "L0 U0 L1 L2 U1 U2")
 
 
 def test_insert_into_empty_route(small_optional_shipments):
@@ -45,20 +44,16 @@ def test_insert_into_empty_route(small_optional_shipments):
     assert_equal(route.num_shipments(), 0)
 
     sol = Solution(small_optional_shipments)
-    pickup, delivery = sol.shipments[0]
+    pickup, _ = sol.shipments[0]
 
     op = InsertOptionalShipment(small_optional_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
 
     # We evaluate inserting the pickup and delivery nodes after the route's
-    # start depot. The pickup is fine - for empty routes, we then evaluate
-    # start -> pickup -> delivery -> end, a singleton route. For delivery we
-    # cannot evaluate such a move, since start -> delivery is not valid (we
-    # need a pickup first, but we want to insert delivery directly after the
-    # second argument). Finally, the cost delta is
-    #   distance - prize = 9_571 - 10_000 = -429.
+    # start depot. For empty routes we first evaluate start -> pickup
+    # -> delivery -> end, a singleton route. The delta is distance - prize
+    # = 9_571 - 10_000 = -429.
     assert_equal(op.evaluate(pickup, route[0], cost_eval), (-429, True))
-    assert_equal(op.evaluate(delivery, route[0], cost_eval), (0, False))
 
 
 def test_fixed_cost_empty_routes(small_optional_shipments):
@@ -82,7 +77,7 @@ def test_fixed_cost_empty_routes(small_optional_shipments):
     assert_equal(op.evaluate(pickup, route[0], cost_eval), (-179, True))
 
 
-def test_insert_delivery_in_improving_place(small_optional_shipments):
+def test_insert_delivery_in_first_improving_place(small_optional_shipments):
     """
     Tests that U's delivery is inserted in the first improving place following
     pickup.
@@ -141,12 +136,9 @@ def test_does_not_insert_across_depots(small_optional_shipments):
     cost_eval = CostEvaluator([0], 0, 0)
 
     # The first shipment has a high prize, and is worth inserting in some parts
-    # of this route. But we cannot insert the delivery just after the reload
-    # depot at idx 3, since then pickup needs to be before that depot, and that
-    # would mean the shipment crosses depots.
+    # of this route
     sol = Solution(data)
-    pickup, delivery = sol.shipments[0]
-    assert_equal(op.evaluate(delivery, route[3], cost_eval), (0, False))
+    pickup, _ = sol.shipments[0]
 
     # For the pickup node we evaluate a direct sequence first, that is,
     # inserting the pickup and delivery nodes directly after each other. In
@@ -157,6 +149,21 @@ def test_does_not_insert_across_depots(small_optional_shipments):
     route.update()
 
     assert_equal(str(route), "L1 U1 L0 U0 | L2 U2")
+
+
+def test_skips_deliveries(small_optional_shipments):
+    """
+    Tests that the operator skips delivery nodes because the local search only
+    calls the operator with pickups.
+    """
+    sol = Solution(small_optional_shipments)
+    pickup, delivery = sol.shipments[0]
+
+    op = InsertOptionalShipment(small_optional_shipments)
+    cost_eval = CostEvaluator([0], 0, 0)
+    route = make_search_route(small_optional_shipments, ["L1", "U1"])
+    assert_equal(op.evaluate(delivery, route[1], cost_eval), (0, False))
+    assert_equal(op.evaluate(pickup, route[1], cost_eval), (-1_648, True))
 
 
 def test_supports(small_optional_shipments, small_shipments):

@@ -45,8 +45,7 @@ std::string ReplaceOptionalClient::name() const
     return "ReplaceOptionalClient";
 }
 
-template <>
-bool pyvrp::search::supports<ReplaceOptionalClient>(ProblemData const &data)
+bool ReplaceOptionalClient::supports(ProblemData const &data)
 {
     for (auto const &client : data.clients())   // need at least one optional
         if (!client.required && !client.group)  // client not in a group

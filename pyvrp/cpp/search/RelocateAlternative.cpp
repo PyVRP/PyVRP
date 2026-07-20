@@ -76,7 +76,7 @@ void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
     assert(group.mutuallyExclusive);
 
     Cost fixedCost = 0;
-    if (uRoute->numClients() == 1)
+    if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
         fixedCost -= uRoute->fixedVehicleCost();
 
     if (vRoute->empty())
@@ -111,15 +111,17 @@ std::pair<pyvrp::Cost, bool> RelocateAlternative::evaluate(
 {
     assert(!U->isDepot() && !V->isEndDepot() && solution_);
     stats_.numEvaluations++;
-    move_ = {};
 
-    auto const *uRoute = U->route();
-    auto const *vRoute = V->route();
-    auto const &uData = data.client(U->idx());
-    if (!uRoute || !vRoute || !uData.group || U == V || U == n(V))
+    if (!U->isClient() || !U->route() || !V->route() || U == V || U == n(V))
         return std::make_pair(0, false);
 
-    if (uRoute == vRoute)
+    auto const &client = data.client(U->idx());
+    if (!client.group)
+        return std::make_pair(0, false);
+
+    move_ = {};
+
+    if (U->route() == V->route())
         evalWithinRoute(U, V, costEvaluator);
     else
         evalBetweenRoutes(U, V, costEvaluator);
@@ -129,7 +131,7 @@ std::pair<pyvrp::Cost, bool> RelocateAlternative::evaluate(
 
 void RelocateAlternative::apply(Route::Node *U, Route::Node *V) const
 {
-    assert(U->route() && V->route());
+    assert(U->isClient() && U->route() && V->route());
     assert(move_.alternative && !move_.alternative->route());
     stats_.numApplications++;
 
@@ -145,8 +147,7 @@ void RelocateAlternative::init(Solution &solution)
 
 std::string RelocateAlternative::name() const { return "RelocateAlternative"; }
 
-template <>
-bool pyvrp::search::supports<RelocateAlternative>(ProblemData const &data)
+bool RelocateAlternative::supports(ProblemData const &data)
 {
     for (auto const &group : data.groups())
         if (group.mutuallyExclusive)
