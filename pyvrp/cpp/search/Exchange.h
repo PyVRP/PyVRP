@@ -77,24 +77,25 @@ bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
 template <size_t N, size_t M>
 bool Exchange<N, M>::overlap(Route::Node *U, Route::Node *V) const
 {
-    return U->route() == V->route()
-           // We need max(M, 1) here because when V is the depot and M == 0,
-           // this would turn negative and wrap around to a large number.
-           && U->pos() <= V->pos() + std::max<size_t>(M, 1) - 1
+    assert(U->route() == V->route());
+
+    // We need max(M, 1) here because when V is the depot and M == 0, this
+    // would turn negative and wrap around to a large number.
+    return U->pos() <= V->pos() + std::max<size_t>(M, 1) - 1
            && V->pos() <= U->pos() + N - 1;
 }
 
 template <size_t N, size_t M>
 bool Exchange<N, M>::adjacent(Route::Node *U, Route::Node *V) const
 {
-    return U->route() == V->route()
-           && (U->pos() + N == V->pos() || V->pos() + M == U->pos());
+    assert(U->route() == V->route());
+    return U->pos() + N == V->pos() || V->pos() + M == U->pos();
 }
 
 template <size_t N, size_t M>
 bool Exchange<N, M>::splitsShipment(Route::Node *U, Route::Node *V) const
 {
-    auto const fn = [](Route::Node *node, size_t segLength)
+    auto const splits = [](Route::Node *node, size_t segLength)
     {
         auto const &route = *node->route();
         auto const last = node->pos() + segLength - 1;
@@ -109,9 +110,9 @@ bool Exchange<N, M>::splitsShipment(Route::Node *U, Route::Node *V) const
     };
 
     if constexpr (M > 0)
-        return fn(U, N) || fn(V, M);
+        return splits(U, N) || splits(V, M);
     else
-        return fn(U, N);
+        return splits(U, N);
 }
 
 template <size_t N, size_t M>
@@ -226,15 +227,20 @@ std::pair<Cost, bool> Exchange<N, M>::evaluate(
 {
     stats_.numEvaluations++;
 
-    if (!U->route() || !V->route())
+    if (!U->route() || !V->route() || containsDepot(U, N))
         return std::make_pair(0, false);
 
-    if (containsDepot(U, N) || overlap(U, V))
-        return std::make_pair(0, false);
+    if (U->route() == V->route())
+    {
+        // We cannot easily evaluate across trips, and if U and V overlap the
+        // move is not well-defined.
+        if (U->trip() != V->trip() || overlap(U, V))
+            return std::make_pair(0, false);
 
-    // We cannot easily evaluate across trips, so we cannot determine this move.
-    if (U->route() == V->route() && U->trip() != V->trip())
-        return std::make_pair(0, false);
+        if constexpr (M != 0)    // is equivalent to relocate; no need to
+            if (adjacent(U, V))  // evaluate as a swap
+                return std::make_pair(0, false);
+    }
 
     if constexpr (M == 0)  // special case where nothing in V is moved
     {
@@ -249,7 +255,7 @@ std::pair<Cost, bool> Exchange<N, M>::evaluate(
             if (U->idx() >= V->idx())
                 return std::make_pair(0, false);
 
-        if (containsDepot(V, M) || splitsShipment(U, V) || adjacent(U, V))
+        if (containsDepot(V, M) || splitsShipment(U, V))
             return std::make_pair(0, false);
 
         return evalSwapMove(U, V, costEvaluator);
