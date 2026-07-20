@@ -174,18 +174,6 @@ public:
         [[nodiscard]] inline size_t trip() const;
 
         /**
-         * Returns the number of pickup nodes preceding this node in its route.
-         * Returns ``0`` if the node is *not* in a route.
-         */
-        [[nodiscard]] inline size_t numPickups() const;
-
-        /**
-         * Returns the number of delivery nodes preceding this node in its
-         * route. Returns ``0`` if the node is *not* in a route.
-         */
-        [[nodiscard]] inline size_t numDeliveries() const;
-
-        /**
          * Returns the route this node is currently in. If the node is not in
          * a route, this returns ``None`` (C++: ``nullptr``).
          */
@@ -563,6 +551,16 @@ public:
     [[nodiscard]] inline size_t numPickups() const;  // same; for convenience
 
     /**
+     * Returns the number of pickup nodes before (and including) end.
+     */
+    [[nodiscard]] inline size_t numPickups(size_t end) const;
+
+    /**
+     * Returns the number of delivery nodes before (and including) end.
+     */
+    [[nodiscard]] inline size_t numDeliveries(size_t end) const;
+
+    /**
      * Returns the number of start, end, and reload depots in this route.
      */
     [[nodiscard]] inline size_t numDepots() const;
@@ -702,16 +700,6 @@ Activity::ActivityType Route::Node::type() const { return activity_.type(); }
 size_t Route::Node::pos() const { return pos_; }
 
 size_t Route::Node::trip() const { return trip_; }
-
-size_t Route::Node::numPickups() const
-{
-    return route_ ? route_->numPickups_[pos_] : 0;
-}
-
-size_t Route::Node::numDeliveries() const
-{
-    return route_ ? route_->numDeliveries_[pos_] : 0;
-}
 
 Route *Route::Node::route() const { return route_; }
 
@@ -1121,6 +1109,20 @@ size_t Route::numPickups() const
 {
     assert(!dirty);
     return numPickups_.back();
+}
+
+size_t Route::numPickups(size_t end) const
+{
+    assert(!dirty);
+    assert(end < size());
+    return numPickups_[end];
+}
+
+size_t Route::numDeliveries(size_t end) const
+{
+    assert(!dirty);
+    assert(end < size());
+    return numDeliveries_[end];
 }
 
 size_t Route::numDepots() const { return depots_.size(); }

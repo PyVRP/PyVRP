@@ -16,7 +16,8 @@ bool onLastTrip(pyvrp::search::Route::Node *node)
 
 bool splitsShipment(pyvrp::search::Route::Node *node)
 {
-    return node->numPickups() != node->numDeliveries();
+    auto const *route = node->route();
+    return route->numPickups(node->pos()) != route->numDeliveries(node->pos());
 }
 }  // namespace
 

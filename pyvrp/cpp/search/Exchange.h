@@ -95,14 +95,15 @@ template <size_t N, size_t M>
 bool Exchange<N, M>::splitsShipment(Route::Node *node, size_t segLength) const
 {
     auto const &route = *node->route();
-    auto const *last = route[node->pos() + segLength - 1];
+    auto const last = node->pos() + segLength - 1;
 
     // Moving this segment certainly does not split a shipment if there is not
     // currently a shipment on the vehicle (at node), or if one is loaded, it
     // is delivered within this segment.
     return node->isDelivery()
-           || node->numPickups() != node->numDeliveries() + node->isPickup()
-           || last->numPickups() != last->numDeliveries();
+           || route.numPickups(node->pos())
+                  != route.numDeliveries(node->pos()) + node->isPickup()
+           || route.numPickups(last) != route.numDeliveries(last);
 }
 
 template <size_t N, size_t M>
