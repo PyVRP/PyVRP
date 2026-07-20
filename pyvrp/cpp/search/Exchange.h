@@ -26,11 +26,11 @@ template <size_t N, size_t M> class Exchange : public BinaryOperator
     static_assert(N >= M && N > 0, "N < M or N == 0 does not make sense");
 
     // Tests if the segment starting at node of given length contains the depot.
-    bool containsDepot(Route::Node *node, size_t segLength) const;
+    bool hasDepot(Route::Node *node, size_t segLength) const;
 
-    // Tests if exchanging the segments starting at U and V would result in a
-    // split shipment.
-    bool splitsShipment(Route::Node *U, Route::Node *V) const;
+    // Tests if the segment starting at node of given length would split a
+    // shipment if exchanged.
+    bool splitsShipment(Route::Node *node, size_t segLength) const;
 
     // Tests if the segments of U and V overlap in the same route.
     bool overlap(Route::Node *U, Route::Node *V) const;
@@ -63,7 +63,7 @@ public:
 };
 
 template <size_t N, size_t M>
-bool Exchange<N, M>::containsDepot(Route::Node *node, size_t segLength) const
+bool Exchange<N, M>::hasDepot(Route::Node *node, size_t segLength) const
 {
     auto const first = node->pos();
     auto const last = first + segLength - 1;
@@ -93,26 +93,18 @@ bool Exchange<N, M>::adjacent(Route::Node *U, Route::Node *V) const
 }
 
 template <size_t N, size_t M>
-bool Exchange<N, M>::splitsShipment(Route::Node *U, Route::Node *V) const
+bool Exchange<N, M>::splitsShipment(Route::Node *node, size_t segLength) const
 {
-    auto const splits = [](Route::Node *node, size_t segLength)
-    {
-        auto const &route = *node->route();
-        auto const last = node->pos() + segLength - 1;
+    auto const &route = *node->route();
+    auto const last = node->pos() + segLength - 1;
 
-        // Moving this segment certainly does not split a shipment if there is
-        // not currently a shipment on the vehicle (at node), or if one is
-        // loaded, it is delivered within this segment.
-        return node->isDelivery()
-               || route.numPickups(node->pos())
-                      != route.numDeliveries(node->pos()) + node->isPickup()
-               || route.numPickups(last) != route.numDeliveries(last);
-    };
-
-    if constexpr (M > 0)
-        return splits(U, N) || splits(V, M);
-    else
-        return splits(U, N);
+    // Moving this segment certainly does not split a shipment if there is not
+    // currently a shipment on the vehicle (at node), or if one is loaded, it
+    // is delivered within this segment.
+    return node->isDelivery()
+           || route.numPickups(node->pos())
+                  != route.numDeliveries(node->pos()) + node->isPickup()
+           || route.numPickups(last) != route.numDeliveries(last);
 }
 
 template <size_t N, size_t M>
@@ -227,7 +219,7 @@ std::pair<Cost, bool> Exchange<N, M>::evaluate(
 {
     stats_.numEvaluations++;
 
-    if (!U->route() || !V->route() || containsDepot(U, N))
+    if (!U->route() || !V->route() || hasDepot(U, N) || splitsShipment(U, N))
         return std::make_pair(0, false);
 
     if (U->route() == V->route())
@@ -237,29 +229,26 @@ std::pair<Cost, bool> Exchange<N, M>::evaluate(
         if (U->trip() != V->trip() || overlap(U, V))
             return std::make_pair(0, false);
 
-        if constexpr (M != 0)    // is equivalent to relocate; no need to
-            if (adjacent(U, V))  // evaluate as a swap
+        if constexpr (M != 0)  // is equivalent to relocate; no need to
+        {                      // evaluate as a swap
+            if (adjacent(U, V))
                 return std::make_pair(0, false);
+        }
+        else if (U == n(V))  // already the situation after relocate; no-op
+            return std::make_pair(0, false);
     }
 
     if constexpr (M == 0)  // special case where nothing in V is moved
-    {
-        if (U == n(V) || splitsShipment(U, V))
-            return std::make_pair(0, false);
-
         return evalRelocateMove(U, V, costEvaluator);
-    }
-    else
-    {
-        if constexpr (N == M)  // symmetric, so only have to evaluate this once
-            if (U->idx() >= V->idx())
-                return std::make_pair(0, false);
 
-        if (containsDepot(V, M) || splitsShipment(U, V))
+    if constexpr (N == M)  // symmetric, so only have to evaluate this once
+        if (U->idx() >= V->idx())
             return std::make_pair(0, false);
 
-        return evalSwapMove(U, V, costEvaluator);
-    }
+    if (hasDepot(V, M) || splitsShipment(V, M))
+        return std::make_pair(0, false);
+
+    return evalSwapMove(U, V, costEvaluator);
 }
 
 template <size_t N, size_t M>
