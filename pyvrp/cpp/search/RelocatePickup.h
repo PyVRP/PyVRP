@@ -15,10 +15,10 @@ class RelocatePickup : public UnaryOperator
 {
     using UnaryOperator::UnaryOperator;
 
-    struct Move  // stores cost of reinserting pickup node behind after
+    struct Move  // stores cost of reinserting pickup node in front of before
     {
         Cost cost = std::numeric_limits<Cost>::max();
-        Route::Node const *after = nullptr;
+        Route::Node const *before = nullptr;
     };
 
     Move move_;

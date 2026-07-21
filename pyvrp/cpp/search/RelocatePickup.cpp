@@ -16,13 +16,15 @@ RelocatePickup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
 
     move_ = {};
 
-    auto *route = U->route();
-    auto *delivery = U + 1;
+    auto const *route = U->route();
+    auto const *delivery = U + 1;
     assert(delivery->route() == route && delivery->pos() > U->pos());
 
-    for (auto const *node = p(delivery); !node->isDepot(); node = p(node))
+    // Evaluate reinserting U just before node. We store and apply the
+    // best-found move.
+    for (auto const *node = delivery; !node->isDepot(); node = p(node))
     {
-        if (node == U || n(node) == U)
+        if (node == U || p(node) == U)
             continue;
 
         Cost deltaCost = 0;
@@ -30,21 +32,21 @@ RelocatePickup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
             costEvaluator.deltaCost(
                 deltaCost,
                 Route::Proposal(route->before(U->pos() - 1),
-                                route->between(U->pos() + 1, node->pos()),
+                                route->between(U->pos() + 1, node->pos() - 1),
                                 PickupSegment(data, U->idx()),
-                                route->after(node->pos() + 1)));
+                                route->after(node->pos())));
         else
             costEvaluator.deltaCost(
                 deltaCost,
-                Route::Proposal(route->before(node->pos()),
+                Route::Proposal(route->before(node->pos() - 1),
                                 PickupSegment(data, U->idx()),
-                                route->between(node->pos() + 1, U->pos() - 1),
+                                route->between(node->pos(), U->pos() - 1),
                                 route->after(U->pos() + 1)));
 
         if (deltaCost < move_.cost)
         {
             move_.cost = deltaCost;
-            move_.after = node;
+            move_.before = node;
         }
     }
 
@@ -53,12 +55,12 @@ RelocatePickup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
 
 void RelocatePickup::apply(Route::Node *U) const
 {
-    assert(U->isPickup() && U->route() && move_.after);
+    assert(U->isPickup() && U->route() && move_.before);
     stats_.numApplications++;
 
     auto *route = U->route();
     route->remove(U->pos());
-    route->insert(move_.after->pos() + 1, U);
+    route->insert(move_.before->pos(), U);
 }
 
 std::string RelocatePickup::name() const { return "RelocatePickup"; }
