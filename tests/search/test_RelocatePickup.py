@@ -19,12 +19,36 @@ def make_route(data, *nodes: Node) -> Route:
     return route
 
 
-def test_relocate_just_before_delivery():
+def test_relocate_just_before_delivery(small_shipments):
     """
     Tests that the operator reinserts a pickup node just before the delivery
     node if that is the best move.
     """
-    pass
+    sol = Solution(small_shipments)
+    pickup, delivery = sol.shipments[2]
+    route = make_route(
+        small_shipments,
+        pickup,
+        *sol.shipments[0],
+        *sol.shipments[1],
+        delivery,
+    )
+
+    # L2 is now the first visit in the route, and U2 the last. But it is much
+    # better to visit L2 U2 consecutively. Since U2 is fixed, that means L2
+    # needs to move to the end of the route, just before U2.
+    assert_equal(route.distance(), 43_414)
+    assert_equal(str(route), "L2 L0 U0 L1 U1 U2")
+
+    op = RelocatePickup(small_shipments)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(route[1], cost_eval), (-8_406, True))
+
+    op.apply(route[1])
+    route.update()
+
+    assert_equal(route.distance(), 43_414 - 8_406)
+    assert_equal(str(route), "L0 U0 L1 U1 L2 U2")
 
 
 def test_relocate_just_after_depot(small_shipments):
