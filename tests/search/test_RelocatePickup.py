@@ -3,23 +3,89 @@ from numpy.testing import assert_, assert_equal
 
 from pyvrp import Client, CostEvaluator
 from pyvrp.search import RelocatePickup
-from pyvrp.search._search import Route, Solution
+from pyvrp.search._search import Node, Route, Solution
 
 _INT_MAX = np.iinfo(np.int64).max
 
 
-def test_relocate(small_shipments):
+def make_route(data, *nodes: Node) -> Route:
     """
-    TODO
+    Test helper to create a search route from the given nodes.
+    """
+    route = Route(data, 0)
+    for node in nodes:
+        route.append(node)
+    route.update()
+    return route
+
+
+def test_relocate_just_before_delivery():
+    """
+    Tests that the operator reinserts a pickup node just before the delivery
+    node if that is the best move.
     """
     pass
+
+
+def test_relocate_just_after_depot(small_shipments):
+    """
+    Tests that the operator reinserts a pickup node just after the starting
+    depot if that is the best move.
+    """
+    data = small_shipments.replace(clients=[Client(1, delivery=[0])])
+
+    sol = Solution(data)
+    client = sol.clients[0]
+    pickup, delivery = sol.shipments[0]
+
+    route = make_route(data, client, pickup, delivery)
+    assert_(client.route and pickup.route and delivery.route)
+    assert_equal(route.distance(), 14_924)
+    assert_equal(str(route), "C0 L0 U0")
+
+    client_data = data.client(0)
+    shipment_data = data.shipment(0)
+    assert_equal(client_data.location, shipment_data.delivery.location)
+
+    # L0 is currently just before U0, but a better place is to reinsert it just
+    # before C0. That results in less distance, because C0 is at U0's location.
+    op = RelocatePickup(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(route[2], cost_eval), (-5_353, True))
+
+    op.apply(route[2])
+    route.update()
+
+    assert_equal(route.distance(), 14_924 - 5_353)
+    assert_equal(str(route), "L0 C0 U0")
 
 
 def test_reload_depot(small_shipments):
     """
-    TODO
+    Tests that the operator does not reinsert a pickup node into an earlier
+    trip.
     """
-    pass
+    clients = [Client(2, delivery=[0]), Client(1, delivery=[0])]
+    veh_type = small_shipments.vehicle_type(0).replace(reload_depots=[0])
+    data = small_shipments.replace(clients=clients, vehicle_types=[veh_type])
+
+    sol = Solution(data)
+    client1, client2 = sol.clients
+    pick, deliv = sol.shipments[0]
+
+    shipment = data.shipment(0)
+    assert_equal(clients[0].location, shipment.pickup.location)
+
+    # First trip serves C0 and C1, second trip L0 and U0. Without reloading,
+    # L0 next to C0 would be improving since they share locations. But the
+    # reload depot prevents that move.
+    route = make_route(data, client1, client2, Node("D0"), pick, deliv)
+    assert_(client1.route and client2.route and pick.route and deliv.route)
+    assert_equal(str(route), "C0 C1 | L0 U0")
+
+    op = RelocatePickup(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(route[4], cost_eval), (_INT_MAX, False))
 
 
 def test_relocate_skips_unassigned_nodes(small_shipments):
@@ -47,12 +113,7 @@ def test_relocate_skips_non_pickup_nodes(small_shipments):
     client = sol.clients[0]
     pickup, delivery = sol.shipments[0]
 
-    route = Route(data, 0)
-    route.append(client)
-    route.append(pickup)
-    route.append(delivery)
-    route.update()
-
+    route = make_route(data, client, pickup, delivery)
     assert_(client.route and pickup.route and delivery.route)
     assert_equal(str(route), "C0 L0 U0")
 
@@ -90,11 +151,7 @@ def test_cannot_improve_singleton_route(small_shipments):
     sol = Solution(small_shipments)
     pickup, delivery = sol.shipments[0]
 
-    route = Route(small_shipments, 0)
-    route.append(pickup)
-    route.append(delivery)
-    route.update()
-
+    route = make_route(small_shipments, pickup, delivery)
     assert_(pickup.route and delivery.route)
     assert_equal(str(route), "L0 U0")
 
