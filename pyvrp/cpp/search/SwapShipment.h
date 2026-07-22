@@ -8,7 +8,8 @@ namespace pyvrp::search
 /**
  * SwapShipment(data: ProblemData)
  *
- * TODO
+ * Evaluates whether swapping shipments :math:`U` and :math:`V` in different
+ * routes is an improving move.
  */
 class SwapShipment : public BinaryOperator
 {
