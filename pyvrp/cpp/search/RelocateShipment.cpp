@@ -32,6 +32,9 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
         if (uPickup->trip() != vPickup->trip())  // cannot evaluate relocating
             return std::make_pair(0, false);     // shipments over trips.
 
+        if (n(vPickup) == uPickup && n(vDelivery) == uDelivery)
+            return std::make_pair(0, false);  // is a no-op
+
         auto const *route = U->route();
 
         if (uPickup->pos() < vPickup->pos())
@@ -256,9 +259,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
                 {
                     Cost deltaCost = 0;
 
-                    if (n(vPickup) == uPickup && n(vDelivery) == uDelivery)
-                        return std::make_pair(0, false);  // no-op
-                    else if (n(vPickup) == uPickup)
+                    if (n(vPickup) == uPickup)
                     {
                         auto const proposal = Route::Proposal(
                             route->before(vDelivery->pos()),
