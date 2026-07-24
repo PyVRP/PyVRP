@@ -24,10 +24,12 @@ from pyvrp.search import (
     LocalSearch,
     PerturbationManager,
     PerturbationParams,
+    RelocatePickup,
     RelocateWithDepot,
     RemoveAdjacentDepot,
     RemoveOptionalClient,
     ReplaceGroup,
+    SwapShipment,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -743,3 +745,23 @@ def test_shipment_structural_feasibility(small_shipments):
     complete = ls(empty, cost_eval)
     assert_equal(complete.num_shipments(), 4)
     assert_(complete.is_complete())
+
+
+def test_shipment_improves_over_random(small_shipments):
+    """
+    Smoke test that checks the local search is able to improve a random
+    shipment solution.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbourhood = compute_neighbours(small_shipments)
+    ls = LocalSearch(small_shipments, rng, neighbourhood)
+    ls.add_operator(RelocatePickup(small_shipments))
+    ls.add_operator(SwapShipment(small_shipments))
+
+    rnd_sol = Solution.make_random(small_shipments, rng)
+    cost_eval = CostEvaluator([1], 1, 0)
+    improved = ls(rnd_sol, cost_eval)
+
+    improved_cost = cost_eval.penalised_cost(improved)
+    rnd_cost = cost_eval.penalised_cost(rnd_sol)
+    assert_(improved_cost < rnd_cost)

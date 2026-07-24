@@ -178,3 +178,11 @@ def test_insert_in_empty_routes_considers_fixed_vehicle_cost():
     # fixed cost 13.
     route = make_search_route(data, [], vehicle_type=1)
     assert_equal(op.evaluate(Node("C0"), route[0], cost_eval), (13, False))
+
+
+def test_name(ok_small_prizes):
+    """
+    Tests the name property.
+    """
+    op = InsertOptionalClient(ok_small_prizes)
+    assert_equal(op.name, "InsertOptionalClient")

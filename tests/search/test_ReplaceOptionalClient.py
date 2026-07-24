@@ -113,3 +113,11 @@ def test_supports(
     assert_(not op.supports(ok_small))
     assert_(not op.supports(ok_small_mutually_exclusive_groups))
     assert_(op.supports(ok_small_prizes))
+
+
+def test_name(ok_small_prizes):
+    """
+    Tests the name property.
+    """
+    op = ReplaceOptionalClient(ok_small_prizes)
+    assert_equal(op.name, "ReplaceOptionalClient")

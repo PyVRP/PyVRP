@@ -172,3 +172,11 @@ def test_supports(small_optional_shipments, small_shipments):
     """
     assert_(InsertOptionalShipment.supports(small_optional_shipments))
     assert_(not InsertOptionalShipment.supports(small_shipments))
+
+
+def test_name(small_optional_shipments):
+    """
+    Tests the name property.
+    """
+    op = InsertOptionalShipment(small_optional_shipments)
+    assert_equal(op.name, "InsertOptionalShipment")
