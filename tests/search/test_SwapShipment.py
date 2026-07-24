@@ -8,37 +8,34 @@ from tests.helpers import make_search_route
 
 def test_swap_direct_pairs():
     """
-    TODO
+    Tests the operator when swapping shipments that are both in direct
+    sequence.
     """
-    pass
+    pass  # TODO
 
 
 def test_swap_where_u_is_a_direct_pair():
     """
-    TODO
+    Tests the operator when swapping shipments where U is in a direct sequence,
+    but V is not.
     """
-    pass
+    pass  # TODO
 
 
 def test_swap_where_v_is_a_direct_pair():
     """
-    TODO
+    Tests the operator when swapping shipments where V is in a direct sequence,
+    but U is not.
     """
-    pass
+    pass  # TODO
 
 
 def test_swap_general():
     """
-    TODO
+    Tests the operator when swapping general shipments, where neither U nor V
+    is in a direct sequence.
     """
-    pass
-
-
-def test_v_is_delivery():
-    """
-    TODO
-    """
-    pass
+    pass  # TODO
 
 
 def test_skips_unassigned(small_shipments):
