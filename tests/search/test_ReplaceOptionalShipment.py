@@ -2,7 +2,8 @@ from numpy.testing import assert_, assert_equal
 
 from pyvrp import CostEvaluator
 from pyvrp.search import ReplaceOptionalShipment
-from pyvrp.search._search import Route, Solution
+from pyvrp.search._search import Solution
+from tests.helpers import make_search_route
 
 
 def test_replace(small_optional_shipments):
@@ -11,11 +12,8 @@ def test_replace(small_optional_shipments):
     and lower cost.
     """
     sol = Solution(small_optional_shipments)
-    route = Route(small_optional_shipments, 0)
-    route.append(sol.shipments[1][0])
-    route.append(sol.shipments[1][1])
-    route.update()
 
+    route = make_search_route(small_optional_shipments, sol.shipments[1])
     assert_equal(route.distance(), 27_732)
     assert_equal(str(route), "L1 U1")
 
@@ -41,10 +39,7 @@ def test_cannot_replace_required_shipment(small_shipments):
     Tests that the operator cannot replace required shipments.
     """
     sol = Solution(small_shipments)
-    route = Route(small_shipments, 0)
-    route.append(sol.shipments[1][0])
-    route.append(sol.shipments[1][1])
-    route.update()
+    route = make_search_route(small_shipments, sol.shipments[1])
 
     op = ReplaceOptionalShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
@@ -66,10 +61,8 @@ def test_skips_deliveries(small_optional_shipments):
     sol = Solution(small_optional_shipments)
     pickup, delivery = sol.shipments[0]
 
-    route = Route(small_optional_shipments, 0)  # L1 U1
-    route.append(sol.shipments[1][0])
-    route.append(sol.shipments[1][1])
-    route.update()
+    route = make_search_route(small_optional_shipments, sol.shipments[1])
+    assert_equal(str(route), "L1 U1")
 
     op = ReplaceOptionalShipment(small_optional_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
@@ -95,3 +88,31 @@ def test_name(small_optional_shipments):
     """
     op = ReplaceOptionalShipment(small_optional_shipments)
     assert_equal(op.name, "ReplaceOptionalShipment")
+
+
+def test_replace_non_adjacent(small_optional_shipments):
+    """
+    Tests replacing a shipment whose pickup and delivery nodes are not in
+    direct sequence.
+    """
+    sol = Solution(small_optional_shipments)
+    pickup1, delivery1 = sol.shipments[1]
+    nodes = [pickup1, *sol.shipments[2], delivery1]
+
+    route = make_search_route(small_optional_shipments, nodes)
+    assert_equal(route.distance(), 42_463)
+    assert_equal(str(route), "L1 L2 U2 U1")
+
+    pickup, _ = sol.shipments[0]
+    op = ReplaceOptionalShipment(small_optional_shipments)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(pickup, route[1], cost_eval), (-27_391, True))
+
+    op.apply(pickup, route[1])
+    route.update()
+
+    # Cost delta is -27_391, but part of that is due to prizes: shipment 0
+    # yields a prize of 10_000, while shipment 1 provides a prize of 2_000.
+    # Thus, 10_000 - 2_000 = 8_000 of the delta is due to better prizes.
+    assert_equal(route.distance(), 42_463 - 27_391 + 8_000)
+    assert_equal(str(route), "L0 L2 U2 U0")
