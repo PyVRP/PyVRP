@@ -39,8 +39,23 @@ std::pair<pyvrp::Cost, bool> SwapShipment::evaluate(
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 
+    // Four cases, depending on whether there are nodes between the PD pairs.
     Cost deltaCost = 0;
-    if (n(uPickup) == uDelivery)
+    if (n(uPickup) == uDelivery && n(vPickup) == vDelivery)
+    {
+        auto const uProposal
+            = Route::Proposal(uRoute->before(uPickup->pos() - 1),
+                              vRoute->between(vPickup->pos(), vDelivery->pos()),
+                              uRoute->after(uDelivery->pos() + 1));
+
+        auto const vProposal
+            = Route::Proposal(vRoute->before(vPickup->pos() - 1),
+                              uRoute->between(uPickup->pos(), uDelivery->pos()),
+                              vRoute->after(vDelivery->pos() + 1));
+
+        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+    }
+    else if (n(uPickup) == uDelivery)
     {
         auto const uProposal
             = Route::Proposal(uRoute->before(uPickup->pos() - 1),
@@ -48,27 +63,31 @@ std::pair<pyvrp::Cost, bool> SwapShipment::evaluate(
                               vRoute->at(vDelivery->pos()),
                               uRoute->after(uDelivery->pos() + 1));
 
-        if (n(vPickup) == vDelivery)
-        {
-            auto const vProposal
-                = Route::Proposal(vRoute->before(vPickup->pos() - 1),
-                                  uRoute->at(uPickup->pos()),
-                                  uRoute->at(uDelivery->pos()),
-                                  vRoute->after(vDelivery->pos() + 1));
+        auto const vProposal = Route::Proposal(
+            vRoute->before(vPickup->pos() - 1),
+            uRoute->at(uPickup->pos()),
+            vRoute->between(vPickup->pos() + 1, vDelivery->pos() - 1),
+            uRoute->at(uDelivery->pos()),
+            vRoute->after(vDelivery->pos() + 1));
 
-            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
-        }
-        else
-        {
-            auto const vProposal = Route::Proposal(
-                vRoute->before(vPickup->pos() - 1),
-                uRoute->at(uPickup->pos()),
-                vRoute->between(vPickup->pos() + 1, vDelivery->pos() - 1),
-                uRoute->at(uDelivery->pos()),
-                vRoute->after(vDelivery->pos() + 1));
+        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+    }
+    else if (n(vPickup) == vDelivery)
+    {
+        auto const uProposal = Route::Proposal(
+            uRoute->before(uPickup->pos() - 1),
+            vRoute->at(vPickup->pos()),
+            uRoute->between(uPickup->pos() + 1, uDelivery->pos() - 1),
+            vRoute->at(vDelivery->pos()),
+            uRoute->after(uDelivery->pos() + 1));
 
-            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
-        }
+        auto const vProposal
+            = Route::Proposal(vRoute->before(vPickup->pos() - 1),
+                              uRoute->at(uPickup->pos()),
+                              uRoute->at(uDelivery->pos()),
+                              vRoute->after(vDelivery->pos() + 1));
+
+        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
     else
     {
@@ -79,27 +98,14 @@ std::pair<pyvrp::Cost, bool> SwapShipment::evaluate(
             vRoute->at(vDelivery->pos()),
             uRoute->after(uDelivery->pos() + 1));
 
-        if (n(vPickup) == vDelivery)
-        {
-            auto const vProposal
-                = Route::Proposal(vRoute->before(vPickup->pos() - 1),
-                                  uRoute->at(uPickup->pos()),
-                                  uRoute->at(uDelivery->pos()),
-                                  vRoute->after(vDelivery->pos() + 1));
+        auto const vProposal = Route::Proposal(
+            vRoute->before(vPickup->pos() - 1),
+            uRoute->at(uPickup->pos()),
+            vRoute->between(vPickup->pos() + 1, vDelivery->pos() - 1),
+            uRoute->at(uDelivery->pos()),
+            vRoute->after(vDelivery->pos() + 1));
 
-            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
-        }
-        else
-        {
-            auto const vProposal = Route::Proposal(
-                vRoute->before(vPickup->pos() - 1),
-                uRoute->at(uPickup->pos()),
-                vRoute->between(vPickup->pos() + 1, vDelivery->pos() - 1),
-                uRoute->at(uDelivery->pos()),
-                vRoute->after(vDelivery->pos() + 1));
-
-            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
-        }
+        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
     }
 
     return std::make_pair(deltaCost, deltaCost < 0);
