@@ -22,9 +22,9 @@ std::pair<pyvrp::Cost, bool> SwapShipment::evaluate(
         // branches and proposals, which is prohibitive to fully list here.
         return std::make_pair(0, false);
 
-    Route::Node *uPickup = U;
-    Route::Node *uDelivery = U + 1;
-    Route::Node *vPickup, *vDelivery;
+    Route::Node const *uPickup = U;
+    Route::Node const *uDelivery = U + 1;
+    Route::Node const *vPickup, *vDelivery;
     if (V->isPickup())
     {
         vPickup = V;

@@ -41,6 +41,26 @@ def test_v_is_delivery():
     pass
 
 
+def test_skips_unassigned(small_shipments):
+    """
+    Tests that the operator skips moves when U is not assigned to a route.
+    """
+    sol = Solution(small_shipments)
+    route = make_search_route(small_shipments, sol.shipments[1])
+    assert_equal(str(route), "L1 U1")
+
+    # Shipment 0 is not in any route, shipment 1 is in the route we just
+    # constructed.
+    pickup, _ = sol.shipments[0]
+    _, delivery = sol.shipments[1]
+    assert_(delivery.route is route and pickup.route is None)
+
+    # This move cannot be evaluated because U is not in a route.
+    op = SwapShipment(small_shipments)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(pickup, delivery, cost_eval), (0, False))
+
+
 def test_skips_same_route(small_shipments):
     """
     Tests that the operator cannot swap within the same route.
