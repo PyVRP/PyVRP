@@ -6,15 +6,35 @@ from pyvrp.search._search import Solution
 from tests.helpers import make_search_route
 
 
-def test_swap_direct_pairs():
+def test_swap_direct_sequence(small_shipments):
     """
     Tests the operator when swapping shipments that are both in direct
     sequence.
     """
-    pass  # TODO
+    data = small_shipments
+
+    sol = Solution(data)
+    route1 = make_search_route(data, [*sol.shipments[0], *sol.shipments[2]])
+    route2 = make_search_route(data, [*sol.shipments[1]])
+    assert_equal(route1.distance() + route2.distance(), 48_644)
+
+    # Swapping shipment 2 (on route1) and 1 (on route2) results in less
+    # distance, and is thus an improving move.
+    op = SwapShipment(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(route1[3], route2[1], cost_eval), (-1_629, True))
+
+    op.apply(route1[3], route2[1])
+    route1.update()
+    route2.update()
+
+    # Verify the delta cost and end result.
+    assert_equal(route1.distance() + route2.distance(), 48_644 - 1_629)
+    assert_equal(str(route1), "L0 U0 L1 U1")
+    assert_equal(str(route2), "L2 U2")
 
 
-def test_swap_where_u_is_a_direct_pair():
+def test_swap_where_u_is_in_direct_sequence():
     """
     Tests the operator when swapping shipments where U is in a direct sequence,
     but V is not.
@@ -22,7 +42,7 @@ def test_swap_where_u_is_a_direct_pair():
     pass  # TODO
 
 
-def test_swap_where_v_is_a_direct_pair():
+def test_swap_where_v_is_in_direct_sequence():
     """
     Tests the operator when swapping shipments where V is in a direct sequence,
     but U is not.
