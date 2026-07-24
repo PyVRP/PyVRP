@@ -87,3 +87,11 @@ def test_supports(ok_small, small_shipments, small_optional_shipments):
     # The operator only supports instances with *optional* shipments.
     assert_(not ReplaceOptionalShipment.supports(small_shipments))
     assert_(ReplaceOptionalShipment.supports(small_optional_shipments))
+
+
+def test_name(small_optional_shipments):
+    """
+    Tests the name property.
+    """
+    op = ReplaceOptionalShipment(small_optional_shipments)
+    assert_equal(op.name, "ReplaceOptionalShipment")
