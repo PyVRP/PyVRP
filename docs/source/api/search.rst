@@ -92,9 +92,6 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
    .. autoclass:: RelocatePickup
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: RelocateShipment
-      :exclude-members: evaluate, apply, statistics, supports, init, name
-
    .. autoclass:: RelocateWithDepot
       :exclude-members: evaluate, apply, statistics, supports, init, name
 

@@ -19,7 +19,6 @@ from ._search import PerturbationManager as PerturbationManager
 from ._search import PerturbationParams as PerturbationParams
 from ._search import RelocateAlternative as RelocateAlternative
 from ._search import RelocatePickup as RelocatePickup
-from ._search import RelocateShipment as RelocateShipment
 from ._search import RelocateWithDepot as RelocateWithDepot
 from ._search import RemoveAdjacentDepot as RemoveAdjacentDepot
 from ._search import RemoveOptionalClient as RemoveOptionalClient
@@ -50,6 +49,5 @@ OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     InsertOptionalShipment,
     ReplaceOptionalShipment,
     ReplaceGroup,
-    RelocateShipment,
     SwapShipment,
 ]
