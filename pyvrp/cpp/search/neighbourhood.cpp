@@ -173,6 +173,23 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
                 // not too problematic if we need to have them.
                 prox(frmClient, toClient) = std::numeric_limits<double>::max();
 
+    for (size_t frm = 0; frm != prox.numRows(); ++frm)
+        for (size_t to = data.numClients(); to != prox.numRows(); ++to)
+        {
+            auto const toDeliv = data.numShipments() + to;
+            auto const pick = prox(frm, to);
+            auto const deliv = prox(frm, toDeliv);
+
+            // Only one of {pickup, delivery} enters the neighbourhood lists of
+            // other activities, to ensure a wide diversity of activities. Here
+            // we select the activity that is nearest, and set the other to max
+            // float (see reasoning above for groups about infty).
+            if (pick < deliv)
+                prox(frm, toDeliv) = std::numeric_limits<double>::max();
+            else
+                prox(frm, to) = std::numeric_limits<double>::max();
+        }
+
     for (size_t idx = 0; idx != prox.numRows(); ++idx)  // excl. self
         prox(idx, idx) = std::numeric_limits<double>::infinity();
 
