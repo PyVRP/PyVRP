@@ -44,7 +44,7 @@ def sleep(duration, get_now=time.perf_counter):
 
 def make_search_route(
     data: ProblemData,
-    activities: Iterable[Activity | str],
+    activities: Iterable[Node | Activity | str],
     vehicle_type: int = 0,
 ) -> Route:
     """
@@ -54,6 +54,9 @@ def make_search_route(
     """
     route = Route(data, vehicle_type)
     for activity in activities:
-        route.append(Node(activity))
+        if isinstance(activity, Node):
+            route.append(activity)
+        else:
+            route.append(Node(activity))
     route.update()
     return route
