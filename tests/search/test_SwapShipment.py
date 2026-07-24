@@ -34,20 +34,39 @@ def test_swap_direct_sequence(small_shipments):
     assert_equal(str(route2), "L2 U2")
 
 
-def test_swap_where_u_is_in_direct_sequence():
+def test_swap_where_u_or_v_is_in_direct_sequence(small_shipments):
     """
-    Tests the operator when swapping shipments where U is in a direct sequence,
-    but V is not.
+    Tests the operator when swapping shipments where either U or V is in a
+    direct sequence, but the other shipment is not.
     """
-    pass  # TODO
+    data = small_shipments
 
+    sol = Solution(data)
+    pickup, delivery = sol.shipments[1]
+    route1 = make_search_route(data, [pickup, *sol.shipments[2], delivery])
+    route2 = make_search_route(data, [*sol.shipments[0]])
+    assert_equal(route1.distance() + route2.distance(), 52_034)
 
-def test_swap_where_v_is_in_direct_sequence():
-    """
-    Tests the operator when swapping shipments where V is in a direct sequence,
-    but U is not.
-    """
-    pass  # TODO
+    # We want to swap L1 and U1 (on route1, not in direct sequence) with L0
+    # and U0 (on route2 in direct sequence). This move can be done in many
+    # ways: either from L1 or L0, and against either the pickup or delivery
+    # node of the other shipment. The resulting delta cost should be the same
+    # in all cases.
+    op = SwapShipment(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (-1_230, True))
+    assert_equal(op.evaluate(route1[1], route2[2], cost_eval), (-1_230, True))
+    assert_equal(op.evaluate(route2[1], route1[1], cost_eval), (-1_230, True))
+    assert_equal(op.evaluate(route2[1], route1[4], cost_eval), (-1_230, True))
+
+    op.apply(route2[1], route1[4])
+    route1.update()
+    route2.update()
+
+    # Verify the delta cost and end result.
+    assert_equal(route1.distance() + route2.distance(), 52_034 - 1_230)
+    assert_equal(str(route1), "L0 L2 U2 U0")
+    assert_equal(str(route2), "L1 U1")
 
 
 def test_swap_general():
