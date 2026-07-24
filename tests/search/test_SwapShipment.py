@@ -1,7 +1,9 @@
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import VehicleType
+from pyvrp import Client, CostEvaluator, VehicleType
 from pyvrp.search import SwapShipment
+from pyvrp.search._search import Solution
+from tests.helpers import make_search_route
 
 
 def test_swap_direct_pairs():
@@ -39,11 +41,62 @@ def test_v_is_delivery():
     pass
 
 
-def test_skips_clients_and_non_shipments():
+def test_skips_same_route(small_shipments):
     """
-    TODO
+    Tests that the operator cannot swap within the same route.
     """
-    pass
+    sol = Solution(small_shipments)
+    route = make_search_route(
+        small_shipments,
+        [*sol.shipments[0], *sol.shipments[1]],
+    )
+
+    # Check that the shipments are indeed assigned to the same route.
+    pickup, _ = sol.shipments[0]
+    _, delivery = sol.shipments[1]
+    assert_(pickup.route is delivery.route and pickup.route is route)
+
+    # Test swapping the shipments. This should not work because the operator
+    # cannot swap within the same route.
+    op = SwapShipment(small_shipments)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(pickup, delivery, cost_eval), (0, False))
+
+
+def test_skips_clients_and_non_shipments(small_shipments):
+    """
+    Tests that the operator only works when both U and V are shipments, and U
+    in particular is a pickup node.
+    """
+    data = small_shipments.replace(clients=[Client(2, delivery=[0])])
+    sol = Solution(data)
+
+    route1 = make_search_route(data, [sol.clients[0], *sol.shipments[1]])
+    assert_equal(str(route1), "C0 L1 U1")
+
+    route2 = make_search_route(data, [*sol.shipments[0]])
+    assert_equal(str(route2), "L0 U0")
+
+    client = sol.clients[0]
+    pickup0, delivery0 = sol.shipments[0]
+    pickup1, delivery1 = sol.shipments[1]
+
+    op = SwapShipment(small_shipments)
+    cost_eval = CostEvaluator([0], 0, 0)
+
+    # Swapping shipments 0 and 1 is an improving move, because C0 is at the
+    # location of L0 and the move would thus reduce distance. It does not
+    # matter whether V is a pickup or delivery node; the move is the same
+    # either way.
+    assert_equal(data.client(0).location, data.shipment(0).pickup.location)
+    assert_equal(op.evaluate(pickup0, pickup1, cost_eval), (-2_927, True))
+    assert_equal(op.evaluate(pickup0, delivery1, cost_eval), (-2_927, True))
+
+    # But it does matter what U is: it *must* be a pickup node. U cannot be
+    # a delivery or client node. And of course V must be a shipment.
+    assert_equal(op.evaluate(delivery0, pickup1, cost_eval), (0, False))
+    assert_equal(op.evaluate(client, pickup1, cost_eval), (0, False))
+    assert_equal(op.evaluate(pickup0, client, cost_eval), (0, False))
 
 
 def test_supports(ok_small, gtsp, small_shipments):
