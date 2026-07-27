@@ -101,5 +101,5 @@ std::string RelocateShipment::name() const { return "RelocateShipment"; }
 
 bool RelocateShipment::supports(ProblemData const &data)
 {
-    return data.numShipments() > 1;  // needs multiple shipments
+    return data.numShipments() > 0;
 }
