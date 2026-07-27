@@ -43,10 +43,11 @@ RelocatePickup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
                                 route->between(node->pos(), U->pos() - 1),
                                 route->after(U->pos() + 1)));
 
-        if (deltaCost < move_.cost)
+        if (deltaCost < 0)
         {
             move_.cost = deltaCost;
             move_.before = node;
+            break;
         }
     }
 
