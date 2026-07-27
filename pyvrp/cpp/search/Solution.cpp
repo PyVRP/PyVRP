@@ -283,34 +283,34 @@ bool Solution::insert(Route::Node *pickup,
         }
     }
 
-    // // Finally, we consider inserting into an empty route. We insert into the
-    // // first improving one.
-    // for (auto const &[vehType, offset] : searchSpace.vehTypeOrder())
-    // {
-    //     auto const begin = routes.begin() + offset;
-    //     auto const end = begin + data_.vehicleType(vehType).numAvailable;
-    //     auto const pred = [](auto const &route) { return route.empty(); };
-    //     auto empty = std::find_if(begin, end, pred);
+    // Finally, we consider inserting into an empty route. We insert into the
+    // first improving one.
+    for (auto const &[vehType, offset] : searchSpace.vehTypeOrder())
+    {
+        auto const begin = routes.begin() + offset;
+        auto const end = begin + data_.vehicleType(vehType).numAvailable;
+        auto const pred = [](auto const &route) { return route.empty(); };
+        auto empty = std::find_if(begin, end, pred);
 
-    //     if (empty == end)
-    //         continue;
+        if (empty == end)
+            continue;
 
-    //     Cost deltaCost = empty->fixedVehicleCost() - shipment.prize;
-    //     costEvaluator.deltaCost<true>(
-    //         deltaCost,
-    //         Route::Proposal(empty->before(0),
-    //                         PickupSegment(data_, pickup->idx()),
-    //                         DeliverySegment(data_, delivery->idx()),
-    //                         empty->after(1)));
+        Cost deltaCost = empty->fixedVehicleCost() - shipment.prize;
+        costEvaluator.deltaCost<true>(
+            deltaCost,
+            Route::Proposal(empty->before(0),
+                            PickupSegment(data_, pickup->idx()),
+                            DeliverySegment(data_, delivery->idx()),
+                            empty->after(1)));
 
-    //     if (deltaCost < bestCost)
-    //     {
-    //         pickupAfter = (*empty)[0];
-    //         deliveryPos = 1;
-    //         bestCost = deltaCost;
-    //         break;
-    //     }
-    // }
+        if (deltaCost < bestCost)
+        {
+            pickupAfter = (*empty)[0];
+            deliveryPos = 1;
+            bestCost = deltaCost;
+            break;
+        }
+    }
 
     if (required || bestCost < 0)
     {
