@@ -28,9 +28,6 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
     assert(!U->isDepot());
     assert(!V->isEndDepot() && !V->isReloadDepot());
 
-    if (U->isPickup() && U->pos() > 1)
-        U = p(U);
-
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
 
@@ -106,9 +103,6 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
 void SwapTails::apply(Route::Node *U, Route::Node *V) const
 {
     stats_.numApplications++;
-    if (U->isPickup() && U->pos() > 1)
-        U = p(U);
-
     auto *nU = n(U);
     auto *nV = n(V);
 
@@ -138,5 +132,5 @@ bool SwapTails::supports(ProblemData const &data)
     // Does not work for TSP, since the operator needs two routes. Also requires
     // at least one client, as swapping whole tails does not make much sense
     // for pure shipments since it likely breaks pickup-and-delivery pairs.
-    return data.numVehicles() > 1;
+    return data.numVehicles() > 1 && data.numClients() > 0;
 }
