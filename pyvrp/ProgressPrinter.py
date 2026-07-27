@@ -21,6 +21,7 @@ _START = """PyVRP v{version}
 Solving an instance with:
     {depot_text}
     {client_text}
+    {shipment_text}
     {vehicle_text} ({vehicle_type_text})
 
     Iters    Time |      Current OK    Candidate OK         Best OK"""
@@ -104,23 +105,27 @@ class ProgressPrinter:
             return
 
         num_d = data.num_depots
-        depot_text = f"{num_d} depot{'s' if num_d > 1 else ''}"
+        depot_text = f"{num_d} depot{'s' if num_d != 1 else ''}"
 
         num_c = data.num_clients
-        client_text = f"{num_c} client{'s' if num_c > 1 else ''}"
+        client_text = f"{num_c} client{'s' if num_c != 1 else ''}"
+
+        num_s = data.num_shipments
+        shipment_text = f"{num_s} shipment{'s' if num_s != 1 else ''}"
 
         num_v = data.num_vehicles
-        vehicle_text = f"{num_v} vehicle{'s' if num_v > 1 else ''}"
+        vehicle_text = f"{num_v} vehicle{'s' if num_v != 1 else ''}"
 
         num_vt = data.num_vehicle_types
-        vehicle_type_text = f"{num_vt} vehicle type{'s' if num_vt > 1 else ''}"
+        veh_type_text = f"{num_vt} vehicle type{'s' if num_vt != 1 else ''}"
 
         msg = _START.format(
             version=version("pyvrp"),
             depot_text=depot_text,
             client_text=client_text,
+            shipment_text=shipment_text,
             vehicle_text=vehicle_text,
-            vehicle_type_text=vehicle_type_text,
+            vehicle_type_text=veh_type_text,
         )
 
         for line in msg.splitlines():
