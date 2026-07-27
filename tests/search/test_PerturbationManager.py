@@ -193,11 +193,17 @@ def test_perturb_shipments_remove(small_shipments):
     search_space = SearchSpace(data, compute_neighbours(data))
     cost_eval = CostEvaluator([1], 1, 0)
 
-    # The random solution is complete, so all we can do is remove shipments.
-    # We should remove only one, because we haven't shuffled yet and we default
-    # to min_perturbations in that case.
-    perturbation = PerturbationManager()
-    assert_equal(perturbation.num_perturbations(), 1)
+    # The random solution is complete, so all we can do is remove shipments,
+    # but one move is not enough to remove a shipment.
+    perturbation = PerturbationManager(PerturbationParams(1, 1))
+    perturbation.perturb(sol, search_space, cost_eval)
+    unperturbed = sol.unload()
+    assert_(unperturbed.is_complete())
+    assert_equal(unperturbed.num_shipments(), 4)
+
+    # Removing one shipment requires at least two moves.
+    params = PerturbationParams(2, 2)
+    perturbation = PerturbationManager(params)
 
     perturbation.perturb(sol, search_space, cost_eval)
     perturbed = sol.unload()
@@ -218,7 +224,7 @@ def test_perturb_shipments_insert(small_shipments):
     sol = Solution(small_shipments)
     sol.load(pyvrp_sol)
 
-    params = PerturbationParams(1, 1)  # perturb exactly once
+    params = PerturbationParams(2, 2)  # perturb exactly one shipment
     perturbation = PerturbationManager(params)
 
     neighbours = compute_neighbours(small_shipments)
@@ -234,6 +240,23 @@ def test_perturb_shipments_insert(small_shipments):
     assert_(Activity("L2") in perturbed.unplanned())
 
 
+def test_perturb_shipment_requires_two_moves(small_shipments):
+    """
+    Tests that a shipment is not perturbed when only one move remains.
+    """
+    sol = Solution(small_shipments)
+    params = PerturbationParams(1, 1)
+    perturbation = PerturbationManager(params)
+
+    neighbours = compute_neighbours(small_shipments)
+    search_space = SearchSpace(small_shipments, neighbours)
+    cost_eval = CostEvaluator([1], 1, 0)
+    perturbation.perturb(sol, search_space, cost_eval)
+
+    perturbed = sol.unload()
+    assert_equal(perturbed.num_shipments(), 0)
+
+
 def test_perturb_shipment_empty_route(small_shipments):
     """
     Tests perturbing an empty shipment solution, so shipments must be inserted
@@ -244,8 +267,9 @@ def test_perturb_shipment_empty_route(small_shipments):
     assert_equal(empty.num_shipments(), 0)
     assert_(not empty.is_complete())
 
-    # Perturbation should insert all missing shipments into the empty solution.
-    params = PerturbationParams(min_perturbations=4)
+    # Each shipment insertion counts as two moves, so eight moves should insert
+    # all four shipmentss into the empty solution.
+    params = PerturbationParams(min_perturbations=8)
     perturbation = PerturbationManager(params)
 
     neighbours = compute_neighbours(small_shipments)
@@ -253,7 +277,6 @@ def test_perturb_shipment_empty_route(small_shipments):
     cost_eval = CostEvaluator([1], 1, 0)
     perturbation.perturb(sol, search_space, cost_eval)
 
-    # And thus, after perturbation we expect a complete solution.
     perturbed = sol.unload()
     assert_equal(perturbed.num_shipments(), 4)
-    assert_(perturbed.is_complete())
+    assert_(not perturbed.is_complete())

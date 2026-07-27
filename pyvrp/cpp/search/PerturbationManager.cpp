@@ -74,16 +74,23 @@ void PerturbationManager::perturb(Solution &solution,
         auto *route = node->route();
         if (route && action == PerturbType::REMOVE)
         {
-            searchSpace.markPromising(node);
-            route->remove(node->pos());
-
-            if (node->isPickup())  // then we also remove the associated
-            {                      // delivery node
-                auto const *delivery = node + 1;
+            if (node->isClient())
+            {
+                searchSpace.markPromising(node);
+                route->remove(node->pos());
+                movesLeft--;
+            }
+            else if (node->isPickup() && movesLeft > 1)
+            {
+                auto *pickup = node;
+                auto *delivery = node + 1;
                 assert(delivery->route() == route);
 
+                searchSpace.markPromising(pickup);
                 searchSpace.markPromising(delivery);
                 route->remove(delivery->pos());
+                route->remove(pickup->pos());
+                movesLeft -= 2;
             }
 
             route->update();
@@ -96,8 +103,9 @@ void PerturbationManager::perturb(Solution &solution,
                 solution.insert(node, searchSpace, costEvaluator, true);
                 node->route()->update();
                 searchSpace.markPromising(node);
+                movesLeft--;
             }
-            else if (node->isPickup())
+            else if (node->isPickup() && movesLeft > 1)
             {
                 auto *pickup = node;
                 auto *delivery = node + 1;
@@ -110,20 +118,20 @@ void PerturbationManager::perturb(Solution &solution,
                 route->update();
                 searchSpace.markPromising(pickup);
                 searchSpace.markPromising(delivery);
+                movesLeft -= 2;
             }
         }
         else  // no-op
             return;
 
         perturbed[idx] = true;
-        movesLeft--;
     };
 
     // We do numPerturbations if we can. We perturb the local neighbourhood of
     // a randomly selected clients or pickups: if a selected client or pickup U
     // is in the solution, we remove it and its neighbours V. If it is not, we
-    // try to insert instead. Each removal or insertion counts as one
-    // perturbation.
+    // try to insert instead. Client perturbations count as one move, while
+    // shipment perturbations count as two.
     for (auto const &uActivity : searchSpace.activityOrder())
     {
         Route::Node *U = solution[uActivity];
