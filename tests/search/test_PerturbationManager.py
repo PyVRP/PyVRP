@@ -268,7 +268,7 @@ def test_perturb_shipment_empty_route(small_shipments):
     assert_(not empty.is_complete())
 
     # Each shipment insertion counts as two moves, so eight moves should insert
-    # all four shipmentss into the empty solution.
+    # all four shipments into the empty solution.
     params = PerturbationParams(min_perturbations=8)
     perturbation = PerturbationManager(params)
 
@@ -279,4 +279,4 @@ def test_perturb_shipment_empty_route(small_shipments):
 
     perturbed = sol.unload()
     assert_equal(perturbed.num_shipments(), 4)
-    assert_(not perturbed.is_complete())
+    assert_(perturbed.is_complete())
