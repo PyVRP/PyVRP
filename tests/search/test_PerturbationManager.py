@@ -267,8 +267,8 @@ def test_perturb_shipment_empty_route(small_shipments):
     assert_equal(empty.num_shipments(), 0)
     assert_(not empty.is_complete())
 
-    # Each shipment insertion counts as two moves, so eight moves should insert
-    # all four shipments into the empty solution.
+    # Each shipment insertion counts as two moves, so perturbation should
+    # insert all missing shipments into the empty solution.
     params = PerturbationParams(min_perturbations=8)
     perturbation = PerturbationManager(params)
 
@@ -277,6 +277,7 @@ def test_perturb_shipment_empty_route(small_shipments):
     cost_eval = CostEvaluator([1], 1, 0)
     perturbation.perturb(sol, search_space, cost_eval)
 
+    # And thus, after perturbation we expect a complete solution.
     perturbed = sol.unload()
     assert_equal(perturbed.num_shipments(), 4)
     assert_(perturbed.is_complete())
