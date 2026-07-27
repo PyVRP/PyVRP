@@ -78,6 +78,7 @@ void PerturbationManager::perturb(Solution &solution,
             {
                 searchSpace.markPromising(node);
                 route->remove(node->pos());
+                route->update();
                 movesLeft--;
             }
             else if (node->isPickup() && movesLeft > 1)
@@ -90,10 +91,9 @@ void PerturbationManager::perturb(Solution &solution,
                 searchSpace.markPromising(delivery);
                 route->remove(delivery->pos());
                 route->remove(pickup->pos());
+                route->update();
                 movesLeft -= 2;
             }
-
-            route->update();
         }
         // Insert if node is not in a route and we are currently inserting.
         else if (!route && action == PerturbType::INSERT)

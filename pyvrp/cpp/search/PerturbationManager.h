@@ -13,7 +13,8 @@ namespace pyvrp::search
 /**
  * PerturbationParams(min_perturbations: int = 1, max_perturbations: int = 25)
  *
- * Perturbation parameters.
+ * Perturbation parameters. Client perturbations count as one, while shipment
+ * perturbations count as two.
  *
  * Parameters
  * ----------
