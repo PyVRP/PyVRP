@@ -120,15 +120,23 @@ std::pair<Cost, bool> Exchange<N, M>::evalRelocateMove(
         auto const *uRoute = U->route();
         auto const *vRoute = V->route();
 
-        auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
-                                               uRoute->after(U->pos() + N));
-
         auto const vProposal
             = Route::Proposal(vRoute->before(V->pos()),
                               uRoute->between(U->pos(), U->pos() + N - 1),
                               vRoute->after(V->pos() + 1));
 
-        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        if (uRoute->numClients() + 2 * uRoute->numShipments() == N)
+        {
+            deltaCost -= costEvaluator.penalisedCost(*uRoute);
+            costEvaluator.deltaCost(deltaCost, vProposal);
+        }
+        else
+        {
+            auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
+                                                   uRoute->after(U->pos() + N));
+
+            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        }
     }
     else  // within same route
     {

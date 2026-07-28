@@ -1196,7 +1196,10 @@ Route const *Route::Proposal<Segments...>::route() const
 template <Segment... Segments>
 Cost Route::Proposal<Segments...>::fixedVehicleCost() const
 {
-    return empty() ? 0 : route()->fixedVehicleCost();
+    if (empty())
+        return 0;
+
+    return route()->fixedVehicleCost();
 }
 
 template <Segment... Segments>

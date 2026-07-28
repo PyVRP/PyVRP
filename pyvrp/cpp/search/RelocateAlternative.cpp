@@ -84,11 +84,12 @@ void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
         if (alternative == U)
             continue;
 
-        auto const &alternativeData = data.client(client);
-        Cost deltaCost = uData.prize - alternativeData.prize;
         auto const vProposal = Route::Proposal(vRoute->before(V->pos()),
                                                ClientSegment(data, client),
                                                vRoute->after(V->pos() + 1));
+
+        auto const &alternativeData = data.client(client);
+        Cost deltaCost = uData.prize - alternativeData.prize;
         costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
 
         if (deltaCost < 0)

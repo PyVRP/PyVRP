@@ -22,6 +22,12 @@ RemoveOptionalClient::evaluate(Route::Node *U,
         return std::make_pair(0, false);                     // required member
 
     Cost deltaCost = client.prize;
+    if (route->numShipments() == 0 && route->numClients() == 1)
+    {
+        deltaCost -= costEvaluator.penalisedCost(*route);
+        return std::make_pair(deltaCost, deltaCost < 0);
+    }
+
     costEvaluator.deltaCost(deltaCost,
                             Route::Proposal(route->before(U->pos() - 1),
                                             route->after(U->pos() + 1)));

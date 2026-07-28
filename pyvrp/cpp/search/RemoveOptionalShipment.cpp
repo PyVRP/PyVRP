@@ -22,6 +22,11 @@ RemoveOptionalShipment::evaluate(Route::Node *U,
     auto const *route = U->route();
 
     Cost deltaCost = shipment.prize;
+    if (route->numShipments() == 1 && route->numClients() == 0)
+    {
+        deltaCost -= costEvaluator.penalisedCost(*route);
+        return std::make_pair(deltaCost, deltaCost < 0);
+    }
 
     if (n(pickup) == delivery)
         costEvaluator.deltaCost(
