@@ -35,7 +35,7 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
 
     if (exhaustive)
         searchSpace_.markAllPromising();
-    else
+    else if (!ruinRecreate_.apply(solution_, searchSpace_, costEvaluator))
         perturbationManager_.perturb(solution_, searchSpace_, costEvaluator);
 
     ensureStructuralFeasibility(costEvaluator);
@@ -115,6 +115,7 @@ void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
     perturbationManager_.shuffle(rng);
     searchSpace_.shuffle(rng);
+    ruinRecreate_.reseed(rng);
 
     rng.shuffle(unaryOps_.begin(), unaryOps_.end());
     rng.shuffle(binaryOps_.begin(), binaryOps_.end());
@@ -415,6 +416,7 @@ LocalSearch::LocalSearch(ProblemData const &data,
       solution_(data),
       searchSpace_(data, neighbours),
       perturbationManager_(perturbationManager),
+      ruinRecreate_(data),
       lastTest_(data.numClients() + data.numShipments()),
       lastUpdate_(data.numVehicles())
 {

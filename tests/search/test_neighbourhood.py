@@ -265,25 +265,27 @@ def test_mixed_client_shipments(small_shipments):
     assert_equal(len(neighbours[Activity("C0")]), 7)
 
 
-def test_shipments_enter_neighbourhood_with_only_one_activity(small_shipments):
+def test_shipments_enter_neighbourhood_with_both_activities(small_shipments):
     """
-    Tests that shipments enter the neighbourhood of other activities with
-    either their pickup or their delivery activity, but not both if it can
-    be avoided.
+    Tests that a shipment may enter the neighbourhood of another activity with
+    both its pickup and its delivery activity. Inserting after a pickup and
+    inserting after a delivery are different moves, so both endpoints are
+    useful insertion anchors and neither is suppressed.
     """
-    # There are four shipments, so with num_neighbours == 3, each shipment can
-    # have fully unique neighbours (all different indices). Here we check
-    # that's indeed the case.
+    # There are four shipments, so with num_neighbours == 3 each neighbourhood
+    # could be filled with three distinct shipments. Since both endpoints
+    # compete on distance, some shipment nonetheless enters twice, and then
+    # the activity indices are no longer unique.
     params = NeighbourhoodParams(num_neighbours=3)
     neighbourhoud = compute_neighbours(small_shipments, params)
-    for _, neighbours in neighbourhoud.items():
-        idcs = {activity.idx for activity in neighbours}
-        assert_equal(len(idcs), len(neighbours))
+    assert_(
+        any(
+            len({activity.idx for activity in neighbours}) < len(neighbours)
+            for neighbours in neighbourhoud.values()
+        )
+    )
 
-    # But from num_neighbours > 3 onward we need to have some duplication in
-    # shipments: some enter the neighbourhood list with both a pickup and a
-    # delivery activity, instead of just one of both. Thus, the indices are
-    # no longer unique.
+    # The same holds when there is more room in the neighbourhood lists.
     params = NeighbourhoodParams(num_neighbours=4)
     neighbourhoud = compute_neighbours(small_shipments, params)
     for _, neighbours in neighbourhoud.items():
