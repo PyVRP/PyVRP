@@ -88,6 +88,35 @@ def test_fixed_cost(small_shipments):
     assert_equal(str(route2), "")
 
 
+def test_insert_not_adjacent(small_shipments):
+    """
+    Tests that the delivery node is inserted in the first improving place
+    following pickup.
+    """
+    data = small_shipments
+
+    sol = Solution(data)
+    route1 = make_search_route(data, sol.shipments[2])
+    route2 = make_search_route(data, [*sol.shipments[0], *sol.shipments[1]])
+    assert_equal(route1.distance() + route2.distance(), 47_015)
+
+    # Insert L2 just after U0, and delivery in the first improving place,
+    # just after U1.
+    op = RelocateShipment(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(route1[1], route2[2], cost_eval), (-1_936, True))
+
+    # Should insert U2 after U1, and L2 immediately after U0. L1 U1 is
+    # in-between.
+    op.apply(route1[1], route2[2])
+    route1.update()
+    route2.update()
+
+    assert_equal(route1.distance() + route2.distance(), 47_015 - 1_936)
+    assert_equal(str(route1), "")
+    assert_equal(str(route2), "L0 U0 L2 L1 U1 U2")
+
+
 def test_name(small_shipments):
     """
     Tests the operator's name.
