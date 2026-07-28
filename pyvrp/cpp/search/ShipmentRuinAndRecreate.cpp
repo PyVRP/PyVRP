@@ -92,66 +92,37 @@ bool ShipmentRuinAndRecreate::ruin(Solution &solution,
     auto targetRuinSize
         = MIN_RUIN_SIZE + rng_.randint(MAX_RUIN_SIZE - MIN_RUIN_SIZE + 1);
     targetRuinSize = std::min(targetRuinSize, numAvailable);
-    if (targetRuinSize < MIN_RUIN_SIZE)
-        return false;
 
-    std::vector<bool> ruined(numShipments, false);
-    size_t numRuined = 0;
-
-    for (size_t idx = 0; idx != routes.size() && numRuined < targetRuinSize;
-         ++idx)
+    std::vector<bool> selected(numShipments, false);
+    std::vector<size_t> ruined;
+    for (size_t idx = 0; idx != routes.size(); ++idx)
     {
         auto *route = routes[idx];
-        if (route->size() <= 2)
-            continue;
-
         auto const numRoutesLeft = routes.size() - idx;
-        auto numToRuin
-            = (targetRuinSize - numRuined + numRoutesLeft - 1) / numRoutesLeft;
+        auto numToRuin = (targetRuinSize - ruined.size() + numRoutesLeft - 1)
+                         / numRoutesLeft;
         numToRuin = std::min(numToRuin, route->numShipments());
 
         auto const numNodes = route->size() - 2;
         auto position = 1 + rng_.randint(numNodes);
-        auto left = position;
-        auto right = position;
-        size_t numRouteRuined = 0;
-
-        while (numRouteRuined < numToRuin)
+        for (size_t offset = 0; offset != numNodes && numToRuin != 0; ++offset)
         {
             auto *node = (*route)[position];
-            if (!node->isDepot())
+            if (node->isShipment() && !selected[node->idx()])
             {
-                auto const shipment = node->idx();
-                if (!ruined[shipment])
-                {
-                    ruined[shipment] = true;
-                    ++numRouteRuined;
-                    ++numRuined;
-                }
+                selected[node->idx()] = true;
+                ruined.push_back(node->idx());
+                --numToRuin;
             }
 
-            bool const canMoveLeft = left > 1;
-            bool const canMoveRight = right < route->size() - 2;
-            if (!canMoveLeft && !canMoveRight)
-                break;
-
-            if (canMoveRight && (!canMoveLeft || rng_.randint(2)))
-                position = ++right;
-            else
-                position = --left;
+            position = position == numNodes ? 1 : position + 1;
         }
     }
 
-    if (numRuined < MIN_RUIN_SIZE)
-        return false;
-
     searchSpace.unmarkAllPromising();
 
-    for (size_t shipment = 0; shipment != numShipments; ++shipment)
+    for (auto const shipment : ruined)
     {
-        if (!ruined[shipment])
-            continue;
-
         auto *pickup = &solution.shipments[shipment].first;
         auto *delivery = &solution.shipments[shipment].second;
         auto *route = pickup->route();
