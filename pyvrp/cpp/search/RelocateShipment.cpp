@@ -27,12 +27,16 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
     auto const *uPickup = U;
     auto const *uDelivery = U + 1;
 
-    Cost removeCost = 0;
+    Cost fixedCost = 0;
     if (uRoute->numShipments() == 1 && uRoute->numClients() == 0)
         // Then U's route is empty after we relocate U, and we lose the route's
         // fixed vehicle cost.
-        removeCost -= uRoute->fixedVehicleCost();
+        fixedCost -= uRoute->fixedVehicleCost();
 
+    if (vRoute->empty())  // will become non-empty after inserting U.
+        fixedCost += vRoute->fixedVehicleCost();
+
+    Cost removeCost = 0;
     if (n(uPickup) != uDelivery)  // exact when removing U's shipment so we
     {                             // have the correct delta cost for this part
         auto const uProposal = Route::Proposal(
@@ -51,7 +55,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
         costEvaluator.deltaCost<true>(removeCost, uProposal);
     }
 
-    Cost deltaCost = removeCost;
+    Cost deltaCost = removeCost + fixedCost;
     costEvaluator.deltaCost(deltaCost,  // delivery directly after pickup
                             Route::Proposal(vRoute->before(V->pos()),
                                             uRoute->at(uPickup->pos()),
@@ -67,7 +71,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
     // Pickup after V, delivery later in the route.
     for (auto const *node = n(V); !node->isDepot(); node = n(node))
     {
-        Cost deltaCost = removeCost;
+        Cost deltaCost = removeCost + fixedCost;
         costEvaluator.deltaCost(
             deltaCost,
             Route::Proposal(vRoute->before(V->pos()),
@@ -105,5 +109,7 @@ std::string RelocateShipment::name() const { return "RelocateShipment"; }
 
 bool RelocateShipment::supports(ProblemData const &data)
 {
-    return data.numShipments() > 0;
+    // Evaluates relocating shipments between routes, so we need at least one
+    // shipment and more than one vehicle.
+    return data.numShipments() > 0 && data.numVehicles() > 1;
 }

@@ -1,6 +1,6 @@
 from numpy.testing import assert_, assert_equal
 
-from pyvrp import Client, CostEvaluator
+from pyvrp import Client, CostEvaluator, VehicleType
 from pyvrp.search import RelocateShipment
 from pyvrp.search._search import Route, Solution
 from tests.helpers import make_search_route
@@ -56,7 +56,7 @@ def test_skip_non_pickup(small_shipments):
     assert_equal(op.evaluate(route1[0], route2[1], cost_eval), (0, False))
 
 
-def test_fixed_cost(small_shipments):
+def test_fixed_cost_when_emptying_a_route(small_shipments):
     """
     Tests that the operator is aware of fixed vehicle cost, and accounts for it
     for moves that empty routes.
@@ -86,6 +86,36 @@ def test_fixed_cost(small_shipments):
     assert_equal(route1.distance() + route2.distance(), 13_789 - 4_218)
     assert_equal(str(route1), "C0 L0 U0")
     assert_equal(str(route2), "")
+
+
+def test_fixed_cost_relocating_into_empty_route(small_shipments):
+    """
+    Tests that the operator accounts for fixed cost when relocting to empty
+    routes.
+    """
+    veh_type = small_shipments.vehicle_type(0).replace(fixed_cost=1_000)
+    data = small_shipments.replace(vehicle_types=[veh_type])
+
+    sol = Solution(data)
+    activities = [*sol.shipments[1], *sol.shipments[0], *sol.shipments[2]]
+    route1 = make_search_route(data, activities)
+    route2 = Route(data, 0)
+    assert_equal(route1.distance() + route2.distance(), 44_712)
+
+    # Evaluate moving L0 U0 from route1 to route2, which is currently empty.
+    # This reduces distance by 3_258, but also incurs route2's fixed cost of
+    # 1_000. The resulting delta is thus -2_258.
+    op = RelocateShipment(data)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(route1[3], route2[0], cost_eval), (-2_258, True))
+
+    op.apply(route1[3], route2[0])
+    route1.update()
+    route2.update()
+
+    assert_equal(route1.distance() + route2.distance(), 44_712 - 3_258)
+    assert_equal(str(route1), "L1 U1 L2 U2")
+    assert_equal(str(route2), "L0 U0")
 
 
 def test_relocate_non_adjacent_to_direct_sequence(small_shipments):
@@ -157,11 +187,18 @@ def test_name(small_shipments):
 
 def test_supports(ok_small, small_shipments, small_optional_shipments):
     """
-    Tests that the operator supports instances with shipments.
+    Tests that the operator supports instances with shipments and multiple
+    vehicles (not TSP).
     """
+    # This instance has no shipments and is thus not supported.
+    assert_(not RelocateShipment.supports(ok_small))
+
     # RelocateShipment supports any instance with shipments, optional or not.
     assert_(RelocateShipment.supports(small_shipments))
     assert_(RelocateShipment.supports(small_optional_shipments))
 
-    # This instance has no shipments and is thus not supported.
-    assert_(not RelocateShipment.supports(ok_small))
+    # Now let's modify the instance to have just one vehicle. The operator does
+    # not support TSP, so it does not support the modified instance.
+    data = small_shipments.replace(vehicle_types=[VehicleType(capacity=[0])])
+    assert_equal(data.num_vehicles, 1)
+    assert_(not RelocateShipment.supports(data))
