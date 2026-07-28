@@ -7,8 +7,7 @@
 
 using pyvrp::search::RelocateWithDepot;
 
-void RelocateWithDepot::evalDepotBefore(Cost fixedCost,
-                                        Route::Node *U,
+void RelocateWithDepot::evalDepotBefore(Route::Node *U,
                                         Route::Node *V,
                                         CostEvaluator const &costEvaluator)
 {
@@ -23,7 +22,7 @@ void RelocateWithDepot::evalDepotBefore(Cost fixedCost,
 
         for (auto const depot : vehType.reloadDepots)
         {
-            auto deltaCost = fixedCost;
+            Cost deltaCost = 0;
             costEvaluator.deltaCost(
                 deltaCost,
                 uProposal,
@@ -41,7 +40,7 @@ void RelocateWithDepot::evalDepotBefore(Cost fixedCost,
         auto const *route = vRoute;
         for (auto const depot : vehType.reloadDepots)
         {
-            auto deltaCost = fixedCost;
+            Cost deltaCost = 0;
             if (U->pos() < V->pos())
                 costEvaluator.deltaCost(
                     deltaCost,
@@ -65,8 +64,7 @@ void RelocateWithDepot::evalDepotBefore(Cost fixedCost,
     }
 }
 
-void RelocateWithDepot::evalDepotAfter(Cost fixedCost,
-                                       Route::Node *U,
+void RelocateWithDepot::evalDepotAfter(Route::Node *U,
                                        Route::Node *V,
                                        CostEvaluator const &costEvaluator)
 {
@@ -81,7 +79,7 @@ void RelocateWithDepot::evalDepotAfter(Cost fixedCost,
 
         for (auto const depot : vehType.reloadDepots)
         {
-            Cost deltaCost = fixedCost;
+            Cost deltaCost = 0;
             costEvaluator.deltaCost(
                 deltaCost,
                 uProposal,
@@ -99,7 +97,7 @@ void RelocateWithDepot::evalDepotAfter(Cost fixedCost,
         auto const *route = vRoute;
         for (auto const depot : vehType.reloadDepots)
         {
-            Cost deltaCost = fixedCost;
+            Cost deltaCost = 0;
             if (U->pos() < V->pos())
                 costEvaluator.deltaCost(
                     deltaCost,
@@ -152,19 +150,17 @@ std::pair<pyvrp::Cost, bool> RelocateWithDepot::evaluate(
 
     move_ = {};
 
-    Cost fixedCost = 0;
-
     if (!V->isReloadDepot())
         // If V is already a reload depot, there is no point inserting another
         // reload depot directly after it. If V is a start depot, however, that
         // might be OK to deal with initial vehicle load.
-        evalDepotBefore(fixedCost, U, V, costEvaluator);
+        evalDepotBefore(U, V, costEvaluator);
 
     if (!n(V)->isReloadDepot())
         // If n(V) is a reload depot, there is no point inserting another reload
         // depot directly before it. If n(V) is the end depot, however, that
         // might be OK to ensure the vehicle returns empty.
-        evalDepotAfter(fixedCost, U, V, costEvaluator);
+        evalDepotAfter(U, V, costEvaluator);
 
     return std::make_pair(move_.cost, move_.cost < 0);
 }
