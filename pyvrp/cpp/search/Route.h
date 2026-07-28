@@ -1359,7 +1359,20 @@ std::ostream &operator<<(std::ostream &out,  // for debugging
                          pyvrp::search::Route::Node const &node);
 
 template <>  // specialisation for pyvrp::search::Route
-pyvrp::Cost
-pyvrp::CostEvaluator::penalisedCost(pyvrp::search::Route const &route) const;
+inline pyvrp::Cost
+pyvrp::CostEvaluator::penalisedCost(pyvrp::search::Route const &route) const
+{
+    if (route.empty())
+        return 0;
+
+    // clang-format off
+    return route.distanceCost()
+         + route.durationCost()
+         + route.fixedVehicleCost()
+         + excessLoadPenalties(route.excessLoad())
+         + twPenalty(route.timeWarp())
+         + distPenalty(route.excessDistance(), 0);
+    // clang-format on
+}
 
 #endif  // PYVRP_SEARCH_ROUTE_H
