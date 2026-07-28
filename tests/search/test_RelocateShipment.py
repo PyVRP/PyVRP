@@ -88,21 +88,51 @@ def test_fixed_cost(small_shipments):
     assert_equal(str(route2), "")
 
 
-def test_insert_not_adjacent(small_shipments):
+def test_relocate_non_adjacent_to_direct_sequence(small_shipments):
+    """
+    Tests relocating a shipment with nodes in-between pickup and delivery in
+    its current route, to a direct sequence in the new route.
+    """
+    sol = Solution(small_shipments)
+    pickup, delivery = sol.shipments[0]
+
+    route1 = make_search_route(small_shipments, sol.shipments[1])
+    activities2 = [pickup, *sol.shipments[2], delivery]
+    route2 = make_search_route(small_shipments, activities2)
+    assert_equal(route1.distance() + route2.distance(), 50_804)
+
+    # Relocating U0 from route2 (L0 L2 U2 U0) to route1 (as L1 U1 L0 U0)
+    # results in lower distance.
+    op = RelocateShipment(small_shipments)
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(route2[1], route1[2], cost_eval), (-1_275, True))
+
+    op.apply(route2[1], route1[2])
+    route1.update()
+    route2.update()
+
+    assert_equal(route1.distance() + route2.distance(), 50_804 - 1_275)
+    assert_equal(str(route1), "L1 U1 L0 U0")
+    assert_equal(str(route2), "L2 U2")
+
+
+def test_relocate_non_adjacent_delivery(small_shipments):
     """
     Tests that the delivery node is inserted in the first improving place
     following pickup.
     """
-    data = small_shipments
+    sol = Solution(small_shipments)
+    route1 = make_search_route(small_shipments, sol.shipments[2])
+    route2 = make_search_route(
+        small_shipments,
+        [*sol.shipments[0], *sol.shipments[1]],
+    )
 
-    sol = Solution(data)
-    route1 = make_search_route(data, sol.shipments[2])
-    route2 = make_search_route(data, [*sol.shipments[0], *sol.shipments[1]])
     assert_equal(route1.distance() + route2.distance(), 47_015)
 
     # Insert L2 just after U0, and delivery in the first improving place,
     # just after U1.
-    op = RelocateShipment(data)
+    op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(op.evaluate(route1[1], route2[2], cost_eval), (-1_936, True))
 
