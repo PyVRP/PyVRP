@@ -12,8 +12,7 @@
 namespace pyvrp::search
 {
 /**
- * SISR-style ruin-and-recreate perturbation targeting cross-route shipment
- * membership. Experimental: constants are hardcoded, see the .cpp file.
+ * SISR-style ruin-and-recreate perturbation for shipments.
  */
 class ShipmentRuinAndRecreate
 {
@@ -21,9 +20,13 @@ class ShipmentRuinAndRecreate
 
     mutable RandomNumberGenerator rng_;
 
-    bool ruin(Solution &solution,
-              SearchSpace &searchSpace,
-              std::vector<Route *> &routes) const;
+    std::vector<Route *> ruin(Solution &solution,
+                              SearchSpace &searchSpace) const;
+
+    void recreate(Solution &solution,
+                  SearchSpace &searchSpace,
+                  std::vector<Route *> const &routes,
+                  CostEvaluator const &costEvaluator) const;
 
 public:
     explicit ShipmentRuinAndRecreate(ProblemData const &data);
@@ -31,12 +34,6 @@ public:
     void apply(Solution &solution,
                SearchSpace &searchSpace,
                CostEvaluator const &costEvaluator) const;
-
-    // Reinserts every currently unassigned shipment into the perturbed routes.
-    void recreate(Solution &solution,
-                  SearchSpace &searchSpace,
-                  std::vector<Route *> const &routes,
-                  CostEvaluator const &costEvaluator) const;
 };
 }  // namespace pyvrp::search
 

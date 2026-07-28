@@ -9,6 +9,7 @@
 #include <vector>
 
 using pyvrp::Activity;
+using pyvrp::search::Route;
 using pyvrp::search::ShipmentRuinAndRecreate;
 
 namespace
@@ -26,16 +27,16 @@ void ShipmentRuinAndRecreate::apply(Solution &solution,
                                     SearchSpace &searchSpace,
                                     CostEvaluator const &costEvaluator) const
 {
-    std::vector<Route *> routes;
-    if (!ruin(solution, searchSpace, routes))
+    auto const perturbedRoutes = ruin(solution, searchSpace);
+    if (perturbedRoutes.empty())
         return;
 
-    recreate(solution, searchSpace, routes, costEvaluator);
+    recreate(solution, searchSpace, perturbedRoutes, costEvaluator);
 }
 
-bool ShipmentRuinAndRecreate::ruin(Solution &solution,
-                                   SearchSpace &searchSpace,
-                                   std::vector<Route *> &routes) const
+std::vector<Route *>
+ShipmentRuinAndRecreate::ruin(Solution &solution,
+                              SearchSpace &searchSpace) const
 {
     auto const numShipments = data.numShipments();
 
@@ -46,13 +47,13 @@ bool ShipmentRuinAndRecreate::ruin(Solution &solution,
             assignedShipments.push_back(shipment);
 
     if (assignedShipments.size() < MIN_RUIN_SIZE)
-        return false;
+        return {};
 
     auto const seedShipment
         = assignedShipments[rng_.randint(assignedShipments.size())];
     auto *seedRoute = solution.shipments[seedShipment].first.route();
 
-    routes = {seedRoute};
+    std::vector<Route *> routes = {seedRoute};
     auto const numRoutes = 2 + rng_.randint(2);
     Activity const seedActivity
         = {Activity::ActivityType::PICKUP, seedShipment};
@@ -74,16 +75,13 @@ bool ShipmentRuinAndRecreate::ruin(Solution &solution,
         routes.push_back(route);
     }
 
-    if (routes.size() < 2)
-        return false;
-
     size_t numAvailable = 0;
     for (auto const *route : routes)
         numAvailable += route->numShipments();
 
-    auto targetRuinSize
-        = MIN_RUIN_SIZE + rng_.randint(MAX_RUIN_SIZE - MIN_RUIN_SIZE + 1);
-    targetRuinSize = std::min(targetRuinSize, numAvailable);
+    auto const targetRuinSize = std::min(
+        MIN_RUIN_SIZE + rng_.randint(MAX_RUIN_SIZE - MIN_RUIN_SIZE + 1),
+        numAvailable);
 
     std::vector<bool> selected(numShipments, false);
     std::vector<size_t> ruined;
@@ -135,7 +133,7 @@ bool ShipmentRuinAndRecreate::ruin(Solution &solution,
             route->clear();
     }
 
-    return true;
+    return routes;
 }
 
 void ShipmentRuinAndRecreate::recreate(Solution &solution,
