@@ -15,9 +15,7 @@ namespace
 {
 constexpr double RUIN_PROBABILITY = 0.25;
 constexpr size_t MIN_RUIN_SIZE = 8;
-constexpr size_t MAX_RUIN_SIZE = 15;
-constexpr double LARGE_RUIN_PROBABILITY = 0.05;
-constexpr size_t MAX_LARGE_RUIN_SIZE = 30;
+constexpr size_t MAX_RUIN_SIZE = 20;
 }  // namespace
 
 ShipmentRuinAndRecreate::ShipmentRuinAndRecreate(ProblemData const &data)
@@ -91,15 +89,8 @@ bool ShipmentRuinAndRecreate::ruin(Solution &solution,
     for (auto const *route : routes)
         numAvailable += route->numShipments();
 
-    auto const largeRuin = rng_.rand() < LARGE_RUIN_PROBABILITY;
-    size_t targetRuinSize;
-    if (largeRuin)
-        targetRuinSize = MAX_RUIN_SIZE + 1
-                         + rng_.randint(MAX_LARGE_RUIN_SIZE - MAX_RUIN_SIZE);
-    else
-        targetRuinSize
-            = MIN_RUIN_SIZE + rng_.randint(MAX_RUIN_SIZE - MIN_RUIN_SIZE + 1);
-
+    auto targetRuinSize
+        = MIN_RUIN_SIZE + rng_.randint(MAX_RUIN_SIZE - MIN_RUIN_SIZE + 1);
     targetRuinSize = std::min(targetRuinSize, numAvailable);
     if (targetRuinSize < MIN_RUIN_SIZE)
         return false;
