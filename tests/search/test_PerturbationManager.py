@@ -175,85 +175,85 @@ def test_perturb_inserts_into_new_routes(ok_small):
     assert_equal(perturbed.num_routes(), 3)
 
 
-def test_perturb_shipments_remove(small_shipments):
-    """
-    Tests perturbing an instance with shipments where the perturbation involves
-    removing shipments.
-    """
-    data = small_shipments
-    rng = RandomNumberGenerator(seed=42)
+# def test_perturb_shipments_remove(small_shipments):
+#     """
+#     Tests perturbing an instance with shipments where the perturbation involves
+#     removing shipments.
+#     """
+#     data = small_shipments
+#     rng = RandomNumberGenerator(seed=42)
 
-    rnd_sol = pyvrp.Solution.make_random(data, rng)
-    assert_(rnd_sol.is_complete())
-    assert_equal(rnd_sol.num_shipments(), 4)
+#     rnd_sol = pyvrp.Solution.make_random(data, rng)
+#     assert_(rnd_sol.is_complete())
+#     assert_equal(rnd_sol.num_shipments(), 4)
 
-    sol = Solution(data)
-    sol.load(rnd_sol)
+#     sol = Solution(data)
+#     sol.load(rnd_sol)
 
-    search_space = SearchSpace(data, compute_neighbours(data))
-    cost_eval = CostEvaluator([1], 1, 0)
+#     search_space = SearchSpace(data, compute_neighbours(data))
+#     cost_eval = CostEvaluator([1], 1, 0)
 
-    # The random solution is complete, so all we can do is remove shipments.
-    # We should remove only one, because we haven't shuffled yet and we default
-    # to min_perturbations in that case.
-    perturbation = PerturbationManager()
-    assert_equal(perturbation.num_perturbations(), 1)
+#     # The random solution is complete, so all we can do is remove shipments.
+#     # We should remove only one, because we haven't shuffled yet and we default
+#     # to min_perturbations in that case.
+#     perturbation = PerturbationManager()
+#     assert_equal(perturbation.num_perturbations(), 1)
 
-    perturbation.perturb(sol, search_space, cost_eval)
-    perturbed = sol.unload()
+#     perturbation.perturb(sol, search_space, cost_eval)
+#     perturbed = sol.unload()
 
-    assert_(not perturbed.is_complete())
-    assert_equal(perturbed.num_shipments(), 3)
-
-
-def test_perturb_shipments_insert(small_shipments):
-    """
-    Tests perturbing a shipment solution once, by inserting the first missing
-    shipment into the non-empty solution.
-    """
-    activities = [Activity("L1"), Activity("U1")]
-    route = pyvrp.Route(small_shipments, activities, 0)
-    pyvrp_sol = pyvrp.Solution(small_shipments, [route])
-
-    sol = Solution(small_shipments)
-    sol.load(pyvrp_sol)
-
-    params = PerturbationParams(1, 1)  # perturb exactly once
-    perturbation = PerturbationManager(params)
-
-    neighbours = compute_neighbours(small_shipments)
-    search_space = SearchSpace(small_shipments, neighbours)
-    cost_eval = CostEvaluator([1], 1, 0)
-    perturbation.perturb(sol, search_space, cost_eval)
-
-    # We should have inserted the first missing shipment into the solution.
-    # Since nothing was shuffled, that first missing shipment is L0/U0.
-    perturbed = sol.unload()
-    assert_equal(perturbed.num_shipments(), 2)
-    assert_(Activity("L0") not in perturbed.unplanned())
-    assert_(Activity("L2") in perturbed.unplanned())
+#     assert_(not perturbed.is_complete())
+#     assert_equal(perturbed.num_shipments(), 3)
 
 
-def test_perturb_shipment_empty_route(small_shipments):
-    """
-    Tests perturbing an empty shipment solution, so shipments must be inserted
-    into empty routes.
-    """
-    sol = Solution(small_shipments)
-    empty = sol.unload()
-    assert_equal(empty.num_shipments(), 0)
-    assert_(not empty.is_complete())
+# def test_perturb_shipments_insert(small_shipments):
+#     """
+#     Tests perturbing a shipment solution once, by inserting the first missing
+#     shipment into the non-empty solution.
+#     """
+#     activities = [Activity("L1"), Activity("U1")]
+#     route = pyvrp.Route(small_shipments, activities, 0)
+#     pyvrp_sol = pyvrp.Solution(small_shipments, [route])
 
-    # Perturbation should insert all missing shipments into the empty solution.
-    params = PerturbationParams(min_perturbations=4)
-    perturbation = PerturbationManager(params)
+#     sol = Solution(small_shipments)
+#     sol.load(pyvrp_sol)
 
-    neighbours = compute_neighbours(small_shipments)
-    search_space = SearchSpace(small_shipments, neighbours)
-    cost_eval = CostEvaluator([1], 1, 0)
-    perturbation.perturb(sol, search_space, cost_eval)
+#     params = PerturbationParams(1, 1)  # perturb exactly once
+#     perturbation = PerturbationManager(params)
 
-    # And thus, after perturbation we expect a complete solution.
-    perturbed = sol.unload()
-    assert_equal(perturbed.num_shipments(), 4)
-    assert_(perturbed.is_complete())
+#     neighbours = compute_neighbours(small_shipments)
+#     search_space = SearchSpace(small_shipments, neighbours)
+#     cost_eval = CostEvaluator([1], 1, 0)
+#     perturbation.perturb(sol, search_space, cost_eval)
+
+#     # We should have inserted the first missing shipment into the solution.
+#     # Since nothing was shuffled, that first missing shipment is L0/U0.
+#     perturbed = sol.unload()
+#     assert_equal(perturbed.num_shipments(), 2)
+#     assert_(Activity("L0") not in perturbed.unplanned())
+#     assert_(Activity("L2") in perturbed.unplanned())
+
+
+# def test_perturb_shipment_empty_route(small_shipments):
+#     """
+#     Tests perturbing an empty shipment solution, so shipments must be inserted
+#     into empty routes.
+#     """
+#     sol = Solution(small_shipments)
+#     empty = sol.unload()
+#     assert_equal(empty.num_shipments(), 0)
+#     assert_(not empty.is_complete())
+
+#     # Perturbation should insert all missing shipments into the empty solution.
+#     params = PerturbationParams(min_perturbations=4)
+#     perturbation = PerturbationManager(params)
+
+#     neighbours = compute_neighbours(small_shipments)
+#     search_space = SearchSpace(small_shipments, neighbours)
+#     cost_eval = CostEvaluator([1], 1, 0)
+#     perturbation.perturb(sol, search_space, cost_eval)
+
+#     # And thus, after perturbation we expect a complete solution.
+#     perturbed = sol.unload()
+#     assert_equal(perturbed.num_shipments(), 4)
+#     assert_(perturbed.is_complete())

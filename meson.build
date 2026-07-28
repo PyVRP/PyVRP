@@ -95,7 +95,6 @@ libsearch = static_library(
         SRC_DIR / 'search' / 'ReplaceOptionalClient.cpp',
         SRC_DIR / 'search' / 'ReplaceOptionalShipment.cpp',
         SRC_DIR / 'search' / 'SearchSpace.cpp',
-        SRC_DIR / 'search' / 'ShipmentRuinAndRecreate.cpp',
         SRC_DIR / 'search' / 'Solution.cpp',
         SRC_DIR / 'search' / 'SwapShipment.cpp',
         SRC_DIR / 'search' / 'SwapTails.cpp',

@@ -8,7 +8,6 @@
 #include "RandomNumberGenerator.h"
 #include "Route.h"
 #include "SearchSpace.h"
-#include "ShipmentRuinAndRecreate.h"
 #include "Solution.h"  // pyvrp::search::Solution
 
 #include <functional>
@@ -31,7 +30,6 @@ class LocalSearch
     // Perturbation manager that determines the size of the perturbation during
     // each LS invocation.
     PerturbationManager &perturbationManager_;
-    ShipmentRuinAndRecreate ruinRecreate_;
 
     std::vector<UnaryOperator *> unaryOps_;
     std::vector<BinaryOperator *> binaryOps_;

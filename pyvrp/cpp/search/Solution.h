@@ -13,6 +13,8 @@
 
 namespace pyvrp::search
 {
+class PerturbationManager;
+
 /**
  * Solution(data: ProblemData)
  *
@@ -34,6 +36,7 @@ class Solution
     ProblemData const &data_;
 
     friend class pyvrp::CostEvaluator;
+    friend class PerturbationManager;
 
 public:
     using Clients = std::vector<Route::Node>;

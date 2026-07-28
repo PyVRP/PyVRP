@@ -7,6 +7,7 @@
 #include "Solution.h"
 
 #include <iosfwd>
+#include <vector>
 
 namespace pyvrp::search
 {
@@ -40,6 +41,7 @@ struct PerturbationParams
  * :meth:`~num_perturbations` perturbations that strengthen (resp., weaken)
  * randomly selected neighbourhoods by inserting (removing) clients and
  * shipments.
+ * Shipment-only instances instead use a ruin-and-recreate perturbation.
  *
  * Parameters
  * ----------
@@ -50,6 +52,14 @@ class PerturbationManager
 {
     PerturbationParams const params_;  // owned by us
     size_t numPerturbations_;
+
+    std::vector<Route *> ruinShipments(Solution &solution,
+                                       SearchSpace &searchSpace) const;
+
+    void recreateShipments(Solution &solution,
+                           SearchSpace &searchSpace,
+                           std::vector<Route *> const &routes,
+                           CostEvaluator const &costEvaluator) const;
 
 public:
     PerturbationManager(PerturbationParams params = PerturbationParams());
@@ -67,7 +77,8 @@ public:
     /**
      * Perturbs the given solution using the neighbourhood and ordering of the
      * given search space. Any perturbed clients or shipments are marked as
-     * promising in the search space.
+     * promising in the search space. Shipment-only instances use a
+     * ruin-and-recreate perturbation.
      *
      * Parameters
      * ----------

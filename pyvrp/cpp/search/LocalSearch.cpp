@@ -35,8 +35,6 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
 
     if (exhaustive)
         searchSpace_.markAllPromising();
-    else if (data.numClients() == 0 && data.numShipments() > 0)
-        ruinRecreate_.apply(solution_, searchSpace_, costEvaluator);
     else
         perturbationManager_.perturb(solution_, searchSpace_, costEvaluator);
 
@@ -417,7 +415,6 @@ LocalSearch::LocalSearch(ProblemData const &data,
       solution_(data),
       searchSpace_(data, neighbours),
       perturbationManager_(perturbationManager),
-      ruinRecreate_(data),
       lastTest_(data.numClients() + data.numShipments()),
       lastUpdate_(data.numVehicles())
 {
