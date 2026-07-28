@@ -230,18 +230,16 @@ void ShipmentRuinAndRecreate::recreate(Solution &solution,
 
     auto const numShip = data.numShipments();
 
-    // Insertion order biases the result, since each insertion changes what
-    // later shipments see. Shuffle rather than always going by index.
-    std::vector<size_t> pending;
-    for (size_t ship = 0; ship != numShip; ++ship)
-        if (!solution.shipments[ship].first.route())
-            pending.push_back(ship);
-
-    rng_.shuffle(pending.begin(), pending.end());
-
-    for (auto const ship : pending)
+    for (auto const &activity : searchSpace.activityOrder())
     {
+        if (!activity.isPickup())
+            continue;
+
+        auto const ship = activity.idx();
         auto *pickup = &solution.shipments[ship].first;
+        if (pickup->route())
+            continue;
+
         auto *delivery = &solution.shipments[ship].second;
 
         // Candidate routes: those holding the shipment's nearest activities,
