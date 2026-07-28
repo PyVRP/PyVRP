@@ -13,7 +13,6 @@ using pyvrp::search::ShipmentRuinAndRecreate;
 
 namespace
 {
-constexpr double RUIN_PROBABILITY = 1.0;
 constexpr size_t MIN_RUIN_SIZE = 1;
 constexpr size_t MAX_RUIN_SIZE = 20;
 }  // namespace
@@ -23,22 +22,15 @@ ShipmentRuinAndRecreate::ShipmentRuinAndRecreate(ProblemData const &data)
 {
 }
 
-bool ShipmentRuinAndRecreate::apply(Solution &solution,
+void ShipmentRuinAndRecreate::apply(Solution &solution,
                                     SearchSpace &searchSpace,
                                     CostEvaluator const &costEvaluator) const
 {
-    if (data.numShipments() == 0 || data.numClients() != 0)
-        return false;
-
-    if (rng_.rand() >= RUIN_PROBABILITY)
-        return false;
-
     std::vector<Route *> routes;
     if (!ruin(solution, searchSpace, routes))
-        return false;
+        return;
 
     recreate(solution, searchSpace, routes, costEvaluator);
-    return true;
 }
 
 bool ShipmentRuinAndRecreate::ruin(Solution &solution,
@@ -151,9 +143,6 @@ void ShipmentRuinAndRecreate::recreate(Solution &solution,
                                        std::vector<Route *> const &routes,
                                        CostEvaluator const &costEvaluator) const
 {
-    if (data.numShipments() == 0 || data.numClients() != 0)
-        return;
-
     for (auto const &activity : searchSpace.activityOrder())
     {
         if (!activity.isPickup())

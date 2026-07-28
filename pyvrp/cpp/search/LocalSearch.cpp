@@ -35,7 +35,9 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
 
     if (exhaustive)
         searchSpace_.markAllPromising();
-    else if (!ruinRecreate_.apply(solution_, searchSpace_, costEvaluator))
+    else if (data.numClients() == 0 && data.numShipments() > 0)
+        ruinRecreate_.apply(solution_, searchSpace_, costEvaluator);
+    else
         perturbationManager_.perturb(solution_, searchSpace_, costEvaluator);
 
     ensureStructuralFeasibility(costEvaluator);

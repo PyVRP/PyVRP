@@ -28,9 +28,7 @@ class ShipmentRuinAndRecreate
 public:
     explicit ShipmentRuinAndRecreate(ProblemData const &data);
 
-    // Returns true if the solution was perturbed. When false, nothing was
-    // mutated and the caller should fall back to the usual perturbation.
-    bool apply(Solution &solution,
+    void apply(Solution &solution,
                SearchSpace &searchSpace,
                CostEvaluator const &costEvaluator) const;
 
