@@ -14,7 +14,9 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
         return std::make_pair(0, false);
 
     if (U->route() == V->route())
-        // TODO
+        // It is not technically impossible to relocate within the same route,
+        // but evaluating every possible route configuration requires dozens of
+        // branches and proposals, which is prohibitive to fully list here.
         return std::make_pair(0, false);
 
     move_ = {};
@@ -25,12 +27,18 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
     auto const *uPickup = U;
     auto const *uDelivery = U + 1;
 
-    Cost removeCost = 0;
+    Cost fixedCost = 0;
     if (uRoute->numShipments() == 1 && uRoute->numClients() == 0)
-        removeCost -= uRoute->fixedVehicleCost();
+        // Then U's route is empty after we relocate U, and we lose the route's
+        // fixed vehicle cost.
+        fixedCost -= uRoute->fixedVehicleCost();
 
-    if (n(uPickup) != uDelivery)
-    {
+    if (vRoute->empty())  // will become non-empty after inserting U.
+        fixedCost += vRoute->fixedVehicleCost();
+
+    Cost removeCost = 0;
+    if (n(uPickup) != uDelivery)  // exact when removing U's shipment so we
+    {                             // have the correct delta cost for this part
         auto const uProposal = Route::Proposal(
             uRoute->before(uPickup->pos() - 1),
             uRoute->between(uPickup->pos() + 1, uDelivery->pos() - 1),
@@ -47,7 +55,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
         costEvaluator.deltaCost<true>(removeCost, uProposal);
     }
 
-    Cost deltaCost = removeCost;
+    Cost deltaCost = removeCost + fixedCost;
     costEvaluator.deltaCost(deltaCost,  // delivery directly after pickup
                             Route::Proposal(vRoute->before(V->pos()),
                                             uRoute->at(uPickup->pos()),
@@ -63,7 +71,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
     // Pickup after V, delivery later in the route.
     for (auto const *node = n(V); !node->isDepot(); node = n(node))
     {
-        Cost deltaCost = removeCost;
+        Cost deltaCost = removeCost + fixedCost;
         costEvaluator.deltaCost(
             deltaCost,
             Route::Proposal(vRoute->before(V->pos()),
@@ -101,5 +109,7 @@ std::string RelocateShipment::name() const { return "RelocateShipment"; }
 
 bool RelocateShipment::supports(ProblemData const &data)
 {
-    return data.numShipments() > 0;
+    // Evaluates relocating shipments between routes, so we need at least one
+    // shipment and more than one vehicle.
+    return data.numShipments() > 0 && data.numVehicles() > 1;
 }

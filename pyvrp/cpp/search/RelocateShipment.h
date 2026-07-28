@@ -8,9 +8,9 @@ namespace pyvrp::search
 /**
  * RelocateShipment(data: ProblemData)
  *
- * Evaluates relocating the shipment :math:`U` after :math:`V`. :math:`U` is
- * relocated directly after :math:`V`, and :math:`U`'s delivery is inserted in
- * the first improving place after :math:`U`.
+ * Evaluates relocating the shipment :math:`U` after :math:`V` in different
+ * routes. :math:`U` is relocated directly after :math:`V`, and :math:`U`'s
+ * delivery is inserted in the first improving place after :math:`U`.
  */
 class RelocateShipment : public BinaryOperator
 {

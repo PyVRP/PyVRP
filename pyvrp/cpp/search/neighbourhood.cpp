@@ -173,11 +173,6 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
                 // not too problematic if we need to have them.
                 prox(frmClient, toClient) = std::numeric_limits<double>::max();
 
-    // Both the pickup and the delivery of a shipment may enter the
-    // neighbourhood lists of other activities. Inserting after a pickup and
-    // inserting after a delivery are different moves, so suppressing the
-    // further endpoint removes one of two distinct insertion anchors.
-
     for (size_t idx = 0; idx != prox.numRows(); ++idx)  // excl. self
         prox(idx, idx) = std::numeric_limits<double>::infinity();
 

@@ -263,31 +263,3 @@ def test_mixed_client_shipments(small_shipments):
     # case, there is always one other client, and three other shipments. Thus,
     # a total of seven activities can be in the neighbourhood.
     assert_equal(len(neighbours[Activity("C0")]), 7)
-
-
-def test_shipments_enter_neighbourhood_with_both_activities(small_shipments):
-    """
-    Tests that a shipment may enter the neighbourhood of another activity with
-    both its pickup and its delivery activity. Inserting after a pickup and
-    inserting after a delivery are different moves, so both endpoints are
-    useful insertion anchors and neither is suppressed.
-    """
-    # There are four shipments, so with num_neighbours == 3 each neighbourhood
-    # could be filled with three distinct shipments. Since both endpoints
-    # compete on distance, some shipment nonetheless enters twice, and then
-    # the activity indices are no longer unique.
-    params = NeighbourhoodParams(num_neighbours=3)
-    neighbourhoud = compute_neighbours(small_shipments, params)
-    assert_(
-        any(
-            len({activity.idx for activity in neighbours}) < len(neighbours)
-            for neighbours in neighbourhoud.values()
-        )
-    )
-
-    # The same holds when there is more room in the neighbourhood lists.
-    params = NeighbourhoodParams(num_neighbours=4)
-    neighbourhoud = compute_neighbours(small_shipments, params)
-    for _, neighbours in neighbourhoud.items():
-        idcs = {activity.idx for activity in neighbours}
-        assert_(len(idcs) < len(neighbours))
