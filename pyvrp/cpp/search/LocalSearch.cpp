@@ -115,7 +115,6 @@ void LocalSearch::shuffle(RandomNumberGenerator &rng)
 {
     perturbationManager_.shuffle(rng);
     searchSpace_.shuffle(rng);
-    ruinRecreate_.reseed(rng);
 
     rng.shuffle(unaryOps_.begin(), unaryOps_.end());
     rng.shuffle(binaryOps_.begin(), binaryOps_.end());

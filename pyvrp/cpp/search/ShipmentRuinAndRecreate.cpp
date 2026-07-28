@@ -66,17 +66,6 @@ ShipmentRuinAndRecreate::ShipmentRuinAndRecreate(ProblemData const &data)
     }
 }
 
-void ShipmentRuinAndRecreate::reseed(RandomNumberGenerator &rng)
-{
-    // Drawing from rng shifts the caller's random stream, so we only do so
-    // when this perturbation is actually active. Instances without shipments
-    // then keep the exact stream they had before.
-    if (related_.empty())
-        return;
-
-    rng_ = RandomNumberGenerator(rng());
-}
-
 bool ShipmentRuinAndRecreate::apply(Solution &solution,
                                     SearchSpace &searchSpace,
                                     CostEvaluator const &costEvaluator) const
@@ -84,10 +73,21 @@ bool ShipmentRuinAndRecreate::apply(Solution &solution,
     if (related_.empty())
         return false;
 
-    auto const numShip = data.numShipments();
     auto const draw = static_cast<double>(rng_()) / rng_.max();
     if (draw >= RUIN_PROBABILITY)
         return false;
+
+    if (!ruin(solution, searchSpace))
+        return false;
+
+    recreate(solution, searchSpace, costEvaluator);
+    return true;
+}
+
+bool ShipmentRuinAndRecreate::ruin(Solution &solution,
+                                   SearchSpace &searchSpace) const
+{
+    auto const numShip = data.numShipments();
 
     // ---- select a seed activity belonging to an assigned shipment ----
     std::vector<size_t> assigned;
@@ -218,7 +218,6 @@ bool ShipmentRuinAndRecreate::apply(Solution &solution,
             route->clear();
     }
 
-    recreate(solution, searchSpace, costEvaluator);
     return true;
 }
 

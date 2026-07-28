@@ -26,11 +26,10 @@ class ShipmentRuinAndRecreate
 
     mutable RandomNumberGenerator rng_;
 
+    bool ruin(Solution &solution, SearchSpace &searchSpace) const;
+
 public:
     explicit ShipmentRuinAndRecreate(ProblemData const &data);
-
-    // Reseeds from the given generator, so runs stay reproducible.
-    void reseed(RandomNumberGenerator &rng);
 
     // Returns true if the solution was perturbed. When false, nothing was
     // mutated and the caller should fall back to the usual perturbation.
