@@ -1173,12 +1173,13 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
 
 template <Segment... Segments> bool Route::Proposal<Segments...>::empty() const
 {
-    auto const numVisits = std::apply(  // visits to clients and shipments
-        [](auto &&...args)
-        { return (args.numClients() + ...) + (args.numPickups() + ...); },
-        segments_);
+    auto const numClients = std::apply(
+        [](auto &&...args) { return (args.numClients() + ...); }, segments_);
 
-    return numVisits == 0;
+    auto const numShipments = std::apply(
+        [](auto &&...args) { return (args.numPickups() + ...); }, segments_);
+
+    return numClients == 0 && numShipments == 0;
 }
 
 template <Segment... Segments>
