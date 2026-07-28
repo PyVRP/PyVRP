@@ -14,7 +14,9 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
         return std::make_pair(0, false);
 
     if (U->route() == V->route())
-        // TODO
+        // It is not technically impossible to relocate within the same route,
+        // but evaluating every possible route configuration requires dozens of
+        // branches and proposals, which is prohibitive to fully list here.
         return std::make_pair(0, false);
 
     move_ = {};
@@ -27,10 +29,12 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
 
     Cost removeCost = 0;
     if (uRoute->numShipments() == 1 && uRoute->numClients() == 0)
+        // Then U's route is empty after we relocate U, and we lose the route's
+        // fixed vehicle cost.
         removeCost -= uRoute->fixedVehicleCost();
 
-    if (n(uPickup) != uDelivery)
-    {
+    if (n(uPickup) != uDelivery)  // exact when removing U's shipment so we
+    {                             // have the correct delta cost for this part
         auto const uProposal = Route::Proposal(
             uRoute->before(uPickup->pos() - 1),
             uRoute->between(uPickup->pos() + 1, uDelivery->pos() - 1),
