@@ -27,9 +27,7 @@ Cost insertCost(pyvrp::search::Route::Node *U,
     auto *route = V->route();
     auto const &client = data.client(U->idx());
 
-    Cost deltaCost
-        = Cost(route->empty()) * route->fixedVehicleCost() - client.prize;
-
+    Cost deltaCost = -client.prize;
     costEvaluator.deltaCost<true>(
         deltaCost,
         pyvrp::search::Route::Proposal(
@@ -295,7 +293,7 @@ bool Solution::insert(Route::Node *pickup,
         if (empty == end)
             continue;
 
-        Cost deltaCost = empty->fixedVehicleCost() - shipment.prize;
+        Cost deltaCost = -shipment.prize;
         costEvaluator.deltaCost<true>(
             deltaCost,
             Route::Proposal(empty->before(0),

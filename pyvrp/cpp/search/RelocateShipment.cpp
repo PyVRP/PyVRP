@@ -27,15 +27,6 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
     auto const *uPickup = U;
     auto const *uDelivery = U + 1;
 
-    Cost fixedCost = 0;
-    if (uRoute->numShipments() == 1 && uRoute->numClients() == 0)
-        // Then U's route is empty after we relocate U, and we lose the route's
-        // fixed vehicle cost.
-        fixedCost -= uRoute->fixedVehicleCost();
-
-    if (vRoute->empty())  // will become non-empty after inserting U.
-        fixedCost += vRoute->fixedVehicleCost();
-
     Cost removeCost = 0;
     if (n(uPickup) != uDelivery)  // exact when removing U's shipment so we
     {                             // have the correct delta cost for this part
@@ -55,7 +46,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
         costEvaluator.deltaCost<true>(removeCost, uProposal);
     }
 
-    Cost deltaCost = removeCost + fixedCost;
+    Cost deltaCost = removeCost;
     costEvaluator.deltaCost(deltaCost,  // delivery directly after pickup
                             Route::Proposal(vRoute->before(V->pos()),
                                             uRoute->at(uPickup->pos()),
@@ -71,7 +62,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
     // Pickup after V, delivery later in the route.
     for (auto const *node = n(V); !node->isDepot(); node = n(node))
     {
-        Cost deltaCost = removeCost + fixedCost;
+        Cost deltaCost = removeCost;
         costEvaluator.deltaCost(
             deltaCost,
             Route::Proposal(vRoute->before(V->pos()),

@@ -75,13 +75,6 @@ void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
     auto const &group = data.group(*uData.group);
     assert(group.mutuallyExclusive);
 
-    Cost fixedCost = 0;
-    if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
-        fixedCost -= uRoute->fixedVehicleCost();
-
-    if (vRoute->empty())
-        fixedCost += vRoute->fixedVehicleCost();
-
     auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
                                            uRoute->after(U->pos() + 1));
 
@@ -92,7 +85,7 @@ void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
             continue;
 
         auto const &alternativeData = data.client(client);
-        Cost deltaCost = fixedCost + uData.prize - alternativeData.prize;
+        Cost deltaCost = uData.prize - alternativeData.prize;
         auto const vProposal = Route::Proposal(vRoute->before(V->pos()),
                                                ClientSegment(data, client),
                                                vRoute->after(V->pos() + 1));

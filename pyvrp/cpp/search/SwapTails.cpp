@@ -49,15 +49,6 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
 
     Cost deltaCost = 0;
 
-    // We're going to incur fixed cost if V's route is currently empty but
-    // becomes non-empty due to the proposed move.
-    if (vRoute->empty() && !n(U)->isEndDepot())
-        deltaCost += vRoute->fixedVehicleCost();
-
-    // We lose fixed cost if V's route becomes empty due to the proposed move.
-    if (!vRoute->empty() && V->isStartDepot() && n(U)->isEndDepot())
-        deltaCost -= vRoute->fixedVehicleCost();
-
     if (!n(U)->isEndDepot() && !n(V)->isEndDepot())
     {
         auto const uProposal

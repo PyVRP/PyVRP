@@ -153,9 +153,6 @@ std::pair<pyvrp::Cost, bool> RelocateWithDepot::evaluate(
     move_ = {};
 
     Cost fixedCost = 0;
-    if (uRoute != vRoute  // empty after move
-        && uRoute->numClients() == 1 && uRoute->numShipments() == 0)
-        fixedCost -= uRoute->fixedVehicleCost();
 
     if (!V->isReloadDepot())
         // If V is already a reload depot, there is no point inserting another

@@ -28,8 +28,7 @@ std::pair<pyvrp::Cost, bool> InsertOptionalClient::evaluate(
     }
 
     auto *route = V->route();
-    Cost deltaCost
-        = Cost(route->empty()) * route->fixedVehicleCost() - uData.prize;
+    Cost deltaCost = -uData.prize;
 
     costEvaluator.deltaCost(deltaCost,
                             Route::Proposal(route->before(V->pos()),

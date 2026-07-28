@@ -17,6 +17,7 @@ namespace pyvrp
 template <typename T>
 concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
     { arg.route() };
+    { arg.fixedVehicleCost() } -> std::same_as<Cost>;
     { arg.distance() } -> std::convertible_to<std::pair<Cost, Distance>>;
     { arg.duration() } -> std::convertible_to<std::pair<Cost, Duration>>;
     { arg.excessLoad(dimension) } -> std::same_as<Load>;
@@ -221,16 +222,9 @@ template <bool exact, typename... Args, template <typename...> class T>
 bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
 {
     auto const *route = proposal.route();
-    if (!route->empty())
-    {
-        out -= route->distanceCost();
-        out -= excessDistPenalty(route->excessDistance());
+    out -= penalisedCost(*route);
 
-        out -= excessLoadPenalties(route->excessLoad());
-
-        out -= route->durationCost();
-        out -= twPenalty(route->timeWarp());
-    }
+    out += proposal.fixedVehicleCost();
 
     if (route->hasDistanceCost())
     {
@@ -271,28 +265,13 @@ bool CostEvaluator::deltaCost(Cost &out,
                               T<vArgs...> const &vProposal) const
 {
     auto const *uRoute = uProposal.route();
-    if (!uRoute->empty())
-    {
-        out -= uRoute->distanceCost();
-        out -= excessDistPenalty(uRoute->excessDistance());
-
-        out -= excessLoadPenalties(uRoute->excessLoad());
-
-        out -= uRoute->durationCost();
-        out -= twPenalty(uRoute->timeWarp());
-    }
+    out -= penalisedCost(*uRoute);
 
     auto const *vRoute = vProposal.route();
-    if (!vRoute->empty())
-    {
-        out -= vRoute->distanceCost();
-        out -= excessDistPenalty(vRoute->excessDistance());
+    out -= penalisedCost(*vRoute);
 
-        out -= excessLoadPenalties(vRoute->excessLoad());
-
-        out -= vRoute->durationCost();
-        out -= twPenalty(vRoute->timeWarp());
-    }
+    out += uProposal.fixedVehicleCost();
+    out += vProposal.fixedVehicleCost();
 
     if (uRoute->hasDistanceCost())
     {

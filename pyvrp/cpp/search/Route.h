@@ -112,6 +112,11 @@ public:
         bool empty() const;
 
         /**
+         * Returns the fixed vehicle cost incurred by the proposed route.
+         */
+        Cost fixedVehicleCost() const;
+
+        /**
          * Returns the (distance cost, excess distance) attributes of the
          * proposed route.
          */
@@ -1186,6 +1191,12 @@ template <Segment... Segments>
 Route const *Route::Proposal<Segments...>::route() const
 {
     return std::get<0>(segments_).route();
+}
+
+template <Segment... Segments>
+Cost Route::Proposal<Segments...>::fixedVehicleCost() const
+{
+    return empty() ? 0 : route()->fixedVehicleCost();
 }
 
 template <Segment... Segments>
