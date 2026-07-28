@@ -13,8 +13,8 @@ using pyvrp::search::ShipmentRuinAndRecreate;
 
 namespace
 {
-constexpr double RUIN_PROBABILITY = 0.25;
-constexpr size_t MIN_RUIN_SIZE = 8;
+constexpr double RUIN_PROBABILITY = 1.0;
+constexpr size_t MIN_RUIN_SIZE = 1;
 constexpr size_t MAX_RUIN_SIZE = 20;
 }  // namespace
 
