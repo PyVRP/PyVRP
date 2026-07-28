@@ -19,14 +19,11 @@ class ShipmentRuinAndRecreate
 {
     ProblemData const &data;
 
-    // related_[a] holds the nearest activities to activity a, by symmetric
-    // distance. Activity a in [0, numShipments) is a pickup, and in
-    // [numShipments, 2 * numShipments) the delivery of a - numShipments.
-    std::vector<std::vector<size_t>> related_;
-
     mutable RandomNumberGenerator rng_;
 
-    bool ruin(Solution &solution, SearchSpace &searchSpace) const;
+    bool ruin(Solution &solution,
+              SearchSpace &searchSpace,
+              std::vector<Route *> &routes) const;
 
 public:
     explicit ShipmentRuinAndRecreate(ProblemData const &data);
@@ -37,10 +34,10 @@ public:
                SearchSpace &searchSpace,
                CostEvaluator const &costEvaluator) const;
 
-    // Reinserts every currently unassigned shipment, scanning all pickup and
-    // delivery position pairs in a few related routes.
+    // Reinserts every currently unassigned shipment into the perturbed routes.
     void recreate(Solution &solution,
                   SearchSpace &searchSpace,
+                  std::vector<Route *> const &routes,
                   CostEvaluator const &costEvaluator) const;
 };
 }  // namespace pyvrp::search

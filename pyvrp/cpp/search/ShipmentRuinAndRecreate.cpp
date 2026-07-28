@@ -6,7 +6,9 @@
 #include <algorithm>
 #include <cassert>
 #include <limits>
+#include <vector>
 
+using pyvrp::Activity;
 using pyvrp::search::ShipmentRuinAndRecreate;
 
 namespace
@@ -16,105 +18,63 @@ constexpr size_t MIN_RUIN_SIZE = 8;
 constexpr size_t MAX_RUIN_SIZE = 15;
 constexpr double LARGE_RUIN_PROBABILITY = 0.05;
 constexpr size_t MAX_LARGE_RUIN_SIZE = 30;
-constexpr size_t MAX_NUM_RELATED = 100;
-constexpr size_t NUM_CANDIDATE_ROUTES = 6;
 }  // namespace
 
 ShipmentRuinAndRecreate::ShipmentRuinAndRecreate(ProblemData const &data)
     : data(data), rng_(42)
 {
-    auto const numShipments = data.numShipments();
-    if (numShipments == 0 || data.numClients() != 0)
-        return;
-
-    auto const &distances = data.distanceMatrix(0);
-    auto const location = [&](size_t activity)
-    {
-        if (activity < numShipments)
-            return data.shipment(activity).pickup.location;
-
-        return data.shipment(activity - numShipments).delivery.location;
-    };
-
-    auto const numActivities = 2 * numShipments;
-    related_.resize(numActivities);
-
-    std::vector<std::pair<double, size_t>> scored;
-    scored.reserve(numActivities);
-
-    for (size_t from = 0; from != numActivities; ++from)
-    {
-        scored.clear();
-        auto const fromLocation = location(from);
-        for (size_t to = 0; to != numActivities; ++to)
-        {
-            if (to == from || (to % numShipments) == (from % numShipments))
-                continue;
-
-            auto const toLocation = location(to);
-            auto const score
-                = static_cast<double>(distances(fromLocation, toLocation))
-                  + static_cast<double>(distances(toLocation, fromLocation));
-            scored.emplace_back(score, to);
-        }
-
-        auto const numRelated = std::min(MAX_NUM_RELATED, scored.size());
-        std::partial_sort(
-            scored.begin(), scored.begin() + numRelated, scored.end());
-
-        related_[from].reserve(numRelated);
-        for (size_t idx = 0; idx != numRelated; ++idx)
-            related_[from].push_back(scored[idx].second);
-    }
 }
 
 bool ShipmentRuinAndRecreate::apply(Solution &solution,
                                     SearchSpace &searchSpace,
                                     CostEvaluator const &costEvaluator) const
 {
-    if (related_.empty())
+    if (data.numShipments() == 0 || data.numClients() != 0)
         return false;
 
     if (rng_.rand() >= RUIN_PROBABILITY)
         return false;
 
-    if (!ruin(solution, searchSpace))
+    std::vector<Route *> routes;
+    if (!ruin(solution, searchSpace, routes))
         return false;
 
-    recreate(solution, searchSpace, costEvaluator);
+    recreate(solution, searchSpace, routes, costEvaluator);
     return true;
 }
 
 bool ShipmentRuinAndRecreate::ruin(Solution &solution,
-                                   SearchSpace &searchSpace) const
+                                   SearchSpace &searchSpace,
+                                   std::vector<Route *> &routes) const
 {
     auto const numShipments = data.numShipments();
 
-    std::vector<size_t> assignedActivities;
-    assignedActivities.reserve(2 * numShipments);
+    std::vector<size_t> assignedShipments;
+    assignedShipments.reserve(numShipments);
     for (size_t shipment = 0; shipment != numShipments; ++shipment)
         if (solution.shipments[shipment].first.route())
-        {
-            assignedActivities.push_back(shipment);
-            assignedActivities.push_back(numShipments + shipment);
-        }
+            assignedShipments.push_back(shipment);
 
-    if (assignedActivities.size() < 2 * MIN_RUIN_SIZE)
+    if (assignedShipments.size() < MIN_RUIN_SIZE)
         return false;
 
-    auto const seedActivity
-        = assignedActivities[rng_.randint(assignedActivities.size())];
-    auto const seedShipment = seedActivity % numShipments;
+    auto const seedShipment
+        = assignedShipments[rng_.randint(assignedShipments.size())];
     auto *seedRoute = solution.shipments[seedShipment].first.route();
 
-    std::vector<Route *> routes = {seedRoute};
+    routes = {seedRoute};
     auto const numRoutes = 2 + rng_.randint(2);
-    for (auto const activity : related_[seedActivity])
+    Activity const seedActivity
+        = {Activity::ActivityType::PICKUP, seedShipment};
+    for (auto const &activity : searchSpace.neighboursOf(seedActivity))
     {
         if (routes.size() >= numRoutes)
             break;
 
-        auto *route = solution.shipments[activity % numShipments].first.route();
+        auto *node = solution[activity];
+        assert(node);
+
+        auto *route = node->route();
         if (!route)
             continue;
 
@@ -226,12 +186,11 @@ bool ShipmentRuinAndRecreate::ruin(Solution &solution,
 
 void ShipmentRuinAndRecreate::recreate(Solution &solution,
                                        SearchSpace &searchSpace,
+                                       std::vector<Route *> const &routes,
                                        CostEvaluator const &costEvaluator) const
 {
-    if (related_.empty())
+    if (data.numShipments() == 0 || data.numClients() != 0)
         return;
-
-    auto const numShipments = data.numShipments();
 
     for (auto const &activity : searchSpace.activityOrder())
     {
@@ -244,48 +203,6 @@ void ShipmentRuinAndRecreate::recreate(Solution &solution,
             continue;
 
         auto *delivery = &solution.shipments[shipment].second;
-
-        std::vector<Route *> routes;
-
-        auto const &pickupRelated = related_[shipment];
-        auto const &deliveryRelated = related_[numShipments + shipment];
-        auto const numRelated
-            = std::max(pickupRelated.size(), deliveryRelated.size());
-
-        for (size_t rank = 0; rank != numRelated; ++rank)
-        {
-            if (routes.size() >= NUM_CANDIDATE_ROUTES)
-                break;
-
-            for (auto const *related : {&pickupRelated, &deliveryRelated})
-            {
-                if (rank >= related->size()
-                    || routes.size() >= NUM_CANDIDATE_ROUTES)
-                    continue;
-
-                auto const relatedActivity = (*related)[rank];
-                auto const relatedShipment = relatedActivity % numShipments;
-                auto *route = solution.shipments[relatedShipment].first.route();
-                if (!route)
-                    continue;
-
-                if (std::find(routes.begin(), routes.end(), route)
-                    != routes.end())
-                    continue;
-
-                routes.push_back(route);
-            }
-        }
-
-        for (auto &route : solution.routes)
-            if (route.empty())
-            {
-                routes.push_back(&route);
-                break;
-            }
-
-        if (routes.empty())
-            continue;
 
         auto const prize = data.shipment(shipment).prize;
         Cost bestCost = std::numeric_limits<Cost>::max();
