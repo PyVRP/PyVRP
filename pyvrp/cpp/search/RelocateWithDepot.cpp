@@ -15,8 +15,8 @@ void RelocateWithDepot::evalSameRoute(Route::Node *U,
     auto const *route = U->route();
     auto const &vehType = data.vehicleType(route->vehicleType());
 
-    if (!V->isReloadDepot())
-        for (auto const depot : vehType.reloadDepots)  // depot first, U after
+    if (!V->isReloadDepot())  // depot first, U after
+        for (auto const depot : vehType.reloadDepots)
         {
             Cost deltaCost = 0;
             if (U->pos() < V->pos())
@@ -40,8 +40,8 @@ void RelocateWithDepot::evalSameRoute(Route::Node *U,
                 move_ = {deltaCost, MoveType::DEPOT_U, depot};
         }
 
-    if (!n(V)->isReloadDepot())
-        for (auto const depot : vehType.reloadDepots)  // U first, depot after
+    if (!n(V)->isReloadDepot())  // U first, depot after
+        for (auto const depot : vehType.reloadDepots)
         {
             Cost deltaCost = 0;
             if (U->pos() < V->pos())
@@ -86,8 +86,8 @@ void RelocateWithDepot::evalDifferentRoutes(Route::Node *U,
             Route::Proposal(uRoute->before(U->pos() - 1),
                             uRoute->after(U->pos() + 1)));
 
-    if (!V->isReloadDepot())
-        for (auto const depot : vehType.reloadDepots)  // depot first, U after
+    if (!V->isReloadDepot())  // depot first, U after
+        for (auto const depot : vehType.reloadDepots)
         {
             Cost deltaCost = removeCost;
             costEvaluator.deltaCost(
@@ -101,8 +101,8 @@ void RelocateWithDepot::evalDifferentRoutes(Route::Node *U,
                 move_ = {deltaCost, MoveType::DEPOT_U, depot};
         }
 
-    if (!n(V)->isReloadDepot())
-        for (auto const depot : vehType.reloadDepots)  // U first, depot after
+    if (!n(V)->isReloadDepot())  // U first, depot after
+        for (auto const depot : vehType.reloadDepots)
         {
             Cost deltaCost = removeCost;
             costEvaluator.deltaCost(
