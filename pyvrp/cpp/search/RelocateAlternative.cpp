@@ -75,54 +75,33 @@ void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
     auto const &group = data.group(*uData.group);
     assert(group.mutuallyExclusive);
 
+    Cost removeCost = uData.prize;
     if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
-    {
-        Cost removeCost = -costEvaluator.penalisedCost(*uRoute);
-
-        for (auto const client : group)
-        {
-            if (U->idx() == client)
-                continue;
-
-            auto const proposal = Route::Proposal(vRoute->before(V->pos()),
-                                                  ClientSegment(data, client),
-                                                  vRoute->after(V->pos() + 1));
-
-            auto const &alternativeData = data.client(client);
-            Cost deltaCost = removeCost + uData.prize - alternativeData.prize;
-            costEvaluator.deltaCost(deltaCost, proposal);
-
-            if (deltaCost < 0)
-            {
-                move_ = {deltaCost, &solution_->clients[client]};
-                return;
-            }
-        }
-    }
+        // This move leaves the route empty, so the cost delta is just the
+        // current route cost.
+        removeCost -= costEvaluator.penalisedCost(*uRoute);
     else
+        costEvaluator.deltaCost<true>(  // exact evaluation so we get the right
+            removeCost,                 // delta when inserting the alternative
+            Route::Proposal(uRoute->before(U->pos() - 1),
+                            uRoute->after(U->pos() + 1)));
+
+    for (auto const client : group)
     {
-        auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
-                                               uRoute->after(U->pos() + 1));
+        if (client == U->idx())
+            continue;
 
-        for (auto const client : group)
+        auto const &alternative = data.client(client);
+        Cost deltaCost = removeCost - alternative.prize;
+        costEvaluator.deltaCost(deltaCost,
+                                Route::Proposal(vRoute->before(V->pos()),
+                                                ClientSegment(data, client),
+                                                vRoute->after(V->pos() + 1)));
+
+        if (deltaCost < 0)
         {
-            auto *alternative = &solution_->clients[client];
-            if (alternative == U)
-                continue;
-
-            auto const vProposal = Route::Proposal(vRoute->before(V->pos()),
-                                                   ClientSegment(data, client),
-                                                   vRoute->after(V->pos() + 1));
-
-            auto const &alternativeData = data.client(client);
-            Cost deltaCost = uData.prize - alternativeData.prize;
-            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
-
-            if (deltaCost < 0)
-            {
-                move_ = {deltaCost, alternative};
-                return;
-            }
+            move_ = {deltaCost, &solution_->clients[client]};
+            return;
         }
     }
 }
