@@ -6,9 +6,9 @@
 
 using pyvrp::search::RelocateAlternative;
 
-void RelocateAlternative::evalWithinRoute(Route::Node *U,
-                                          Route::Node *V,
-                                          CostEvaluator const &costEvaluator)
+void RelocateAlternative::evalSameRoute(Route::Node *U,
+                                        Route::Node *V,
+                                        CostEvaluator const &costEvaluator)
 {
 
     auto const *route = U->route();
@@ -65,9 +65,8 @@ void RelocateAlternative::evalWithinRoute(Route::Node *U,
         }
 }
 
-void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
-                                            Route::Node *V,
-                                            CostEvaluator const &costEvaluator)
+void RelocateAlternative::evalDifferentRoutes(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
@@ -122,9 +121,9 @@ std::pair<pyvrp::Cost, bool> RelocateAlternative::evaluate(
     move_ = {};
 
     if (U->route() == V->route())
-        evalWithinRoute(U, V, costEvaluator);
+        evalSameRoute(U, V, costEvaluator);
     else
-        evalBetweenRoutes(U, V, costEvaluator);
+        evalDifferentRoutes(U, V, costEvaluator);
 
     return std::make_pair(move_.cost, move_.cost < 0);
 }
