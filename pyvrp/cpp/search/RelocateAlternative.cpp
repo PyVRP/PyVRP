@@ -89,7 +89,7 @@ void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
                                                   vRoute->after(V->pos() + 1));
 
             auto const &alternativeData = data.client(client);
-            Cost deltaCost = uData.prize - alternativeData.prize;
+            Cost deltaCost = removeCost + uData.prize - alternativeData.prize;
             costEvaluator.deltaCost(deltaCost, proposal);
 
             if (deltaCost < 0)

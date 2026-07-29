@@ -39,11 +39,16 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
     }
     else
     {
-        auto const uProposal
-            = Route::Proposal(uRoute->before(uPickup->pos() - 1),
-                              uRoute->after(uDelivery->pos() + 1));
+        if (uRoute->numClients() == 0 && uRoute->numShipments() == 1)
+            removeCost -= costEvaluator.penalisedCost(*uRoute);
+        else
+        {
+            auto const uProposal
+                = Route::Proposal(uRoute->before(uPickup->pos() - 1),
+                                  uRoute->after(uDelivery->pos() + 1));
 
-        costEvaluator.deltaCost<true>(removeCost, uProposal);
+            costEvaluator.deltaCost<true>(removeCost, uProposal);
+        }
     }
 
     Cost deltaCost = removeCost;
