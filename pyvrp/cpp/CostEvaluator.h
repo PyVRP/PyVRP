@@ -265,9 +265,9 @@ bool CostEvaluator::deltaCost(Cost &out,
                               T<vArgs...> const &vProposal) const
 {
     auto const *uRoute = uProposal.route();
-    out -= penalisedCost(*uRoute);
-
     auto const *vRoute = vProposal.route();
+
+    out -= penalisedCost(*uRoute);
     out -= penalisedCost(*vRoute);
 
     out += uProposal.fixedVehicleCost();
