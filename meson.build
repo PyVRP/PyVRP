@@ -31,7 +31,7 @@ if compiler.has_argument('-Wno-stringop-overflow')
 endif
 
 # Logging configuration and spdlog dependency.
-if get_option('buildtype') == 'debug'
+if get_option('buildtype') in ['debug', 'debugoptimized']
     # Log everything in debug builds.
     add_project_arguments('-DPYVRP_LOG_LEVEL=0', language: 'cpp')
 else
