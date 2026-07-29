@@ -441,20 +441,3 @@ std::ostream &operator<<(std::ostream &out, Route::Node const &node)
 {
     return out << node.activity();
 }
-
-template <>
-pyvrp::Cost
-pyvrp::CostEvaluator::penalisedCost(pyvrp::search::Route const &route) const
-{
-    if (route.empty())
-        return 0;
-
-    // clang-format off
-    return route.distanceCost()
-         + route.durationCost()
-         + route.fixedVehicleCost()
-         + excessLoadPenalties(route.excessLoad())
-         + twPenalty(route.timeWarp())
-         + distPenalty(route.excessDistance(), 0);
-    // clang-format on
-}

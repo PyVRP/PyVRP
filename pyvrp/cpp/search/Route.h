@@ -83,14 +83,9 @@ class Route
 {
 public:
     /**
-     * A simple class that tracks a proposed route structure. This new structure
-     * can be efficiently evaluated by calling appropriate member functions,
-     * detailing the newly proposed route's statistics.
-     *
-     * .. note::
-     *
-     *    The member functions may shortcut if they detect that a particular
-     *    statistic has no impact on the newly proposed route's cost.
+     * A simple class that tracks a proposed, non-empty route structure. This
+     * new structure can be efficiently evaluated by calling appropriate member
+     * functions, detailing the newly proposed route's statistics.
      */
     template <Segment... Segments> class Proposal
     {
@@ -107,9 +102,9 @@ public:
         Route const *route() const;
 
         /**
-         * Returns whether the proposed route is empty.
+         * Returns the fixed vehicle cost incurred by the proposed route.
          */
-        bool empty() const;
+        Cost fixedVehicleCost() const;
 
         /**
          * Returns the (distance cost, excess distance) attributes of the
@@ -1161,6 +1156,12 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
 {
     static_assert(sizeof...(Segments) > 0, "Proposal cannot be empty.");
 
+    [[maybe_unused]] auto const numClients = std::apply(
+        [](auto &&...args) { return (args.numClients() + ...); }, segments_);
+    [[maybe_unused]] auto const numShipments = std::apply(
+        [](auto &&...args) { return (args.numPickups() + ...); }, segments_);
+    assert(numClients + numShipments != 0);  // proposal must not be empty
+
     [[maybe_unused]] auto &&first = std::get<0>(segments_);
     [[maybe_unused]] auto &&last = std::get<sizeof...(Segments) - 1>(segments_);
     assert(first.route() == last.route());  // must start and end at same route
@@ -1171,16 +1172,6 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
     assert(last.back().activity() == route[route.size() - 1]->activity());
 }
 
-template <Segment... Segments> bool Route::Proposal<Segments...>::empty() const
-{
-    auto const numVisits = std::apply(  // visits to clients and shipments
-        [](auto &&...args)
-        { return (args.numClients() + ...) + (args.numPickups() + ...); },
-        segments_);
-
-    return numVisits == 0;
-}
-
 template <Segment... Segments>
 Route const *Route::Proposal<Segments...>::route() const
 {
@@ -1188,11 +1179,14 @@ Route const *Route::Proposal<Segments...>::route() const
 }
 
 template <Segment... Segments>
+Cost Route::Proposal<Segments...>::fixedVehicleCost() const
+{
+    return route()->fixedVehicleCost();
+}
+
+template <Segment... Segments>
 std::pair<Cost, Distance> Route::Proposal<Segments...>::distance() const
 {
-    if (empty())
-        return std::make_pair(0, 0);
-
     auto const &data = route()->data;
     auto const unitDistanceCost = route()->unitDistanceCost();
     auto const maxDistance = route()->maxDistance();
@@ -1227,9 +1221,6 @@ std::pair<Cost, Distance> Route::Proposal<Segments...>::distance() const
 template <Segment... Segments>
 std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
 {
-    if (empty())
-        return std::make_pair(0, 0);
-
     auto const &data = route()->data;
     auto const unitDurationCost = route()->unitDurationCost();
     auto const unitOvertimeCost = route()->unitOvertimeCost();
@@ -1301,9 +1292,6 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
 template <Segment... Segments>
 Load Route::Proposal<Segments...>::excessLoad(size_t dimension) const
 {
-    if (empty())
-        return 0;
-
     auto const &capacities = route()->capacity();
     auto const capacity = capacities[dimension];
 
@@ -1347,7 +1335,20 @@ std::ostream &operator<<(std::ostream &out,  // for debugging
                          pyvrp::search::Route::Node const &node);
 
 template <>  // specialisation for pyvrp::search::Route
-pyvrp::Cost
-pyvrp::CostEvaluator::penalisedCost(pyvrp::search::Route const &route) const;
+inline pyvrp::Cost
+pyvrp::CostEvaluator::penalisedCost(pyvrp::search::Route const &route) const
+{
+    if (route.empty())
+        return 0;
+
+    // clang-format off
+    return route.distanceCost()
+         + route.durationCost()
+         + route.fixedVehicleCost()
+         + excessLoadPenalties(route.excessLoad())
+         + twPenalty(route.timeWarp())
+         + distPenalty(route.excessDistance(), 0);
+    // clang-format on
+}
 
 #endif  // PYVRP_SEARCH_ROUTE_H

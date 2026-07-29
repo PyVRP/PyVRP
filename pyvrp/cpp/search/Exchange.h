@@ -120,24 +120,25 @@ std::pair<Cost, bool> Exchange<N, M>::evalRelocateMove(
         auto const *uRoute = U->route();
         auto const *vRoute = V->route();
 
-        // We're going to incur V's fixed cost if V is currently empty.
-        if (V->isStartDepot() && vRoute->empty())
-            deltaCost += vRoute->fixedVehicleCost();
-
-        // We lose U's fixed cost if we're moving all U's clients or shipment
-        // nodes (pickup + delivery).
-        if (uRoute->numClients() + 2 * uRoute->numShipments() == N)
-            deltaCost -= uRoute->fixedVehicleCost();
-
-        auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
-                                               uRoute->after(U->pos() + N));
-
         auto const vProposal
             = Route::Proposal(vRoute->before(V->pos()),
                               uRoute->between(U->pos(), U->pos() + N - 1),
                               vRoute->after(V->pos() + 1));
 
-        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        // Then U's route is empty after this move, so we can subtract the
+        // current route's cost and only evaluate V's proposal.
+        if (uRoute->numClients() + 2 * uRoute->numShipments() == N)
+        {
+            deltaCost -= costEvaluator.penalisedCost(*uRoute);
+            costEvaluator.deltaCost(deltaCost, vProposal);
+        }
+        else
+        {
+            auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
+                                                   uRoute->after(U->pos() + N));
+
+            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        }
     }
     else  // within same route
     {

@@ -25,13 +25,15 @@ class RelocateAlternative : public BinaryOperator
     Move move_;
     Solution *solution_ = nullptr;
 
-    void evalWithinRoute(Route::Node *U,
-                         Route::Node *V,
-                         CostEvaluator const &costEvaluator);
+    // Evaluates relocation moves when U and V are in the same route.
+    void evalSameRoute(Route::Node *U,
+                       Route::Node *V,
+                       CostEvaluator const &costEvaluator);
 
-    void evalBetweenRoutes(Route::Node *U,
-                           Route::Node *V,
-                           CostEvaluator const &costEvaluator);
+    // Evaluates relocation moves when U and V are in different routes.
+    void evalDifferentRoutes(Route::Node *U,
+                             Route::Node *V,
+                             CostEvaluator const &costEvaluator);
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,

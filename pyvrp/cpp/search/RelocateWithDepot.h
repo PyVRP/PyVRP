@@ -38,19 +38,15 @@ class RelocateWithDepot : public BinaryOperator
 
     Move move_;
 
-    // Evaluates moves where a reload depot is inserted before U, as
-    // V -> depot -> U.
-    void evalDepotBefore(Cost fixedCost,
-                         Route::Node *U,
-                         Route::Node *V,
-                         CostEvaluator const &costEvaluator);
+    // Evaluates relocation moves when U and V are in the same route.
+    void evalSameRoute(Route::Node *U,
+                       Route::Node *V,
+                       CostEvaluator const &costEvaluator);
 
-    // Evaluates moves where a reload depot is inserted after U, as
-    // V -> U -> depot.
-    void evalDepotAfter(Cost fixedCost,
-                        Route::Node *U,
-                        Route::Node *V,
-                        CostEvaluator const &costEvaluator);
+    // Evaluates relocation moves when U and V are in different routes.
+    void evalDifferentRoutes(Route::Node *U,
+                             Route::Node *V,
+                             CostEvaluator const &costEvaluator);
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,

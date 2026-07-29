@@ -6,9 +6,9 @@
 
 using pyvrp::search::RelocateAlternative;
 
-void RelocateAlternative::evalWithinRoute(Route::Node *U,
-                                          Route::Node *V,
-                                          CostEvaluator const &costEvaluator)
+void RelocateAlternative::evalSameRoute(Route::Node *U,
+                                        Route::Node *V,
+                                        CostEvaluator const &costEvaluator)
 {
 
     auto const *route = U->route();
@@ -65,9 +65,8 @@ void RelocateAlternative::evalWithinRoute(Route::Node *U,
         }
 }
 
-void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
-                                            Route::Node *V,
-                                            CostEvaluator const &costEvaluator)
+void RelocateAlternative::evalDifferentRoutes(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
@@ -75,32 +74,32 @@ void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
     auto const &group = data.group(*uData.group);
     assert(group.mutuallyExclusive);
 
-    Cost fixedCost = 0;
+    Cost removeCost = uData.prize;
     if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
-        fixedCost -= uRoute->fixedVehicleCost();
-
-    if (vRoute->empty())
-        fixedCost += vRoute->fixedVehicleCost();
-
-    auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
-                                           uRoute->after(U->pos() + 1));
+        // This move leaves the route empty, so the cost delta is just the
+        // current route cost.
+        removeCost -= costEvaluator.penalisedCost(*uRoute);
+    else
+        costEvaluator.deltaCost<true>(  // exact evaluation so we get the right
+            removeCost,                 // delta when inserting the alternative
+            Route::Proposal(uRoute->before(U->pos() - 1),
+                            uRoute->after(U->pos() + 1)));
 
     for (auto const client : group)
     {
-        auto *alternative = &solution_->clients[client];
-        if (alternative == U)
+        if (client == U->idx())
             continue;
 
-        auto const &alternativeData = data.client(client);
-        Cost deltaCost = fixedCost + uData.prize - alternativeData.prize;
-        auto const vProposal = Route::Proposal(vRoute->before(V->pos()),
-                                               ClientSegment(data, client),
-                                               vRoute->after(V->pos() + 1));
-        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        auto const &alternative = data.client(client);
+        Cost deltaCost = removeCost - alternative.prize;
+        costEvaluator.deltaCost(deltaCost,
+                                Route::Proposal(vRoute->before(V->pos()),
+                                                ClientSegment(data, client),
+                                                vRoute->after(V->pos() + 1)));
 
         if (deltaCost < 0)
         {
-            move_ = {deltaCost, alternative};
+            move_ = {deltaCost, &solution_->clients[client]};
             return;
         }
     }
@@ -122,9 +121,9 @@ std::pair<pyvrp::Cost, bool> RelocateAlternative::evaluate(
     move_ = {};
 
     if (U->route() == V->route())
-        evalWithinRoute(U, V, costEvaluator);
+        evalSameRoute(U, V, costEvaluator);
     else
-        evalBetweenRoutes(U, V, costEvaluator);
+        evalDifferentRoutes(U, V, costEvaluator);
 
     return std::make_pair(move_.cost, move_.cost < 0);
 }

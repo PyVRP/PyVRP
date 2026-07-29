@@ -23,9 +23,10 @@ RemoveOptionalShipment::evaluate(Route::Node *U,
 
     Cost deltaCost = shipment.prize;
     if (route->numShipments() == 1 && route->numClients() == 0)
-        deltaCost -= route->fixedVehicleCost();
-
-    if (n(pickup) == delivery)
+        // This move leaves the route empty, so the cost delta is just the
+        // current route cost.
+        deltaCost -= costEvaluator.penalisedCost(*route);
+    else if (n(pickup) == delivery)
         costEvaluator.deltaCost(
             deltaCost,
             Route::Proposal(route->before(pickup->pos() - 1),
