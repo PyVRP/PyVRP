@@ -125,6 +125,8 @@ std::pair<Cost, bool> Exchange<N, M>::evalRelocateMove(
                               uRoute->between(U->pos(), U->pos() + N - 1),
                               vRoute->after(V->pos() + 1));
 
+        // Then U's route is empty after this move, so we can subtract the
+        // current route's cost and only evaluate V's proposal.
         if (uRoute->numClients() + 2 * uRoute->numShipments() == N)
         {
             deltaCost -= costEvaluator.penalisedCost(*uRoute);

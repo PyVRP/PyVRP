@@ -1160,7 +1160,7 @@ Route::Proposal<Segments...>::Proposal(Segments &&...segments)
         [](auto &&...args) { return (args.numClients() + ...); }, segments_);
     [[maybe_unused]] auto const numShipments = std::apply(
         [](auto &&...args) { return (args.numPickups() + ...); }, segments_);
-    assert(numClients + numShipments != 0);
+    assert(numClients + numShipments != 0);  // proposal must not be empty
 
     [[maybe_unused]] auto &&first = std::get<0>(segments_);
     [[maybe_unused]] auto &&last = std::get<sizeof...(Segments) - 1>(segments_);

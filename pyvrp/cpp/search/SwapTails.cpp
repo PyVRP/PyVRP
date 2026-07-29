@@ -82,18 +82,17 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
                               vRoute->between(V->pos() + 1, vRoute->size() - 2),
                               uRoute->at(uRoute->size() - 1));
 
-        if (V->isStartDepot())
-        {
+        if (V->isStartDepot())  // this move empties V's route, so we subtract
+        {                       // its cost and only evaluate U's proposal
             deltaCost -= costEvaluator.penalisedCost(*vRoute);
             costEvaluator.deltaCost(deltaCost, uProposal);
         }
         else
-        {
-            auto const vProposal = Route::Proposal(
-                vRoute->before(V->pos()), vRoute->at(vRoute->size() - 1));
-
-            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
-        }
+            costEvaluator.deltaCost(
+                deltaCost,
+                uProposal,
+                Route::Proposal(vRoute->before(V->pos()),
+                                vRoute->at(vRoute->size() - 1)));
     }
 
     return std::make_pair(deltaCost, deltaCost < 0);
