@@ -17,15 +17,22 @@ void RelocateWithDepot::evalDepotBefore(Route::Node *U,
 
     if (uRoute != vRoute)
     {
-        auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
-                                               uRoute->after(U->pos() + 1));
+        Cost removeCost = 0;
+        if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
+            removeCost -= costEvaluator.penalisedCost(*uRoute);
+        else
+        {
+            auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
+                                                   uRoute->after(U->pos() + 1));
+
+            costEvaluator.deltaCost<true>(removeCost, uProposal);
+        }
 
         for (auto const depot : vehType.reloadDepots)
         {
-            Cost deltaCost = 0;
+            Cost deltaCost = removeCost;
             costEvaluator.deltaCost(
                 deltaCost,
-                uProposal,
                 Route::Proposal(vRoute->before(V->pos()),
                                 DepotSegment(data, depot),
                                 uRoute->at(U->pos()),
@@ -74,15 +81,22 @@ void RelocateWithDepot::evalDepotAfter(Route::Node *U,
 
     if (uRoute != vRoute)
     {
-        auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
-                                               uRoute->after(U->pos() + 1));
+        Cost removeCost = 0;
+        if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
+            removeCost -= costEvaluator.penalisedCost(*uRoute);
+        else
+        {
+            auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
+                                                   uRoute->after(U->pos() + 1));
+
+            costEvaluator.deltaCost<true>(removeCost, uProposal);
+        }
 
         for (auto const depot : vehType.reloadDepots)
         {
-            Cost deltaCost = 0;
+            Cost deltaCost = removeCost;
             costEvaluator.deltaCost(
                 deltaCost,
-                uProposal,
                 Route::Proposal(vRoute->before(V->pos()),
                                 uRoute->at(U->pos()),
                                 DepotSegment(data, depot),
