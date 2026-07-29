@@ -1,5 +1,6 @@
 #include "PerturbationManager.h"
 
+#include "ClientSegment.h"
 #include "DeliverySegment.h"
 #include "DynamicBitset.h"
 #include "PickupSegment.h"
@@ -34,7 +35,9 @@ PerturbationParams::PerturbationParams(size_t minPerturbations,
 }
 
 PerturbationManager::PerturbationManager(PerturbationParams params)
-    : params_(params), numPerturbations_(params_.minPerturbations)
+    : params_(params),
+      numPerturbations_(params_.minPerturbations),
+      numRoutes_(1)
 {
 }
 
@@ -47,14 +50,12 @@ void PerturbationManager::shuffle(RandomNumberGenerator &rng)
 {
     auto const range = params_.maxPerturbations - params_.minPerturbations;
     numPerturbations_ = params_.minPerturbations + rng.randint(range + 1);
+    numRoutes_ = 1 + rng.randint(3);  // TODO
 }
 
-std::vector<Route *>
-PerturbationManager::ruinShipments(Solution &solution,
-                                   SearchSpace &searchSpace) const
+PerturbationManager::RuinResult
+PerturbationManager::ruin(Solution &solution, SearchSpace &searchSpace) const
 {
-    auto const numShipments = solution.data_.numShipments();
-
     Route::Node *seed = nullptr;
     for (auto const &activity : searchSpace.activityOrder())
     {
@@ -71,11 +72,10 @@ PerturbationManager::ruinShipments(Solution &solution,
     if (!seed)
         return {};
 
-    assert(seed->isPickup());
-
     std::vector<Route *> routes = {seed->route()};
+    std::vector<Activity> activities;
     std::vector<size_t> positions = {seed->pos()};
-    auto const numRoutes = std::min<size_t>(3, numPerturbations_);
+    auto const numRoutes = std::min(numRoutes_, numPerturbations_);
     for (auto const &activity : searchSpace.neighboursOf(seed->activity()))
     {
         if (routes.size() >= numRoutes)
@@ -97,51 +97,73 @@ PerturbationManager::ruinShipments(Solution &solution,
 
     size_t numAvailable = 0;
     for (auto const *route : routes)
-        numAvailable += route->numShipments();
+        numAvailable += route->numClients() + route->numShipments();
 
     auto const targetRuinSize = std::min(numPerturbations_, numAvailable);
 
-    std::vector<bool> selected(numShipments, false);
-    std::vector<size_t> ruined;
+    auto const numClients = solution.clients.size();
+    DynamicBitset selected(numClients + solution.shipments.size());
     for (size_t idx = 0; idx != routes.size(); ++idx)
     {
         auto *route = routes[idx];
-        auto const numRoutesLeft = routes.size() - idx;
-        auto numToRuin = (targetRuinSize - ruined.size() + numRoutesLeft - 1)
-                         / numRoutesLeft;
-        numToRuin = std::min(numToRuin, route->numShipments());
 
+        // Divide the remaining ruin size over the remaining routes, rounding
+        // up so the full target can still be reached.
+        auto const numRoutesLeft = routes.size() - idx;
+        auto const numRemaining = targetRuinSize - activities.size();
+        auto const targetForRoute
+            = (numRemaining + numRoutesLeft - 1) / numRoutesLeft;
+        auto movesLeft = std::min(targetForRoute,
+                                  route->numClients() + route->numShipments());
+
+        // Walk forward from the selected position, wrapping around the route.
         auto const numNodes = route->size() - 2;
         auto position = positions[idx];
-        for (size_t offset = 0; offset != numNodes && numToRuin != 0; ++offset)
+        for (size_t offset = 0; offset != numNodes && movesLeft != 0; ++offset)
         {
             auto *node = (*route)[position];
-            if (node->isShipment() && !selected[node->idx()])
-            {
-                selected[node->idx()] = true;
-                ruined.push_back(node->idx());
-                --numToRuin;
-            }
-
             position = position == numNodes ? 1 : position + 1;
+
+            if (!node->isClient() && !node->isShipment())
+                continue;
+
+            auto const selectedIdx
+                = node->isClient() ? node->idx() : numClients + node->idx();
+            if (selected[selectedIdx])
+                continue;
+
+            selected[selectedIdx] = true;
+            // Store shipments by pickup, even when a delivery was selected.
+            activities.push_back(
+                node->isClient()
+                    ? node->activity()
+                    : Activity(Activity::ActivityType::PICKUP, node->idx()));
+            movesLeft--;
         }
     }
 
     searchSpace.unmarkAllPromising();
 
-    for (auto const shipment : ruined)
+    // Select all requests before mutating the routes traversed above.
+    for (auto const &activity : activities)
     {
-        auto *pickup = &solution.shipments[shipment].first;
-        auto *delivery = &solution.shipments[shipment].second;
-        auto *route = pickup->route();
-        assert(route && delivery->route() == route);
+        auto *node = solution[activity];
+        assert(node && node->route());
 
-        searchSpace.markPromising(pickup);
+        auto *route = node->route();
+        searchSpace.markPromising(node);
+        if (node->isClient())
+        {
+            route->remove(node->pos());
+            continue;
+        }
+
+        assert(node->isPickup());
+        auto *delivery = node + 1;
+        assert(delivery->route() == route);
         searchSpace.markPromising(delivery);
-
-        // Remove in descending position order.
         route->remove(delivery->pos());
-        route->remove(pickup->pos());
+        route->remove(node->pos());
     }
 
     for (auto *route : routes)
@@ -151,61 +173,123 @@ PerturbationManager::ruinShipments(Solution &solution,
             route->clear();
     }
 
-    return routes;
+    return {std::move(routes), std::move(activities)};
 }
 
-void PerturbationManager::recreateShipments(
-    Solution &solution,
-    SearchSpace &searchSpace,
-    std::vector<Route *> const &routes,
-    CostEvaluator const &costEvaluator) const
+void PerturbationManager::recreate(Solution &solution,
+                                   SearchSpace &searchSpace,
+                                   RuinResult const &result,
+                                   CostEvaluator const &costEvaluator) const
 {
     auto const &data = solution.data_;
+
+    // Shuffle activities in random order.
+    auto const numClients = solution.clients.size();
+    DynamicBitset selected(numClients + solution.shipments.size());
+    for (auto const &activity : result.activities)
+    {
+        auto const selectedIdx = activity.isClient()
+                                     ? activity.idx()
+                                     : numClients + activity.idx();
+        selected[selectedIdx] = true;
+    }
+
+    std::vector<Activity> activities;
+    activities.reserve(result.activities.size());
     for (auto const &activity : searchSpace.activityOrder())
     {
-        if (!activity.isPickup())
+        auto const selectedIdx = activity.isClient()
+                                     ? activity.idx()
+                                     : numClients + activity.idx();
+        if (selected[selectedIdx])
+            activities.push_back(activity);
+    }
+
+    for (auto const &activity : activities)
+    {
+        auto *node = solution[activity];
+        assert(node && !node->route());
+
+        if (node->isClient())
+        {
+            auto const &client = data.client(node->idx());
+            auto const required
+                = client.required
+                  || (client.group && data.group(*client.group).required);
+
+            Cost bestCost = std::numeric_limits<Cost>::max();
+            Route *bestRoute = nullptr;
+            size_t bestPosition = 0;
+            for (auto *route : result.routes)
+            {
+                auto const numPositions = route->size() - 1;
+                auto const fixedVehicleCost
+                    = route->empty() ? route->fixedVehicleCost() : 0;
+                for (size_t position = 0; position != numPositions; ++position)
+                {
+                    Cost deltaCost = fixedVehicleCost - client.prize;
+                    costEvaluator.deltaCost<true>(
+                        deltaCost,
+                        Route::Proposal(route->before(position),
+                                        ClientSegment(data, node->idx()),
+                                        route->after(position + 1)));
+
+                    if (deltaCost < bestCost)
+                    {
+                        bestCost = deltaCost;
+                        bestRoute = route;
+                        bestPosition = position;
+                    }
+                }
+            }
+
+            assert(bestRoute);
+            if (!required && bestCost >= 0)
+                continue;
+
+            bestRoute->insert(bestPosition + 1, node);
+            bestRoute->update();
+            searchSpace.markPromising(node);
             continue;
+        }
 
-        auto const shipment = activity.idx();
-        auto *pickup = &solution.shipments[shipment].first;
-        if (pickup->route())
-            continue;
+        assert(node->isPickup());
+        auto *pickup = node;
+        auto *delivery = pickup + 1;
+        assert(!delivery->route());
 
-        auto *delivery = &solution.shipments[shipment].second;
-
-        auto const prize = data.shipment(shipment).prize;
+        auto const &shipment = data.shipment(pickup->idx());
         Cost bestCost = std::numeric_limits<Cost>::max();
         Route *bestRoute = nullptr;
         size_t bestPickupPos = 0;
         size_t bestDeliveryPos = 0;
-
-        for (auto *route : routes)
+        for (auto *route : result.routes)
         {
             auto const numPositions = route->size() - 1;
             auto const fixedVehicleCost
                 = route->empty() ? route->fixedVehicleCost() : 0;
-
             for (size_t pickupPos = 0; pickupPos != numPositions; ++pickupPos)
                 for (size_t deliveryPos = pickupPos;
                      deliveryPos != numPositions;
                      ++deliveryPos)
                 {
-                    Cost deltaCost = fixedVehicleCost - prize;
+                    Cost deltaCost = fixedVehicleCost - shipment.prize;
                     if (pickupPos == deliveryPos)
                         costEvaluator.deltaCost<true>(
                             deltaCost,
-                            Route::Proposal(route->before(pickupPos),
-                                            PickupSegment(data, shipment),
-                                            DeliverySegment(data, shipment),
-                                            route->after(pickupPos + 1)));
+                            Route::Proposal(
+                                route->before(pickupPos),
+                                PickupSegment(data, pickup->idx()),
+                                DeliverySegment(data, pickup->idx()),
+                                route->after(pickupPos + 1)));
                     else
                         costEvaluator.deltaCost<true>(
                             deltaCost,
                             Route::Proposal(
                                 route->before(pickupPos),
-                                PickupSegment(data, shipment),
+                                PickupSegment(data, pickup->idx()),
                                 route->between(pickupPos + 1, deliveryPos),
-                                DeliverySegment(data, shipment),
+                                DeliverySegment(data, pickup->idx()),
                                 route->after(deliveryPos + 1)));
 
                     if (deltaCost < bestCost)
@@ -218,7 +302,8 @@ void PerturbationManager::recreateShipments(
                 }
         }
 
-        if (!bestRoute)
+        assert(bestRoute);
+        if (!shipment.required && bestCost >= 0)
             continue;
 
         bestRoute->insert(bestDeliveryPos + 1, delivery);
@@ -242,14 +327,11 @@ void PerturbationManager::perturb(Solution &solution,
     if (!movesLeft)  // nothing to do
         return;
 
-    if (solution.clients.empty() && !solution.shipments.empty())
+    auto const result = ruin(solution, searchSpace);
+    if (!result.routes.empty())
     {
-        auto const routes = ruinShipments(solution, searchSpace);
-        if (!routes.empty())
-        {
-            recreateShipments(solution, searchSpace, routes, costEvaluator);
-            return;
-        }
+        recreate(solution, searchSpace, result, costEvaluator);
+        return;
     }
 
     // Clear the set of promising nodes. Perturbation determines the initial
