@@ -7,6 +7,7 @@
 #include "RelocateAlternative.h"
 #include "RelocatePickup.h"
 #include "RelocateShipment.h"
+#include "RelocateTail.h"
 #include "RelocateWithDepot.h"
 #include "RemoveAdjacentDepot.h"
 #include "RemoveOptionalClient.h"
@@ -43,6 +44,7 @@ using pyvrp::search::PerturbationParams;
 using pyvrp::search::RelocateAlternative;
 using pyvrp::search::RelocatePickup;
 using pyvrp::search::RelocateShipment;
+using pyvrp::search::RelocateTail;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::RemoveAdjacentDepot;
 using pyvrp::search::RemoveOptionalClient;
@@ -453,6 +455,24 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"))
         .def("apply", &SwapShipment::apply, py::arg("U"), py::arg("V"))
         .def_static("supports", &SwapShipment::supports, py::arg("data"));
+
+    py::class_<RelocateTail, BinaryOperator>(
+        m, "RelocateTail", DOC(pyvrp, search, RelocateTail))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &RelocateTail::statistics,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &RelocateTail::name)
+        .def("evaluate",
+             &RelocateTail::evaluate,
+             py::arg("U"),
+             py::arg("V"),
+             py::arg("cost_evaluator"))
+        .def("apply", &RelocateTail::apply, py::arg("U"), py::arg("V"))
+        .def("init", &RelocateTail::init, py::arg("solution"))
+        .def_static("supports", &RelocateTail::supports, py::arg("data"));
 
     py::class_<SwapTails, BinaryOperator>(
         m, "SwapTails", DOC(pyvrp, search, SwapTails))

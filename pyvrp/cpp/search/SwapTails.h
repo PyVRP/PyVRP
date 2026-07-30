@@ -32,7 +32,6 @@ public:
 
     static bool supports(ProblemData const &data);
 };
-
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_SWAPTAILS_H
