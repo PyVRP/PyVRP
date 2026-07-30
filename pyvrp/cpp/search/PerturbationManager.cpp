@@ -121,9 +121,6 @@ void PerturbationManager::neighbourPerturb(
     // perturbation.
     for (auto const &uActivity : searchSpace.activityOrder())
     {
-        if (!movesLeft)
-            break;
-
         Route::Node *U = solution[uActivity];
         assert(U);
 
@@ -131,7 +128,7 @@ void PerturbationManager::neighbourPerturb(
         perturb(U, action);
 
         if (!movesLeft)
-            break;
+            return;
 
         for (auto const &vActivity : searchSpace.neighboursOf(uActivity))
         {
@@ -156,7 +153,7 @@ void PerturbationManager::neighbourPerturb(
             perturb(V, action);
 
             if (!movesLeft)
-                break;
+                return;
         }
     }
 }
@@ -220,7 +217,7 @@ void PerturbationManager::routePerturb(Solution &solution,
     for (auto const &uActivity : searchSpace.activityOrder())
     {
         if (!movesLeft)
-            break;
+            return;
 
         auto *U = nodeFor(uActivity);
         assert(U);
@@ -233,7 +230,7 @@ void PerturbationManager::routePerturb(Solution &solution,
             for (auto const &vActivity : searchSpace.neighboursOf(uActivity))
             {
                 if (!movesLeft)
-                    break;
+                    return;
 
                 auto *V = nodeFor(vActivity);
                 if (V)
