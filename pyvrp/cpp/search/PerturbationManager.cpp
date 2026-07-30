@@ -2,7 +2,6 @@
 
 #include "DynamicBitset.h"
 
-#include <algorithm>
 #include <cassert>
 #include <stdexcept>
 #include <vector>
@@ -16,9 +15,9 @@ namespace
 enum class PerturbType
 {
     REMOVE,
-    INSERT,
+    INSERT
 };
-}  // namespace
+}
 
 PerturbationParams::PerturbationParams(size_t minPerturbations,
                                        size_t maxPerturbations)
@@ -46,35 +45,6 @@ void PerturbationManager::shuffle(RandomNumberGenerator &rng)
     routeRemoval_ = rng.randint(2) == 1;
 }
 
-void PerturbationManager::recreateRequiredShipments(
-    Solution &solution,
-    SearchSpace &searchSpace,
-    DynamicBitset const &removedShipments,
-    std::vector<Route *> const &affectedRoutes,
-    CostEvaluator const &costEvaluator) const
-{
-    if (removedShipments.none())
-        return;
-
-    for (auto const &activity : searchSpace.activityOrder())
-    {
-        if (!activity.isPickup() || !removedShipments[activity.idx()])
-            continue;
-
-        auto &[pickup, delivery] = solution.shipments[activity.idx()];
-        if (!solution.insert(&pickup, affectedRoutes, costEvaluator))
-            continue;
-
-        auto *route = pickup.route();
-        assert(route);
-        route->update();
-        assert(delivery.route() == route);
-        assert(pickup.trip() == delivery.trip());
-        searchSpace.markPromising(&pickup);
-        searchSpace.markPromising(&delivery);
-    }
-}
-
 void PerturbationManager::neighbourPerturb(
     Solution &solution,
     SearchSpace &searchSpace,
@@ -83,8 +53,6 @@ void PerturbationManager::neighbourPerturb(
     size_t movesLeft = numPerturbations_;
     DynamicBitset perturbed
         = {solution.clients.size() + solution.shipments.size()};
-    DynamicBitset removedShipments = {solution.shipments.size()};
-    std::vector<Route *> affectedRoutes;
     auto const perturb = [&](Route::Node *node, PerturbType action)
     {
         assert(node->isClient() || node->isPickup());
@@ -101,10 +69,6 @@ void PerturbationManager::neighbourPerturb(
         auto *route = node->route();
         if (route && action == PerturbType::REMOVE)
         {
-            if (std::find(affectedRoutes.begin(), affectedRoutes.end(), route)
-                == affectedRoutes.end())
-                affectedRoutes.push_back(route);
-
             searchSpace.markPromising(node);
             route->remove(node->pos());
 
@@ -115,7 +79,6 @@ void PerturbationManager::neighbourPerturb(
 
                 searchSpace.markPromising(delivery);
                 route->remove(delivery->pos());
-                removedShipments[node->idx()] = true;
             }
 
             route->update();
@@ -196,9 +159,6 @@ void PerturbationManager::neighbourPerturb(
                 break;
         }
     }
-
-    recreateRequiredShipments(
-        solution, searchSpace, removedShipments, affectedRoutes, costEvaluator);
 }
 
 void PerturbationManager::routePerturb(Solution &solution,
@@ -208,8 +168,6 @@ void PerturbationManager::routePerturb(Solution &solution,
     size_t movesLeft = numPerturbations_;
     DynamicBitset perturbed
         = {solution.clients.size() + solution.shipments.size()};
-    DynamicBitset removedShipments = {solution.shipments.size()};
-    std::vector<Route *> affectedRoutes;
 
     auto const nodeFor = [&](Activity const &activity) -> Route::Node *
     {
@@ -312,8 +270,6 @@ void PerturbationManager::routePerturb(Solution &solution,
             selected.push_back(candidate);
         }
 
-        affectedRoutes.push_back(route);
-
         for (auto *candidate : selected)
         {
             searchSpace.markPromising(candidate);
@@ -325,7 +281,6 @@ void PerturbationManager::routePerturb(Solution &solution,
 
                 searchSpace.markPromising(delivery);
                 route->remove(delivery->pos());
-                removedShipments[candidate->idx()] = true;
             }
 
             route->remove(candidate->pos());
@@ -337,9 +292,6 @@ void PerturbationManager::routePerturb(Solution &solution,
         if (route->empty())
             route->clear();
     }
-
-    recreateRequiredShipments(
-        solution, searchSpace, removedShipments, affectedRoutes, costEvaluator);
 }
 
 void PerturbationManager::perturb(Solution &solution,
@@ -354,10 +306,7 @@ void PerturbationManager::perturb(Solution &solution,
     searchSpace.unmarkAllPromising();
 
     if (routeRemoval_)
-    {
         routePerturb(solution, searchSpace, costEvaluator);
-        return;
-    }
-
-    neighbourPerturb(solution, searchSpace, costEvaluator);
+    else
+        neighbourPerturb(solution, searchSpace, costEvaluator);
 }

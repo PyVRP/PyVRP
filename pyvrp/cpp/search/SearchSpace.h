@@ -26,6 +26,7 @@ class SearchSpace
 public:
     using Neighbours = std::unordered_map<Activity, std::vector<Activity>>;
     using Promising = std::unordered_set<Activity>;
+    using PromisingRoutes = std::unordered_set<Route const *>;
 
 private:
     // Neighbourhood restrictions: list of nearby activities for each client
@@ -42,6 +43,7 @@ private:
     // Tracks clients and shipments that can likely be improved by local search
     // operators.
     Promising promising_;
+    PromisingRoutes promisingRoutes_;
     bool allPromising_ = false;
 
 public:
@@ -67,6 +69,11 @@ public:
      * Returns whether the given activity is a promising evaluation candidate.
      */
     bool isPromising(Activity const &activity) const;
+
+    /**
+     * Returns the routes marked as promising.
+     */
+    PromisingRoutes const &promisingRoutes() const;
 
     /**
      * Marks the given activity as promising.

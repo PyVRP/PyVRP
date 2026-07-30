@@ -61,21 +61,15 @@ public:
                 bool required);
 
     // Inserts the given pickup and delivery pair into the solution - either in
-    // its neighbourhood, or in an empty route, if improving or required.
+    // its neighbourhood, a promising route, or an empty route, if improving
+    // or required.
     // Returns true if the shipment was successfully inserted, false otherwise.
-    // Updating the search space an inserted route is left to the calling code.
+    // Updating the search space and inserted route is left to the calling code.
     bool insert(Route::Node *pickup,
                 Route::Node *delivery,
                 SearchSpace const &searchSpace,
                 CostEvaluator const &costEvaluator,
                 bool required);
-
-    // Inserts the shipment of the given pickup in the best position within the
-    // given routes if it is required. Returns true if the shipment was
-    // inserted, false otherwise.
-    bool insert(Route::Node *pickup,
-                std::vector<Route *> const &routes,
-                CostEvaluator const &costEvaluator);
 
     // Maps from an activity to a client or shipment node pointer in this
     // solution. Returns null if the activity is not represented via a

@@ -236,16 +236,10 @@ bool Solution::insert(Route::Node *pickup,
     size_t deliveryPos = 1;
     Cost bestCost = std::numeric_limits<Cost>::max();
 
-    // First we search the shipment's neighbourhood to insert the pickup and
-    // delivery in a route that's already in use.
-    for (auto const &vActivity : searchSpace.neighboursOf(pickup->activity()))
+    auto const evaluate = [&](Route::Node *V)
     {
-        Route::Node *V = this->operator[](vActivity);
-        assert(V);
-
         auto const *route = V->route();
-        if (!route)
-            continue;
+        assert(route);
 
         Cost deltaCost = -shipment.prize;
         costEvaluator.deltaCost<true>(
@@ -280,10 +274,30 @@ bool Solution::insert(Route::Node *pickup,
                 bestCost = deltaCost;
             }
         }
+    };
+
+    // First we search the shipment's neighbourhood to insert the pickup and
+    // delivery in a route that's already in use.
+    for (auto const &vActivity : searchSpace.neighboursOf(pickup->activity()))
+    {
+        Route::Node *V = this->operator[](vActivity);
+        assert(V);
+
+        if (V->route())
+            evaluate(V);
     }
 
-    // Finally, we consider inserting into an empty route. We insert into the
-    // first improving one.
+    // Next we search all positions in promising routes.
+    for (auto &route : routes)
+    {
+        if (!searchSpace.promisingRoutes().contains(&route))
+            continue;
+
+        for (auto *V = route[0]; !V->isEndDepot(); V = n(V))
+            evaluate(V);
+    }
+
+    // Finally, consider the first improving empty route of each vehicle type.
     for (auto const &[vehType, offset] : searchSpace.vehTypeOrder())
     {
         auto const begin = routes.begin() + offset;
@@ -320,75 +334,6 @@ bool Solution::insert(Route::Node *pickup,
     }
 
     return false;
-}
-
-bool Solution::insert(Route::Node *pickup,
-                      std::vector<Route *> const &routes,
-                      CostEvaluator const &costEvaluator)
-{
-    assert(pickup->isPickup());
-    auto *delivery = &shipments[pickup->idx()].second;
-    assert(delivery->isDelivery());
-    assert(pickup->idx() == delivery->idx());
-    assert(!pickup->route() && !delivery->route());
-
-    auto const &shipment = data_.shipment(pickup->idx());
-    if (!shipment.required)
-        return false;
-
-    Cost bestCost = std::numeric_limits<Cost>::max();
-    Route::Node *bestPickupAfter = nullptr;
-    Route::Node *bestDeliveryAfter = nullptr;
-
-    for (auto *route : routes)
-    {
-        for (auto *V = (*route)[0]; !V->isEndDepot(); V = n(V))
-        {
-            Cost deltaCost = -shipment.prize;
-            costEvaluator.deltaCost<true>(
-                deltaCost,  // delivery directly after pickup
-                Route::Proposal(route->before(V->pos()),
-                                PickupSegment(data_, pickup->idx()),
-                                DeliverySegment(data_, pickup->idx()),
-                                route->after(V->pos() + 1)));
-
-            if (deltaCost < bestCost)
-            {
-                bestCost = deltaCost;
-                bestPickupAfter = V;
-                bestDeliveryAfter = V;
-            }
-
-            // Pickup after V, delivery later in the same trip.
-            for (auto *node = n(V); !node->isDepot(); node = n(node))
-            {
-                Cost deltaCost = -shipment.prize;
-                costEvaluator.deltaCost<true>(
-                    deltaCost,
-                    Route::Proposal(route->before(V->pos()),
-                                    PickupSegment(data_, pickup->idx()),
-                                    route->between(V->pos() + 1, node->pos()),
-                                    DeliverySegment(data_, pickup->idx()),
-                                    route->after(node->pos() + 1)));
-
-                if (deltaCost < bestCost)
-                {
-                    bestCost = deltaCost;
-                    bestPickupAfter = V;
-                    bestDeliveryAfter = node;
-                }
-            }
-        }
-    }
-
-    if (!bestPickupAfter)
-        return false;
-
-    auto *route = bestPickupAfter->route();
-    assert(bestDeliveryAfter->route() == route);
-    route->insert(bestDeliveryAfter->pos() + 1, delivery);
-    route->insert(bestPickupAfter->pos() + 1, pickup);
-    return true;
 }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Solution const &sol)

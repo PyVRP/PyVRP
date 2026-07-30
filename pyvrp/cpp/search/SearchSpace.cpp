@@ -78,6 +78,11 @@ bool SearchSpace::isPromising(Activity const &activity) const
     return allPromising_ || promising_.contains(activity);
 }
 
+SearchSpace::PromisingRoutes const &SearchSpace::promisingRoutes() const
+{
+    return promisingRoutes_;
+}
+
 void SearchSpace::markPromising(Activity const &activity)
 {
     promising_.insert(activity);
@@ -86,6 +91,7 @@ void SearchSpace::markPromising(Activity const &activity)
 void SearchSpace::markPromising(Route::Node const *node)
 {
     assert(node->route());
+    promisingRoutes_.insert(node->route());
 
     if (node->isClient() || node->isShipment())
         markPromising(node->activity());
@@ -99,13 +105,14 @@ void SearchSpace::markPromising(Route::Node const *node)
 
 void SearchSpace::markAllPromising()
 {
-    promising_.clear();
+    unmarkAllPromising();
     allPromising_ = true;
 }
 
 void SearchSpace::unmarkAllPromising()
 {
     promising_.clear();
+    promisingRoutes_.clear();
     allPromising_ = false;
 }
 
