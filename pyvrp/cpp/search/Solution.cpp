@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <limits>
 #include <ostream>
 
 using pyvrp::Cost;
@@ -319,6 +320,75 @@ bool Solution::insert(Route::Node *pickup,
     }
 
     return false;
+}
+
+bool Solution::insert(Route::Node *pickup,
+                      std::vector<Route *> const &routes,
+                      CostEvaluator const &costEvaluator)
+{
+    assert(pickup->isPickup());
+    auto *delivery = &shipments[pickup->idx()].second;
+    assert(delivery->isDelivery());
+    assert(pickup->idx() == delivery->idx());
+    assert(!pickup->route() && !delivery->route());
+
+    auto const &shipment = data_.shipment(pickup->idx());
+    if (!shipment.required)
+        return false;
+
+    Cost bestCost = std::numeric_limits<Cost>::max();
+    Route::Node *bestPickupAfter = nullptr;
+    Route::Node *bestDeliveryAfter = nullptr;
+
+    for (auto *route : routes)
+    {
+        for (auto *V = (*route)[0]; !V->isEndDepot(); V = n(V))
+        {
+            Cost deltaCost = -shipment.prize;
+            costEvaluator.deltaCost<true>(
+                deltaCost,  // delivery directly after pickup
+                Route::Proposal(route->before(V->pos()),
+                                PickupSegment(data_, pickup->idx()),
+                                DeliverySegment(data_, pickup->idx()),
+                                route->after(V->pos() + 1)));
+
+            if (deltaCost < bestCost)
+            {
+                bestCost = deltaCost;
+                bestPickupAfter = V;
+                bestDeliveryAfter = V;
+            }
+
+            // Pickup after V, delivery later in the same trip.
+            for (auto *node = n(V); !node->isDepot(); node = n(node))
+            {
+                Cost deltaCost = -shipment.prize;
+                costEvaluator.deltaCost<true>(
+                    deltaCost,
+                    Route::Proposal(route->before(V->pos()),
+                                    PickupSegment(data_, pickup->idx()),
+                                    route->between(V->pos() + 1, node->pos()),
+                                    DeliverySegment(data_, pickup->idx()),
+                                    route->after(node->pos() + 1)));
+
+                if (deltaCost < bestCost)
+                {
+                    bestCost = deltaCost;
+                    bestPickupAfter = V;
+                    bestDeliveryAfter = node;
+                }
+            }
+        }
+    }
+
+    if (!bestPickupAfter)
+        return false;
+
+    auto *route = bestPickupAfter->route();
+    assert(bestDeliveryAfter->route() == route);
+    route->insert(bestDeliveryAfter->pos() + 1, delivery);
+    route->insert(bestPickupAfter->pos() + 1, pickup);
+    return true;
 }
 
 std::ostream &operator<<(std::ostream &out, pyvrp::search::Solution const &sol)

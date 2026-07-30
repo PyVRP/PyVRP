@@ -70,6 +70,13 @@ public:
                 CostEvaluator const &costEvaluator,
                 bool required);
 
+    // Inserts the shipment of the given pickup in the best position within the
+    // given routes if it is required. Returns true if the shipment was
+    // inserted, false otherwise.
+    bool insert(Route::Node *pickup,
+                std::vector<Route *> const &routes,
+                CostEvaluator const &costEvaluator);
+
     // Maps from an activity to a client or shipment node pointer in this
     // solution. Returns null if the activity is not represented via a
     // solution-level node.

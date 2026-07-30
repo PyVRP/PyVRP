@@ -37,9 +37,9 @@ struct PerturbationParams
  * PerturbationManager(params: PerturbationParams)
  *
  * Handles perturbation during the search. In each iteration, it applies
- * :meth:`~num_perturbations` perturbations that strengthen (resp., weaken)
- * randomly selected neighbourhoods by inserting (removing) clients and
- * shipments.
+ * :meth:`~num_perturbations` perturbations that insert unplanned
+ * neighbourhoods or remove planned activities through either neighbourhood
+ * or route removal. Removed required shipments are recreated afterward.
  *
  * Parameters
  * ----------
@@ -50,6 +50,7 @@ class PerturbationManager
 {
     PerturbationParams const params_;  // owned by us
     size_t numPerturbations_;
+    bool routeRemoval_ = false;
 
 public:
     PerturbationManager(PerturbationParams params = PerturbationParams());
@@ -60,7 +61,7 @@ public:
     size_t numPerturbations() const;
 
     /**
-     * Draws and sets a new random number of perturbations to apply.
+     * Draws a new number of perturbations and removal type.
      */
     void shuffle(RandomNumberGenerator &rng);
 
