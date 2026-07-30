@@ -159,23 +159,11 @@ void PerturbationManager::neighbourPerturb(
 }
 
 void PerturbationManager::routePerturb(Solution &solution,
-                                       SearchSpace &searchSpace,
-                                       CostEvaluator const &costEvaluator) const
+                                       SearchSpace &searchSpace) const
 {
     size_t movesLeft = numPerturbations_;
     DynamicBitset perturbed
         = {solution.clients.size() + solution.shipments.size()};
-
-    auto const nodeFor = [&](Activity const &activity) -> Route::Node *
-    {
-        if (activity.isClient())
-            return &solution.clients[activity.idx()];
-
-        if (activity.isShipment())
-            return &solution.shipments[activity.idx()].first;
-
-        return nullptr;
-    };
 
     auto const perturbationIdx = [&](Route::Node const *node)
     {
@@ -184,60 +172,17 @@ void PerturbationManager::routePerturb(Solution &solution,
                                 : solution.clients.size() + node->idx();
     };
 
-    auto const insert = [&](Route::Node *node)
-    {
-        auto const idx = perturbationIdx(node);
-        if (perturbed[idx] || node->route())
-            return;
-
-        if (node->isClient())
-        {
-            solution.insert(node, searchSpace, costEvaluator, true);
-            node->route()->update();
-            searchSpace.markPromising(node);
-        }
-        else
-        {
-            assert(node->isPickup());
-            auto *delivery = node + 1;
-            solution.insert(node, delivery, searchSpace, costEvaluator, true);
-
-            auto *route = node->route();
-            assert(delivery->route() == route);
-
-            route->update();
-            searchSpace.markPromising(node);
-            searchSpace.markPromising(delivery);
-        }
-
-        perturbed[idx] = true;
-        movesLeft--;
-    };
-
     for (auto const &uActivity : searchSpace.activityOrder())
     {
         if (!movesLeft)
             return;
 
-        auto *U = nodeFor(uActivity);
+        auto *U = solution[uActivity];
         assert(U);
 
         auto *route = U->route();
         if (!route)
-        {
-            insert(U);
-
-            for (auto const &vActivity : searchSpace.neighboursOf(uActivity))
-            {
-                if (!movesLeft)
-                    return;
-
-                auto *V = nodeFor(vActivity);
-                if (V)
-                    insert(V);
-            }
             continue;
-        }
 
         if (perturbed[perturbationIdx(U)])
             continue;
@@ -303,7 +248,7 @@ void PerturbationManager::perturb(Solution &solution,
     searchSpace.unmarkAllPromising();
 
     if (routeRemoval_)
-        routePerturb(solution, searchSpace, costEvaluator);
+        routePerturb(solution, searchSpace);
     else
         neighbourPerturb(solution, searchSpace, costEvaluator);
 }

@@ -8,11 +8,6 @@
 
 #include <iosfwd>
 
-namespace pyvrp
-{
-class DynamicBitset;
-}
-
 namespace pyvrp::search
 {
 /**
@@ -61,9 +56,7 @@ class PerturbationManager
                           SearchSpace &searchSpace,
                           CostEvaluator const &costEvaluator) const;
 
-    void routePerturb(Solution &solution,
-                      SearchSpace &searchSpace,
-                      CostEvaluator const &costEvaluator) const;
+    void routePerturb(Solution &solution, SearchSpace &searchSpace) const;
 
 public:
     PerturbationManager(PerturbationParams params = PerturbationParams());

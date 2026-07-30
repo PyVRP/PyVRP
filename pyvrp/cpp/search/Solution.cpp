@@ -297,7 +297,8 @@ bool Solution::insert(Route::Node *pickup,
             evaluate(V);
     }
 
-    // Finally, consider the first improving empty route of each vehicle type.
+    // Finally, we consider inserting into an empty route. We insert into the
+    // first improving one.
     for (auto const &[vehType, offset] : searchSpace.vehTypeOrder())
     {
         auto const begin = routes.begin() + offset;
