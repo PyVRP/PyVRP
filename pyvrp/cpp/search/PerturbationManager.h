@@ -39,7 +39,8 @@ struct PerturbationParams
  * Handles perturbation during the search. In each iteration, it applies
  * :meth:`~num_perturbations` perturbations that insert unplanned
  * neighbourhoods or remove planned activities through either neighbourhood
- * or route removal. Removed required shipments are recreated afterward.
+ * or route removal. Route removal recreates removed required shipments
+ * afterward.
  *
  * Parameters
  * ----------
@@ -51,6 +52,14 @@ class PerturbationManager
     PerturbationParams const params_;  // owned by us
     size_t numPerturbations_;
     bool routeRemoval_ = false;
+
+    void neighbourPerturb(Solution &solution,
+                          SearchSpace &searchSpace,
+                          CostEvaluator const &costEvaluator) const;
+
+    void routePerturb(Solution &solution,
+                      SearchSpace &searchSpace,
+                      CostEvaluator const &costEvaluator) const;
 
 public:
     PerturbationManager(PerturbationParams params = PerturbationParams());
