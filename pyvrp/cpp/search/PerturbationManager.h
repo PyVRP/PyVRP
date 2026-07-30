@@ -7,6 +7,12 @@
 #include "Solution.h"
 
 #include <iosfwd>
+#include <vector>
+
+namespace pyvrp
+{
+class DynamicBitset;
+}
 
 namespace pyvrp::search
 {
@@ -39,8 +45,7 @@ struct PerturbationParams
  * Handles perturbation during the search. In each iteration, it applies
  * :meth:`~num_perturbations` perturbations that insert unplanned
  * neighbourhoods or remove planned activities through either neighbourhood
- * or route removal. Route removal recreates removed required shipments
- * afterward.
+ * or route removal. Removed required shipments are recreated afterward.
  *
  * Parameters
  * ----------
@@ -52,6 +57,12 @@ class PerturbationManager
     PerturbationParams const params_;  // owned by us
     size_t numPerturbations_;
     bool routeRemoval_ = false;
+
+    void recreateRequiredShipments(Solution &solution,
+                                   SearchSpace &searchSpace,
+                                   DynamicBitset const &removedShipments,
+                                   std::vector<Route *> const &affectedRoutes,
+                                   CostEvaluator const &costEvaluator) const;
 
     void neighbourPerturb(Solution &solution,
                           SearchSpace &searchSpace,
