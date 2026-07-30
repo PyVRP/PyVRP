@@ -2,7 +2,6 @@
 
 #include "DynamicBitset.h"
 
-#include <algorithm>
 #include <cassert>
 #include <stdexcept>
 #include <vector>
@@ -189,9 +188,6 @@ void PerturbationManager::routePerturb(Solution &solution,
 
     auto const insert = [&](Route::Node *node)
     {
-        if (!movesLeft)
-            return;
-
         auto const idx = perturbationIdx(node);
         if (perturbed[idx] || node->route())
             return;
@@ -228,7 +224,8 @@ void PerturbationManager::routePerturb(Solution &solution,
         auto *U = nodeFor(uActivity);
         assert(U);
 
-        if (!U->route())
+        auto *route = U->route();
+        if (!route)
         {
             insert(U);
 
@@ -247,13 +244,12 @@ void PerturbationManager::routePerturb(Solution &solution,
         if (perturbed[perturbationIdx(U)])
             continue;
 
-        auto *route = U->route();
         auto const numPositions = route->size() - 2;
         auto const startPos = U->pos();
-        std::vector<Route::Node *> nodes;
+        std::vector<Route::Node *> selected;
 
         for (size_t offset = 0;
-             offset != numPositions && nodes.size() < movesLeft;
+             offset != numPositions && selected.size() < movesLeft;
              ++offset)
         {
             auto const pos = 1 + (startPos - 1 + offset) % numPositions;
@@ -266,25 +262,16 @@ void PerturbationManager::routePerturb(Solution &solution,
                 candidate = &solution.shipments[candidate->idx()].first;
 
             auto const idx = perturbationIdx(candidate);
-            auto const selected
-                = std::find(nodes.begin(), nodes.end(), candidate)
-                  != nodes.end();
-            if (perturbed[idx] || selected)
+            if (perturbed[idx])
                 continue;
 
-            nodes.push_back(candidate);
+            perturbed[idx] = true;
+            selected.push_back(candidate);
         }
 
-        if (nodes.empty())
-            continue;
+        affectedRoutes.push_back(route);
 
-        auto const isAffected
-            = std::find(affectedRoutes.begin(), affectedRoutes.end(), route)
-              != affectedRoutes.end();
-        if (!isAffected)
-            affectedRoutes.push_back(route);
-
-        for (auto *candidate : nodes)
+        for (auto *candidate : selected)
         {
             searchSpace.markPromising(candidate);
 
@@ -299,7 +286,6 @@ void PerturbationManager::routePerturb(Solution &solution,
             }
 
             route->remove(candidate->pos());
-            perturbed[perturbationIdx(candidate)] = true;
             movesLeft--;
         }
 
