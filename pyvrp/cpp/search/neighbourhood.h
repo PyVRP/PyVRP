@@ -25,9 +25,8 @@ namespace pyvrp::search
  *     calculation. A large wait time indicates the clients are far apart
  *     in duration/time.
  * num_neighbours
- *     Number of other clients that are in each client's granular
- *     neighbourhood. This parameter determines the size of the overall
- *     neighbourhood.
+ *     Number of activities in each granular neighbourhood. This parameter
+ *     determines the size of the overall neighbourhood.
  * symmetric_proximity
  *     Whether to calculate a symmetric proximity matrix. This ensures edge
  *     :math:`(i, j)` is given the same weight as :math:`(j, i)`.
