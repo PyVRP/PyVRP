@@ -63,7 +63,7 @@ public:
     // Inserts the given pickup and delivery pair into the solution - either in
     // its neighbourhood, or in an empty route, if improving or required.
     // Returns true if the shipment was successfully inserted, false otherwise.
-    // Updating the search space an inserted route is left to the calling code.
+    // Updating the search space and inserted route is left to the calling code.
     bool insert(Route::Node *pickup,
                 Route::Node *delivery,
                 SearchSpace const &searchSpace,
