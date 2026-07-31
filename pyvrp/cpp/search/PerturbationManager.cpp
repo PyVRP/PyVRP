@@ -175,24 +175,17 @@ void PerturbationManager::routePerturb(Solution &solution,
         if (!route)
             continue;
 
-        auto const numPositions = route->size() - 2;
-        auto const startPos = node->pos();
         std::vector<Route::Node *> selected;
-
-        for (size_t offset = 0;
-             offset != numPositions && selected.size() < movesLeft;
-             ++offset)
+        for (size_t offset = 0; offset != route->size(); ++offset)
         {
-            auto const pos = 1 + (startPos - 1 + offset) % numPositions;
+            auto const pos = (node->pos() + offset) % route->size();
             auto *candidate = (*route)[pos];
-
-            if (candidate->isDepot())
+            if (!candidate->isClient() && !candidate->isShipment())
                 continue;
 
             if (candidate->isDelivery())
                 candidate = candidate - 1;  // pickup
 
-            assert(candidate->isClient() || candidate->isPickup());
             auto const idx = candidate->isClient()
                                  ? candidate->idx()
                                  : solution.clients.size() + candidate->idx();
@@ -202,6 +195,8 @@ void PerturbationManager::routePerturb(Solution &solution,
 
             perturbed[idx] = true;
             selected.push_back(candidate);
+            if (selected.size() == movesLeft)
+                break;
         }
 
         for (auto *candidate : selected)
