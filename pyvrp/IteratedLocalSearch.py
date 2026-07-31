@@ -27,9 +27,9 @@ class IteratedLocalSearchCallbacks:
     search progress.
     """
 
-    def on_start(self, initial: Solution):
+    def on_start(self, ils: IteratedLocalSearch):
         """
-        Called at search start with the initial solution.
+        Called at search start with the initialised ILS object.
         """
         pass
 
@@ -137,6 +137,34 @@ class IteratedLocalSearch:
         self._init = initial_solution
         self._params = params
 
+    @property
+    def penalty_manager(self) -> PenaltyManager:
+        """
+        Returns the penalty manager.
+        """
+        return self._pm
+
+    @property
+    def search(self) -> SearchMethod:
+        """
+        Returns the search method.
+        """
+        return self._search
+
+    @property
+    def initial_solution(self) -> Solution:
+        """
+        Returns the initial solution.
+        """
+        return self._init
+
+    @property
+    def params(self) -> IteratedLocalSearchParams:
+        """
+        Returns the algorithm's parameter configuration.
+        """
+        return self._params
+
     def run(
         self,
         stop: StoppingCriterion,
@@ -189,7 +217,7 @@ class IteratedLocalSearch:
         iters = iters_no_improvement = 0
         best = curr = self._init
 
-        callbacks.on_start(self._init)
+        callbacks.on_start(self)
 
         cost_eval = self._pm.cost_evaluator()
         while not stop(cost_eval.cost(best)):
