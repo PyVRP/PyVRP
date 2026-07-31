@@ -27,9 +27,10 @@ class IteratedLocalSearchCallbacks:
     search progress.
     """
 
-    def on_start(self, initial: Solution):
+    def on_start(self, ils: IteratedLocalSearch, initial: Solution):
         """
-        Called at search start with the initial solution.
+        Called at search start with the initialised ILS, and the initial
+        solution.
         """
         pass
 
@@ -189,7 +190,7 @@ class IteratedLocalSearch:
         iters = iters_no_improvement = 0
         best = curr = self._init
 
-        callbacks.on_start(self._init)
+        callbacks.on_start(self, self._init)
 
         cost_eval = self._pm.cost_evaluator()
         while not stop(cost_eval.cost(best)):

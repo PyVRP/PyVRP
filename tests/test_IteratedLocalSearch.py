@@ -272,7 +272,7 @@ def test_callback_on_start_and_end(ok_small):
             self.init: Solution | None = None
             self.res: Result | None = None
 
-        def on_start(self, initial):
+        def on_start(self, ils, initial):
             self.start_cnt += 1
             self.init = initial
 
