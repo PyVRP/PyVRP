@@ -165,30 +165,18 @@ void PerturbationManager::routePerturb(Solution &solution,
     DynamicBitset perturbed
         = {solution.clients.size() + solution.shipments.size()};
 
-    auto const perturbationIdx = [&](Route::Node const *node)
-    {
-        assert(node->isClient() || node->isPickup());
-        return node->isClient() ? node->idx()
-                                : solution.clients.size() + node->idx();
-    };
-
     for (auto const &uActivity : searchSpace.activityOrder())
     {
         if (!movesLeft)
             return;
 
-        auto *U = solution[uActivity];
-        assert(U);
-
-        auto *route = U->route();
+        auto *node = solution[uActivity];
+        auto *route = node->route();
         if (!route)
             continue;
 
-        if (perturbed[perturbationIdx(U)])
-            continue;
-
         auto const numPositions = route->size() - 2;
-        auto const startPos = U->pos();
+        auto const startPos = node->pos();
         std::vector<Route::Node *> selected;
 
         for (size_t offset = 0;
@@ -204,7 +192,11 @@ void PerturbationManager::routePerturb(Solution &solution,
             if (candidate->isDelivery())
                 candidate = &solution.shipments[candidate->idx()].first;
 
-            auto const idx = perturbationIdx(candidate);
+            assert(candidate->isClient() || candidate->isPickup());
+            auto const idx = candidate->isClient()
+                                 ? candidate->idx()
+                                 : solution.clients.size() + candidate->idx();
+
             if (perturbed[idx])
                 continue;
 
@@ -226,9 +218,9 @@ void PerturbationManager::routePerturb(Solution &solution,
             }
 
             route->remove(candidate->pos());
-            movesLeft--;
         }
 
+        movesLeft -= selected.size();
         route->update();
 
         if (route->empty())

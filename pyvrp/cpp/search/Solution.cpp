@@ -235,6 +235,7 @@ bool Solution::insert(Route::Node *pickup,
     Route::Node *pickupAfter = routes[0][0];  // fallback option
     size_t deliveryPos = 1;
     Cost bestCost = std::numeric_limits<Cost>::max();
+    auto const &promisingRoutes = searchSpace.promisingRoutes();
 
     auto const evaluate = [&](Route::Node *V)
     {
@@ -276,21 +277,21 @@ bool Solution::insert(Route::Node *pickup,
         }
     };
 
-    // First we search the shipment's neighbourhood to insert the pickup and
-    // delivery in a route that's already in use.
+    // First we search the shipment's neighbourhood in routes that are not
+    // searched exhaustively below.
     for (auto const &vActivity : searchSpace.neighboursOf(pickup->activity()))
     {
         Route::Node *V = this->operator[](vActivity);
         assert(V);
 
-        if (V->route())
+        if (V->route() && !promisingRoutes.contains(V->route()))
             evaluate(V);
     }
 
     // Next we search all positions in promising routes.
     for (auto &route : routes)
     {
-        if (!searchSpace.promisingRoutes().contains(&route))
+        if (!promisingRoutes.contains(&route))
             continue;
 
         for (auto *V = route[0]; !V->isEndDepot(); V = n(V))
