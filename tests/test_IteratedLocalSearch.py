@@ -269,12 +269,12 @@ def test_callback_on_start_and_end(ok_small):
             self.start_cnt = 0
             self.end_cnt = 0
 
-            self.init: Solution | None = None
+            self.ils: IteratedLocalSearch | None = None
             self.res: Result | None = None
 
-        def on_start(self, ils, initial):
+        def on_start(self, ils):
             self.start_cnt += 1
-            self.init = initial
+            self.ils = ils
 
         def on_end(self, result):
             self.end_cnt += 1
@@ -296,8 +296,8 @@ def test_callback_on_start_and_end(ok_small):
     res = ils.run(stop=MaxIterations(10))
     assert_equal(callbacks.start_cnt, 1)
     assert_equal(callbacks.end_cnt, 1)
-    assert_equal(callbacks.init, init)
-    assert_equal(callbacks.res, res)
+    assert_(callbacks.ils is ils)
+    assert_(callbacks.res is res)
 
 
 @pytest.mark.parametrize("max_iterations", (1, 10, 100))
@@ -379,3 +379,22 @@ def test_callback_on_best(ok_small):
     # search. The callback is called once with the improved solution.
     ils.run(MaxIterations(2))
     assert_equal(callbacks.best_cnt, 1)
+
+
+def test_properties(ok_small):
+    """
+    Tests accessing ILS properties.
+    """
+    pm = PenaltyManager(initial_penalties=([20], 6, 6))
+    init_sol = Solution(ok_small, [[0, 3], [1, 2]])
+    params = IteratedLocalSearchParams()
+
+    def search(sol, *args, **kwargs):
+        return sol
+
+    # Properties should reference the arguments.
+    ils = IteratedLocalSearch(ok_small, pm, search, init_sol, params)
+    assert_(ils.penalty_manager is pm)
+    assert_(ils.search is search)
+    assert_(ils.initial_solution is init_sol)
+    assert_(ils.params is params)
