@@ -190,7 +190,7 @@ void PerturbationManager::routePerturb(Solution &solution,
                 continue;
 
             if (candidate->isDelivery())
-                candidate = &solution.shipments[candidate->idx()].first;
+                candidate = candidate - 1;  // pickup
 
             assert(candidate->isClient() || candidate->isPickup());
             auto const idx = candidate->isClient()
