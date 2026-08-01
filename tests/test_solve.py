@@ -40,7 +40,7 @@ def test_solve_params_from_file():
     penalty = PenaltyParams(100, 1.25, 0.85, 0.43)
     neighbourhood = NeighbourhoodParams(0, 20, True)
     operators = [Exchange10, SwapTails]
-    perturbation = PerturbationParams(1, 10)
+    perturbation = PerturbationParams(1, 10, 1, False)
 
     assert_equal(params.ils, ils)
     assert_equal(params.penalty, penalty)

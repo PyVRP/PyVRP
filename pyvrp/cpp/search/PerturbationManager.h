@@ -11,7 +11,12 @@
 namespace pyvrp::search
 {
 /**
- * PerturbationParams(min_perturbations: int = 1, max_perturbations: int = 25)
+ * PerturbationParams(
+ *     min_perturbations: int = 1,
+ *     max_perturbations: int = 25,
+ *     max_routes: int = 3,
+ *     neighbouring_routes: bool = True,
+ * )
  *
  * Perturbation parameters.
  *
@@ -21,14 +26,31 @@ namespace pyvrp::search
  *     Minimum number of perturbations to apply. Must not be negative.
  * max_perturbations
  *     Maximum number of perturbations to apply.
+ * max_routes
+ *     Maximum number of routes involved in route perturbation. The actual
+ *     number is sampled uniformly from one through this value.
+ * neighbouring_routes
+ *     Whether additional routes are selected from the seed activity's
+ *     neighbourhood. If not, routes are selected from the random activity
+ *     order.
+ *
+ * Raises
+ * ------
+ * ValueError
+ *     When ``min_perturbations`` exceeds ``max_perturbations``, or
+ *     ``max_routes`` is zero.
  */
 struct PerturbationParams
 {
     size_t const minPerturbations;
     size_t const maxPerturbations;
+    size_t const maxRoutes;
+    bool const neighbouringRoutes;
 
     PerturbationParams(size_t minPerturbations = 1,
-                       size_t maxPerturbations = 25);
+                       size_t maxPerturbations = 25,
+                       size_t maxRoutes = 3,
+                       bool neighbouringRoutes = true);
 
     bool operator==(PerturbationParams const &other) const = default;
 };
@@ -36,10 +58,10 @@ struct PerturbationParams
 /**
  * PerturbationManager(params: PerturbationParams)
  *
- * Handles perturbation during the search. In each iteration, it applies
- * :meth:`~num_perturbations` perturbations that strengthen (resp., weaken)
- * randomly selected neighbourhoods by inserting (removing) clients and
- * shipments.
+ * Handles perturbation during the search. Neighbour perturbation inserts or
+ * removes related clients and shipments. Route perturbation removes part of
+ * one or more routes when its seed is planned. When its seed is unplanned, it
+ * inserts the seed and related activities into the same route.
  *
  * Parameters
  * ----------
@@ -50,6 +72,16 @@ class PerturbationManager
 {
     PerturbationParams const params_;  // owned by us
     size_t numPerturbations_;
+    size_t numRoutes_ = 1;
+    bool useRoutePerturb_ = false;
+
+    void neighbourPerturb(Solution &solution,
+                          SearchSpace &searchSpace,
+                          CostEvaluator const &costEvaluator) const;
+
+    void routePerturb(Solution &solution,
+                      SearchSpace &searchSpace,
+                      CostEvaluator const &costEvaluator) const;
 
 public:
     PerturbationManager(PerturbationParams params = PerturbationParams());
@@ -60,7 +92,7 @@ public:
     size_t numPerturbations() const;
 
     /**
-     * Draws and sets a new random number of perturbations to apply.
+     * Draws new perturbation settings.
      */
     void shuffle(RandomNumberGenerator &rng);
 
