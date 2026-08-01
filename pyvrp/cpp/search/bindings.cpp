@@ -535,18 +535,15 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<PerturbationParams>(
         m, "PerturbationParams", DOC(pyvrp, search, PerturbationParams))
-        .def(py::init<size_t, size_t, size_t, bool>(),
+        .def(py::init<size_t, size_t, size_t>(),
              py::arg("min_perturbations") = 1,
              py::arg("max_perturbations") = 25,
-             py::arg("max_routes") = 3,
-             py::arg("neighbouring_routes") = true)
+             py::arg("max_routes") = 3)
         .def_readonly("min_perturbations",
                       &PerturbationParams::minPerturbations)
         .def_readonly("max_perturbations",
                       &PerturbationParams::maxPerturbations)
         .def_readonly("max_routes", &PerturbationParams::maxRoutes)
-        .def_readonly("neighbouring_routes",
-                      &PerturbationParams::neighbouringRoutes)
         .def(py::self == py::self, py::arg("other"));  // this is __eq__
 
     py::class_<PerturbationManager>(

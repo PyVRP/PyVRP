@@ -15,7 +15,6 @@ namespace pyvrp::search
  *     min_perturbations: int = 1,
  *     max_perturbations: int = 25,
  *     max_routes: int = 3,
- *     neighbouring_routes: bool = True,
  * )
  *
  * Perturbation parameters.
@@ -27,12 +26,8 @@ namespace pyvrp::search
  * max_perturbations
  *     Maximum number of perturbations to apply.
  * max_routes
- *     Maximum number of routes involved in route perturbation. The actual
- *     number is sampled uniformly from one through this value.
- * neighbouring_routes
- *     Whether additional routes are selected from the seed activity's
- *     neighbourhood. If not, routes are selected from the random activity
- *     order.
+ *     Maximum number of related seed regions in route perturbation. The
+ *     current limit is sampled from one through this value.
  *
  * Raises
  * ------
@@ -45,12 +40,10 @@ struct PerturbationParams
     size_t const minPerturbations;
     size_t const maxPerturbations;
     size_t const maxRoutes;
-    bool const neighbouringRoutes;
 
     PerturbationParams(size_t minPerturbations = 1,
                        size_t maxPerturbations = 25,
-                       size_t maxRoutes = 3,
-                       bool neighbouringRoutes = true);
+                       size_t maxRoutes = 3);
 
     bool operator==(PerturbationParams const &other) const = default;
 };
@@ -59,9 +52,10 @@ struct PerturbationParams
  * PerturbationManager(params: PerturbationParams)
  *
  * Handles perturbation during the search. Neighbour perturbation inserts or
- * removes related clients and shipments. Route perturbation removes part of
- * one or more routes when its seed is planned. When its seed is unplanned, it
- * inserts the seed and related activities into the same route.
+ * removes related clients and shipments. Route perturbation selects one or
+ * more related seeds. For each planned seed, it removes part of the seed's
+ * route. For each unplanned seed, it inserts the seed and related activities
+ * into the same route.
  *
  * Parameters
  * ----------
@@ -72,7 +66,7 @@ class PerturbationManager
 {
     PerturbationParams const params_;  // owned by us
     size_t numPerturbations_;
-    size_t numRoutes_ = 1;
+    size_t maxRoutes_ = 1;
     bool useRoutePerturb_ = false;
 
     void neighbourPerturb(Solution &solution,

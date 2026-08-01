@@ -98,13 +98,11 @@ class PerturbationParams:
     min_perturbations: int
     max_perturbations: int
     max_routes: int
-    neighbouring_routes: bool
     def __init__(
         self,
         min_perturbations: int = 1,
         max_perturbations: int = 25,
         max_routes: int = 3,
-        neighbouring_routes: bool = True,
     ) -> None: ...
     def __eq__(self, other: object) -> bool: ...
 

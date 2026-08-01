@@ -21,7 +21,6 @@ symmetric_proximity = true
 min_perturbations = 1
 max_perturbations = 10
 max_routes = 1
-neighbouring_routes = false
 
 
 [penalty]
