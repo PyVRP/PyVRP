@@ -76,7 +76,7 @@ Matrix<double> computeProximity(ProblemData const &data,
                    + params.weightWaitTime * std::max(minWait, 0.0);
         };
 
-        // Symmetrise each pair before combining shipment endpoints below.
+        // Symmetrise the cost, if required.
         auto const cost = [&](auto const &from, auto const &to)
         {
             auto value = directedCost(from, to);
