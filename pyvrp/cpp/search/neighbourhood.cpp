@@ -50,7 +50,7 @@ Matrix<double> computeProximity(ProblemData const &data,
         auto const &dists = data.distanceMatrix(vehType.profile);
         auto const &durs = data.durationMatrix(vehType.profile);
 
-        auto const cost = [&](auto const &from, auto const &to)
+        auto const directedCost = [&](auto const &from, auto const &to)
         {
             auto const frmServ = static_cast<double>(from.serviceDuration);
             auto const frmEarly = static_cast<double>(from.twEarly);
@@ -77,22 +77,20 @@ Matrix<double> computeProximity(ProblemData const &data,
         };
 
         // Symmetrise each pair before combining shipment endpoints below.
-        auto const proximity = [&](auto const &from, auto const &to)
+        auto const cost = [&](auto const &from, auto const &to)
         {
-            auto value = cost(from, to);
+            auto value = directedCost(from, to);
             if (params.symmetricProximity)
-                value = std::min(value, cost(to, from));
+                value = std::min(value, directedCost(to, from));
 
             return value;
         };
 
-        // A shipment is close to an activity when either endpoint is close.
-        // Its neighbourhood can therefore contain activities near the pickup
-        // or the delivery.
-        auto const shipmentProximity = [&](auto const &shipment, auto const &to)
-        {
-            return std::min(proximity(shipment.pickup, to),
-                            proximity(shipment.delivery, to));
+        // A shipment's pickup neighbourhood considers proximity cost from both
+        // pickup and delivery endpoints.
+        auto const shipmentCost = [&](auto const &shipment, auto const &to) {
+            return std::min(cost(shipment.pickup, to),
+                            cost(shipment.delivery, to));
         };
 
         // From clients.
@@ -105,8 +103,7 @@ Matrix<double> computeProximity(ProblemData const &data,
             {
                 auto const idx = client;
                 auto const &to = data.client(client);
-                prox(frm, idx)
-                    = std::min(proximity(frmData, to), prox(frm, idx));
+                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
             }
 
             // To shipment pickups.
@@ -114,8 +111,7 @@ Matrix<double> computeProximity(ProblemData const &data,
             {
                 auto const idx = data.numClients() + pick;
                 auto const &to = data.shipment(pick).pickup;
-                prox(frm, idx)
-                    = std::min(proximity(frmData, to), prox(frm, idx));
+                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
             }
 
             // To shipment deliveries.
@@ -123,12 +119,11 @@ Matrix<double> computeProximity(ProblemData const &data,
             {
                 auto const idx = data.numClients() + data.numShipments() + del;
                 auto const &to = data.shipment(del).delivery;
-                prox(frm, idx)
-                    = std::min(proximity(frmData, to), prox(frm, idx));
+                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
             }
         }
 
-        // From shipments.
+        // From shipment pickups.
         for (size_t frm = data.numClients(); frm != prox.numRows(); ++frm)
         {
             auto const &shipment = data.shipment(frm - data.numClients());
@@ -139,7 +134,7 @@ Matrix<double> computeProximity(ProblemData const &data,
                 auto const idx = client;
                 auto const &to = data.client(client);
                 prox(frm, idx)
-                    = std::min(shipmentProximity(shipment, to), prox(frm, idx));
+                    = std::min(shipmentCost(shipment, to), prox(frm, idx));
             }
 
             // To shipment pickups.
@@ -148,7 +143,7 @@ Matrix<double> computeProximity(ProblemData const &data,
                 auto const idx = data.numClients() + pick;
                 auto const &to = data.shipment(pick).pickup;
                 prox(frm, idx)
-                    = std::min(shipmentProximity(shipment, to), prox(frm, idx));
+                    = std::min(shipmentCost(shipment, to), prox(frm, idx));
             }
 
             // To shipment deliveries.
@@ -157,7 +152,7 @@ Matrix<double> computeProximity(ProblemData const &data,
                 auto const idx = data.numClients() + data.numShipments() + del;
                 auto const &to = data.shipment(del).delivery;
                 prox(frm, idx)
-                    = std::min(shipmentProximity(shipment, to), prox(frm, idx));
+                    = std::min(shipmentCost(shipment, to), prox(frm, idx));
             }
         }
     }

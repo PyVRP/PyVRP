@@ -245,16 +245,14 @@ bool Solution::insert(Route::Node *pickup,
         Route::Node *neighbour = this->operator[](vActivity);
         assert(neighbour);
 
-        if (!neighbour->route())
+        auto const *route = neighbour->route();
+        if (!route)
             continue;
 
-        for (auto *V : {neighbour, p(neighbour)})
+        for (auto *V : {neighbour, p(neighbour)})  // after or before neighbour
         {
             if (!evaluated.insert(V).second)
                 continue;
-
-            auto const *route = V->route();
-            assert(route);
 
             Cost deltaCost = -shipment.prize;
             costEvaluator.deltaCost<true>(
