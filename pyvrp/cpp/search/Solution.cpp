@@ -8,7 +8,6 @@
 #include <cassert>
 #include <limits>
 #include <ostream>
-#include <unordered_set>
 
 using pyvrp::Cost;
 using pyvrp::Distance;

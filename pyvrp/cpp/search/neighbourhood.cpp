@@ -118,7 +118,7 @@ Matrix<double> computeProximity(ProblemData const &data,
         }
 
         // From shipment pickups. Their neighbourhood considers proximity cost
-        // from both pickup and delivery endpoints to other activities.
+        // from both pickup and delivery steps to other activities.
         for (size_t frm = data.numClients(); frm != prox.numRows(); ++frm)
         {
             auto const &shipment = data.shipment(frm - data.numClients());

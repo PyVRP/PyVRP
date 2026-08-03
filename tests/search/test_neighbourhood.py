@@ -238,7 +238,7 @@ def test_shipments_exclude_either_activity_in_neighbourhood(small_shipments):
         assert_(pickup not in neighbourhood)  # cannot be in own neighbourhood
         assert_(delivery not in neighbourhood)  # nor can delivery
 
-        # The neighbourhood contains pickup and delivery activities for each 
+        # The neighbourhood contains pickup and delivery activities for each
         # shipment, but excludes its own.
         assert_equal(len(neighbourhood), 2 * small_shipments.num_shipments - 2)
 
@@ -249,8 +249,8 @@ def test_shipment_proximity_uses_pickup_and_delivery():
     """
     distances = np.full((5, 5), 100, dtype=int)
     np.fill_diagonal(distances, 0)
-    distances[3, 1] = distances[1, 3] = 10 # pickup closest to C0
-    distances[4, 2] = distances[2, 4] = 1 # delivery closest to C1
+    distances[3, 1] = distances[1, 3] = 10  # pickup closest to C0
+    distances[4, 2] = distances[2, 4] = 1  # delivery closest to C1
 
     data = ProblemData(
         locations=[Location(idx, 0) for idx in range(5)],

@@ -225,8 +225,7 @@ def test_insert_shipment_at_neighbour_predecessor(small_shipments):
     assert_(sol.insert(pickup, delivery, search_space, cost_eval, True))
     route.update()
 
-    # Inserting after the start depot adds 3_125 distance, compared to 9_571
-    # for opening the empty second route. Considering only positions after L1
-    # would instead produce L1 L0 U1 U0.
+    # Inserting after the start depot adds 3_125 distance. Considering only
+    # positions after L1 would instead produce L1 L0 U1 U0, adding 6_637.
     assert_equal(route.distance(), 30_857)
     assert_equal(str(route), "L0 U0 L1 U1")
