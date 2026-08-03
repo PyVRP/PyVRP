@@ -28,7 +28,13 @@ The following figure explains this graphically.
 Shipments
 ^^^^^^^^^
 
-TODO
+Shipments modelled using :class:`~pyvrp._pyvrp.Shipment` objects support time windows and service durations at both the pickup and delivery location.
+The model follows that of clients: the time windows indicate when service may *begin*, but vehicles are allowed to arrive earlier.
+The following figure explains the available time window and service duration attributes graphically.
+
+.. figure:: ../assets/images/duration-shipment.svg
+   :alt: Duration attributes of ``Shipment`` objects.
+   :figwidth: 100%
 
 Depots
 ^^^^^^
