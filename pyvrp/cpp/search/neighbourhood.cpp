@@ -50,7 +50,7 @@ Matrix<double> computeProximity(ProblemData const &data,
         auto const &dists = data.distanceMatrix(vehType.profile);
         auto const &durs = data.durationMatrix(vehType.profile);
 
-        auto const cost = [&](auto const &from, auto const &to)
+        auto const arcCost = [&](auto const &from, auto const &to)
         {
             auto const frmServ = static_cast<double>(from.serviceDuration);
             auto const frmEarly = static_cast<double>(from.twEarly);
@@ -74,6 +74,17 @@ Matrix<double> computeProximity(ProblemData const &data,
             return static_cast<double>(vehType.unitDistanceCost) * distance
                    + static_cast<double>(vehType.unitDurationCost) * duration
                    + params.weightWaitTime * std::max(minWait, 0.0);
+        };
+
+        // Proximity between two activities. If proximity is symmetric, we
+        // evaluate the arc in both directions, and take the best of the two.
+        auto const cost = [&](auto const &from, auto const &to)
+        {
+            auto value = arcCost(from, to);
+            if (params.symmetricProximity)
+                value = std::min(value, arcCost(to, from));
+
+            return value;
         };
 
         // From clients.
@@ -106,17 +117,20 @@ Matrix<double> computeProximity(ProblemData const &data,
             }
         }
 
-        // From shipment pickups.
+        // From shipment pickups. Their neighbourhood considers proximity cost
+        // from both pickup and delivery steps to other activities.
         for (size_t frm = data.numClients(); frm != prox.numRows(); ++frm)
         {
-            auto const &frmData = data.shipment(frm - data.numClients()).pickup;
+            auto const &shipment = data.shipment(frm - data.numClients());
 
             // To clients.
             for (size_t client = 0; client != data.numClients(); ++client)
             {
                 auto const idx = client;
                 auto const &to = data.client(client);
-                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
+                prox(frm, idx) = std::min({cost(shipment.pickup, to),
+                                           cost(shipment.delivery, to),
+                                           prox(frm, idx)});
             }
 
             // To shipment pickups.
@@ -124,7 +138,9 @@ Matrix<double> computeProximity(ProblemData const &data,
             {
                 auto const idx = data.numClients() + pick;
                 auto const &to = data.shipment(pick).pickup;
-                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
+                prox(frm, idx) = std::min({cost(shipment.pickup, to),
+                                           cost(shipment.delivery, to),
+                                           prox(frm, idx)});
             }
 
             // To shipment deliveries.
@@ -132,7 +148,9 @@ Matrix<double> computeProximity(ProblemData const &data,
             {
                 auto const idx = data.numClients() + data.numShipments() + del;
                 auto const &to = data.shipment(del).delivery;
-                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
+                prox(frm, idx) = std::min({cost(shipment.pickup, to),
+                                           cost(shipment.delivery, to),
+                                           prox(frm, idx)});
             }
         }
     }
@@ -157,12 +175,6 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
                                  NeighbourhoodParams const &params)
 {
     auto prox = computeProximity(data, params);
-
-    if (params.symmetricProximity)  // then we symmetrise the proximity matrix
-        for (size_t frm = 0; frm != prox.numRows(); ++frm)
-            for (size_t to = frm; to != prox.numRows(); ++to)
-                prox(frm, to) = prox(to, frm)
-                    = std::min(prox(frm, to), prox(to, frm));
 
     for (auto const &group : data.groups())
         for (auto const frmClient : group)

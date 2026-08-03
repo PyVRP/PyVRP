@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <limits>
 #include <ostream>
 
 using pyvrp::Cost;
@@ -239,44 +240,47 @@ bool Solution::insert(Route::Node *pickup,
     // delivery in a route that's already in use.
     for (auto const &vActivity : searchSpace.neighboursOf(pickup->activity()))
     {
-        Route::Node *V = this->operator[](vActivity);
-        assert(V);
+        Route::Node *neighbour = this->operator[](vActivity);
+        assert(neighbour);
 
-        auto const *route = V->route();
+        auto const *route = neighbour->route();
         if (!route)
             continue;
 
-        Cost deltaCost = -shipment.prize;
-        costEvaluator.deltaCost<true>(
-            deltaCost,  // delivery directly after pickup
-            Route::Proposal(route->before(V->pos()),
-                            PickupSegment(data_, pickup->idx()),
-                            DeliverySegment(data_, delivery->idx()),
-                            route->after(V->pos() + 1)));
-
-        if (deltaCost < bestCost)
-        {
-            pickupAfter = V;
-            deliveryPos = V->pos() + 1;
-            bestCost = deltaCost;
-        }
-
-        for (auto const *node = n(V); !node->isDepot(); node = n(node))
+        for (auto *V : {p(neighbour), neighbour})  // before or after neighbour
         {
             Cost deltaCost = -shipment.prize;
             costEvaluator.deltaCost<true>(
-                deltaCost,
+                deltaCost,  // delivery directly after pickup
                 Route::Proposal(route->before(V->pos()),
                                 PickupSegment(data_, pickup->idx()),
-                                route->between(V->pos() + 1, node->pos()),
                                 DeliverySegment(data_, delivery->idx()),
-                                route->after(node->pos() + 1)));
+                                route->after(V->pos() + 1)));
 
             if (deltaCost < bestCost)
             {
                 pickupAfter = V;
-                deliveryPos = node->pos() + 1;
+                deliveryPos = V->pos() + 1;
                 bestCost = deltaCost;
+            }
+
+            for (auto const *node = n(V); !node->isDepot(); node = n(node))
+            {
+                Cost deltaCost = -shipment.prize;
+                costEvaluator.deltaCost<true>(
+                    deltaCost,
+                    Route::Proposal(route->before(V->pos()),
+                                    PickupSegment(data_, pickup->idx()),
+                                    route->between(V->pos() + 1, node->pos()),
+                                    DeliverySegment(data_, delivery->idx()),
+                                    route->after(node->pos() + 1)));
+
+                if (deltaCost < bestCost)
+                {
+                    pickupAfter = V;
+                    deliveryPos = node->pos() + 1;
+                    bestCost = deltaCost;
+                }
             }
         }
     }
