@@ -160,6 +160,7 @@ MACOSX_DEPLOYMENT_TARGET = "13.3"
 include = [
     { path = "benchmarks/", format = "sdist" },
     { path = "docs/source", format = "sdist" },
+    { path = "notebooks/", format = "sdist" },
     { path = "tests/", format = "sdist" },
 
     { path = "pyvrp/cpp", format = "sdist"},

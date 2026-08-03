@@ -52,6 +52,7 @@ Contents
    notebooks/optional_clients
    notebooks/mutually_exclusive_groups
    notebooks/reloading
+   notebooks/shipments
 
 .. toctree::
    :maxdepth: 1
