@@ -236,7 +236,6 @@ bool Solution::insert(Route::Node *pickup,
     Route::Node *pickupAfter = routes[0][0];  // fallback option
     size_t deliveryPos = 1;
     Cost bestCost = std::numeric_limits<Cost>::max();
-    std::unordered_set<Route::Node *> evaluated;
 
     // First we search the shipment's neighbourhood to insert the pickup and
     // delivery in a route that's already in use.
@@ -249,11 +248,8 @@ bool Solution::insert(Route::Node *pickup,
         if (!route)
             continue;
 
-        for (auto *V : {neighbour, p(neighbour)})  // after or before neighbour
+        for (auto *V : {p(neighbour), neighbour})  // before or after neighbour
         {
-            if (!evaluated.insert(V).second)
-                continue;
-
             Cost deltaCost = -shipment.prize;
             costEvaluator.deltaCost<true>(
                 deltaCost,  // delivery directly after pickup
