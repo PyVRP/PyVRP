@@ -50,7 +50,7 @@ Matrix<double> computeProximity(ProblemData const &data,
         auto const &dists = data.distanceMatrix(vehType.profile);
         auto const &durs = data.durationMatrix(vehType.profile);
 
-        auto const cost = [&](auto const &from, auto const &to)
+        auto const arcCost = [&](auto const &from, auto const &to)
         {
             auto const frmServ = static_cast<double>(from.serviceDuration);
             auto const frmEarly = static_cast<double>(from.twEarly);
@@ -76,6 +76,17 @@ Matrix<double> computeProximity(ProblemData const &data,
                    + params.weightWaitTime * std::max(minWait, 0.0);
         };
 
+        // Proximity between two activities. If proximity is symmetric, we
+        // evaluate the arc in both directions, and take the best of the two.
+        auto const cost = [&](auto const &from, auto const &to)
+        {
+            auto value = arcCost(from, to);
+            if (params.symmetricProximity)
+                value = std::min(value, arcCost(to, from));
+
+            return value;
+        };
+
         // From clients.
         for (size_t frm = 0; frm != data.numClients(); ++frm)
         {
@@ -87,10 +98,6 @@ Matrix<double> computeProximity(ProblemData const &data,
                 auto const idx = client;
                 auto const &to = data.client(client);
                 prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
-
-                if (params.symmetricProximity)
-                    prox(frm, idx)
-                        = std::min(cost(to, frmData), prox(frm, idx));
             }
 
             // To shipment pickups.
@@ -99,10 +106,6 @@ Matrix<double> computeProximity(ProblemData const &data,
                 auto const idx = data.numClients() + pick;
                 auto const &to = data.shipment(pick).pickup;
                 prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
-
-                if (params.symmetricProximity)
-                    prox(frm, idx)
-                        = std::min(cost(to, frmData), prox(frm, idx));
             }
 
             // To shipment deliveries.
@@ -111,10 +114,6 @@ Matrix<double> computeProximity(ProblemData const &data,
                 auto const idx = data.numClients() + data.numShipments() + del;
                 auto const &to = data.shipment(del).delivery;
                 prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
-
-                if (params.symmetricProximity)
-                    prox(frm, idx)
-                        = std::min(cost(to, frmData), prox(frm, idx));
             }
         }
 
@@ -132,11 +131,6 @@ Matrix<double> computeProximity(ProblemData const &data,
                 prox(frm, idx) = std::min({cost(shipment.pickup, to),
                                            cost(shipment.delivery, to),
                                            prox(frm, idx)});
-
-                if (params.symmetricProximity)
-                    prox(frm, idx) = std::min({cost(to, shipment.pickup),
-                                               cost(to, shipment.delivery),
-                                               prox(frm, idx)});
             }
 
             // To shipment pickups.
@@ -147,11 +141,6 @@ Matrix<double> computeProximity(ProblemData const &data,
                 prox(frm, idx) = std::min({cost(shipment.pickup, to),
                                            cost(shipment.delivery, to),
                                            prox(frm, idx)});
-
-                if (params.symmetricProximity)
-                    prox(frm, idx) = std::min({cost(to, shipment.pickup),
-                                               cost(to, shipment.delivery),
-                                               prox(frm, idx)});
             }
 
             // To shipment deliveries.
@@ -162,11 +151,6 @@ Matrix<double> computeProximity(ProblemData const &data,
                 prox(frm, idx) = std::min({cost(shipment.pickup, to),
                                            cost(shipment.delivery, to),
                                            prox(frm, idx)});
-
-                if (params.symmetricProximity)
-                    prox(frm, idx) = std::min({cost(to, shipment.pickup),
-                                               cost(to, shipment.delivery),
-                                               prox(frm, idx)});
             }
         }
     }
