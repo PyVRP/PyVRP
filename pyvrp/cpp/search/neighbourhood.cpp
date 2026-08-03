@@ -144,12 +144,6 @@ Matrix<double> computeProximity(ProblemData const &data,
         }
     }
 
-    if (params.symmetricProximity)  // then we symmetrise the proximity matrix
-        for (size_t frm = 0; frm != prox.numRows(); ++frm)
-            for (size_t to = frm; to != prox.numRows(); ++to)
-                prox(frm, to) = prox(to, frm)
-                    = std::min(prox(frm, to), prox(to, frm));
-
     return prox;
 }
 }  // namespace
@@ -170,6 +164,12 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
                                  NeighbourhoodParams const &params)
 {
     auto prox = computeProximity(data, params);
+
+    if (params.symmetricProximity)  // then we symmetrise the proximity matrix
+        for (size_t frm = 0; frm != prox.numRows(); ++frm)
+            for (size_t to = frm; to != prox.numRows(); ++to)
+                prox(frm, to) = prox(to, frm)
+                    = std::min(prox(frm, to), prox(to, frm));
 
     for (auto const &group : data.groups())
         for (auto const frmClient : group)
