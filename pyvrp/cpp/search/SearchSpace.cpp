@@ -9,6 +9,7 @@ using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 
 SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
+    : promising_(data.numClients() + data.numShipments())
 {
     if (neighbours.size() != data.numClients() + data.numShipments())
         throw std::runtime_error(
@@ -75,12 +76,18 @@ SearchSpace::neighboursOf(Activity const &activity) const
 bool SearchSpace::isPromising(Activity const &activity) const
 {
     assert(activity.isClient() || activity.isShipment());
-    return allPromising_ || promising_.contains(activity);
+    return activity.isClient()
+               ? promising_[activity.idx()]
+               : promising_[promising_.size() - activity.idx() - 1];
 }
 
 void SearchSpace::markPromising(Activity const &activity)
 {
-    promising_.insert(activity);
+    assert(activity.isClient() || activity.isShipment());
+    if (activity.isClient())
+        promising_[activity.idx()] = true;
+    else
+        promising_[promising_.size() - activity.idx() - 1] = true;
 }
 
 void SearchSpace::markPromising(Route::Node const *node)
@@ -97,17 +104,9 @@ void SearchSpace::markPromising(Route::Node const *node)
         markPromising(n(node)->activity());
 }
 
-void SearchSpace::markAllPromising()
-{
-    promising_.clear();
-    allPromising_ = true;
-}
+void SearchSpace::markAllPromising() { promising_.set(); }
 
-void SearchSpace::unmarkAllPromising()
-{
-    promising_.clear();
-    allPromising_ = false;
-}
+void SearchSpace::unmarkAllPromising() { promising_.reset(); }
 
 std::vector<Activity> const &SearchSpace::activityOrder() const
 {
