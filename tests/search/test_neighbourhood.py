@@ -2,7 +2,15 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Activity, Client, Depot, Location, ProblemData, VehicleType
+from pyvrp import (
+    Activity,
+    Client,
+    Depot,
+    Location,
+    ProblemData,
+    Shipment,
+    VehicleType,
+)
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 
 
@@ -233,6 +241,33 @@ def test_shipments_exclude_either_activity_in_neighbourhood(small_shipments):
         # The neighbourhood contains pickup and delivery activities for each 
         # shipment, but excludes its own.
         assert_equal(len(neighbourhood), 2 * small_shipments.num_shipments - 2)
+
+
+def test_shipment_proximity_uses_pickup_and_delivery():
+    """
+    Tests that shipment proximity considers both pickup and delivery.
+    """
+    distances = np.full((5, 5), 100, dtype=int)
+    np.fill_diagonal(distances, 0)
+    distances[3, 1] = distances[1, 3] = 10 # pickup closest to C0
+    distances[4, 2] = distances[2, 4] = 1 # delivery closest to C1
+
+    data = ProblemData(
+        locations=[Location(idx, 0) for idx in range(5)],
+        clients=[Client(1), Client(2)],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[distances],
+        duration_matrices=[distances],
+        shipments=[Shipment(3, 4)],
+    )
+
+    # Shipment 0's pickup is closest to C0, but its delivery is even closer to
+    # C1. With one neighbour, the neighbour is therefore C1 rather than C0.
+    params = NeighbourhoodParams(0, num_neighbours=1)
+    neighbours = compute_neighbours(data, params)
+
+    assert_equal(neighbours[Activity("L0")], [Activity("C1")])
 
 
 def test_mixed_client_shipments(small_shipments):

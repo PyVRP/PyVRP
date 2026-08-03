@@ -196,3 +196,37 @@ def test_insert_pickup_delivery_non_adjacent(small_shipments):
 
     # The solution should have inserted L2 and U2, but not next to each other.
     assert_equal(str(route), "L0 L1 L3 U0 L2 U1 U3 U2")
+
+
+def test_insert_shipment_at_neighbour_predecessor(small_shipments):
+    """
+    Tests inserting a shipment at the predecessor of a neighbour.
+    """
+    sol = Solution(small_shipments)
+
+    # Start with shipment 1 in the route. Shipment 0 remains unplanned.
+    route = sol.routes[0]
+    for descr in ["L1", "U1"]:
+        route.append(sol[Activity(descr)])
+    route.update()
+    assert_equal(route.distance(), 27_732)
+
+    # L1 is the only neighbour of shipment 0. Inserting shipment 0 should
+    # therefore consider positions after L1 and after its predecessor, which
+    # is the start depot.
+    neighbours = {
+        Activity(f"L{idx}"): [] for idx in range(small_shipments.num_shipments)
+    }
+    neighbours[Activity("L0")] = [Activity("L1")]
+    search_space = SearchSpace(small_shipments, neighbours)
+
+    pickup, delivery = sol.shipments[0]
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_(sol.insert(pickup, delivery, search_space, cost_eval, True))
+    route.update()
+
+    # Inserting after the start depot adds 3_125 distance, compared to 9_571
+    # for opening the empty second route. Considering only positions after L1
+    # would instead produce L1 L0 U1 U0.
+    assert_equal(route.distance(), 30_857)
+    assert_equal(str(route), "L0 U0 L1 U1")
