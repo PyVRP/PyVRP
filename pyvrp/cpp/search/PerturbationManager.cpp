@@ -20,32 +20,29 @@ enum class PerturbType
     REMOVE,
     INSERT
 };
-
-Route::Node *nodeFor(Solution &solution, Activity const &activity)
-{
-    auto *node = solution[activity];
-    assert(node);
-    return node->isDelivery() ? node - 1 : node;
 }
-}  // namespace
 
 PerturbationParams::PerturbationParams(size_t minPerturbations,
                                        size_t maxPerturbations,
+                                       size_t minRoutes,
                                        size_t maxRoutes)
     : minPerturbations(minPerturbations),
       maxPerturbations(maxPerturbations),
+      minRoutes(minRoutes),
       maxRoutes(maxRoutes)
 {
     if (minPerturbations > maxPerturbations)
         throw std::invalid_argument(
             "min_perturbations must be <= max_perturbations.");
 
-    if (maxRoutes == 0)
-        throw std::invalid_argument("max_routes must be positive.");
+    if (minRoutes > maxRoutes)
+        throw std::invalid_argument("min_routes must be <= max_routes.");
 }
 
 PerturbationManager::PerturbationManager(PerturbationParams params)
-    : params_(params), numPerturbations_(params_.minPerturbations)
+    : params_(params),
+      numPerturbations_(params_.minPerturbations),
+      numRoutes_(params_.minRoutes)
 {
 }
 
@@ -59,7 +56,9 @@ void PerturbationManager::shuffle(RandomNumberGenerator &rng)
     auto const range = params_.maxPerturbations - params_.minPerturbations;
     numPerturbations_ = params_.minPerturbations + rng.randint(range + 1);
     useRoutePerturb_ = rng.randint(2) == 1;
-    maxRoutes_ = 1 + rng.randint(params_.maxRoutes);
+
+    auto const routeRange = params_.maxRoutes - params_.minRoutes;
+    numRoutes_ = params_.minRoutes + rng.randint(routeRange + 1);
 }
 
 void PerturbationManager::neighbourPerturb(
@@ -182,65 +181,57 @@ void PerturbationManager::routePerturb(Solution &solution,
     if (searchSpace.activityOrder().empty())
         return;
 
-    auto const requestIdx = [&](Route::Node const *node)
-    {
-        assert(node->isClient() || node->isPickup());
-        return node->isClient() ? node->idx()
-                                : solution.clients.size() + node->idx();
-    };
-    auto const markPromising = [&](Route::Node *node)
-    {
-        searchSpace.markPromising(node);
-
-        if (node->isPickup())
-            searchSpace.markPromising(node + 1);
-    };
-
     DynamicBitset perturbed
         = {solution.clients.size() + solution.shipments.size()};
 
     // Remove the seed and its successors from its route.
-    auto const removePart = [&](Route::Node *seed, size_t numMoves)
+    auto const remove = [&](Route::Node *seed, size_t numMoves)
     {
         auto *route = seed->route();
         assert(route);
-        assert(numMoves > 0);
 
         std::vector<Route::Node *> selected = {seed};
-        perturbed[requestIdx(seed)] = true;
-        for (size_t offset = 1;
-             offset != route->size() && selected.size() != numMoves;
-             ++offset)
+        auto const seedIdx = seed->isClient()
+                                 ? seed->idx()
+                                 : solution.clients.size() + seed->idx();
+        perturbed[seedIdx] = true;
+        for (size_t offset = 1; offset != route->size(); ++offset)
         {
+            if (selected.size() == numMoves)
+                break;
+
             auto const pos = (seed->pos() + offset) % route->size();
-            auto *candidate = (*route)[pos];
-            if (!candidate->isClient() && !candidate->isShipment())
+            auto *node = (*route)[pos];
+            if (!node->isClient() && !node->isShipment())
                 continue;
 
-            if (candidate->isDelivery())
-                candidate = candidate - 1;  // pickup
+            if (node->isDelivery())
+                node = node - 1;  // pickup
 
-            auto const candidateIdx = requestIdx(candidate);
+            auto const idx = node->isClient()
+                                 ? node->idx()
+                                 : solution.clients.size() + node->idx();
 
-            if (perturbed[candidateIdx])
+            if (perturbed[idx])
                 continue;
 
-            perturbed[candidateIdx] = true;
-            selected.push_back(candidate);
+            perturbed[idx] = true;
+            selected.push_back(node);
         }
 
-        for (auto *candidate : selected)
+        for (auto *node : selected)
         {
-            markPromising(candidate);
+            searchSpace.markPromising(node);
 
-            if (candidate->isPickup())
+            if (node->isPickup())
             {
-                auto *delivery = candidate + 1;
+                auto *delivery = node + 1;
+                searchSpace.markPromising(delivery);
                 assert(delivery->route() == route);
                 route->remove(delivery->pos());
             }
 
-            route->remove(candidate->pos());
+            route->remove(node->pos());
         }
 
         route->update();
@@ -250,107 +241,124 @@ void PerturbationManager::routePerturb(Solution &solution,
     };
 
     // Insert the seed and its unplanned neighbours into the same route.
-    auto const insertPart = [&](Route::Node *node, size_t numMoves)
+    auto const insert = [&](Route::Node *seed, size_t numMoves)
     {
-        assert(!node->route());
+        assert(!seed->route());
 
-        if (node->isClient())
-            solution.insert(node, searchSpace, costEvaluator, true);
+        if (seed->isClient())
+        {
+            solution.insert(seed, searchSpace, costEvaluator, true);
+            searchSpace.markPromising(seed);
+        }
         else
         {
-            assert(node->isPickup());
-            solution.insert(node, node + 1, searchSpace, costEvaluator, true);
+            assert(seed->isPickup());
+            solution.insert(seed, seed + 1, searchSpace, costEvaluator, true);
+            searchSpace.markPromising(seed);
+            searchSpace.markPromising(seed + 1);
         }
 
-        auto *route = node->route();
+        auto *route = seed->route();
         assert(route);
         route->update();
-        markPromising(node);
 
         size_t numInserted = 1;
-        for (auto const &activity : searchSpace.neighboursOf(node->activity()))
+        for (auto const &activity : searchSpace.neighboursOf(seed->activity()))
         {
             if (numInserted >= numMoves)
                 break;
 
-            auto *candidate = nodeFor(solution, activity);
-            auto const candidateIdx = requestIdx(candidate);
-            if (perturbed[candidateIdx] || candidate->route())
+            auto *node = solution[activity];
+            assert(node);
+
+            if (node->isDelivery())
+                node = node - 1;  // pickup
+
+            auto const idx = node->isClient()
+                                 ? node->idx()
+                                 : solution.clients.size() + node->idx();
+            if (perturbed[idx] || node->route())
                 continue;
 
-            if (candidate->isClient())
-                solution.insert(candidate, *route, costEvaluator);
+            if (node->isClient())
+            {
+                solution.insert(node, *route, costEvaluator);
+                searchSpace.markPromising(node);
+            }
             else
             {
-                assert(candidate->isPickup());
-                solution.insert(
-                    candidate, candidate + 1, *route, costEvaluator);
+                assert(node->isPickup());
+                solution.insert(node, node + 1, *route, costEvaluator);
+                searchSpace.markPromising(node);
+                searchSpace.markPromising(node + 1);
             }
 
             route->update();
-            markPromising(candidate);
-            perturbed[candidateIdx] = true;
+            perturbed[idx] = true;
             numInserted++;
         }
     };
 
-    // We select maxRoutes seed nodes if we can. The first follows the random
-    // activity order, and the remaining seeds come from its neighbourhood.
-    // Planned seeds must belong to distinct routes. We mark seeds immediately
-    // so they cannot be consumed as part of another seed's route region.
-    auto const maxRoutes = std::min(maxRoutes_, numPerturbations_);
-    auto *first = nodeFor(solution, searchSpace.activityOrder().front());
+    // Identify the seeds for route perturbation. We select the first node in
+    // the activity order, and then go through its neighbours until we have
+    // enough seeds. Seeds must be unplanned or in different routes.
+    auto const numSeeds = std::min(numRoutes_, numPerturbations_);
+    auto *first = solution[searchSpace.activityOrder().front()];
+    assert(first);
+
     std::vector<Route::Node *> seeds = {first};
-    perturbed[requestIdx(first)] = true;
+    std::vector<Route *> routes = {first->route()};
+    auto const firstIdx = first->isClient()
+                              ? first->idx()
+                              : solution.clients.size() + first->idx();
+    perturbed[firstIdx] = true;
 
     for (auto const &activity : searchSpace.neighboursOf(first->activity()))
     {
-        if (seeds.size() == maxRoutes)
+        if (seeds.size() == numSeeds)
             break;
 
-        auto *node = nodeFor(solution, activity);
-        auto const idx = requestIdx(node);
+        auto *node = solution[activity];
+        assert(node);
+
+        if (node->isDelivery())
+            node = node - 1;  // pickup
+
+        auto const idx = node->isClient()
+                             ? node->idx()
+                             : solution.clients.size() + node->idx();
         if (perturbed[idx])
             continue;
 
         auto *route = node->route();
-        auto const hasRoute = [route](Route::Node const *seed)
-        { return route && seed->route() == route; };
-        if (std::any_of(seeds.begin(), seeds.end(), hasRoute))
+        if (route
+            && std::find(routes.begin(), routes.end(), route) != routes.end())
             continue;
 
         seeds.push_back(node);
+        routes.push_back(route);
         perturbed[idx] = true;
     }
 
     auto const movesPerSeed = numPerturbations_ / seeds.size();
     auto const numExtraMoves = numPerturbations_ % seeds.size();
-    auto const movesForSeed
-        = [&](size_t idx) { return movesPerSeed + (idx < numExtraMoves); };
 
-    // First remove route parts around planned seeds.
-    for (size_t idx = 0; idx != seeds.size(); ++idx)
+    for (size_t seedIdx = 0; seedIdx != seeds.size(); ++seedIdx)
     {
-        auto *seed = seeds[idx];
-        if (!seed->route())
-            continue;
+        auto const numMoves = movesPerSeed + (seedIdx < numExtraMoves);
 
-        removePart(seed, movesForSeed(idx));
-        seeds[idx] = nullptr;
+        if (routes[seedIdx])
+            remove(seeds[seedIdx], numMoves);
+        else
+            insert(seeds[seedIdx], numMoves);
     }
-
-    // The remaining seeds were originally unplanned. Insert each one and its
-    // neighbours into the same route.
-    for (size_t idx = 0; idx != seeds.size(); ++idx)
-        if (seeds[idx])
-            insertPart(seeds[idx], movesForSeed(idx));
 }
 
 void PerturbationManager::perturb(Solution &solution,
                                   SearchSpace &searchSpace,
                                   CostEvaluator const &costEvaluator) const
 {
-    if (!numPerturbations_)
+    if (!numPerturbations_ || (useRoutePerturb_ && !numRoutes_))
         return;
 
     // Clear the set of promising nodes. Perturbation determines the initial

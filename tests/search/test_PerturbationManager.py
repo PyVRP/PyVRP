@@ -21,14 +21,6 @@ def test_raises_max_smaller_than_min():
     PerturbationParams(0, 0)  # but min == max should be fine
 
 
-def test_raises_zero_max_routes():
-    """
-    Tests that at least one route must be available for route perturbation.
-    """
-    with assert_raises(ValueError):
-        PerturbationParams(max_routes=0)
-
-
 def test_eq():
     """
     Tests that PerturbationParams's ``__eq__`` implementation is correct.
@@ -36,9 +28,6 @@ def test_eq():
     params = PerturbationParams()
     assert_(params == PerturbationParams())
     assert_(params != PerturbationParams(1, 10))
-    assert_(params != PerturbationParams(max_routes=1))
-
-    assert_equal(params.max_routes, 3)
 
     assert_(params != "")
     assert_(params != 123)
@@ -86,156 +75,6 @@ def test_num_perturbations_randomness():
     assert_equal(min(sample), min_perturbs)
     assert_equal(max(sample), max_perturbs)
     assert_allclose(sum(sample) / len(sample), avg_perturbs, atol=0.05)
-
-
-def test_route_perturb_selects_neighbouring_routes(ok_small):
-    """
-    Tests that route perturbation selects routes from the neighbourhood.
-    """
-    neighbours = {
-        Activity("C0"): [Activity("C2")],
-        Activity("C1"): [],
-        Activity("C2"): [],
-        Activity("C3"): [],
-    }
-    cost_eval = CostEvaluator([0], 0, 0)
-
-    cases = [
-        (1, [1, 2]),
-        (2, [1, 3]),
-    ]
-    for max_routes, expected in cases:
-        sol = Solution(ok_small)
-        sol.load(pyvrp.Solution(ok_small, [[0, 3], [1], [2]]))
-        search_space = SearchSpace(ok_small, neighbours)
-
-        params = PerturbationParams(
-            2,
-            2,
-            max_routes=max_routes,
-        )
-        perturbation = PerturbationManager(params)
-
-        # This seed selects route perturbation and, when possible, two routes.
-        perturbation.shuffle(RandomNumberGenerator(seed=1))
-        perturbation.perturb(sol, search_space, cost_eval)
-
-        planned = sorted(
-            activity.idx
-            for route in sol.unload().routes()
-            for activity in route
-            if activity.is_client()
-        )
-        assert_equal(planned, expected)
-
-
-def test_route_perturb_inserts_neighbours_into_seed_route(ok_small):
-    """
-    Tests that an unplanned seed and its neighbours enter the same route.
-    """
-    sol = Solution(ok_small)
-    neighbours = {
-        Activity("C0"): [Activity("C1")],
-        Activity("C1"): [],
-        Activity("C2"): [],
-        Activity("C3"): [],
-    }
-    search_space = SearchSpace(ok_small, neighbours)
-    cost_eval = CostEvaluator([0], 0, 0)
-
-    params = PerturbationParams(2, 2, max_routes=1)
-    perturbation = PerturbationManager(params)
-    perturbation.shuffle(RandomNumberGenerator(seed=1))
-    perturbation.perturb(sol, search_space, cost_eval)
-
-    perturbed = sol.unload()
-    assert_equal(perturbed.num_routes(), 1)
-    assert_equal(perturbed.num_clients(), 2)
-    assert_equal(
-        sorted(
-            activity.idx
-            for activity in perturbed.routes()[0]
-            if activity.is_client()
-        ),
-        [0, 1],
-    )
-
-
-def test_route_perturb_uses_multiple_unplanned_seeds(ok_small):
-    """
-    Tests that route perturbation handles multiple unplanned seed nodes.
-    """
-    sol = Solution(ok_small)
-    neighbours = {
-        Activity("C0"): [Activity("C1"), Activity("C2")],
-        Activity("C1"): [Activity("C3")],
-        Activity("C2"): [],
-        Activity("C3"): [],
-    }
-    search_space = SearchSpace(ok_small, neighbours)
-    cost_eval = CostEvaluator([0], 0, 0)
-
-    params = PerturbationParams(4, 4, max_routes=2)
-    perturbation = PerturbationManager(params)
-    perturbation.shuffle(RandomNumberGenerator(seed=1))
-    perturbation.perturb(sol, search_space, cost_eval)
-
-    planned = sorted(
-        activity.idx
-        for route in sol.unload().routes()
-        for activity in route
-        if activity.is_client()
-    )
-    assert_equal(planned, [0, 1, 2, 3])
-
-
-def test_route_perturb_mixes_removal_and_insertion(ok_small):
-    """
-    Tests that planned and unplanned seed nodes are handled independently.
-    """
-    sol = Solution(ok_small)
-    sol.load(pyvrp.Solution(ok_small, [[0, 3]]))
-    neighbours = {
-        Activity("C0"): [Activity("C1")],
-        Activity("C1"): [Activity("C2")],
-        Activity("C2"): [],
-        Activity("C3"): [],
-    }
-    search_space = SearchSpace(ok_small, neighbours)
-    cost_eval = CostEvaluator([0], 0, 0)
-
-    params = PerturbationParams(4, 4, max_routes=2)
-    perturbation = PerturbationManager(params)
-    perturbation.shuffle(RandomNumberGenerator(seed=1))
-    perturbation.perturb(sol, search_space, cost_eval)
-
-    planned = sorted(
-        activity.idx
-        for route in sol.unload().routes()
-        for activity in route
-        if activity.is_client()
-    )
-    assert_equal(planned, [1, 2])
-
-
-def test_route_perturb_marks_inserted_shipment_promising(small_shipments):
-    """
-    Tests that both activities of an inserted seed shipment are promising.
-    """
-    sol = Solution(small_shipments)
-    search_space = SearchSpace(
-        small_shipments,
-        compute_neighbours(small_shipments),
-    )
-    cost_eval = CostEvaluator([0], 0, 0)
-
-    params = PerturbationParams(1, 1, max_routes=1)
-    perturbation = PerturbationManager(params)
-    perturbation.shuffle(RandomNumberGenerator(seed=1))
-    perturbation.perturb(sol, search_space, cost_eval)
-
-    assert_(search_space.is_promising(Activity("L0")))
-    assert_(search_space.is_promising(Activity("U0")))
 
 
 def test_perturb_inserts_clients(ok_small):

@@ -97,11 +97,13 @@ class SearchSpace:
 class PerturbationParams:
     min_perturbations: int
     max_perturbations: int
+    min_routes: int
     max_routes: int
     def __init__(
         self,
         min_perturbations: int = 1,
         max_perturbations: int = 25,
+        min_routes: int = 1,
         max_routes: int = 3,
     ) -> None: ...
     def __eq__(self, other: object) -> bool: ...

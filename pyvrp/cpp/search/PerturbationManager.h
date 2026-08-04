@@ -14,6 +14,7 @@ namespace pyvrp::search
  * PerturbationParams(
  *     min_perturbations: int = 1,
  *     max_perturbations: int = 25,
+ *     min_routes: int = 1,
  *     max_routes: int = 3,
  * )
  *
@@ -25,24 +26,27 @@ namespace pyvrp::search
  *     Minimum number of perturbations to apply. Must not be negative.
  * max_perturbations
  *     Maximum number of perturbations to apply.
+ * min_routes
+ *     Minimum number of routes to perturb.
  * max_routes
- *     Maximum number of related seed regions in route perturbation. The
- *     current limit is sampled from one through this value.
+ *     Maximum number of routes to perturb.
  *
  * Raises
  * ------
  * ValueError
- *     When ``min_perturbations`` exceeds ``max_perturbations``, or
- *     ``max_routes`` is zero.
+ *     When ``min_perturbations`` exceeds ``max_perturbations``,
+ *     or ``min_routes`` exceeds ``max_routes``.
  */
 struct PerturbationParams
 {
     size_t const minPerturbations;
     size_t const maxPerturbations;
+    size_t const minRoutes;
     size_t const maxRoutes;
 
     PerturbationParams(size_t minPerturbations = 1,
                        size_t maxPerturbations = 25,
+                       size_t minRoutes = 1,
                        size_t maxRoutes = 3);
 
     bool operator==(PerturbationParams const &other) const = default;
@@ -54,8 +58,8 @@ struct PerturbationParams
  * Handles perturbation during the search. Neighbour perturbation inserts or
  * removes related clients and shipments. Route perturbation selects one or
  * more related seeds. For each planned seed, it removes part of the seed's
- * route. For each unplanned seed, it inserts the seed and related activities
- * into the same route.
+ * route. For each unplanned seed, it inserts the seed and neighbouring
+ * activities into the same route.
  *
  * Parameters
  * ----------
@@ -66,7 +70,7 @@ class PerturbationManager
 {
     PerturbationParams const params_;  // owned by us
     size_t numPerturbations_;
-    size_t maxRoutes_ = 1;
+    size_t numRoutes_;
     bool useRoutePerturb_ = false;
 
     void neighbourPerturb(Solution &solution,
@@ -86,7 +90,7 @@ public:
     size_t numPerturbations() const;
 
     /**
-     * Draws new perturbation settings.
+     * Draws and sets a new random number of perturbations to apply.
      */
     void shuffle(RandomNumberGenerator &rng);
 
