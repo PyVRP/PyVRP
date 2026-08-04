@@ -70,19 +70,6 @@ public:
                 CostEvaluator const &costEvaluator,
                 bool required);
 
-    // Inserts the given client in the best position in the route. Updating the
-    // route and search space is left to the calling code.
-    void insert(Route::Node *client,
-                Route &route,
-                CostEvaluator const &costEvaluator);
-
-    // Inserts the given pickup and delivery pair in the best positions in the
-    // route. Updating the route and search space is left to the calling code.
-    void insert(Route::Node *pickup,
-                Route::Node *delivery,
-                Route &route,
-                CostEvaluator const &costEvaluator);
-
     // Maps from an activity to a client or shipment node pointer in this
     // solution. Returns null if the activity is not represented via a
     // solution-level node.

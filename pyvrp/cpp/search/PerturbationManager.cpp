@@ -240,27 +240,32 @@ void PerturbationManager::routePerturb(Solution &solution,
             route->clear();
     };
 
-    // Insert the seed and its unplanned neighbours into the same route.
+    // Insert the seed and its unplanned neighbours.
     auto const insert = [&](Route::Node *seed, size_t numMoves)
     {
-        assert(!seed->route());
-
-        if (seed->isClient())
+        auto const insertNode = [&](Route::Node *node)
         {
-            solution.insert(seed, searchSpace, costEvaluator, true);
-            searchSpace.markPromising(seed);
-        }
-        else
-        {
-            assert(seed->isPickup());
-            solution.insert(seed, seed + 1, searchSpace, costEvaluator, true);
-            searchSpace.markPromising(seed);
-            searchSpace.markPromising(seed + 1);
-        }
+            assert(!node->route());
 
-        auto *route = seed->route();
-        assert(route);
-        route->update();
+            if (node->isClient())
+            {
+                solution.insert(node, searchSpace, costEvaluator, true);
+                searchSpace.markPromising(node);
+            }
+            else
+            {
+                assert(node->isPickup());
+                solution.insert(
+                    node, node + 1, searchSpace, costEvaluator, true);
+                searchSpace.markPromising(node);
+                searchSpace.markPromising(node + 1);
+            }
+
+            assert(node->route());
+            node->route()->update();
+        };
+
+        insertNode(seed);
 
         size_t numInserted = 1;
         for (auto const &activity : searchSpace.neighboursOf(seed->activity()))
@@ -280,20 +285,7 @@ void PerturbationManager::routePerturb(Solution &solution,
             if (perturbed[idx] || node->route())
                 continue;
 
-            if (node->isClient())
-            {
-                solution.insert(node, *route, costEvaluator);
-                searchSpace.markPromising(node);
-            }
-            else
-            {
-                assert(node->isPickup());
-                solution.insert(node, node + 1, *route, costEvaluator);
-                searchSpace.markPromising(node);
-                searchSpace.markPromising(node + 1);
-            }
-
-            route->update();
+            insertNode(node);
             perturbed[idx] = true;
             numInserted++;
         }

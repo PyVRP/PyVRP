@@ -59,7 +59,7 @@ struct PerturbationParams
  * removes related clients and shipments. Route perturbation selects one or
  * more related seeds. For each planned seed, it removes part of the seed's
  * route. For each unplanned seed, it inserts the seed and neighbouring
- * activities into the same route.
+ * activities.
  *
  * Parameters
  * ----------
