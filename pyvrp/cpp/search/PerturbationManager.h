@@ -36,12 +36,10 @@ struct PerturbationParams
 /**
  * PerturbationManager(params: PerturbationParams)
  *
- * Handles perturbation during the search. In each iteration, it applies up to
+ * Handles perturbation during the search. In each iteration, it applies
  * :meth:`~num_perturbations` perturbations that strengthen (resp., weaken)
  * randomly selected neighbourhoods by inserting (removing) clients and
- * shipments. Neighbouring activities are grouped by route, including one
- * group for unplanned activities. Planned groups are removed route by route,
- * while the unplanned group is inserted.
+ * shipments.
  *
  * Parameters
  * ----------
