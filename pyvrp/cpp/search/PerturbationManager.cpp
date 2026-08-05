@@ -8,11 +8,9 @@
 #include <utility>
 #include <vector>
 
-using pyvrp::Activity;
 using pyvrp::search::PerturbationManager;
 using pyvrp::search::PerturbationParams;
 using pyvrp::search::Route;
-using pyvrp::search::Solution;
 
 PerturbationParams::PerturbationParams(size_t minPerturbations,
                                        size_t maxPerturbations)
@@ -55,125 +53,112 @@ void PerturbationManager::perturb(Solution &solution,
     auto const numClients = solution.clients.size();
     DynamicBitset perturbed = {numClients + solution.shipments.size()};
 
-    using RouteBucket = std::pair<Route *, std::vector<Route::Node *>>;
+    using RouteGroup = std::pair<Route *, std::vector<Route::Node *>>;
+    auto const perturb = [&](Route::Node *node)
+    {
+        assert(node->isClient() || node->isPickup());
+
+        auto *route = node->route();
+        if (route)
+        {
+            searchSpace.markPromising(node);
+            if (node->isPickup())
+            {
+                auto *delivery = node + 1;
+                assert(delivery->route() == route);
+
+                searchSpace.markPromising(delivery);
+                route->remove(delivery->pos());
+            }
+
+            route->remove(node->pos());
+        }
+        else
+        {
+            assert(!node->route());
+
+            if (node->isClient())
+                solution.insert(node, searchSpace, costEvaluator, true);
+            else
+                solution.insert(
+                    node, node + 1, searchSpace, costEvaluator, true);
+
+            auto *insertedRoute = node->route();
+            assert(insertedRoute);
+            insertedRoute->update();
+            searchSpace.markPromising(node);
+
+            if (node->isPickup())
+            {
+                auto *delivery = node + 1;
+                assert(delivery->route() == insertedRoute);
+                searchSpace.markPromising(delivery);
+            }
+        }
+
+        movesLeft--;
+    };
 
     // We perturb the local neighbourhood of randomly ordered activities,
     // grouped by their current route. Unplanned activities share a null route
-    // bucket. Planned activities are removed and unplanned ones are inserted.
+    // group. Planned activities are removed and unplanned ones are inserted.
     for (auto const &uActivity : searchSpace.activityOrder())
     {
         if (!movesLeft)
             break;
 
-        std::vector<RouteBucket> buckets;
-        DynamicBitset candidates = {numClients + solution.shipments.size()};
-        auto const addCandidate = [&](Activity const &activity)
+        std::vector<RouteGroup> groups;
+        auto const addCandidate = [&](auto const &activity)
         {
             auto *node = solution[activity];
-            assert(node);
+            if (!node)
+                return;
 
             if (node->isDelivery())
                 node = node - 1;  // pickup
 
             auto const idx
                 = node->isClient() ? node->idx() : numClients + node->idx();
-            auto *route = node->route();
-            if (perturbed[idx] || candidates[idx])
+            if (perturbed[idx])
                 return;
 
+            perturbed[idx] = true;
+
+            auto *route = node->route();
             auto const sameRoute
-                = [route](auto const &bucket) { return bucket.first == route; };
-            auto bucket
-                = std::find_if(buckets.begin(), buckets.end(), sameRoute);
+                = [route](auto const &group) { return group.first == route; };
+            auto group = std::find_if(groups.begin(), groups.end(), sameRoute);
 
-            if (bucket == buckets.end())
-                buckets.push_back({route, {node}});
+            if (group == groups.end())
+                groups.push_back({route, {node}});
             else
-                bucket->second.push_back(node);
-
-            candidates[idx] = true;
+                group->second.push_back(node);
         };
 
         addCandidate(uActivity);
         for (auto const &vActivity : searchSpace.neighboursOf(uActivity))
             addCandidate(vActivity);
 
-        for (auto &[route, nodes] : buckets)
+        for (auto &[route, nodes] : groups)
         {
-            if (!movesLeft)
-                break;
-
-            if (!route)
-            {
-                for (auto *node : nodes)
-                {
-                    if (!movesLeft)
-                        break;
-
-                    assert(!node->route());
-
-                    auto const inserted
-                        = node->isClient()
-                              ? solution.insert(
-                                    node, searchSpace, costEvaluator, true)
-                              : solution.insert(node,
-                                                node + 1,
-                                                searchSpace,
-                                                costEvaluator,
-                                                true);
-
-                    if (!inserted)
-                        continue;
-
-                    auto *insertedRoute = node->route();
-                    assert(insertedRoute);
-                    insertedRoute->update();
-                    searchSpace.markPromising(node);
-
-                    if (node->isPickup())
-                    {
-                        auto *delivery = node + 1;
-                        assert(delivery->route() == insertedRoute);
-                        searchSpace.markPromising(delivery);
-                    }
-
-                    auto const idx = node->isClient()
-                                         ? node->idx()
-                                         : numClients + node->idx();
-                    perturbed[idx] = true;
-                    movesLeft--;
-                }
-
-                continue;
-            }
-
             for (auto *node : nodes)
             {
+                assert(node->route() == route);
+                perturb(node);
+
                 if (!movesLeft)
                     break;
-
-                assert(node->route() == route);
-
-                searchSpace.markPromising(node);
-                if (node->isPickup())
-                {
-                    auto *delivery = node + 1;
-                    assert(delivery->route() == route);
-
-                    searchSpace.markPromising(delivery);
-                    route->remove(delivery->pos());
-                }
-
-                route->remove(node->pos());
-                auto const idx
-                    = node->isClient() ? node->idx() : numClients + node->idx();
-                perturbed[idx] = true;
-                movesLeft--;
             }
 
-            route->update();
-            if (route->empty())
-                route->clear();
+            if (route)
+            {
+                route->update();
+                if (route->empty())
+                    route->clear();
+            }
+
+            if (!movesLeft)
+                return;
         }
     }
 }
