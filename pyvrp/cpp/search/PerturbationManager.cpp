@@ -308,8 +308,8 @@ void PerturbationManager::perturb(Solution &solution,
     // set of promising nodes for further (local search) improvement.
     searchSpace.unmarkAllPromising();
 
-    if (useRoutePerturb_)
-        routePerturb(solution, searchSpace, costEvaluator);
-    else
-        neighbourPerturb(solution, searchSpace, costEvaluator);
+    // if (useRoutePerturb_)
+    routePerturb(solution, searchSpace, costEvaluator);
+    // else
+    // neighbourPerturb(solution, searchSpace, costEvaluator);
 }
