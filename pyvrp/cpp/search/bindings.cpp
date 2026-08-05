@@ -1,4 +1,5 @@
 #include "bindings.h"
+#include "../bindings.h"
 #include "Exchange.h"
 #include "InsertOptionalClient.h"
 #include "InsertOptionalShipment.h"
@@ -491,7 +492,8 @@ PYBIND11_MODULE(_search, m)
         .def_static("supports", &RelocateWithDepot::supports, py::arg("data"));
 
     py::class_<SearchSpace>(m, "SearchSpace", DOC(pyvrp, search, SearchSpace))
-        .def(py::init<pyvrp::ProblemData const &, SearchSpace::Neighbours>(),
+        .def(py::init<pyvrp::ProblemData const &,
+                      pyvrp::search::Neighbourhood>(),
              py::arg("data"),
              py::arg("neighbours"))
         .def_property("neighbours",
@@ -571,7 +573,7 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
-                      SearchSpace::Neighbours,
+                      pyvrp::search::Neighbourhood,
                       PerturbationManager &>(),
              py::arg("data"),
              py::arg("neighbours"),

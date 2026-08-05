@@ -6,8 +6,8 @@
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
+#include "neighbourhood.h"
 
-#include <unordered_map>
 #include <vector>
 
 namespace pyvrp::search
@@ -23,13 +23,9 @@ namespace pyvrp::search
  */
 class SearchSpace
 {
-public:
-    using Neighbours = std::unordered_map<Activity, std::vector<Activity>>;
-
-private:
     // Neighbourhood restrictions: list of nearby activities for each client
     // and pickup activity.
-    Neighbours neighbours_;
+    Neighbourhood neighbours_;
 
     // Activity order used for node-based search.
     std::vector<Activity> activityOrder_;
@@ -44,17 +40,17 @@ private:
     DynamicBitset promising_;
 
 public:
-    SearchSpace(ProblemData const &data, Neighbours neighbours);
+    SearchSpace(ProblemData const &data, Neighbourhood neighbours);
 
     /**
      * Set the neighbourhood structure of this search space.
      */
-    void setNeighbours(Neighbours neighbours);
+    void setNeighbours(Neighbourhood neighbours);
 
     /**
      * Returns the current neighbourhood structure.
      */
-    Neighbours const &neighbours() const;
+    Neighbourhood const &neighbours() const;
 
     /**
      * Returns the vector of neighbours for a given client or shipment

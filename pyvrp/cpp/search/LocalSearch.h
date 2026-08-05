@@ -9,6 +9,7 @@
 #include "Route.h"
 #include "SearchSpace.h"
 #include "Solution.h"  // pyvrp::search::Solution
+#include "neighbourhood.h"
 
 #include <functional>
 #include <stdexcept>
@@ -118,12 +119,12 @@ public:
      * and pickup activity, the neighbourhood structure is a vector of nearby
      * client, pickups, and deliveries.
      */
-    void setNeighbours(SearchSpace::Neighbours neighbours);
+    void setNeighbours(Neighbourhood neighbours);
 
     /**
      * Returns the current neighbourhood structure.
      */
-    SearchSpace::Neighbours const &neighbours() const;
+    Neighbourhood const &neighbours() const;
 
     /**
      * Returns search statistics for the currently loaded solution.
@@ -145,7 +146,7 @@ public:
     void shuffle(RandomNumberGenerator &rng);
 
     LocalSearch(ProblemData const &data,
-                SearchSpace::Neighbours neighbours,
+                Neighbourhood neighbours,
                 PerturbationManager &perturbationManager);
 };
 }  // namespace pyvrp::search

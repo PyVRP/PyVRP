@@ -379,12 +379,12 @@ std::vector<BinaryOperator *> const &LocalSearch::binaryOperators() const
     return binaryOps_;
 }
 
-void LocalSearch::setNeighbours(SearchSpace::Neighbours neighbours)
+void LocalSearch::setNeighbours(Neighbourhood neighbours)
 {
     searchSpace_.setNeighbours(neighbours);
 }
 
-SearchSpace::Neighbours const &LocalSearch::neighbours() const
+pyvrp::search::Neighbourhood const &LocalSearch::neighbours() const
 {
     return searchSpace_.neighbours();
 }
@@ -409,7 +409,7 @@ LocalSearch::Statistics LocalSearch::statistics() const
 }
 
 LocalSearch::LocalSearch(ProblemData const &data,
-                         SearchSpace::Neighbours neighbours,
+                         Neighbourhood neighbours,
                          PerturbationManager &perturbationManager)
     : data(data),
       solution_(data),

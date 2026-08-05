@@ -4,11 +4,37 @@
 #include "Activity.h"
 #include "ProblemData.h"
 
-#include <unordered_map>
 #include <vector>
 
 namespace pyvrp::search
 {
+/**
+ * TODO
+ */
+class Neighbourhood
+{
+    std::vector<std::vector<Activity>> clients_;
+    std::vector<std::vector<Activity>> pickups_;
+
+public:
+    Neighbourhood() = default;
+    Neighbourhood(Neighbourhood &&) = default;
+    Neighbourhood(Neighbourhood const &) = default;
+
+    Neighbourhood &operator=(Neighbourhood const &) = default;
+    Neighbourhood &operator=(Neighbourhood &&) = default;
+
+    Neighbourhood(std::vector<std::vector<Activity>> clients,
+                  std::vector<std::vector<Activity>> pickups);
+
+    std::vector<std::vector<Activity>> const &clients() const;
+    std::vector<std::vector<Activity>> const &pickups() const;
+
+    std::vector<Activity> const &operator[](Activity const &activity) const;
+
+    size_t size() const;
+};
+
 /**
  * NeighbourhoodParams(
  *    weight_wait_time: float = 0.2,
@@ -52,8 +78,8 @@ struct NeighbourhoodParams
 /**
  * Computes neighbours defining the neighbourhood for a problem instance.
  */
-std::unordered_map<Activity, std::vector<Activity>>
-computeNeighbours(ProblemData const &data, NeighbourhoodParams const &params);
+Neighbourhood computeNeighbours(ProblemData const &data,
+                                NeighbourhoodParams const &params);
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_NEIGHBOURHOOD_H

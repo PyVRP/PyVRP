@@ -8,8 +8,9 @@ using pyvrp::Activity;
 using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 
-SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
-    : promising_(data.numClients() + data.numShipments())
+SearchSpace::SearchSpace(ProblemData const &data, Neighbourhood neighbours)
+    : neighbours_(neighbours),
+      promising_(data.numClients() + data.numShipments())
 {
     if (neighbours.size() != data.numClients() + data.numShipments())
         throw std::runtime_error(
@@ -31,38 +32,12 @@ SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
     }
 }
 
-void SearchSpace::setNeighbours(Neighbours neighbours)
+void SearchSpace::setNeighbours(Neighbourhood neighbours)
 {
-    if (!neighbours_.empty() && neighbours.size() != neighbours_.size())
-        throw std::runtime_error("Neighbourhood dimensions do not match.");
-
-    for (auto const &[activity, neighbourhood] : neighbours)
-    {
-        if (!activity.isClient() && !activity.isPickup())
-        {
-            std::ostringstream msg;
-            msg << "Expected neighbourhoods for clients and pickups, not "
-                << activity << ".";
-            throw std::runtime_error(msg.str());
-        }
-
-        auto const beginPos = neighbourhood.begin();
-        auto const endPos = neighbourhood.end();
-
-        auto const pred = [&](auto const &item) { return item == activity; };
-
-        if (std::any_of(beginPos, endPos, pred))
-        {
-            std::ostringstream msg;
-            msg << "Neighbourhood of " << activity << " contains itself.";
-            throw std::runtime_error(msg.str());
-        }
-    }
-
     neighbours_ = neighbours;
 }
 
-SearchSpace::Neighbours const &SearchSpace::neighbours() const
+pyvrp::search::Neighbourhood const &SearchSpace::neighbours() const
 {
     return neighbours_;
 }
@@ -70,7 +45,7 @@ SearchSpace::Neighbours const &SearchSpace::neighbours() const
 std::vector<Activity> const &
 SearchSpace::neighboursOf(Activity const &activity) const
 {
-    return neighbours_.at(activity);
+    return neighbours_[activity];
 }
 
 bool SearchSpace::isPromising(Activity const &activity) const

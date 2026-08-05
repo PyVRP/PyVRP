@@ -12,6 +12,7 @@
 using pyvrp::Activity;
 using pyvrp::Matrix;
 using pyvrp::ProblemData;
+using pyvrp::search::Neighbourhood;
 using pyvrp::search::NeighbourhoodParams;
 
 namespace
@@ -159,6 +160,56 @@ Matrix<double> computeProximity(ProblemData const &data,
 }
 }  // namespace
 
+Neighbourhood::Neighbourhood(std::vector<std::vector<Activity>> clients,
+                             std::vector<std::vector<Activity>> pickups)
+    : clients_(std::move(clients)), pickups_(std::move(pickups))
+{
+    // for (auto const &[activity, neighbourhood] : neighbours)
+    // {
+    //     if (!activity.isClient() && !activity.isPickup())
+    //     {
+    //         std::ostringstream msg;
+    //         msg << "Expected neighbourhoods for clients and pickups, not "
+    //             << activity << ".";
+    //         throw std::runtime_error(msg.str());
+    //     }
+
+    //     auto const beginPos = neighbourhood.begin();
+    //     auto const endPos = neighbourhood.end();
+
+    //     auto const pred = [&](auto const &item) { return item == activity; };
+
+    //     if (std::any_of(beginPos, endPos, pred))
+    //     {
+    //         std::ostringstream msg;
+    //         msg << "Neighbourhood of " << activity << " contains itself.";
+    //         throw std::runtime_error(msg.str());
+    //     }
+    // }
+}
+
+std::vector<std::vector<Activity>> const &Neighbourhood::clients() const
+{
+    return clients_;
+}
+
+std::vector<std::vector<Activity>> const &Neighbourhood::pickups() const
+{
+    return pickups_;
+}
+
+std::vector<Activity> const &
+Neighbourhood::operator[](Activity const &activity) const
+{
+    assert(activity.isClient() || activity.isPickup());
+    if (activity.isClient())
+        return clients_[activity.idx()];
+    else
+        return pickups_[activity.idx()];
+}
+
+size_t Neighbourhood::size() const { return clients_.size() + pickups_.size(); }
+
 NeighbourhoodParams::NeighbourhoodParams(double weightWaitTime,
                                          size_t numNeighbours,
                                          bool symmetricProximity)
@@ -170,7 +221,7 @@ NeighbourhoodParams::NeighbourhoodParams(double weightWaitTime,
         throw std::invalid_argument("num_neighbours == 0 not understood.");
 }
 
-std::unordered_map<Activity, std::vector<Activity>>
+Neighbourhood
 pyvrp::search::computeNeighbours(ProblemData const &data,
                                  NeighbourhoodParams const &params)
 {
@@ -202,13 +253,13 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
     auto const maxNeighbours = numClients + numShipments;
     auto const numNeighbours = std::min(params.numNeighbours, maxNeighbours);
 
-    std::unordered_map<Activity, std::vector<Activity>> neighbours;
-
+    // Vector of indices into the proximity matrix that gets reused for every
+    // client and pickup neighbourhood.
     std::vector<size_t> indices(prox.numCols());
+
+    std::vector<std::vector<Activity>> clients(data.numClients());
     for (size_t idx = 0; idx != data.numClients(); ++idx)
     {
-        Activity const activity = {Activity::ActivityType::CLIENT, idx};
-
         auto const comp = [&](auto const a, auto const b)
         { return prox(idx, a) < prox(idx, b); };
 
@@ -217,11 +268,8 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
         std::stable_sort(indices.begin(), indices.end(), comp);
 
         // Neighbourhood of client is set to the first numNeighbours indices.
-        neighbours[activity] = {};
+        auto &neighbourhood = clients[idx];
         for (size_t neighbour = 0; neighbour != numNeighbours; ++neighbour)
-        {
-            auto &neighbourhood = neighbours[activity];
-
             if (indices[neighbour] < data.numClients())
                 neighbourhood.emplace_back(Activity::ActivityType::CLIENT,
                                            indices[neighbour]);
@@ -235,13 +283,11 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
                                            indices[neighbour]
                                                - data.numClients()
                                                - data.numShipments());
-        }
     }
 
+    std::vector<std::vector<Activity>> pickups(data.numShipments());
     for (size_t idx = 0; idx != data.numShipments(); ++idx)
     {
-        Activity const activity = {Activity::ActivityType::PICKUP, idx};
-
         auto const comp = [&](auto const a, auto const b) {
             return prox(data.numClients() + idx, a)
                    < prox(data.numClients() + idx, b);
@@ -252,11 +298,8 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
         std::stable_sort(indices.begin(), indices.end(), comp);
 
         // Neighbourhood of pickup is set to the first numNeighbours indices.
-        neighbours[activity] = {};
+        auto &neighbourhood = pickups[idx];
         for (size_t neighbour = 0; neighbour != numNeighbours; ++neighbour)
-        {
-            auto &neighbourhood = neighbours[activity];
-
             if (indices[neighbour] < data.numClients())
                 neighbourhood.emplace_back(Activity::ActivityType::CLIENT,
                                            indices[neighbour]);
@@ -270,8 +313,7 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
                                            indices[neighbour]
                                                - data.numClients()
                                                - data.numShipments());
-        }
     }
 
-    return neighbours;
+    return {clients, pickups};
 }
