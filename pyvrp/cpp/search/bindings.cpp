@@ -18,7 +18,6 @@
 #include "Route.h"
 #include "SearchSpace.h"
 #include "Solution.h"
-#include "SwapShipment.h"
 #include "SwapTails.h"
 #include "neighbourhood.h"
 #include "search_docs.h"
@@ -54,7 +53,6 @@ using pyvrp::search::ReplaceOptionalShipment;
 using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 using pyvrp::search::Solution;
-using pyvrp::search::SwapShipment;
 using pyvrp::search::SwapTails;
 using pyvrp::search::UnaryOperator;
 
@@ -437,23 +435,6 @@ PYBIND11_MODULE(_search, m)
         .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"))
         .def("init", &Exchange<3, 3>::init, py::arg("solution"))
         .def_static("supports", &Exchange<3, 3>::supports, py::arg("data"));
-
-    py::class_<SwapShipment, BinaryOperator>(
-        m, "SwapShipment", DOC(pyvrp, search, SwapShipment))
-        .def(py::init<pyvrp::ProblemData const &>(),
-             py::arg("data"),
-             py::keep_alive<1, 2>())  // keep data alive
-        .def_property_readonly("statistics",
-                               &SwapShipment::statistics,
-                               py::return_value_policy::reference_internal)
-        .def_property_readonly("name", &SwapShipment::name)
-        .def("evaluate",
-             &SwapShipment::evaluate,
-             py::arg("U"),
-             py::arg("V"),
-             py::arg("cost_evaluator"))
-        .def("apply", &SwapShipment::apply, py::arg("U"), py::arg("V"))
-        .def_static("supports", &SwapShipment::supports, py::arg("data"));
 
     py::class_<SwapTails, BinaryOperator>(
         m, "SwapTails", DOC(pyvrp, search, SwapTails))
