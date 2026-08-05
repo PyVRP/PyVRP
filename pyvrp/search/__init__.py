@@ -51,5 +51,4 @@ OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     ReplaceOptionalShipment,
     ReplaceGroup,
     RelocateShipment,
-    SwapShipment,
 ]
