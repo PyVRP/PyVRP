@@ -103,13 +103,9 @@ void PerturbationManager::perturb(Solution &solution,
     for (auto const &uActivity : searchSpace.activityOrder())
     {
         std::vector<RouteGroup> groups;
-        auto const addCandidate = [&](auto const &activity)
+        auto const groupNode = [&](Route::Node *node)
         {
-            auto *node = solution[activity];
-            assert(node);
-
-            if (node->isDelivery())
-                node = node - 1;  // pickup
+            assert(node->isClient() || node->isPickup());
 
             auto const idx
                 = node->isClient() ? node->idx() : numClients + node->idx();
@@ -129,9 +125,17 @@ void PerturbationManager::perturb(Solution &solution,
                 group->second.push_back(node);
         };
 
-        addCandidate(uActivity);
+        groupNode(solution[uActivity]);
         for (auto const &vActivity : searchSpace.neighboursOf(uActivity))
-            addCandidate(vActivity);
+        {
+            auto *node = solution[vActivity];
+            assert(node);
+
+            if (node->isDelivery())
+                node = node - 1;  // pickup
+
+            groupNode(node);
+        }
 
         for (auto &[route, nodes] : groups)
         {
