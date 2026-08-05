@@ -122,8 +122,5 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
    .. autoclass:: ReplaceOptionalShipment
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: SwapShipment
-      :exclude-members: evaluate, apply, statistics, supports, init, name
-
    .. autoclass:: SwapTails
       :exclude-members: evaluate, apply, statistics, supports, init, name
