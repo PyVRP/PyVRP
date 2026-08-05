@@ -75,8 +75,6 @@ void PerturbationManager::perturb(Solution &solution,
         }
         else
         {
-            assert(!node->route());
-
             if (node->isClient())
                 solution.insert(node, searchSpace, costEvaluator, true);
             else
@@ -104,15 +102,11 @@ void PerturbationManager::perturb(Solution &solution,
     // group. Planned activities are removed and unplanned ones are inserted.
     for (auto const &uActivity : searchSpace.activityOrder())
     {
-        if (!movesLeft)
-            break;
-
         std::vector<RouteGroup> groups;
         auto const addCandidate = [&](auto const &activity)
         {
             auto *node = solution[activity];
-            if (!node)
-                return;
+            assert(node);
 
             if (node->isDelivery())
                 node = node - 1;  // pickup
@@ -151,11 +145,7 @@ void PerturbationManager::perturb(Solution &solution,
             }
 
             if (route)
-            {
                 route->update();
-                if (route->empty())
-                    route->clear();
-            }
 
             if (!movesLeft)
                 return;
