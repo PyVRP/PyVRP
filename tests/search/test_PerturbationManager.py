@@ -116,9 +116,12 @@ def test_perturb_removes_clients(ok_small):
 
 def test_perturb_groups_neighbours_by_route(small_shipments):
     """
-    Tests that perturbation processes neighbours on the seed route first.
+    Tests that perturbation processes neighbours by route.
     """
     data = small_shipments
+
+    # Shipments 0 and 1 share the same route, shipment 3 is on another route,
+    # and shipment 2 starts unplanned.
     activities1 = [Activity(des) for des in ["L0", "U0", "L1", "U1"]]
     activities2 = [Activity(des) for des in ["L3", "U3"]]
     route1 = pyvrp.Route(data, activities1, 0)
@@ -127,11 +130,13 @@ def test_perturb_groups_neighbours_by_route(small_shipments):
     sol = Solution(data)
     sol.load(pyvrp.Solution(data, [route1, route2]))
 
+    # We will perturb shipment 0. Its neighbours are shipments 2, 3 and 1,
+    # in that order.
     neighbours = {Activity(f"L{idx}"): [] for idx in range(data.num_shipments)}
     neighbours[Activity("L0")] = [
         Activity("U2"),
-        Activity("U1"),
         Activity("U3"),
+        Activity("U1"),
     ]
     search_space = SearchSpace(data, neighbours)
     cost_eval = CostEvaluator([1], 1, 0)
@@ -139,6 +144,9 @@ def test_perturb_groups_neighbours_by_route(small_shipments):
     perturbation = PerturbationManager(PerturbationParams(3, 3))
     perturbation.perturb(sol, search_space, cost_eval)
 
+    # The first two perturbations remove shipments 0 and 1 from the same
+    # route. The third inserts shipment 2, exhausting the budget before
+    # shipment 3 on the other route is considered.
     perturbed = sol.unload()
     unplanned = {
         activity.idx
