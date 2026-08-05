@@ -52,15 +52,6 @@ class PerturbationManager
 {
     PerturbationParams const params_;  // owned by us
     size_t numPerturbations_;
-    bool useRoutePerturb_ = false;
-
-    void neighbourPerturb(Solution &solution,
-                          SearchSpace &searchSpace,
-                          CostEvaluator const &costEvaluator) const;
-
-    void routePerturb(Solution &solution,
-                      SearchSpace &searchSpace,
-                      CostEvaluator const &costEvaluator) const;
 
 public:
     PerturbationManager(PerturbationParams params = PerturbationParams());
