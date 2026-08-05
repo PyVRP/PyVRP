@@ -81,15 +81,12 @@ void PerturbationManager::perturb(Solution &solution,
                 solution.insert(
                     node, node + 1, searchSpace, costEvaluator, true);
 
-            auto *insertedRoute = node->route();
-            assert(insertedRoute);
-            insertedRoute->update();
+            node->route()->update();
             searchSpace.markPromising(node);
 
             if (node->isPickup())
             {
                 auto *delivery = node + 1;
-                assert(delivery->route() == insertedRoute);
                 searchSpace.markPromising(delivery);
             }
         }
