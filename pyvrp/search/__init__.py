@@ -40,7 +40,6 @@ OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     Exchange22,
     SwapTails,
     RelocateAlternative,
-    RelocatePickup,
     RelocateWithDepot,
     RemoveAdjacentDepot,
     RemoveOptionalClient,
@@ -51,4 +50,5 @@ OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     ReplaceOptionalShipment,
     ReplaceGroup,
     RelocateShipment,
+    SwapShipment,
 ]
