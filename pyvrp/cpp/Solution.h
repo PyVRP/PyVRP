@@ -293,8 +293,10 @@ template <> struct std::hash<pyvrp::Solution>
     size_t operator()(pyvrp::Solution const &sol) const
     {
         // We take number of routes, uncollected prizes, distance, duration and
-        // time warp to determine a quick hash of this solution. Each field
-        // contributes about eight bits of information to the final hash.
+        // time warp to determine a quick hash of this solution. Loosely
+        // inspired by the djb2 hash function, but with a larger 8-bit shift
+        // to better spread the information provided by each field (note that
+        // 257 == 1 << 8 + 1).
         size_t hash = sol.numRoutes();
         hash = hash * 257 + std::hash<pyvrp::Cost>()(sol.uncollectedPrizes());
         hash = hash * 257 + std::hash<pyvrp::Distance>()(sol.distance());
