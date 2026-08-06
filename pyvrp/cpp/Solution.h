@@ -295,8 +295,7 @@ template <> struct std::hash<pyvrp::Solution>
         // We take number of routes, uncollected prizes, distance, duration and
         // time warp to determine a quick hash of this solution. Each field
         // contributes about eight bits of information to the final hash.
-        size_t hash = 0;
-        hash = hash * 257 + std::hash<size_t>()(sol.numRoutes());
+        size_t hash = sol.numRoutes();
         hash = hash * 257 + std::hash<pyvrp::Cost>()(sol.uncollectedPrizes());
         hash = hash * 257 + std::hash<pyvrp::Distance>()(sol.distance());
         hash = hash * 257 + std::hash<pyvrp::Duration>()(sol.duration());
