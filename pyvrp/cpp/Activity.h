@@ -114,10 +114,9 @@ template <> struct std::hash<pyvrp::Activity>
 {
     size_t operator()(pyvrp::Activity const &activity) const
     {
-        // 1 << 19 is 524'288, so each type can have 524'288 unique entities
-        // before hashes overlap. That should be plenty.
-        return (1 << 19) * static_cast<size_t>(activity.type())
-               + activity.idx();
+        // 1 << 20 is 1'048'576, so each type can have more than a million
+        // unique entities before hashes overlap. That should be plenty.
+        return (static_cast<size_t>(activity.type()) << 20) + activity.idx();
     }
 };
 

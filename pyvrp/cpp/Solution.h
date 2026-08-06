@@ -292,13 +292,17 @@ template <> struct std::hash<pyvrp::Solution>
 {
     size_t operator()(pyvrp::Solution const &sol) const
     {
-        size_t res = 17;
-        res = res * 31 + std::hash<size_t>()(sol.numRoutes());
-        res = res * 31 + std::hash<pyvrp::Distance>()(sol.distance());
-        res = res * 31 + std::hash<pyvrp::Duration>()(sol.duration());
-        res = res * 31 + std::hash<pyvrp::Duration>()(sol.timeWarp());
+        // We take number of routes, uncollected prizes, distance, duration and
+        // time warp to determine a quick hash of this solution. Each field
+        // contributes about eight bits of information to the final hash.
+        size_t hash = 0;
+        hash = hash * 257 + std::hash<size_t>()(sol.numRoutes());
+        hash = hash * 257 + std::hash<pyvrp::Cost>()(sol.uncollectedPrizes());
+        hash = hash * 257 + std::hash<pyvrp::Distance>()(sol.distance());
+        hash = hash * 257 + std::hash<pyvrp::Duration>()(sol.duration());
+        hash = hash * 257 + std::hash<pyvrp::Duration>()(sol.timeWarp());
 
-        return res;
+        return hash;
     }
 };
 
