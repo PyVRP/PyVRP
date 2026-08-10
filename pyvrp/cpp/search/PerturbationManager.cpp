@@ -133,7 +133,10 @@ void PerturbationManager::perturb(Solution &solution,
     {
         groups.clear();
 
-        groupNode(solution[uActivity]);
+        auto *node = solution[uActivity];
+        assert(node);
+
+        groupNode(node);
 
         for (auto const &vActivity : searchSpace.neighboursOf(uActivity))
         {
