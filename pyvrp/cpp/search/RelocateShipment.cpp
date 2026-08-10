@@ -32,7 +32,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
         // This move leaves the route empty, so the cost delta is just the
         // current route cost.
         removeCost -= costEvaluator.penalisedCost(*uRoute);
-    else if (n(uPickup) != uDelivery)   // exact evaluation when removing U's so
+    else if (n(uPickup) != uDelivery)   // exact evaluation when removing U so
         costEvaluator.deltaCost<true>(  // we have the correct delta cost for V
             removeCost,
             Route::Proposal(
