@@ -50,59 +50,60 @@ void PerturbationManager::perturb(Solution &solution,
     // set of promising nodes for further (local search) improvement.
     searchSpace.unmarkAllPromising();
 
+    auto const insert = [&](Route::Node *node)
+    {
+        assert(node->isClient() || node->isPickup());
+        assert(!node->route());
+
+        if (node->isClient())
+        {
+            solution.insert(node, searchSpace, costEvaluator, true);
+            node->route()->update();
+            searchSpace.markPromising(node);
+        }
+        else if (node->isPickup())
+        {
+            auto *pickup = node;
+            auto *delivery = node + 1;
+            solution.insert(pickup, delivery, searchSpace, costEvaluator, true);
+
+            auto *route = pickup->route();
+            assert(delivery->route() == route);
+
+            route->update();
+            searchSpace.markPromising(pickup);
+            searchSpace.markPromising(delivery);
+        }
+    };
+
+    auto const remove = [&](Route::Node *node)
+    {
+        assert(node->isClient() || node->isPickup());
+        assert(node->route());
+
+        searchSpace.markPromising(node);
+
+        auto *route = node->route();
+        route->remove(node->pos());
+
+        if (node->isPickup())  // then we also remove the associated
+        {                      // delivery node
+            auto const *delivery = node + 1;
+            assert(delivery->route() == route);
+
+            searchSpace.markPromising(delivery);
+            route->remove(delivery->pos());
+        }
+
+        route->update();
+    };
+
     auto const numClients = solution.clients.size();
     DynamicBitset perturbed = {numClients + solution.shipments.size()};
 
-    using RouteGroup = std::pair<Route *, std::vector<Route::Node *>>;
-    auto const perturb = [&](Route::Node *node)
-    {
-        assert(node->isClient() || node->isPickup());
-
-        auto *route = node->route();
-        if (route)
-        {
-            searchSpace.markPromising(node);
-            route->remove(node->pos());
-
-            if (node->isPickup())  // then we also remove the associated
-            {                      // delivery node
-                auto const *delivery = node + 1;
-                assert(delivery->route() == route);
-
-                searchSpace.markPromising(delivery);
-                route->remove(delivery->pos());
-            }
-
-            route->update();
-        }
-        else
-        {
-            if (node->isClient())
-            {
-                solution.insert(node, searchSpace, costEvaluator, true);
-                node->route()->update();
-                searchSpace.markPromising(node);
-            }
-            else if (node->isPickup())
-            {
-                auto *pickup = node;
-                auto *delivery = node + 1;
-                solution.insert(
-                    pickup, delivery, searchSpace, costEvaluator, true);
-
-                auto *route = pickup->route();
-                assert(delivery->route() == route);
-
-                route->update();
-                searchSpace.markPromising(pickup);
-                searchSpace.markPromising(delivery);
-            }
-        }
-
-        movesLeft--;
-    };
-
-    std::vector<RouteGroup> groups;
+    // Group nodes by their current route. Unplanned nodes share a nullptr
+    // route.
+    std::vector<std::pair<Route *, std::vector<Route::Node *>>> groups;
     auto const groupNode = [&](Route::Node *node)
     {
         assert(node->isClient() || node->isPickup());
@@ -126,8 +127,8 @@ void PerturbationManager::perturb(Solution &solution,
     };
 
     // We perturb the local neighbourhood of randomly ordered activities,
-    // grouped by their current route. Unplanned activities share a null route
-    // group. Planned activities are removed and unplanned ones are inserted.
+    // grouped by their current route. Planned activities are removed and
+    // unplanned ones are inserted.
     for (auto const &uActivity : searchSpace.activityOrder())
     {
         groups.clear();
@@ -146,15 +147,18 @@ void PerturbationManager::perturb(Solution &solution,
         }
 
         for (auto &[route, nodes] : groups)
-        {
             for (auto *node : nodes)
             {
                 assert(node->route() == route);
-                perturb(node);
+                if (route)
+                    remove(node);
+                else
+                    insert(node);
+
+                movesLeft--;
 
                 if (!movesLeft)
                     return;
             }
-        }
     }
 }
