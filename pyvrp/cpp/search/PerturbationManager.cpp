@@ -40,9 +40,7 @@ void PerturbationManager::perturb(Solution &solution,
                                   SearchSpace &searchSpace,
                                   CostEvaluator const &costEvaluator) const
 {
-    size_t movesLeft = numPerturbations_;
-
-    if (!movesLeft)  // nothing to do
+    if (numPerturbations_ == 0)  // nothing to do
         return;
 
     // Clear the set of promising nodes. Perturbation determines the initial
@@ -60,7 +58,7 @@ void PerturbationManager::perturb(Solution &solution,
             node->route()->update();
             searchSpace.markPromising(node);
         }
-        else if (node->isPickup())
+        else
         {
             auto *pickup = node;
             auto *delivery = node + 1;
@@ -85,8 +83,8 @@ void PerturbationManager::perturb(Solution &solution,
         auto *route = node->route();
         route->remove(node->pos());
 
-        if (node->isPickup())  // then we also remove the associated
-        {                      // delivery node
+        if (node->isPickup())  // then we also remove the associated delivery
+        {
             auto const *delivery = node + 1;
             assert(delivery->route() == route);
 
@@ -100,12 +98,10 @@ void PerturbationManager::perturb(Solution &solution,
     DynamicBitset perturbed
         = {solution.clients.size() + solution.shipments.size()};
 
-    // Group nodes by their current route. Unplanned nodes share a nullptr
-    // route.
     std::vector<std::pair<Route *, std::vector<Route::Node *>>> groups;
-    auto const groupNode = [&](Route::Node *node)
+    auto const group = [&](Route::Node *node)  // group nodes by their route
     {
-        assert(node->isClient() || node->isPickup());
+        assert(node && (node->isClient() || node->isPickup()));
         auto const idx = node->isClient()
                              ? node->idx()
                              : solution.clients.size() + node->idx();
@@ -128,39 +124,31 @@ void PerturbationManager::perturb(Solution &solution,
     };
 
     // We perturb the local neighbourhood of randomly ordered activities,
-    // grouped by their current route. Planned activities are removed and
-    // unplanned ones are inserted.
-    for (auto const &uActivity : searchSpace.activityOrder())
+    // grouped by their current route (unplanned by their nullptr route).
+    // Planned activities are removed and unplanned ones are inserted.
+    for (size_t movesLeft = numPerturbations_;
+         auto const &uActivity : searchSpace.activityOrder())
     {
         groups.clear();
 
         auto *node = solution[uActivity];
-        assert(node);
-
-        groupNode(node);
+        group(node);
 
         for (auto const &vActivity : searchSpace.neighboursOf(uActivity))
         {
-            auto *node = solution[vActivity];
-            assert(node);
-
-            if (node->isDelivery())
-                node = node - 1;  // pickup
-
-            groupNode(node);
+            auto *node = solution[vActivity];  // only group clients and pickups
+            group(node->isDelivery() ? node - 1 : node);
         }
 
         for (auto &[route, nodes] : groups)
             for (auto *node : nodes)
             {
-                assert(node->route() == route);
                 if (route)
                     remove(node);
                 else
                     insert(node);
 
                 movesLeft--;
-
                 if (!movesLeft)
                     return;
             }
