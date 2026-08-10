@@ -2,7 +2,6 @@
 
 #include "DynamicBitset.h"
 
-#include <algorithm>
 #include <cassert>
 #include <stdexcept>
 #include <utility>
@@ -50,7 +49,7 @@ void PerturbationManager::perturb(Solution &solution,
     // set of promising nodes for further (local search) improvement.
     searchSpace.unmarkAllPromising();
 
-    auto const insert = [&](Route::Node *node)
+    auto const insert = [&](Route::Node *node)  // insert and mark promising
     {
         assert(node->isClient() || node->isPickup());
         assert(!node->route());
@@ -76,7 +75,7 @@ void PerturbationManager::perturb(Solution &solution,
         }
     };
 
-    auto const remove = [&](Route::Node *node)
+    auto const remove = [&](Route::Node *node)  // remove and mark promising
     {
         assert(node->isClient() || node->isPickup());
         assert(node->route());
@@ -98,8 +97,8 @@ void PerturbationManager::perturb(Solution &solution,
         route->update();
     };
 
-    auto const numClients = solution.clients.size();
-    DynamicBitset perturbed = {numClients + solution.shipments.size()};
+    DynamicBitset perturbed
+        = {solution.clients.size() + solution.shipments.size()};
 
     // Group nodes by their current route. Unplanned nodes share a nullptr
     // route.
@@ -107,23 +106,25 @@ void PerturbationManager::perturb(Solution &solution,
     auto const groupNode = [&](Route::Node *node)
     {
         assert(node->isClient() || node->isPickup());
+        auto const idx = node->isClient()
+                             ? node->idx()
+                             : solution.clients.size() + node->idx();
 
-        auto const idx
-            = node->isClient() ? node->idx() : numClients + node->idx();
+        // This node has already been touched by a previous iteration, so
+        // we skip it here.
         if (perturbed[idx])
             return;
 
         perturbed[idx] = true;
 
-        auto *route = node->route();
-        auto const sameRoute
-            = [route](auto const &group) { return group.first == route; };
-        auto group = std::find_if(groups.begin(), groups.end(), sameRoute);
+        for (auto &[groupRoute, groupNodes] : groups)  // insert into existing
+            if (groupRoute == node->route())           // route group..
+            {
+                groupNodes.push_back(node);
+                return;
+            }
 
-        if (group == groups.end())
-            groups.push_back({route, {node}});
-        else
-            group->second.push_back(node);
+        groups.push_back({node->route(), {node}});  // .. or create new group
     };
 
     // We perturb the local neighbourhood of randomly ordered activities,
