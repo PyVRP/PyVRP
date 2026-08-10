@@ -114,38 +114,48 @@ def test_perturb_removes_clients(ok_small):
     assert_equal(perturbed.num_clients(), 0)
 
 
-def test_perturb_switches_remove_insert(ok_small):
+def test_perturb_groups_neighbours_by_route(small_shipments):
     """
-    Tests that perturbing switches between inserting and removing, depending
-    on whether a random initial client is in the solution.
+    Tests that perturbation processes neighbours by route.
     """
-    sol = Solution(ok_small)  # start with [C0, C1] in the solution
-    sol.load(pyvrp.Solution(ok_small, [[0, 1]]))
+    data = small_shipments
 
-    # We want to perturb three times. We begin by perturbing C0. Since C0 is in
-    # the solution, we remove. C1 is in C0's neighbourhood, so we also remove
-    # C1. Then we move to perturb C1, but it's already been perturbed and none
-    # of its neighbourhood members are in the solution, so there is nothing we
-    # can do. So we move to perturb C2: it's not in the solution, has not been
-    # perturbed yet, so we insert it. That's the third and final perturbation,
-    # so the perturbed solution should contain only C2.
-    search_space = SearchSpace(ok_small, compute_neighbours(ok_small))
-    cost_eval = CostEvaluator([0], 0, 0)
+    # Shipments 0 and 1 share the same route, shipment 3 is on another route,
+    # and shipment 2 starts unplanned.
+    activities1 = [Activity(des) for des in ["L0", "U0", "L1", "U1"]]
+    activities2 = [Activity(des) for des in ["L3", "U3"]]
+    route1 = pyvrp.Route(data, activities1, 0)
+    route2 = pyvrp.Route(data, activities2, 0)
+
+    sol = Solution(data)
+    sol.load(pyvrp.Solution(data, [route1, route2]))
+
+    # We will perturb shipment 0. Its neighbours are shipments 2, 3 and 1,
+    # in that order.
+    neighbours = {Activity(f"L{idx}"): [] for idx in range(data.num_shipments)}
+    neighbours[Activity("L0")] = [
+        Activity("U2"),
+        Activity("U3"),
+        Activity("U1"),
+    ]
+    search_space = SearchSpace(data, neighbours)
+    cost_eval = CostEvaluator([1], 1, 0)
 
     perturbation = PerturbationManager(PerturbationParams(3, 3))
     perturbation.perturb(sol, search_space, cost_eval)
 
-    # Test that the perturbed solution contains only C2.
+    # The first two perturbations remove shipments 0 and 1 from the same
+    # route. The third inserts shipment 2, exhausting the budget before
+    # shipment 3 on the other route is considered.
     perturbed = sol.unload()
-    clients = [
+    unplanned = {
         activity.idx
-        for route in perturbed.routes()
-        for activity in route
-        if activity.is_client()
-    ]
+        for activity in perturbed.unplanned()
+        if activity.is_pickup()
+    }
 
-    assert_equal(perturbed.num_clients(), 1)
-    assert_equal(clients, [2])
+    assert_equal(perturbed.num_shipments(), 2)
+    assert_equal(unplanned, {0, 1})
 
 
 def test_perturb_inserts_into_new_routes(ok_small):
