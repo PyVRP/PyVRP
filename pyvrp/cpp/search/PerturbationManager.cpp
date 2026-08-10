@@ -62,31 +62,39 @@ void PerturbationManager::perturb(Solution &solution,
         if (route)
         {
             searchSpace.markPromising(node);
-            if (node->isPickup())
-            {
-                auto *delivery = node + 1;
+            route->remove(node->pos());
+
+            if (node->isPickup())  // then we also remove the associated
+            {                      // delivery node
+                auto const *delivery = node + 1;
                 assert(delivery->route() == route);
 
                 searchSpace.markPromising(delivery);
                 route->remove(delivery->pos());
             }
 
-            route->remove(node->pos());
+            route->update();
         }
         else
         {
             if (node->isClient())
-                solution.insert(node, searchSpace, costEvaluator, true);
-            else
-                solution.insert(
-                    node, node + 1, searchSpace, costEvaluator, true);
-
-            node->route()->update();
-            searchSpace.markPromising(node);
-
-            if (node->isPickup())
             {
+                solution.insert(node, searchSpace, costEvaluator, true);
+                node->route()->update();
+                searchSpace.markPromising(node);
+            }
+            else if (node->isPickup())
+            {
+                auto *pickup = node;
                 auto *delivery = node + 1;
+                solution.insert(
+                    pickup, delivery, searchSpace, costEvaluator, true);
+
+                auto *route = pickup->route();
+                assert(delivery->route() == route);
+
+                route->update();
+                searchSpace.markPromising(pickup);
                 searchSpace.markPromising(delivery);
             }
         }
@@ -94,35 +102,38 @@ void PerturbationManager::perturb(Solution &solution,
         movesLeft--;
     };
 
+    std::vector<RouteGroup> groups;
+    auto const groupNode = [&](Route::Node *node)
+    {
+        assert(node->isClient() || node->isPickup());
+
+        auto const idx
+            = node->isClient() ? node->idx() : numClients + node->idx();
+        if (perturbed[idx])
+            return;
+
+        perturbed[idx] = true;
+
+        auto *route = node->route();
+        auto const sameRoute
+            = [route](auto const &group) { return group.first == route; };
+        auto group = std::find_if(groups.begin(), groups.end(), sameRoute);
+
+        if (group == groups.end())
+            groups.push_back({route, {node}});
+        else
+            group->second.push_back(node);
+    };
+
     // We perturb the local neighbourhood of randomly ordered activities,
     // grouped by their current route. Unplanned activities share a null route
     // group. Planned activities are removed and unplanned ones are inserted.
     for (auto const &uActivity : searchSpace.activityOrder())
     {
-        std::vector<RouteGroup> groups;
-        auto const groupNode = [&](Route::Node *node)
-        {
-            assert(node->isClient() || node->isPickup());
-
-            auto const idx
-                = node->isClient() ? node->idx() : numClients + node->idx();
-            if (perturbed[idx])
-                return;
-
-            perturbed[idx] = true;
-
-            auto *route = node->route();
-            auto const sameRoute
-                = [route](auto const &group) { return group.first == route; };
-            auto group = std::find_if(groups.begin(), groups.end(), sameRoute);
-
-            if (group == groups.end())
-                groups.push_back({route, {node}});
-            else
-                group->second.push_back(node);
-        };
+        groups.clear();
 
         groupNode(solution[uActivity]);
+
         for (auto const &vActivity : searchSpace.neighboursOf(uActivity))
         {
             auto *node = solution[vActivity];
@@ -142,14 +153,8 @@ void PerturbationManager::perturb(Solution &solution,
                 perturb(node);
 
                 if (!movesLeft)
-                    break;
+                    return;
             }
-
-            if (route)
-                route->update();
-
-            if (!movesLeft)
-                return;
         }
     }
 }
