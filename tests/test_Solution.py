@@ -923,6 +923,24 @@ def test_shipments(small_shipments):
     )
 
 
+def test_shipment_prizes(small_optional_shipments):
+    """
+    Tests collected and uncollected prize values for optional shipments.
+    """
+    data = small_optional_shipments
+
+    # The four shipment prizes total 23_000, all of which are uncollected.
+    unplanned = Solution(data, [])
+    assert_equal(unplanned.prizes(), 0)
+    assert_equal(unplanned.uncollected_prizes(), 23_000)
+
+    # Servicing shipment 0 collects 10_000. The other prizes total 13_000.
+    route = Route(data, map(Activity, ["L0", "U0"]), 0)
+    planned = Solution(data, [route])
+    assert_equal(planned.prizes(), 10_000)
+    assert_equal(planned.uncollected_prizes(), 13_000)
+
+
 def test_raises_multiple_shipment_visits(small_shipments):
     """
     Tests that the solution constructor does not allow the same shipment to
