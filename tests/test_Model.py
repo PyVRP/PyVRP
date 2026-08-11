@@ -1298,3 +1298,15 @@ def test_model_raises_unknown_location_when_adding_shipments():
     # both locations.
     m.add_shipment(pickup_location=loc1, delivery_location=loc1)
     assert_equal(len(m.shipments), 1)
+
+
+def test_add_shipment_integer_amount():
+    """
+    Tests that adding a shipment with integer loads (not list of integers)
+    works as expected, just as it does for clients and vehicle types.
+    """
+    m = Model()
+
+    loc = m.add_location(0, 0)
+    shipment = m.add_shipment(loc, loc, amount=1)
+    assert_equal(shipment.amount, [1])
