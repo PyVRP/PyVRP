@@ -123,7 +123,7 @@ public:
      *
      * where the first part lists each route's fixed, distance, duration and
      * overtime costs, respectively, and the second part the uncollected prizes
-     * of unserved clients and shipments.
+     * of unplanned clients and shipments.
      *
      * .. note::
      *
