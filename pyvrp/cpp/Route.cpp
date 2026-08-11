@@ -1,5 +1,7 @@
 #include "Route.h"
+
 #include "DurationSegment.h"
+#include "DynamicBitset.h"
 #include "LoadSegment.h"
 
 #include <algorithm>
@@ -53,7 +55,8 @@ void Route::validate(ProblemData const &data,
     auto const &vehData = data.vehicleType(vehicleType_);
 
     size_t numTrips = 1;
-    std::vector<size_t> shipmentVisits(data.numShipments(), 0);
+    DynamicBitset pickupVisited(data.numShipments());
+    DynamicBitset deliveryVisited(data.numShipments());
     for (auto const &activity : activities)  // some quick checks up front
     {
         if (activity.isDepot())
@@ -82,34 +85,41 @@ void Route::validate(ProblemData const &data,
             throw std::invalid_argument(msg.str());
         }
 
-        if (activity.isPickup())  // check if it's not been visited before and
-        {                         // increase visit counter
-            if (shipmentVisits[activity.idx()] != 0)
+        if (activity.isPickup())  // check that pickup is unvisited
+        {
+            if (pickupVisited[activity.idx()])
             {
                 std::ostringstream msg;
-                msg << "Pickup " << activity << " must happen before delivery.";
+                msg << "Pickup " << activity << " visited more than once.";
                 throw std::invalid_argument(msg.str());
             }
 
-            shipmentVisits[activity.idx()]++;
+            pickupVisited[activity.idx()] = true;
         }
 
-        if (activity.isDelivery())  // check that it's been visited once before
-        {                           // and decrease visit counter
-            if (shipmentVisits[activity.idx()] != 1)
+        if (activity.isDelivery())  // check that pickup has been visited before
+        {                           // but not delivery
+            if (!pickupVisited[activity.idx()])
             {
                 std::ostringstream msg;
                 msg << "Delivery " << activity << " must follow after pickup.";
                 throw std::invalid_argument(msg.str());
             }
 
-            shipmentVisits[activity.idx()]--;
+            if (deliveryVisited[activity.idx()])
+            {
+                std::ostringstream msg;
+                msg << "Delivery " << activity << " visited more than once.";
+                throw std::invalid_argument(msg.str());
+            }
+
+            deliveryVisited[activity.idx()] = true;
         }
     }
 
     for (size_t idx = 0; idx != data.numShipments(); ++idx)
-        if (shipmentVisits[idx] != 0)  // all shipment visits should match
-        {                              // within this route, so zero count
+        if (pickupVisited[idx] != deliveryVisited[idx])
+        {
             std::ostringstream msg;
             msg << "Shipment " << idx << " has unpaired pickup and delivery.";
             throw std::invalid_argument(msg.str());

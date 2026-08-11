@@ -309,13 +309,14 @@ ProblemData::ProblemData(std::vector<Location> locations,
                                    [](auto sum, VehicleType const &type)
                                    { return sum + type.numAvailable; })),
       numLoadDimensions_(
-          clients_.empty()
-              // If there are no clients we look at the vehicle types. If both
-              // are empty we default to 0. Clients have pickups and deliveries
-              // but the client constructor already ensures those are of equal
-              // size (within a single client).
-              ? (vehicleTypes_.empty() ? 0 : vehicleTypes_[0].capacity.size())
-              : clients_[0].delivery.size()),
+          // We try to get this from the vehicle types, but if those are empty,
+          // we look at the clients and shipments. Since validation happens
+          // later, we cannot yet assume that any vector is non-empty.
+          vehicleTypes_.empty()
+              ? (clients_.empty()
+                     ? (shipments_.empty() ? 0 : shipments_[0].amount.size())
+                     : clients_[0].delivery.size())
+              : vehicleTypes_[0].capacity.size()),
       hasTimeWindows_(
           std::any_of(clients_.begin(), clients_.end(), hasTimeWindow<Client>)
           || std::any_of(depots_.begin(), depots_.end(), hasTimeWindow<Depot>)
