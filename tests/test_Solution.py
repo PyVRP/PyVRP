@@ -933,9 +933,8 @@ def test_shipment_prizes(small_optional_shipments):
     assert_equal(unplanned.uncollected_prizes(), 23_000)
 
     # Servicing shipment 0 collects 10_000. The other prizes total 13_000.
-    route = Route(
-        small_optional_shipments, [Activity("L0"), Activity("U0")], 0
-    )
+    activities = [Activity("L0"), Activity("U0")]
+    route = Route(small_optional_shipments, activities, 0)
     planned = Solution(small_optional_shipments, [route])
     assert_equal(planned.prizes(), 10_000)
     assert_equal(planned.uncollected_prizes(), 13_000)
