@@ -1,7 +1,7 @@
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 import pyvrp
-from pyvrp import Activity, CostEvaluator, RandomNumberGenerator
+from pyvrp import Activity, Client, CostEvaluator, RandomNumberGenerator
 from pyvrp.search import (
     PerturbationManager,
     PerturbationParams,
@@ -141,11 +141,11 @@ def test_perturb_groups_neighbours_by_route(small_shipments):
     search_space = SearchSpace(data, neighbours)
     cost_eval = CostEvaluator([1], 1, 0)
 
-    perturbation = PerturbationManager(PerturbationParams(3, 3))
+    perturbation = PerturbationManager(PerturbationParams(6, 6))
     perturbation.perturb(sol, search_space, cost_eval)
 
-    # The first two perturbations remove shipments 0 and 1 from the same
-    # route. The third inserts shipment 2, exhausting the budget before
+    # Removing shipments 0 and 1 from the same route uses four perturbations.
+    # Inserting shipment 2 uses the last two, exhausting the budget before
     # shipment 3 on the other route is considered.
     perturbed = sol.unload()
     unplanned = {
@@ -203,23 +203,29 @@ def test_perturb_shipments_remove(small_shipments):
     search_space = SearchSpace(data, compute_neighbours(data))
     cost_eval = CostEvaluator([1], 1, 0)
 
-    # The random solution is complete, so all we can do is remove shipments.
-    # We should remove only one, because we haven't shuffled yet and we default
-    # to min_perturbations in that case.
-    perturbation = PerturbationManager()
-    assert_equal(perturbation.num_perturbations(), 1)
+    # One perturbation is not enough to remove a shipment.
+    perturbation = PerturbationManager(PerturbationParams(1, 1))
+    perturbation.perturb(sol, search_space, cost_eval)
+
+    unperturbed = sol.unload()
+    assert_(unperturbed.is_complete())
+    assert_equal(unperturbed.num_shipments(), 4)
+
+    # Two perturbations remove exactly one shipment.
+    perturbation = PerturbationManager(PerturbationParams(2, 2))
 
     perturbation.perturb(sol, search_space, cost_eval)
     perturbed = sol.unload()
 
     assert_(not perturbed.is_complete())
     assert_equal(perturbed.num_shipments(), 3)
+    assert_equal({activity.idx for activity in perturbed.unplanned()}, {0})
 
 
 def test_perturb_shipments_insert(small_shipments):
     """
-    Tests perturbing a shipment solution once, by inserting the first missing
-    shipment into the non-empty solution.
+    Tests perturbing an instance with shipments where the perturbation involves
+    inserting shipments.
     """
     activities = [Activity("L1"), Activity("U1")]
     route = pyvrp.Route(small_shipments, activities, 0)
@@ -228,12 +234,21 @@ def test_perturb_shipments_insert(small_shipments):
     sol = Solution(small_shipments)
     sol.load(pyvrp_sol)
 
-    params = PerturbationParams(1, 1)  # perturb exactly once
-    perturbation = PerturbationManager(params)
-
     neighbours = compute_neighbours(small_shipments)
     search_space = SearchSpace(small_shipments, neighbours)
     cost_eval = CostEvaluator([1], 1, 0)
+
+    # One perturbation is not enough to insert a shipment.
+    search_space.mark_all_promising()
+    perturbation = PerturbationManager(PerturbationParams(1, 1))
+    perturbation.perturb(sol, search_space, cost_eval)
+
+    unperturbed = sol.unload()
+    assert_equal(unperturbed.num_shipments(), 1)
+    assert_(Activity("L0") in unperturbed.unplanned())
+
+    # Two perturbations insert exactly one shipment.
+    perturbation = PerturbationManager(PerturbationParams(2, 2))
     perturbation.perturb(sol, search_space, cost_eval)
 
     # We should have inserted the first missing shipment into the solution.
@@ -254,8 +269,9 @@ def test_perturb_shipment_empty_route(small_shipments):
     assert_equal(empty.num_shipments(), 0)
     assert_(not empty.is_complete())
 
-    # Perturbation should insert all missing shipments into the empty solution.
-    params = PerturbationParams(min_perturbations=4)
+    # Each shipment requires two perturbations, so eight perturbations should
+    # insert all missing shipments into the empty solution.
+    params = PerturbationParams(min_perturbations=8)
     perturbation = PerturbationManager(params)
 
     neighbours = compute_neighbours(small_shipments)
@@ -267,3 +283,29 @@ def test_perturb_shipment_empty_route(small_shipments):
     perturbed = sol.unload()
     assert_equal(perturbed.num_shipments(), 4)
     assert_(perturbed.is_complete())
+
+
+def test_perturb_uses_remaining_move_on_client(small_shipments):
+    """
+    Tests that a single, remaining perturbation move is spent perturbing a
+    client, because a shipment requires two moves.
+    """
+    data = small_shipments.replace(clients=[Client(2, delivery=[0])])
+    sol = Solution(data)
+
+    neighbours = compute_neighbours(data)
+    search_space = SearchSpace(data, neighbours)
+
+    # Ensure that a shipment is considered before the client.
+    search_space.shuffle(RandomNumberGenerator(seed=42))
+    assert_(search_space.activity_order()[0].is_pickup())
+
+    cost_eval = CostEvaluator([1], 1, 0)
+    perturbation = PerturbationManager(PerturbationParams(1, 1))
+    perturbation.perturb(sol, search_space, cost_eval)
+
+    # Shipments are never perturbed because they require two moves. The client
+    # uses the single available move instead.
+    perturbed = sol.unload()
+    assert_equal(perturbed.num_clients(), 1)
+    assert_equal(perturbed.num_shipments(), 0)
