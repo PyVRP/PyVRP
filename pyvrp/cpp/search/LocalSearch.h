@@ -116,7 +116,7 @@ public:
     /**
      * Set neighbourhood structure to use by the local search. For each client
      * and pickup activity, the neighbourhood structure is a vector of nearby
-     * client, pickups, and deliveries.
+     * clients, pickups, and deliveries.
      */
     void setNeighbours(SearchSpace::Neighbours neighbours);
 
