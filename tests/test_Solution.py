@@ -927,16 +927,16 @@ def test_shipment_prizes(small_optional_shipments):
     """
     Tests collected and uncollected prize values for optional shipments.
     """
-    data = small_optional_shipments
-
     # The four shipment prizes total 23_000, all of which are uncollected.
-    unplanned = Solution(data, [])
+    unplanned = Solution(small_optional_shipments, [])
     assert_equal(unplanned.prizes(), 0)
     assert_equal(unplanned.uncollected_prizes(), 23_000)
 
     # Servicing shipment 0 collects 10_000. The other prizes total 13_000.
-    route = Route(data, map(Activity, ["L0", "U0"]), 0)
-    planned = Solution(data, [route])
+    route = Route(
+        small_optional_shipments, [Activity("L0"), Activity("U0")], 0
+    )
+    planned = Solution(small_optional_shipments, [route])
     assert_equal(planned.prizes(), 10_000)
     assert_equal(planned.uncollected_prizes(), 13_000)
 
