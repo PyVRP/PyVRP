@@ -106,10 +106,10 @@ public:
      * fixed vehicle cost :math:`f_R`, and unit distance, duration and overtime
      * costs :math:`c^\text{distance}_R`, :math:`c^\text{duration}_R`,
      * :math:`c^\text{overtime}_R`, respectively. Let
-     * :math:`V_R = \{i : (i, j) \in R \}` be the set of locations visited by
-     * route :math:`R`, and :math:`d_R`, :math:`t_R`, and :math:`o_R` the total
-     * route distance, duration, and overtime, respectively. The objective value
-     * is then given by
+     * :math:`V` be the set of clients and shipments, and :math:`V_R \subseteq
+     * V` those serviced by route :math:`R`. Finally, let :math:`d_R`,
+     * :math:`t_R`, and :math:`o_R` be the total route distance, duration, and
+     * overtime, respectively. The objective value is then given by
      *
      * .. math::
      *
@@ -123,7 +123,7 @@ public:
      *
      * where the first part lists each route's fixed, distance, duration and
      * overtime costs, respectively, and the second part the uncollected prizes
-     * of unvisited clients.
+     * of unserved clients and shipments.
      *
      * .. note::
      *

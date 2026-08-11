@@ -22,6 +22,9 @@ void Solution::evaluate(ProblemData const &data)
     for (auto const &client : data.clients())
         allPrizes += client.prize;
 
+    for (auto const &shipment : data.shipments())
+        allPrizes += shipment.prize;
+
     excessLoad_ = std::vector<Load>(data.numLoadDimensions(), 0);
     for (auto const &route : routes_)
     {

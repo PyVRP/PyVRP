@@ -92,8 +92,8 @@ public:
      *
      *    An empty solution typically indicates that there is a significant
      *    difference between the values of the prizes of the optional clients
-     *    and the other objective terms. This hints at a scaling issue in the
-     *    data.
+     *    and shipments, and the other objective terms. This hints at a scaling
+     *    issue in the data.
      */
     [[nodiscard]] size_t numClients() const;
 
@@ -221,7 +221,8 @@ public:
     [[nodiscard]] Cost prizes() const;
 
     /**
-     * Total prize value of all clients not visited in this solution.
+     * Total prize value of all clients and shipments not serviced in this
+     * solution.
      */
     [[nodiscard]] Cost uncollectedPrizes() const;
 
