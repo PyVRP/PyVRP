@@ -69,6 +69,13 @@ void Route::validate(ProblemData const &data,
                 msg << "Depot " << activity << " is not understood.";
                 throw std::invalid_argument(msg.str());
             }
+
+            if (pickupVisited != deliveryVisited)  // then a shipment crosses
+            {                                      // this reload depot
+                std::ostringstream msg;
+                msg << "A shipment must be fully serviced in the same trip.";
+                throw std::invalid_argument(msg.str());
+            }
         }
 
         if (activity.isClient() && activity.idx() >= data.numClients())
