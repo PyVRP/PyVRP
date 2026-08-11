@@ -85,15 +85,8 @@ void Route::validate(ProblemData const &data,
             throw std::invalid_argument(msg.str());
         }
 
-        if (activity.isPickup())  // check that delivery and pickup have not
-        {                         // been visited before.
-            if (deliveryVisited[activity.idx()])
-            {
-                std::ostringstream msg;
-                msg << "Pickup " << activity << " must happen before delivery.";
-                throw std::invalid_argument(msg.str());
-            }
-
+        if (activity.isPickup())  // check that pickup is unvisited
+        {
             if (pickupVisited[activity.idx()])
             {
                 std::ostringstream msg;
