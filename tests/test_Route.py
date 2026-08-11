@@ -905,3 +905,75 @@ def test_route_with_shipments(small_shipments):
     assert_(route.has_excess_load())
     assert_equal(small_shipments.vehicle_type(0).capacity, [50])
     assert_equal(route.excess_load(), [20])
+
+
+def test_mixed_clients_and_shipments_with_reloading(small_shipments):
+    """
+    Tests the route attributes (distance, duration, etc.) of an instance that
+    has reloading for clients, and shipments.
+    """
+    clients = [Client(0, delivery=[60]), Client(1, delivery=[0])]
+    veh_type = small_shipments.vehicle_type(0).replace(reload_depots=[0])
+    data = small_shipments.replace(clients=clients, vehicle_types=[veh_type])
+    assert_equal(data.num_clients, 2)
+    assert_equal(data.num_shipments, 4)
+
+    descriptions = ["L0", "C0", "L1", "L2", "U0", "U1", "U2", "D0", "C1"]
+    route = Route(data, map(Activity, descriptions), 0)
+    assert_equal(str(route), "L0 C0 L1 L2 U0 U1 U2 | C1")
+
+    # The follow edges are used:
+    #  - D0 -> L0: 2109,
+    #  - L0 -> C0: 2109,
+    #  - C0 -> L1: 8993,
+    #  - L1 -> L2: 11200,
+    #  - L2 -> U0: 5261,
+    #  - U0 -> U1: 5780,
+    #  - U1 -> U2: 8249,
+    #  - U2 -> D0: 3667,
+    #  - D0 -> C1: 3785,
+    #  - C1 -> D0: 3785,
+    # for a total distance of 54_938.
+    assert_equal(route.distance(), 54_938)
+
+    # Time warp at L1 and U2:
+    # * We leave C0 at 15'809, and arrive at L1 at 15'809 + 8'993 = 24'802,
+    #   after L1's time window closes at 21'900. We thus have 24'802 - 21'900
+    #   = 2'902 time warp from L1.
+    # * We leave U1 at 62'500, and arrive at U2 at 62'500 + 8'249 = 70'749,
+    #   after U2's time window closes at 60'200. So we have 70'749 - 60'200
+    #   = 10'549 time warp from U2.
+    assert_equal(data.shipment(1).pickup.tw_late, 21_900)
+    assert_equal(data.shipment(2).delivery.tw_late, 60_200)
+    assert_equal(route.time_warp(), 2_902 + 10_549)
+
+    # Route duration is travel duration (54_938, same as distance), 6 * 900
+    # service, and wait duration at L2 and U1:
+    # * We leave L1 at 22'800, and arrive at L2 at 22'800 + 11'200 = 34'000,
+    #   before L2's time window opens at 47'800. We thus have 47'800 - 34'000
+    #   = 13'800 wait duration from L2.
+    # * We leave U0 at 54'861, and arrive at U1 at 54'861 + 5'780 = 60'641,
+    #   before U1's time window opens at 61'600. We thus have 61'600 - 60'641
+    #   = 959 wait duration from U1.
+    assert_equal(data.shipment(2).pickup.tw_early, 47_800)
+    assert_equal(data.shipment(1).delivery.tw_early, 61_600)
+    assert_equal(route.duration(), 54_938 + 6 * 900 + 13_800 + 959)
+
+    # C0 loads 60, L0 20, L1 30, and L2 again 20. At C0, only C0 and L0 are on
+    # the vehicle for an excess load of 80 - 50 = 30. Although L0 + L1 + L2 are
+    # all on the vehicle together later in the trip, and that results in an
+    # excess load of 70 - 50 = 20, the load at C0 is the greater number.
+    assert_equal(route.excess_load(), [30])
+
+
+def test_raises_shipment_crossing_reload_depot(small_shipments):
+    """
+    Tests that routes check and raise when shipments cross reload depots, which
+    is not supported.
+    """
+    veh_type = small_shipments.vehicle_type(0).replace(reload_depots=[0])
+    data = small_shipments.replace(vehicle_types=[veh_type])
+
+    with assert_raises(ValueError):
+        # Pickup, reload, then delivery. So the shipment crosses the depot.
+        Route(data, map(Activity, ["L0", "D0", "U0"]), 0)
