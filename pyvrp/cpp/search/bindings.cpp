@@ -6,7 +6,7 @@
 #include "PerturbationManager.h"
 #include "RelocateAlternative.h"
 #include "RelocateShipment.h"
-#include "RelocateStep.h"
+#include "RelocateShipmentStep.h"
 #include "RelocateWithDepot.h"
 #include "RemoveAdjacentDepot.h"
 #include "RemoveOptionalClient.h"
@@ -41,7 +41,7 @@ using pyvrp::search::PerturbationManager;
 using pyvrp::search::PerturbationParams;
 using pyvrp::search::RelocateAlternative;
 using pyvrp::search::RelocateShipment;
-using pyvrp::search::RelocateStep;
+using pyvrp::search::RelocateShipmentStep;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::RemoveAdjacentDepot;
 using pyvrp::search::RemoveOptionalClient;
@@ -67,22 +67,23 @@ PYBIND11_MODULE(_search, m)
         .def_readonly("num_evaluations", &OperatorStatistics::numEvaluations)
         .def_readonly("num_applications", &OperatorStatistics::numApplications);
 
-    py::class_<RelocateStep, UnaryOperator>(
-        m, "RelocateStep", DOC(pyvrp, search, RelocateStep))
+    py::class_<RelocateShipmentStep, UnaryOperator>(
+        m, "RelocateShipmentStep", DOC(pyvrp, search, RelocateShipmentStep))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &RelocateStep::statistics,
+                               &RelocateShipmentStep::statistics,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("name", &RelocateStep::name)
+        .def_property_readonly("name", &RelocateShipmentStep::name)
         .def("evaluate",
-             &RelocateStep::evaluate,
+             &RelocateShipmentStep::evaluate,
              py::arg("U"),
              py::arg("cost_evaluator"))
-        .def("apply", &RelocateStep::apply, py::arg("U"))
-        .def("init", &RelocateStep::init, py::arg("solution"))
-        .def_static("supports", &RelocateStep::supports, py::arg("data"));
+        .def("apply", &RelocateShipmentStep::apply, py::arg("U"))
+        .def("init", &RelocateShipmentStep::init, py::arg("solution"))
+        .def_static(
+            "supports", &RelocateShipmentStep::supports, py::arg("data"));
 
     py::class_<RemoveAdjacentDepot, UnaryOperator>(
         m, "RemoveAdjacentDepot", DOC(pyvrp, search, RemoveAdjacentDepot))

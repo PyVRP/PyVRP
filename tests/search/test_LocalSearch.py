@@ -24,7 +24,7 @@ from pyvrp.search import (
     LocalSearch,
     PerturbationManager,
     PerturbationParams,
-    RelocateStep,
+    RelocateShipmentStep,
     RelocateWithDepot,
     RemoveAdjacentDepot,
     RemoveOptionalClient,
@@ -754,7 +754,7 @@ def test_shipment_improves_over_random(small_shipments):
     rng = RandomNumberGenerator(seed=42)
     neighbourhood = compute_neighbours(small_shipments)
     ls = LocalSearch(small_shipments, rng, neighbourhood)
-    ls.add_operator(RelocateStep(small_shipments))
+    ls.add_operator(RelocateShipmentStep(small_shipments))
 
     rnd_sol = Solution.make_random(small_shipments, rng)
     cost_eval = CostEvaluator([1], 1, 0)

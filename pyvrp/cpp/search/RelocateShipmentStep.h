@@ -1,17 +1,17 @@
-#ifndef PYVRP_SEARCH_RELOCATESTEP_H
-#define PYVRP_SEARCH_RELOCATESTEP_H
+#ifndef PYVRP_SEARCH_RELOCATESHIPMENTSTEP_H
+#define PYVRP_SEARCH_RELOCATESHIPMENTSTEP_H
 
 #include "LocalSearchOperator.h"
 
 namespace pyvrp::search
 {
 /**
- * RelocateStep(data: ProblemData)
+ * RelocateShipmentStep(data: ProblemData)
  *
  * Evaluates relocating either step of the shipment represented by pickup node
  * :math:`U` to an improving position in its current route.
  */
-class RelocateStep : public UnaryOperator
+class RelocateShipmentStep : public UnaryOperator
 {
     using UnaryOperator::UnaryOperator;
 
@@ -36,4 +36,4 @@ public:
 };
 }  // namespace pyvrp::search
 
-#endif  // PYVRP_SEARCH_RELOCATESTEP_H
+#endif  // PYVRP_SEARCH_RELOCATESHIPMENTSTEP_H
