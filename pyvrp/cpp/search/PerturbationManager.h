@@ -39,7 +39,8 @@ struct PerturbationParams
  * Handles perturbation during the search. In each iteration, it applies
  * :meth:`~num_perturbations` perturbations that strengthen (resp., weaken)
  * randomly selected neighbourhoods by inserting (removing) clients and
- * shipments.
+ * shipments. Perturbing a shipment counts as two perturbations, one for its
+ * pickup and one for its delivery.
  *
  * Parameters
  * ----------

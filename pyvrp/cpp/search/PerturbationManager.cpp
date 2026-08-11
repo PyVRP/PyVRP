@@ -47,6 +47,11 @@ void PerturbationManager::perturb(Solution &solution,
     // set of promising nodes for further (local search) improvement.
     searchSpace.unmarkAllPromising();
 
+    size_t movesLeft = numPerturbations_;
+    size_t numClientsLeft = solution.clients.size();
+    if (movesLeft == 1 && !numClientsLeft)
+        return;
+
     auto const insert = [&](Route::Node *node)  // insert and mark promising
     {
         assert(node->isClient() || node->isPickup());
@@ -126,8 +131,7 @@ void PerturbationManager::perturb(Solution &solution,
     // We perturb the local neighbourhood of randomly ordered activities,
     // grouped by their current route (unplanned by their nullptr route).
     // Planned activities are removed and unplanned ones are inserted.
-    for (size_t movesLeft = numPerturbations_;
-         auto const &uActivity : searchSpace.activityOrder())
+    for (auto const &uActivity : searchSpace.activityOrder())
     {
         groups.clear();
 
@@ -143,13 +147,20 @@ void PerturbationManager::perturb(Solution &solution,
         for (auto &[route, nodes] : groups)
             for (auto *node : nodes)
             {
+                size_t const numMoves = node->isPickup() ? 2 : 1;
+                if (numMoves > movesLeft)
+                    continue;
+
                 if (route)
                     remove(node);
                 else
                     insert(node);
 
-                movesLeft--;
-                if (!movesLeft)
+                if (node->isClient())
+                    numClientsLeft--;
+
+                movesLeft -= numMoves;
+                if (!movesLeft || (movesLeft == 1 && !numClientsLeft))
                     return;
             }
     }
