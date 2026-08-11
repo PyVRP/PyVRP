@@ -76,7 +76,13 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             auto const lastTest = lastTest_[idx];
             lastTest_[idx] = numUpdates_;
 
-            applyUnaryOps(U, costEvaluator);
+            auto *routes = solution_.routes.data();
+            auto uUpdate = std::numeric_limits<int>::max();
+            if (U->route())
+                uUpdate = lastUpdate_[std::distance(routes, U->route())];
+
+            if (uUpdate > lastTest)
+                applyUnaryOps(U, costEvaluator);
 
             for (auto const &vActivity : searchSpace_.neighboursOf(uActivity))
             {
@@ -86,8 +92,6 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 if (!V->route())
                     continue;
 
-                auto *routes = solution_.routes.data();
-                auto uUpdate = 0;
                 if (U->route())
                     uUpdate = lastUpdate_[std::distance(routes, U->route())];
                 auto vUpdate = lastUpdate_[std::distance(routes, V->route())];
@@ -350,6 +354,11 @@ void LocalSearch::update(Route *U, Route *V)
 
         auto const idx = std::distance(solution_.routes.data(), route);
         lastUpdate_[idx] = numUpdates_;
+
+        for (auto *op : unaryOps_)   // some operators cache partial evaluations
+            op->update(route);       // and use this call to keep those caches
+        for (auto *op : binaryOps_)  // in sync.
+            op->update(route);
     };
 
     if (U)

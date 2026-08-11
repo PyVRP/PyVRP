@@ -84,6 +84,13 @@ public:
      */
     static bool supports([[maybe_unused]] ProblemData const &data);
 
+    /**
+     * Called when a route has been changed. Can be used to update caches, but
+     * the implementation should be fast: this is called every time something
+     * changes!
+     */
+    virtual void update([[maybe_unused]] Route *U) {};
+
     LocalSearchOperator(ProblemData const &data) : data(data){};
     virtual ~LocalSearchOperator() = default;
 };
