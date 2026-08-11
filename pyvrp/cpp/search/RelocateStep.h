@@ -1,23 +1,24 @@
-#ifndef PYVRP_SEARCH_RELOCATEPICKUP_H
-#define PYVRP_SEARCH_RELOCATEPICKUP_H
+#ifndef PYVRP_SEARCH_RELOCATESTEP_H
+#define PYVRP_SEARCH_RELOCATESTEP_H
 
 #include "LocalSearchOperator.h"
 
 namespace pyvrp::search
 {
 /**
- * RelocatePickup(data: ProblemData)
+ * RelocateStep(data: ProblemData)
  *
- * Evaluate relocating the pickup node :math:`U` to the best position in its
- * current route.
+ * Evaluates relocating either step of the shipment represented by pickup node
+ * :math:`U` to an improving position in its current route.
  */
-class RelocatePickup : public UnaryOperator
+class RelocateStep : public UnaryOperator
 {
     using UnaryOperator::UnaryOperator;
 
-    struct Move  // stores cost of reinserting pickup node in front of before
+    struct Move
     {
         Cost cost = std::numeric_limits<Cost>::max();
+        Route::Node *step = nullptr;
         Route::Node const *before = nullptr;
     };
 
@@ -35,4 +36,4 @@ public:
 };
 }  // namespace pyvrp::search
 
-#endif  // PYVRP_SEARCH_RELOCATEPICKUP_H
+#endif  // PYVRP_SEARCH_RELOCATESTEP_H

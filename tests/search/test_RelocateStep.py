@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import Client, CostEvaluator
-from pyvrp.search import RelocatePickup
+from pyvrp.search import RelocateStep
 from pyvrp.search._search import Solution
 from tests.helpers import make_search_route
 
@@ -27,7 +27,7 @@ def test_relocate_just_before_delivery(small_shipments):
     assert_equal(route.distance(), 43_414)
     assert_equal(str(route), "L2 L0 U0 L1 U1 U2")
 
-    op = RelocatePickup(small_shipments)
+    op = RelocateStep(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(op.evaluate(route[1], cost_eval), (-8_406, True))
 
@@ -60,7 +60,7 @@ def test_relocate_just_after_depot(small_shipments):
 
     # L0 is currently just before U0, but a better place is to reinsert it just
     # before C0. That results in less distance, because C0 is at U0's location.
-    op = RelocatePickup(data)
+    op = RelocateStep(data)
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(op.evaluate(route[2], cost_eval), (-5_353, True))
 
@@ -94,7 +94,7 @@ def test_reload_depot(small_shipments):
     assert_(client1.route and client2.route and pick.route and deliv.route)
     assert_equal(str(route), "C0 C1 | L0 U0")
 
-    op = RelocatePickup(data)
+    op = RelocateStep(data)
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(op.evaluate(route[4], cost_eval), (_INT_MAX, False))
 
@@ -107,18 +107,18 @@ def test_relocate_skips_unassigned_nodes(small_shipments):
     pickup, _ = sol.shipments[0]
     assert_(not pickup.route)
 
-    op = RelocatePickup(small_shipments)
+    op = RelocateStep(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(op.evaluate(pickup, cost_eval), (0, False))
 
 
 def test_relocate_skips_non_pickup_nodes(small_shipments):
     """
-    Tests that the operator skips client and delivery nodes. It only works for
-    pickup nodes.
+    Tests that the operator skips client and delivery nodes passed directly as
+    U. The pickup represents the shipment, but either step may be relocated.
     """
     data = small_shipments.replace(clients=[Client(0, delivery=[0])])
-    assert_(RelocatePickup.supports(data))
+    assert_(RelocateStep.supports(data))
 
     sol = Solution(data)
     client = sol.clients[0]
@@ -129,8 +129,8 @@ def test_relocate_skips_non_pickup_nodes(small_shipments):
     assert_equal(str(route), "C0 L0 U0")
 
     # The operator supports instances like these, but it cannot evaluate moves
-    # for the client and delivery nodes.
-    op = RelocatePickup(data)
+    # with the client or delivery as U.
+    op = RelocateStep(data)
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(op.evaluate(client, cost_eval), (0, False))
     assert_equal(op.evaluate(delivery, cost_eval), (0, False))
@@ -140,19 +140,19 @@ def test_supports(ok_small, small_shipments, small_optional_shipments):
     """
     Tests that the operator supports instances with shipments.
     """
-    assert_(RelocatePickup.supports(small_shipments))
-    assert_(RelocatePickup.supports(small_optional_shipments))
+    assert_(RelocateStep.supports(small_shipments))
+    assert_(RelocateStep.supports(small_optional_shipments))
 
     # This instance has no shipments.
-    assert_(not RelocatePickup.supports(ok_small))
+    assert_(not RelocateStep.supports(ok_small))
 
 
 def test_name(small_shipments):
     """
     Tests the operator's name property.
     """
-    op = RelocatePickup(small_shipments)
-    assert_equal(op.name, "RelocatePickup")
+    op = RelocateStep(small_shipments)
+    assert_equal(op.name, "RelocateStep")
 
 
 def test_cannot_improve_singleton_route(small_shipments):
@@ -166,6 +166,6 @@ def test_cannot_improve_singleton_route(small_shipments):
     assert_(pickup.route and delivery.route)
     assert_equal(str(route), "L0 U0")
 
-    op = RelocatePickup(small_shipments)
+    op = RelocateStep(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
     assert_equal(op.evaluate(pickup, cost_eval), (_INT_MAX, False))
