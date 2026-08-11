@@ -134,7 +134,7 @@ public:
      * Returns
      * -------
      * list
-     *     A list of client and shipm,ent activities that are not in this
+     *     A list of client and shipment activities that are not in this
      *     solution.
      */
     [[nodiscard]] Unplanned const &unplanned() const;

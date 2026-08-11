@@ -236,9 +236,10 @@ public:
     durationMatrix(size_t profile) const;
 
     /**
-     * Determines whether any of the :meth:`~clients` or :meth:`~depots` in this
-     * instance have nonstandard time windows, or if any :meth:`~vehicle_types`
-     * have nonstandard shift time windows or latest start constraints.
+     * Determines whether any of the :meth:`~clients`, :meth:`~depots`, or
+     * :meth:`~shipments` in this instance have nonstandard time windows, or
+     * if any :meth:`~vehicle_types` have nonstandard shift time windows or
+     * latest start constraints.
      */
     [[nodiscard]] inline bool hasTimeWindows() const;
 
