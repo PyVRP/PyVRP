@@ -22,6 +22,7 @@ from ._search import RemoveAdjacentDepot as RemoveAdjacentDepot
 from ._search import RemoveOptional as RemoveOptional
 from ._search import ReplaceGroup as ReplaceGroup
 from ._search import ReplaceOptional as ReplaceOptional
+from ._search import SwapRoutes as SwapRoutes
 from ._search import SwapTails as SwapTails
 from ._search import UnaryOperator as UnaryOperator
 from .neighbourhood import compute_neighbours as compute_neighbours
@@ -33,6 +34,7 @@ OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     Exchange21,
     Exchange22,
     SwapTails,
+    SwapRoutes,
     RelocateAlternative,
     RelocateWithDepot,
     RemoveAdjacentDepot,
