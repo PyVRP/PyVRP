@@ -1,10 +1,11 @@
 #ifndef PYVRP_SEARCH_RELOCATE_H
 #define PYVRP_SEARCH_RELOCATE_H
 
+#include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
-#include "Route.h"
 
 #include <cassert>
+#include <vector>
 
 namespace pyvrp::search
 {
@@ -15,8 +16,6 @@ namespace pyvrp::search
  */
 template <size_t N> class Relocate : public BinaryOperator
 {
-    using BinaryOperator::BinaryOperator;
-
     static_assert(N > 0, "N == 0 does not make sense");
 
     // Tests if the segment starting at node contains a depot.
@@ -28,6 +27,9 @@ template <size_t N> class Relocate : public BinaryOperator
     // Tests if the segments of U and V overlap in the same route.
     bool overlap(Route::Node *U, Route::Node *V) const;
 
+    DynamicBitset hasCachedRemoveCost_;
+    std::vector<Cost> removeCost_;
+
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
                                    Route::Node *V,
@@ -35,9 +37,15 @@ public:
 
     void apply(Route::Node *U, Route::Node *V) const override;
 
+    void init(Solution &solution) override;
+
     std::string name() const override;
 
     static bool supports(ProblemData const &data);
+
+    void update(Route const *route) override;
+
+    Relocate(ProblemData const &data);
 };
 
 template <size_t N> bool Relocate<N>::hasDepot(Route::Node *node) const
@@ -91,28 +99,34 @@ std::pair<Cost, bool> Relocate<N>::evaluate(Route::Node *U,
     Cost deltaCost = 0;
     if (U->route() != V->route())
     {
+        assert(U->isClient() || U->isPickup());
         auto const *uRoute = U->route();
         auto const *vRoute = V->route();
 
-        auto const vProposal
-            = Route::Proposal(vRoute->before(V->pos()),
-                              uRoute->between(U->pos(), U->pos() + N - 1),
-                              vRoute->after(V->pos() + 1));
-
-        // Then U's route is empty after this move, so we can subtract the
-        // current route's cost and only evaluate V's proposal.
-        if (uRoute->numClients() + 2 * uRoute->numShipments() == N)
+        auto const idx = (U->isClient() ? 0 : data.numClients()) + U->idx();
+        if (!hasCachedRemoveCost_[idx])
         {
-            deltaCost -= costEvaluator.penalisedCost(*uRoute);
-            costEvaluator.deltaCost(deltaCost, vProposal);
-        }
-        else
-        {
-            auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
-                                                   uRoute->after(U->pos() + N));
+            Cost removeCost = 0;
+            if (uRoute->numClients() + 2 * uRoute->numShipments() == N)
+                // This move leaves the route empty, so the cost delta is just
+                // the current route cost.
+                removeCost -= costEvaluator.penalisedCost(*uRoute);
+            else
+                costEvaluator.deltaCost<true>(  // exact when removing U so we
+                    removeCost,                 // get the right delta for V
+                    Route::Proposal(uRoute->before(U->pos() - 1),
+                                    uRoute->after(U->pos() + N)));
 
-            costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+            removeCost_[idx] = removeCost;
+            hasCachedRemoveCost_[idx] = true;
         }
+
+        deltaCost = removeCost_[idx];
+        costEvaluator.deltaCost(
+            deltaCost,
+            Route::Proposal(vRoute->before(V->pos()),
+                            uRoute->between(U->pos(), U->pos() + N - 1),
+                            vRoute->after(V->pos() + 1)));
     }
     else  // within same route
     {
@@ -155,6 +169,12 @@ void Relocate<N>::apply(Route::Node *U, Route::Node *V) const
     }
 }
 
+template <size_t N> void Relocate<N>::init(Solution &solution)
+{
+    BinaryOperator::init(solution);
+    hasCachedRemoveCost_.reset();
+}
+
 template <size_t N> std::string Relocate<N>::name() const
 {
     return "Relocate" + std::to_string(N);
@@ -167,6 +187,26 @@ template <size_t N> bool Relocate<N>::supports(ProblemData const &data)
             return false;     // if the instance has only shipments
 
     return true;
+}
+
+template <size_t N> void Relocate<N>::update(Route const *route)
+{
+    for (auto const *node : *route)
+    {
+        if (node->isClient())
+            hasCachedRemoveCost_[node->idx()] = false;
+
+        if (node->isPickup())
+            hasCachedRemoveCost_[data.numClients() + node->idx()] = false;
+    }
+}
+
+template <size_t N>
+Relocate<N>::Relocate(ProblemData const &data)
+    : BinaryOperator(data),
+      hasCachedRemoveCost_(data.numClients() + data.numShipments()),
+      removeCost_(data.numClients() + data.numShipments())
+{
 }
 }  // namespace pyvrp::search
 

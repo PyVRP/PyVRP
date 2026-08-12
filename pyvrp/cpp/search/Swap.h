@@ -2,7 +2,6 @@
 #define PYVRP_SEARCH_SWAP_H
 
 #include "LocalSearchOperator.h"
-#include "Route.h"
 
 #include <cassert>
 
