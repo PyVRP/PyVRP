@@ -620,25 +620,15 @@ def test_supports_clients(operator, instance, request):
     assert_(operator.supports(data))
 
 
-def test_supports_shipments(small_shipments):
+@pytest.mark.parametrize("operator", [Exchange10, Exchange11])
+def test_does_not_support_shipments(operator, small_shipments):
     """
-    Tests that only the even Exchange operators support instances with pure
-    shipments.
+    Tests that the Exchange operators do not support instances with shipments.
     """
-    # This is an instance with pure shipments - there are no clients.
-    assert_equal(small_shipments.num_clients, 0)
-    assert_equal(small_shipments.num_shipments, 4)
+    mixed = small_shipments.replace(clients=[Client(location=0, delivery=[0])])
 
-    # These move an even number of nodes between routes, and thus support
-    # instances with pure shipments.
-    assert_(Exchange20.supports(small_shipments))
-    assert_(Exchange22.supports(small_shipments))
-
-    # But these operators move an odd number of nodes between routes, and that
-    # is not supported.
-    assert_(not Exchange10.supports(small_shipments))
-    assert_(not Exchange11.supports(small_shipments))
-    assert_(not Exchange21.supports(small_shipments))
+    assert_(not operator.supports(small_shipments))
+    assert_(not operator.supports(mixed))
 
 
 def test_bug_release_time_shift_time_windows():
@@ -760,86 +750,3 @@ def test_name(ok_small):
     """
     assert_equal(Exchange10(ok_small).name, "Exchange10")
     assert_equal(Exchange11(ok_small).name, "Exchange11")
-
-
-def test_relocate_shipment(small_shipments):
-    """
-    Tests that the relocate operators can also move shipments.
-    """
-    activities = ["L1", "U1", "L0", "U0", "L2", "U2", "L3", "U3"]
-    route = make_search_route(small_shipments, activities)
-    assert_equal(route.distance(), 64_267)
-
-    op = Exchange20(small_shipments)
-    cost_eval = CostEvaluator([0], 0, 0)
-
-    # These moves cannot be done because they would move part of a shipment,
-    # possibly resulting in a pickup after a delivery.
-    assert_equal(op.evaluate(route[2], route[0], cost_eval), (0, False))
-    assert_equal(op.evaluate(route[4], route[0], cost_eval), (0, False))
-    assert_equal(op.evaluate(route[6], route[0], cost_eval), (0, False))
-
-    # But those one can: moving L3 U3 to the front of the route is perfectly
-    # fine, and an improving move.
-    assert_equal(op.evaluate(route[7], route[0], cost_eval), (-13_838, True))
-    op.apply(route[7], route[0])
-    route.update()
-
-    assert_equal(route.distance(), 50_429)
-    assert_equal(str(route), "L3 U3 L1 U1 L0 U0 L2 U2")
-
-
-def test_swap_shipment(small_shipments):
-    """
-    Tests swapping two shipments.
-    """
-    activities = ["L1", "U1", "L0", "U0", "L2", "U2", "L3", "U3"]
-    route = make_search_route(small_shipments, activities)
-    assert_equal(route.distance(), 64_267)
-
-    op = Exchange22(small_shipments)
-    cost_eval = CostEvaluator([0], 0, 0)
-
-    # These cannot be swapped since they would move part of a shipment,
-    # possibly resulting in a pickup after a delivery.
-    assert_equal(op.evaluate(route[2], route[0], cost_eval), (0, False))
-    assert_equal(op.evaluate(route[4], route[0], cost_eval), (0, False))
-    assert_equal(op.evaluate(route[6], route[0], cost_eval), (0, False))
-
-    # But swapping L0 U0 with L3 U3 is fine, and an improving move.
-    assert_equal(op.evaluate(route[3], route[7], cost_eval), (-5_622, True))
-    op.apply(route[3], route[7])
-    route.update()
-
-    assert_equal(route.distance(), 58_645)
-    assert_equal(str(route), "L1 U1 L3 U3 L2 U2 L0 U0")
-
-
-def test_relocate_shipment_fixed_cost(small_shipments):
-    """
-    Tests that relocating a shipment accounts for fixed cost if it leaves the
-    route empty.
-    """
-    veh_type = small_shipments.vehicle_type(0).replace(fixed_cost=10_000)
-    data = small_shipments.replace(vehicle_types=[veh_type])
-
-    route1 = make_search_route(data, ["L0", "U0"])
-    route2 = make_search_route(data, ["L3", "U3"])
-    assert_equal(route1.distance() + route2.distance(), 29_265)
-
-    # Move results in 1_902 less distance, but also empties route1, which saves
-    # a fixed cost of 10_000. So delta is 11_902.
-    op = Exchange20(data)
-    cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route1[1], route2[2], cost_eval), (-11_902, True))
-
-    op.apply(route1[1], route2[2])
-    route1.update()
-    route2.update()
-
-    # route1 is now empty, and route2 has 1_902 less distance than the two
-    # routes had previously.
-    assert_equal(route1.distance(), 0)
-    assert_equal(route2.distance(), 29_265 - 1_902)
-    assert_equal(str(route1), "")
-    assert_equal(str(route2), "L3 U3 L0 U0")

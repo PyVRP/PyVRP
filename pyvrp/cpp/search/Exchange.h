@@ -28,10 +28,6 @@ template <size_t N, size_t M> class Exchange : public BinaryOperator
     // Tests if the segment starting at node of given length contains the depot.
     bool hasDepot(Route::Node *node, size_t segLength) const;
 
-    // Tests if the segment starting at node of given length would split a
-    // shipment if exchanged.
-    bool splitsShipment(Route::Node *node, size_t segLength) const;
-
     // Tests if the segments of U and V overlap in the same route.
     bool overlap(Route::Node *U, Route::Node *V) const;
 
@@ -93,21 +89,6 @@ bool Exchange<N, M>::adjacent(Route::Node *U, Route::Node *V) const
 }
 
 template <size_t N, size_t M>
-bool Exchange<N, M>::splitsShipment(Route::Node *node, size_t segLength) const
-{
-    auto const &route = *node->route();
-    auto const last = node->pos() + segLength - 1;
-
-    // Moving this segment certainly does not split a shipment if there is not
-    // currently a shipment on the vehicle (at node), or if one is loaded, it
-    // is delivered within this segment.
-    return node->isDelivery()
-           || route.numPickups(node->pos())
-                  != route.numDeliveries(node->pos()) + node->isPickup()
-           || route.numPickups(last) != route.numDeliveries(last);
-}
-
-template <size_t N, size_t M>
 std::pair<Cost, bool> Exchange<N, M>::evalRelocateMove(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator) const
 {
@@ -127,7 +108,7 @@ std::pair<Cost, bool> Exchange<N, M>::evalRelocateMove(
 
         // Then U's route is empty after this move, so we can subtract the
         // current route's cost and only evaluate V's proposal.
-        if (uRoute->numClients() + 2 * uRoute->numShipments() == N)
+        if (uRoute->numClients() == N)
         {
             deltaCost -= costEvaluator.penalisedCost(*uRoute);
             costEvaluator.deltaCost(deltaCost, vProposal);
@@ -220,7 +201,7 @@ std::pair<Cost, bool> Exchange<N, M>::evaluate(
 {
     stats_.numEvaluations++;
 
-    if (!U->route() || !V->route() || hasDepot(U, N) || splitsShipment(U, N))
+    if (!U->route() || !V->route() || hasDepot(U, N))
         return std::make_pair(0, false);
 
     if (U->route() == V->route())
@@ -246,7 +227,7 @@ std::pair<Cost, bool> Exchange<N, M>::evaluate(
         if (U->idx() >= V->idx())
             return std::make_pair(0, false);
 
-    if (hasDepot(V, M) || splitsShipment(V, M))
+    if (hasDepot(V, M))
         return std::make_pair(0, false);
 
     return evalSwapMove(U, V, costEvaluator);
@@ -288,11 +269,7 @@ template <size_t N, size_t M> std::string Exchange<N, M>::name() const
 template <size_t N, size_t M>
 bool Exchange<N, M>::supports(ProblemData const &data)
 {
-    if (data.numClients() == 0 && data.numShipments() > 0)
-        if constexpr (N & 1 || M & 1)  // cannot move uneven number of nodes
-            return false;              // if the instance has only shipments
-
-    return true;
+    return data.numShipments() == 0;
 }
 }  // namespace pyvrp::search
 
