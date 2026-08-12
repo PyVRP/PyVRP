@@ -186,8 +186,9 @@ void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
     }
 }
 
-void RelocateWithDepot::init([[maybe_unused]] Solution &solution)
+void RelocateWithDepot::init(Solution &solution)
 {
+    BinaryOperator::init(solution);
     isCached_.reset();
 }
 

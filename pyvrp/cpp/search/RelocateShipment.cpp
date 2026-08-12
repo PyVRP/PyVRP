@@ -101,8 +101,9 @@ void RelocateShipment::apply(Route::Node *U, Route::Node *V) const
     vRoute->insert(V->pos() + 1, U);   // insert pickup
 }
 
-void RelocateShipment::init([[maybe_unused]] Solution &solution)
+void RelocateShipment::init(Solution &solution)
 {
+    BinaryOperator::init(solution);
     isCached_.reset();
 }
 
