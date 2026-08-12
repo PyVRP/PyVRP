@@ -89,7 +89,7 @@ public:
      * the implementation should be fast: this is called every time something
      * changes!
      */
-    virtual void update([[maybe_unused]] Route *U) {};
+    virtual void update([[maybe_unused]] Route const *route) {};
 
     LocalSearchOperator(ProblemData const &data) : data(data){};
     virtual ~LocalSearchOperator() = default;

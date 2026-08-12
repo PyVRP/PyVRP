@@ -352,8 +352,8 @@ void LocalSearch::update(Route *U, Route *V)
         lastUpdate_[idx] = numUpdates_;
 
         for (auto *op : unaryOps_)   // some operators cache partial evaluations
-            op->update(route);       // and use this call to keep those caches
-        for (auto *op : binaryOps_)  // in sync.
+            op->update(route);       // and rely on this call to keep those
+        for (auto *op : binaryOps_)  // caches in sync.
             op->update(route);
     };
 

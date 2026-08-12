@@ -1,7 +1,10 @@
 #ifndef PYVRP_SEARCH_RELOCATESHIPMENT_H
 #define PYVRP_SEARCH_RELOCATESHIPMENT_H
 
+#include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
+
+#include <vector>
 
 namespace pyvrp::search
 {
@@ -14,14 +17,15 @@ namespace pyvrp::search
  */
 class RelocateShipment : public BinaryOperator
 {
-    using BinaryOperator::BinaryOperator;
-
     struct Move
     {
         size_t pos = 0;
     };
 
     Move move_;
+
+    DynamicBitset isCached_;
+    std::vector<Cost> removeCost_;
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
@@ -33,6 +37,10 @@ public:
     std::string name() const override;
 
     static bool supports(ProblemData const &data);
+
+    void update(Route const *route);
+
+    RelocateShipment(ProblemData const &data);
 };
 }  // namespace pyvrp::search
 
