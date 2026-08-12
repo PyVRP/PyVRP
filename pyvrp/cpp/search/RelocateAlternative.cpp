@@ -74,16 +74,22 @@ void RelocateAlternative::evalDifferentRoutes(
     auto const &group = data.group(*uData.group);
     assert(group.mutuallyExclusive);
 
-    Cost removeCost = uData.prize;
-    if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
-        // This move leaves the route empty, so the cost delta is just the
-        // current route cost.
-        removeCost -= costEvaluator.penalisedCost(*uRoute);
-    else
-        costEvaluator.deltaCost<true>(  // exact evaluation so we get the right
-            removeCost,                 // delta when inserting the alternative
-            Route::Proposal(uRoute->before(U->pos() - 1),
-                            uRoute->after(U->pos() + 1)));
+    if (!hasCachedRemoveCost_[U->idx()])
+    {
+        Cost removeCost = uData.prize;
+        if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
+            // This move leaves the route empty, so the cost delta is just the
+            // current route cost.
+            removeCost -= costEvaluator.penalisedCost(*uRoute);
+        else
+            costEvaluator.deltaCost<true>(  // exact so we get the right delta
+                removeCost,                 // when inserting the alternative
+                Route::Proposal(uRoute->before(U->pos() - 1),
+                                uRoute->after(U->pos() + 1)));
+
+        removeCost_[U->idx()] = removeCost;
+        hasCachedRemoveCost_[U->idx()] = true;
+    }
 
     for (auto const client : group)
     {
@@ -91,7 +97,7 @@ void RelocateAlternative::evalDifferentRoutes(
             continue;
 
         auto const &alternative = data.client(client);
-        Cost deltaCost = removeCost - alternative.prize;
+        Cost deltaCost = removeCost_[U->idx()] - alternative.prize;
         costEvaluator.deltaCost(deltaCost,
                                 Route::Proposal(vRoute->before(V->pos()),
                                                 ClientSegment(data, client),
@@ -140,8 +146,9 @@ void RelocateAlternative::apply(Route::Node *U, Route::Node *V) const
 
 void RelocateAlternative::init(Solution &solution)
 {
-    stats_ = {};
+    BinaryOperator::init(solution);
     solution_ = &solution;
+    hasCachedRemoveCost_.reset();
 }
 
 std::string RelocateAlternative::name() const { return "RelocateAlternative"; }
@@ -153,4 +160,18 @@ bool RelocateAlternative::supports(ProblemData const &data)
             return true;
 
     return false;
+}
+
+void RelocateAlternative::update(Route const *route)
+{
+    for (auto const *node : *route)
+        if (node->isClient())
+            hasCachedRemoveCost_[node->idx()] = false;
+}
+
+RelocateAlternative::RelocateAlternative(ProblemData const &data)
+    : BinaryOperator(data),
+      hasCachedRemoveCost_(data.numClients()),
+      removeCost_(data.numClients())
+{
 }

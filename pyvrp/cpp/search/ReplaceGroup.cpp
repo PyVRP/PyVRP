@@ -59,7 +59,7 @@ void ReplaceGroup::apply(Route::Node *U) const
 
 void ReplaceGroup::init(Solution &solution)
 {
-    stats_ = {};
+    UnaryOperator::init(solution);
     solution_ = &solution;
 }
 

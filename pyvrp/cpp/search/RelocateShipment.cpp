@@ -27,25 +27,31 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
     auto const *uPickup = U;
     auto const *uDelivery = U + 1;
 
-    Cost removeCost = 0;
-    if (uRoute->numClients() == 0 && uRoute->numShipments() == 1)
-        // This move leaves the route empty, so the cost delta is just the
-        // current route cost.
-        removeCost -= costEvaluator.penalisedCost(*uRoute);
-    else if (n(uPickup) != uDelivery)   // exact evaluation when removing U so
-        costEvaluator.deltaCost<true>(  // we have the correct delta cost for V
-            removeCost,
-            Route::Proposal(
-                uRoute->before(uPickup->pos() - 1),
-                uRoute->between(uPickup->pos() + 1, uDelivery->pos() - 1),
-                uRoute->after(uDelivery->pos() + 1)));
-    else
-        costEvaluator.deltaCost<true>(
-            removeCost,
-            Route::Proposal(uRoute->before(uPickup->pos() - 1),
-                            uRoute->after(uDelivery->pos() + 1)));
+    if (!hasCachedRemoveCost_[uPickup->idx()])
+    {
+        Cost removeCost = 0;
+        if (uRoute->numClients() == 0 && uRoute->numShipments() == 1)
+            // This move leaves the route empty, so the cost delta is just the
+            // current route cost.
+            removeCost -= costEvaluator.penalisedCost(*uRoute);
+        else if (n(uPickup) != uDelivery)   // exact when removing U so we have
+            costEvaluator.deltaCost<true>(  // the correct delta cost for V
+                removeCost,
+                Route::Proposal(
+                    uRoute->before(uPickup->pos() - 1),
+                    uRoute->between(uPickup->pos() + 1, uDelivery->pos() - 1),
+                    uRoute->after(uDelivery->pos() + 1)));
+        else
+            costEvaluator.deltaCost<true>(
+                removeCost,
+                Route::Proposal(uRoute->before(uPickup->pos() - 1),
+                                uRoute->after(uDelivery->pos() + 1)));
 
-    Cost deltaCost = removeCost;
+        removeCost_[uPickup->idx()] = removeCost;
+        hasCachedRemoveCost_[uPickup->idx()] = true;
+    }
+
+    Cost deltaCost = removeCost_[uPickup->idx()];
     costEvaluator.deltaCost(deltaCost,  // delivery directly after pickup
                             Route::Proposal(vRoute->before(V->pos()),
                                             uRoute->at(uPickup->pos()),
@@ -61,7 +67,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
     // Pickup after V, delivery later in the route.
     for (auto const *node = n(V); !node->isDepot(); node = n(node))
     {
-        Cost deltaCost = removeCost;
+        Cost deltaCost = removeCost_[uPickup->idx()];
         costEvaluator.deltaCost(
             deltaCost,
             Route::Proposal(vRoute->before(V->pos()),
@@ -95,6 +101,12 @@ void RelocateShipment::apply(Route::Node *U, Route::Node *V) const
     vRoute->insert(V->pos() + 1, U);   // insert pickup
 }
 
+void RelocateShipment::init(Solution &solution)
+{
+    BinaryOperator::init(solution);
+    hasCachedRemoveCost_.reset();
+}
+
 std::string RelocateShipment::name() const { return "RelocateShipment"; }
 
 bool RelocateShipment::supports(ProblemData const &data)
@@ -102,4 +114,18 @@ bool RelocateShipment::supports(ProblemData const &data)
     // Evaluates relocating shipments between routes, so we need at least one
     // shipment and more than one vehicle.
     return data.numShipments() > 0 && data.numVehicles() > 1;
+}
+
+void RelocateShipment::update(Route const *route)
+{
+    for (auto const *node : *route)
+        if (node->isPickup())
+            hasCachedRemoveCost_[node->idx()] = false;
+}
+
+RelocateShipment::RelocateShipment(ProblemData const &data)
+    : BinaryOperator(data),
+      hasCachedRemoveCost_(data.numShipments()),
+      removeCost_(data.numShipments())
+{
 }

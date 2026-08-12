@@ -84,6 +84,11 @@ public:
      */
     static bool supports([[maybe_unused]] ProblemData const &data);
 
+    /**
+     * Called when a route has been changed.
+     */
+    virtual void update([[maybe_unused]] Route const *route) {};
+
     LocalSearchOperator(ProblemData const &data) : data(data){};
     virtual ~LocalSearchOperator() = default;
 };
