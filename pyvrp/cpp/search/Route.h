@@ -39,7 +39,7 @@ namespace detail
 template <class Tuple, std::size_t... Indices>
 auto constexpr reverse_impl(Tuple &&tuple, std::index_sequence<Indices...>)
 {
-    return std::make_tuple(std::get<sizeof...(Indices) - 1 - Indices>(
+    return std::forward_as_tuple(std::get<sizeof...(Indices) - 1 - Indices>(
         std::forward<Tuple>(tuple))...);
 }
 
@@ -47,7 +47,7 @@ template <class Tuple> auto constexpr reverse(Tuple &&tuple)
 {
     auto constexpr size = std::tuple_size_v<std::remove_reference_t<Tuple>>;
     auto constexpr indices = std::make_index_sequence<size>{};
-    return reverse_impl(tuple, indices);
+    return reverse_impl(std::forward<Tuple>(tuple), indices);
 }
 }  // namespace detail
 
@@ -123,6 +123,9 @@ public:
          */
         Load excessLoad(size_t dimension) const;
     };
+
+    template <Segment... Segments>  // deduct guide for forward reference pack
+    Proposal(Segments &&...) -> Proposal<Segments...>;
 
     /**
      * Light wrapper class around an activity. This class tracks the route it
