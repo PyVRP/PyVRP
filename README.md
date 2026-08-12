@@ -8,7 +8,7 @@
 
 PyVRP is an open-source, state-of-the-art vehicle routing problem (VRP) solver developed by [Applied Routing](https://appliedrouting.com).
 It currently supports VRPs with:
-- Pickups and deliveries between depots and clients (capacitated VRP, VRP with simultaneous pickup and delivery, VRP with backhaul);
+- Pickups and deliveries (capacitated VRP, VRP with simultaneous pickup and delivery, VRP with backhaul, pickup and delivery VRP);
 - Vehicles of different capacities, costs, shift durations, routing profiles, and maximum distance and duration constraints (heterogeneous fleet VRP, site-dependent VRP);
 - Time windows, client service durations, and release times (VRP with time windows and release times);
 - Multiple depots (multi-depot VRP);
@@ -36,12 +36,13 @@ We provide many tutorials that show how to use PyVRP to solve vehicle routing pr
 The [quickstart][4] introduces PyVRP's modelling interface and is a great way to get started.
 
 The following tutorials cover specific features in more detail:
-- [Load and vehicle capacities][5]: pickups, deliveries, and multiple load dimensions.
+- [Load and vehicle capacities][5]: client pickups, deliveries, and multiple load dimensions.
 - [Time and duration constraints][6]: time windows, service durations, release times, shifts and overtime.
 - [Profiles][7]: different distances and durations for different vehicle types, and modelling access restrictions.
 - [Optional clients][8]: using rewards to visit optional clients.
 - [Mutually exclusive groups][9]: modelling alternative services.
 - [Reloading][10]: vehicle reloading at depots during routes.
+- [Shipments][14]: paired pickup and delivery.
 
 For those interested in PyVRP's underlying algorithm, see [this page][11] for a high-level description of the iterated local search algorithm, and [this notebook][12] for an implementation of the `solve` method using PyVRP's components.
 
@@ -111,3 +112,5 @@ A preprint of this paper is available on [arXiv][13].
 [12]: https://pyvrp.org/notebooks/pyvrp_implementation.html
 
 [13]: https://arxiv.org/abs/2403.13795
+
+[14]: https://pyvrp.org/notebooks/shipments.html

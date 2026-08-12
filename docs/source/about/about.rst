@@ -19,7 +19,7 @@ The following timeline sketches the most significant extensions to date:
 * **2023**: PyVRP is released publicly, and adds support for multiple vehicle types, optional clients, and a high-level :class:`~pyvrp.Model.Model` interface;
 * **2024**: PyVRP adds support for multiple depots, simultaneous pickups and deliveries, mutually exclusive groups, multiple distance and duration matrices through the profile mechanism, and multiple load dimensions;
 * **2025**: PyVRP adds support for routing problems with intermediate reloading at depots;
-* **2026**: PyVRP solves instances of many thousands of clients much better than before.
+* **2026**: PyVRP solves instances of many thousands of clients much better than before, and adds support for shipments (paired pickup and delivery).
 
 Mission
 ^^^^^^^

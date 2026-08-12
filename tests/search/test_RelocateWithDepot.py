@@ -9,6 +9,7 @@ from pyvrp import (
     Depot,
     Location,
     ProblemData,
+    Shipment,
     VehicleType,
 )
 from pyvrp.search import RelocateWithDepot
@@ -388,3 +389,29 @@ def test_depot_service_duration(ok_small_multiple_trips):
     assert_equal(route.excess_load(), [0])
     assert_equal(route.duration(), 2 * 200 + 360 + 360 + 360 + 420)
     assert_(not route.has_time_warp())
+
+
+def test_does_not_insert_depot_in_between_shipments(ok_small_multiple_trips):
+    """
+    Tests that the operator does not insert depots while a shipment is still
+    inside the vehicle.
+    """
+    shipment = Shipment(pickup_location=0, delivery_location=2, amount=[0])
+    data = ok_small_multiple_trips.replace(shipments=[shipment])
+
+    route1 = make_search_route(data, ["C2"])
+    route2 = make_search_route(data, ["L0", "U0", "C0", "C1", "C3"])
+
+    op = RelocateWithDepot(data)
+    cost_eval = CostEvaluator([500], 0, 0)
+
+    # Inserting C2 with a depot after U0 or C0 in route2 is an improving move,
+    # and valid: there is no shipment pair that would be broken up by the depot
+    # insertion.
+    assert_equal(op.evaluate(route1[1], route2[2], cost_eval), (-1_741, True))
+    assert_equal(op.evaluate(route1[1], route2[3], cost_eval), (-3_052, True))
+
+    # But here there would be: L0 and U0 would be broken up by a depot inserted
+    # just after C0. So this move cannot be applied.
+    route3 = make_search_route(data, ["L0", "C0", "U0", "C1", "C3"])
+    assert_equal(op.evaluate(route1[1], route3[2], cost_eval), (0, False))

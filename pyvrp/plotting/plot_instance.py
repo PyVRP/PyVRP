@@ -8,7 +8,7 @@ from pyvrp.plotting.plot_time_windows import plot_time_windows
 
 def plot_instance(data: ProblemData, fig: plt.Figure | None = None):
     """
-    Plots client coordinate, time window and demand data of the given instance.
+    Plots coordinate, time window and demand data of the given instance.
 
     Parameters
     ----------

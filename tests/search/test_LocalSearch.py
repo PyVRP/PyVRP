@@ -20,13 +20,14 @@ from pyvrp import (
 from pyvrp.search import (
     Exchange10,
     Exchange11,
-    InsertOptional,
+    InsertOptionalClient,
     LocalSearch,
     PerturbationManager,
     PerturbationParams,
+    RelocatePickup,
     RelocateWithDepot,
     RemoveAdjacentDepot,
-    RemoveOptional,
+    RemoveOptionalClient,
     ReplaceGroup,
     compute_neighbours,
 )
@@ -45,7 +46,8 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
     cost_evaluator = CostEvaluator([20], 6, 0)
     rng = RandomNumberGenerator(seed=42)
 
-    ls = LocalSearch(ok_small, rng, [[] for _ in range(ok_small.num_clients)])
+    empty = {Activity(f"C{idx}"): [] for idx in range(ok_small.num_clients)}
+    ls = LocalSearch(ok_small, rng, empty)
     ls.add_operator(Exchange10(ok_small))
     ls.add_operator(Exchange11(ok_small))
 
@@ -80,12 +82,12 @@ def test_get_set_neighbours(ok_small):
     ``test_SearchSpace.py``, which handle validation.
     """
     rng = RandomNumberGenerator(seed=42)
-    neighbours = [[] for _ in range(ok_small.num_clients)]
-    ls = LocalSearch(ok_small, rng, neighbours)
-    assert_equal(ls.neighbours, neighbours)
+    empty = {Activity(f"C{idx}"): [] for idx in range(ok_small.num_clients)}
+    ls = LocalSearch(ok_small, rng, empty)
+    assert_equal(ls.neighbours, empty)
 
     new_neighbours = compute_neighbours(ok_small)
-    assert_(new_neighbours != neighbours)
+    assert_(new_neighbours != empty)
 
     ls.neighbours = new_neighbours
     assert_equal(ls.neighbours, new_neighbours)
@@ -105,7 +107,10 @@ def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):
     # [C0, C1, C2, C3] into [C1, C0, C2, C3] or moving one of the nodes into a
     # new route. Since those solutions have larger distance but smaller time
     # warp, they are considered improving sufficiently large time warp penalty.
-    neighbours = [[1], [], [], []]  # C0 -> C1 only
+    data = ok_small
+    neighbours = {Activity(f"C{idx}"): [] for idx in range(data.num_clients)}
+    neighbours[Activity("C0")] = [Activity("C1")]
+
     ls = LocalSearch(ok_small, rng, neighbours)
     ls.add_operator(Exchange10(ok_small))
 
@@ -297,7 +302,7 @@ def test_mutually_exclusive_group_not_in_solution(
     neighbours = compute_neighbours(ok_small_mutually_exclusive_groups)
 
     ls = LocalSearch(ok_small_mutually_exclusive_groups, rng, neighbours)
-    ls.add_operator(InsertOptional(ok_small_mutually_exclusive_groups))
+    ls.add_operator(InsertOptionalClient(ok_small_mutually_exclusive_groups))
 
     sol = Solution(ok_small_mutually_exclusive_groups, [[3]])
     assert_equal(sol.num_missing_groups(), 1)
@@ -339,7 +344,7 @@ def test_no_op_multi_trip_instance(ok_small_multiple_trips):
     data = ok_small_multiple_trips
 
     rng = RandomNumberGenerator(seed=42)
-    neighbours = [[] for _ in range(data.num_clients)]
+    neighbours = {Activity(f"C{idx}"): [] for idx in range(data.num_clients)}
     ls = LocalSearch(
         data,
         rng,
@@ -572,7 +577,7 @@ def test_local_search_inserts_into_empty_solutions():
     rng = RandomNumberGenerator(seed=2)
     cost_eval = CostEvaluator([], 0, 0)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_operator(InsertOptional(data))
+    ls.add_operator(InsertOptionalClient(data))
 
     empty = Solution(data, [])
     assert_equal(empty.num_clients(), 0)
@@ -611,8 +616,8 @@ def test_does_not_insert_optional_groups():
 
     rng = RandomNumberGenerator(seed=2)
     ls = LocalSearch(data, rng, compute_neighbours(data))
-    ls.add_operator(InsertOptional(data))
-    ls.add_operator(RemoveOptional(data))
+    ls.add_operator(InsertOptionalClient(data))
+    ls.add_operator(RemoveOptionalClient(data))
 
     # Start with the group present. After local search, the solution should be
     # empty because the group is not worth keeping around.
@@ -720,3 +725,41 @@ def test_debug_operator_logs(prize_collecting, caplog):
 
     for idx, exp_msg in expected:
         assert_equal(caplog.records[idx].message, exp_msg)
+
+
+def test_shipment_structural_feasibility(small_shipments):
+    """
+    Tests that the LocalSearch restores structural feasibility for instances
+    with required shipments.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbourhood = compute_neighbours(small_shipments)
+    ls = LocalSearch(small_shipments, rng, neighbourhood)
+
+    empty = Solution(small_shipments, [])
+    assert_equal(empty.num_shipments(), 0)
+    assert_(not empty.is_complete())
+
+    cost_eval = CostEvaluator([0], 0, 0)
+    complete = ls(empty, cost_eval)
+    assert_equal(complete.num_shipments(), 4)
+    assert_(complete.is_complete())
+
+
+def test_shipment_improves_over_random(small_shipments):
+    """
+    Smoke test that checks the local search is able to improve a random
+    shipment solution.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    neighbourhood = compute_neighbours(small_shipments)
+    ls = LocalSearch(small_shipments, rng, neighbourhood)
+    ls.add_operator(RelocatePickup(small_shipments))
+
+    rnd_sol = Solution.make_random(small_shipments, rng)
+    cost_eval = CostEvaluator([1], 1, 0)
+    improved = ls(rnd_sol, cost_eval)
+
+    improved_cost = cost_eval.penalised_cost(improved)
+    rnd_cost = cost_eval.penalised_cost(rnd_sol)
+    assert_(improved_cost < rnd_cost)

@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 from tqdm.contrib.concurrent import process_map
 
-from pyvrp import ProblemData, Result, SolveParams, solve
+from pyvrp import ActivityType, ProblemData, Result, SolveParams, solve
 from pyvrp.read import ROUND_FUNCS, read
 from pyvrp.stop import (
     MaxIterations,
@@ -45,12 +45,29 @@ def write_solution(where: Path, data: ProblemData, result: Result):
             # Map activities back to VRPLIB's format.  VRPLIB uses a format
             # where the route visits are numbered with [0, ..., num_depots) for
             # the depots, and [num_depots, ..., num_depots + num_clients) for
-            # the clients.
-            if activity.is_depot():
-                visits.append(activity.idx)
+            # the clients. For the shipments we use the indices from their
+            # names and subtract the depots. Note that this gets confusing
+            # fast if we have instances with mixed clients and shipments, but
+            # we do not typically have those.
+            match activity.type:
+                case ActivityType.DEPOT:
+                    visits.append(activity.idx)
 
-            if activity.is_client():
-                visits.append(data.num_depots + activity.idx)
+                case ActivityType.CLIENT:
+                    visits.append(data.num_depots + activity.idx)
+
+                case ActivityType.PICKUP:
+                    obj = data.shipment(activity.idx)
+                    idx = int(obj.name.split("->")[0]) - data.num_depots
+                    visits.append(idx)
+
+                case ActivityType.DELIVERY:
+                    obj = data.shipment(activity.idx)
+                    idx = int(obj.name.split("->")[1]) - data.num_depots
+                    visits.append(idx)
+
+                case _:
+                    continue
 
         return visits[1:-1]  # skip start and end depots
 

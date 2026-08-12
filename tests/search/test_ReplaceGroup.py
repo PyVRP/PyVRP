@@ -64,7 +64,7 @@ def test_replace_accounts_for_prizes():
     op.init(sol)
 
     # Replacing C0 with C1 collects four more units of prize.
-    move = op.evaluate(sol.nodes[1], CostEvaluator([], 0, 0))
+    move = op.evaluate(sol.clients[1], CostEvaluator([], 0, 0))
     assert_equal(move, (-4, True))
 
 

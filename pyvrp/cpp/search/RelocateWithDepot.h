@@ -1,7 +1,10 @@
 #ifndef PYVRP_SEARCH_RELOCATEWITHDEPOT_H
 #define PYVRP_SEARCH_RELOCATEWITHDEPOT_H
 
+#include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
+
+#include <vector>
 
 namespace pyvrp::search
 {
@@ -21,8 +24,6 @@ namespace pyvrp::search
  */
 class RelocateWithDepot : public BinaryOperator
 {
-    using BinaryOperator::BinaryOperator;
-
     enum class MoveType
     {
         DEPOT_U,  // V -> depot -> U
@@ -38,19 +39,18 @@ class RelocateWithDepot : public BinaryOperator
 
     Move move_;
 
-    // Evaluates moves where a reload depot is inserted before U, as
-    // V -> depot -> U.
-    void evalDepotBefore(Cost fixedCost,
-                         Route::Node *U,
-                         Route::Node *V,
-                         CostEvaluator const &costEvaluator);
+    DynamicBitset hasCachedRemoveCost_;
+    std::vector<Cost> removeCost_;
 
-    // Evaluates moves where a reload depot is inserted after U, as
-    // V -> U -> depot.
-    void evalDepotAfter(Cost fixedCost,
-                        Route::Node *U,
-                        Route::Node *V,
-                        CostEvaluator const &costEvaluator);
+    // Evaluates relocation moves when U and V are in the same route.
+    void evalSameRoute(Route::Node *U,
+                       Route::Node *V,
+                       CostEvaluator const &costEvaluator);
+
+    // Evaluates relocation moves when U and V are in different routes.
+    void evalDifferentRoutes(Route::Node *U,
+                             Route::Node *V,
+                             CostEvaluator const &costEvaluator);
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
@@ -59,10 +59,16 @@ public:
 
     void apply(Route::Node *U, Route::Node *V) const override;
 
-    std::string name() const override;
-};
+    void init(Solution &solution) override;
 
-template <> bool supports<RelocateWithDepot>(ProblemData const &data);
+    std::string name() const override;
+
+    static bool supports(ProblemData const &data);
+
+    void update(Route const *route) override;
+
+    RelocateWithDepot(ProblemData const &data);
+};
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_RELOCATEWITHDEPOT_H

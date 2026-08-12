@@ -13,6 +13,7 @@ from pyvrp import (
 from pyvrp import Solution as PyVRPSolution
 from pyvrp.search import RelocateAlternative
 from pyvrp.search._search import Solution
+from tests.helpers import make_search_route
 
 
 def test_relocate_alternative_within_route(ok_small_mutually_exclusive_groups):
@@ -34,10 +35,10 @@ def test_relocate_alternative_within_route(ok_small_mutually_exclusive_groups):
     #       - dist(D0, C0) - dist(C0, C3) - dist(C3, D0)
     #       = 1476 + 1090 + 1965 - 1544 - 1593 - 1475
     #       = -81.
-    move = op.evaluate(sol.nodes[0], sol.nodes[3], cost_eval)
+    move = op.evaluate(sol.clients[0], sol.clients[3], cost_eval)
     assert_equal(move, (-81, True))
 
-    op.apply(sol.nodes[0], sol.nodes[3])
+    op.apply(sol.clients[0], sol.clients[3])
     assert_equal(str(sol.routes[0]), "C3 C1")
 
 
@@ -63,10 +64,13 @@ def test_relocate_alternative_between_routes(
     #       - dist(D0, C0) - dist(C0, D0)
     #       = 1090 + 1965 - 1475 - 1544 - 1726
     #       = -1690.
-    move = op.evaluate(sol.nodes[0], sol.nodes[3], cost_eval)
+    move = op.evaluate(sol.clients[0], sol.clients[3], cost_eval)
     assert_equal(move, (-1690, True))
 
-    op.apply(sol.nodes[0], sol.nodes[3])
+    op.apply(sol.clients[0], sol.clients[3])
+    sol.routes[0].update()
+    sol.routes[1].update()
+
     assert_equal(sol.routes[0].num_clients(), 0)
     assert_equal(str(sol.routes[1]), "C3 C1")
 
@@ -99,7 +103,7 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
 
     # Moving to the second route saves one fixed vehicle cost (100), and the
     # alternative collects 150 more units of prize.
-    move = op.evaluate(sol.nodes[0], sol.nodes[2], CostEvaluator([], 0, 0))
+    move = op.evaluate(sol.clients[0], sol.clients[2], CostEvaluator([], 0, 0))
     assert_equal(move, (-250, True))
 
     # Second scenario, with C0 and C2 on the same route.
@@ -112,8 +116,25 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
 
     # Moving to the empty second route adds one fixed vehicle cost (100),
     # while the cheaper alternative collects 150 more units of prize.
-    move = op.evaluate(sol.nodes[0], empty[0], CostEvaluator([], 0, 0))
+    move = op.evaluate(sol.clients[0], empty[0], CostEvaluator([], 0, 0))
     assert_equal(move, (-50, True))
+
+
+def test_skips_client_not_in_group(ok_small_mutually_exclusive_groups):
+    """
+    Tests that the operator skips clients that are not in a group.
+    """
+    data = ok_small_mutually_exclusive_groups
+    assert_(not data.client(3).group)
+
+    sol = Solution(data)
+    op = RelocateAlternative(data)
+    op.init(sol)
+
+    # C3 is not in a group, so the operator should skip it.
+    route = make_search_route(data, ["C3", "C0"])
+    cost_eval = CostEvaluator([0], 0, 0)
+    assert_equal(op.evaluate(route[1], route[2], cost_eval), (0, False))
 
 
 def test_supports(

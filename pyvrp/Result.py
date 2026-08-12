@@ -68,6 +68,7 @@ class Result:
             f"    # routes: {self.best.num_routes()}",
             f"     # trips: {self.best.num_trips()}",
             f"   # clients: {self.best.num_clients()}",
+            f" # shipments: {self.best.num_shipments()}",
             f"   objective: {obj_str}",
             f"    distance: {self.best.distance()}",
             f"    duration: {self.best.duration()}",

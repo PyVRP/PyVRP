@@ -127,3 +127,16 @@ def test_result_can_be_pickled(ok_small, num_iterations: int):
     assert_equal(after_pickle.best, before_pickle.best)
     assert_equal(after_pickle.stats, before_pickle.stats)
     assert_equal(after_pickle, before_pickle)
+
+
+def test_shipments_in_summary(small_shipments):
+    """
+    Tests that the number of shipments in the best-found solution is included
+    in the summary.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    sol = Solution.make_random(small_shipments, rng)
+
+    res = Result(sol, Statistics(), 0, 0.0)
+    summary = res.summary()
+    assert_(f"# shipments: {sol.num_shipments()}" in summary)

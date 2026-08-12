@@ -1,7 +1,10 @@
 #ifndef PYVRP_SEARCH_RELOCATEALTERNATIVE_H
 #define PYVRP_SEARCH_RELOCATEALTERNATIVE_H
 
+#include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
+
+#include <vector>
 
 namespace pyvrp::search
 {
@@ -14,8 +17,6 @@ namespace pyvrp::search
  */
 class RelocateAlternative : public BinaryOperator
 {
-    using BinaryOperator::BinaryOperator;
-
     struct Move
     {
         Cost cost = 0;
@@ -25,13 +26,18 @@ class RelocateAlternative : public BinaryOperator
     Move move_;
     Solution *solution_ = nullptr;
 
-    void evalWithinRoute(Route::Node *U,
-                         Route::Node *V,
-                         CostEvaluator const &costEvaluator);
+    DynamicBitset hasCachedRemoveCost_;
+    std::vector<Cost> removeCost_;
 
-    void evalBetweenRoutes(Route::Node *U,
-                           Route::Node *V,
-                           CostEvaluator const &costEvaluator);
+    // Evaluates relocation moves when U and V are in the same route.
+    void evalSameRoute(Route::Node *U,
+                       Route::Node *V,
+                       CostEvaluator const &costEvaluator);
+
+    // Evaluates relocation moves when U and V are in different routes.
+    void evalDifferentRoutes(Route::Node *U,
+                             Route::Node *V,
+                             CostEvaluator const &costEvaluator);
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
@@ -43,9 +49,13 @@ public:
     void init(Solution &solution) override;
 
     std::string name() const override;
-};
 
-template <> bool supports<RelocateAlternative>(ProblemData const &data);
+    static bool supports(ProblemData const &data);
+
+    void update(Route const *route) override;
+
+    RelocateAlternative(ProblemData const &data);
+};
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_RELOCATEALTERNATIVE_H

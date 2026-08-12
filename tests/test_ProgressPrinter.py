@@ -30,7 +30,21 @@ def test_start(ok_small, caplog):
     out = caplog.text
     assert_(f"{ok_small.num_depots} depot" in out)
     assert_(f"{ok_small.num_clients} clients" in out)
+    assert_("0 shipments" in out)  # instance has no shipments
     assert_(f"{ok_small.num_vehicles} vehicles" in out)
+
+
+def test_start_shipments(small_shipments, caplog):
+    """
+    Tests that the progress printer outputs statistics about the number of
+    shipments in the instance when calling start.
+    """
+    printer = ProgressPrinter(should_print=True, display_interval=1.0)
+    printer.start(small_shipments)
+
+    out = caplog.text
+    assert_("0 clients" in out)  # instance has no clients
+    assert_("4 shipments" in out)
 
 
 def test_start_multiple_depot_plural(ok_small_multi_depot, caplog):

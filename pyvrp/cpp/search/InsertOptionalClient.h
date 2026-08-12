@@ -1,18 +1,20 @@
-#ifndef PYVRP_SEARCH_REPLACEOPTIONAL_H
-#define PYVRP_SEARCH_REPLACEOPTIONAL_H
+#ifndef PYVRP_SEARCH_INSERTOPTIONALCLIENT_H
+#define PYVRP_SEARCH_INSERTOPTIONALCLIENT_H
 
 #include "LocalSearchOperator.h"
 
 namespace pyvrp::search
 {
 /**
- * ReplaceOptional(data: ProblemData)
+ * InsertOptionalClient(data: ProblemData)
  *
- * Evaluates replacing an optional client node :math:`V` with :math:`U`.
+ * Evaluates inserting an optional client node :math:`U` after :math:`V`.
  */
-class ReplaceOptional : public BinaryOperator
+class InsertOptionalClient : public BinaryOperator
 {
     using BinaryOperator::BinaryOperator;
+
+    Solution const *solution_ = nullptr;
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
@@ -21,10 +23,12 @@ public:
 
     void apply(Route::Node *U, Route::Node *V) const override;
 
-    std::string name() const override;
-};
+    void init(Solution &solution) override;
 
-template <> bool supports<ReplaceOptional>(ProblemData const &data);
+    std::string name() const override;
+
+    static bool supports(ProblemData const &data);
+};
 }  // namespace pyvrp::search
 
-#endif  // PYVRP_SEARCH_REPLACEOPTIONAL_H
+#endif  // PYVRP_SEARCH_INSERTOPTIONALCLIENT_H

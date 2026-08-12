@@ -7,7 +7,7 @@ This page explains how different attributes of PyVRP's data model relate.
 Time and duration constraints
 -----------------------------
 
-Clients, depots and vehicles are equipped with time windows, and a number of other time and duration-related attributes.
+Clients, shipments, depots and vehicles are equipped with time windows, and a number of other time and duration-related attributes.
 Together, these attributes can be used to model a rich set of constraints.
 Below, we explain the attributes, and how these can be used to enforce different constraints.
 
@@ -23,6 +23,17 @@ The following figure explains this graphically.
 
 .. figure:: ../assets/images/duration-client.svg
    :alt: Duration attributes of ``Client`` objects.
+   :figwidth: 100%
+
+Shipments
+^^^^^^^^^
+
+Shipments modelled using :class:`~pyvrp._pyvrp.Shipment` objects support time windows and service durations at both the pickup and delivery location.
+The model follows that of clients: the time windows indicate when service may *begin*, but vehicles are allowed to arrive earlier.
+The following figure explains the available time window and service duration attributes graphically.
+
+.. figure:: ../assets/images/duration-shipment.svg
+   :alt: Duration attributes of ``Shipment`` objects.
    :figwidth: 100%
 
 Depots

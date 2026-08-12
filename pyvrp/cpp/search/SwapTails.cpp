@@ -13,13 +13,19 @@ bool onLastTrip(pyvrp::search::Route::Node *node)
     auto const *route = node->route();
     return node->trip() + 1 == route->numTrips();
 }
+
+bool splitsShipment(pyvrp::search::Route::Node *node)
+{
+    auto const *route = node->route();
+    return route->numPickups(node->pos()) != route->numDeliveries(node->pos());
+}
 }  // namespace
 
 std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
     Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     stats_.numEvaluations++;
-    assert(!U->isEndDepot() && !U->isReloadDepot());
+    assert(!U->isDepot());
     assert(!V->isEndDepot() && !V->isReloadDepot());
 
     auto const *uRoute = U->route();
@@ -36,22 +42,12 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
         // not include a reload depot.
         return std::make_pair(0, false);
 
+    if (splitsShipment(U) || splitsShipment(V))
+        // Cannot evaluate this move because it would leave part of a shipment
+        // in the other route.
+        return std::make_pair(0, false);
+
     Cost deltaCost = 0;
-
-    // We're going to incur fixed cost if a route is currently empty but
-    // becomes non-empty due to the proposed move.
-    if (uRoute->empty() && !n(V)->isEndDepot())
-        deltaCost += uRoute->fixedVehicleCost();
-
-    if (vRoute->empty() && !n(U)->isEndDepot())
-        deltaCost += vRoute->fixedVehicleCost();
-
-    // We lose fixed cost if a route becomes empty due to the proposed move.
-    if (!uRoute->empty() && U->isStartDepot() && n(V)->isEndDepot())
-        deltaCost -= uRoute->fixedVehicleCost();
-
-    if (!vRoute->empty() && V->isStartDepot() && n(U)->isEndDepot())
-        deltaCost -= vRoute->fixedVehicleCost();
 
     if (!n(U)->isEndDepot() && !n(V)->isEndDepot())
     {
@@ -86,10 +82,17 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
                               vRoute->between(V->pos() + 1, vRoute->size() - 2),
                               uRoute->at(uRoute->size() - 1));
 
-        auto const vProposal = Route::Proposal(vRoute->before(V->pos()),
-                                               vRoute->at(vRoute->size() - 1));
-
-        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        if (V->isStartDepot())  // this move empties V's route, so we subtract
+        {                       // its cost and only evaluate U's proposal
+            deltaCost -= costEvaluator.penalisedCost(*vRoute);
+            costEvaluator.deltaCost(deltaCost, uProposal);
+        }
+        else
+            costEvaluator.deltaCost(
+                deltaCost,
+                uProposal,
+                Route::Proposal(vRoute->before(V->pos()),
+                                vRoute->at(vRoute->size() - 1)));
     }
 
     return std::make_pair(deltaCost, deltaCost < 0);
@@ -122,8 +125,10 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
 
 std::string SwapTails::name() const { return "SwapTails"; }
 
-template <> bool pyvrp::search::supports<SwapTails>(ProblemData const &data)
+bool SwapTails::supports(ProblemData const &data)
 {
-    // Does not work for TSP, since the operator needs at least two routes.
-    return data.numVehicles() > 1;
+    // Does not work for TSP, since the operator needs two routes. Also requires
+    // at least one client, as swapping whole tails does not make much sense
+    // for pure shipments since it likely breaks pickup-and-delivery pairs.
+    return data.numVehicles() > 1 && data.numClients() > 0;
 }

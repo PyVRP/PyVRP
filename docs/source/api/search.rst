@@ -89,22 +89,40 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
    .. autoclass:: RelocateAlternative
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
+   .. autoclass:: RelocatePickup
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: RelocateDelivery
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: RelocateShipment
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
    .. autoclass:: RelocateWithDepot
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
    .. autoclass:: RemoveAdjacentDepot
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: RemoveOptional
+   .. autoclass:: RemoveOptionalClient
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: InsertOptional
+   .. autoclass:: InsertOptionalClient
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
    .. autoclass:: ReplaceGroup
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: ReplaceOptional
+   .. autoclass:: ReplaceOptionalClient
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: InsertOptionalShipment
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: RemoveOptionalShipment
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: ReplaceOptionalShipment
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
    .. autoclass:: SwapTails

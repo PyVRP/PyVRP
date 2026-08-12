@@ -29,9 +29,10 @@ public:
     void apply(Route::Node *U, Route::Node *V) const override;
 
     std::string name() const override;
+
+    static bool supports(ProblemData const &data);
 };
 
-template <> bool supports<SwapTails>(ProblemData const &data);
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_SWAPTAILS_H

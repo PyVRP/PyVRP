@@ -13,8 +13,11 @@ ReplaceGroup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
     assert(!U->isDepot() && solution_);
     stats_.numEvaluations++;
 
+    if (!U->isClient() || U->route())
+        return std::make_pair(0, false);
+
     auto const &uData = data.client(U->idx());
-    if (U->route() || !uData.group)
+    if (!uData.group)
         return std::make_pair(0, false);
 
     auto const &group = data.group(*uData.group);
@@ -22,10 +25,10 @@ ReplaceGroup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
 
     Cost deltaCost = 0;
     for (auto const client : group)
-        if (solution_->nodes[client].route())
+        if (solution_->clients[client].route())
         {
             assert(client != U->idx());
-            V_ = &solution_->nodes[client];
+            V_ = &solution_->clients[client];
             auto *route = V_->route();
 
             deltaCost = data.client(client).prize - uData.prize;
@@ -45,7 +48,7 @@ ReplaceGroup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
 
 void ReplaceGroup::apply(Route::Node *U) const
 {
-    assert(!U->route() && V_);
+    assert(U->isClient() && !U->route() && V_);
     stats_.numApplications++;
 
     auto *route = V_->route();
@@ -56,13 +59,13 @@ void ReplaceGroup::apply(Route::Node *U) const
 
 void ReplaceGroup::init(Solution &solution)
 {
-    stats_ = {};
+    UnaryOperator::init(solution);
     solution_ = &solution;
 }
 
 std::string ReplaceGroup::name() const { return "ReplaceGroup"; }
 
-template <> bool pyvrp::search::supports<ReplaceGroup>(ProblemData const &data)
+bool ReplaceGroup::supports(ProblemData const &data)
 {
     for (auto const &group : data.groups())
         if (group.mutuallyExclusive)

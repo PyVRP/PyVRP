@@ -6,9 +6,9 @@
 
 using pyvrp::search::RelocateAlternative;
 
-void RelocateAlternative::evalWithinRoute(Route::Node *U,
-                                          Route::Node *V,
-                                          CostEvaluator const &costEvaluator)
+void RelocateAlternative::evalSameRoute(Route::Node *U,
+                                        Route::Node *V,
+                                        CostEvaluator const &costEvaluator)
 {
 
     auto const *route = U->route();
@@ -22,7 +22,7 @@ void RelocateAlternative::evalWithinRoute(Route::Node *U,
     if (U->pos() < V->pos())
         for (auto const client : group)
         {
-            auto *alternative = &solution_->nodes[client];
+            auto *alternative = &solution_->clients[client];
             if (alternative == U)
                 continue;
 
@@ -44,7 +44,7 @@ void RelocateAlternative::evalWithinRoute(Route::Node *U,
     else
         for (auto const client : group)
         {
-            auto *alternative = &solution_->nodes[client];
+            auto *alternative = &solution_->clients[client];
             if (alternative == U)
                 continue;
 
@@ -65,9 +65,8 @@ void RelocateAlternative::evalWithinRoute(Route::Node *U,
         }
 }
 
-void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
-                                            Route::Node *V,
-                                            CostEvaluator const &costEvaluator)
+void RelocateAlternative::evalDifferentRoutes(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
 {
     auto const *uRoute = U->route();
     auto const *vRoute = V->route();
@@ -75,32 +74,38 @@ void RelocateAlternative::evalBetweenRoutes(Route::Node *U,
     auto const &group = data.group(*uData.group);
     assert(group.mutuallyExclusive);
 
-    Cost fixedCost = 0;
-    if (uRoute->numClients() == 1)
-        fixedCost -= uRoute->fixedVehicleCost();
+    if (!hasCachedRemoveCost_[U->idx()])
+    {
+        Cost removeCost = uData.prize;
+        if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
+            // This move leaves the route empty, so the cost delta is just the
+            // current route cost.
+            removeCost -= costEvaluator.penalisedCost(*uRoute);
+        else
+            costEvaluator.deltaCost<true>(  // exact so we get the right delta
+                removeCost,                 // when inserting the alternative
+                Route::Proposal(uRoute->before(U->pos() - 1),
+                                uRoute->after(U->pos() + 1)));
 
-    if (vRoute->empty())
-        fixedCost += vRoute->fixedVehicleCost();
-
-    auto const uProposal = Route::Proposal(uRoute->before(U->pos() - 1),
-                                           uRoute->after(U->pos() + 1));
+        removeCost_[U->idx()] = removeCost;
+        hasCachedRemoveCost_[U->idx()] = true;
+    }
 
     for (auto const client : group)
     {
-        auto *alternative = &solution_->nodes[client];
-        if (alternative == U)
+        if (client == U->idx())
             continue;
 
-        auto const &alternativeData = data.client(client);
-        Cost deltaCost = fixedCost + uData.prize - alternativeData.prize;
-        auto const vProposal = Route::Proposal(vRoute->before(V->pos()),
-                                               ClientSegment(data, client),
-                                               vRoute->after(V->pos() + 1));
-        costEvaluator.deltaCost(deltaCost, uProposal, vProposal);
+        auto const &alternative = data.client(client);
+        Cost deltaCost = removeCost_[U->idx()] - alternative.prize;
+        costEvaluator.deltaCost(deltaCost,
+                                Route::Proposal(vRoute->before(V->pos()),
+                                                ClientSegment(data, client),
+                                                vRoute->after(V->pos() + 1)));
 
         if (deltaCost < 0)
         {
-            move_ = {deltaCost, alternative};
+            move_ = {deltaCost, &solution_->clients[client]};
             return;
         }
     }
@@ -111,25 +116,27 @@ std::pair<pyvrp::Cost, bool> RelocateAlternative::evaluate(
 {
     assert(!U->isDepot() && !V->isEndDepot() && solution_);
     stats_.numEvaluations++;
-    move_ = {};
 
-    auto const *uRoute = U->route();
-    auto const *vRoute = V->route();
-    auto const &uData = data.client(U->idx());
-    if (!uRoute || !vRoute || !uData.group || U == V || U == n(V))
+    if (!U->isClient() || !U->route() || !V->route() || U == V || U == n(V))
         return std::make_pair(0, false);
 
-    if (uRoute == vRoute)
-        evalWithinRoute(U, V, costEvaluator);
+    auto const &client = data.client(U->idx());
+    if (!client.group)
+        return std::make_pair(0, false);
+
+    move_ = {};
+
+    if (U->route() == V->route())
+        evalSameRoute(U, V, costEvaluator);
     else
-        evalBetweenRoutes(U, V, costEvaluator);
+        evalDifferentRoutes(U, V, costEvaluator);
 
     return std::make_pair(move_.cost, move_.cost < 0);
 }
 
 void RelocateAlternative::apply(Route::Node *U, Route::Node *V) const
 {
-    assert(U->route() && V->route());
+    assert(U->isClient() && U->route() && V->route());
     assert(move_.alternative && !move_.alternative->route());
     stats_.numApplications++;
 
@@ -139,18 +146,32 @@ void RelocateAlternative::apply(Route::Node *U, Route::Node *V) const
 
 void RelocateAlternative::init(Solution &solution)
 {
-    stats_ = {};
+    BinaryOperator::init(solution);
     solution_ = &solution;
+    hasCachedRemoveCost_.reset();
 }
 
 std::string RelocateAlternative::name() const { return "RelocateAlternative"; }
 
-template <>
-bool pyvrp::search::supports<RelocateAlternative>(ProblemData const &data)
+bool RelocateAlternative::supports(ProblemData const &data)
 {
     for (auto const &group : data.groups())
         if (group.mutuallyExclusive)
             return true;
 
     return false;
+}
+
+void RelocateAlternative::update(Route const *route)
+{
+    for (auto const *node : *route)
+        if (node->isClient())
+            hasCachedRemoveCost_[node->idx()] = false;
+}
+
+RelocateAlternative::RelocateAlternative(ProblemData const &data)
+    : BinaryOperator(data),
+      hasCachedRemoveCost_(data.numClients()),
+      removeCost_(data.numClients())
+{
 }

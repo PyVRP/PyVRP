@@ -26,7 +26,7 @@ namespace pyvrp
  *
  * Duration segments can be efficiently concatenated, and track statistics
  * about route and trip duration and time warp resulting from visiting clients
- * in the concatenated order.
+ * and shipments in the concatenated order.
  *
  * Parameters
  * ----------
@@ -155,6 +155,11 @@ public:
      * Construct from attributes of the given depot and service duration.
      */
     DurationSegment(Depot const &depot, Duration const serviceDuration);
+
+    /**
+     * Construct from attributes of the given shipment step.
+     */
+    DurationSegment(Shipment::Step const &step);
 
     /**
      * Construct from attributes of the given vehicle type and latest finish.
