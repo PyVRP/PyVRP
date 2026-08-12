@@ -8,16 +8,110 @@
 #include <cassert>
 #include <limits>
 #include <ostream>
+#include <vector>
 
 using pyvrp::Cost;
 using pyvrp::Distance;
-using pyvrp::Duration;
-using pyvrp::Load;
+using pyvrp::DurationSegment;
+using pyvrp::LoadSegment;
 
+using pyvrp::search::Route;
+using pyvrp::search::SegmentProxy;
 using pyvrp::search::Solution;
 
 namespace
 {
+class SegmentAccumulator
+{
+    pyvrp::ProblemData const &data_;
+    Route const &route_;
+    SegmentProxy front_;
+    SegmentProxy back_;
+    size_t size_;
+    size_t numClients_;
+    size_t numPickups_;
+    Distance distance_;
+    DurationSegment duration_;
+    std::vector<LoadSegment> loads_;
+
+public:
+    Route const *route() const { return &route_; }
+    SegmentProxy front() const { return front_; }
+    SegmentProxy back() const { return back_; }
+    size_t size() const { return size_; }
+    size_t numClients() const { return numClients_; }
+    size_t numPickups() const { return numPickups_; }
+    bool startsAtReloadDepot() const { return false; }
+    bool endsAtReloadDepot() const { return false; }
+
+    Distance distance([[maybe_unused]] size_t profile) const
+    {
+        assert(profile == route_.profile());
+        return distance_;
+    }
+
+    DurationSegment duration([[maybe_unused]] size_t profile) const
+    {
+        assert(profile == route_.profile());
+        return duration_;
+    }
+
+    LoadSegment const &load(size_t dimension) const
+    {
+        return loads_[dimension];
+    }
+
+    template <pyvrp::search::Segment T>
+    SegmentAccumulator(pyvrp::ProblemData const &data,
+                       Route const &route,
+                       T const &segment)
+        : data_(data),
+          route_(route),
+          front_(segment.front()),
+          back_(segment.back()),
+          size_(segment.size()),
+          numClients_(segment.numClients()),
+          numPickups_(segment.numPickups()),
+          distance_(segment.distance(route.profile())),
+          duration_(segment.duration(route.profile())),
+          loads_(route.capacity().size())
+    {
+        assert(segment.route() == &route);
+        assert(!segment.startsAtReloadDepot());
+        assert(!segment.endsAtReloadDepot());
+
+        for (size_t dim = 0; dim != route.capacity().size(); ++dim)
+            loads_[dim] = segment.load(dim);
+    }
+
+    template <pyvrp::search::Segment T> void merge(T const &segment)
+    {
+        assert(segment.route() == &route_);
+        assert(!segment.startsAtReloadDepot());
+        assert(!segment.endsAtReloadDepot());
+
+        auto const profile = route_.profile();
+        auto const from = back_.location();
+        auto const to = segment.front().location();
+
+        distance_ += data_.distanceMatrix(profile)(from, to);
+        distance_ += segment.distance(profile);
+
+        duration_
+            = DurationSegment::merge(data_.durationMatrix(profile)(from, to),
+                                     duration_,
+                                     segment.duration(profile));
+
+        for (size_t dim = 0; dim != loads_.size(); ++dim)
+            loads_[dim] = LoadSegment::merge(loads_[dim], segment.load(dim));
+
+        back_ = segment.back();
+        size_ += segment.size();
+        numClients_ += segment.numClients();
+        numPickups_ += segment.numPickups();
+    }
+};
+
 Cost insertCost(pyvrp::search::Route::Node *U,
                 pyvrp::search::Route::Node *V,
                 pyvrp::ProblemData const &data,
@@ -264,6 +358,7 @@ bool Solution::insert(Route::Node *pickup,
                 bestCost = deltaCost;
             }
 
+            SegmentAccumulator middle(data_, *route, route->at(V->pos() + 1));
             for (auto const *node = n(V); !node->isDepot(); node = n(node))
             {
                 Cost deltaCost = -shipment.prize;
@@ -271,7 +366,7 @@ bool Solution::insert(Route::Node *pickup,
                     deltaCost,
                     Route::Proposal(route->before(V->pos()),
                                     PickupSegment(data_, pickup->idx()),
-                                    route->between(V->pos() + 1, node->pos()),
+                                    middle,
                                     DeliverySegment(data_, delivery->idx()),
                                     route->after(node->pos() + 1)));
 
@@ -281,6 +376,8 @@ bool Solution::insert(Route::Node *pickup,
                     deliveryPos = node->pos() + 1;
                     bestCost = deltaCost;
                 }
+
+                middle.merge(route->at(node->pos() + 1));
             }
         }
     }
