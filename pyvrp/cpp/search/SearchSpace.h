@@ -49,7 +49,7 @@ public:
     /**
      * Set the neighbourhood structure of this search space. For each client
      * and pickup activity, the neighbourhood structure is a vector of nearby
-     * client, pickups, and deliveries.
+     * clients, pickups, and deliveries.
      */
     void setNeighbours(Neighbours neighbours);
 
