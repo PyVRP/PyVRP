@@ -758,8 +758,8 @@ def test_name(ok_small):
     """
     Tests accessing the operator's name attribute.
     """
-    assert_equal(Exchange10(ok_small).name, "Exchange10")
-    assert_equal(Exchange11(ok_small).name, "Exchange11")
+    assert_equal(Exchange10(ok_small).name, "Relocate1")
+    assert_equal(Exchange11(ok_small).name, "Swap11")
 
 
 def test_relocate_shipment(small_shipments):
