@@ -75,21 +75,27 @@ void RelocateWithDepot::evalDifferentRoutes(Route::Node *U,
     auto const *vRoute = V->route();
     auto const &vehType = data.vehicleType(vRoute->vehicleType());
 
-    Cost removeCost = 0;
-    if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
-        // This move leaves the route empty, so the cost delta is just the
-        // current route cost.
-        removeCost -= costEvaluator.penalisedCost(*uRoute);
-    else
-        costEvaluator.deltaCost<true>(  // exact evaluation when removing U
-            removeCost,                 // so we get the right delta later
-            Route::Proposal(uRoute->before(U->pos() - 1),
-                            uRoute->after(U->pos() + 1)));
+    if (!hasCachedRemoveCost_[U->idx()])
+    {
+        Cost removeCost = 0;
+        if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
+            // This move leaves the route empty, so the cost delta is just the
+            // current route cost.
+            removeCost -= costEvaluator.penalisedCost(*uRoute);
+        else
+            costEvaluator.deltaCost<true>(  // exact evaluation when removing U
+                removeCost,                 // so we get the right delta later
+                Route::Proposal(uRoute->before(U->pos() - 1),
+                                uRoute->after(U->pos() + 1)));
+
+        removeCost_[U->idx()] = removeCost;
+        hasCachedRemoveCost_[U->idx()] = true;
+    }
 
     if (!V->isReloadDepot())  // depot first, U after
         for (auto const depot : vehType.reloadDepots)
         {
-            Cost deltaCost = removeCost;
+            Cost deltaCost = removeCost_[U->idx()];
             costEvaluator.deltaCost(
                 deltaCost,
                 Route::Proposal(vRoute->before(V->pos()),
@@ -104,7 +110,7 @@ void RelocateWithDepot::evalDifferentRoutes(Route::Node *U,
     if (!n(V)->isReloadDepot())  // U first, depot after
         for (auto const depot : vehType.reloadDepots)
         {
-            Cost deltaCost = removeCost;
+            Cost deltaCost = removeCost_[U->idx()];
             costEvaluator.deltaCost(
                 deltaCost,
                 Route::Proposal(vRoute->before(V->pos()),
@@ -180,6 +186,12 @@ void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
     }
 }
 
+void RelocateWithDepot::init(Solution &solution)
+{
+    BinaryOperator::init(solution);
+    hasCachedRemoveCost_.reset();
+}
+
 std::string RelocateWithDepot::name() const { return "RelocateWithDepot"; }
 
 bool RelocateWithDepot::supports(ProblemData const &data)
@@ -190,4 +202,18 @@ bool RelocateWithDepot::supports(ProblemData const &data)
             return true;
 
     return false;
+}
+
+void RelocateWithDepot::update(Route const *route)
+{
+    for (auto const *node : *route)
+        if (node->isClient())
+            hasCachedRemoveCost_[node->idx()] = false;
+}
+
+RelocateWithDepot::RelocateWithDepot(ProblemData const &data)
+    : BinaryOperator(data),
+      hasCachedRemoveCost_(data.numClients()),
+      removeCost_(data.numClients())
+{
 }

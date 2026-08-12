@@ -49,7 +49,7 @@ void InsertOptionalClient::apply(Route::Node *U, Route::Node *V) const
 
 void InsertOptionalClient::init(Solution &solution)
 {
-    stats_ = {};
+    BinaryOperator::init(solution);
     solution_ = &solution;
 }
 

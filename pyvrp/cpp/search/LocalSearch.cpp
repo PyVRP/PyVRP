@@ -350,6 +350,11 @@ void LocalSearch::update(Route *U, Route *V)
 
         auto const idx = std::distance(solution_.routes.data(), route);
         lastUpdate_[idx] = numUpdates_;
+
+        for (auto *op : unaryOps_)   // some operators cache partial evaluations
+            op->update(route);       // and rely on this call to keep those
+        for (auto *op : binaryOps_)  // caches in sync.
+            op->update(route);
     };
 
     if (U)
