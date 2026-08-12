@@ -39,7 +39,7 @@ class RelocateWithDepot : public BinaryOperator
 
     Move move_;
 
-    DynamicBitset isCached_;
+    DynamicBitset hasCachedRemoveCost_;
     std::vector<Cost> removeCost_;
 
     // Evaluates relocation moves when U and V are in the same route.

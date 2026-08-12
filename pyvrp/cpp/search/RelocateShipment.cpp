@@ -27,7 +27,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
     auto const *uPickup = U;
     auto const *uDelivery = U + 1;
 
-    if (!isCached_[uPickup->idx()])
+    if (!hasCachedRemoveCost_[uPickup->idx()])
     {
         Cost removeCost = 0;
         if (uRoute->numClients() == 0 && uRoute->numShipments() == 1)
@@ -48,7 +48,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
                                 uRoute->after(uDelivery->pos() + 1)));
 
         removeCost_[uPickup->idx()] = removeCost;
-        isCached_[uPickup->idx()] = true;
+        hasCachedRemoveCost_[uPickup->idx()] = true;
     }
 
     Cost deltaCost = removeCost_[uPickup->idx()];
@@ -104,7 +104,7 @@ void RelocateShipment::apply(Route::Node *U, Route::Node *V) const
 void RelocateShipment::init(Solution &solution)
 {
     BinaryOperator::init(solution);
-    isCached_.reset();
+    hasCachedRemoveCost_.reset();
 }
 
 std::string RelocateShipment::name() const { return "RelocateShipment"; }
@@ -120,12 +120,12 @@ void RelocateShipment::update(Route const *route)
 {
     for (auto const *node : *route)
         if (node->isPickup())
-            isCached_[node->idx()] = false;
+            hasCachedRemoveCost_[node->idx()] = false;
 }
 
 RelocateShipment::RelocateShipment(ProblemData const &data)
     : BinaryOperator(data),
-      isCached_(data.numShipments()),
+      hasCachedRemoveCost_(data.numShipments()),
       removeCost_(data.numShipments())
 {
 }

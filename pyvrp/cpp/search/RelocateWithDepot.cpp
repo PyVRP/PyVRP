@@ -75,7 +75,7 @@ void RelocateWithDepot::evalDifferentRoutes(Route::Node *U,
     auto const *vRoute = V->route();
     auto const &vehType = data.vehicleType(vRoute->vehicleType());
 
-    if (!isCached_[U->idx()])
+    if (!hasCachedRemoveCost_[U->idx()])
     {
         Cost removeCost = 0;
         if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
@@ -89,7 +89,7 @@ void RelocateWithDepot::evalDifferentRoutes(Route::Node *U,
                                 uRoute->after(U->pos() + 1)));
 
         removeCost_[U->idx()] = removeCost;
-        isCached_[U->idx()] = true;
+        hasCachedRemoveCost_[U->idx()] = true;
     }
 
     if (!V->isReloadDepot())  // depot first, U after
@@ -189,7 +189,7 @@ void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const
 void RelocateWithDepot::init(Solution &solution)
 {
     BinaryOperator::init(solution);
-    isCached_.reset();
+    hasCachedRemoveCost_.reset();
 }
 
 std::string RelocateWithDepot::name() const { return "RelocateWithDepot"; }
@@ -208,12 +208,12 @@ void RelocateWithDepot::update(Route const *route)
 {
     for (auto const *node : *route)
         if (node->isClient())
-            isCached_[node->idx()] = false;
+            hasCachedRemoveCost_[node->idx()] = false;
 }
 
 RelocateWithDepot::RelocateWithDepot(ProblemData const &data)
     : BinaryOperator(data),
-      isCached_(data.numClients()),
+      hasCachedRemoveCost_(data.numClients()),
       removeCost_(data.numClients())
 {
 }

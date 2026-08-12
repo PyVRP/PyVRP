@@ -24,7 +24,7 @@ class RelocateShipment : public BinaryOperator
 
     Move move_;
 
-    DynamicBitset isCached_;
+    DynamicBitset hasCachedRemoveCost_;
     std::vector<Cost> removeCost_;
 
 public:
