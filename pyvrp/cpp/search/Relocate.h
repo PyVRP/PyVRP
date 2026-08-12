@@ -93,7 +93,7 @@ std::pair<Cost, bool> Relocate<N>::evaluate(Route::Node *U,
     if (U->route() == V->route()
         && (U->trip() != V->trip() || overlap(U, V) || U == n(V)))
         // We cannot easily evaluate across trips, and if U and V overlap the
-        // move is not well-defined. If they are adjacent the move is a no-op.
+        // move is not well-defined. If U follows V the move is a no-op.
         return std::make_pair(0, false);
 
     Cost deltaCost = 0;
