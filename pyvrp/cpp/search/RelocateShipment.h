@@ -38,7 +38,7 @@ public:
 
     static bool supports(ProblemData const &data);
 
-    void update(Route const *route);
+    void update(Route const *route) override;
 
     RelocateShipment(ProblemData const &data);
 };
