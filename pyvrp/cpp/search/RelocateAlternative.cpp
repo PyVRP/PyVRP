@@ -140,7 +140,7 @@ void RelocateAlternative::apply(Route::Node *U, Route::Node *V) const
 
 void RelocateAlternative::init(Solution &solution)
 {
-    stats_ = {};
+    BinaryOperator::init(solution);
     solution_ = &solution;
 }
 
