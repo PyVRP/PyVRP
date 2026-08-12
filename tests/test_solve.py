@@ -6,9 +6,9 @@ from pyvrp.IteratedLocalSearch import IteratedLocalSearchParams
 from pyvrp.PenaltyManager import PenaltyParams
 from pyvrp.search import (
     OPERATORS,
-    Exchange10,
     NeighbourhoodParams,
     PerturbationParams,
+    Relocate1,
     SwapTails,
 )
 from pyvrp.solve import SolveParams, solve
@@ -39,7 +39,7 @@ def test_solve_params_from_file():
     ils = IteratedLocalSearchParams(10, 1)
     penalty = PenaltyParams(100, 1.25, 0.85, 0.43)
     neighbourhood = NeighbourhoodParams(0, 20, True)
-    operators = [Exchange10, SwapTails]
+    operators = [Relocate1, SwapTails]
     perturbation = PerturbationParams(1, 10)
 
     assert_equal(params.ils, ils)

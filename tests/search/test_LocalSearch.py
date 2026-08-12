@@ -18,17 +18,17 @@ from pyvrp import (
     VehicleType,
 )
 from pyvrp.search import (
-    Exchange10,
-    Exchange11,
     InsertOptionalClient,
     LocalSearch,
     PerturbationManager,
     PerturbationParams,
+    Relocate1,
     RelocatePickup,
     RelocateWithDepot,
     RemoveAdjacentDepot,
     RemoveOptionalClient,
     ReplaceGroup,
+    Swap11,
     compute_neighbours,
 )
 from pyvrp.search._search import LocalSearch as cpp_LocalSearch
@@ -48,8 +48,8 @@ def test_local_search_returns_same_solution_with_empty_neighbourhood(ok_small):
 
     empty = {Activity(f"C{idx}"): [] for idx in range(ok_small.num_clients)}
     ls = LocalSearch(ok_small, rng, empty)
-    ls.add_operator(Exchange10(ok_small))
-    ls.add_operator(Exchange11(ok_small))
+    ls.add_operator(Relocate1(ok_small))
+    ls.add_operator(Swap11(ok_small))
 
     # The search is completed after one iteration due to the empty
     # neighbourhood. This also prevents moves involving empty routes,
@@ -112,7 +112,7 @@ def test_reoptimize_changed_objective_timewarp_OkSmall(ok_small):
     neighbours[Activity("C0")] = [Activity("C1")]
 
     ls = LocalSearch(ok_small, rng, neighbours)
-    ls.add_operator(Exchange10(ok_small))
+    ls.add_operator(Relocate1(ok_small))
 
     # With 0 timewarp penalty, the solution should not change since
     # the solution [C1, C0, C2, C3] has larger distance.
@@ -140,8 +140,8 @@ def test_prize_collecting(prize_collecting):
 
     neighbours = compute_neighbours(prize_collecting)
     ls = LocalSearch(prize_collecting, rng, neighbours)
-    ls.add_operator(Exchange10(prize_collecting))  # relocate
-    ls.add_operator(Exchange11(prize_collecting))  # swap
+    ls.add_operator(Relocate1(prize_collecting))
+    ls.add_operator(Swap11(prize_collecting))
 
     improved = ls(sol, cost_evaluator, exhaustive=True)
     improved_cost = cost_evaluator.penalised_cost(improved)
@@ -158,8 +158,8 @@ def test_cpp_shuffle_results_in_different_solution(rc208):
     rng = RandomNumberGenerator(seed=42)
 
     ls = cpp_LocalSearch(rc208, compute_neighbours(rc208))
-    ls.add_operator(Exchange10(rc208))
-    ls.add_operator(Exchange11(rc208))
+    ls.add_operator(Relocate1(rc208))
+    ls.add_operator(Swap11(rc208))
 
     cost_evaluator = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(rc208, rng)
@@ -188,8 +188,8 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     neighbours = compute_neighbours(rc208)
 
     ls = cpp_LocalSearch(rc208, neighbours)
-    ls.add_operator(Exchange10(rc208))
-    ls.add_operator(Exchange11(rc208))
+    ls.add_operator(Relocate1(rc208))
+    ls.add_operator(Swap11(rc208))
 
     cost_evaluator = CostEvaluator([1], 1, 0)
     sol = Solution.make_random(rc208, rng)
@@ -205,8 +205,8 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     )
 
     ls = cpp_LocalSearch(data, neighbours)
-    ls.add_operator(Exchange10(data))
-    ls.add_operator(Exchange11(data))
+    ls.add_operator(Relocate1(data))
+    ls.add_operator(Swap11(data))
 
     # Update the improved (locally optimal) solution with vehicles of type 1.
     routes = []
@@ -236,7 +236,7 @@ def test_bugfix_vehicle_type_offsets(ok_small):
     )
 
     ls = cpp_LocalSearch(data, compute_neighbours(data))
-    ls.add_operator(Exchange10(data))
+    ls.add_operator(Relocate1(data))
 
     cost_evaluator = CostEvaluator([1], 1, 0)
 
@@ -281,7 +281,7 @@ def test_local_search_completes_incomplete_solutions(ok_small_prizes):
     rng = RandomNumberGenerator(seed=42)
 
     ls = LocalSearch(ok_small_prizes, rng, compute_neighbours(ok_small_prizes))
-    ls.add_operator(Exchange10(ok_small_prizes))
+    ls.add_operator(Relocate1(ok_small_prizes))
 
     cost_eval = CostEvaluator([1], 1, 0)
     sol = Solution(ok_small_prizes, [[1], [2, 3]])
@@ -428,7 +428,7 @@ def test_search_statistics(ok_small):
         PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
     )
 
-    op = Exchange10(ok_small)
+    op = Relocate1(ok_small)
     ls.add_operator(op)
 
     # No solution is yet loaded/improved, so all these numbers should be zero.
@@ -478,7 +478,7 @@ def test_operators_property(ok_small):
 
     # Now we add a binary operator. The local search does not take ownership,
     # so its only operator should be the exact object we just created.
-    op = Exchange10(ok_small)
+    op = Relocate1(ok_small)
     ls.add_operator(op)
     assert_equal(len(ls.unary_operators), 0)
     assert_equal(len(ls.binary_operators), 1)
@@ -510,7 +510,7 @@ def test_inserts_required_missing(instance, exp_clients: set[int], request):
     rng = RandomNumberGenerator(seed=42)
     perturbation = PerturbationManager(PerturbationParams(1, 1))
     ls = LocalSearch(data, rng, compute_neighbours(data), perturbation)
-    ls.add_operator(Exchange10(data))
+    ls.add_operator(Relocate1(data))
 
     sol = Solution(data, [])
     assert_(not sol.is_complete())
@@ -535,7 +535,7 @@ def test_local_search_exhaustive(rc208):
     """
     rng = RandomNumberGenerator(seed=2)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    ls.add_operator(Exchange10(rc208))
+    ls.add_operator(Relocate1(rc208))
 
     init = Solution.make_random(rc208, rng)
     cost_eval = CostEvaluator([20], 6, 0)
@@ -678,7 +678,7 @@ def test_debug_logs_on_bks(rc208, caplog):
     """
     rng = RandomNumberGenerator(seed=42)
     ls = LocalSearch(rc208, rng, compute_neighbours(rc208))
-    ls.add_operator(Exchange10(rc208))
+    ls.add_operator(Relocate1(rc208))
 
     bks = read_solution("data/RC208.sol", rc208)
     cost_eval = CostEvaluator([1_000], 1_000, 0)
@@ -706,7 +706,7 @@ def test_debug_operator_logs(prize_collecting, caplog):
     rng = RandomNumberGenerator(seed=42)
     neighbourhood = compute_neighbours(prize_collecting)
     ls = LocalSearch(prize_collecting, rng, neighbourhood)
-    ls.add_operator(Exchange10(prize_collecting))
+    ls.add_operator(Relocate1(prize_collecting))
 
     sol = Solution.make_random(prize_collecting, rng)
     cost_eval = CostEvaluator([1_000], 1_000, 0)
@@ -718,7 +718,7 @@ def test_debug_operator_logs(prize_collecting, caplog):
     # captured logs list.
     expected = [
         (0, "Applying local search (exhaustive=true)."),
-        (2, "Applying operator Exchange10 to U=9 and V=48 (delta=-300)."),
+        (2, "Applying operator Relocate1 to U=9 and V=48 (delta=-300)."),
         (-2, "Entering search loop (step=3)."),
         (-1, "Completed local search: improving=71, updates=71, moves=5671."),
     ]
