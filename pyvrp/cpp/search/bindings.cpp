@@ -295,7 +295,7 @@ PYBIND11_MODULE(_search, m)
             "supports", &ReplaceOptionalShipment::supports, py::arg("data"));
 
     py::class_<Relocate<1>, BinaryOperator>(
-        m, "Exchange10", DOC(pyvrp, search, Relocate))
+        m, "Relocate1", DOC(pyvrp, search, Relocate))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
@@ -313,7 +313,7 @@ PYBIND11_MODULE(_search, m)
         .def_static("supports", &Relocate<1>::supports, py::arg("data"));
 
     py::class_<Relocate<2>, BinaryOperator>(
-        m, "Exchange20", DOC(pyvrp, search, Relocate))
+        m, "Relocate2", DOC(pyvrp, search, Relocate))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
@@ -331,7 +331,7 @@ PYBIND11_MODULE(_search, m)
         .def_static("supports", &Relocate<2>::supports, py::arg("data"));
 
     py::class_<Relocate<3>, BinaryOperator>(
-        m, "Exchange30", DOC(pyvrp, search, Relocate))
+        m, "Relocate3", DOC(pyvrp, search, Relocate))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
@@ -349,7 +349,7 @@ PYBIND11_MODULE(_search, m)
         .def_static("supports", &Relocate<3>::supports, py::arg("data"));
 
     py::class_<Swap<1, 1>, BinaryOperator>(
-        m, "Exchange11", DOC(pyvrp, search, Swap))
+        m, "Swap11", DOC(pyvrp, search, Swap))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
@@ -367,7 +367,7 @@ PYBIND11_MODULE(_search, m)
         .def_static("supports", &Swap<1, 1>::supports, py::arg("data"));
 
     py::class_<Swap<2, 1>, BinaryOperator>(
-        m, "Exchange21", DOC(pyvrp, search, Swap))
+        m, "Swap21", DOC(pyvrp, search, Swap))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
@@ -385,7 +385,7 @@ PYBIND11_MODULE(_search, m)
         .def_static("supports", &Swap<2, 1>::supports, py::arg("data"));
 
     py::class_<Swap<3, 1>, BinaryOperator>(
-        m, "Exchange31", DOC(pyvrp, search, Swap))
+        m, "Swap31", DOC(pyvrp, search, Swap))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
@@ -403,7 +403,7 @@ PYBIND11_MODULE(_search, m)
         .def_static("supports", &Swap<3, 1>::supports, py::arg("data"));
 
     py::class_<Swap<2, 2>, BinaryOperator>(
-        m, "Exchange22", DOC(pyvrp, search, Swap))
+        m, "Swap22", DOC(pyvrp, search, Swap))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
@@ -421,7 +421,7 @@ PYBIND11_MODULE(_search, m)
         .def_static("supports", &Swap<2, 2>::supports, py::arg("data"));
 
     py::class_<Swap<3, 2>, BinaryOperator>(
-        m, "Exchange32", DOC(pyvrp, search, Swap))
+        m, "Swap32", DOC(pyvrp, search, Swap))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
@@ -439,7 +439,7 @@ PYBIND11_MODULE(_search, m)
         .def_static("supports", &Swap<3, 2>::supports, py::arg("data"));
 
     py::class_<Swap<3, 3>, BinaryOperator>(
-        m, "Exchange33", DOC(pyvrp, search, Swap))
+        m, "Swap33", DOC(pyvrp, search, Swap))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive

@@ -130,7 +130,7 @@ std::pair<Cost, bool> Relocate<N>::evaluate(Route::Node *U,
     }
     else  // within same route
     {
-        auto *route = U->route();
+        auto const *route = U->route();
 
         if (U->pos() < V->pos())
             costEvaluator.deltaCost(

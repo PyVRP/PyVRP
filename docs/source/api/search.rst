@@ -59,31 +59,31 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
 
    .. autoclass:: UnaryOperator
 
-   .. autoclass:: Exchange10
+   .. autoclass:: Relocate1
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: Exchange20
+   .. autoclass:: Relocate2
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: Exchange30
+   .. autoclass:: Relocate3
       :exclude-members: evaluate, apply, statistics, supports, init, name
    
-   .. autoclass:: Exchange11
+   .. autoclass:: Swap11
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: Exchange21
+   .. autoclass:: Swap21
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: Exchange31
+   .. autoclass:: Swap31
       :exclude-members: evaluate, apply, statistics, supports, init, name
    
-   .. autoclass:: Exchange22
+   .. autoclass:: Swap22
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: Exchange32
+   .. autoclass:: Swap32
       :exclude-members: evaluate, apply, statistics, supports, init, name
    
-   .. autoclass:: Exchange33
+   .. autoclass:: Swap33
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
    .. autoclass:: RelocateAlternative
