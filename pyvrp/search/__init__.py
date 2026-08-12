@@ -18,6 +18,7 @@ from ._search import NeighbourhoodParams as NeighbourhoodParams
 from ._search import PerturbationManager as PerturbationManager
 from ._search import PerturbationParams as PerturbationParams
 from ._search import RelocateAlternative as RelocateAlternative
+from ._search import RelocateDelivery as RelocateDelivery
 from ._search import RelocatePickup as RelocatePickup
 from ._search import RelocateShipment as RelocateShipment
 from ._search import RelocateWithDepot as RelocateWithDepot
@@ -40,6 +41,7 @@ OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     SwapTails,
     RelocateAlternative,
     RelocatePickup,
+    RelocateDelivery,
     RelocateWithDepot,
     RemoveAdjacentDepot,
     RemoveOptionalClient,
