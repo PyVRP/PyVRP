@@ -5,6 +5,7 @@
 #include "LocalSearch.h"
 #include "PerturbationManager.h"
 #include "RelocateAlternative.h"
+#include "RelocateDelivery.h"
 #include "RelocatePickup.h"
 #include "RelocateShipment.h"
 #include "RelocateWithDepot.h"
@@ -40,6 +41,7 @@ using pyvrp::search::OperatorStatistics;
 using pyvrp::search::PerturbationManager;
 using pyvrp::search::PerturbationParams;
 using pyvrp::search::RelocateAlternative;
+using pyvrp::search::RelocateDelivery;
 using pyvrp::search::RelocatePickup;
 using pyvrp::search::RelocateShipment;
 using pyvrp::search::RelocateWithDepot;
@@ -66,6 +68,23 @@ PYBIND11_MODULE(_search, m)
         m, "OperatorStatistics", DOC(pyvrp, search, OperatorStatistics))
         .def_readonly("num_evaluations", &OperatorStatistics::numEvaluations)
         .def_readonly("num_applications", &OperatorStatistics::numApplications);
+
+    py::class_<RelocateDelivery, UnaryOperator>(
+        m, "RelocateDelivery", DOC(pyvrp, search, RelocateDelivery))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &RelocateDelivery::statistics,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &RelocateDelivery::name)
+        .def("evaluate",
+             &RelocateDelivery::evaluate,
+             py::arg("U"),
+             py::arg("cost_evaluator"))
+        .def("apply", &RelocateDelivery::apply, py::arg("U"))
+        .def("init", &RelocateDelivery::init, py::arg("solution"))
+        .def_static("supports", &RelocateDelivery::supports, py::arg("data"));
 
     py::class_<RelocatePickup, UnaryOperator>(
         m, "RelocatePickup", DOC(pyvrp, search, RelocatePickup))
