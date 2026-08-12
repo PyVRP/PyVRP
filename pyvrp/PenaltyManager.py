@@ -163,10 +163,9 @@ class PenaltyManager:
             params.max_penalty,
         )
 
-        # Tracks recent feasibilities for each penalty dimension.
-        self._feas_lists: list[list[bool]] = [
-            [] for _ in range(len(self._penalties))
-        ]
+        # Tracks recent violations for each penalty dimension.
+        self._viol_lists: list[list[int]] = [[] for _ in self._penalties]
+        self._prev_avgs: list[float | None] = [None] * len(self._penalties)
 
     def penalties(self) -> tuple[list[float], float, float]:
         """
@@ -191,7 +190,35 @@ class PenaltyManager:
         else:
             new_penalty = self._params.penalty_decrease * penalty
 
-        if new_penalty >= self._params.max_penalty:
+        return np.clip(
+            new_penalty,
+            self._params.min_penalty,
+            self._params.max_penalty,
+        )
+
+    def _register(self, idx: int, violation: int):
+        viol_list = self._viol_lists[idx]
+        viol_list.append(violation)
+
+        if len(viol_list) != self._params.solutions_between_updates:
+            return
+
+        feas_percentage = fmean(violation == 0 for violation in viol_list)
+        avg_violation = fmean(viol_list)
+        viol_list.clear()
+
+        # Warn if no feasible solutions are found and violations stop improving
+        # while the penalty is at its maximum.
+        penalty = self._penalties[idx]
+        prev_avg = self._prev_avgs[idx]
+        diff = self._params.target_feasible - feas_percentage
+        if (
+            diff >= self._params.feas_tolerance
+            and penalty >= self._params.max_penalty
+            and feas_percentage == 0
+            and prev_avg is not None
+            and avg_violation >= prev_avg
+        ):
             msg = """
             A penalty parameter has reached its maximum value. This means PyVRP
             struggles to find a feasible solution for this instance, either
@@ -201,36 +228,21 @@ class PenaltyManager:
             """
             warn(msg, PenaltyBoundWarning)
 
-        return np.clip(
-            new_penalty,
-            self._params.min_penalty,
-            self._params.max_penalty,
-        )
-
-    def _register(self, feas_list: list[bool], penalty: float, is_feas: bool):
-        feas_list.append(is_feas)
-
-        if len(feas_list) != self._params.solutions_between_updates:
-            return penalty
-
-        avg = fmean(feas_list)
-        feas_list.clear()
-        return self._compute(penalty, avg)
+        self._prev_avgs[idx] = avg_violation
+        self._penalties[idx] = self._compute(penalty, feas_percentage)
 
     def register(self, sol: Solution):
         """
-        Registers the feasibility dimensions of the given solution.
+        Registers the violations for each dimension of the given solution.
         """
-        is_feasible = [
-            *[excess == 0 for excess in sol.excess_load()],
-            not sol.has_time_warp(),
-            not sol.has_excess_distance(),
+        violations = [
+            *sol.excess_load(),
+            sol.time_warp(),
+            sol.excess_distance(),
         ]
 
-        for idx, is_feas in enumerate(is_feasible):
-            feas_list = self._feas_lists[idx]
-            penalty = self._penalties[idx]
-            self._penalties[idx] = self._register(feas_list, penalty, is_feas)
+        for idx, violation in enumerate(violations):
+            self._register(idx, violation)
 
     def cost_evaluator(self) -> CostEvaluator:
         """
