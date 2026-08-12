@@ -22,35 +22,36 @@ RelocateDelivery::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
 
     for (auto const *after = U; !after->isDepot(); after = n(after))
     {
-        if (after != delivery && n(after) != delivery)
-        {
-            Cost deltaCost = 0;
-            if (delivery->pos() < after->pos())
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(
-                        route->before(delivery->pos() - 1),
-                        route->between(delivery->pos() + 1, after->pos()),
-                        DeliverySegment(data, U->idx()),
-                        route->after(after->pos() + 1)));
-            else
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(
-                        route->before(after->pos()),
-                        DeliverySegment(data, U->idx()),
-                        route->between(after->pos() + 1, delivery->pos() - 1),
-                        route->after(delivery->pos() + 1)));
+        if (after == delivery || n(after) == delivery)
+            continue;
 
-            if (deltaCost < 0)
-            {
-                move_ = {deltaCost, after};
-                return std::make_pair(deltaCost, true);
-            }
+        Cost deltaCost = 0;
+        if (delivery->pos() < after->pos())
+            costEvaluator.deltaCost(
+                deltaCost,
+                Route::Proposal(
+                    route->before(delivery->pos() - 1),
+                    route->between(delivery->pos() + 1, after->pos()),
+                    DeliverySegment(data, U->idx()),
+                    route->after(after->pos() + 1)));
+        else
+            costEvaluator.deltaCost(
+                deltaCost,
+                Route::Proposal(
+                    route->before(after->pos()),
+                    DeliverySegment(data, U->idx()),
+                    route->between(after->pos() + 1, delivery->pos() - 1),
+                    route->after(delivery->pos() + 1)));
+
+        if (deltaCost < 0)
+        {
+            move_.cost = deltaCost;
+            move_.after = after;
+            break;
         }
     }
 
-    return std::make_pair(move_.cost, false);
+    return std::make_pair(move_.cost, move_.cost < 0);
 }
 
 void RelocateDelivery::apply(Route::Node *U) const
