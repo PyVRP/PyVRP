@@ -12,7 +12,8 @@ namespace pyvrp::search
 /**
  * Relocate(data: ProblemData)
  *
- * TODO
+ * The :math:`N`-relocate operator evaluates relocating :math:`N` consecutive
+ * nodes from :math:`U`'s route, starting with :math:`U`, to after :math:`V`.
  */
 template <size_t N> class Relocate : public BinaryOperator
 {

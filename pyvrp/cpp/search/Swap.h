@@ -10,7 +10,9 @@ namespace pyvrp::search
 /**
  * Swap(data: ProblemData)
  *
- * TODO
+ * The :math:`(N, M)`-swap operator evaluates swapping :math:`N` consecutive
+ * nodes from :math:`U`'s route (starting with :math:`U`) with :math:`M`
+ * consecutive nodes from :math:`V`'s route (starting with :math:`V`).
  */
 template <size_t N, size_t M> class Swap : public BinaryOperator
 {
