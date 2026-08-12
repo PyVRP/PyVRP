@@ -101,6 +101,11 @@ void RelocateShipment::apply(Route::Node *U, Route::Node *V) const
     vRoute->insert(V->pos() + 1, U);   // insert pickup
 }
 
+void RelocateShipment::init([[maybe_unused]] Solution &solution)
+{
+    isCached_.reset();
+}
+
 std::string RelocateShipment::name() const { return "RelocateShipment"; }
 
 bool RelocateShipment::supports(ProblemData const &data)

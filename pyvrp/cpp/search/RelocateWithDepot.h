@@ -1,7 +1,10 @@
 #ifndef PYVRP_SEARCH_RELOCATEWITHDEPOT_H
 #define PYVRP_SEARCH_RELOCATEWITHDEPOT_H
 
+#include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
+
+#include <vector>
 
 namespace pyvrp::search
 {
@@ -21,8 +24,6 @@ namespace pyvrp::search
  */
 class RelocateWithDepot : public BinaryOperator
 {
-    using BinaryOperator::BinaryOperator;
-
     enum class MoveType
     {
         DEPOT_U,  // V -> depot -> U
@@ -37,6 +38,9 @@ class RelocateWithDepot : public BinaryOperator
     };
 
     Move move_;
+
+    DynamicBitset isCached_;
+    std::vector<Cost> removeCost_;
 
     // Evaluates relocation moves when U and V are in the same route.
     void evalSameRoute(Route::Node *U,
@@ -55,9 +59,15 @@ public:
 
     void apply(Route::Node *U, Route::Node *V) const override;
 
+    void init(Solution &solution) override;
+
     std::string name() const override;
 
     static bool supports(ProblemData const &data);
+
+    void update(Route const *route) override;
+
+    RelocateWithDepot(ProblemData const &data);
 };
 }  // namespace pyvrp::search
 
