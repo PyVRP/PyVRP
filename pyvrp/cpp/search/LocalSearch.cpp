@@ -138,8 +138,9 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
             if (rU)
                 searchSpace_.markPromising(U);
 
-            [[maybe_unused]] auto const costBefore
-                = costEvaluator.penalisedCost(solution_);
+#ifndef NDEBUG
+            auto const costBefore = costEvaluator.penalisedCost(solution_);
+#endif
 
             op->apply(U);
             if (!rU)  // then U wasn't in the solution before, and the operator
@@ -150,13 +151,13 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
 
             update(rU, rU);
 
-            [[maybe_unused]] auto const costAfter
-                = costEvaluator.penalisedCost(solution_);
-
+#ifndef NDEBUG
+            auto const costAfter = costEvaluator.penalisedCost(solution_);
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
             // the move, plus the delta cost.
             assert(costAfter == costBefore + deltaCost);
+#endif
 
             return true;
         }
@@ -189,19 +190,20 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
                 searchSpace_.markPromising(U);
             searchSpace_.markPromising(V);
 
-            [[maybe_unused]] auto const costBefore
-                = costEvaluator.penalisedCost(solution_);
+#ifndef NDEBUG
+            auto const costBefore = costEvaluator.penalisedCost(solution_);
+#endif
 
             op->apply(U, V);
             update(rU, rV);
 
-            [[maybe_unused]] auto const costAfter
-                = costEvaluator.penalisedCost(solution_);
-
+#ifndef NDEBUG
+            auto const costAfter = costEvaluator.penalisedCost(solution_);
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
             // the move, plus the delta cost.
             assert(costAfter == costBefore + deltaCost);
+#endif
 
             return true;
         }
