@@ -51,22 +51,91 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
         hasCachedRemoveCost_[uPickup->idx()] = true;
     }
 
-    Cost deltaCost = removeCost_[uPickup->idx()];
-    costEvaluator.deltaCost(deltaCost,  // delivery directly after pickup
-                            Route::Proposal(vRoute->before(V->pos()),
-                                            uRoute->at(uPickup->pos()),
-                                            uRoute->at(uDelivery->pos()),
-                                            vRoute->after(V->pos() + 1)));
+    auto const &shipment = data.shipment(uPickup->idx());
+    auto const &matrix = data.distanceMatrix(vRoute->profile());
+    auto const vLocation = vRoute->at(V->pos()).back().location();
+    auto const nextLocation = vRoute->at(V->pos() + 1).front().location();
+    auto const pickupLocation = shipment.pickup.location;
+    auto const deliveryLocation = shipment.delivery.location;
+    auto const hasDistanceCost = vRoute->hasDistanceCost();
+    auto const unitDistanceCost = vRoute->unitDistanceCost();
+    auto const maxDistance = vRoute->maxDistance();
 
-    if (deltaCost < 0)
+    // Load and duration costs are non-negative, so fixed and distance costs
+    // form a lower bound on the move cost.
+    auto const fixedCostBound = removeCost_[uPickup->idx()]
+                                - costEvaluator.penalisedCost(*vRoute)
+                                + vRoute->fixedVehicleCost();
+    if (!hasDistanceCost && fixedCostBound >= 0)
+        return std::make_pair(0, false);
+
+    auto const couldImprove = [&](Distance distance)
     {
-        move_ = {V->pos() + 1};
-        return std::make_pair(deltaCost, true);
+        auto lowerBound = fixedCostBound;
+        if (hasDistanceCost)
+        {
+            lowerBound += unitDistanceCost * static_cast<Cost>(distance);
+            lowerBound += costEvaluator.distPenalty(distance, maxDistance);
+        }
+
+        return lowerBound < 0;
+    };
+
+    Distance baseDistance = 0;
+    Distance pickupIn = 0;
+    Distance pickupOut = 0;
+    if (hasDistanceCost)
+    {
+        baseDistance = vRoute->distance() - matrix(vLocation, nextLocation);
+        pickupIn = matrix(vLocation, pickupLocation);
+        pickupOut = matrix(pickupLocation, nextLocation);
+    }
+
+    Distance directDistance = baseDistance;
+    if (hasDistanceCost)
+    {
+        directDistance += pickupIn;
+        directDistance += matrix(pickupLocation, deliveryLocation);
+        directDistance += matrix(deliveryLocation, nextLocation);
+    }
+
+    if (couldImprove(directDistance))
+    {
+        Cost deltaCost = removeCost_[uPickup->idx()];
+        costEvaluator.deltaCost(deltaCost,  // delivery directly after pickup
+                                Route::Proposal(vRoute->before(V->pos()),
+                                                uRoute->at(uPickup->pos()),
+                                                uRoute->at(uDelivery->pos()),
+                                                vRoute->after(V->pos() + 1)));
+
+        if (deltaCost < 0)
+        {
+            move_ = {V->pos() + 1};
+            return std::make_pair(deltaCost, true);
+        }
     }
 
     // Pickup after V, delivery later in the route.
     for (auto const *node = n(V); !node->isDepot(); node = n(node))
     {
+        Distance distance = 0;
+        if (hasDistanceCost)
+        {
+            auto const nodeLocation = vRoute->at(node->pos()).back().location();
+            auto const afterLocation
+                = vRoute->at(node->pos() + 1).front().location();
+
+            distance = baseDistance;
+            distance -= matrix(nodeLocation, afterLocation);
+            distance += pickupIn;
+            distance += pickupOut;
+            distance += matrix(nodeLocation, deliveryLocation);
+            distance += matrix(deliveryLocation, afterLocation);
+        }
+
+        if (!couldImprove(distance))
+            continue;
+
         Cost deltaCost = removeCost_[uPickup->idx()];
         costEvaluator.deltaCost(
             deltaCost,
