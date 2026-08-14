@@ -105,7 +105,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             // Moves involving empty routes are not tested initially to avoid
             // using too many routes, but we will try it if we have not been
             // able to insert U yet (perhaps the solution is empty?).
-            if (step > 0 || !U->route())
+            if (step >= 0 || !U->route())
                 applyEmptyRouteMoves(U, costEvaluator);
         }
     }
