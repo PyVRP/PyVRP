@@ -1,4 +1,5 @@
 import sys
+import warnings
 
 import pytest
 from numpy.testing import (
@@ -308,7 +309,6 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
     assert_equal(pm.cost_evaluator().dist_penalty(1, 0), 3)
 
 
-@pytest.mark.filterwarnings("ignore::pyvrp.exceptions.PenaltyBoundWarning")
 def test_max_min_penalty(ok_small):
     """
     Tests that penalty parameters are clipped to [min_penalty, max_penalty]
@@ -346,19 +346,46 @@ def test_max_min_penalty(ok_small):
     )
 
 
-def test_warns_max_penalty_value(ok_small):
+def test_does_not_warn_while_violation_decreases(ok_small):
     """
-    Tests that a penalty parameter clipped to max_penalty raises a warning.
-    This typically indicates a data issue that PyVRP is struggling with.
+    Tests that decreasing violations at max_penalty do not raise a warning.
+    """
+    params = PenaltyParams(
+        solutions_between_updates=1,
+        penalty_increase=2,
+    )
+    pm = PenaltyManager(([params.max_penalty], 1, 1), params)
+    solutions = [
+        Solution(ok_small, [[1, 2, 0, 3]]),  # excess load 8
+        Solution(ok_small, [[0, 1, 3]]),  # excess load 5
+        Solution(ok_small, [[1, 2, 0]]),  # excess load 3
+    ]
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", PenaltyBoundWarning)
+        for sol in solutions:
+            pm.register(sol)
+
+
+def test_warn_when_violations_stuck(ok_small):
+    """
+    Tests that a warning is raised when the penalty is at max_penalty, and
+    violations do not decrease.
     """
     params = PenaltyParams(solutions_between_updates=1)
-    initial = ([1], params.max_penalty, 1)
-    pm = PenaltyManager(initial, params)
-    assert_equal(pm.penalties(), initial)
+    pm = PenaltyManager(([params.max_penalty], 1, 1), params)
 
-    infeas = Solution(ok_small, [[0, 1, 2, 3]])
-    assert_(infeas.has_time_warp())
+    infeas = Solution(ok_small, [[1, 2, 0, 3]])  # excess load 8
+    assert_(infeas.has_excess_load())
 
+    # The first registration has no previous average violation to compare
+    # against, so no warning should be raised yet.
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", PenaltyBoundWarning)
+        pm.register(infeas)
+
+    # The load penalty is at max_penalty and the violation did not decrease
+    # since the previous update, so now a warning should be raised.
     with pytest.warns(PenaltyBoundWarning):
         pm.register(infeas)
 

@@ -163,9 +163,10 @@ class PenaltyManager:
             params.max_penalty,
         )
 
-        # Tracks recent violations for each penalty dimension.
+        # For each penalty dimension, track the recent violations and the
+        # average violation at the previous update.
         self._viol_lists: list[list[int]] = [[] for _ in self._penalties]
-        self._prev_avgs: list[float] = [float("inf")] * len(self._penalties)
+        self._prev_avg_violations = [float("inf")] * len(self._penalties)
 
     def penalties(self) -> tuple[list[float], float, float]:
         """
@@ -214,7 +215,7 @@ class PenaltyManager:
         if (
             diff >= self._params.feas_tolerance
             and penalty >= self._params.max_penalty
-            and avg_violation >= self._prev_avgs[idx]
+            and avg_violation >= self._prev_avg_violations[idx]
         ):
             msg = """
             A penalty parameter has reached its maximum value. This means PyVRP
@@ -225,7 +226,7 @@ class PenaltyManager:
             """
             warn(msg, PenaltyBoundWarning)
 
-        self._prev_avgs[idx] = avg_violation
+        self._prev_avg_violations[idx] = avg_violation
         self._penalties[idx] = self._compute(penalty, feas_percentage)
 
     def register(self, sol: Solution):
