@@ -123,24 +123,29 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         idcs = list(map(int, veh_type.name.split(",")))
         veh2type[idcs] = idx
 
+    # VRPLIB numbers the route visits by location: [0, num_depots) are the
+    # depots, and the remaining locations are clients or shipment activities.
+    # Each location corresponds to exactly one activity, so we can map each
+    # location to the activity visiting it.
+    loc2activity = {}
+    for idx in range(data.num_depots):
+        loc2activity[idx] = Activity(ActivityType.DEPOT, idx)
+
+    for idx in range(data.num_clients):
+        loc = data.num_depots + idx
+        loc2activity[loc] = Activity(ActivityType.CLIENT, idx)
+
+    for idx, shipment in enumerate(data.shipments()):
+        pickup = shipment.pickup.location
+        delivery = shipment.delivery.location
+        loc2activity[pickup] = Activity(ActivityType.PICKUP, idx)
+        loc2activity[delivery] = Activity(ActivityType.DELIVERY, idx)
+
     routes = []
     for idx, route in enumerate(sol["routes"]):
-        if not route:
-            continue
-
-        activities = []
-        for visit in route:
-            # VRPLIB uses a format where the route visits are numbered with
-            # [0, ..., num_depots) for the depots, and [num_depots, ...,
-            # num_depots + num_clients) for the clients.
-            if visit < data.num_depots:
-                activity = Activity(ActivityType.DEPOT, visit)
-            else:
-                visit = visit - data.num_depots
-                activity = Activity(ActivityType.CLIENT, visit)
-            activities.append(activity)
-
-        routes.append(Route(data, activities, veh2type[idx]))
+        if route:
+            activities = [loc2activity[visit] for visit in route]
+            routes.append(Route(data, activities, veh2type[idx]))
 
     return Solution(data, routes)
 
@@ -219,6 +224,13 @@ class _InstanceParser:
         return self.round_func(service_times)
 
     def time_windows(self) -> np.ndarray:
+        if "pickup_and_delivery" in self.instance:
+            # The pickup and delivery data contain each location's time window
+            # in the second and third columns. We mainly need these for the
+            # depot time windows, shipments parse their own time windows.
+            data = self.instance["pickup_and_delivery"]
+            return self.round_func(data[:, 1:3])
+
         if "time_window" not in self.instance:
             time_windows = np.empty((self.num_locations, 2), dtype=np.int64)
             time_windows[:, 0] = 0

@@ -716,3 +716,22 @@ def test_reading_small_shipments():
     assert_equal(shipments[3].delivery.tw_early, 61_600)
     assert_equal(shipments[3].delivery.tw_late, 68_000)
     assert_equal(shipments[3].delivery.service_duration, 900)
+
+
+def test_reading_small_shipments_solution():
+    """
+    Tests that reading a solution for the SmallShipments instance maps the
+    route visits to the correct pickup and delivery activities.
+    """
+    data = read("data/SmallShipments.txt")
+    sol = read_solution("data/SmallShipments.sol", data)
+
+    assert_(sol.is_feasible())
+    assert_equal(sol.num_routes(), 2)
+    assert_equal(sol.distance(), 65_128)
+
+    routes = sol.routes()
+
+    # The first route serves shipments 1 and 2, the second shipments 0 and 3.
+    assert_equal(str(routes[0]), "L1 L2 U2 U1")
+    assert_equal(str(routes[1]), "L0 U0 L3 U3")
