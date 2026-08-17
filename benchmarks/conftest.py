@@ -31,3 +31,8 @@ def mtvrptwr():
 @pytest.fixture(scope="session")
 def gtsp():
     return read("data/50pr439.gtsp", round_func="round")
+
+
+@pytest.fixture(scope="session")
+def pdptw():
+    return read("data/lrc206.vrp", round_func="exact")
