@@ -43,7 +43,9 @@ def write_solution(where: Path, data: ProblemData, result: Result):
         visits: list[int] = []
         for activity in route:
             # Map activities back to VRPLIB's format, which numbers the route
-            # visits by location. All activities have a unique location.
+            # visits by location: [0, num_depots) are the depots, and the
+            # remaining locations are clients or shipment activities. All
+            # activities have a unique location.
             match activity.type:
                 case ActivityType.DEPOT:
                     visits.append(data.depot(activity.idx).location)
