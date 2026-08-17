@@ -128,13 +128,11 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
     # All activities have a unique location, so we can map each location to
     # the activity visiting it.
     loc2activity = {}
-    for idx in range(data.num_depots):
-        loc = data.depot(idx).location
-        loc2activity[loc] = Activity(ActivityType.DEPOT, idx)
+    for idx, depot in enumerate(data.depots()):
+        loc2activity[depot.location] = Activity(ActivityType.DEPOT, idx)
 
-    for idx in range(data.num_clients):
-        loc = data.client(idx).location
-        loc2activity[loc] = Activity(ActivityType.CLIENT, idx)
+    for idx, client in enumerate(data.clients()):
+        loc2activity[client.location] = Activity(ActivityType.CLIENT, idx)
 
     for idx, shipment in enumerate(data.shipments()):
         pickup = shipment.pickup.location
@@ -144,9 +142,11 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
 
     routes = []
     for idx, route in enumerate(sol["routes"]):
-        if route:
-            activities = [loc2activity[visit] for visit in route]
-            routes.append(Route(data, activities, veh2type[idx]))
+        if not route:
+            continue
+
+        activities = [loc2activity[visit] for visit in route]
+        routes.append(Route(data, activities, veh2type[idx]))
 
     return Solution(data, routes)
 
