@@ -42,29 +42,24 @@ def write_solution(where: Path, data: ProblemData, result: Result):
     def route2vrplib(route) -> list[int]:
         visits: list[int] = []
         for activity in route:
-            # Map activities back to VRPLIB's format.  VRPLIB uses a format
-            # where the route visits are numbered with [0, ..., num_depots) for
-            # the depots, and [num_depots, ..., num_depots + num_clients) for
-            # the clients. For the shipments we use the indices from their
-            # names and subtract the depots. Note that this gets confusing
-            # fast if we have instances with mixed clients and shipments, but
-            # we do not typically have those.
+            # Map activities back to VRPLIB's format. VRPLIB numbers the
+            # route visits by location: [0, num_depots) are the depots, and
+            # the remaining locations are clients or shipment activities. We
+            # assume that all activities have a unique location.
             match activity.type:
                 case ActivityType.DEPOT:
                     visits.append(activity.idx)
 
                 case ActivityType.CLIENT:
-                    visits.append(data.num_depots + activity.idx)
+                    visits.append(data.client(activity.idx).location)
 
                 case ActivityType.PICKUP:
-                    obj = data.shipment(activity.idx)
-                    idx = int(obj.name.split("->")[0]) - data.num_depots
-                    visits.append(idx)
+                    shipment = data.shipment(activity.idx)
+                    visits.append(shipment.pickup.location)
 
                 case ActivityType.DELIVERY:
-                    obj = data.shipment(activity.idx)
-                    idx = int(obj.name.split("->")[1]) - data.num_depots
-                    visits.append(idx)
+                    shipment = data.shipment(activity.idx)
+                    visits.append(shipment.delivery.location)
 
                 case _:
                     continue
