@@ -208,13 +208,13 @@ class PenaltyManager:
         avg_violation = fmean(viol_list)
         viol_list.clear()
 
-        # Warn if (1) too few feasible solutions are found, (2) the penalty is
-        # as its maximum, and (3) violations stop improving.
+        # Warn if (1) the penalty is at its maximum, (2) too few feasible
+        # solutions are found, and (3) violations stop improving.
         penalty = self._penalties[idx]
         diff = self._params.target_feasible - feas_percentage
         if (
-            diff >= self._params.feas_tolerance
-            and penalty >= self._params.max_penalty
+            penalty >= self._params.max_penalty
+            and diff >= self._params.feas_tolerance
             and avg_violation >= self._prev_avg_violations[idx]
         ):
             msg = """
