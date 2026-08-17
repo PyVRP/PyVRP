@@ -123,16 +123,16 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         idcs = list(map(int, veh_type.name.split(",")))
         veh2type[idcs] = idx
 
-    # VRPLIB numbers the route visits by location: [0, num_depots) are the
-    # depots, and the remaining locations are clients or shipment activities.
-    # Each location corresponds to exactly one activity, so we can map each
-    # location to the activity visiting it.
+    # VRPLIB numbers the route visits by location. We assume that all
+    # activities have a unique location, so we can map each location to the
+    # activity visiting it.
     loc2activity = {}
     for idx in range(data.num_depots):
-        loc2activity[idx] = Activity(ActivityType.DEPOT, idx)
+        loc = data.depot(idx).location
+        loc2activity[loc] = Activity(ActivityType.DEPOT, idx)
 
     for idx in range(data.num_clients):
-        loc = data.num_depots + idx
+        loc = data.client(idx).location
         loc2activity[loc] = Activity(ActivityType.CLIENT, idx)
 
     for idx, shipment in enumerate(data.shipments()):
