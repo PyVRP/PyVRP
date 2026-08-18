@@ -209,7 +209,7 @@ class PenaltyManager:
         viol_list.clear()
 
         # Warn if (1) the penalty is at its maximum, (2) too few feasible
-        # solutions are found, and (3) violations stop improving.
+        # solutions are found, and (3) violations stop decreasing.
         penalty = self._penalties[idx]
         diff = self._params.target_feasible - feas_percentage
         if (
