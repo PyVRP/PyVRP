@@ -319,9 +319,11 @@ private:
         inline LoadSegment load(size_t dimension) const;
     };
 
-public:
     /**
-     * TODO
+     * Like its parent, this class stores data related to the route segment
+     * starting at ``start``, and ending at ``end`` (inclusive). Unlike its
+     * parent, it can be efficiently expanded to cover more of the route by
+     * calling its prefix increment and decrement operators.
      */
     class IncrementalSegmentBetween : public SegmentBetween
     {
@@ -329,7 +331,9 @@ public:
         std::vector<LoadSegment> loads_;
 
     public:
-        inline IncrementalSegmentBetween(Route const &route, size_t at);
+        inline IncrementalSegmentBetween(Route const &route,
+                                         size_t start,
+                                         size_t end);
 
         inline DurationSegment const &duration(size_t profile) const;
         inline LoadSegment const &load(size_t dimension) const;
@@ -339,7 +343,6 @@ public:
         inline IncrementalSegmentBetween &operator--();
     };
 
-private:
     ProblemData const &data;
 
     VehicleType const &vehicleType_;
@@ -615,9 +618,12 @@ public:
 
     /**
      * Returns an object that can be queried for data associated with the
-     * segment between [start, end].
+     * segment between [start, end]. If the incremental template argument
+     * is provided, the segment can efficiently be expanded to cover larger
+     * route segments.
      */
-    [[nodiscard]] inline SegmentBetween between(size_t start, size_t end) const;
+    template <bool incremental = false>
+    [[nodiscard]] inline auto between(size_t start, size_t end) const;
 
     /**
      * @return This route's vehicle type.
@@ -974,15 +980,16 @@ LoadSegment Route::SegmentBetween::load(size_t dimension) const
 }
 
 Route::IncrementalSegmentBetween::IncrementalSegmentBetween(Route const &route,
-                                                            size_t at)
-    : SegmentBetween(route, at, at)
+                                                            size_t start,
+                                                            size_t end)
+    : SegmentBetween(route, start, end)
 {
-    duration_ = route_.durAt[at];
+    duration_ = SegmentBetween::duration(route.profile());
 
     auto const &data = route_.data;
     loads_.reserve(data.numLoadDimensions());
     for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-        loads_.emplace_back(route_.loadAt[dim][at]);
+        loads_.emplace_back(SegmentBetween::load(dim));
 }
 
 DurationSegment const &Route::IncrementalSegmentBetween::duration(
@@ -1242,10 +1249,12 @@ Route::SegmentBefore Route::before(size_t end) const
     return {*this, end};
 }
 
-Route::SegmentBetween Route::between(size_t start, size_t end) const
+template <bool incremental> auto Route::between(size_t start, size_t end) const
 {
-    assert(!dirty);
-    return {*this, start, end};
+    if constexpr (incremental)
+        return IncrementalSegmentBetween(*this, start, end);
+    else
+        return SegmentBetween(*this, start, end);
 }
 
 template <Segment... Segments>

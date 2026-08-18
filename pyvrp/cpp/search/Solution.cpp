@@ -261,8 +261,7 @@ bool Solution::insert(Route::Node *pickup,
                 bestCost = deltaCost;
             }
 
-            pyvrp::search::Route::IncrementalSegmentBetween between(
-                *route, V->pos() + 1);
+            auto between = route->between<true>(V->pos() + 1, V->pos() + 1);
             for (auto const *node = n(V); !node->isDepot();
                  node = n(node), ++between)
             {
