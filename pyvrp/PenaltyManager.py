@@ -222,7 +222,8 @@ class PenaltyManager:
             struggles to find a feasible solution for this instance, either
             because the instance has no feasible solution, or it is hard to
             find one - possibly due to large data scaling differences. Check
-            the instance carefully to determine if a feasible solution exists.
+            the instance carefully to determine if a feasible solution exists,
+            or consider increasing PenaltyParams.max_penalty.
             """
             warn(msg, PenaltyBoundWarning)
 
