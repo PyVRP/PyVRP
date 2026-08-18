@@ -127,7 +127,7 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
     # depots, and the remaining locations are clients or shipment activities.
     # All activities have a unique location, so we can map each location to
     # the activity visiting it.
-    loc2activity = {}
+    loc2activity: list[Activity | None] = [None] * data.num_locations
     for idx, depot in enumerate(data.depots()):
         loc2activity[depot.location] = Activity(ActivityType.DEPOT, idx)
 
