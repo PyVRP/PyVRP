@@ -754,6 +754,25 @@ Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
     assert(start < route.size());
 }
 
+Route::SegmentBefore::SegmentBefore(Route const &route, size_t end)
+    : route_(route), end(end)
+{
+    assert(end < route.size());
+}
+
+Route::SegmentBetween::SegmentBetween(Route const &route,
+                                      size_t start,
+                                      size_t end)
+    : route_(route), start(start), end(end)
+{
+    assert(start <= end && end < route.size());
+
+    // The segment must consist of a single trip only, possibly including the
+    // depot that begins the next trip (and ends this one). So the difference
+    // in trips is at most one.
+    assert(route[end]->trip() - route[start]->trip() <= route[end]->isDepot());
+}
+
 Distance Route::SegmentAfter::distance([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
@@ -808,12 +827,6 @@ bool Route::SegmentAfter::startsAtReloadDepot() const
 }
 bool Route::SegmentAfter::endsAtReloadDepot() const { return false; }
 
-Route::SegmentBefore::SegmentBefore(Route const &route, size_t end)
-    : route_(route), end(end)
-{
-    assert(end < route.size());
-}
-
 Distance Route::SegmentBefore::distance([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
@@ -861,19 +874,6 @@ bool Route::SegmentBefore::startsAtReloadDepot() const { return false; }
 bool Route::SegmentBefore::endsAtReloadDepot() const
 {
     return route_.nodes[end]->isReloadDepot();
-}
-
-Route::SegmentBetween::SegmentBetween(Route const &route,
-                                      size_t start,
-                                      size_t end)
-    : route_(route), start(start), end(end)
-{
-    assert(start <= end && end < route.size());
-
-    // The segment must consist of a single trip only, possibly including the
-    // depot that begins the next trip (and ends this one). So the difference
-    // in trips is at most one.
-    assert(route[end]->trip() - route[start]->trip() <= route[end]->isDepot());
 }
 
 Route const *Route::SegmentBetween::route() const { return &route_; }
