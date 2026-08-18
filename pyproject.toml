@@ -161,8 +161,9 @@ MACOSX_DEPLOYMENT_TARGET = "13.3"
 # for JavaScript builds (and ignored otherwise).
 environment.CXXFLAGS = "-Wno-error=unused-command-line-argument"
 repair-wheel-command = "pyodide auditwheel repair --output-dir {dest_dir} {wheel}"
-test-environment = { MPLBACKEND = "Agg" }
-# test-command = "pytest -k \"not test_plotting\" ./tests -v"
+# When testing plots with pyodide builds with the Agg backend we get significant
+# layout differences, so we skip the plots for pyodide.
+test-command = "pytest -k \"not test_plotting\" ./tests -v"
 
 
 [tool.poetry]
