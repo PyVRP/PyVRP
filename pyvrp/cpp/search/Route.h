@@ -256,7 +256,7 @@ private:
 
         inline SegmentAfter(Route const &route, size_t start);
         inline Distance distance(size_t profile) const;
-        inline DurationSegment duration(size_t profile) const;
+        inline DurationSegment const &duration(size_t profile) const;
         inline LoadSegment const &load(size_t dimension) const;
     };
 
@@ -284,7 +284,7 @@ private:
 
         inline SegmentBefore(Route const &route, size_t end);
         inline Distance distance(size_t profile) const;
-        inline DurationSegment duration(size_t profile) const;
+        inline DurationSegment const &duration(size_t profile) const;
         inline LoadSegment const &load(size_t dimension) const;
     };
 
@@ -318,6 +318,43 @@ private:
         inline LoadSegment load(size_t dimension) const;
     };
 
+public:
+    /**
+     * TODO
+     */
+    class IncrementalSegmentBetween
+    {
+        Route const &route_;
+        size_t start;
+        size_t end;
+
+        DurationSegment duration_;
+        std::vector<LoadSegment> loads_;
+
+    public:
+        inline Route const *route() const;
+
+        inline SegmentProxy front() const;
+        inline SegmentProxy back() const;
+
+        inline size_t size() const;
+        inline size_t numClients() const;
+        inline size_t numPickups() const;
+
+        inline bool startsAtReloadDepot() const;
+        inline bool endsAtReloadDepot() const;
+
+        inline IncrementalSegmentBetween(Route const &route, size_t at);
+        inline Distance distance(size_t profile) const;
+        inline DurationSegment const &duration(size_t profile) const;
+        inline LoadSegment const &load(size_t dimension) const;
+
+        // Prefix increment and decrement operators to expand the segment.
+        inline IncrementalSegmentBetween &operator++();
+        inline IncrementalSegmentBetween &operator--();
+    };
+
+private:
     ProblemData const &data;
 
     VehicleType const &vehicleType_;
@@ -732,32 +769,13 @@ Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
     assert(start < route.size());
 }
 
-Route::SegmentBefore::SegmentBefore(Route const &route, size_t end)
-    : route_(route), end(end)
-{
-    assert(end < route.size());
-}
-
-Route::SegmentBetween::SegmentBetween(Route const &route,
-                                      size_t start,
-                                      size_t end)
-    : route_(route), start(start), end(end)
-{
-    assert(start <= end && end < route.size());
-
-    // The segment must consist of a single trip only, possibly including the
-    // depot that begins the next trip (and ends this one). So the difference
-    // in trips is at most one.
-    assert(route[end]->trip() - route[start]->trip() <= route[end]->isDepot());
-}
-
 Distance Route::SegmentAfter::distance([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
     return {route_.cumDist.back() - route_.cumDist[start]};
 }
 
-DurationSegment
+DurationSegment const &
 Route::SegmentAfter::duration([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
@@ -769,13 +787,55 @@ LoadSegment const &Route::SegmentAfter::load(size_t dimension) const
     return route_.loadAfter[dimension][start];
 }
 
+Route const *Route::SegmentAfter::route() const { return &route_; }
+
+SegmentProxy Route::SegmentAfter::front() const
+{
+    return {route_.nodes[start]->activity(), route_.locations[start]};
+}
+
+SegmentProxy Route::SegmentAfter::back() const
+{
+    return {route_.nodes.back()->activity(), route_.locations.back()};
+}
+
+size_t Route::SegmentAfter::size() const { return route_.size() - start; }
+
+size_t Route::SegmentAfter::numClients() const
+{
+    // fromStart is (start, end]. So we need to check if start itself is also
+    // a client, and add 1 if it is.
+    auto const fromStart = route_.numClients() - route_.numClients_[start];
+    return fromStart + route_[start]->isClient();
+}
+
+size_t Route::SegmentAfter::numPickups() const
+{
+    // fromStart is (start, end]. So we need to check if start itself is also
+    // a pickup, and add 1 if it is.
+    auto const fromStart = route_.numPickups() - route_.numPickups_[start];
+    return fromStart + route_[start]->isPickup();
+}
+
+bool Route::SegmentAfter::startsAtReloadDepot() const
+{
+    return route_.nodes[start]->isReloadDepot();
+}
+bool Route::SegmentAfter::endsAtReloadDepot() const { return false; }
+
+Route::SegmentBefore::SegmentBefore(Route const &route, size_t end)
+    : route_(route), end(end)
+{
+    assert(end < route.size());
+}
+
 Distance Route::SegmentBefore::distance([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
     return route_.cumDist[end];
 }
 
-DurationSegment
+DurationSegment const &
 Route::SegmentBefore::duration([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
@@ -818,41 +878,18 @@ bool Route::SegmentBefore::endsAtReloadDepot() const
     return route_.nodes[end]->isReloadDepot();
 }
 
-Route const *Route::SegmentAfter::route() const { return &route_; }
-
-SegmentProxy Route::SegmentAfter::front() const
+Route::SegmentBetween::SegmentBetween(Route const &route,
+                                      size_t start,
+                                      size_t end)
+    : route_(route), start(start), end(end)
 {
-    return {route_.nodes[start]->activity(), route_.locations[start]};
-}
+    assert(start <= end && end < route.size());
 
-SegmentProxy Route::SegmentAfter::back() const
-{
-    return {route_.nodes.back()->activity(), route_.locations.back()};
+    // The segment must consist of a single trip only, possibly including the
+    // depot that begins the next trip (and ends this one). So the difference
+    // in trips is at most one.
+    assert(route[end]->trip() - route[start]->trip() <= route[end]->isDepot());
 }
-
-size_t Route::SegmentAfter::size() const { return route_.size() - start; }
-
-size_t Route::SegmentAfter::numClients() const
-{
-    // fromStart is (start, end]. So we need to check if start itself is also
-    // a client, and add 1 if it is.
-    auto const fromStart = route_.numClients() - route_.numClients_[start];
-    return fromStart + route_[start]->isClient();
-}
-
-size_t Route::SegmentAfter::numPickups() const
-{
-    // fromStart is (start, end]. So we need to check if start itself is also
-    // a pickup, and add 1 if it is.
-    auto const fromStart = route_.numPickups() - route_.numPickups_[start];
-    return fromStart + route_[start]->isPickup();
-}
-
-bool Route::SegmentAfter::startsAtReloadDepot() const
-{
-    return route_.nodes[start]->isReloadDepot();
-}
-bool Route::SegmentAfter::endsAtReloadDepot() const { return false; }
 
 Route const *Route::SegmentBetween::route() const { return &route_; }
 
@@ -918,8 +955,7 @@ Distance Route::SegmentBetween::distance(size_t profile) const
     return endDist - startDist;
 }
 
-DurationSegment
-Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
+DurationSegment Route::SegmentBetween::duration(size_t profile) const
 {
     auto const &mat = route_.data.durationMatrix(profile);
     auto segment = route_.durAt[start];
@@ -950,6 +986,135 @@ LoadSegment Route::SegmentBetween::load(size_t dimension) const
         loadSegment = LoadSegment::merge(loadSegment, loads[step + 1]);
 
     return loadSegment;
+}
+
+Route::IncrementalSegmentBetween::IncrementalSegmentBetween(Route const &route,
+                                                            size_t at)
+    : route_(route), start(at), end(at)
+{
+    assert(at < route.size());
+    duration_ = route_.durAt[at];
+
+    auto const &data = route_.data;
+    loads_.reserve(data.numLoadDimensions());
+    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
+        loads_.emplace_back(route_.loadAt[dim][at]);
+}
+
+Route const *Route::IncrementalSegmentBetween::route() const { return &route_; }
+
+SegmentProxy Route::IncrementalSegmentBetween::front() const
+{
+    return {route_.nodes[start]->activity(), route_.locations[start]};
+}
+
+SegmentProxy Route::IncrementalSegmentBetween::back() const
+{
+    return {route_.nodes[end]->activity(), route_.locations[end]};
+}
+
+size_t Route::IncrementalSegmentBetween::size() const
+{
+    return end - start + 1;
+}
+
+size_t Route::IncrementalSegmentBetween::numClients() const
+{
+    // fromStart is (start, end]. So we need to check if start itself is also
+    // a client, and add 1 if it is.
+    auto const fromStart = route_.numClients_[end] - route_.numClients_[start];
+    return fromStart + route_[start]->isClient();
+}
+
+size_t Route::IncrementalSegmentBetween::numPickups() const
+{
+    // fromStart is (start, end]. So we need to check if start itself is also
+    // a pickup, and add 1 if it is.
+    auto const fromStart = route_.numPickups_[end] - route_.numPickups_[start];
+    return fromStart + route_[start]->isPickup();
+}
+
+bool Route::IncrementalSegmentBetween::startsAtReloadDepot() const
+{
+    return route_.nodes[start]->isReloadDepot();
+}
+
+bool Route::IncrementalSegmentBetween::endsAtReloadDepot() const
+{
+    return route_.nodes[end]->isReloadDepot();
+}
+
+Distance Route::IncrementalSegmentBetween::distance(
+    [[maybe_unused]] size_t profile) const
+{
+    assert(profile == route_.profile());
+    auto const startDist = route_.cumDist[start];
+    auto const endDist = route_.cumDist[end];
+
+    assert(startDist <= endDist);
+    return endDist - startDist;
+}
+
+DurationSegment const &Route::IncrementalSegmentBetween::duration(
+    [[maybe_unused]] size_t profile) const
+{
+    assert(profile == route_.profile());
+    return duration_;
+}
+
+LoadSegment const &
+Route::IncrementalSegmentBetween::load(size_t dimension) const
+{
+    return loads_[dimension];
+}
+
+Route::IncrementalSegmentBetween &Route::IncrementalSegmentBetween::operator++()
+{
+    assert(end != route_.size() - 1);
+    end++;
+
+    for (size_t dim = 0; dim != loads_.size(); ++dim)
+        loads_[dim] = LoadSegment::merge(loads_[dim], route_.loadAt[dim][end]);
+
+    auto const &mat = route_.data.durationMatrix(route_.profile());
+    auto const from = route_.locations[end - 1];
+    auto const to = route_.locations[end];
+
+    if (route_[end - 1]->isReloadDepot())
+    {
+        auto const &depot = route_.data.depot(route_[end - 1]->idx());
+        duration_ = DurationSegment::merge(duration_, {depot.serviceDuration});
+    }
+
+    duration_
+        = DurationSegment::merge(mat(from, to), duration_, route_.durAt[end]);
+
+    return *this;
+}
+
+Route::IncrementalSegmentBetween &Route::IncrementalSegmentBetween::operator--()
+{
+    assert(start > 0);
+    start--;
+
+    for (size_t dim = 0; dim != loads_.size(); ++dim)
+        loads_[dim]
+            = LoadSegment::merge(route_.loadAt[dim][start], loads_[dim]);
+
+    auto const &mat = route_.data.durationMatrix(route_.profile());
+    auto const from = route_.locations[start];
+    auto const to = route_.locations[start + 1];
+
+    if (route_[start]->isReloadDepot())
+    {
+        auto const &depot = route_.data.depot(route_[start]->idx());
+        duration_ = DurationSegment::merge(duration_, {depot.serviceDuration});
+    }
+
+    duration_
+        = DurationSegment::merge(mat(from, to), route_.durAt[start], duration_);
+
+    return *this;
 }
 
 bool Route::isFeasible() const

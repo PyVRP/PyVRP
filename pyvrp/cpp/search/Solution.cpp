@@ -11,95 +11,11 @@
 #include <vector>
 
 using pyvrp::Cost;
-using pyvrp::Distance;
-using pyvrp::DurationSegment;
-using pyvrp::LoadSegment;
-using pyvrp::ProblemData;
 
-using pyvrp::search::Route;
-using pyvrp::search::SegmentProxy;
 using pyvrp::search::Solution;
 
 namespace
 {
-class IncrementalSegmentBetween
-{
-    ProblemData const &data_;
-    Route const *route_;
-    size_t start;
-    size_t end;
-    DurationSegment duration_;
-    std::vector<LoadSegment> loads_;
-
-public:
-    Route const *route() const { return route_; }
-
-    SegmentProxy front() const { return route_->at(start).front(); }
-    SegmentProxy back() const { return route_->at(end).back(); }
-
-    size_t size() const { return route_->between(start, end).size(); }
-    size_t numClients() const
-    {
-        return route_->between(start, end).numClients();
-    }
-    size_t numPickups() const
-    {
-        return route_->between(start, end).numPickups();
-    }
-
-    bool startsAtReloadDepot() const { return false; }
-    bool endsAtReloadDepot() const { return false; }
-
-    Distance distance([[maybe_unused]] size_t profile) const
-    {
-        return route_->between(start, end).distance(profile);
-    }
-
-    DurationSegment duration([[maybe_unused]] size_t profile) const
-    {
-        assert(profile == route_->profile());
-        return duration_;
-    }
-
-    LoadSegment const &load(size_t dimension) const
-    {
-        return loads_[dimension];
-    }
-
-    IncrementalSegmentBetween(ProblemData const &data,
-                              Route const *route,
-                              size_t pos)
-        : data_(data),
-          route_(route),
-          start(pos),
-          end(pos),
-          duration_(route_->at(pos).duration(route->profile())),
-          loads_(route_->capacity().size())
-    {
-        for (size_t dim = 0; dim != route_->capacity().size(); ++dim)
-            loads_[dim] = route_->at(pos).load(dim);
-    }
-
-    void advance()
-    {
-        auto const profile = route_->profile();
-        auto const &matrix = data_.durationMatrix(profile);
-
-        auto const segment = route_->at(end + 1);
-
-        auto const from = back().location();
-        auto const to = segment.front().location();
-
-        duration_ = DurationSegment::merge(
-            matrix(from, to), duration_, segment.duration(profile));
-
-        for (size_t dim = 0; dim != loads_.size(); ++dim)
-            loads_[dim] = LoadSegment::merge(loads_[dim], segment.load(dim));
-
-        end++;
-    }
-};
-
 Cost insertCost(pyvrp::search::Route::Node *U,
                 pyvrp::search::Route::Node *V,
                 pyvrp::ProblemData const &data,
@@ -346,9 +262,10 @@ bool Solution::insert(Route::Node *pickup,
                 bestCost = deltaCost;
             }
 
-            IncrementalSegmentBetween between(data_, route, V->pos() + 1);
+            pyvrp::search::Route::IncrementalSegmentBetween between(
+                *route, V->pos() + 1);
             for (auto const *node = n(V); !node->isDepot();
-                 node = n(node), between.advance())
+                 node = n(node), ++between)
             {
                 Cost deltaCost = -shipment.prize;
                 costEvaluator.deltaCost<true>(
