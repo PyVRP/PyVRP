@@ -65,14 +65,15 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
     }
 
     // Pickup after V, delivery later in the route.
-    for (auto const *node = n(V); !node->isDepot(); node = n(node))
+    auto between = vRoute->between<true>(V->pos() + 1, V->pos() + 1);
+    for (auto const *node = n(V); !node->isDepot(); node = n(node), ++between)
     {
         Cost deltaCost = removeCost_[uPickup->idx()];
         costEvaluator.deltaCost(
             deltaCost,
             Route::Proposal(vRoute->before(V->pos()),
                             uRoute->at(uPickup->pos()),
-                            vRoute->between(V->pos() + 1, node->pos()),
+                            between,
                             uRoute->at(uDelivery->pos()),
                             vRoute->after(node->pos() + 1)));
 
