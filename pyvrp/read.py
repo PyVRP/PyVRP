@@ -1,5 +1,4 @@
 import pathlib
-import sys
 from collections import defaultdict
 from itertools import count
 from numbers import Number
@@ -22,15 +21,10 @@ from pyvrp._pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp.constants import MAX_VALUE
+from pyvrp.constants import INT_MAX, MAX_VALUE, UINT_MAX
 from pyvrp.exceptions import ScalingWarning
 
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
-
-_INT_MAX = np.iinfo(np.int64).max
-_UINT_MAX = np.iinfo(np.uint64).max
-if sys.platform == "emscripten":
-    _UINT_MAX = np.iinfo(np.uint32).max
 
 
 ROUND_FUNCS: dict[str, _RoundingFunc] = {
@@ -238,7 +232,7 @@ class _InstanceParser:
         if "time_window" not in self.instance:
             time_windows = np.empty((self.num_locations, 2), dtype=np.int64)
             time_windows[:, 0] = 0
-            time_windows[:, 1] = _INT_MAX
+            time_windows[:, 1] = INT_MAX
             return time_windows
 
         return self.round_func(self.instance["time_window"])
@@ -269,7 +263,7 @@ class _InstanceParser:
 
     def capacities(self) -> np.ndarray:
         if "capacity" not in self.instance:
-            return np.full(self.num_vehicles, _INT_MAX)
+            return np.full(self.num_vehicles, INT_MAX)
 
         capacities = self.instance["capacity"]
 
@@ -305,7 +299,7 @@ class _InstanceParser:
 
     def max_distances(self) -> np.ndarray:
         if "vehicles_max_distance" not in self.instance:
-            return np.full(self.num_vehicles, _INT_MAX)
+            return np.full(self.num_vehicles, INT_MAX)
 
         max_distances = self.instance["vehicles_max_distance"]
         shape = self.num_vehicles
@@ -314,14 +308,14 @@ class _InstanceParser:
     def shift_durations(self) -> np.ndarray:
         # We call this field shift duration instead of a hard maximum duration.
         if "vehicles_max_duration" not in self.instance:
-            return np.full(self.num_vehicles, _INT_MAX)
+            return np.full(self.num_vehicles, INT_MAX)
 
         max_durations = self.instance["vehicles_max_duration"]
         shape = self.num_vehicles
         return self.round_func(np.broadcast_to(max_durations, shape))
 
     def max_reloads(self) -> np.ndarray:
-        max_reloads = self.instance.get("vehicles_max_reloads", _UINT_MAX)
+        max_reloads = self.instance.get("vehicles_max_reloads", UINT_MAX)
         return np.broadcast_to(max_reloads, self.num_vehicles)
 
     def fixed_costs(self) -> np.ndarray:

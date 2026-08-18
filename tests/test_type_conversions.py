@@ -9,6 +9,7 @@ import pytest
 from numpy.testing import assert_equal, assert_raises
 
 from pyvrp import Client
+from pyvrp.constants import INT_MAX
 
 
 @pytest.mark.parametrize(
@@ -33,9 +34,7 @@ def test_measure_convertible_to_int(input, expected):
     assert_equal(client.tw_late, expected)
 
 
-@pytest.mark.parametrize(
-    "input", [np.iinfo(np.int64).max + 1, np.finfo(np.float64).max]
-)
+@pytest.mark.parametrize("input", [INT_MAX + 1, np.finfo(np.float64).max])
 def test_larger_than_max_size(input):
     """
     Tests that arguments larger than the maximum value for measure arguments

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from typing import TYPE_CHECKING, Sequence
 from warnings import warn
 
@@ -16,7 +15,7 @@ from pyvrp._pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp.constants import MAX_VALUE
+from pyvrp.constants import INT_MAX, MAX_VALUE, UINT_MAX
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.solve import SolveParams, solve
 
@@ -242,7 +241,7 @@ class Model:
         pickup: int | list[int] = [],
         service_duration: int = 0,
         tw_early: int = 0,
-        tw_late: int = np.iinfo(np.int64).max,
+        tw_late: int = INT_MAX,
         release_time: int = 0,
         prize: int = 0,
         required: bool = True,
@@ -303,10 +302,10 @@ class Model:
         pickup_location: Location,
         delivery_location: Location,
         pickup_tw_early: int = 0,
-        pickup_tw_late: int = np.iinfo(np.int64).max,
+        pickup_tw_late: int = INT_MAX,
         pickup_service_duration: int = 0,
         delivery_tw_early: int = 0,
-        delivery_tw_late: int = np.iinfo(np.int64).max,
+        delivery_tw_late: int = INT_MAX,
         delivery_service_duration: int = 0,
         amount: int | list[int] = [],
         prize: int = 0,
@@ -360,7 +359,7 @@ class Model:
         self,
         location: Location,
         tw_early: int = 0,
-        tw_late: int = np.iinfo(np.int64).max,
+        tw_late: int = INT_MAX,
         service_duration: int = 0,
         *,
         name: str = "",
@@ -434,18 +433,16 @@ class Model:
         end_depot: Depot | None = None,
         fixed_cost: int = 0,
         tw_early: int = 0,
-        tw_late: int = np.iinfo(np.int64).max,
-        shift_duration: int = np.iinfo(np.int64).max,
-        max_distance: int = np.iinfo(np.int64).max,
+        tw_late: int = INT_MAX,
+        shift_duration: int = INT_MAX,
+        max_distance: int = INT_MAX,
         unit_distance_cost: int = 1,
         unit_duration_cost: int = 0,
         profile: Profile | None = None,
         start_late: int | None = None,
         initial_load: int | list[int] = [],
         reload_depots: list[Depot] = [],
-        max_reloads: int = np.iinfo(np.uint32).max
-        if sys.platform == "emscripten"
-        else np.iinfo(np.uint64).max,
+        max_reloads: int = UINT_MAX,
         max_overtime: int = 0,
         unit_overtime_cost: int = 0,
         *,

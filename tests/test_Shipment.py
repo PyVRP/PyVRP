@@ -1,12 +1,10 @@
 import pickle
 
-import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import Shipment, ShipmentStep
-
-_INT_MAX = np.iinfo(np.int64).max
+from pyvrp.constants import INT_MAX
 
 
 @pytest.mark.parametrize(
@@ -87,11 +85,11 @@ def test_default_attributes():
     shipment = Shipment(0, 0)
     assert_equal(shipment.pickup.location, 0)
     assert_equal(shipment.pickup.tw_early, 0)
-    assert_equal(shipment.pickup.tw_late, _INT_MAX)
+    assert_equal(shipment.pickup.tw_late, INT_MAX)
     assert_equal(shipment.pickup.service_duration, 0)
     assert_equal(shipment.delivery.location, 0)
     assert_equal(shipment.delivery.tw_early, 0)
-    assert_equal(shipment.delivery.tw_late, _INT_MAX)
+    assert_equal(shipment.delivery.tw_late, INT_MAX)
     assert_equal(shipment.delivery.service_duration, 0)
     assert_equal(shipment.amount, [])
     assert_equal(shipment.prize, 0)

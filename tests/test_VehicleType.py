@@ -1,16 +1,10 @@
 import pickle
-import sys
 
-import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import VehicleType
-
-_INT_MAX = np.iinfo(np.int64).max
-_MAX_SIZE = np.iinfo(np.uint64).max
-if sys.platform == "emscripten":
-    _MAX_SIZE = np.iinfo(np.uint32).max
+from pyvrp.constants import INT_MAX, UINT_MAX
 
 
 @pytest.mark.parametrize(
@@ -145,10 +139,10 @@ def test_default_values():
 
     # The default value for the following fields is the largest representable
     # integral value.
-    assert_equal(vehicle_type.tw_late, _INT_MAX)
-    assert_equal(vehicle_type.shift_duration, _INT_MAX)
-    assert_equal(vehicle_type.max_duration, _INT_MAX)
-    assert_equal(vehicle_type.max_distance, _INT_MAX)
+    assert_equal(vehicle_type.tw_late, INT_MAX)
+    assert_equal(vehicle_type.shift_duration, INT_MAX)
+    assert_equal(vehicle_type.max_duration, INT_MAX)
+    assert_equal(vehicle_type.max_distance, INT_MAX)
 
     # The default value for start_late is the value of tw_late.
     assert_equal(vehicle_type.start_late, vehicle_type.tw_late)
@@ -197,11 +191,11 @@ def test_attribute_access():
 @pytest.mark.parametrize(
     ("shift_duration", "max_overtime", "expected"),
     [
-        (_INT_MAX, _INT_MAX, _INT_MAX),  # should not overflow
-        (_INT_MAX, 0, _INT_MAX),  # borderline
-        (0, _INT_MAX, _INT_MAX),  # borderline
-        (_INT_MAX - 1, 1, _INT_MAX),  # check for off-by-one
-        (1, _INT_MAX - 1, _INT_MAX),  # check for off-by-one
+        (INT_MAX, INT_MAX, INT_MAX),  # should not overflow
+        (INT_MAX, 0, INT_MAX),  # borderline
+        (0, INT_MAX, INT_MAX),  # borderline
+        (INT_MAX - 1, 1, INT_MAX),  # check for off-by-one
+        (1, INT_MAX - 1, INT_MAX),  # check for off-by-one
         (10, 10, 20),  # completely OK, should sum both terms
     ],
 )
@@ -317,9 +311,9 @@ def test_max_trips(ok_small_multiple_trips):
     # Normally, max_trips == max_reloads + 1, but when max_reloads is at the
     # maximum size, we do not want max_trips to overflow and wrap around to
     # zero. These asserts check that does not happen.
-    veh_type = veh_type.replace(max_reloads=_MAX_SIZE)
-    assert_equal(veh_type.max_reloads, _MAX_SIZE)
-    assert_equal(veh_type.max_trips, _MAX_SIZE)
+    veh_type = veh_type.replace(max_reloads=UINT_MAX)
+    assert_equal(veh_type.max_reloads, UINT_MAX)
+    assert_equal(veh_type.max_trips, UINT_MAX)
 
 
 def test_max_trips_is_one_if_no_reload_depots(ok_small):
@@ -329,7 +323,7 @@ def test_max_trips_is_one_if_no_reload_depots(ok_small):
     """
     veh_type = ok_small.vehicle_type(0)
     assert_equal(veh_type.reload_depots, [])
-    assert_equal(veh_type.max_reloads, _MAX_SIZE)
+    assert_equal(veh_type.max_reloads, UINT_MAX)
     assert_equal(veh_type.max_trips, 1)
 
 

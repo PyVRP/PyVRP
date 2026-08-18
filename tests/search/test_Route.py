@@ -11,10 +11,9 @@ from pyvrp import (
     ProblemData,
     VehicleType,
 )
+from pyvrp.constants import INT_MAX
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
-
-_INT_MAX = np.iinfo(np.int64).max
 
 
 def test_node_init():
@@ -478,7 +477,7 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
 @pytest.mark.parametrize(
     ("shift_tw", "expected_start"),
     [
-        ((0, np.iinfo(np.int64).max), (0, 1000)),  # should default to depot
+        ((0, INT_MAX), (0, 1000)),  # should default to depot
         ((0, 1000), (0, 1000)),  # same as depot
         ((0, 500), (0, 500)),  # should lower start_late
         ((250, 1000), (250, 1000)),  # should increase start_early
@@ -1065,7 +1064,7 @@ def test_multi_trip_duration_caches(ok_small_multiple_trips):
     [
         (VehicleType(), True),  # default has cost
         (VehicleType(unit_distance_cost=0), False),  # no cost or constraint
-        (VehicleType(unit_distance_cost=0, max_distance=_INT_MAX), False),
+        (VehicleType(unit_distance_cost=0, max_distance=INT_MAX), False),
         (VehicleType(unit_distance_cost=0, max_distance=0), True),  # constr
         (VehicleType(max_distance=0), True),  # both cost and constraint
     ],
