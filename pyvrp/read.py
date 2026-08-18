@@ -21,14 +21,12 @@ from pyvrp._pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp.constants import MAX_VALUE
+from pyvrp.constants import MAX_SIZE, MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
 _INT_MAX = np.iinfo(np.int64).max
-_UINT_MAX = np.iinfo(np.uint64).max
-
 
 ROUND_FUNCS: dict[str, _RoundingFunc] = {
     "round": lambda vals: np.round(vals).astype(np.int64),
@@ -318,7 +316,7 @@ class _InstanceParser:
         return self.round_func(np.broadcast_to(max_durations, shape))
 
     def max_reloads(self) -> np.ndarray:
-        max_reloads = self.instance.get("vehicles_max_reloads", _UINT_MAX)
+        max_reloads = self.instance.get("vehicles_max_reloads", MAX_SIZE)
         return np.broadcast_to(max_reloads, self.num_vehicles)
 
     def fixed_costs(self) -> np.ndarray:

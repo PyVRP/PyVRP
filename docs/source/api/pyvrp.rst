@@ -136,3 +136,4 @@ This object stores the best observed solution and detailed runtime statistics.
 
 .. automodule:: pyvrp.constants
    :members:
+   :exclude-members: MAX_SIZE
