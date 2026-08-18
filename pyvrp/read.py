@@ -1,4 +1,5 @@
 import pathlib
+import sys
 from collections import defaultdict
 from itertools import count
 from numbers import Number
@@ -27,7 +28,7 @@ from pyvrp.exceptions import ScalingWarning
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
 _INT_MAX = np.iinfo(np.int64).max
-_UINT_MAX = np.iinfo(np.uint64).max
+_UINT_MAX = 2 * sys.maxsize + 1
 
 
 ROUND_FUNCS: dict[str, _RoundingFunc] = {

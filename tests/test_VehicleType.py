@@ -1,4 +1,5 @@
 import pickle
+import sys
 
 import numpy as np
 import pytest
@@ -7,7 +8,7 @@ from numpy.testing import assert_, assert_equal, assert_raises
 from pyvrp import VehicleType
 
 _INT_MAX = np.iinfo(np.int64).max
-_MAX_SIZE = np.iinfo(np.uint64).max
+_MAX_SIZE = 2 * sys.maxsize + 1
 
 
 @pytest.mark.parametrize(
