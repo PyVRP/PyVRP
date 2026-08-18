@@ -5,7 +5,7 @@ from pyvrp.search import OPERATORS, LocalSearch, compute_neighbours
 
 
 @pytest.mark.parametrize(
-    "instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr", "gtsp"]
+    "instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr", "gtsp", "pdptw"]
 )
 def test_all_operators(instance, benchmark, request):
     """
@@ -43,7 +43,7 @@ def test_all_operators_on_vrptw_from_bks(benchmark, vrptw, vrptw_bks):
 
 @pytest.mark.parametrize("op", OPERATORS)
 @pytest.mark.parametrize(
-    "instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr", "gtsp"]
+    "instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr", "gtsp", "pdptw"]
 )
 def test_each_operator(op, instance, benchmark, request):
     """

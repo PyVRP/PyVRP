@@ -1,9 +1,9 @@
 #include "bindings.h"
-#include "Exchange.h"
 #include "InsertOptionalClient.h"
 #include "InsertOptionalShipment.h"
 #include "LocalSearch.h"
 #include "PerturbationManager.h"
+#include "Relocate.h"
 #include "RelocateAlternative.h"
 #include "RelocateDelivery.h"
 #include "RelocatePickup.h"
@@ -18,6 +18,7 @@
 #include "Route.h"
 #include "SearchSpace.h"
 #include "Solution.h"
+#include "Swap.h"
 #include "SwapTails.h"
 #include "neighbourhood.h"
 #include "search_docs.h"
@@ -32,7 +33,6 @@
 namespace py = pybind11;
 
 using pyvrp::search::BinaryOperator;
-using pyvrp::search::Exchange;
 using pyvrp::search::InsertOptionalClient;
 using pyvrp::search::InsertOptionalShipment;
 using pyvrp::search::LocalSearch;
@@ -40,6 +40,7 @@ using pyvrp::search::NeighbourhoodParams;
 using pyvrp::search::OperatorStatistics;
 using pyvrp::search::PerturbationManager;
 using pyvrp::search::PerturbationParams;
+using pyvrp::search::Relocate;
 using pyvrp::search::RelocateAlternative;
 using pyvrp::search::RelocateDelivery;
 using pyvrp::search::RelocatePickup;
@@ -54,6 +55,7 @@ using pyvrp::search::ReplaceOptionalShipment;
 using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 using pyvrp::search::Solution;
+using pyvrp::search::Swap;
 using pyvrp::search::SwapTails;
 using pyvrp::search::UnaryOperator;
 
@@ -292,167 +294,167 @@ PYBIND11_MODULE(_search, m)
         .def_static(
             "supports", &ReplaceOptionalShipment::supports, py::arg("data"));
 
-    py::class_<Exchange<1, 0>, BinaryOperator>(
-        m, "Exchange10", DOC(pyvrp, search, Exchange))
+    py::class_<Relocate<1>, BinaryOperator>(
+        m, "Relocate1", DOC(pyvrp, search, Relocate))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &Exchange<1, 0>::statistics,
+                               &Relocate<1>::statistics,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("name", &Exchange<1, 0>::name)
+        .def_property_readonly("name", &Relocate<1>::name)
         .def("evaluate",
-             &Exchange<1, 0>::evaluate,
+             &Relocate<1>::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<1, 0>::apply, py::arg("U"), py::arg("V"))
-        .def("init", &Exchange<1, 0>::init, py::arg("solution"))
-        .def_static("supports", &Exchange<1, 0>::supports, py::arg("data"));
+        .def("apply", &Relocate<1>::apply, py::arg("U"), py::arg("V"))
+        .def("init", &Relocate<1>::init, py::arg("solution"))
+        .def_static("supports", &Relocate<1>::supports, py::arg("data"));
 
-    py::class_<Exchange<2, 0>, BinaryOperator>(
-        m, "Exchange20", DOC(pyvrp, search, Exchange))
+    py::class_<Relocate<2>, BinaryOperator>(
+        m, "Relocate2", DOC(pyvrp, search, Relocate))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &Exchange<2, 0>::statistics,
+                               &Relocate<2>::statistics,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("name", &Exchange<2, 0>::name)
+        .def_property_readonly("name", &Relocate<2>::name)
         .def("evaluate",
-             &Exchange<2, 0>::evaluate,
+             &Relocate<2>::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<2, 0>::apply, py::arg("U"), py::arg("V"))
-        .def("init", &Exchange<2, 0>::init, py::arg("solution"))
-        .def_static("supports", &Exchange<2, 0>::supports, py::arg("data"));
+        .def("apply", &Relocate<2>::apply, py::arg("U"), py::arg("V"))
+        .def("init", &Relocate<2>::init, py::arg("solution"))
+        .def_static("supports", &Relocate<2>::supports, py::arg("data"));
 
-    py::class_<Exchange<3, 0>, BinaryOperator>(
-        m, "Exchange30", DOC(pyvrp, search, Exchange))
+    py::class_<Relocate<3>, BinaryOperator>(
+        m, "Relocate3", DOC(pyvrp, search, Relocate))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &Exchange<3, 0>::statistics,
+                               &Relocate<3>::statistics,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("name", &Exchange<3, 0>::name)
+        .def_property_readonly("name", &Relocate<3>::name)
         .def("evaluate",
-             &Exchange<3, 0>::evaluate,
+             &Relocate<3>::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<3, 0>::apply, py::arg("U"), py::arg("V"))
-        .def("init", &Exchange<3, 0>::init, py::arg("solution"))
-        .def_static("supports", &Exchange<3, 0>::supports, py::arg("data"));
+        .def("apply", &Relocate<3>::apply, py::arg("U"), py::arg("V"))
+        .def("init", &Relocate<3>::init, py::arg("solution"))
+        .def_static("supports", &Relocate<3>::supports, py::arg("data"));
 
-    py::class_<Exchange<1, 1>, BinaryOperator>(
-        m, "Exchange11", DOC(pyvrp, search, Exchange))
+    py::class_<Swap<1, 1>, BinaryOperator>(
+        m, "Swap11", DOC(pyvrp, search, Swap))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &Exchange<1, 1>::statistics,
+                               &Swap<1, 1>::statistics,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("name", &Exchange<1, 1>::name)
+        .def_property_readonly("name", &Swap<1, 1>::name)
         .def("evaluate",
-             &Exchange<1, 1>::evaluate,
+             &Swap<1, 1>::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<1, 1>::apply, py::arg("U"), py::arg("V"))
-        .def("init", &Exchange<1, 1>::init, py::arg("solution"))
-        .def_static("supports", &Exchange<1, 1>::supports, py::arg("data"));
+        .def("apply", &Swap<1, 1>::apply, py::arg("U"), py::arg("V"))
+        .def("init", &Swap<1, 1>::init, py::arg("solution"))
+        .def_static("supports", &Swap<1, 1>::supports, py::arg("data"));
 
-    py::class_<Exchange<2, 1>, BinaryOperator>(
-        m, "Exchange21", DOC(pyvrp, search, Exchange))
+    py::class_<Swap<2, 1>, BinaryOperator>(
+        m, "Swap21", DOC(pyvrp, search, Swap))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &Exchange<2, 1>::statistics,
+                               &Swap<2, 1>::statistics,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("name", &Exchange<2, 1>::name)
+        .def_property_readonly("name", &Swap<2, 1>::name)
         .def("evaluate",
-             &Exchange<2, 1>::evaluate,
+             &Swap<2, 1>::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<2, 1>::apply, py::arg("U"), py::arg("V"))
-        .def("init", &Exchange<2, 1>::init, py::arg("solution"))
-        .def_static("supports", &Exchange<2, 1>::supports, py::arg("data"));
+        .def("apply", &Swap<2, 1>::apply, py::arg("U"), py::arg("V"))
+        .def("init", &Swap<2, 1>::init, py::arg("solution"))
+        .def_static("supports", &Swap<2, 1>::supports, py::arg("data"));
 
-    py::class_<Exchange<3, 1>, BinaryOperator>(
-        m, "Exchange31", DOC(pyvrp, search, Exchange))
+    py::class_<Swap<3, 1>, BinaryOperator>(
+        m, "Swap31", DOC(pyvrp, search, Swap))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &Exchange<3, 1>::statistics,
+                               &Swap<3, 1>::statistics,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("name", &Exchange<3, 1>::name)
+        .def_property_readonly("name", &Swap<3, 1>::name)
         .def("evaluate",
-             &Exchange<3, 1>::evaluate,
+             &Swap<3, 1>::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<3, 1>::apply, py::arg("U"), py::arg("V"))
-        .def("init", &Exchange<3, 1>::init, py::arg("solution"))
-        .def_static("supports", &Exchange<3, 1>::supports, py::arg("data"));
+        .def("apply", &Swap<3, 1>::apply, py::arg("U"), py::arg("V"))
+        .def("init", &Swap<3, 1>::init, py::arg("solution"))
+        .def_static("supports", &Swap<3, 1>::supports, py::arg("data"));
 
-    py::class_<Exchange<2, 2>, BinaryOperator>(
-        m, "Exchange22", DOC(pyvrp, search, Exchange))
+    py::class_<Swap<2, 2>, BinaryOperator>(
+        m, "Swap22", DOC(pyvrp, search, Swap))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &Exchange<2, 2>::statistics,
+                               &Swap<2, 2>::statistics,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("name", &Exchange<2, 2>::name)
+        .def_property_readonly("name", &Swap<2, 2>::name)
         .def("evaluate",
-             &Exchange<2, 2>::evaluate,
+             &Swap<2, 2>::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<2, 2>::apply, py::arg("U"), py::arg("V"))
-        .def("init", &Exchange<2, 2>::init, py::arg("solution"))
-        .def_static("supports", &Exchange<2, 2>::supports, py::arg("data"));
+        .def("apply", &Swap<2, 2>::apply, py::arg("U"), py::arg("V"))
+        .def("init", &Swap<2, 2>::init, py::arg("solution"))
+        .def_static("supports", &Swap<2, 2>::supports, py::arg("data"));
 
-    py::class_<Exchange<3, 2>, BinaryOperator>(
-        m, "Exchange32", DOC(pyvrp, search, Exchange))
+    py::class_<Swap<3, 2>, BinaryOperator>(
+        m, "Swap32", DOC(pyvrp, search, Swap))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &Exchange<3, 2>::statistics,
+                               &Swap<3, 2>::statistics,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("name", &Exchange<3, 2>::name)
+        .def_property_readonly("name", &Swap<3, 2>::name)
         .def("evaluate",
-             &Exchange<3, 2>::evaluate,
+             &Swap<3, 2>::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<3, 2>::apply, py::arg("U"), py::arg("V"))
-        .def("init", &Exchange<3, 2>::init, py::arg("solution"))
-        .def_static("supports", &Exchange<3, 2>::supports, py::arg("data"));
+        .def("apply", &Swap<3, 2>::apply, py::arg("U"), py::arg("V"))
+        .def("init", &Swap<3, 2>::init, py::arg("solution"))
+        .def_static("supports", &Swap<3, 2>::supports, py::arg("data"));
 
-    py::class_<Exchange<3, 3>, BinaryOperator>(
-        m, "Exchange33", DOC(pyvrp, search, Exchange))
+    py::class_<Swap<3, 3>, BinaryOperator>(
+        m, "Swap33", DOC(pyvrp, search, Swap))
         .def(py::init<pyvrp::ProblemData const &>(),
              py::arg("data"),
              py::keep_alive<1, 2>())  // keep data alive
         .def_property_readonly("statistics",
-                               &Exchange<3, 3>::statistics,
+                               &Swap<3, 3>::statistics,
                                py::return_value_policy::reference_internal)
-        .def_property_readonly("name", &Exchange<3, 3>::name)
+        .def_property_readonly("name", &Swap<3, 3>::name)
         .def("evaluate",
-             &Exchange<3, 3>::evaluate,
+             &Swap<3, 3>::evaluate,
              py::arg("U"),
              py::arg("V"),
              py::arg("cost_evaluator"))
-        .def("apply", &Exchange<3, 3>::apply, py::arg("U"), py::arg("V"))
-        .def("init", &Exchange<3, 3>::init, py::arg("solution"))
-        .def_static("supports", &Exchange<3, 3>::supports, py::arg("data"));
+        .def("apply", &Swap<3, 3>::apply, py::arg("U"), py::arg("V"))
+        .def("init", &Swap<3, 3>::init, py::arg("solution"))
+        .def_static("supports", &Swap<3, 3>::supports, py::arg("data"));
 
     py::class_<SwapTails, BinaryOperator>(
         m, "SwapTails", DOC(pyvrp, search, SwapTails))

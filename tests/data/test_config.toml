@@ -1,7 +1,7 @@
 display_interval = 10.0
 
 operators = [
-    "Exchange10",
+    "Relocate1",
     "SwapTails",
 ]
 
