@@ -156,6 +156,11 @@ repair-wheel-command = "delvewheel repair -w {dest_dir} {wheel}"
 MACOSX_DEPLOYMENT_TARGET = "13.3"
 
 
+[tool.cibuildwheel.pyodide]
+repair-wheel-command = "pyodide auditwheel repair --output-dir {dest_dir} {wheel}"
+test-command = "pytest -k \"not test_plotting\" ./tests -v"
+
+
 [tool.poetry]
 include = [
     { path = "benchmarks/", format = "sdist" },
@@ -183,12 +188,6 @@ packages = [
 generate-setup-file = false
 script = "buildtools/build_wrapper.py"
 
-[tool.cibuildwheel.pyodide]
-build = "cp314-*"
-environment.CFLAGS = "-Wno-error=unused-command-line-argument"
-environment.CXXFLAGS = "-Wno-error=unused-command-line-argument"
-test-requires = ["pytest"]
-test-command = "python -m pytest -k \"not test_plotting\" -n 0 {project}/tests -x"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "meson", "ninja", "docblock"]
