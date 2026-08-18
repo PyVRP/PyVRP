@@ -163,10 +163,10 @@ class PenaltyManager:
             params.max_penalty,
         )
 
-        # Tracks recent feasibilities for each penalty dimension.
-        self._feas_lists: list[list[bool]] = [
-            [] for _ in range(len(self._penalties))
-        ]
+        # For each penalty dimension, track the recent violations and the
+        # average violation at the previous update.
+        self._viol_lists: list[list[int]] = [[] for _ in self._penalties]
+        self._prev_avg_violations = [float("inf")] * len(self._penalties)
 
     def penalties(self) -> tuple[list[float], float, float]:
         """
@@ -191,46 +191,57 @@ class PenaltyManager:
         else:
             new_penalty = self._params.penalty_decrease * penalty
 
-        if new_penalty >= self._params.max_penalty:
-            msg = """
-            A penalty parameter has reached its maximum value. This means PyVRP
-            struggles to find a feasible solution for this instance, either
-            because the instance has no feasible solution, or it is hard to
-            find one - possibly due to large data scaling differences. Check
-            the instance carefully to determine if a feasible solution exists.
-            """
-            warn(msg, PenaltyBoundWarning)
-
         return np.clip(
             new_penalty,
             self._params.min_penalty,
             self._params.max_penalty,
         )
 
-    def _register(self, feas_list: list[bool], penalty: float, is_feas: bool):
-        feas_list.append(is_feas)
+    def _register(self, idx: int, violation: int):
+        viol_list = self._viol_lists[idx]
+        viol_list.append(violation)
 
-        if len(feas_list) != self._params.solutions_between_updates:
-            return penalty
+        if len(viol_list) != self._params.solutions_between_updates:
+            return
 
-        avg = fmean(feas_list)
-        feas_list.clear()
-        return self._compute(penalty, avg)
+        feas_percentage = fmean(violation == 0 for violation in viol_list)
+        avg_violation = fmean(viol_list)
+        viol_list.clear()
+
+        # Warn if (1) the penalty is at its maximum, (2) too few feasible
+        # solutions are found, and (3) violations stop decreasing.
+        penalty = self._penalties[idx]
+        diff = self._params.target_feasible - feas_percentage
+        if (
+            penalty >= self._params.max_penalty
+            and diff >= self._params.feas_tolerance
+            and avg_violation >= self._prev_avg_violations[idx]
+        ):
+            msg = """
+            A penalty parameter has reached its maximum value. This means PyVRP
+            struggles to find a feasible solution for this instance, either
+            because the instance has no feasible solution, or it is hard to
+            find one - possibly due to large data scaling differences. Check
+            the instance carefully to determine if a feasible solution exists,
+            or consider increasing PenaltyParams.max_penalty.
+            """
+            warn(msg, PenaltyBoundWarning)
+
+        self._prev_avg_violations[idx] = avg_violation
+        self._penalties[idx] = self._compute(penalty, feas_percentage)
 
     def register(self, sol: Solution):
         """
-        Registers the feasibility dimensions of the given solution.
+        Registers the violations per penalty dimension of the given solution.
         """
-        is_feasible = [
-            *[excess == 0 for excess in sol.excess_load()],
-            not sol.has_time_warp(),
-            not sol.has_excess_distance(),
+        violations = [
+            *sol.excess_load(),
+            sol.time_warp(),
+            sol.excess_distance(),
         ]
 
-        for idx, is_feas in enumerate(is_feasible):
-            feas_list = self._feas_lists[idx]
-            penalty = self._penalties[idx]
-            self._penalties[idx] = self._register(feas_list, penalty, is_feas)
+        for idx, violation in enumerate(violations):
+            self._register(idx, violation)
 
     def cost_evaluator(self) -> CostEvaluator:
         """
