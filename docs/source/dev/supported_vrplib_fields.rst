@@ -95,7 +95,7 @@ PyVRP supports the following data sections:
 
    ``PICKUP_AND_DELIVERY_SECTION``
       Array of pickup and delivery data, one row for each depot and shipment step.
-      Each row lists the location's demand, time window, service duration, and the indices of the paired pickup and delivery locations.
+      Each row lists the location's demand, time window, service duration, and the indices of the paired pickup and delivery locations, in that order.
       For a pickup location the pickup index is zero and the delivery index refers to the paired delivery location, and vice versa.
       When this section is present, all non-depot locations are interpreted as shipment steps, and their time windows and service durations are taken from this section.
       Support for this section is limited; it cannot be combined with client data sections like :term:`DEMAND_SECTION`, :term:`SERVICE_TIME_SECTION`, and :term:`TIME_WINDOW_SECTION`, which are ignored when this section is present.
