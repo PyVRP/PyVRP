@@ -9,6 +9,7 @@ from numpy.testing import (
 )
 
 from pyvrp import PenaltyManager, PenaltyParams, Solution, VehicleType
+from pyvrp.exceptions import PenaltyBoundWarning
 
 
 @pytest.mark.parametrize(
@@ -384,8 +385,8 @@ def test_warn_when_violations_stuck(ok_small, recwarn):
 
     # The load penalty is at max_penalty and the violation did not decrease
     # since the previous update, so now a warning should be raised.
-    pm.register(infeas)
-    assert_equal(len(recwarn), 1)
+    with pytest.warns(PenaltyBoundWarning):
+        pm.register(infeas)
 
 
 def test_init_clips_penalties():
