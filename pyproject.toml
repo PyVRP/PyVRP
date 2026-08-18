@@ -157,12 +157,13 @@ MACOSX_DEPLOYMENT_TARGET = "13.3"
 
 
 [tool.cibuildwheel.pyodide]
-# Build chain sets PTHREAD_POOL_SIZE flag, but that's apparently only supported
-# for JavaScript builds (and ignored otherwise).
-environment.CXXFLAGS = "-Wno-error=unused-command-line-argument"
+build-frontend = "pyodide-build"
 repair-wheel-command = "pyodide auditwheel repair --output-dir {dest_dir} {wheel}"
-# When testing plots with pyodide builds with the Agg backend we get significant
-# layout differences, so we skip the plots for pyodide.
+# Build chain sets PTHREAD_POOL_SIZE, but that's only supported by JavaScript
+# builds and unused otherwise (so we need to allow unused arguments).
+environment.CXXFLAGS = "-Wno-error=unused-command-line-argument"
+# The pyodide builds can only test with the Agg backend. With that backend we 
+# get significant layout shifts, so we skip the plot tests for pyodide.
 test-command = "pytest -k \"not test_plotting\" ./tests -v"
 
 
