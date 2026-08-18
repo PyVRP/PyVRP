@@ -8,7 +8,6 @@
 #include <cassert>
 #include <limits>
 #include <ostream>
-#include <vector>
 
 using pyvrp::Cost;
 
