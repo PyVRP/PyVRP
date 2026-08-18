@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from typing import TYPE_CHECKING, Sequence
 from warnings import warn
 
@@ -443,9 +442,7 @@ class Model:
         start_late: int | None = None,
         initial_load: int | list[int] = [],
         reload_depots: list[Depot] = [],
-        max_reloads: int = np.iinfo(np.uint32).max
-        if sys.platform == "emscripten"
-        else np.iinfo(np.uint64).max,
+        max_reloads: int = np.iinfo(np.uint64).max,
         max_overtime: int = 0,
         unit_overtime_cost: int = 0,
         *,

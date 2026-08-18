@@ -1,5 +1,4 @@
 import pickle
-import sys
 
 import numpy as np
 import pytest
@@ -9,8 +8,6 @@ from pyvrp import VehicleType
 
 _INT_MAX = np.iinfo(np.int64).max
 _MAX_SIZE = np.iinfo(np.uint64).max
-if sys.platform == "emscripten":
-    _MAX_SIZE = np.iinfo(np.uint32).max
 
 
 @pytest.mark.parametrize(
