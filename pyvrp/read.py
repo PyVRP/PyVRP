@@ -495,20 +495,20 @@ class _ProblemDataBuilder:
 
             vehicle_type = VehicleType(
                 num_available=len(vehicles),
-                capacity=list(map(int, capacity)),
-                start_depot=int(depot),
-                end_depot=int(depot),
-                fixed_cost=int(fixed_cost),
+                capacity=capacity,
+                start_depot=depot,
+                end_depot=depot,
+                fixed_cost=fixed_cost,
                 # The literature specifies depot time windows. We instead set
                 # those on the vehicles.
-                tw_early=int(time_windows[depot][0]),
-                tw_late=int(time_windows[depot][1]),
-                shift_duration=int(shift_duration),
-                max_distance=int(max_distance),
-                unit_distance_cost=int(unit_distance_cost),
-                profile=int(client2profile[clients]),
-                reload_depots=list(map(int, reloads)),
-                max_reloads=int(max_reloads),
+                tw_early=time_windows[depot][0],
+                tw_late=time_windows[depot][1],
+                shift_duration=shift_duration,
+                max_distance=max_distance,
+                unit_distance_cost=unit_distance_cost,
+                profile=client2profile[clients],
+                reload_depots=reloads,
+                max_reloads=max_reloads,
                 # A bit hacky, but this csv-like name is really useful to track
                 # the actual vehicles that make up this vehicle type.
                 name=",".join(map(str, vehicles)),
