@@ -15,7 +15,7 @@ from pyvrp._pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp.constants import MAX_VALUE
+from pyvrp.constants import MAX_SIZE, MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from pyvrp.solve import SolveParams, solve
 
@@ -442,7 +442,7 @@ class Model:
         start_late: int | None = None,
         initial_load: int | list[int] = [],
         reload_depots: list[Depot] = [],
-        max_reloads: int = np.iinfo(np.uint64).max,
+        max_reloads: int = MAX_SIZE,
         max_overtime: int = 0,
         unit_overtime_cost: int = 0,
         *,

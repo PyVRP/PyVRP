@@ -21,14 +21,12 @@ from pyvrp._pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp.constants import MAX_VALUE
+from pyvrp.constants import MAX_SIZE, MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
 _INT_MAX = np.iinfo(np.int64).max
-_UINT_MAX = np.iinfo(np.uint64).max
-
 
 ROUND_FUNCS: dict[str, _RoundingFunc] = {
     "round": lambda vals: np.round(vals).astype(np.int64),
@@ -123,23 +121,29 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         idcs = list(map(int, veh_type.name.split(",")))
         veh2type[idcs] = idx
 
+    # VRPLIB numbers the route visits by location: [0, num_depots) are the
+    # depots, and the remaining locations are clients or shipment activities.
+    # All activities have a unique location, so we can map each location to
+    # the activity visiting it.
+    loc2activity: list[Activity | None] = [None] * data.num_locations
+    for idx, depot in enumerate(data.depots()):
+        loc2activity[depot.location] = Activity(ActivityType.DEPOT, idx)
+
+    for idx, client in enumerate(data.clients()):
+        loc2activity[client.location] = Activity(ActivityType.CLIENT, idx)
+
+    for idx, shipment in enumerate(data.shipments()):
+        pickup = shipment.pickup.location
+        delivery = shipment.delivery.location
+        loc2activity[pickup] = Activity(ActivityType.PICKUP, idx)
+        loc2activity[delivery] = Activity(ActivityType.DELIVERY, idx)
+
     routes = []
     for idx, route in enumerate(sol["routes"]):
         if not route:
             continue
 
-        activities = []
-        for visit in route:
-            # VRPLIB uses a format where the route visits are numbered with
-            # [0, ..., num_depots) for the depots, and [num_depots, ...,
-            # num_depots + num_clients) for the clients.
-            if visit < data.num_depots:
-                activity = Activity(ActivityType.DEPOT, visit)
-            else:
-                visit = visit - data.num_depots
-                activity = Activity(ActivityType.CLIENT, visit)
-            activities.append(activity)
-
+        activities = [loc2activity[visit] for visit in route]
         routes.append(Route(data, activities, veh2type[idx]))
 
     return Solution(data, routes)
@@ -219,6 +223,13 @@ class _InstanceParser:
         return self.round_func(service_times)
 
     def time_windows(self) -> np.ndarray:
+        if "pickup_and_delivery" in self.instance:
+            # The pickup and delivery data contain each location's time window
+            # in the second and third columns. We mainly need these for the
+            # depot time windows, shipments parse their own time windows.
+            data = self.instance["pickup_and_delivery"]
+            return self.round_func(data[:, 1:3])
+
         if "time_window" not in self.instance:
             time_windows = np.empty((self.num_locations, 2), dtype=np.int64)
             time_windows[:, 0] = 0
@@ -305,7 +316,7 @@ class _InstanceParser:
         return self.round_func(np.broadcast_to(max_durations, shape))
 
     def max_reloads(self) -> np.ndarray:
-        max_reloads = self.instance.get("vehicles_max_reloads", _UINT_MAX)
+        max_reloads = self.instance.get("vehicles_max_reloads", MAX_SIZE)
         return np.broadcast_to(max_reloads, self.num_vehicles)
 
     def fixed_costs(self) -> np.ndarray:

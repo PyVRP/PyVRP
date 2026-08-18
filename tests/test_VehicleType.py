@@ -5,9 +5,9 @@ import pytest
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import VehicleType
+from pyvrp.constants import MAX_SIZE
 
 _INT_MAX = np.iinfo(np.int64).max
-_MAX_SIZE = np.iinfo(np.uint64).max
 
 
 @pytest.mark.parametrize(
@@ -314,9 +314,9 @@ def test_max_trips(ok_small_multiple_trips):
     # Normally, max_trips == max_reloads + 1, but when max_reloads is at the
     # maximum size, we do not want max_trips to overflow and wrap around to
     # zero. These asserts check that does not happen.
-    veh_type = veh_type.replace(max_reloads=_MAX_SIZE)
-    assert_equal(veh_type.max_reloads, _MAX_SIZE)
-    assert_equal(veh_type.max_trips, _MAX_SIZE)
+    veh_type = veh_type.replace(max_reloads=MAX_SIZE)
+    assert_equal(veh_type.max_reloads, MAX_SIZE)
+    assert_equal(veh_type.max_trips, MAX_SIZE)
 
 
 def test_max_trips_is_one_if_no_reload_depots(ok_small):
@@ -326,7 +326,7 @@ def test_max_trips_is_one_if_no_reload_depots(ok_small):
     """
     veh_type = ok_small.vehicle_type(0)
     assert_equal(veh_type.reload_depots, [])
-    assert_equal(veh_type.max_reloads, _MAX_SIZE)
+    assert_equal(veh_type.max_reloads, MAX_SIZE)
     assert_equal(veh_type.max_trips, 1)
 
 

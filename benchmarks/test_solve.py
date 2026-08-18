@@ -5,7 +5,7 @@ from pyvrp.stop import MaxIterations
 
 
 @pytest.mark.parametrize(
-    "instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr", "gtsp"]
+    "instance", ["vrptw", "mdvrp", "vrpb", "mtvrptwr", "gtsp", "pdptw"]
 )
 def test_solve(instance, benchmark, request):
     """

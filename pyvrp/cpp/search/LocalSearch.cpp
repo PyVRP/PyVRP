@@ -57,7 +57,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
         return;
 
     searchCompleted_ = false;
-    for (int step = 0; !searchCompleted_; ++step)
+    for ([[maybe_unused]] int step = 0; !searchCompleted_; ++step)
     {
         PYVRP_DEBUG("pyvrp.search", "Entering search loop (step={}).", step);
         searchCompleted_ = true;
@@ -102,11 +102,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                 }
             }
 
-            // Moves involving empty routes are not tested initially to avoid
-            // using too many routes, but we will try it if we have not been
-            // able to insert U yet (perhaps the solution is empty?).
-            if (step > 0 || !U->route())
-                applyEmptyRouteMoves(U, costEvaluator);
+            applyEmptyRouteMoves(U, costEvaluator);
         }
     }
 }
@@ -138,8 +134,9 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
             if (rU)
                 searchSpace_.markPromising(U);
 
-            [[maybe_unused]] auto const costBefore
-                = costEvaluator.penalisedCost(solution_);
+#ifndef NDEBUG
+            auto const costBefore = costEvaluator.penalisedCost(solution_);
+#endif
 
             op->apply(U);
             if (!rU)  // then U wasn't in the solution before, and the operator
@@ -150,13 +147,13 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
 
             update(rU, rU);
 
-            [[maybe_unused]] auto const costAfter
-                = costEvaluator.penalisedCost(solution_);
-
+#ifndef NDEBUG
+            auto const costAfter = costEvaluator.penalisedCost(solution_);
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
             // the move, plus the delta cost.
             assert(costAfter == costBefore + deltaCost);
+#endif
 
             return true;
         }
@@ -189,19 +186,20 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
                 searchSpace_.markPromising(U);
             searchSpace_.markPromising(V);
 
-            [[maybe_unused]] auto const costBefore
-                = costEvaluator.penalisedCost(solution_);
+#ifndef NDEBUG
+            auto const costBefore = costEvaluator.penalisedCost(solution_);
+#endif
 
             op->apply(U, V);
             update(rU, rV);
 
-            [[maybe_unused]] auto const costAfter
-                = costEvaluator.penalisedCost(solution_);
-
+#ifndef NDEBUG
+            auto const costAfter = costEvaluator.penalisedCost(solution_);
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
             // the move, plus the delta cost.
             assert(costAfter == costBefore + deltaCost);
+#endif
 
             return true;
         }
