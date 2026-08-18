@@ -157,6 +157,9 @@ MACOSX_DEPLOYMENT_TARGET = "13.3"
 
 
 [tool.cibuildwheel.pyodide]
+# Build chain sets PTHREAD_POOL_SIZE flag, but that's apparently only supported
+# for JavaScript builds (and ignored otherwise).
+environment.CXXFLAGS = "-Wno-error=unused-command-line-argument"
 repair-wheel-command = "pyodide auditwheel repair --output-dir {dest_dir} {wheel}"
 test-command = "pytest -k \"not test_plotting\" ./tests -v"
 
