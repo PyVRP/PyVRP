@@ -791,42 +791,6 @@ LoadSegment const &Route::SegmentAfter::load(size_t dimension) const
     return route_.loadAfter[dimension][start];
 }
 
-Route const *Route::SegmentAfter::route() const { return &route_; }
-
-SegmentProxy Route::SegmentAfter::front() const
-{
-    return {route_.nodes[start]->activity(), route_.locations[start]};
-}
-
-SegmentProxy Route::SegmentAfter::back() const
-{
-    return {route_.nodes.back()->activity(), route_.locations.back()};
-}
-
-size_t Route::SegmentAfter::size() const { return route_.size() - start; }
-
-size_t Route::SegmentAfter::numClients() const
-{
-    // fromStart is (start, end]. So we need to check if start itself is also
-    // a client, and add 1 if it is.
-    auto const fromStart = route_.numClients() - route_.numClients_[start];
-    return fromStart + route_[start]->isClient();
-}
-
-size_t Route::SegmentAfter::numPickups() const
-{
-    // fromStart is (start, end]. So we need to check if start itself is also
-    // a pickup, and add 1 if it is.
-    auto const fromStart = route_.numPickups() - route_.numPickups_[start];
-    return fromStart + route_[start]->isPickup();
-}
-
-bool Route::SegmentAfter::startsAtReloadDepot() const
-{
-    return route_.nodes[start]->isReloadDepot();
-}
-bool Route::SegmentAfter::endsAtReloadDepot() const { return false; }
-
 Distance Route::SegmentBefore::distance([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
@@ -875,6 +839,42 @@ bool Route::SegmentBefore::endsAtReloadDepot() const
 {
     return route_.nodes[end]->isReloadDepot();
 }
+
+Route const *Route::SegmentAfter::route() const { return &route_; }
+
+SegmentProxy Route::SegmentAfter::front() const
+{
+    return {route_.nodes[start]->activity(), route_.locations[start]};
+}
+
+SegmentProxy Route::SegmentAfter::back() const
+{
+    return {route_.nodes.back()->activity(), route_.locations.back()};
+}
+
+size_t Route::SegmentAfter::size() const { return route_.size() - start; }
+
+size_t Route::SegmentAfter::numClients() const
+{
+    // fromStart is (start, end]. So we need to check if start itself is also
+    // a client, and add 1 if it is.
+    auto const fromStart = route_.numClients() - route_.numClients_[start];
+    return fromStart + route_[start]->isClient();
+}
+
+size_t Route::SegmentAfter::numPickups() const
+{
+    // fromStart is (start, end]. So we need to check if start itself is also
+    // a pickup, and add 1 if it is.
+    auto const fromStart = route_.numPickups() - route_.numPickups_[start];
+    return fromStart + route_[start]->isPickup();
+}
+
+bool Route::SegmentAfter::startsAtReloadDepot() const
+{
+    return route_.nodes[start]->isReloadDepot();
+}
+bool Route::SegmentAfter::endsAtReloadDepot() const { return false; }
 
 Route const *Route::SegmentBetween::route() const { return &route_; }
 
