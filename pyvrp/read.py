@@ -29,6 +29,7 @@ _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 _INT_MAX = np.iinfo(np.int64).max
 _UINT_MAX = np.iinfo(np.uint64).max
 
+
 ROUND_FUNCS: dict[str, _RoundingFunc] = {
     "round": lambda vals: np.round(vals).astype(np.int64),
     "trunc": lambda vals: vals.astype(np.int64),
