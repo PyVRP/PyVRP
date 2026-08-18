@@ -1,0 +1,177 @@
+#include "RelocateAlternative.h"
+
+#include "ClientSegment.h"
+
+#include <cassert>
+
+using pyvrp::search::RelocateAlternative;
+
+void RelocateAlternative::evalSameRoute(Route::Node *U,
+                                        Route::Node *V,
+                                        CostEvaluator const &costEvaluator)
+{
+
+    auto const *route = U->route();
+    auto const &uData = data.client(U->idx());
+    auto const &group = data.group(*uData.group);
+    assert(group.mutuallyExclusive);
+
+    if (U->trip() != V->trip())
+        return;
+
+    if (U->pos() < V->pos())
+        for (auto const client : group)
+        {
+            auto *alternative = &solution_->clients[client];
+            if (alternative == U)
+                continue;
+
+            auto const &alternativeData = data.client(client);
+            Cost deltaCost = uData.prize - alternativeData.prize;
+            costEvaluator.deltaCost(
+                deltaCost,
+                Route::Proposal(route->before(U->pos() - 1),
+                                route->between(U->pos() + 1, V->pos()),
+                                ClientSegment(data, client),
+                                route->after(V->pos() + 1)));
+
+            if (deltaCost < 0)
+            {
+                move_ = {deltaCost, alternative};
+                return;
+            }
+        }
+    else
+        for (auto const client : group)
+        {
+            auto *alternative = &solution_->clients[client];
+            if (alternative == U)
+                continue;
+
+            auto const &alternativeData = data.client(client);
+            Cost deltaCost = uData.prize - alternativeData.prize;
+            costEvaluator.deltaCost(
+                deltaCost,
+                Route::Proposal(route->before(V->pos()),
+                                ClientSegment(data, client),
+                                route->between(V->pos() + 1, U->pos() - 1),
+                                route->after(U->pos() + 1)));
+
+            if (deltaCost < 0)
+            {
+                move_ = {deltaCost, alternative};
+                return;
+            }
+        }
+}
+
+void RelocateAlternative::evalDifferentRoutes(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
+{
+    auto const *uRoute = U->route();
+    auto const *vRoute = V->route();
+    auto const &uData = data.client(U->idx());
+    auto const &group = data.group(*uData.group);
+    assert(group.mutuallyExclusive);
+
+    if (!hasCachedRemoveCost_[U->idx()])
+    {
+        Cost removeCost = uData.prize;
+        if (uRoute->numClients() == 1 && uRoute->numShipments() == 0)
+            // This move leaves the route empty, so the cost delta is just the
+            // current route cost.
+            removeCost -= costEvaluator.penalisedCost(*uRoute);
+        else
+            costEvaluator.deltaCost<true>(  // exact so we get the right delta
+                removeCost,                 // when inserting the alternative
+                Route::Proposal(uRoute->before(U->pos() - 1),
+                                uRoute->after(U->pos() + 1)));
+
+        removeCost_[U->idx()] = removeCost;
+        hasCachedRemoveCost_[U->idx()] = true;
+    }
+
+    for (auto const client : group)
+    {
+        if (client == U->idx())
+            continue;
+
+        auto const &alternative = data.client(client);
+        Cost deltaCost = removeCost_[U->idx()] - alternative.prize;
+        costEvaluator.deltaCost(deltaCost,
+                                Route::Proposal(vRoute->before(V->pos()),
+                                                ClientSegment(data, client),
+                                                vRoute->after(V->pos() + 1)));
+
+        if (deltaCost < 0)
+        {
+            move_ = {deltaCost, &solution_->clients[client]};
+            return;
+        }
+    }
+}
+
+std::pair<pyvrp::Cost, bool> RelocateAlternative::evaluate(
+    Route::Node *U, Route::Node *V, CostEvaluator const &costEvaluator)
+{
+    assert(!U->isDepot() && !V->isEndDepot() && solution_);
+    stats_.numEvaluations++;
+
+    if (!U->isClient() || !U->route() || !V->route() || U == V || U == n(V))
+        return std::make_pair(0, false);
+
+    auto const &client = data.client(U->idx());
+    if (!client.group)
+        return std::make_pair(0, false);
+
+    move_ = {};
+
+    if (U->route() == V->route())
+        evalSameRoute(U, V, costEvaluator);
+    else
+        evalDifferentRoutes(U, V, costEvaluator);
+
+    return std::make_pair(move_.cost, move_.cost < 0);
+}
+
+void RelocateAlternative::apply(Route::Node *U, Route::Node *V) const
+{
+    assert(U->isClient() && U->route() && V->route());
+    assert(move_.alternative && !move_.alternative->route());
+    stats_.numApplications++;
+
+    U->route()->remove(U->pos());
+    V->route()->insert(V->pos() + 1, move_.alternative);
+}
+
+void RelocateAlternative::init(Solution &solution)
+{
+    BinaryOperator::init(solution);
+    solution_ = &solution;
+    hasCachedRemoveCost_.reset();
+}
+
+std::string RelocateAlternative::name() const { return "RelocateAlternative"; }
+
+bool RelocateAlternative::supports(ProblemData const &data)
+{
+    for (auto const &group : data.groups())
+        if (group.mutuallyExclusive)
+            return true;
+
+    return false;
+}
+
+void RelocateAlternative::update(Route const *route)
+{
+    for (auto const *node : *route)
+        if (node->isClient())
+            hasCachedRemoveCost_[node->idx()] = false;
+}
+
+RelocateAlternative::RelocateAlternative(ProblemData const &data)
+    : BinaryOperator(data),
+      hasCachedRemoveCost_(data.numClients()),
+      removeCost_(data.numClients())
+{
+}

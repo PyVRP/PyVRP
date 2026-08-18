@@ -1,20 +1,15 @@
 #include "PerturbationManager.h"
 
+#include "DynamicBitset.h"
+
 #include <cassert>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 using pyvrp::search::PerturbationManager;
 using pyvrp::search::PerturbationParams;
 using pyvrp::search::Route;
-
-namespace
-{
-enum class PerturbType
-{
-    REMOVE,
-    INSERT
-};
-}
 
 PerturbationParams::PerturbationParams(size_t minPerturbations,
                                        size_t maxPerturbations)
@@ -45,65 +40,117 @@ void PerturbationManager::perturb(Solution &solution,
                                   SearchSpace &searchSpace,
                                   CostEvaluator const &costEvaluator) const
 {
-    size_t movesLeft = numPerturbations_;
-
-    if (!movesLeft)  // nothing to do
+    if (numPerturbations_ == 0)  // nothing to do
         return;
 
     // Clear the set of promising nodes. Perturbation determines the initial
     // set of promising nodes for further (local search) improvement.
     searchSpace.unmarkAllPromising();
 
-    DynamicBitset perturbed = {solution.nodes.size()};
-    auto const perturb = [&](auto *node, PerturbType action)
+    auto const insert = [&](Route::Node *node)  // insert and mark promising
     {
-        // This node has already been touched by a previous perturbation, so
-        // we skip it here.
-        if (perturbed[node->idx()])
-            return;
+        assert(node->isClient() || node->isPickup());
+        assert(!node->route());
 
-        // Remove if node is in a route and we are currently removing.
-        auto *route = node->route();
-        if (route && action == PerturbType::REMOVE)
-        {
-            searchSpace.markPromising(node);
-            route->remove(node->pos());
-            route->update();
-        }
-        // Insert if node is not in a route and we are currently inserting.
-        else if (!route && action == PerturbType::INSERT)
+        if (node->isClient())
         {
             solution.insert(node, searchSpace, costEvaluator, true);
             node->route()->update();
             searchSpace.markPromising(node);
         }
-        else  // no-op
-            return;
+        else
+        {
+            auto *pickup = node;
+            auto *delivery = node + 1;
+            solution.insert(pickup, delivery, searchSpace, costEvaluator, true);
 
-        perturbed[node->idx()] = true;
-        movesLeft--;
+            auto *route = pickup->route();
+            assert(delivery->route() == route);
+
+            route->update();
+            searchSpace.markPromising(pickup);
+            searchSpace.markPromising(delivery);
+        }
     };
 
-    // We do numPerturbations if we can. We perturb the local neighbourhood of
-    // randomly selected clients U: if U is in the solution, we remove it and
-    // its neighbours, while if it is not, we try to insert instead. Each
-    // removal or insertion counts as one perturbation.
-    for (auto const uClient : searchSpace.clientOrder())
+    auto const remove = [&](Route::Node *node)  // remove and mark promising
     {
-        auto *U = &solution.nodes[uClient];
-        auto action = U->route() ? PerturbType::REMOVE : PerturbType::INSERT;
-        perturb(U, action);
+        assert(node->isClient() || node->isPickup());
+        assert(node->route());
 
-        if (!movesLeft)
+        searchSpace.markPromising(node);
+
+        auto *route = node->route();
+        route->remove(node->pos());
+
+        if (node->isPickup())  // then we also remove the associated delivery
+        {
+            auto const *delivery = node + 1;
+            assert(delivery->route() == route);
+
+            searchSpace.markPromising(delivery);
+            route->remove(delivery->pos());
+        }
+
+        route->update();
+    };
+
+    DynamicBitset perturbed
+        = {solution.clients.size() + solution.shipments.size()};
+
+    std::vector<std::pair<Route *, std::vector<Route::Node *>>> groups;
+    auto const group = [&](Route::Node *node)  // group nodes by their route
+    {
+        assert(node && (node->isClient() || node->isPickup()));
+        auto const idx = node->isClient()
+                             ? node->idx()
+                             : solution.clients.size() + node->idx();
+
+        // This node has already been touched by a previous iteration, so
+        // we skip it here.
+        if (perturbed[idx])
             return;
 
-        for (auto const vClient : searchSpace.neighboursOf(uClient))
-        {
-            auto *V = &solution.nodes[vClient];
-            perturb(V, action);
+        perturbed[idx] = true;
 
-            if (!movesLeft)
+        for (auto &[groupRoute, groupNodes] : groups)  // insert into existing
+            if (groupRoute == node->route())           // route group..
+            {
+                groupNodes.push_back(node);
                 return;
+            }
+
+        groups.push_back({node->route(), {node}});  // .. or create new group
+    };
+
+    // We perturb the local neighbourhood of randomly ordered activities,
+    // grouped by their current route (unplanned by their nullptr route).
+    // Planned activities are removed and unplanned ones are inserted.
+    for (size_t movesLeft = numPerturbations_;
+         auto const &uActivity : searchSpace.activityOrder())
+    {
+        groups.clear();
+
+        auto *node = solution[uActivity];
+        group(node);
+
+        for (auto const &vActivity : searchSpace.neighboursOf(uActivity))
+        {
+            auto *node = solution[vActivity];  // only group clients and pickups
+            group(node->isDelivery() ? node - 1 : node);
         }
+
+        for (auto &[route, nodes] : groups)
+            for (auto *node : nodes)
+            {
+                if (route)
+                    remove(node);
+                else
+                    insert(node);
+
+                movesLeft--;
+                if (!movesLeft)
+                    return;
+            }
     }
 }

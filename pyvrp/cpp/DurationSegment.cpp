@@ -34,6 +34,13 @@ DurationSegment::DurationSegment(Depot const &depot,
 {
 }
 
+DurationSegment::DurationSegment(Shipment::Step const &step)
+    : duration_(step.serviceDuration),
+      startEarly_(step.twEarly),
+      startLate_(step.twLate)
+{
+}
+
 DurationSegment::DurationSegment(VehicleType const &vehicleType,
                                  Duration const twLate)
     : startEarly_(vehicleType.twEarly), startLate_(twLate)

@@ -18,6 +18,7 @@ from pyvrp._pyvrp import (
     Location,
     ProblemData,
     Route,
+    Shipment,
     Solution,
     VehicleType,
 )
@@ -125,23 +126,29 @@ def read_solution(where: str | pathlib.Path, data: ProblemData) -> Solution:
         idcs = list(map(int, veh_type.name.split(",")))
         veh2type[idcs] = idx
 
+    # VRPLIB numbers the route visits by location: [0, num_depots) are the
+    # depots, and the remaining locations are clients or shipment activities.
+    # All activities have a unique location, so we can map each location to
+    # the activity visiting it.
+    loc2activity = {}
+    for idx, depot in enumerate(data.depots()):
+        loc2activity[depot.location] = Activity(ActivityType.DEPOT, idx)
+
+    for idx, client in enumerate(data.clients()):
+        loc2activity[client.location] = Activity(ActivityType.CLIENT, idx)
+
+    for idx, shipment in enumerate(data.shipments()):
+        pickup = shipment.pickup.location
+        delivery = shipment.delivery.location
+        loc2activity[pickup] = Activity(ActivityType.PICKUP, idx)
+        loc2activity[delivery] = Activity(ActivityType.DELIVERY, idx)
+
     routes = []
     for idx, route in enumerate(sol["routes"]):
         if not route:
             continue
 
-        activities = []
-        for visit in route:
-            # VRPLIB uses a format where the route visits are numbered with
-            # [0, ..., num_depots) for the depots, and [num_depots, ...,
-            # num_depots + num_clients) for the clients.
-            if visit < data.num_depots:
-                activity = Activity(ActivityType.DEPOT, visit)
-            else:
-                visit = visit - data.num_depots
-                activity = Activity(ActivityType.CLIENT, visit)
-            activities.append(activity)
-
+        activities = [loc2activity[visit] for visit in route]
         routes.append(Route(data, activities, veh2type[idx]))
 
     return Solution(data, routes)
@@ -167,7 +174,14 @@ class _InstanceParser:
 
     @property
     def num_clients(self) -> int:
-        return self.num_locations - self.num_depots
+        return self.num_locations - self.num_depots - self.num_shipments
+
+    @property
+    def num_shipments(self) -> int:
+        if "pickup_and_delivery" not in self.instance:
+            return 0
+
+        return len(self.instance["pickup_and_delivery"]) - self.num_depots
 
     @property
     def num_vehicles(self) -> int:
@@ -214,6 +228,13 @@ class _InstanceParser:
         return self.round_func(service_times)
 
     def time_windows(self) -> np.ndarray:
+        if "pickup_and_delivery" in self.instance:
+            # The pickup and delivery data contain each location's time window
+            # in the second and third columns. We mainly need these for the
+            # depot time windows, shipments parse their own time windows.
+            data = self.instance["pickup_and_delivery"]
+            return self.round_func(data[:, 1:3])
+
         if "time_window" not in self.instance:
             time_windows = np.empty((self.num_locations, 2), dtype=np.int64)
             time_windows[:, 0] = 0
@@ -333,6 +354,17 @@ class _InstanceParser:
         # in keeping them.
         return [group for group in raw_groups if len(group) > 1]
 
+    def shipments(self) -> np.ndarray:
+        if "pickup_and_delivery" not in self.instance:
+            return np.array([])
+
+        # Round demand, time windows, and service duration. Skip the pickup
+        # and delivery index fields; we need those unchanged.
+        shipments = self.instance["pickup_and_delivery"]
+        shipments[:, :4] = self.round_func(shipments[:, :4])
+
+        return shipments
+
 
 class _ProblemDataBuilder:
     """
@@ -350,6 +382,7 @@ class _ProblemDataBuilder:
         vehicle_types = self._vehicle_types()
         distance_matrices = self._distance_matrices()
         groups = self._groups()
+        shipments = self._shipments()
 
         return ProblemData(
             locations=locations,
@@ -361,6 +394,7 @@ class _ProblemDataBuilder:
             # instead assume duration == distance.
             duration_matrices=distance_matrices,
             groups=groups,
+            shipments=shipments,
         )
 
     def _locations(self) -> list[Location]:
@@ -543,6 +577,33 @@ class _ProblemDataBuilder:
     def _groups(self) -> list[ClientGroup]:
         groups = self.parser.mutually_exclusive_groups()
         return [ClientGroup(group) for group in groups]
+
+    def _shipments(self) -> list[Shipment]:
+        num_depots = self.parser.num_depots
+        data = self.parser.shipments()
+
+        shipments = []
+        for idx, pickup_data in enumerate(data):
+            *_, pick_idx, deliv_idx = pickup_data
+
+            if pick_idx == 0 and deliv_idx > 0:  # parse PD pair
+                delivery_data = data[deliv_idx - num_depots]
+                shipments.append(
+                    Shipment(
+                        pickup_location=idx,
+                        delivery_location=deliv_idx - num_depots,
+                        pickup_tw_early=pickup_data[1],
+                        pickup_tw_late=pickup_data[2],
+                        pickup_service_duration=pickup_data[3],
+                        delivery_tw_early=delivery_data[1],
+                        delivery_tw_late=delivery_data[2],
+                        delivery_service_duration=delivery_data[3],
+                        amount=[pickup_data[0]],
+                        name=f"{delivery_data[-2]} -> {deliv_idx}",
+                    )
+                )
+
+        return shipments
 
     def _allowed2profile(self) -> dict[tuple[int, ...], int]:
         allowed_clients2profile_idx = {}

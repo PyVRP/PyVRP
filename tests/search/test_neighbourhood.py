@@ -2,7 +2,15 @@ import numpy as np
 from numpy.testing import assert_, assert_equal, assert_raises
 from pytest import mark
 
-from pyvrp import Depot, Location, ProblemData, VehicleType
+from pyvrp import (
+    Activity,
+    Client,
+    Depot,
+    Location,
+    ProblemData,
+    Shipment,
+    VehicleType,
+)
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 
 
@@ -58,9 +66,13 @@ def test_compute_neighbours(
 
     # We compare sets because the expected data (from the old C++
     # implementation) sorts by client ID (ascending), not proximity.
-    assert_equal(set(neighbours[idx_check]), expected_neighbours_check)
+    activity = Activity(f"C{idx_check}")
+    assert_equal(
+        set(act.idx for act in neighbours[activity]),
+        expected_neighbours_check,
+    )
 
-    for neighb in neighbours:
+    for neighb in neighbours.values():
         assert_equal(len(neighb), num_neighbours)
 
 
@@ -84,7 +96,8 @@ def test_neighbours_are_sorted_by_proximity(small_cvrp):
         valid = np.array([other for other in clients if other != client])
         dists = distances[client, valid]
         by_proximity = valid[np.argsort(dists, kind="stable")]
-        assert_equal(by_proximity, neighbours[client])
+        as_activities = [Activity(f"C{idx}") for idx in by_proximity]
+        assert_equal(as_activities, neighbours[Activity(f"C{client}")])
 
 
 def test_more_neighbours_than_instance_size(rc208):
@@ -95,7 +108,7 @@ def test_more_neighbours_than_instance_size(rc208):
     params = NeighbourhoodParams(num_neighbours=rc208.num_clients)
     neighbours = compute_neighbours(rc208, params)
 
-    for neighb in neighbours[1:]:
+    for neighb in neighbours.values():
         assert_equal(len(neighb), rc208.num_clients - 1)
 
 
@@ -113,8 +126,8 @@ def test_proximity_with_prizes(prize_collecting):
     # biggest difference is in prizes: client 19 has a prize of 33, whereas
     # client 35 only yields 8. As a consequence, 35 should be in many fewer
     # neighbourhoods than 19.
-    count_19 = sum(19 in n for n in neighbours)
-    count_35 = sum(35 in n for n in neighbours)
+    count_19 = sum(Activity("C19") in n for n in neighbours.values())
+    count_35 = sum(Activity("C35") in n for n in neighbours.values())
     assert_(count_19 > count_35)
 
 
@@ -131,7 +144,11 @@ def test_proximity_with_mutually_exclusive_groups(
     group = ok_small_mutually_exclusive_groups.group(0)
     members = group.clients
     for client in members:
-        assert_(all(other not in neighbours[client] for other in members))
+        act = Activity(f"C{client}")
+        assert_(
+            all(Activity(f"C{other}") not in neighbours[act]
+            for other in members)
+        )
 
 
 def test_different_routing_costs(ok_small):
@@ -188,9 +205,10 @@ def test_multiple_routing_profiles(ok_small):
     assert_equal(compute_neighbours(data), compute_neighbours(ok_small))
 
 
-def test_zero_clients():
+def test_zero_clients_or_shipments():
     """
-    Tests that the neighbourhood for an instance with zero clients is empty.
+    Tests that the neighbourhood for an instance with zero clients and
+    shipments is empty.
     """
     data = ProblemData(
         locations=[Location(0, 0)],
@@ -199,6 +217,84 @@ def test_zero_clients():
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
+        shipments=[],
     )
 
-    assert_equal(compute_neighbours(data), [])
+    assert_equal(compute_neighbours(data), {})
+
+
+def test_shipments_exclude_either_activity_in_neighbourhood(small_shipments):
+    """
+    Tests that shipments exclude their own activities from the neighbourhood.
+    """
+    neighbours = compute_neighbours(small_shipments)
+
+    for shipment in range(small_shipments.num_shipments):
+        delivery = Activity(f"U{shipment}")
+        assert_(delivery not in neighbours)  # only includes pickup activities
+
+        pickup = Activity(f"L{shipment}")
+        neighbourhood = neighbours[pickup]
+        assert_(pickup not in neighbourhood)  # cannot be in own neighbourhood
+        assert_(delivery not in neighbourhood)  # nor can delivery
+
+        # The neighbourhood contains pickup and delivery activities for each
+        # shipment, but excludes its own.
+        assert_equal(len(neighbourhood), 2 * small_shipments.num_shipments - 2)
+
+
+def test_shipment_proximity_uses_pickup_and_delivery():
+    """
+    Tests that shipment proximity considers both pickup and delivery.
+    """
+    distances = np.full((5, 5), 100, dtype=int)
+    np.fill_diagonal(distances, 0)
+    distances[3, 1] = distances[1, 3] = 10  # pickup closest to C0
+    distances[4, 2] = distances[2, 4] = 1  # delivery closest to C1
+
+    data = ProblemData(
+        locations=[Location(idx, 0) for idx in range(5)],
+        clients=[Client(1), Client(2)],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[distances],
+        duration_matrices=[distances],
+        shipments=[Shipment(3, 4)],
+    )
+
+    # Shipment 0's pickup is closest to C0, but its delivery is even closer to
+    # C1. With one neighbour, the neighbour is therefore C1 rather than C0.
+    params = NeighbourhoodParams(0, num_neighbours=1)
+    neighbours = compute_neighbours(data, params)
+
+    assert_equal(neighbours[Activity("L0")], [Activity("C1")])
+
+
+def test_mixed_client_shipments(small_shipments):
+    """
+    Tests the neighbourhood of a small instance with mixed clients and
+    shipments.
+    """
+    # Create a mixed instance, with clients and shipments.
+    clients = [Client(2, delivery=[0]), Client(5, delivery=[1])]
+    data = small_shipments.replace(clients=clients)
+    assert_equal(data.num_clients, 2)
+    assert_equal(data.num_shipments, 4)
+
+    neighbours = compute_neighbours(data)
+    assert_equal(len(neighbours), 6)  # for each client and shipment pickup
+
+    # We should have neighbours for both clients and shipments.
+    assert_(Activity("C0") in neighbours)
+    assert_(Activity("L0") in neighbours)
+
+    # The shipment is at location 2, which is also where the first shipment's
+    # pickup happens. So, L0 should be the first entry in C0's neighbourhood,
+    # and vice versa.
+    assert_equal(neighbours[Activity("C0")][0], Activity("L0"))
+    assert_equal(neighbours[Activity("L0")][0], Activity("C0"))
+
+    # The neighbourhood can contain all other shipments and clients. In this
+    # case, there is always one other client, and three other shipments. Thus,
+    # a total of seven activities can be in the neighbourhood.
+    assert_equal(len(neighbours[Activity("C0")]), 7)

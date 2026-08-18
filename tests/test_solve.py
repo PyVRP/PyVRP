@@ -1,13 +1,14 @@
 import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 
+from pyvrp import Activity
 from pyvrp.IteratedLocalSearch import IteratedLocalSearchParams
 from pyvrp.PenaltyManager import PenaltyParams
 from pyvrp.search import (
     OPERATORS,
-    Exchange10,
     NeighbourhoodParams,
     PerturbationParams,
+    Relocate1,
     SwapTails,
 )
 from pyvrp.solve import SolveParams, solve
@@ -38,7 +39,7 @@ def test_solve_params_from_file():
     ils = IteratedLocalSearchParams(10, 1)
     penalty = PenaltyParams(100, 1.25, 0.85, 0.43)
     neighbourhood = NeighbourhoodParams(0, 20, True)
-    operators = [Exchange10, SwapTails]
+    operators = [Relocate1, SwapTails]
     perturbation = PerturbationParams(1, 10)
 
     assert_equal(params.ils, ils)
@@ -99,3 +100,42 @@ def test_solve_custom_params(rc208):
     # is skipped because it's an empty initial solution with penalised cost 0.
     costs = [datum.current_cost for datum in res.stats.data[1:]]
     assert_(monotonically_decreasing(costs))
+
+
+def test_negative_fixed_cost_uses_all_vehicles(ok_small):
+    """
+    Tests that setting a large, negative fixed cost incentivises the solver to
+    use more vehicles than it otherwise would.
+    """
+    # The regular instance has zero fixed cost, and normally uses only two
+    # vehicles.
+    res = solve(ok_small, stop=MaxIterations(10))
+    assert_equal(res.best.num_routes(), 2)
+
+    # Let's now set a large, negative fixed cost. This should result in all
+    # vehicles being used.
+    veh_type = ok_small.vehicle_type(0).replace(fixed_cost=-10_000)
+    data = ok_small.replace(vehicle_types=[veh_type])
+    res = solve(data, stop=MaxIterations(10))
+    assert_equal(res.best.num_routes(), 3)
+
+
+def test_solve_optional_shipments(small_optional_shipments):
+    """
+    Smoke test that solve() can solve instances with optional shipments.
+    """
+    # Shipments 0 and 2 have high prizes, but only 0 can be visited without
+    # incurring a 'loss' (prize is greater than distance it takes to get there
+    # and back). So there should be only a single shipment in the solution.
+    res = solve(small_optional_shipments, stop=MaxIterations(10))
+    assert_equal(res.best.num_shipments(), 1)
+    assert_(res.best.is_feasible())
+
+    # Shipment 0 has prize 10_000, which means visiting it at a distance cost
+    # of 9_571 incurs a profit.
+    assert_equal(res.best.distance_cost(), 9_571)
+
+    # Shipment 0 should not have any unplanned activities (that is, it should
+    # be the sole planned shipment).
+    assert_(Activity("L0") not in res.best.unplanned())
+    assert_(Activity("U0") not in res.best.unplanned())

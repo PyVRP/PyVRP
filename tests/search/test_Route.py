@@ -116,11 +116,15 @@ def test_route_append_increases_route_len(ok_small):
 
     node = Node("C0")
     route.append(node)
+    route.update()
+
     assert_equal(route.num_clients(), 1)
     assert_(route[1] is node)  # pointers, so must be same object
 
     node = Node("C1")
     route.append(node)
+    route.update()
+
     assert_equal(route.num_clients(), 2)
     assert_(route[2] is node)  # pointers, so must be same object
 
@@ -137,12 +141,16 @@ def test_route_insert(ok_small):
     # Insert a few nodes so we have an actual route.
     route.append(Node("C0"))
     route.append(Node("C1"))
+    route.update()
+
     assert_equal(route.num_clients(), 2)
     assert_equal(route[1].activity, Activity("C0"))
     assert_equal(route[2].activity, Activity("C1"))
 
     # # Now insert a new nodes at index 1.
     route.insert(1, Node("C2"))
+    route.update()
+
     assert_equal(route.num_clients(), 3)
     assert_equal(route[1].activity, Activity("C2"))
     assert_equal(route[2].activity, Activity("C0"))
@@ -186,9 +194,13 @@ def test_route_add_and_delete_client_leaves_route_empty(ok_small):
     route = Route(ok_small, vehicle_type=0)
 
     route.append(Node("C0"))
+    route.update()
+
     assert_equal(route.num_clients(), 1)
 
     del route[1]
+    route.update()
+
     assert_equal(route.num_clients(), 0)
 
 
@@ -200,9 +212,13 @@ def test_route_delete_reduces_size_by_one(ok_small):
 
     route.append(Node("C0"))
     route.append(Node("C1"))
+    route.update()
+
     assert_equal(route.num_clients(), 2)
 
     del route[1]
+    route.update()
+
     assert_equal(route.num_clients(), 1)
     assert_equal(route[1].activity, Activity("C1"))
 
@@ -218,6 +234,7 @@ def test_route_clear_empties_entire_route(ok_small, num_nodes: int):
     for client in range(num_nodes):
         route.append(Node(f"C{client}"))
 
+    route.update()
     assert_equal(route.num_clients(), num_nodes)
 
     route.clear()
@@ -602,14 +619,15 @@ def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
         before = route.load_before(idx)
         between_before = route.load_between(0, idx)
         assert_equal(before.load(), between_before.load())
-        assert_equal(before.pickup(), between_before.pickup())
-        assert_equal(before.delivery(), between_before.delivery())
+        assert_equal(before.initial(), between_before.initial())
+        assert_equal(before.increase(), between_before.increase())
+        assert_equal(before.delta(), between_before.delta())
 
         after = route.load_after(idx)
         between_after = route.load_between(idx, len(route) - 1)
-        assert_equal(after.load(), between_after.load())
-        assert_equal(after.pickup(), between_after.pickup())
-        assert_equal(after.delivery(), between_after.delivery())
+        assert_equal(after.initial(), between_after.initial())
+        assert_equal(after.increase(), between_after.increase())
+        assert_equal(after.delta(), between_after.delta())
 
 
 @pytest.mark.parametrize(
@@ -669,15 +687,17 @@ def test_load_between_equal_to_before_after_when_one_is_depot_different_dims(
             between_before = route.load_between(0, idx, dim)
 
             assert_equal(before.load(), between_before.load())
-            assert_equal(before.pickup(), between_before.pickup())
-            assert_equal(before.delivery(), between_before.delivery())
+            assert_equal(before.initial(), between_before.initial())
+            assert_equal(before.delta(), between_before.delta())
+            assert_equal(before.increase(), between_before.increase())
 
             after = route.load_after(idx, dim)
             between_after = route.load_between(idx, len(route) - 1, dim)
 
             assert_equal(after.load(), between_after.load())
-            assert_equal(after.pickup(), between_after.pickup())
-            assert_equal(after.delivery(), between_after.delivery())
+            assert_equal(after.initial(), between_after.initial())
+            assert_equal(after.delta(), between_after.delta())
+            assert_equal(after.increase(), between_after.increase())
 
 
 def test_distance_different_profiles(ok_small_two_profiles):
@@ -907,11 +927,10 @@ def test_route_raises_too_many_trips(ok_small_multiple_trips):
         route.append(Node("D0"))
 
 
-def test_bug_reload_swaps_pickup_delivery_swap(small_spd):
+def test_bug_reload_swaps_load_arguments(small_spd):
     """
     Tests a bug that materialised when reloading, where the reload depot
-    segment accidentally swapped delivery and pickup arguments, causing a
-    wrong load evaluation.
+    segment accidentally swapped arguments, causing a wrong load evaluation.
     """
     veh_type = small_spd.vehicle_type(0)
     new_type = veh_type.replace(reload_depots=[0], max_reloads=2)
@@ -923,12 +942,12 @@ def test_bug_reload_swaps_pickup_delivery_swap(small_spd):
     assert_equal(client3.delivery[0] + client4.delivery[0], 34)
     assert_equal(client3.pickup[0] + client4.pickup[0], 50)
 
-    assert_equal(route.load_before(5).delivery(), 34)
-    assert_equal(route.load_before(5).pickup(), 50)
+    assert_equal(route.load_before(5).initial(), 34)
+    assert_equal(route.load_before(5).delta(), 16)
     assert_equal(route.load_before(5).load(), 50)
 
-    assert_equal(route.load_after(2).delivery(), 34)
-    assert_equal(route.load_after(2).pickup(), 50)
+    assert_equal(route.load_after(2).initial(), 34)
+    assert_equal(route.load_after(2).delta(), 16)
     assert_equal(route.load_after(2).load(), 50)
 
 
@@ -1197,3 +1216,36 @@ def test_node_is_client_and_is_depot():
     node = Node("C0")
     assert_(node.is_client())
     assert_(not node.is_depot())
+
+
+def test_node_is_pickup_and_is_delivery():
+    """
+    Tests Node's is_pickup(), is_delivery(), and is_shipment() members.
+    """
+    node = Node("L0")
+    assert_(node.is_pickup())
+    assert_(node.is_shipment())
+    assert_(not node.is_delivery())
+
+    node = Node("U0")
+    assert_(node.is_delivery())
+    assert_(node.is_shipment())
+    assert_(not node.is_pickup())
+
+
+def test_route_statistics_with_shipments(small_shipments):
+    """
+    Tests the route statistics of a route with shipments.
+    """
+    activities = ["L0", "L1", "L2", "U2", "U1", "U0"]
+    route = make_search_route(small_shipments, activities, 0)
+    assert_equal(route.num_shipments(), 3)
+    assert_equal(route.num_pickups(), 3)
+    assert_equal(route.num_clients(), 0)
+
+    # These numbers are explained in the ``test_route_with_shipments`` test
+    # for pyvrp.Route; see there for details.
+    assert_equal(route.distance(), 47_132)
+    assert_equal(route.duration(), 47_132 + 6 * 900 + 13_800 + 402)
+    assert_equal(route.time_warp(), 1_611)
+    assert_equal(route.excess_load(), [20])

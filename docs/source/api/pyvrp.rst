@@ -93,6 +93,12 @@ This object stores the best observed solution and detailed runtime statistics.
    .. autoclass:: Client
       :members:
 
+   .. autoclass:: ShipmentStep
+      :members:
+
+   .. autoclass:: Shipment
+      :members:
+
    .. autoclass:: ClientGroup
       :members:
       :special-members: __iter__, __len__

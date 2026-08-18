@@ -1,8 +1,10 @@
 #ifndef PYVRP_SEARCH_NEIGHBOURHOOD_H
 #define PYVRP_SEARCH_NEIGHBOURHOOD_H
 
+#include "Activity.h"
 #include "ProblemData.h"
 
+#include <unordered_map>
 #include <vector>
 
 namespace pyvrp::search
@@ -23,9 +25,8 @@ namespace pyvrp::search
  *     calculation. A large wait time indicates the clients are far apart
  *     in duration/time.
  * num_neighbours
- *     Number of other clients that are in each client's granular
- *     neighbourhood. This parameter determines the size of the overall
- *     neighbourhood.
+ *     Number of activities in each granular neighbourhood. This parameter
+ *     determines the size of the overall neighbourhood.
  * symmetric_proximity
  *     Whether to calculate a symmetric proximity matrix. This ensures edge
  *     :math:`(i, j)` is given the same weight as :math:`(j, i)`.
@@ -51,7 +52,7 @@ struct NeighbourhoodParams
 /**
  * Computes neighbours defining the neighbourhood for a problem instance.
  */
-std::vector<std::vector<size_t>>
+std::unordered_map<Activity, std::vector<Activity>>
 computeNeighbours(ProblemData const &data, NeighbourhoodParams const &params);
 }  // namespace pyvrp::search
 

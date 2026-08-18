@@ -38,7 +38,8 @@ struct PerturbationParams
  *
  * Handles perturbation during the search. In each iteration, it applies
  * :meth:`~num_perturbations` perturbations that strengthen (resp., weaken)
- * randomly selected neighbourhoods by inserting (removing) clients.
+ * randomly selected neighbourhoods by inserting (removing) clients and
+ * shipments.
  *
  * Parameters
  * ----------
@@ -65,8 +66,8 @@ public:
 
     /**
      * Perturbs the given solution using the neighbourhood and ordering of the
-     * given search space. Any perturbed clients are marked as promising in the
-     * search space.
+     * given search space. Any perturbed clients or shipments are marked as
+     * promising in the search space.
      *
      * Parameters
      * ----------

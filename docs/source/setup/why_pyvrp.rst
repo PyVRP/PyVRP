@@ -36,8 +36,8 @@ Feature comparison
      - ✅
      - ❌
      - ❌
-   * - Shipments [#pickup_delivery]_
-     - ❌
+   * - Shipments
+     - ✅
      - ✅
      - ✅
    * - Multiple depots
@@ -87,10 +87,6 @@ Feature comparison
 
 .. [#reloading]
    Have a look at our :doc:`../notebooks/reloading` tutorial to get started using this feature.
-
-.. [#pickup_delivery]
-   Shipments require an amount of goods to be picked up in one place and then delivered to another.
-   PyVRP only supports shipments from and to the depot, not between general client visits.
 
 .. [#mutually_exclusive_groups]
    Have a look at our :doc:`../notebooks/mutually_exclusive_groups` tutorial to get started using this feature.

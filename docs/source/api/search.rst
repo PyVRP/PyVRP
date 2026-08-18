@@ -59,31 +59,43 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
 
    .. autoclass:: UnaryOperator
 
-   .. autoclass:: Exchange10
+   .. autoclass:: Relocate1
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: Exchange20
+   .. autoclass:: Relocate2
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: Exchange30
+   .. autoclass:: Relocate3
       :exclude-members: evaluate, apply, statistics, supports, init, name
    
-   .. autoclass:: Exchange11
+   .. autoclass:: Swap11
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: Exchange21
+   .. autoclass:: Swap21
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: Exchange31
+   .. autoclass:: Swap31
       :exclude-members: evaluate, apply, statistics, supports, init, name
    
-   .. autoclass:: Exchange22
+   .. autoclass:: Swap22
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: Exchange32
+   .. autoclass:: Swap32
       :exclude-members: evaluate, apply, statistics, supports, init, name
    
-   .. autoclass:: Exchange33
+   .. autoclass:: Swap33
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: RelocateAlternative
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: RelocatePickup
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: RelocateDelivery
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: RelocateShipment
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
    .. autoclass:: RelocateWithDepot
@@ -92,16 +104,25 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
    .. autoclass:: RemoveAdjacentDepot
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: RemoveOptional
+   .. autoclass:: RemoveOptionalClient
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: InsertOptional
+   .. autoclass:: InsertOptionalClient
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
    .. autoclass:: ReplaceGroup
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
-   .. autoclass:: ReplaceOptional
+   .. autoclass:: ReplaceOptionalClient
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: InsertOptionalShipment
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: RemoveOptionalShipment
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: ReplaceOptionalShipment
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
    .. autoclass:: SwapTails

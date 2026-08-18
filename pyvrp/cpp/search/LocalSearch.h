@@ -23,7 +23,7 @@ class LocalSearch
     // Stores the node-based solution representation used during LS.
     Solution solution_;
 
-    // Manages the granular neighbourhood, promising clients, and the order in
+    // Manages the granular neighbourhood, promising nodes, and the order in
     // which nodes and routes are searched.
     SearchSpace searchSpace_;
 
@@ -34,7 +34,7 @@ class LocalSearch
     std::vector<UnaryOperator *> unaryOps_;
     std::vector<BinaryOperator *> binaryOps_;
 
-    std::vector<int> lastTest_;    // tracks last client evaluations
+    std::vector<int> lastTest_;    // tracks last client and pickup evaluations
     std::vector<int> lastUpdate_;  // tracks when routes were last modified
 
     size_t numUpdates_ = 0;         // modification counter
@@ -53,8 +53,8 @@ class LocalSearch
                               CostEvaluator const &costEvaluator);
 
     // Ensures structural feasibility of the loaded solution. The local search
-    // will insert required clients and groups if they are missing, and remove
-    // group duplicates if needed.
+    // will insert required clients, shipments and groups if they are missing,
+    // and remove group duplicates if needed.
     void ensureStructuralFeasibility(CostEvaluator const &costEvaluator);
 
     // Updates solution state after an improving local search move.
@@ -77,7 +77,7 @@ public:
      * num_updates
      *     Total number of changes to the solution. This always includes the
      *     number of evaluated improving moves, but also e.g. insertion of
-     *     required but missing clients.
+     *     required but missing clients and shipments.
      */
     struct Statistics
     {
@@ -92,12 +92,12 @@ public:
     };
 
     /**
-     * Adds a local search operator that works on client nodes U.
+     * Adds a local search operator that works on client and pickup nodes U.
      */
     void addOperator(UnaryOperator &op);
 
     /**
-     * Adds a local search operator that works on client node pairs U and V.
+     * Adds a local search operator that works on node pairs U and V.
      */
     void addOperator(BinaryOperator &op);
 
@@ -114,8 +114,9 @@ public:
     std::vector<BinaryOperator *> const &binaryOperators() const;
 
     /**
-     * Set neighbourhood structure to use by the local search. For each client,
-     * the neighbourhood structure is a vector of nearby clients.
+     * Set neighbourhood structure to use by the local search. For each client
+     * and pickup activity, the neighbourhood structure is a vector of nearby
+     * clients, pickups, and deliveries.
      */
     void setNeighbours(SearchSpace::Neighbours neighbours);
 

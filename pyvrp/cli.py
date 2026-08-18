@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 from tqdm.contrib.concurrent import process_map
 
-from pyvrp import ProblemData, Result, SolveParams, solve
+from pyvrp import ActivityType, ProblemData, Result, SolveParams, solve
 from pyvrp.read import ROUND_FUNCS, read
 from pyvrp.stop import (
     MaxIterations,
@@ -42,15 +42,27 @@ def write_solution(where: Path, data: ProblemData, result: Result):
     def route2vrplib(route) -> list[int]:
         visits: list[int] = []
         for activity in route:
-            # Map activities back to VRPLIB's format.  VRPLIB uses a format
-            # where the route visits are numbered with [0, ..., num_depots) for
-            # the depots, and [num_depots, ..., num_depots + num_clients) for
-            # the clients.
-            if activity.is_depot():
-                visits.append(activity.idx)
+            # Map activities back to VRPLIB's format, which numbers the route
+            # visits by location: [0, num_depots) are the depots, and the
+            # remaining locations are clients or shipment activities. All
+            # activities have a unique location.
+            match activity.type:
+                case ActivityType.DEPOT:
+                    visits.append(data.depot(activity.idx).location)
 
-            if activity.is_client():
-                visits.append(data.num_depots + activity.idx)
+                case ActivityType.CLIENT:
+                    visits.append(data.client(activity.idx).location)
+
+                case ActivityType.PICKUP:
+                    shipment = data.shipment(activity.idx)
+                    visits.append(shipment.pickup.location)
+
+                case ActivityType.DELIVERY:
+                    shipment = data.shipment(activity.idx)
+                    visits.append(shipment.delivery.location)
+
+                case _:
+                    continue
 
         return visits[1:-1]  # skip start and end depots
 

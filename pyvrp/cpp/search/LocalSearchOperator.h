@@ -78,21 +78,23 @@ public:
      */
     OperatorStatistics const &statistics() const { return stats_; }
 
+    /**
+     * Determines whether this operator can find improving moves for the given
+     * data instance.
+     */
+    static bool supports([[maybe_unused]] ProblemData const &data);
+
+    /**
+     * Called when a route has been changed.
+     */
+    virtual void update([[maybe_unused]] Route const *route) {};
+
     LocalSearchOperator(ProblemData const &data) : data(data){};
     virtual ~LocalSearchOperator() = default;
 };
 
 using UnaryOperator = LocalSearchOperator<Route::Node *>;
 using BinaryOperator = LocalSearchOperator<Route::Node *, Route::Node *>;
-
-/**
- * Helper template function that may be specialised to determine if an operator
- * can find improving moves for the given data instance.
- */
-template <typename Op> bool supports([[maybe_unused]] ProblemData const &data)
-{
-    return true;
-}
 }  // namespace pyvrp::search
 
 #endif  // PYVRP_SEARCH_LOCALSEARCHOPERATOR_H

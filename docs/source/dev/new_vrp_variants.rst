@@ -60,7 +60,7 @@ Depending on the VRP variant in question, this might be simple, or it could be a
 
 In the :mod:`pyvrp.search` module, either changes need to be made to the operators, or the :class:`~pyvrp.search.LocalSearch` object.
 In the case of prize-collecting, it was the latter: we added support for evaluating (and applying) moves that inserted a client into the solution, or removed a client from it.
-The required evaluation logic was easy to write by looking at the implementation of :class:`~pyvrp.search._search.Exchange10`.
+The required evaluation logic was easy to write by looking at the implementation of :class:`~pyvrp.search._search.Relocate1`.
 
 With those changes in place, a basic implementation supporting the new VRP variant is typically already functional.
 This is more than sufficient for an initial patch, so please open a pull request around this time.
