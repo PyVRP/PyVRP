@@ -161,6 +161,7 @@ MACOSX_DEPLOYMENT_TARGET = "13.3"
 # for JavaScript builds (and ignored otherwise).
 environment.CXXFLAGS = "-Wno-error=unused-command-line-argument"
 repair-wheel-command = "pyodide auditwheel repair --output-dir {dest_dir} {wheel}"
+test-environment = { MPLBACKEND = "Agg" }
 # test-command = "pytest -k \"not test_plotting\" ./tests -v"
 
 
