@@ -10,7 +10,7 @@ from numpy.testing import (
 )
 
 from pyvrp import Activity, CostEvaluator
-from pyvrp.constants import INT_MAX, MAX_VALUE
+from pyvrp.constants import MAX_VALUE
 from pyvrp.exceptions import ScalingWarning
 from tests.helpers import read, read_solution
 
@@ -160,7 +160,7 @@ def test_reading_vrplib_instance():
         client = data.client(idx)
         assert_equal(client.service_duration, 0)
         assert_equal(client.tw_early, 0)
-        assert_equal(client.tw_late, INT_MAX)
+        assert_equal(client.tw_late, np.iinfo(np.int64).max)
         assert_equal(client.release_time, 0)
         assert_equal(client.prize, 0)
         assert_equal(client.required, True)

@@ -1,10 +1,12 @@
+import numpy as np
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import Client, CostEvaluator
-from pyvrp.constants import INT_MAX
 from pyvrp.search import RelocateDelivery
 from pyvrp.search._search import Solution
 from tests.helpers import make_search_route
+
+_INT_MAX = np.iinfo(np.int64).max
 
 
 def test_relocate_just_after_pickup(small_shipments):
@@ -93,7 +95,7 @@ def test_reload_depot(small_shipments):
 
     op = RelocateDelivery(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[1], cost_eval), (INT_MAX, False))
+    assert_equal(op.evaluate(route[1], cost_eval), (_INT_MAX, False))
 
 
 def test_relocate_skips_unassigned_nodes(small_shipments):
@@ -163,4 +165,4 @@ def test_cannot_improve_singleton_route(small_shipments):
 
     op = RelocateDelivery(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(pickup, cost_eval), (INT_MAX, False))
+    assert_equal(op.evaluate(pickup, cost_eval), (_INT_MAX, False))

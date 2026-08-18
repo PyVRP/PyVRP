@@ -5,7 +5,8 @@ import pytest
 from numpy.testing import assert_, assert_equal
 
 from pyvrp._pyvrp import DurationSegment
-from pyvrp.constants import INT_MAX
+
+_INT_MAX = np.iinfo(np.int64).max
 
 
 @pytest.mark.parametrize("existing_time_warp", [2, 5, 10])
@@ -151,8 +152,8 @@ def test_bug_fix_overflow_more_timewarp_than_duration():
     ds1 = DurationSegment(9, 18, 0, 18, 0)
     assert_(ds1.duration() < ds1.time_warp())
 
-    ds2 = DurationSegment(0, 0, 0, INT_MAX, 0)
-    assert_equal(ds2.start_late(), INT_MAX)
+    ds2 = DurationSegment(0, 0, 0, np.iinfo(np.int64).max, 0)
+    assert_equal(ds2.start_late(), np.iinfo(np.int64).max)
 
     # ds1 has 9 duration and 18 time warp, which results in an arrival time of
     # -9 at ds2. Before enforcing non-negative arrival times, this would result
@@ -205,7 +206,7 @@ def test_finalise_back_with_time_warp_from_release_time():
     # We also track when the finalised segment would end at the earliest and
     # latest.
     assert_equal(finalised.start_early(), 75)
-    assert_equal(finalised.start_late(), INT_MAX)
+    assert_equal(finalised.start_late(), _INT_MAX)
     assert_equal(finalised.release_time(), 75)
     assert_equal(finalised.prev_end_late(), 75)
 
@@ -296,7 +297,7 @@ def test_repeated_merge_and_finalise_back():
     # segment1 finalises at a reload depot, so we need to finalise at the end.
     finalised1 = segment1.finalise_back()
     assert_equal(finalised1.start_early(), 95)
-    assert_equal(finalised1.start_late(), INT_MAX)
+    assert_equal(finalised1.start_late(), _INT_MAX)
     assert_equal(finalised1.release_time(), 95)
     assert_equal(finalised1.prev_end_late(), 95)
 
@@ -317,7 +318,7 @@ def test_repeated_merge_and_finalise_back():
     finalised2 = merged.finalise_back()
     assert_equal(finalised2.duration(), 100)
     assert_equal(finalised2.start_early(), 150)
-    assert_equal(finalised2.start_late(), INT_MAX)
+    assert_equal(finalised2.start_late(), _INT_MAX)
     assert_equal(finalised2.release_time(), 150)
     assert_equal(finalised2.prev_end_late(), 150)
 

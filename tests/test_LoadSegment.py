@@ -1,13 +1,15 @@
+import numpy as np
 import pytest
 from numpy.testing import assert_, assert_equal
 
 from pyvrp._pyvrp import LoadSegment
-from pyvrp.constants import INT_MAX
+
+_INT_MAX = np.iinfo(np.int64).max
 
 
 @pytest.mark.parametrize(
     ("initial", "delta", "increase"),
-    [(1, 2, 3), (0, 0, 0), (INT_MAX, INT_MAX, INT_MAX)],
+    [(1, 2, 3), (0, 0, 0), (_INT_MAX, _INT_MAX, _INT_MAX)],
 )
 def test_attribute_getters(initial: int, delta: int, increase: int):
     """

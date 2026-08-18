@@ -12,7 +12,6 @@ from pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp.constants import INT_MAX
 
 
 @pytest.mark.parametrize(
@@ -140,8 +139,9 @@ def test_cost(ok_small):
     infeas_sol = Solution(ok_small, [[0, 1, 2, 3]])  # infeasible solution
     assert_(not infeas_sol.is_feasible())
 
-    assert_equal(cost_evaluator.cost(infeas_sol), INT_MAX)
-    assert_equal(default_cost_evaluator.cost(infeas_sol), INT_MAX)
+    infeas_cost = np.iinfo(np.int64).max
+    assert_equal(cost_evaluator.cost(infeas_sol), infeas_cost)
+    assert_equal(default_cost_evaluator.cost(infeas_sol), infeas_cost)
 
 
 def test_cost_with_prizes(prize_collecting):
