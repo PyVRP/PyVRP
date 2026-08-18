@@ -1,5 +1,4 @@
 import sys
-import warnings
 
 import pytest
 from numpy.testing import (
@@ -10,7 +9,6 @@ from numpy.testing import (
 )
 
 from pyvrp import PenaltyManager, PenaltyParams, Solution, VehicleType
-from pyvrp.exceptions import PenaltyBoundWarning
 
 
 @pytest.mark.parametrize(
@@ -346,7 +344,7 @@ def test_max_min_penalty(ok_small):
     )
 
 
-def test_does_not_warn_while_violation_decreases(ok_small):
+def test_does_not_warn_while_violation_decreases(ok_small, recwarn):
     """
     Tests that decreasing violations at max_penalty do not raise a warning.
     """
@@ -361,13 +359,14 @@ def test_does_not_warn_while_violation_decreases(ok_small):
         Solution(ok_small, [[1, 2, 0]]),  # excess load 3
     ]
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("error", PenaltyBoundWarning)
-        for sol in solutions:
-            pm.register(sol)
+    for sol in solutions:
+        pm.register(sol)
+
+    # No warnings should have been raised.
+    assert_equal(len(recwarn), 0)
 
 
-def test_warn_when_violations_stuck(ok_small):
+def test_warn_when_violations_stuck(ok_small, recwarn):
     """
     Tests that a warning is raised when the penalty is at max_penalty, and
     violations do not decrease.
@@ -380,14 +379,13 @@ def test_warn_when_violations_stuck(ok_small):
 
     # The first registration has no previous average violation to compare
     # against, so no warning should be raised yet.
-    with warnings.catch_warnings():
-        warnings.simplefilter("error", PenaltyBoundWarning)
-        pm.register(infeas)
+    pm.register(infeas)
+    assert_equal(len(recwarn), 0)
 
     # The load penalty is at max_penalty and the violation did not decrease
     # since the previous update, so now a warning should be raised.
-    with pytest.warns(PenaltyBoundWarning):
-        pm.register(infeas)
+    pm.register(infeas)
+    assert_equal(len(recwarn), 1)
 
 
 def test_init_clips_penalties():

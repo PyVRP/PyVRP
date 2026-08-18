@@ -232,7 +232,7 @@ class PenaltyManager:
 
     def register(self, sol: Solution):
         """
-        Registers the violations for each dimension of the given solution.
+        Registers the violations per penalty dimension of the given solution.
         """
         violations = [
             *sol.excess_load(),
