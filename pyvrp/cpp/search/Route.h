@@ -1010,18 +1010,18 @@ Route::IncrementalSegmentBetween &Route::IncrementalSegmentBetween::operator++()
     assert(end != route_.size() - 1);
     end++;
 
+    // The segment must consist of a single trip only, possibly including the
+    // depot that begins the next trip (and ends this one). So the difference
+    // in trips is at most one.
+    assert(route_[end]->trip() - route_[start]->trip()
+           <= route_[end]->isDepot());
+
     for (size_t dim = 0; dim != loads_.size(); ++dim)
         loads_[dim] = LoadSegment::merge(loads_[dim], route_.loadAt[dim][end]);
 
     auto const &mat = route_.data.durationMatrix(route_.profile());
     auto const from = route_.locations[end - 1];
     auto const to = route_.locations[end];
-
-    if (route_[end - 1]->isReloadDepot())
-    {
-        auto const &depot = route_.data.depot(route_[end - 1]->idx());
-        duration_ = DurationSegment::merge(duration_, {depot.serviceDuration});
-    }
 
     duration_
         = DurationSegment::merge(mat(from, to), duration_, route_.durAt[end]);
@@ -1034,6 +1034,12 @@ Route::IncrementalSegmentBetween &Route::IncrementalSegmentBetween::operator--()
     assert(start > 0);
     start--;
 
+    // The segment must consist of a single trip only, possibly including the
+    // depot that begins the next trip (and ends this one). So the difference
+    // in trips is at most one.
+    assert(route_[end]->trip() - route_[start]->trip()
+           <= route_[end]->isDepot());
+
     for (size_t dim = 0; dim != loads_.size(); ++dim)
         loads_[dim]
             = LoadSegment::merge(route_.loadAt[dim][start], loads_[dim]);
@@ -1042,14 +1048,15 @@ Route::IncrementalSegmentBetween &Route::IncrementalSegmentBetween::operator--()
     auto const from = route_.locations[start];
     auto const to = route_.locations[start + 1];
 
-    if (route_[start]->isReloadDepot())
-    {
+    if (route_[start]->isReloadDepot())  // need to account for depot service
+    {                                    // duration
         auto const &depot = route_.data.depot(route_[start]->idx());
-        duration_ = DurationSegment::merge(duration_, {depot.serviceDuration});
+        DurationSegment const depotDS = {depot, depot.serviceDuration};
+        duration_ = DurationSegment::merge(mat(from, to), depotDS, duration_);
     }
-
-    duration_
-        = DurationSegment::merge(mat(from, to), route_.durAt[start], duration_);
+    else
+        duration_ = DurationSegment::merge(
+            mat(from, to), route_.durAt[start], duration_);
 
     return *this;
 }
