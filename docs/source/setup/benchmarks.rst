@@ -34,6 +34,17 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - VRPB
      - HFVRP
      - MTVRPTWR
+     - PDPTW
+   * - 19 August 2026
+     - `0.14.0 <https://github.com/PyVRP/PyVRP/tree/258ef312171d408edb3a1f433f8d2bcb88423371>`_
+     - 0.31%
+     - 0.65%
+     - 0.18%
+     - 0.81%
+     - 0.67%
+     - 0.51%
+     - 0.58%
+     - 0.45%
    * - 15 January 2026
      - `0.13.0 <https://github.com/PyVRP/PyVRP/tree/9d18224b09bfee81fea7600991300c4ceee9a922>`_
      - 0.31%
@@ -43,6 +54,7 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - 0.55%
      - 0.53%
      - 0.33%
+     -
    * - 20 October 2025
      - `0.12.0 <https://github.com/PyVRP/PyVRP/tree/0f84c35356c5be16255b02aee3475aa2d69cc632>`_
      - 0.43%
@@ -52,6 +64,7 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - 0.68%
      - 0.98%
      - 2.50%
+     -
    * - 15 May 2025
      - `0.11.0 <https://github.com/PyVRP/PyVRP/tree/a06232deafd53f5024ede9e813fad70ec2a325c5>`_
      - 0.25%
@@ -61,6 +74,7 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - 0.58%
      - 0.76%
      - 2.53%
+     -
    * - 7 November 2024
      - `0.10.0 <https://github.com/PyVRP/PyVRP/tree/17a305390ab8daab59bf31abd21b497cca3de37d>`_
      - 0.25%
@@ -68,6 +82,7 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - 0.45%
      - 1.01%
      - 0.60%
+     -
      -
      -
    * - 27 June 2024
@@ -79,6 +94,7 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - 0.40%
      -
      -
+     -
    * - 22 March 2024
      - `0.8.0 <https://github.com/PyVRP/PyVRP/tree/75e4fd4f5a449f11d4974164ce84a170a53b8221>`_
      - 0.23%
@@ -86,6 +102,7 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      - 0.39%
      - 0.99% [#note2]_
      - 0.35%
+     -
      -
      -
    * - 29 January 2024
@@ -97,10 +114,12 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      -
      -
      -
+     -
    * - 31 August 2023
      - `0.6.0 <https://github.com/PyVRP/PyVRP/tree/7ce7bfe66cb4930496dab412eb0f1999b18fbfa8>`_
      - 0.24%
      - 0.54%
+     -
      -
      -
      -
@@ -115,10 +134,12 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      -
      -
      -
+     -
    * - 9 July 2023
      - `0.4.2 <https://github.com/PyVRP/PyVRP/tree/f934e0da184dd0bdbd4d83f72ec98b7ef51cd8da>`_
      - 0.18%
      - 0.43%
+     -
      -
      -
      -
@@ -133,6 +154,7 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      -
      -
      -
+     -
    * - 13 May 2023
      - `0.2.0 <https://github.com/PyVRP/PyVRP/tree/3784f03fa3b6777613fb0bc8cedeac5ad372cfe4>`_
      - 0.25%
@@ -142,10 +164,12 @@ These best-known solutions are tracked in the `PyVRP/Instances <https://github.c
      -
      -
      -
+     -
    * - 28 February 2023
      - `0.1.0 <https://github.com/PyVRP/PyVRP/tree/e1b1ac72bc1246cc51d252bf72df71fc43dc422b>`_
      - 0.22%
      - 0.45%
+     -
      -
      -
      -
@@ -171,6 +195,7 @@ The reported values represent the average gaps to the best-known solutions (at t
      - VRPB
      - HFVRP
      - MTVRPTWR
+     - PDPTW
    * - 20 May 2024
      - `Google OR-Tools <https://developers.google.com/optimization/routing>`_ [#note4]_
      - 4.42%
@@ -180,9 +205,11 @@ The reported values represent the average gaps to the best-known solutions (at t
      -
      -
      -
+     -
    * - 28 February 2023
      - `HGS-CVRP <https://github.com/vidalt/HGS-CVRP>`_
      - 0.11%
+     -
      -
      -
      -
@@ -198,6 +225,7 @@ The reported values represent the average gaps to the best-known solutions (at t
      -
      -
      -
+     -
    * - 2020
      - `ILS-SP <https://doi.org/10.1007/s11590-020-01564-5>`_
      -
@@ -207,12 +235,14 @@ The reported values represent the average gaps to the best-known solutions (at t
      - 1.09% [#note5]_
      -
      -
+     -
    * - 2013
      - `HGS-ADC <https://doi.org/10.1016/j.cor.2012.07.018>`_
      -
      -
      -
      - 0.71% [#note6]_
+     -
      -
      -
      -
