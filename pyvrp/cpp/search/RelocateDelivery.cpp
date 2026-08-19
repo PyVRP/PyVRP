@@ -73,11 +73,11 @@ RelocateDelivery::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
 
     move_ = {};
 
-    auto deltaCost = evalBefore(U, costEvaluator);
+    auto deltaCost = evalBefore(U, costEvaluator);  // move closer to pickup
     if (deltaCost < 0)
         return std::make_pair(deltaCost, true);
 
-    deltaCost = evalAfter(U, costEvaluator);
+    deltaCost = evalAfter(U, costEvaluator);  // move closer to route end
     return std::make_pair(deltaCost, deltaCost < 0);
 }
 
