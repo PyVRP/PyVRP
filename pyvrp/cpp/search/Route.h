@@ -229,9 +229,6 @@ public:
         void unassign();
     };
 
-private:
-    using LoadSegments = std::vector<LoadSegment>;
-
     /**
      * Class storing data related to the route segment starting at ``start``,
      * and ending at the end depot (inclusive).
@@ -319,29 +316,8 @@ private:
         inline LoadSegment load(size_t dimension) const;
     };
 
-    /**
-     * Like its parent, this class stores data related to the route segment
-     * starting at ``start``, and ending at ``end`` (inclusive). Unlike its
-     * parent, it can be efficiently expanded to cover more of the route by
-     * calling its prefix increment and decrement operators.
-     */
-    class IncrementalSegmentBetween : public SegmentBetween
-    {
-        DurationSegment duration_;
-        std::vector<LoadSegment> loads_;
-
-    public:
-        inline IncrementalSegmentBetween(Route const &route,
-                                         size_t start,
-                                         size_t end);
-
-        inline DurationSegment const &duration(size_t profile) const;
-        inline LoadSegment const &load(size_t dimension) const;
-
-        // Prefix increment and decrement operators to expand the segment.
-        inline IncrementalSegmentBetween &operator++();
-        inline IncrementalSegmentBetween &operator--();
-    };
+private:
+    using LoadSegments = std::vector<LoadSegment>;
 
     ProblemData const &data;
 
@@ -618,12 +594,9 @@ public:
 
     /**
      * Returns an object that can be queried for data associated with the
-     * segment between [start, end]. If the incremental template argument
-     * is provided, the segment can efficiently be expanded to cover larger
-     * route segments.
+     * segment between [start, end].
      */
-    template <bool incremental = false>
-    [[nodiscard]] inline auto between(size_t start, size_t end) const;
+    [[nodiscard]] inline SegmentBetween between(size_t start, size_t end) const;
 
     /**
      * @return This route's vehicle type.
@@ -979,88 +952,6 @@ LoadSegment Route::SegmentBetween::load(size_t dimension) const
     return loadSegment;
 }
 
-Route::IncrementalSegmentBetween::IncrementalSegmentBetween(Route const &route,
-                                                            size_t start,
-                                                            size_t end)
-    : SegmentBetween(route, start, end)
-{
-    duration_ = SegmentBetween::duration(route.profile());
-
-    auto const &data = route_.data;
-    loads_.reserve(data.numLoadDimensions());
-    for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
-        loads_.emplace_back(SegmentBetween::load(dim));
-}
-
-DurationSegment const &Route::IncrementalSegmentBetween::duration(
-    [[maybe_unused]] size_t profile) const
-{
-    assert(profile == route_.profile());
-    return duration_;
-}
-
-LoadSegment const &
-Route::IncrementalSegmentBetween::load(size_t dimension) const
-{
-    return loads_[dimension];
-}
-
-Route::IncrementalSegmentBetween &Route::IncrementalSegmentBetween::operator++()
-{
-    assert(end != route_.size() - 1);
-    end++;
-
-    // The segment must consist of a single trip only, possibly including the
-    // depot that begins the next trip (and ends this one). So the difference
-    // in trips is at most one.
-    assert(route_[end]->trip() - route_[start]->trip()
-           <= route_[end]->isDepot());
-
-    for (size_t dim = 0; dim != loads_.size(); ++dim)
-        loads_[dim] = LoadSegment::merge(loads_[dim], route_.loadAt[dim][end]);
-
-    auto const &mat = route_.data.durationMatrix(route_.profile());
-    auto const from = route_.locations[end - 1];
-    auto const to = route_.locations[end];
-
-    duration_
-        = DurationSegment::merge(mat(from, to), duration_, route_.durAt[end]);
-
-    return *this;
-}
-
-Route::IncrementalSegmentBetween &Route::IncrementalSegmentBetween::operator--()
-{
-    assert(start > 0);
-    start--;
-
-    // The segment must consist of a single trip only, possibly including the
-    // depot that begins the next trip (and ends this one). So the difference
-    // in trips is at most one.
-    assert(route_[end]->trip() - route_[start]->trip()
-           <= route_[end]->isDepot());
-
-    for (size_t dim = 0; dim != loads_.size(); ++dim)
-        loads_[dim]
-            = LoadSegment::merge(route_.loadAt[dim][start], loads_[dim]);
-
-    auto const &mat = route_.data.durationMatrix(route_.profile());
-    auto const from = route_.locations[start];
-    auto const to = route_.locations[start + 1];
-
-    if (route_[start]->isReloadDepot())  // need to account for depot service
-    {                                    // duration
-        auto const &depot = route_.data.depot(route_[start]->idx());
-        DurationSegment const depotDS = {depot, depot.serviceDuration};
-        duration_ = DurationSegment::merge(mat(from, to), depotDS, duration_);
-    }
-    else
-        duration_ = DurationSegment::merge(
-            mat(from, to), route_.durAt[start], duration_);
-
-    return *this;
-}
-
 bool Route::isFeasible() const
 {
     assert(!dirty);
@@ -1256,12 +1147,10 @@ Route::SegmentBefore Route::before(size_t end) const
     return {*this, end};
 }
 
-template <bool incremental> auto Route::between(size_t start, size_t end) const
+Route::SegmentBetween Route::between(size_t start, size_t end) const
 {
-    if constexpr (incremental)
-        return IncrementalSegmentBetween(*this, start, end);
-    else
-        return SegmentBetween(*this, start, end);
+    assert(!dirty);
+    return {*this, start, end};
 }
 
 template <Segment... Segments>
