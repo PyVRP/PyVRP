@@ -14,7 +14,6 @@
 #include <vector>
 
 using pyvrp::Cost;
-
 using pyvrp::search::Route;
 using pyvrp::search::Solution;
 
