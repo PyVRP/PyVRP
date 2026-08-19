@@ -15,13 +15,18 @@ class RelocatePickup : public UnaryOperator
 {
     using UnaryOperator::UnaryOperator;
 
-    struct Move  // stores cost of reinserting pickup node in front of before
+    struct Move
     {
-        Cost cost = std::numeric_limits<Cost>::max();
         Route::Node const *before = nullptr;
     };
 
     Move move_;
+
+    // Evaluate placing the pickup node after its current position.
+    Cost evalAfter(Route::Node *U, CostEvaluator const &costEvaluator);
+
+    // Evaluate placing the pickup node before its current position.
+    Cost evalBefore(Route::Node *U, CostEvaluator const &costEvaluator);
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
