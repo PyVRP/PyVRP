@@ -1,4 +1,3 @@
-import numpy as np
 from numpy.testing import assert_, assert_equal
 
 from pyvrp import Client, CostEvaluator
@@ -6,13 +5,11 @@ from pyvrp.search import RelocateDelivery
 from pyvrp.search._search import Solution
 from tests.helpers import make_search_route
 
-_INT_MAX = np.iinfo(np.int64).max
 
-
-def test_relocate_just_after_pickup(small_shipments):
+def test_relocate_earlier_in_route(small_shipments):
     """
-    Tests that the operator reinserts a delivery node just after the pickup
-    node if that is the best move.
+    Tests that the operator reinserts a delivery node earlier in the route if
+    that is a better move.
     """
     sol = Solution(small_shipments)
     pickup, delivery = sol.shipments[1]
@@ -21,26 +18,26 @@ def test_relocate_just_after_pickup(small_shipments):
         [*sol.shipments[0], pickup, *sol.shipments[2], delivery],
     )
 
-    # L2 U2 is currently in-between L1 and U1. It is better to visit L1 U1
-    # consecutively by moving U1 just after L1.
+    # U1 is currently the last visit, but it is better for U2 to be the last
+    # visit, by moving U1 to earlier in the route.
     assert_equal(route.distance(), 45_588)
     assert_equal(str(route), "L0 U0 L1 L2 U2 U1")
 
     op = RelocateDelivery(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[3], cost_eval), (-10_580, True))
+    assert_equal(op.evaluate(route[3], cost_eval), (-8_245, True))
 
     op.apply(route[3])
     route.update()
 
-    assert_equal(route.distance(), 45_588 - 10_580)
-    assert_equal(str(route), "L0 U0 L1 U1 L2 U2")
+    assert_equal(route.distance(), 45_588 - 8_245)
+    assert_equal(str(route), "L0 U0 L1 L2 U1 U2")
 
 
 def test_relocate_just_before_depot(small_shipments):
     """
     Tests that the operator reinserts a delivery node just before the ending
-    depot if that is the best move.
+    depot if that is a better move.
     """
     data = small_shipments.replace(clients=[Client(2, delivery=[0])])
 
@@ -95,7 +92,7 @@ def test_reload_depot(small_shipments):
 
     op = RelocateDelivery(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[1], cost_eval), (_INT_MAX, False))
+    assert_equal(op.evaluate(route[1], cost_eval), (0, False))
 
 
 def test_relocate_skips_unassigned_nodes(small_shipments):
@@ -165,4 +162,4 @@ def test_cannot_improve_singleton_route(small_shipments):
 
     op = RelocateDelivery(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(pickup, cost_eval), (_INT_MAX, False))
+    assert_equal(op.evaluate(pickup, cost_eval), (0, False))

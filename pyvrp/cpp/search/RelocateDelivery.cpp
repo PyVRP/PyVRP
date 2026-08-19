@@ -6,6 +6,62 @@
 
 using pyvrp::search::RelocateDelivery;
 
+pyvrp::Cost RelocateDelivery::evalAfter(Route::Node *U,
+                                        CostEvaluator const &costEvaluator)
+{
+    assert(U->route() && U->isPickup());
+    auto const *route = U->route();
+    auto const *deliv = U + 1;
+
+    auto between = route->between<true>(deliv->pos() + 1, deliv->pos() + 1);
+    for (auto const *node = n(deliv); !node->isDepot();
+         node = n(node), ++between)
+    {
+        Cost deltaCost = 0;
+        costEvaluator.deltaCost(deltaCost,
+                                Route::Proposal(route->before(deliv->pos() - 1),
+                                                between,
+                                                DeliverySegment(data, U->idx()),
+                                                route->after(node->pos() + 1)));
+
+        if (deltaCost < 0)
+        {
+            move_.after = node;
+            return deltaCost;
+        }
+    }
+
+    return 0;
+}
+
+pyvrp::Cost RelocateDelivery::evalBefore(Route::Node *U,
+                                         CostEvaluator const &costEvaluator)
+{
+    assert(U->route() && U->isPickup());
+    auto const *route = U->route();
+    auto const *deliv = U + 1;
+
+    auto between = route->between<true>(deliv->pos() - 1, deliv->pos() - 1);
+    for (auto const *node = p(deliv); node != U; node = p(node), --between)
+    {
+        Cost deltaCost = 0;
+        costEvaluator.deltaCost(
+            deltaCost,
+            Route::Proposal(route->before(node->pos() - 1),
+                            DeliverySegment(data, U->idx()),
+                            between,
+                            route->after(deliv->pos() + 1)));
+
+        if (deltaCost < 0)
+        {
+            move_.after = p(node);
+            return deltaCost;
+        }
+    }
+
+    return 0;
+}
+
 std::pair<pyvrp::Cost, bool>
 RelocateDelivery::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
 {
@@ -20,38 +76,12 @@ RelocateDelivery::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
     auto const *delivery = U + 1;
     assert(delivery->route() == route && delivery->pos() > U->pos());
 
-    for (auto const *after = U; !after->isDepot(); after = n(after))
-    {
-        if (after == delivery || n(after) == delivery)
-            continue;
+    auto deltaCost = evalBefore(U, costEvaluator);
+    if (deltaCost < 0)
+        return std::make_pair(deltaCost, true);
 
-        Cost deltaCost = 0;
-        if (delivery->pos() < after->pos())
-            costEvaluator.deltaCost(
-                deltaCost,
-                Route::Proposal(
-                    route->before(delivery->pos() - 1),
-                    route->between(delivery->pos() + 1, after->pos()),
-                    DeliverySegment(data, U->idx()),
-                    route->after(after->pos() + 1)));
-        else
-            costEvaluator.deltaCost(
-                deltaCost,
-                Route::Proposal(
-                    route->before(after->pos()),
-                    DeliverySegment(data, U->idx()),
-                    route->between(after->pos() + 1, delivery->pos() - 1),
-                    route->after(delivery->pos() + 1)));
-
-        if (deltaCost < 0)
-        {
-            move_.cost = deltaCost;
-            move_.after = after;
-            break;
-        }
-    }
-
-    return std::make_pair(move_.cost, move_.cost < 0);
+    deltaCost = evalAfter(U, costEvaluator);
+    return std::make_pair(deltaCost, deltaCost < 0);
 }
 
 void RelocateDelivery::apply(Route::Node *U) const

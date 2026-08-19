@@ -9,12 +9,12 @@ using pyvrp::search::RelocatePickup;
 pyvrp::Cost RelocatePickup::evalAfter(Route::Node *U,
                                       CostEvaluator const &costEvaluator)
 {
+    assert(U->route() && U->isPickup());
     auto const *route = U->route();
     auto const *delivery = U + 1;
 
     auto between = route->between<true>(U->pos() + 1, U->pos() + 1);
-    for (auto const *node = n(U); !node->isDepot() && node != delivery;
-         node = n(node), ++between)
+    for (auto const *node = n(U); node != delivery; node = n(node), ++between)
     {
         Cost deltaCost = 0;
         costEvaluator.deltaCost(deltaCost,
@@ -36,6 +36,7 @@ pyvrp::Cost RelocatePickup::evalAfter(Route::Node *U,
 pyvrp::Cost RelocatePickup::evalBefore(Route::Node *U,
                                        CostEvaluator const &costEvaluator)
 {
+    assert(U->route() && U->isPickup());
     auto const *route = U->route();
 
     auto between = route->between<true>(U->pos() - 1, U->pos() - 1);

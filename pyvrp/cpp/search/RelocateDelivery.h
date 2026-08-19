@@ -17,11 +17,16 @@ class RelocateDelivery : public UnaryOperator
 
     struct Move
     {
-        Cost cost = std::numeric_limits<Cost>::max();
         Route::Node const *after = nullptr;
     };
 
     Move move_;
+
+    // Evaluate placing the delivery node after its current position.
+    Cost evalAfter(Route::Node *U, CostEvaluator const &costEvaluator);
+
+    // Evaluate placing the delivery node before its current position.
+    Cost evalBefore(Route::Node *U, CostEvaluator const &costEvaluator);
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
