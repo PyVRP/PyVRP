@@ -195,6 +195,7 @@ The reported values represent the average gaps to the best-known solutions (at t
      - VRPB
      - HFVRP
      - MTVRPTWR
+     - PDPTW
    * - 20 May 2024
      - `Google OR-Tools <https://developers.google.com/optimization/routing>`_ [#note4]_
      - 4.42%
@@ -204,9 +205,11 @@ The reported values represent the average gaps to the best-known solutions (at t
      -
      -
      -
+     -
    * - 28 February 2023
      - `HGS-CVRP <https://github.com/vidalt/HGS-CVRP>`_
      - 0.11%
+     -
      -
      -
      -
@@ -222,6 +225,7 @@ The reported values represent the average gaps to the best-known solutions (at t
      -
      -
      -
+     -
    * - 2020
      - `ILS-SP <https://doi.org/10.1007/s11590-020-01564-5>`_
      -
@@ -231,12 +235,14 @@ The reported values represent the average gaps to the best-known solutions (at t
      - 1.09% [#note5]_
      -
      -
+     -
    * - 2013
      - `HGS-ADC <https://doi.org/10.1016/j.cor.2012.07.018>`_
      -
      -
      -
      - 0.71% [#note6]_
+     -
      -
      -
      -
