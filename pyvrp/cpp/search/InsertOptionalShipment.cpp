@@ -35,16 +35,16 @@ std::pair<pyvrp::Cost, bool> InsertOptionalShipment::evaluate(
     }
 
     // Pickup after V, delivery later in the route.
-    auto between = route.between<true>(V->pos() + 1, V->pos() + 1);
-    for (auto const *node = n(V); !node->isDepot(); node = n(node), ++between)
+    for (auto const *node = n(V); !node->isDepot(); node = n(node))
     {
         Cost deltaCost = -shipment.prize;
-        costEvaluator.deltaCost(deltaCost,
-                                Route::Proposal(route.before(V->pos()),
-                                                PickupSegment(data, U->idx()),
-                                                between,
-                                                DeliverySegment(data, U->idx()),
-                                                route.after(node->pos() + 1)));
+        costEvaluator.deltaCost(
+            deltaCost,
+            Route::Proposal(route.before(V->pos()),
+                            PickupSegment(data, U->idx()),
+                            route.between(V->pos() + 1, node->pos()),
+                            DeliverySegment(data, U->idx()),
+                            route.after(node->pos() + 1)));
 
         if (deltaCost < 0)
         {
