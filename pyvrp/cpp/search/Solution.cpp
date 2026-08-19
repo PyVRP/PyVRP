@@ -40,50 +40,6 @@ public:
     inline IncrementalSegmentBetween &operator++();
 };
 
-Cost insertCost(pyvrp::search::Route::Node *U,
-                pyvrp::search::Route::Node *V,
-                pyvrp::ProblemData const &data,
-                pyvrp::CostEvaluator const &costEvaluator)
-{
-    assert(V->route() && U->isClient());
-
-    auto *route = V->route();
-    auto const &client = data.client(U->idx());
-
-    Cost deltaCost = -client.prize;
-    costEvaluator.deltaCost<true>(
-        deltaCost,
-        pyvrp::search::Route::Proposal(
-            route->before(V->pos()),
-            pyvrp::search::ClientSegment(data, U->idx()),
-            route->after(V->pos() + 1)));
-
-    return deltaCost;
-}
-
-// Comparison operator to determine if pyvrp::Route and search::Route are
-// equivalent - if so, the pyvrp::Route does not need to be loaded.
-bool operator==(pyvrp::Route const &pyvrp, pyvrp::search::Route const &search)
-{
-    // clang-format off
-    bool const simpleChecks = pyvrp.distance() == search.distance()
-                              && pyvrp.duration() == search.duration()
-                              && pyvrp.timeWarp() == search.timeWarp()
-                              && pyvrp.vehicleType() == search.vehicleType()
-                              && pyvrp.size() == search.size();
-    // clang-format on
-
-    if (!simpleChecks)
-        return false;
-
-    size_t idx = 0;
-    for (auto const &activity : pyvrp)
-        if (search[idx++]->activity() != activity)
-            return false;
-
-    return true;
-}
-
 IncrementalSegmentBetween::IncrementalSegmentBetween(
     pyvrp::ProblemData const &data, Route::Node *node)
     : SegmentBetween(*node->route(), node->pos(), node->pos()), data_(data)
@@ -133,6 +89,50 @@ IncrementalSegmentBetween &IncrementalSegmentBetween::operator++()
         mat(from, to), duration_, at.duration(route_.profile()));
 
     return *this;
+}
+
+Cost insertCost(pyvrp::search::Route::Node *U,
+                pyvrp::search::Route::Node *V,
+                pyvrp::ProblemData const &data,
+                pyvrp::CostEvaluator const &costEvaluator)
+{
+    assert(V->route() && U->isClient());
+
+    auto *route = V->route();
+    auto const &client = data.client(U->idx());
+
+    Cost deltaCost = -client.prize;
+    costEvaluator.deltaCost<true>(
+        deltaCost,
+        pyvrp::search::Route::Proposal(
+            route->before(V->pos()),
+            pyvrp::search::ClientSegment(data, U->idx()),
+            route->after(V->pos() + 1)));
+
+    return deltaCost;
+}
+
+// Comparison operator to determine if pyvrp::Route and search::Route are
+// equivalent - if so, the pyvrp::Route does not need to be loaded.
+bool operator==(pyvrp::Route const &pyvrp, pyvrp::search::Route const &search)
+{
+    // clang-format off
+    bool const simpleChecks = pyvrp.distance() == search.distance()
+                              && pyvrp.duration() == search.duration()
+                              && pyvrp.timeWarp() == search.timeWarp()
+                              && pyvrp.vehicleType() == search.vehicleType()
+                              && pyvrp.size() == search.size();
+    // clang-format on
+
+    if (!simpleChecks)
+        return false;
+
+    size_t idx = 0;
+    for (auto const &activity : pyvrp)
+        if (search[idx++]->activity() != activity)
+            return false;
+
+    return true;
 }
 }  // namespace
 
