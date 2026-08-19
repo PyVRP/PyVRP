@@ -46,6 +46,11 @@ We use the following instances and configurations to benchmark PyVRP:
   The instances are each run for ten minutes on a reference CPU with PassMark score 2000.
   For this benchmark, the ``dimacs`` rounding function should be used.
 
+* For the PDPTW, we use `the Li & Lim instances <https://github.com/PyVRP/Instances/tree/main/PDPTW#pdptw>`_ with 1000 locations (500 shipments).
+  These instances are each run for one hour on a reference CPU with PassMark score 2000.
+  The objective is to minimise the total distance travelled, rather than the classical hierarchical objective that first minimises the number of vehicles.
+  For this benchmark, the ``exact`` rounding function should be used.
+
 The time limit should be scaled by the PassMark score of your CPU.
 Each instance is run ten times with different seeds.
 Each run is performed on a single core.
