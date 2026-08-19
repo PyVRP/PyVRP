@@ -40,6 +40,7 @@ pyvrp::Cost RelocateDelivery::evalBefore(Route::Node *U,
     assert(U->route() && U->isPickup());
     auto const *route = U->route();
     auto const *deliv = U + 1;
+    assert(deliv->pos() > U->pos());
 
     auto between = route->between<true>(deliv->pos() - 1, deliv->pos() - 1);
     for (auto const *node = p(deliv); node != U; node = p(node), --between)
@@ -71,10 +72,6 @@ RelocateDelivery::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
         return std::make_pair(0, false);
 
     move_ = {};
-
-    auto const *route = U->route();
-    auto const *delivery = U + 1;
-    assert(delivery->route() == route && delivery->pos() > U->pos());
 
     auto deltaCost = evalBefore(U, costEvaluator);
     if (deltaCost < 0)
