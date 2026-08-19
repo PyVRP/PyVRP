@@ -20,10 +20,9 @@ using pyvrp::search::Solution;
 namespace
 {
 /**
- * Like its parent, this helper class stores data related to the route segment
- * starting at ``start``, and ending at ``end`` (inclusive). Unlike its parent,
- * it can be efficiently expanded to cover more of the route by calling its
- * prefix increment operator.
+ * Segment that tracks a route segment between ``[start, end]``, but does so
+ * incrementally: it starts from a single node and can be grown to cover more
+ * of the route via its prefix operators.
  */
 class IncrementalSegmentBetween : public Route::SegmentBetween
 {
@@ -38,7 +37,6 @@ public:
     inline pyvrp::DurationSegment const &duration(size_t profile) const;
     inline pyvrp::LoadSegment const &load(size_t dimension) const;
 
-    // Prefix increment operator to expand the segment.
     inline IncrementalSegmentBetween &operator++();
 };
 
@@ -90,6 +88,7 @@ IncrementalSegmentBetween::IncrementalSegmentBetween(
     pyvrp::ProblemData const &data, Route::Node *node)
     : SegmentBetween(*node->route(), node->pos(), node->pos()), data_(data)
 {
+    assert(node->route());
     duration_ = SegmentBetween::duration(route_.profile());
 
     loads_.reserve(data_.numLoadDimensions());
