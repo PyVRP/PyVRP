@@ -2,22 +2,95 @@
 
 #include "ClientSegment.h"
 #include "DeliverySegment.h"
+#include "DurationSegment.h"
+#include "LoadSegment.h"
 #include "PickupSegment.h"
+#include "Route.h"
 
 #include <algorithm>
 #include <cassert>
 #include <limits>
 #include <ostream>
+#include <vector>
 
 using pyvrp::Cost;
-using pyvrp::Distance;
-using pyvrp::Duration;
-using pyvrp::Load;
-
+using pyvrp::search::Route;
 using pyvrp::search::Solution;
 
 namespace
 {
+/**
+ * Segment that tracks a route segment between ``[start, end]``, but does so
+ * incrementally: it starts from a single node and can be grown to cover more
+ * of the route via its prefix operators.
+ */
+class IncrementalSegmentBetween : public Route::SegmentBetween
+{
+    pyvrp::ProblemData const &data_;
+    pyvrp::DurationSegment duration_;
+    std::vector<pyvrp::LoadSegment> loads_;
+
+public:
+    IncrementalSegmentBetween(pyvrp::ProblemData const &data,
+                              Route::Node const *node);
+
+    IncrementalSegmentBetween &operator++();
+
+    inline pyvrp::DurationSegment const &duration(size_t profile) const;
+    inline pyvrp::LoadSegment const &load(size_t dimension) const;
+};
+
+IncrementalSegmentBetween::IncrementalSegmentBetween(
+    pyvrp::ProblemData const &data, Route::Node const *node)
+    : SegmentBetween(*node->route(), node->pos(), node->pos()), data_(data)
+{
+    assert(node->route());
+    duration_ = SegmentBetween::duration(route_.profile());
+
+    loads_.reserve(data_.numLoadDimensions());
+    for (size_t dim = 0; dim != data_.numLoadDimensions(); ++dim)
+        loads_.emplace_back(SegmentBetween::load(dim));
+}
+
+IncrementalSegmentBetween &IncrementalSegmentBetween::operator++()
+{
+    assert(end != route_.size() - 1);
+    auto const from = back().location();  // current last location
+    end++;
+
+    // The segment must consist of a single trip only, possibly including the
+    // depot that begins the next trip (and ends this one). So the difference
+    // in trips is at most one.
+    assert(route_[end]->trip() - route_[start]->trip()
+           <= route_[end]->isDepot());
+
+    auto const at = route_.at(end);
+
+    for (size_t dim = 0; dim != loads_.size(); ++dim)
+        loads_[dim] = pyvrp::LoadSegment::merge(loads_[dim], at.load(dim));
+
+    auto const &mat = data_.durationMatrix(route_.profile());
+    auto const to = at.front().location();
+
+    duration_ = pyvrp::DurationSegment::merge(
+        mat(from, to), duration_, at.duration(route_.profile()));
+
+    return *this;
+}
+
+pyvrp::DurationSegment const &
+IncrementalSegmentBetween::duration([[maybe_unused]] size_t profile) const
+{
+    assert(profile == route_.profile());
+    return duration_;
+}
+
+pyvrp::LoadSegment const &
+IncrementalSegmentBetween::load(size_t dimension) const
+{
+    return loads_[dimension];
+}
+
 Cost insertCost(pyvrp::search::Route::Node *U,
                 pyvrp::search::Route::Node *V,
                 pyvrp::ProblemData const &data,
@@ -264,14 +337,16 @@ bool Solution::insert(Route::Node *pickup,
                 bestCost = deltaCost;
             }
 
-            for (auto const *node = n(V); !node->isDepot(); node = n(node))
+            IncrementalSegmentBetween between = {data_, n(V)};
+            for (auto const *node = n(V); !node->isDepot();
+                 node = n(node), ++between)
             {
                 Cost deltaCost = -shipment.prize;
                 costEvaluator.deltaCost<true>(
                     deltaCost,
                     Route::Proposal(route->before(V->pos()),
                                     PickupSegment(data_, pickup->idx()),
-                                    route->between(V->pos() + 1, node->pos()),
+                                    between,
                                     DeliverySegment(data_, delivery->idx()),
                                     route->after(node->pos() + 1)));
 
