@@ -33,7 +33,7 @@ class IncrementalSegmentBetween : public Route::SegmentBetween
 
 public:
     IncrementalSegmentBetween(pyvrp::ProblemData const &data,
-                              Route::Node *node);
+                              Route::Node const *node);
 
     IncrementalSegmentBetween &operator++();
 
@@ -42,7 +42,7 @@ public:
 };
 
 IncrementalSegmentBetween::IncrementalSegmentBetween(
-    pyvrp::ProblemData const &data, Route::Node *node)
+    pyvrp::ProblemData const &data, Route::Node const *node)
     : SegmentBetween(*node->route(), node->pos(), node->pos()), data_(data)
 {
     assert(node->route());
