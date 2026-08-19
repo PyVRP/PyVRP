@@ -39,7 +39,7 @@ namespace detail
 template <class Tuple, std::size_t... Indices>
 auto constexpr reverse_impl(Tuple &&tuple, std::index_sequence<Indices...>)
 {
-    return std::make_tuple(std::get<sizeof...(Indices) - 1 - Indices>(
+    return std::forward_as_tuple(std::get<sizeof...(Indices) - 1 - Indices>(
         std::forward<Tuple>(tuple))...);
 }
 
@@ -47,7 +47,7 @@ template <class Tuple> auto constexpr reverse(Tuple &&tuple)
 {
     auto constexpr size = std::tuple_size_v<std::remove_reference_t<Tuple>>;
     auto constexpr indices = std::make_index_sequence<size>{};
-    return reverse_impl(tuple, indices);
+    return reverse_impl(std::forward<Tuple>(tuple), indices);
 }
 }  // namespace detail
 
@@ -123,6 +123,9 @@ public:
          */
         Load excessLoad(size_t dimension) const;
     };
+
+    template <Segment... Segments>  // deduct guide for forward reference pack
+    Proposal(Segments &&...) -> Proposal<Segments...>;
 
     /**
      * Light wrapper class around an activity. This class tracks the route it
@@ -226,9 +229,6 @@ public:
         void unassign();
     };
 
-private:
-    using LoadSegments = std::vector<LoadSegment>;
-
     /**
      * Class storing data related to the route segment starting at ``start``,
      * and ending at the end depot (inclusive).
@@ -253,7 +253,7 @@ private:
 
         inline SegmentAfter(Route const &route, size_t start);
         inline Distance distance(size_t profile) const;
-        inline DurationSegment duration(size_t profile) const;
+        inline DurationSegment const &duration(size_t profile) const;
         inline LoadSegment const &load(size_t dimension) const;
     };
 
@@ -281,7 +281,7 @@ private:
 
         inline SegmentBefore(Route const &route, size_t end);
         inline Distance distance(size_t profile) const;
-        inline DurationSegment duration(size_t profile) const;
+        inline DurationSegment const &duration(size_t profile) const;
         inline LoadSegment const &load(size_t dimension) const;
     };
 
@@ -292,9 +292,10 @@ private:
      */
     class SegmentBetween
     {
+    protected:
         Route const &route_;
-        size_t const start;
-        size_t const end;
+        size_t start;
+        size_t end;
 
     public:
         inline Route const *route() const;
@@ -314,6 +315,9 @@ private:
         inline DurationSegment duration(size_t profile) const;
         inline LoadSegment load(size_t dimension) const;
     };
+
+private:
+    using LoadSegments = std::vector<LoadSegment>;
 
     ProblemData const &data;
 
@@ -754,7 +758,7 @@ Distance Route::SegmentAfter::distance([[maybe_unused]] size_t profile) const
     return {route_.cumDist.back() - route_.cumDist[start]};
 }
 
-DurationSegment
+DurationSegment const &
 Route::SegmentAfter::duration([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
@@ -772,7 +776,7 @@ Distance Route::SegmentBefore::distance([[maybe_unused]] size_t profile) const
     return route_.cumDist[end];
 }
 
-DurationSegment
+DurationSegment const &
 Route::SegmentBefore::duration([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
@@ -915,8 +919,7 @@ Distance Route::SegmentBetween::distance(size_t profile) const
     return endDist - startDist;
 }
 
-DurationSegment
-Route::SegmentBetween::duration([[maybe_unused]] size_t profile) const
+DurationSegment Route::SegmentBetween::duration(size_t profile) const
 {
     auto const &mat = route_.data.durationMatrix(profile);
     auto segment = route_.durAt[start];
