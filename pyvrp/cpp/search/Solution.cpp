@@ -11,6 +11,7 @@
 #include <cassert>
 #include <limits>
 #include <ostream>
+#include <vector>
 
 using pyvrp::Cost;
 
@@ -31,13 +32,13 @@ class IncrementalSegmentBetween : public Route::SegmentBetween
     std::vector<pyvrp::LoadSegment> loads_;
 
 public:
-    inline IncrementalSegmentBetween(pyvrp::ProblemData const &data,
-                                     Route::Node *node);
+    IncrementalSegmentBetween(pyvrp::ProblemData const &data,
+                              Route::Node *node);
+
+    IncrementalSegmentBetween &operator++();
 
     inline pyvrp::DurationSegment const &duration(size_t profile) const;
     inline pyvrp::LoadSegment const &load(size_t dimension) const;
-
-    inline IncrementalSegmentBetween &operator++();
 };
 
 IncrementalSegmentBetween::IncrementalSegmentBetween(
@@ -50,19 +51,6 @@ IncrementalSegmentBetween::IncrementalSegmentBetween(
     loads_.reserve(data_.numLoadDimensions());
     for (size_t dim = 0; dim != data_.numLoadDimensions(); ++dim)
         loads_.emplace_back(SegmentBetween::load(dim));
-}
-
-pyvrp::DurationSegment const &
-IncrementalSegmentBetween::duration([[maybe_unused]] size_t profile) const
-{
-    assert(profile == route_.profile());
-    return duration_;
-}
-
-pyvrp::LoadSegment const &
-IncrementalSegmentBetween::load(size_t dimension) const
-{
-    return loads_[dimension];
 }
 
 IncrementalSegmentBetween &IncrementalSegmentBetween::operator++()
@@ -89,6 +77,19 @@ IncrementalSegmentBetween &IncrementalSegmentBetween::operator++()
         mat(from, to), duration_, at.duration(route_.profile()));
 
     return *this;
+}
+
+pyvrp::DurationSegment const &
+IncrementalSegmentBetween::duration([[maybe_unused]] size_t profile) const
+{
+    assert(profile == route_.profile());
+    return duration_;
+}
+
+pyvrp::LoadSegment const &
+IncrementalSegmentBetween::load(size_t dimension) const
+{
+    return loads_[dimension];
 }
 
 Cost insertCost(pyvrp::search::Route::Node *U,
