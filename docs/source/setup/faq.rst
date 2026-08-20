@@ -25,7 +25,7 @@ Modelling
 
    How can I model vehicle-specific service durations?
 
-      Rather than specifying an explicit service duration for the clients or depots, add the service duration to the duration all the edges leaving the location.
+      Rather than specifying an explicit service duration at clients, depots, or shipment steps, add the service duration to the travel duration of all outgoing edges.
       Using route profiles, you can then set up different travel duration matrices for the vehicles that include the vehicle-specific service durations.
 
    How can I model clients with multiple time windows?
