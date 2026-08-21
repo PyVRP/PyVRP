@@ -25,7 +25,7 @@ Modelling
 
    How can I model vehicle-specific service durations?
 
-      Rather than specifying an explicit service duration at clients, depots, or shipment steps, add the service duration to the travel duration of all outgoing edges.
+      Rather than specifying an explicit service duration at clients, depots, or shipment steps, add the service duration to the travel duration of all outgoing edges at the location.
       Using route profiles, you can then set up different travel duration matrices for the vehicles that include the vehicle-specific service durations.
 
    How can I model clients with multiple time windows?
@@ -44,6 +44,11 @@ Modelling
 
       By specifying a negative fixed cost for each vehicle.
       This incentivises PyVRP to use more vehicles than it normally would.
+
+   How do I warm-start from a known solution?
+
+      PyVRP supports warm-starting from an initial (possibly infeasible or incomplete) solution.
+      Using the :class:`~pyvrp.Model.Model` interface, warm-starting can be achieved by passing a :class:`~pyvrp._pyvrp.Solution` as :meth:`~pyvrp.Model.Model.solve`'s ``initial_solution`` argument.
 
 Debugging
 ---------
