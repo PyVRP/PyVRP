@@ -45,22 +45,6 @@ Now make sure everything runs smoothly, by executing the test suite:
    After this completes, style and typing issues are automatically checked whenever you make a new commit to your feature branch.
 
 
-Setting up Github Codespaces
-----------------------------
-
-If you are having trouble building PyVRP from source or setting up your local development environment, you can try to build PyVRP online, using `GitHub Codespaces <https://docs.github.com/en/codespaces>`_.
-Github Codespaces allows you to create a development environment directly in your browser.
-
-To launch Github Codespaces, go to the `PyVRP repository <https://github.com/PyVRP/PyVRP>`_ and click on the green button.
-Select the Codespaces tab and click on the `+` icon to create a Codespaces environment.
-This environment is configured with all necessary dependencies to build PyVRP.
-Once the setup completes, execute the test suite to verify everything runs smoothly:
-
-.. code-block:: shell
-
-   uv run pytest
-
-
 Building the extensions
 -----------------------
 
