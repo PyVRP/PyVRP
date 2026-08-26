@@ -691,6 +691,7 @@ def test_debug_logs_on_bks(rc208, caplog):
     expected = [
         "Applying local search (exhaustive=false)",
         "Entering search loop (step=0).",
+        "Entering search loop (step=1).",  # after reinserting required clients
         "Completed local search: improving=0",  # bks, so no improvements
     ]
 
@@ -737,6 +738,7 @@ def test_shipment_structural_feasibility(small_shipments):
     rng = RandomNumberGenerator(seed=42)
     neighbourhood = compute_neighbours(small_shipments)
     ls = LocalSearch(small_shipments, rng, neighbourhood)
+    ls.add_operator(RelocatePickup(small_shipments))
 
     empty = Solution(small_shipments, [])
     assert_equal(empty.num_shipments(), 0)
