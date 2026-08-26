@@ -77,10 +77,10 @@ void PerturbationManager::perturb(Solution &solution,
 
         if (node->isClient())
         {
-            // Groups are mutually exclusive, so we first remove any planned
-            // member of the client's group before inserting the client.
             auto const &client = data_.client(node->idx());
             if (client.group)
+                // If another group member is already planned, we first remove
+                // it before inserting the client.
                 for (auto const member : data_.group(*client.group))
                 {
                     auto *other = &solution.clients[member];
