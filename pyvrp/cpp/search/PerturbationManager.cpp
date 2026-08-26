@@ -57,7 +57,8 @@ void PerturbationManager::perturb(Solution &solution,
         {
             // We cannot insert a client whose mutually exclusive group already
             // has another member in the solution.
-            if (auto const &client = data_.client(node->idx()); client.group)
+            auto const &client = data_.client(node->idx());
+            if (client.group)
                 for (auto const member : data_.group(*client.group))
                     if (solution.clients[member].route())
                         return false;
