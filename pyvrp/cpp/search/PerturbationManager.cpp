@@ -136,7 +136,7 @@ void PerturbationManager::perturb(ProblemData const &data,
     // We perturb the local neighbourhood of randomly ordered activities,
     // grouped by their current route (unplanned by their nullptr route).
     // Planned activities are removed and unplanned ones are inserted. Only
-    // successful removals and insertions count as perturbation..
+    // successful removals and insertions count as perturbation.
     for (size_t movesLeft = numPerturbations_;
          auto const &uActivity : searchSpace.activityOrder())
     {

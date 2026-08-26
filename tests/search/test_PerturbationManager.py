@@ -275,7 +275,7 @@ def test_perturb_does_not_insert_group_duplicates(
     """
     Tests that perturbation does not insert a client whose mutually exclusive
     group already has a member in the solution, and that such skipped inserts
-    do not consume the perturbation budget.
+    do not count towards the perturbation budget.
     """
     data = ok_small_mutually_exclusive_groups
 
@@ -296,5 +296,5 @@ def test_perturb_does_not_insert_group_duplicates(
 
     perturbed = sol.unload()
     assert_equal(perturbed.num_clients(), 1)
-    visits = [act.idx for act in perturbed.routes()[0] if act.is_client()]
-    assert_equal(visits, [3])
+    assert_(Activity("C2") in perturbed.unplanned())
+    assert_(Activity("C3") not in perturbed.unplanned())
