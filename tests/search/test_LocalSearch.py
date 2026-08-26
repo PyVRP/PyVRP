@@ -157,7 +157,8 @@ def test_cpp_shuffle_results_in_different_solution(rc208):
     """
     rng = RandomNumberGenerator(seed=42)
 
-    ls = cpp_LocalSearch(rc208, compute_neighbours(rc208))
+    perturbation = PerturbationManager(rc208)
+    ls = cpp_LocalSearch(rc208, compute_neighbours(rc208), perturbation)
     ls.add_operator(Relocate1(rc208))
     ls.add_operator(Swap11(rc208))
 
@@ -187,7 +188,7 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(rc208)
 
-    ls = cpp_LocalSearch(rc208, neighbours)
+    ls = cpp_LocalSearch(rc208, neighbours, PerturbationManager(rc208))
     ls.add_operator(Relocate1(rc208))
     ls.add_operator(Swap11(rc208))
 
@@ -204,7 +205,7 @@ def test_vehicle_types_are_preserved_for_locally_optimal_solutions(rc208):
         ]
     )
 
-    ls = cpp_LocalSearch(data, neighbours)
+    ls = cpp_LocalSearch(data, neighbours, PerturbationManager(data))
     ls.add_operator(Relocate1(data))
     ls.add_operator(Swap11(data))
 
@@ -235,7 +236,8 @@ def test_bugfix_vehicle_type_offsets(ok_small):
         ]
     )
 
-    ls = cpp_LocalSearch(data, compute_neighbours(data))
+    perturbation = PerturbationManager(data)
+    ls = cpp_LocalSearch(data, compute_neighbours(data), perturbation)
     ls.add_operator(Relocate1(data))
 
     cost_evaluator = CostEvaluator([1], 1, 0)
@@ -262,7 +264,7 @@ def test_no_op_results_in_same_solution(ok_small):
         ok_small,
         rng,
         compute_neighbours(ok_small),
-        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
+        PerturbationManager(ok_small, PerturbationParams(0, 0)),  # disabled
     )
 
     cost_eval = CostEvaluator([1], 1, 0)
@@ -321,7 +323,7 @@ def test_swap_if_improving_mutually_exclusive_group(
     data = ok_small_mutually_exclusive_groups
     rng = RandomNumberGenerator(seed=42)
     neighbours = compute_neighbours(data)
-    perturbation = PerturbationManager(PerturbationParams(0, 0))
+    perturbation = PerturbationManager(data, PerturbationParams(0, 0))
 
     ls = LocalSearch(data, rng, neighbours, perturbation)
     ls.add_operator(ReplaceGroup(data))
@@ -349,7 +351,7 @@ def test_no_op_multi_trip_instance(ok_small_multiple_trips):
         data,
         rng,
         neighbours,
-        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
+        PerturbationManager(data, PerturbationParams(0, 0)),  # disabled
     )
 
     activities = map(Activity, ["C0", "C1", "D0", "C2", "C3"])
@@ -396,7 +398,7 @@ def test_local_search_removes_useless_reload_depots(ok_small_multiple_trips):
         data,
         rng,
         compute_neighbours(data),
-        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
+        PerturbationManager(data, PerturbationParams(0, 0)),  # disabled
     )
     ls.add_operator(RemoveAdjacentDepot(data))
 
@@ -425,7 +427,7 @@ def test_search_statistics(ok_small):
         ok_small,
         rng,
         compute_neighbours(ok_small),
-        PerturbationManager(PerturbationParams(0, 0)),  # disable perturbation
+        PerturbationManager(ok_small, PerturbationParams(0, 0)),  # disabled
     )
 
     op = Relocate1(ok_small)
@@ -508,7 +510,7 @@ def test_inserts_required_missing(instance, exp_clients: set[int], request):
     """
     data = request.getfixturevalue(instance)
     rng = RandomNumberGenerator(seed=42)
-    perturbation = PerturbationManager(PerturbationParams(1, 1))
+    perturbation = PerturbationManager(data, PerturbationParams(1, 1))
     ls = LocalSearch(data, rng, compute_neighbours(data), perturbation)
     ls.add_operator(Relocate1(data))
 

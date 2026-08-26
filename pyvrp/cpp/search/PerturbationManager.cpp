@@ -20,8 +20,9 @@ PerturbationParams::PerturbationParams(size_t minPerturbations,
             "min_perturbations must be <= max_perturbations.");
 }
 
-PerturbationManager::PerturbationManager(PerturbationParams params)
-    : params_(params), numPerturbations_(params_.minPerturbations)
+PerturbationManager::PerturbationManager(ProblemData const &data,
+                                         PerturbationParams params)
+    : data_(data), params_(params), numPerturbations_(params_.minPerturbations)
 {
 }
 
@@ -47,32 +48,6 @@ void PerturbationManager::perturb(Solution &solution,
     // set of promising nodes for further (local search) improvement.
     searchSpace.unmarkAllPromising();
 
-    auto const insert = [&](Route::Node *node)  // insert and mark promising
-    {
-        assert(node->isClient() || node->isPickup());
-        assert(!node->route());
-
-        if (node->isClient())
-        {
-            solution.insert(node, searchSpace, costEvaluator, true);
-            node->route()->update();
-            searchSpace.markPromising(node);
-        }
-        else
-        {
-            auto *pickup = node;
-            auto *delivery = node + 1;
-            solution.insert(pickup, delivery, searchSpace, costEvaluator, true);
-
-            auto *route = pickup->route();
-            assert(delivery->route() == route);
-
-            route->update();
-            searchSpace.markPromising(pickup);
-            searchSpace.markPromising(delivery);
-        }
-    };
-
     auto const remove = [&](Route::Node *node)  // remove and mark promising
     {
         assert(node->isClient() || node->isPickup());
@@ -93,6 +68,46 @@ void PerturbationManager::perturb(Solution &solution,
         }
 
         route->update();
+    };
+
+    auto const insert = [&](Route::Node *node)  // insert and mark promising
+    {
+        assert(node->isClient() || node->isPickup());
+        assert(!node->route());
+
+        if (node->isClient())
+        {
+            auto const &client = data_.client(node->idx());
+            if (client.group)
+                // If another group member is already planned, we first remove
+                // it before inserting the client.
+                for (auto const member : data_.group(*client.group))
+                {
+                    auto *other = &solution.clients[member];
+                    if (other->route())
+                    {
+                        remove(other);
+                        break;
+                    }
+                }
+
+            solution.insert(node, searchSpace, costEvaluator, true);
+            node->route()->update();
+            searchSpace.markPromising(node);
+        }
+        else
+        {
+            auto *pickup = node;
+            auto *delivery = node + 1;
+            solution.insert(pickup, delivery, searchSpace, costEvaluator, true);
+
+            auto *route = pickup->route();
+            assert(delivery->route() == route);
+
+            route->update();
+            searchSpace.markPromising(pickup);
+            searchSpace.markPromising(delivery);
+        }
     };
 
     DynamicBitset perturbed
@@ -143,6 +158,9 @@ void PerturbationManager::perturb(Solution &solution,
         for (auto &[route, nodes] : groups)
             for (auto *node : nodes)
             {
+                if (route && !node->route())  // already removed by an earlier
+                    continue;                 // mutually exclusive group swap
+
                 if (route)
                     remove(node);
                 else

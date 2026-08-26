@@ -107,6 +107,7 @@ class PerturbationParams:
 class PerturbationManager:
     def __init__(
         self,
+        data: ProblemData,
         params: PerturbationParams = ...,
     ) -> None: ...
     def num_perturbations(self) -> int: ...
@@ -128,7 +129,7 @@ class LocalSearch:
         self,
         data: ProblemData,
         neighbours: dict[Activity, list[Activity]],
-        perturbation_manager: PerturbationManager = ...,
+        perturbation_manager: PerturbationManager,
     ) -> None: ...
     def add_operator(self, op: UnaryOperator | BinaryOperator) -> None: ...
     @property

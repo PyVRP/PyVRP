@@ -270,16 +270,6 @@ void LocalSearch::ensureStructuralFeasibility(
                     update(node.route(), node.route());
                     searchSpace_.markPromising(&node);
                     groupCount[idx]++;
-                    continue;
-                }
-
-                if (node.route() && groupCount[idx] > 1)  // must remove
-                {
-                    searchSpace_.markPromising(&node);
-                    auto *route = node.route();
-                    route->remove(node.pos());
-                    update(route, route);
-                    groupCount[idx]--;
                 }
             }
 
