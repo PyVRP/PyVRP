@@ -269,32 +269,62 @@ def test_perturb_shipment_empty_route(small_shipments):
     assert_(perturbed.is_complete())
 
 
-def test_perturb_does_not_insert_group_duplicates(
-    ok_small_mutually_exclusive_groups,
-):
+def test_perturb_replaces_group_member(ok_small_mutually_exclusive_groups):
     """
-    Tests that perturbation does not insert a client whose mutually exclusive
-    group already has a member in the solution, and that such skipped inserts
-    do not count towards the perturbation budget.
+    Tests that inserting a client whose mutually exclusive group already has a
+    member in the solution first removes that member, so the perturbation
+    replaces the group's planned member.
     """
     data = ok_small_mutually_exclusive_groups
 
     # Clients 0, 1, and 2 are in a mutually exclusive group. Client 2 is in
     # the solution, clients 0 and 1 are not.
     sol = Solution(data)
-    sol.load(pyvrp.Solution(data, [[2, 3]]))
+    sol.load(pyvrp.Solution(data, [[2]]))
 
     neighbours = {Activity(f"C{idx}"): [] for idx in range(data.num_clients)}
     search_space = SearchSpace(data, neighbours)
     cost_eval = CostEvaluator([20], 6, 0)
 
-    # Perturbation considers clients 0 and 1 first, but cannot insert them
-    # because client 2 is in the solution. The single perturbation should
-    # instead remove client 2.
+    # Perturbation considers client 0 first. Since client 2 is in the
+    # solution, the single perturbation removes client 2 and inserts client 0.
     perturbation = PerturbationManager(data, PerturbationParams(1, 1))
     perturbation.perturb(sol, search_space, cost_eval)
 
     perturbed = sol.unload()
     assert_equal(perturbed.num_clients(), 1)
+    assert_(Activity("C0") not in perturbed.unplanned())
     assert_(Activity("C2") in perturbed.unplanned())
-    assert_(Activity("C3") not in perturbed.unplanned())
+
+
+def test_perturb_skips_group_member_removed_by_group_swap(
+    ok_small_mutually_exclusive_groups,
+):
+    """
+    Tests that a planned group member is skipped if an earlier group swap has
+    already removed it.
+    """
+    data = ok_small_mutually_exclusive_groups
+
+    # Clients 0, 1, and 2 are in a mutually exclusive group. Client 2 is in
+    # the solution, clients 0 and 1 are not.
+    sol = Solution(data)
+    sol.load(pyvrp.Solution(data, [[2]]))
+
+    neighbours = {Activity(f"C{idx}"): [] for idx in range(data.num_clients)}
+    neighbours[Activity("C0")] = [Activity("C2")]
+    search_space = SearchSpace(data, neighbours)
+    cost_eval = CostEvaluator([20], 6, 0)
+
+    # Perturbation inserts client 0 first, which also removes client 2 since
+    # they belong to the same mutually exclusive group. The next perturbation
+    # would remove client 2, but it has already been removed, so we skip it
+    # and insert client 1 instead.
+    perturbation = PerturbationManager(data, PerturbationParams(2, 2))
+    perturbation.perturb(sol, search_space, cost_eval)
+
+    perturbed = sol.unload()
+    assert_equal(perturbed.num_clients(), 1)
+    assert_(Activity("C0") in perturbed.unplanned())
+    assert_(Activity("C1") not in perturbed.unplanned())
+    assert_(Activity("C2") in perturbed.unplanned())

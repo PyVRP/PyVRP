@@ -48,42 +48,6 @@ void PerturbationManager::perturb(Solution &solution,
     // set of promising nodes for further (local search) improvement.
     searchSpace.unmarkAllPromising();
 
-    auto const insert = [&](Route::Node *node)  // insert and mark promising
-    {
-        assert(node->isClient() || node->isPickup());
-        assert(!node->route());
-
-        if (node->isClient())
-        {
-            // We cannot insert a client whose mutually exclusive group already
-            // has another member in the solution.
-            auto const &client = data_.client(node->idx());
-            if (client.group)
-                for (auto const member : data_.group(*client.group))
-                    if (solution.clients[member].route())
-                        return false;
-
-            solution.insert(node, searchSpace, costEvaluator, true);
-            node->route()->update();
-            searchSpace.markPromising(node);
-        }
-        else
-        {
-            auto *pickup = node;
-            auto *delivery = node + 1;
-            solution.insert(pickup, delivery, searchSpace, costEvaluator, true);
-
-            auto *route = pickup->route();
-            assert(delivery->route() == route);
-
-            route->update();
-            searchSpace.markPromising(pickup);
-            searchSpace.markPromising(delivery);
-        }
-
-        return true;
-    };
-
     auto const remove = [&](Route::Node *node)  // remove and mark promising
     {
         assert(node->isClient() || node->isPickup());
@@ -104,6 +68,46 @@ void PerturbationManager::perturb(Solution &solution,
         }
 
         route->update();
+    };
+
+    auto const insert = [&](Route::Node *node)  // insert and mark promising
+    {
+        assert(node->isClient() || node->isPickup());
+        assert(!node->route());
+
+        if (node->isClient())
+        {
+            auto const &client = data_.client(node->idx());
+            if (client.group)
+                // If another group member is already planned, we first remove
+                // it before inserting the client.
+                for (auto const member : data_.group(*client.group))
+                {
+                    auto *other = &solution.clients[member];
+                    if (other->route())
+                    {
+                        remove(other);
+                        break;
+                    }
+                }
+
+            solution.insert(node, searchSpace, costEvaluator, true);
+            node->route()->update();
+            searchSpace.markPromising(node);
+        }
+        else
+        {
+            auto *pickup = node;
+            auto *delivery = node + 1;
+            solution.insert(pickup, delivery, searchSpace, costEvaluator, true);
+
+            auto *route = pickup->route();
+            assert(delivery->route() == route);
+
+            route->update();
+            searchSpace.markPromising(pickup);
+            searchSpace.markPromising(delivery);
+        }
     };
 
     DynamicBitset perturbed
@@ -136,8 +140,7 @@ void PerturbationManager::perturb(Solution &solution,
 
     // We perturb the local neighbourhood of randomly ordered activities,
     // grouped by their current route (unplanned by their nullptr route).
-    // Planned activities are removed and unplanned ones are inserted. Only
-    // successful removals and insertions count as perturbation.
+    // Planned activities are removed and unplanned ones are inserted.
     for (size_t movesLeft = numPerturbations_;
          auto const &uActivity : searchSpace.activityOrder())
     {
@@ -155,10 +158,13 @@ void PerturbationManager::perturb(Solution &solution,
         for (auto &[route, nodes] : groups)
             for (auto *node : nodes)
             {
+                if (route && !node->route())  // already removed by an earlier
+                    continue;                 // mutually exclusive group swap
+
                 if (route)
                     remove(node);
-                else if (!insert(node))
-                    continue;
+                else
+                    insert(node);
 
                 movesLeft--;
                 if (!movesLeft)
