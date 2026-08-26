@@ -159,6 +159,9 @@ void PerturbationManager::perturb(Solution &solution,
         for (auto &[route, nodes] : groups)
             for (auto *node : nodes)
             {
+                if (route && !node->route())  // already removed by an earlier
+                    continue;                 // group swap
+
                 if (route)
                     remove(node);
                 else
