@@ -140,8 +140,7 @@ void PerturbationManager::perturb(Solution &solution,
 
     // We perturb the local neighbourhood of randomly ordered activities,
     // grouped by their current route (unplanned by their nullptr route).
-    // Planned activities are removed and unplanned ones are inserted. Only
-    // successful removals and insertions count as perturbation.
+    // Planned activities are removed and unplanned ones are inserted.
     for (size_t movesLeft = numPerturbations_;
          auto const &uActivity : searchSpace.activityOrder())
     {
@@ -160,7 +159,7 @@ void PerturbationManager::perturb(Solution &solution,
             for (auto *node : nodes)
             {
                 if (route && !node->route())  // already removed by an earlier
-                    continue;                 // group swap
+                    continue;                 // mutually exclusive group swap
 
                 if (route)
                     remove(node);
