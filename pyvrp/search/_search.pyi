@@ -113,6 +113,7 @@ class PerturbationManager:
     def shuffle(self, rng: RandomNumberGenerator) -> None: ...
     def perturb(
         self,
+        data: ProblemData,
         solution: Solution,
         search_space: SearchSpace,
         cost_evaluator: CostEvaluator,

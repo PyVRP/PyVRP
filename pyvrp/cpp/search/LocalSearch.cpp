@@ -36,7 +36,8 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
     if (exhaustive)
         searchSpace_.markAllPromising();
     else
-        perturbationManager_.perturb(solution_, searchSpace_, costEvaluator);
+        perturbationManager_.perturb(
+            data, solution_, searchSpace_, costEvaluator);
 
     ensureStructuralFeasibility(costEvaluator);
     search(costEvaluator);

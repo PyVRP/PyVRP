@@ -36,7 +36,8 @@ void PerturbationManager::shuffle(RandomNumberGenerator &rng)
     numPerturbations_ = params_.minPerturbations + rng.randint(range + 1);
 }
 
-void PerturbationManager::perturb(Solution &solution,
+void PerturbationManager::perturb(ProblemData const &data,
+                                  Solution &solution,
                                   SearchSpace &searchSpace,
                                   CostEvaluator const &costEvaluator) const
 {
@@ -47,7 +48,6 @@ void PerturbationManager::perturb(Solution &solution,
     // set of promising nodes for further (local search) improvement.
     searchSpace.unmarkAllPromising();
 
-    auto const &data = solution.data();
     auto const insert = [&](Route::Node *node)  // insert and mark promising
     {
         assert(node->isClient() || node->isPickup());

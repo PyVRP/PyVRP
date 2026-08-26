@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_PERTURBATIONMANAGER_H
 
 #include "CostEvaluator.h"
+#include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "SearchSpace.h"
 #include "Solution.h"
@@ -71,6 +72,8 @@ public:
      *
      * Parameters
      * ----------
+     * data
+     *     Problem data instance.
      * solution
      *     Solution to perturb. Perturbation happens in place.
      * search_space
@@ -78,7 +81,8 @@ public:
      * cost_evaluator
      *     Evaluator to use for insertions.
      */
-    void perturb(Solution &solution,
+    void perturb(ProblemData const &data,
+                 Solution &solution,
                  SearchSpace &searchSpace,
                  CostEvaluator const &costEvaluator) const;
 };

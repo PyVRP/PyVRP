@@ -559,6 +559,7 @@ PYBIND11_MODULE(_search, m)
              DOC(pyvrp, search, PerturbationManager, shuffle))
         .def("perturb",
              &PerturbationManager::perturb,
+             py::arg("data"),
              py::arg("solution"),
              py::arg("search_space"),
              py::arg("cost_evaluator"),

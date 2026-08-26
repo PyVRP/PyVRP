@@ -427,5 +427,3 @@ pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
 
     return cost;
 }
-
-pyvrp::ProblemData const &Solution::data() const { return data_; }
