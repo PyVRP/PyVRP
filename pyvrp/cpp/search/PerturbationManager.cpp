@@ -82,11 +82,14 @@ void PerturbationManager::perturb(Solution &solution,
             auto const &client = data_.client(node->idx());
             if (client.group)
                 for (auto const member : data_.group(*client.group))
-                    if (auto *other = &solution.clients[member]; other->route())
+                {
+                    auto *other = &solution.clients[member];
+                    if (other->route())
                     {
                         remove(other);
                         break;
                     }
+                }
 
             solution.insert(node, searchSpace, costEvaluator, true);
             node->route()->update();
