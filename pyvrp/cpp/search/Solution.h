@@ -45,6 +45,9 @@ public:
 
     Solution(ProblemData const &data);
 
+    // The problem data instance this solution is defined on.
+    ProblemData const &data() const;
+
     // Converts the given solution into our node-based representation.
     void load(pyvrp::Solution const &solution);
 

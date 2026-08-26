@@ -53,8 +53,7 @@ class LocalSearch
                               CostEvaluator const &costEvaluator);
 
     // Ensures structural feasibility of the loaded solution. The local search
-    // will insert required clients, shipments and groups if they are missing,
-    // and remove group duplicates if needed.
+    // will insert required clients, shipments and groups if they are missing.
     void ensureStructuralFeasibility(CostEvaluator const &costEvaluator);
 
     // Updates solution state after an improving local search move.

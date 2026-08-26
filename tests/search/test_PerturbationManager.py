@@ -267,3 +267,34 @@ def test_perturb_shipment_empty_route(small_shipments):
     perturbed = sol.unload()
     assert_equal(perturbed.num_shipments(), 4)
     assert_(perturbed.is_complete())
+
+
+def test_perturb_does_not_insert_group_duplicates(
+    ok_small_mutually_exclusive_groups,
+):
+    """
+    Tests that perturbation does not insert a client whose mutually exclusive
+    group already has a member in the solution, and that such skipped inserts
+    do not consume the perturbation budget.
+    """
+    data = ok_small_mutually_exclusive_groups
+
+    # Clients 0, 1, and 2 are in a mutually exclusive group. Client 2 is in
+    # the solution, clients 0 and 1 are not.
+    sol = Solution(data)
+    sol.load(pyvrp.Solution(data, [[2, 3]]))
+
+    neighbours = {Activity(f"C{idx}"): [] for idx in range(data.num_clients)}
+    search_space = SearchSpace(data, neighbours)
+    cost_eval = CostEvaluator([20], 6, 0)
+
+    # Perturbation considers clients 0 and 1 first, but cannot insert them
+    # because client 2 is in the solution. The single perturbation should
+    # instead remove client 2.
+    perturbation = PerturbationManager(PerturbationParams(1, 1))
+    perturbation.perturb(sol, search_space, cost_eval)
+
+    perturbed = sol.unload()
+    assert_equal(perturbed.num_clients(), 1)
+    visits = [act.idx for act in perturbed.routes()[0] if act.is_client()]
+    assert_equal(visits, [3])

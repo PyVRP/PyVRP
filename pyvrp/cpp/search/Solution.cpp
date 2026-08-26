@@ -239,7 +239,7 @@ bool Solution::insert(Route::Node *U,
                       CostEvaluator const &costEvaluator,
                       bool required)
 {
-    assert(U->isClient());
+    assert(U->isClient() && !U->route());
 
     Route::Node *UAfter = routes[0][0];  // fallback option
     auto bestCost = insertCost(U, UAfter, data_, costEvaluator);
@@ -427,3 +427,5 @@ pyvrp::Cost pyvrp::CostEvaluator::penalisedCost(
 
     return cost;
 }
+
+pyvrp::ProblemData const &Solution::data() const { return data_; }
