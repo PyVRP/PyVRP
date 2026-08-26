@@ -31,6 +31,7 @@ class LocalSearch:
         granular neighbourhood.
     perturbation_manager
         Perturbation manager that handles perturbation during each invocation.
+        Uses a default perturbation manager if not provided.
     """
 
     def __init__(
@@ -38,8 +39,11 @@ class LocalSearch:
         data: ProblemData,
         rng: RandomNumberGenerator,
         neighbours: dict[Activity, list[Activity]],
-        perturbation_manager: PerturbationManager = PerturbationManager(),
+        perturbation_manager: PerturbationManager | None = None,
     ):
+        if perturbation_manager is None:
+            perturbation_manager = PerturbationManager(data)
+
         self._ls = _LocalSearch(data, neighbours, perturbation_manager)
         self._rng = rng
 

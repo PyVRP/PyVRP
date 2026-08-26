@@ -20,8 +20,9 @@ PerturbationParams::PerturbationParams(size_t minPerturbations,
             "min_perturbations must be <= max_perturbations.");
 }
 
-PerturbationManager::PerturbationManager(PerturbationParams params)
-    : params_(params), numPerturbations_(params_.minPerturbations)
+PerturbationManager::PerturbationManager(ProblemData const &data,
+                                         PerturbationParams params)
+    : data_(data), params_(params), numPerturbations_(params_.minPerturbations)
 {
 }
 
@@ -36,8 +37,7 @@ void PerturbationManager::shuffle(RandomNumberGenerator &rng)
     numPerturbations_ = params_.minPerturbations + rng.randint(range + 1);
 }
 
-void PerturbationManager::perturb(ProblemData const &data,
-                                  Solution &solution,
+void PerturbationManager::perturb(Solution &solution,
                                   SearchSpace &searchSpace,
                                   CostEvaluator const &costEvaluator) const
 {
@@ -57,8 +57,8 @@ void PerturbationManager::perturb(ProblemData const &data,
         {
             // We cannot insert a client whose mutually exclusive group already
             // has another member in the solution.
-            if (auto const &client = data.client(node->idx()); client.group)
-                for (auto const member : data.group(*client.group))
+            if (auto const &client = data_.client(node->idx()); client.group)
+                for (auto const member : data_.group(*client.group))
                     if (solution.clients[member].route())
                         return false;
 

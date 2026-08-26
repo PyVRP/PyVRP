@@ -33,12 +33,12 @@ def test_eq():
     assert_(params != 123)
 
 
-def test_shuffle():
+def test_shuffle(ok_small):
     """
     Tests shuffling and drawing random number of perturbations.
     """
     params = PerturbationParams(1, 10)
-    manager = PerturbationManager(params)
+    manager = PerturbationManager(ok_small, params)
 
     rng = RandomNumberGenerator(seed=42)
     for _ in range(10):  # all samples should be within bounds
@@ -46,18 +46,18 @@ def test_shuffle():
         assert_(1 <= manager.num_perturbations() <= 10)
 
     params = PerturbationParams(0, 0)
-    manager = PerturbationManager(params)
+    manager = PerturbationManager(ok_small, params)
     for _ in range(10):  # same, but now we can only draw one outcome: 0
         manager.shuffle(rng)
         assert_equal(manager.num_perturbations(), 0)
 
 
-def test_num_perturbations_randomness():
+def test_num_perturbations_randomness(ok_small):
     """
     Tests the bounds and randomness of repeated shuffles.
     """
     params = PerturbationParams(1, 10)
-    manager = PerturbationManager(params)
+    manager = PerturbationManager(ok_small, params)
 
     # Collect a large sample.
     rng = RandomNumberGenerator(seed=42)
@@ -88,8 +88,8 @@ def test_perturb_inserts_clients(ok_small):
 
     # Perturb the empty solution exactly four times. That means we should
     # insert all missing clients.
-    perturbation = PerturbationManager(PerturbationParams(4, 4))
-    perturbation.perturb(ok_small, sol, search_space, cost_eval)
+    perturbation = PerturbationManager(ok_small, PerturbationParams(4, 4))
+    perturbation.perturb(sol, search_space, cost_eval)
 
     perturbed = sol.unload()
     assert_equal(perturbed.num_clients(), 4)
@@ -107,8 +107,8 @@ def test_perturb_removes_clients(ok_small):
 
     # Perturb the complete solution four times. That means we should remove all
     # clients, and the perturbed solution should be empty.
-    perturbation = PerturbationManager(PerturbationParams(4, 4))
-    perturbation.perturb(ok_small, sol, search_space, cost_eval)
+    perturbation = PerturbationManager(ok_small, PerturbationParams(4, 4))
+    perturbation.perturb(sol, search_space, cost_eval)
 
     perturbed = sol.unload()
     assert_equal(perturbed.num_clients(), 0)
@@ -141,8 +141,8 @@ def test_perturb_groups_neighbours_by_route(small_shipments):
     search_space = SearchSpace(data, neighbours)
     cost_eval = CostEvaluator([1], 1, 0)
 
-    perturbation = PerturbationManager(PerturbationParams(3, 3))
-    perturbation.perturb(data, sol, search_space, cost_eval)
+    perturbation = PerturbationManager(data, PerturbationParams(3, 3))
+    perturbation.perturb(sol, search_space, cost_eval)
 
     # The first two perturbations remove shipments 0 and 1 from the same
     # route. The third inserts shipment 2, exhausting the budget before
@@ -178,8 +178,8 @@ def test_perturb_inserts_into_new_routes(ok_small):
     # the first route, which is a default). The large load violation penalty
     # ensures that the empty routes are always better. We should thus end up
     # with three routes in the perturbed solution.
-    perturbation = PerturbationManager(PerturbationParams(3, 3))
-    perturbation.perturb(data, sol, search_space, cost_eval)
+    perturbation = PerturbationManager(data, PerturbationParams(3, 3))
+    perturbation.perturb(sol, search_space, cost_eval)
 
     perturbed = sol.unload()
     assert_equal(perturbed.num_routes(), 3)
@@ -206,10 +206,10 @@ def test_perturb_shipments_remove(small_shipments):
     # The random solution is complete, so all we can do is remove shipments.
     # We should remove only one, because we haven't shuffled yet and we default
     # to min_perturbations in that case.
-    perturbation = PerturbationManager()
+    perturbation = PerturbationManager(data)
     assert_equal(perturbation.num_perturbations(), 1)
 
-    perturbation.perturb(data, sol, search_space, cost_eval)
+    perturbation.perturb(sol, search_space, cost_eval)
     perturbed = sol.unload()
 
     assert_(not perturbed.is_complete())
@@ -229,12 +229,12 @@ def test_perturb_shipments_insert(small_shipments):
     sol.load(pyvrp_sol)
 
     params = PerturbationParams(1, 1)  # perturb exactly once
-    perturbation = PerturbationManager(params)
+    perturbation = PerturbationManager(small_shipments, params)
 
     neighbours = compute_neighbours(small_shipments)
     search_space = SearchSpace(small_shipments, neighbours)
     cost_eval = CostEvaluator([1], 1, 0)
-    perturbation.perturb(small_shipments, sol, search_space, cost_eval)
+    perturbation.perturb(sol, search_space, cost_eval)
 
     # We should have inserted the first missing shipment into the solution.
     # Since nothing was shuffled, that first missing shipment is L0/U0.
@@ -256,12 +256,12 @@ def test_perturb_shipment_empty_route(small_shipments):
 
     # Perturbation should insert all missing shipments into the empty solution.
     params = PerturbationParams(min_perturbations=4)
-    perturbation = PerturbationManager(params)
+    perturbation = PerturbationManager(small_shipments, params)
 
     neighbours = compute_neighbours(small_shipments)
     search_space = SearchSpace(small_shipments, neighbours)
     cost_eval = CostEvaluator([1], 1, 0)
-    perturbation.perturb(small_shipments, sol, search_space, cost_eval)
+    perturbation.perturb(sol, search_space, cost_eval)
 
     # And thus, after perturbation we expect a complete solution.
     perturbed = sol.unload()
@@ -291,8 +291,8 @@ def test_perturb_does_not_insert_group_duplicates(
     # Perturbation considers clients 0 and 1 first, but cannot insert them
     # because client 2 is in the solution. The single perturbation should
     # instead remove client 2.
-    perturbation = PerturbationManager(PerturbationParams(1, 1))
-    perturbation.perturb(data, sol, search_space, cost_eval)
+    perturbation = PerturbationManager(data, PerturbationParams(1, 1))
+    perturbation.perturb(sol, search_space, cost_eval)
 
     perturbed = sol.unload()
     assert_equal(perturbed.num_clients(), 1)

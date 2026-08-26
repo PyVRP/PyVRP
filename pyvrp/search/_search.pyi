@@ -107,13 +107,13 @@ class PerturbationParams:
 class PerturbationManager:
     def __init__(
         self,
+        data: ProblemData,
         params: PerturbationParams = ...,
     ) -> None: ...
     def num_perturbations(self) -> int: ...
     def shuffle(self, rng: RandomNumberGenerator) -> None: ...
     def perturb(
         self,
-        data: ProblemData,
         solution: Solution,
         search_space: SearchSpace,
         cost_evaluator: CostEvaluator,
@@ -129,7 +129,7 @@ class LocalSearch:
         self,
         data: ProblemData,
         neighbours: dict[Activity, list[Activity]],
-        perturbation_manager: PerturbationManager = ...,
+        perturbation_manager: PerturbationManager,
     ) -> None: ...
     def add_operator(self, op: UnaryOperator | BinaryOperator) -> None: ...
     @property

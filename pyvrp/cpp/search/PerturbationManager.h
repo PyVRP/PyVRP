@@ -35,7 +35,7 @@ struct PerturbationParams
 };
 
 /**
- * PerturbationManager(params: PerturbationParams)
+ * PerturbationManager(data: ProblemData, params: PerturbationParams)
  *
  * Handles perturbation during the search. In each iteration, it applies
  * :meth:`~num_perturbations` perturbations that strengthen (resp., weaken)
@@ -44,16 +44,20 @@ struct PerturbationParams
  *
  * Parameters
  * ----------
+ * data
+ *     Problem data instance.
  * params
  *     Perturbation parameters for this manager.
  */
 class PerturbationManager
 {
+    ProblemData const &data_;
     PerturbationParams const params_;  // owned by us
     size_t numPerturbations_;
 
 public:
-    PerturbationManager(PerturbationParams params = PerturbationParams());
+    PerturbationManager(ProblemData const &data,
+                        PerturbationParams params = PerturbationParams());
 
     /**
      * Number of perturbations to apply.
@@ -72,8 +76,6 @@ public:
      *
      * Parameters
      * ----------
-     * data
-     *     Problem data instance.
      * solution
      *     Solution to perturb. Perturbation happens in place.
      * search_space
@@ -81,8 +83,7 @@ public:
      * cost_evaluator
      *     Evaluator to use for insertions.
      */
-    void perturb(ProblemData const &data,
-                 Solution &solution,
+    void perturb(Solution &solution,
                  SearchSpace &searchSpace,
                  CostEvaluator const &costEvaluator) const;
 };
