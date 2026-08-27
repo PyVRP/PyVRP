@@ -15,7 +15,7 @@ def test_load_unload(ok_small):
 
     search_sol = Solution(ok_small)
     search_sol.load(pyvrp_sol)
-    assert_equal(search_sol.unload(), pyvrp_sol)
+    assert_equal(search_sol.unload(pyvrp_sol), pyvrp_sol)
 
 
 def test_loading_twice_in_a_row(ok_small):
@@ -30,7 +30,7 @@ def test_loading_twice_in_a_row(ok_small):
     search_sol = Solution(ok_small)
     search_sol.load(pyvrp_sol)
     search_sol.load(pyvrp_sol)
-    assert_equal(search_sol.unload(), pyvrp_sol)
+    assert_equal(search_sol.unload(pyvrp_sol), pyvrp_sol)
 
 
 def test_clients_routes_access(ok_small):
@@ -89,7 +89,7 @@ def test_load_unload_shipments(small_shipments):
 
     # Let's test if loading and unloading results in the same solution.
     sol.load(pyvrp_sol)
-    assert_equal(sol.unload(), pyvrp_sol)
+    assert_equal(sol.unload(pyvrp_sol), pyvrp_sol)
 
 
 def test_insert_shipment(small_shipments):
