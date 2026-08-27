@@ -100,8 +100,7 @@ def test_perturb_removes_clients(ok_small):
     Tests that perturbing a complete solution could remove all clients.
     """
     sol = Solution(ok_small)  # load a complete solution
-    pyvrp_sol = pyvrp.Solution(ok_small, [[0, 1], [2, 3]])
-    sol.load(pyvrp_sol)
+    sol.load(pyvrp.Solution(ok_small, [[0, 1], [2, 3]]))
 
     search_space = SearchSpace(ok_small, compute_neighbours(ok_small))
     cost_eval = CostEvaluator([20], 6, 0)
@@ -129,8 +128,7 @@ def test_perturb_groups_neighbours_by_route(small_shipments):
     route2 = pyvrp.Route(data, activities2, 0)
 
     sol = Solution(data)
-    pyvrp_sol = pyvrp.Solution(data, [route1, route2])
-    sol.load(pyvrp_sol)
+    sol.load(pyvrp.Solution(data, [route1, route2]))
 
     # We will perturb shipment 0. Its neighbours are shipments 2, 3 and 1,
     # in that order.
@@ -282,8 +280,7 @@ def test_perturb_replaces_group_member(ok_small_mutually_exclusive_groups):
     # Clients 0, 1, and 2 are in a mutually exclusive group. Client 2 is in
     # the solution, clients 0 and 1 are not.
     sol = Solution(data)
-    pyvrp_sol = pyvrp.Solution(data, [[2]])
-    sol.load(pyvrp_sol)
+    sol.load(pyvrp.Solution(data, [[2]]))
 
     neighbours = {Activity(f"C{idx}"): [] for idx in range(data.num_clients)}
     search_space = SearchSpace(data, neighbours)
@@ -312,8 +309,7 @@ def test_perturb_skips_group_member_removed_by_group_swap(
     # Clients 0, 1, and 2 are in a mutually exclusive group. Client 2 is in
     # the solution, clients 0 and 1 are not.
     sol = Solution(data)
-    pyvrp_sol = pyvrp.Solution(data, [[2]])
-    sol.load(pyvrp_sol)
+    sol.load(pyvrp.Solution(data, [[2]]))
 
     neighbours = {Activity(f"C{idx}"): [] for idx in range(data.num_clients)}
     neighbours[Activity("C0")] = [Activity("C2")]
