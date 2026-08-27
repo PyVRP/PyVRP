@@ -223,8 +223,8 @@ pyvrp::Solution Solution::unload() const
         vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
     }
 
-    // Map each route to the route it was loaded from (if any), following the
-    // same route layout as load().
+    // Map each search route to the original route of the loaded solution,
+    // following the same layout as used in load().
     std::vector<pyvrp::Route const *> loadedRoutes(routes.size());
     if (loadedSolution_)
         for (auto const &solRoute : loadedSolution_->routes())
@@ -239,8 +239,7 @@ pyvrp::Solution Solution::unload() const
         if (route.empty())
             continue;
 
-        // If the route is unchanged since loading, we copy the loaded route
-        // rather than rebuild it.
+        // Copy the loaded route if it is unchanged - this is much cheaper.
         auto const *solRoute = loadedRoutes[idx];
         if (solRoute && *solRoute == route)
         {
