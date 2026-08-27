@@ -48,7 +48,7 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
                 stats.numUpdates,
                 stats.numMoves);
 
-    return solution_.unload(solution);
+    return solution_.unload();
 }
 
 void LocalSearch::search(CostEvaluator const &costEvaluator)

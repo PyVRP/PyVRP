@@ -158,6 +158,8 @@ Solution::Solution(ProblemData const &data) : data_(data)
 
 void Solution::load(pyvrp::Solution const &solution)
 {
+    loadedSolution_ = &solution;
+
     // Determine offsets for vehicle types.
     std::vector<size_t> vehicleOffset(data_.numVehicleTypes(), 0);
     for (size_t vehType = 1; vehType < data_.numVehicleTypes(); vehType++)
@@ -211,7 +213,7 @@ void Solution::load(pyvrp::Solution const &solution)
     }
 }
 
-pyvrp::Solution Solution::unload(pyvrp::Solution const &solution) const
+pyvrp::Solution Solution::unload() const
 {
     // Determine offsets for vehicle types.
     std::vector<size_t> vehicleOffset(data_.numVehicleTypes(), 0);
@@ -221,12 +223,12 @@ pyvrp::Solution Solution::unload(pyvrp::Solution const &solution) const
         vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
     }
 
-    // Determine which route of the solution was loaded into each slot, where
-    // we rely on solution to be valid to not exceed the number of vehicles
-    // per vehicle type. Slots without a route are nullptr.
-    std::vector<pyvrp::Route const *> slots(routes.size(), nullptr);
-    for (auto const &solRoute : solution.routes())
-        slots[vehicleOffset[solRoute.vehicleType()]++] = &solRoute;
+    // Map each route to the route it was loaded from (if any), following the
+    // same route layout as load().
+    std::vector<pyvrp::Route const *> loadedRoutes(routes.size());
+    if (loadedSolution_)
+        for (auto const &solRoute : loadedSolution_->routes())
+            loadedRoutes[vehicleOffset[solRoute.vehicleType()]++] = &solRoute;
 
     std::vector<pyvrp::Route> solRoutes;
     solRoutes.reserve(data_.numVehicles());
@@ -237,8 +239,9 @@ pyvrp::Solution Solution::unload(pyvrp::Solution const &solution) const
         if (route.empty())
             continue;
 
-        // If the loaded route is the same, we copy it rather than rebuild it.
-        auto const *solRoute = slots[idx];
+        // If the route is unchanged since loading, we copy the loaded route
+        // rather than rebuild it.
+        auto const *solRoute = loadedRoutes[idx];
         if (solRoute && *solRoute == route)
         {
             solRoutes.push_back(*solRoute);

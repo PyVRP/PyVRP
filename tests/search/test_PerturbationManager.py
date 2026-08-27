@@ -91,7 +91,7 @@ def test_perturb_inserts_clients(ok_small):
     perturbation = PerturbationManager(ok_small, PerturbationParams(4, 4))
     perturbation.perturb(sol, search_space, cost_eval)
 
-    perturbed = sol.unload(pyvrp.Solution(ok_small, []))
+    perturbed = sol.unload()
     assert_equal(perturbed.num_clients(), 4)
 
 
@@ -111,7 +111,7 @@ def test_perturb_removes_clients(ok_small):
     perturbation = PerturbationManager(ok_small, PerturbationParams(4, 4))
     perturbation.perturb(sol, search_space, cost_eval)
 
-    perturbed = sol.unload(pyvrp_sol)
+    perturbed = sol.unload()
     assert_equal(perturbed.num_clients(), 0)
 
 
@@ -149,7 +149,7 @@ def test_perturb_groups_neighbours_by_route(small_shipments):
     # The first two perturbations remove shipments 0 and 1 from the same
     # route. The third inserts shipment 2, exhausting the budget before
     # shipment 3 on the other route is considered.
-    perturbed = sol.unload(pyvrp_sol)
+    perturbed = sol.unload()
     unplanned = {
         activity.idx
         for activity in perturbed.unplanned()
@@ -183,7 +183,7 @@ def test_perturb_inserts_into_new_routes(ok_small):
     perturbation = PerturbationManager(data, PerturbationParams(3, 3))
     perturbation.perturb(sol, search_space, cost_eval)
 
-    perturbed = sol.unload(pyvrp.Solution(data, []))
+    perturbed = sol.unload()
     assert_equal(perturbed.num_routes(), 3)
 
 
@@ -212,7 +212,7 @@ def test_perturb_shipments_remove(small_shipments):
     assert_equal(perturbation.num_perturbations(), 1)
 
     perturbation.perturb(sol, search_space, cost_eval)
-    perturbed = sol.unload(rnd_sol)
+    perturbed = sol.unload()
 
     assert_(not perturbed.is_complete())
     assert_equal(perturbed.num_shipments(), 3)
@@ -240,7 +240,7 @@ def test_perturb_shipments_insert(small_shipments):
 
     # We should have inserted the first missing shipment into the solution.
     # Since nothing was shuffled, that first missing shipment is L0/U0.
-    perturbed = sol.unload(pyvrp_sol)
+    perturbed = sol.unload()
     assert_equal(perturbed.num_shipments(), 2)
     assert_(Activity("L0") not in perturbed.unplanned())
     assert_(Activity("L2") in perturbed.unplanned())
@@ -252,7 +252,7 @@ def test_perturb_shipment_empty_route(small_shipments):
     into empty routes.
     """
     sol = Solution(small_shipments)
-    empty = sol.unload(pyvrp.Solution(small_shipments, []))
+    empty = sol.unload()
     assert_equal(empty.num_shipments(), 0)
     assert_(not empty.is_complete())
 
@@ -266,7 +266,7 @@ def test_perturb_shipment_empty_route(small_shipments):
     perturbation.perturb(sol, search_space, cost_eval)
 
     # And thus, after perturbation we expect a complete solution.
-    perturbed = sol.unload(pyvrp.Solution(small_shipments, []))
+    perturbed = sol.unload()
     assert_equal(perturbed.num_shipments(), 4)
     assert_(perturbed.is_complete())
 
@@ -294,7 +294,7 @@ def test_perturb_replaces_group_member(ok_small_mutually_exclusive_groups):
     perturbation = PerturbationManager(data, PerturbationParams(1, 1))
     perturbation.perturb(sol, search_space, cost_eval)
 
-    perturbed = sol.unload(pyvrp_sol)
+    perturbed = sol.unload()
     assert_equal(perturbed.num_clients(), 1)
     assert_(Activity("C0") not in perturbed.unplanned())
     assert_(Activity("C2") in perturbed.unplanned())
@@ -327,7 +327,7 @@ def test_perturb_skips_group_member_removed_by_group_swap(
     perturbation = PerturbationManager(data, PerturbationParams(2, 2))
     perturbation.perturb(sol, search_space, cost_eval)
 
-    perturbed = sol.unload(pyvrp_sol)
+    perturbed = sol.unload()
     assert_equal(perturbed.num_clients(), 1)
     assert_(Activity("C0") in perturbed.unplanned())
     assert_(Activity("C1") not in perturbed.unplanned())

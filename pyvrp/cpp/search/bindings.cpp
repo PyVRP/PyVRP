@@ -622,8 +622,11 @@ PYBIND11_MODULE(_search, m)
         .def_readonly("routes",
                       &Solution::routes,
                       py::return_value_policy::reference_internal)
-        .def("load", &Solution::load, py::arg("solution"))
-        .def("unload", &Solution::unload, py::arg("solution"))
+        .def("load",
+             &Solution::load,
+             py::arg("solution"),
+             py::keep_alive<1, 2>())  // keep solution alive
+        .def("unload", &Solution::unload)
         .def("insert",
              py::overload_cast<Route::Node *,
                                SearchSpace const &,

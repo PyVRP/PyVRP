@@ -33,6 +33,8 @@ class Solution
 {
     ProblemData const &data_;
 
+    pyvrp::Solution const *loadedSolution_ = nullptr;
+
     friend class pyvrp::CostEvaluator;
 
 public:
@@ -48,10 +50,8 @@ public:
     // Converts the given solution into our node-based representation.
     void load(pyvrp::Solution const &solution);
 
-    // Converts from our representation to a proper solution. Takes the
-    // previously loaded solution, whose unchanged routes are copied rather
-    // than rebuilt. This is much faster on large instances.
-    pyvrp::Solution unload(pyvrp::Solution const &solution) const;
+    // Converts from our representation to a proper solution.
+    pyvrp::Solution unload() const;
 
     // Inserts the given client node into the solution - either in its
     // neighbourhood, or in an empty route, if improving or required. Returns
