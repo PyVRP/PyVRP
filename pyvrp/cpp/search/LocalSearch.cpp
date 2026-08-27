@@ -254,6 +254,8 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
 void LocalSearch::insertRequired(Route::Node *U,
                                  CostEvaluator const &costEvaluator)
 {
+    assert(U->isClient() || U->isShipment());
+
     if (U->route())  // then U is planned, and there is nothing to do
         return;
 
@@ -284,8 +286,7 @@ void LocalSearch::insertRequired(Route::Node *U,
         update(U->route(), U->route());
         searchSpace_.markPromising(U);
     }
-
-    else if (U->isPickup() && data.shipment(U->idx()).required)
+    else if (data.shipment(U->idx()).required)
     {
         auto &[pickup, delivery] = solution_.shipments[U->idx()];
         solution_.insert(&pickup, &delivery, searchSpace_, costEvaluator, true);
