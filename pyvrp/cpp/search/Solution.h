@@ -47,7 +47,8 @@ public:
 
     Solution(ProblemData const &data);
 
-    // Converts the given solution into our node-based representation.
+    // Converts the given solution into our node-based representation. The given
+    // solution should remain in scope until unload() is called.
     void load(pyvrp::Solution const &solution);
 
     // Converts from our representation to a proper solution.
