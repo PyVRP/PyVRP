@@ -666,8 +666,9 @@ def test_insert_missing_groups_and_clients(ok_small_mutually_exclusive_groups):
     rng = RandomNumberGenerator(seed=42)
     cost_eval = CostEvaluator([0], 0, 0)
     ls = LocalSearch(data, rng, compute_neighbours(data))
+    ls.add_operator(Relocate1(data))  # does not insert clients
 
-    new = ls(sol, cost_eval)
+    new = ls(sol, cost_eval, exhaustive=True)  # disable perturbation
     assert_(new.is_complete())
     assert_equal(new.num_missing_clients(), 0)
     assert_equal(new.num_missing_groups(), 0)
@@ -738,14 +739,14 @@ def test_shipment_structural_feasibility(small_shipments):
     rng = RandomNumberGenerator(seed=42)
     neighbourhood = compute_neighbours(small_shipments)
     ls = LocalSearch(small_shipments, rng, neighbourhood)
-    ls.add_operator(RelocatePickup(small_shipments))
+    ls.add_operator(Relocate1(small_shipments))  # does not insert shipments
 
     empty = Solution(small_shipments, [])
     assert_equal(empty.num_shipments(), 0)
     assert_(not empty.is_complete())
 
     cost_eval = CostEvaluator([0], 0, 0)
-    complete = ls(empty, cost_eval)
+    complete = ls(empty, cost_eval, exhaustive=True)  # disable perturbation
     assert_equal(complete.num_shipments(), 4)
     assert_(complete.is_complete())
 
