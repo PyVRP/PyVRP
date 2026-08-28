@@ -38,7 +38,6 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
     else
         perturbationManager_.perturb(solution_, searchSpace_, costEvaluator);
 
-    ensureStructuralFeasibility(costEvaluator);
     search(costEvaluator);
 
     [[maybe_unused]] auto const stats = statistics();
@@ -64,11 +63,12 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
         for (auto const &uActivity : searchSpace_.activityOrder())
         {
-            if (!searchSpace_.isPromising(uActivity))
-                continue;
-
             auto *U = solution_[uActivity];
             assert(U);
+            insertRequired(U, costEvaluator);
+
+            if (!searchSpace_.isPromising(uActivity))
+                continue;
 
             // lastTest_ is ordered - #clients (lower indices) and #pickups
             // (upper indices).
@@ -105,6 +105,30 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             applyEmptyRouteMoves(U, costEvaluator);
         }
     }
+
+#ifndef NDEBUG
+    // Debug checks to ensure the search restored structural feasibility.
+    for (size_t idx = 0; idx != data.numClients(); ++idx)
+    {
+        auto const &node = solution_.clients[idx];
+        assert(node.route() || !data.client(idx).required);
+    }
+
+    for (auto const &group : data.groups())
+    {
+        auto const inSol = [&](auto member)
+        { return solution_.clients[member].route() != nullptr; };
+        auto const count = std::count_if(group.begin(), group.end(), inSol);
+        assert(group.required ? count == 1 : count <= 1);
+    }
+
+    for (size_t idx = 0; idx != data.numShipments(); ++idx)
+    {
+        auto const &[pickup, delivery] = solution_.shipments[idx];
+        assert(pickup.route() == delivery.route());
+        assert(pickup.route() || !data.shipment(idx).required);
+    }
+#endif
 }
 
 void LocalSearch::shuffle(RandomNumberGenerator &rng)
@@ -227,101 +251,63 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
     }
 }
 
-void LocalSearch::ensureStructuralFeasibility(
-    CostEvaluator const &costEvaluator)
+void LocalSearch::insertRequired(Route::Node *U,
+                                 CostEvaluator const &costEvaluator)
 {
-    std::vector<size_t> groupCount(data.numGroups(), 0);  // tracks membership
-    for (size_t idx = 0; idx != data.numGroups(); ++idx)  // count in solution
+    assert(U->isClient() || U->isShipment());
+
+    if (U->route())  // then U is planned, and there is nothing to do
+        return;
+
+    switch (U->type())
     {
-        auto const &group = data.group(idx);
-        for (auto const client : group)
-            if (solution_.clients[client].route())
-                groupCount[idx]++;
-    }
+    case Activity::ActivityType::DEPOT:
+        return;
 
-    // Ensure all required clients, groups and shipments are present in the
-    // solution.
-    for (auto const &activity : searchSpace_.activityOrder())
+    case Activity::ActivityType::CLIENT:
     {
-        switch (activity.type())
+        auto const &client = data.client(U->idx());
+
+        if (client.required)  // then we must insert U
         {
-        case Activity::ActivityType::CLIENT:
-        {
-            auto &node = solution_.clients[activity.idx()];
-            auto const &client = data.client(activity.idx());
-
-            if (!node.route() && client.required)  // must insert
-            {
-                solution_.insert(&node, searchSpace_, costEvaluator, true);
-                update(node.route(), node.route());
-                searchSpace_.markPromising(&node);
-                continue;
-            }
-
-            if (client.group)
-            {
-                auto const idx = *client.group;
-                auto const &group = data.group(idx);
-
-                if (group.required && groupCount[idx] == 0)  // must insert
-                {
-                    assert(!node.route());
-                    solution_.insert(&node, searchSpace_, costEvaluator, true);
-                    update(node.route(), node.route());
-                    searchSpace_.markPromising(&node);
-                    groupCount[idx]++;
-                }
-            }
-
-            break;
+            solution_.insert(U, searchSpace_, costEvaluator, true);
+            update(U->route(), U->route());
+            searchSpace_.markPromising(U);
+            return;
         }
 
-        case Activity::ActivityType::PICKUP:
-        {
-            auto const idx = activity.idx();
-            auto &[pickup, delivery] = solution_.shipments[idx];
-            auto const &shipment = data.shipment(idx);
+        if (!client.group)
+            return;
 
-            if (!pickup.route() && shipment.required)
-            {
-                solution_.insert(
-                    &pickup, &delivery, searchSpace_, costEvaluator, true);
-                update(pickup.route(), delivery.route());
-                searchSpace_.markPromising(&pickup);
-                searchSpace_.markPromising(&delivery);
-            }
+        auto const &group = data.group(*client.group);
+        if (!group.required)
+            return;
 
-            break;
-        }
+        for (auto const client : group.clients())   // check if any of the group
+            if (solution_.clients[client].route())  // is already present - then
+                return;                             // we need not insert
 
-        default:
-            continue;
-        }
+        solution_.insert(U, searchSpace_, costEvaluator, true);
+        update(U->route(), U->route());
+        searchSpace_.markPromising(U);
+        return;
     }
 
-#ifndef NDEBUG
-    // Debug checks to ensure we have restored structural feasibility.
-    for (size_t idx = 0; idx != data.numClients(); ++idx)
+    case Activity::ActivityType::PICKUP:
+        [[fallthrough]];
+    case Activity::ActivityType::DELIVERY:
     {
-        auto const &node = solution_.clients[idx];
-        auto const &clientData = data.client(idx);
-        assert(node.route() || !clientData.required);
-    }
+        if (!data.shipment(U->idx()).required)
+            return;
 
-    for (size_t idx = 0; idx != data.numGroups(); ++idx)
-    {
-        auto const &group = data.group(idx);
-        assert(group.required ? groupCount[idx] == 1 : groupCount[idx] <= 1);
+        auto &[pickup, delivery] = solution_.shipments[U->idx()];
+        solution_.insert(&pickup, &delivery, searchSpace_, costEvaluator, true);
+        update(pickup.route(), delivery.route());
+        searchSpace_.markPromising(&pickup);
+        searchSpace_.markPromising(&delivery);
+        return;
     }
-
-    for (size_t idx = 0; idx != data.numShipments(); ++idx)
-    {
-        auto const &[pickup, delivery] = solution_.shipments[idx];
-        auto const &shipment = data.shipment(idx);
-        assert(pickup.route() == delivery.route());
-        assert(pickup.route() || !shipment.required);
     }
-#endif
 }
 
 void LocalSearch::update(Route *U, Route *V)
