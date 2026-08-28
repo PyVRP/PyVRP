@@ -294,6 +294,7 @@ void LocalSearch::insertRequired(Route::Node *U,
     }
 
     case Activity::ActivityType::PICKUP:
+        [[fallthrough]];
     case Activity::ActivityType::DELIVERY:
     {
         if (!data.shipment(U->idx()).required)
