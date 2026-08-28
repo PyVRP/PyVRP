@@ -259,7 +259,12 @@ void LocalSearch::insertRequired(Route::Node *U,
     if (U->route())  // then U is planned, and there is nothing to do
         return;
 
-    if (U->isClient())
+    switch (U->type())
+    {
+    case Activity::ActivityType::DEPOT:
+        return;
+
+    case Activity::ActivityType::CLIENT:
     {
         auto const &client = data.client(U->idx());
 
@@ -285,14 +290,22 @@ void LocalSearch::insertRequired(Route::Node *U,
         solution_.insert(U, searchSpace_, costEvaluator, true);
         update(U->route(), U->route());
         searchSpace_.markPromising(U);
+        return;
     }
-    else if (data.shipment(U->idx()).required)
+
+    case Activity::ActivityType::PICKUP:
+    case Activity::ActivityType::DELIVERY:
     {
+        if (!data.shipment(U->idx()).required)
+            return;
+
         auto &[pickup, delivery] = solution_.shipments[U->idx()];
         solution_.insert(&pickup, &delivery, searchSpace_, costEvaluator, true);
         update(pickup.route(), delivery.route());
         searchSpace_.markPromising(&pickup);
         searchSpace_.markPromising(&delivery);
+        return;
+    }
     }
 }
 
