@@ -158,6 +158,8 @@ Solution::Solution(ProblemData const &data) : data_(data)
 
 void Solution::load(pyvrp::Solution const &solution)
 {
+    loadedSolution_ = &solution;
+
     // Determine offsets for vehicle types.
     std::vector<size_t> vehicleOffset(data_.numVehicleTypes(), 0);
     for (size_t vehType = 1; vehType < data_.numVehicleTypes(); vehType++)
@@ -213,13 +215,37 @@ void Solution::load(pyvrp::Solution const &solution)
 
 pyvrp::Solution Solution::unload() const
 {
+    // Determine offsets for vehicle types.
+    std::vector<size_t> vehicleOffset(data_.numVehicleTypes(), 0);
+    for (size_t vehType = 1; vehType != data_.numVehicleTypes(); ++vehType)
+    {
+        auto const prevAvail = data_.vehicleType(vehType - 1).numAvailable;
+        vehicleOffset[vehType] = vehicleOffset[vehType - 1] + prevAvail;
+    }
+
+    // Map each search route to the original route of the loaded solution,
+    // following the same layout as used in load().
+    std::vector<pyvrp::Route const *> loadedRoutes(routes.size());
+    if (loadedSolution_)
+        for (auto const &solRoute : loadedSolution_->routes())
+            loadedRoutes[vehicleOffset[solRoute.vehicleType()]++] = &solRoute;
+
     std::vector<pyvrp::Route> solRoutes;
     solRoutes.reserve(data_.numVehicles());
 
-    for (auto const &route : routes)
+    for (size_t idx = 0; idx != routes.size(); ++idx)
     {
+        auto const &route = routes[idx];
         if (route.empty())
             continue;
+
+        // Copy the loaded route if it is unchanged - this is much cheaper.
+        auto const *solRoute = loadedRoutes[idx];
+        if (solRoute && *solRoute == route)
+        {
+            solRoutes.push_back(*solRoute);
+            continue;
+        }
 
         std::vector<Activity> activities;
         activities.reserve(route.size());
