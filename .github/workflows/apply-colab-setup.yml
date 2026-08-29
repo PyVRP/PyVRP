@@ -1,0 +1,76 @@
+name: Apply Colab setup cells
+
+on:
+  push:
+    branches:
+      - docs/colab-prolog
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/colab-prolog
+          fetch-depth: 0
+
+      - name: Insert Colab-only setup cells
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          marker = "Install PyVRP when running in Google Colab."
+          source = [
+              f"# {marker}\n",
+              "import subprocess\n",
+              "import sys\n",
+              "\n",
+              "if \"google.colab\" in sys.modules:\n",
+              "    subprocess.check_call(\n",
+              "        [sys.executable, \"-m\", \"pip\", \"install\", \"--quiet\", \"pyvrp\"]\n",
+              "    )\n",
+          ]
+
+          changed = []
+          for path in sorted(Path("notebooks").glob("*.ipynb")):
+              notebook = json.loads(path.read_text(encoding="utf-8"))
+              if any(
+                  marker in "".join(cell.get("source", []))
+                  for cell in notebook.get("cells", [])
+              ):
+                  continue
+
+              setup_cell = {
+                  "cell_type": "code",
+                  "execution_count": None,
+                  "metadata": {"nbsphinx": "hidden"},
+                  "outputs": [],
+                  "source": source,
+              }
+              notebook["cells"].insert(1, setup_cell)
+              path.write_text(
+                  json.dumps(notebook, indent=1, ensure_ascii=False) + "\n",
+                  encoding="utf-8",
+              )
+              changed.append(str(path))
+
+          if len(changed) != 9:
+              raise RuntimeError(f"Expected 9 updated notebooks, got {len(changed)}: {changed}")
+
+          print("Updated notebooks:")
+          print("\n".join(changed))
+          PY
+
+      - name: Commit notebook updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add notebooks
+          git rm .github/workflows/apply-colab-setup.yml
+          git diff --cached --check
+          git commit -m "docs: install PyVRP automatically in Colab"
+          git push origin HEAD:docs/colab-prolog
