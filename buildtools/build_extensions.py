@@ -3,7 +3,9 @@ Builds the native extensions.
 """
 
 import argparse
+import os
 import pathlib
+import sys
 from subprocess import check_call
 
 
@@ -97,18 +99,51 @@ def build(
     install(build_dir)
 
 
-def workload():
-    # TODO if and when we actually start using PGO we should probably rethink
-    # what the profiling workload needs to be. For example, larger instances
-    # are harder to solve, so perhaps we should optimise for those?
+def workload(build_dir: pathlib.Path):
     cmds = [
-        "pytest",
+        "pytest -n0",
         "pyvrp --seed 1 tests/data/X-n101-50-k13.vrp --max_runtime 5",
         "pyvrp --seed 2 tests/data/RC208.vrp --max_runtime 5",
+        "pyvrp --seed 3 tests/data/lrc206.vrp --max_runtime 5",
     ]
+    env = os.environ.copy()
+    env["LLVM_PROFILE_FILE"] = str(build_dir / "%m-%p.profraw")
+    env.pop("GCOV_PREFIX", None)
+    env.pop("GCOV_PREFIX_STRIP", None)
 
     for cmd in cmds:
-        check_call(cmd.split())
+        check_call(cmd.split(), env=env)
+
+
+def remove_profiles(build_dir: pathlib.Path):
+    for pattern in ("*.gcda", "*.profdata", "*.profraw"):
+        for profile in build_dir.rglob(pattern):
+            profile.unlink()
+
+
+def merge_profiles(build_dir: pathlib.Path):
+    profiles = sorted(build_dir.glob("*.profraw"))
+
+    if not profiles:
+        return
+
+    llvm_profdata = os.environ.get("LLVM_PROFDATA")
+    if llvm_profdata is not None:
+        command = [llvm_profdata]
+    elif sys.platform == "darwin":
+        command = ["xcrun", "llvm-profdata"]
+    else:
+        command = ["llvm-profdata"]
+
+    output = build_dir / "default.profdata"
+    check_call(
+        [
+            *command,
+            "merge",
+            f"-output={output}",
+            *map(str, profiles),
+        ]
+    )
 
 
 def main():
@@ -128,9 +163,15 @@ def main():
     )
 
     if args.use_pgo:
-        build(*build_args, "-Db_pgo=generate")
-        workload()
-        build(*build_args, "-Db_pgo=use")
+        # GCC requires profile data for every compiled source file. Some
+        # sources in the static spdlog dependency are not linked into the
+        # extensions, so no profile data can be generated for them.
+        spdlog_arg = "-Dspdlog:b_pgo=off"
+        build(*build_args, "-Db_pgo=generate", spdlog_arg)
+        remove_profiles(build_dir)
+        workload(build_dir)
+        merge_profiles(build_dir)
+        build(*build_args, "-Db_pgo=use", spdlog_arg)
     else:
         build(*build_args)
 
