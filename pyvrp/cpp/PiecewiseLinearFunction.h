@@ -36,6 +36,11 @@ namespace pyvrp
  *       f_n(x) & \text{ otherwise.}
  *    \end{cases}
  *
+ * .. note::
+ *    The internal representation uses floating-point arithmetic to accurately
+ *    capture the intended linear functions. The returned values are always
+ *    truncated to integers, to match the rest of PyVRP's integer-only design.
+ *
  * Parameters
  * ----------
  * points
@@ -44,14 +49,14 @@ namespace pyvrp
  * Raises
  * ------
  * ValueError
- *     When fewer than two points are provided, when the points are decreasing
- *     in :math:`x`, or when the implied slope between points is not integral.
+ *     When fewer than two points are provided, or when the points are
+ *     decreasing in :math:`x`.
  */
 // clang-format on
 template <typename Dom, typename Co> class PiecewiseLinearFunction
 {
 public:
-    using Segment = std::pair<Dom, Dom>;
+    using Segment = std::pair<double, double>;
     using Point = std::pair<Dom, Co>;
 
 private:
@@ -118,14 +123,11 @@ PiecewiseLinearFunction<Dom, Co>::PiecewiseLinearFunction(
         if (dx < 0)
             throw std::invalid_argument("Points must be non-decreasing in x.");
 
-        if (dy % dx != 0)
-            throw std::invalid_argument("Slope is not integral.");
-
         if (idx != 0)  // breakpoints separate segments
             breakpoints_.push_back(curr.first);
 
-        auto const slope = dy / dx;
-        auto const intercept = curr.second - slope * curr.first;
+        double const slope = static_cast<double>(dy) / dx;
+        double const intercept = curr.second - slope * curr.first;
         segments_.emplace_back(intercept, slope);
     }
 
