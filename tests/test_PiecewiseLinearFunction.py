@@ -181,3 +181,14 @@ def test_pickle():
     pickled = pickle.dumps(fn)
     unpickled = pickle.loads(pickled)
     assert_equal(fn, unpickled)
+
+
+def test_exact_representation_at_points():
+    """
+    Tests that the piecewise linear function returns the given points exactly.
+    """
+    fn = PiecewiseLinearFunction(points=[(0, 0), (7, 61), (27, 91), (81, 144)])
+    assert_equal(fn(0), 0)
+    assert_equal(fn(7), 61)
+    assert_equal(fn(27), 91)
+    assert_equal(fn(81), 144)
