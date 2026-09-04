@@ -51,30 +51,36 @@ using Load = Measure<MeasureType::LOAD, int64_t>;
  */
 template <MeasureType _, NumberType Value> class Measure
 {
-    Value value = 0;
+    Value value_ = 0;
 
 public:
     // Default construction initialises to 0.
     Measure() = default;
 
     // This constructor takes any arithmetic type (generally useful) and casts
-    // it to the underlying Value.
-    template <NumberType T>
-    Measure(T const value) : value(static_cast<Value>(value))
+    // it to the underlying Value. This may be lossy, but then we do our best
+    // to round the input argument to the nearest representable value.
+    template <NumberType T> Measure(T const value)
     {
+        if constexpr (std::is_integral_v<Value> && std::is_floating_point_v<T>)
+            // We have a floating point argument that we need to store inside
+            // an integer measure, so we round to the nearest integer first.
+            value_ = std::nearbyint(value);
+        else
+            value_ = static_cast<Value>(value);
     }
 
     // Explicit conversions of the underlying value to other arithmetic types.
     template <NumberType T> explicit operator T() const
     {
-        return static_cast<T>(value);
+        return static_cast<T>(value_);
     }
 
     // Explicit conversions to other measures of the same storage type (we do
     // not want there to be data loss just by casting between measures).
     template <MeasureType Other> explicit operator Measure<Other, Value>() const
     {
-        return value;
+        return value_;
     }
 
     // Retrieves the underlying value.
@@ -95,7 +101,7 @@ public:
 template <MeasureType Type, NumberType Value>
 Value Measure<Type, Value>::get() const
 {
-    return value;
+    return value_;
 }
 
 // In-place unary operators.
@@ -106,10 +112,10 @@ Measure<Type, Value>::operator+=(Measure<Type, Value> const rhs)
     if constexpr (std::is_integral_v<Value>)
     {
         [[maybe_unused]] Value res = 0;
-        assert(!__builtin_add_overflow(this->value, rhs.value, &res));
+        assert(!__builtin_add_overflow(this->value_, rhs.value_, &res));
     }
 
-    this->value += rhs.value;
+    this->value_ += rhs.value_;
     return *this;
 }
 
@@ -120,10 +126,10 @@ Measure<Type, Value>::operator-=(Measure<Type, Value> const rhs)
     if constexpr (std::is_integral_v<Value>)
     {
         [[maybe_unused]] Value res = 0;
-        assert(!__builtin_sub_overflow(this->value, rhs.value, &res));
+        assert(!__builtin_sub_overflow(this->value_, rhs.value_, &res));
     }
 
-    this->value -= rhs.value;
+    this->value_ -= rhs.value_;
     return *this;
 }
 
@@ -134,10 +140,10 @@ Measure<Type, Value>::operator*=(Measure<Type, Value> const rhs)
     if constexpr (std::is_integral_v<Value>)
     {
         [[maybe_unused]] Value res = 0;
-        assert(!__builtin_mul_overflow(this->value, rhs.value, &res));
+        assert(!__builtin_mul_overflow(this->value_, rhs.value_, &res));
     }
 
-    this->value *= rhs.value;
+    this->value_ *= rhs.value_;
     return *this;
 }
 
@@ -145,7 +151,7 @@ template <MeasureType Type, NumberType Value>
 Measure<Type, Value> &
 Measure<Type, Value>::operator/=(Measure<Type, Value> const rhs)
 {
-    this->value /= rhs.value;
+    this->value_ /= rhs.value_;
     return *this;
 }
 
@@ -153,14 +159,14 @@ Measure<Type, Value>::operator/=(Measure<Type, Value> const rhs)
 template <MeasureType Type, NumberType Value>
 bool Measure<Type, Value>::operator==(Measure<Type, Value> const other) const
 {
-    return value == other.value;
+    return value_ == other.value_;
 }
 
 template <MeasureType Type, NumberType Value>
 std::strong_ordering
 Measure<Type, Value>::operator<=>(Measure<Type, Value> const other) const
 {
-    return value <=> other.value;
+    return value_ <=> other.value_;
 }
 
 // Free-standing binary operators.

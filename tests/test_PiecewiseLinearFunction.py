@@ -27,6 +27,18 @@ def test_call():
     assert_equal(fn(100), 26 + 4 * 100)
 
 
+def test_call_with_floating_point_coefficients():
+    """
+    Tests calling a piecewise linear function with floating-point segment
+    coefficients. Non-integral results are truncated to integers.
+    """
+    fn = PiecewiseLinearFunction([], [(0.5, 1.5)])
+
+    assert_equal(fn(-1), -1)
+    assert_equal(fn(0), 0)
+    assert_equal(fn(1), 2)
+
+
 def test_zero():
     """
     Tests the piecewise linear function with zero slope and/or intercept.
@@ -103,13 +115,15 @@ def test_raises_unsorted_breakpoints():
     [
         ([(0, 0), (1, 0)], [], [(0, 0)]),
         ([(0, 0), (1, 1)], [], [(0, 1)]),
+        ([(0, 0), (2, 3)], [], [(0, 1.5)]),
+        ([(1, 0), (3, 1)], [], [(-0.5, 0.5)]),
         ([(0, 0), (2, 4), (2, 6), (10, 14)], [2], [(0, 2), (4, 1)]),
     ],
 )
 def test_points_constructor(
     points: list[tuple[int, int]],
     exp_breakpoints: list[int],
-    exp_segments: list[tuple[int, int]],
+    exp_segments: list[tuple[float, float]],
 ):
     """
     Tests constructing a piecewise linear function from points, rather than
@@ -137,9 +151,6 @@ def test_raises_point_constructor():
     with assert_raises(ValueError):  # points must be non-decreasing in x
         PiecewiseLinearFunction(points=[(0, 0), (-1, 0)])
 
-    with assert_raises(ValueError):  # slope must be integral - 3/2 is not
-        PiecewiseLinearFunction(points=[(0, 0), (2, 3)])
-
 
 @pytest.mark.parametrize(
     ("points", "expected"),
@@ -165,8 +176,19 @@ def test_pickle():
     Tests that piecewise linear functions can be pickled and unpickled
     correctly.
     """
-    fn = PiecewiseLinearFunction(points=[(0, 0), (5, 5), (5, 8), (6, 18)])
+    fn = PiecewiseLinearFunction(points=[(0, 0), (2, 3), (2, 5), (4, 6)])
 
     pickled = pickle.dumps(fn)
     unpickled = pickle.loads(pickled)
     assert_equal(fn, unpickled)
+
+
+def test_exact_representation_at_points():
+    """
+    Tests that the piecewise linear function returns the given points exactly.
+    """
+    fn = PiecewiseLinearFunction(points=[(0, 0), (7, 61), (27, 91), (81, 144)])
+    assert_equal(fn(0), 0)
+    assert_equal(fn(7), 61)
+    assert_equal(fn(27), 91)
+    assert_equal(fn(81), 144)

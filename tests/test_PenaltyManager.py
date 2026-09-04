@@ -140,7 +140,7 @@ def test_load_penalty_update_decrease(ok_small):
     """
     num_registrations = 4
     params = PenaltyParams(num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(([4], 1, 1), params)
+    pm = PenaltyManager(([5], 1, 1), params)
 
     feas = Solution(ok_small, [[0, 1]])
     infeas = Solution(ok_small, [[0, 1, 2]])
@@ -149,16 +149,16 @@ def test_load_penalty_update_decrease(ok_small):
     assert_(infeas.has_excess_load())
 
     # Within bandwidth, so penalty should not change.
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 4)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 5)
     for sol in [feas, infeas, feas, infeas]:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 4)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 5)
 
     # Above targetFeasible, so should decrease the loadPenalty to 90%, and -1
-    # from the bounds check. So 0.9 * 4 = 3.6, and int(3.6) = 3.
+    # from the bounds check. So 0.9 * 5 = 4.5, and round(4.5) = 4.
     for sol in [feas] * num_registrations:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 3)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 4)
 
     # Now we start from a much bigger initial loadPenalty. Here we want the
     # penalty to decrease by 10% due to penaltyDecrease = 0.9, and -1 due to
@@ -228,7 +228,7 @@ def test_time_warp_penalty_update_decrease(ok_small):
     """
     num_registrations = 4
     params = PenaltyParams(num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(([1], 4, 1), params)
+    pm = PenaltyManager(([1], 5, 1), params)
 
     feas = Solution(ok_small, [[0, 1]])
     infeas = Solution(ok_small, [[0, 1, 2]])
@@ -237,16 +237,16 @@ def test_time_warp_penalty_update_decrease(ok_small):
     assert_(infeas.has_time_warp())
 
     # Within bandwidth, so penalty should not change.
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 4)
+    assert_equal(pm.cost_evaluator().tw_penalty(1), 5)
     for sol in [feas, infeas, feas, infeas]:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 4)
+    assert_equal(pm.cost_evaluator().tw_penalty(1), 5)
 
     # Above targetFeasible, so should decrease the twCapacity to 90%. So
-    # 0.9 * 4 = 3.6, and int(3.6) = 3.
+    # 0.9 * 5 = 4.5, and round(4.5) = 3.
     for sol in [feas] * num_registrations:
         pm.register(sol)
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 3)
+    assert_equal(pm.cost_evaluator().tw_penalty(1), 4)
 
     # Now we start from a much bigger initial twCapacity. Here we want the
     # penalty to decrease by 10% due to penaltyDecrease = 0.9, and -1 due
@@ -279,7 +279,7 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
 
     num_registrations = 4
     params = PenaltyParams(num_registrations, 1.1, 0.9, 0.5)
-    pm = PenaltyManager(([4], 4, 4), params)
+    pm = PenaltyManager(([5], 5, 5), params)
 
     feas = Solution(data, [[0, 1], [2, 3]])
     infeas = Solution(data, [[0, 1, 2, 3]])
@@ -287,25 +287,25 @@ def test_does_not_update_penalties_before_sufficient_registrations(ok_small):
     assert_(feas.is_feasible())
     assert_(not infeas.is_feasible())
 
-    # Both have four initial penalty, and vehicle capacity is one.
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 4)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 4)
-    assert_equal(pm.cost_evaluator().dist_penalty(2, 1), 4)
+    # Both have five initial penalty, and vehicle capacity is one.
+    assert_equal(pm.cost_evaluator().tw_penalty(1), 5)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 5)
+    assert_equal(pm.cost_evaluator().dist_penalty(2, 1), 5)
 
     # Register three times. We need at least four registrations before the
     # penalties are updated, so this should not change anything.
     for sol in [feas, infeas, feas]:
         pm.register(sol)
-        assert_equal(pm.cost_evaluator().tw_penalty(1), 4)
-        assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 4)
-        assert_equal(pm.cost_evaluator().dist_penalty(1, 0), 4)
+        assert_equal(pm.cost_evaluator().tw_penalty(1), 5)
+        assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 5)
+        assert_equal(pm.cost_evaluator().dist_penalty(1, 0), 5)
 
     # Register a fourth time. Now the penalties should change. Since there are
     # more feasible registrations than desired, the penalties should decrease.
     pm.register(feas)
-    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 3)
-    assert_equal(pm.cost_evaluator().tw_penalty(1), 3)
-    assert_equal(pm.cost_evaluator().dist_penalty(1, 0), 3)
+    assert_equal(pm.cost_evaluator().load_penalty(2, 1, 0), 4)
+    assert_equal(pm.cost_evaluator().tw_penalty(1), 4)
+    assert_equal(pm.cost_evaluator().dist_penalty(1, 0), 4)
 
 
 def test_max_min_penalty(ok_small):
