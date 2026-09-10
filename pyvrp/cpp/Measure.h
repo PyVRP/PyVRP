@@ -58,16 +58,10 @@ public:
     Measure() = default;
 
     // This constructor takes any arithmetic type (generally useful) and casts
-    // it to the underlying Value. This may be lossy, but then we do our best
-    // to round the input argument to the nearest representable value.
-    template <NumberType T> Measure(T const value)
+    // it to the underlying Value.
+    template <NumberType T>
+    Measure(T const value) : value_(static_cast<Value>(value))
     {
-        if constexpr (std::is_integral_v<Value> && std::is_floating_point_v<T>)
-            // We have a floating point argument that we need to store inside
-            // an integer measure, so we round to the nearest integer first.
-            value_ = std::nearbyint(value);
-        else
-            value_ = static_cast<Value>(value);
     }
 
     // Explicit conversions of the underlying value to other arithmetic types.
