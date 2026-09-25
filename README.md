@@ -18,6 +18,7 @@ It currently supports VRPs with:
 - **[Enterprise]** Automatic break planning for EU and US hours-of-service regulations;
 - **[Enterprise]** Vehicle-client and client-client compatibility constraints and sequencing relations;
 - **[Enterprise]** Fairness constraints like load and shift duration balancing.
+- **[Enterprise]** Soft clustering to encourage geographically compact routes;
 
 PyVRP is available on the Python package index as `pyvrp`.
 It may be installed in the usual way as
