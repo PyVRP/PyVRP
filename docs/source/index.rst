@@ -26,7 +26,8 @@ It can be installed through *pip* via
 
 .. tip::
 
-   Looking for professional support or enterprise features? `Applied Routing <https://appliedrouting.com>`_ provides consulting, custom development, and PyVRP Enterprise - an extended and production-ready version of PyVRP.
+   Using or evaluating PyVRP at your company? `Applied Routing <https://appliedrouting.com>`_ provides consulting, custom development, and PyVRP Enterprise, an extended and production-ready version of PyVRP.
+   Get in touch at `info@appliedrouting.com <mailto:info@appliedrouting.com>`_ to join a private Slack channel with our team and discuss your use case, PyVRP features, or the roadmap.
 
 Contents
 --------
