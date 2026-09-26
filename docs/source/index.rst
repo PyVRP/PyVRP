@@ -14,8 +14,8 @@ It currently supports VRPs with:
 * Client groups imposing additional restrictions on multiple clients jointly (generalised VRP, VRP with multiple time windows);
 * **[Enterprise]** Automatic break planning for EU and US hours-of-service regulations;
 * **[Enterprise]** Vehicle-client and client-client compatibility constraints and sequencing relations;
-* **[Enterprise]** Fairness constraints like load and duration balancing.
-* **[Enterprise]** Soft clustering to encourage geographically compact routes;
+* **[Enterprise]** Fairness constraints like load and duration balancing;
+* **[Enterprise]** Soft clustering to encourage geographically compact routes.
 
 The PyVRP package comes with pre-compiled binaries for Windows, Mac OS and Linux, and can thus be easily installed without requiring local compilation.
 It can be installed through *pip* via
