@@ -18,6 +18,7 @@ It currently supports VRPs with:
 - **[Enterprise]** Automatic break planning for EU and US hours-of-service regulations;
 - **[Enterprise]** Vehicle-client and client-client compatibility constraints and sequencing relations;
 - **[Enterprise]** Fairness constraints like load and shift duration balancing.
+- **[Enterprise]** Soft clustering to encourage geographically compact routes;
 
 PyVRP is available on the Python package index as `pyvrp`.
 It may be installed in the usual way as
@@ -28,7 +29,8 @@ pip install pyvrp
 The documentation is available [here][1].
 
 > [!TIP]
-> Looking for professional support or enterprise features? [Applied Routing](https://appliedrouting.com) provides consulting, custom development, and PyVRP Enterprise - an extended and production-ready version of PyVRP.
+> Using or evaluating PyVRP at your company? [Applied Routing](https://appliedrouting.com) provides consulting, custom development, and PyVRP Enterprise, an extended and production-ready version of PyVRP.
+> Get in touch at [info@appliedrouting.com](mailto:info@appliedrouting.com) to join a private Slack channel with our team and discuss your use case, PyVRP features, or the roadmap.
 
 ### Tutorials
 
