@@ -88,6 +88,10 @@ public:
     // Comparison operators.
     [[nodiscard]] bool operator==(Measure const other) const;
     [[nodiscard]] std::partial_ordering operator<=>(Measure const other) const;
+    [[nodiscard]] bool operator<(Measure const other) const;
+    [[nodiscard]] bool operator>(Measure const other) const;
+    [[nodiscard]] bool operator<=(Measure const other) const;
+    [[nodiscard]] bool operator>=(Measure const other) const;
 };
 
 // Retrieves the underlying value.
@@ -141,6 +145,31 @@ Measure<Type>::operator<=>(Measure<Type> const other) const
 {
     return *this == other ? std::partial_ordering::equivalent
                           : value_ <=> other.value_;
+}
+
+// Check ordinary ordering first, evaluating tolerance only when needed.
+template <MeasureType Type>
+bool Measure<Type>::operator<(Measure<Type> const other) const
+{
+    return value_ < other.value_ && !(*this == other);
+}
+
+template <MeasureType Type>
+bool Measure<Type>::operator>(Measure<Type> const other) const
+{
+    return value_ > other.value_ && !(*this == other);
+}
+
+template <MeasureType Type>
+bool Measure<Type>::operator<=(Measure<Type> const other) const
+{
+    return value_ <= other.value_ || *this == other;
+}
+
+template <MeasureType Type>
+bool Measure<Type>::operator>=(Measure<Type> const other) const
+{
+    return value_ >= other.value_ || *this == other;
 }
 
 // Free-standing binary operators.
