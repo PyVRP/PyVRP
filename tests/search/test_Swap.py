@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Client,
@@ -157,12 +157,12 @@ def test_swap_with_duration_constraint(ok_small, max_dur, cost):
     # total distance decreases but the maximum duration violation increases.
     # Moving from the first to the second route reduces the maximum duration
     # violation in the first route and is typically improving.
-    assert_equal(route1.duration(), 5_229)
-    assert_equal(route2.duration(), 5_814)
+    assert_allclose(route1.duration(), 5_229)
+    assert_allclose(route2.duration(), 5_814)
 
     cost_eval = CostEvaluator([1], 1, 0)
     delta, should_apply = op.evaluate(route1[1], route2[1], cost_eval)
-    assert_equal(delta, cost)
+    assert_allclose(delta, cost)
     assert_equal(should_apply, cost < 0)
 
 
@@ -193,14 +193,14 @@ def test_swap_within_route_simultaneous_pickup_and_delivery():
     # off C2's delivery amount (5). So total load is 10, and the excess load 5.
     route = make_search_route(data, ["C0", "C1", "C2"])
     assert_(not route.is_feasible())
-    assert_equal(route.load(), [10])
-    assert_equal(route.excess_load(), [5])
+    assert_allclose(route.load(), [10])
+    assert_allclose(route.excess_load(), [5])
 
     # We evaluate swapping C0 and C2, which would resolve the excess load: the
     # important bit is that we visit C2 before C0.
     op = Swap11(data)
     cost_eval = CostEvaluator([1], 1, 0)
-    assert_equal(op.evaluate(route[1], route[3], cost_eval), (-5, True))
+    assert_allclose(op.evaluate(route[1], route[3], cost_eval), (-5, True))
 
 
 @pytest.mark.parametrize(
@@ -223,11 +223,11 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
     route1 = make_search_route(data, ["C0", "C1"])
     route2 = make_search_route(data, ["C2"])
 
-    assert_equal(route1.distance(), 5_501)
-    assert_equal(route1.excess_distance(), max(5_501 - max_distance, 0))
+    assert_allclose(route1.distance(), 5_501)
+    assert_allclose(route1.excess_distance(), max(5_501 - max_distance, 0))
 
-    assert_equal(route2.distance(), 3_994)
-    assert_equal(route2.excess_distance(), max(3_994 - max_distance, 0))
+    assert_allclose(route2.distance(), 3_994)
+    assert_allclose(route2.excess_distance(), max(3_994 - max_distance, 0))
 
     cost_eval = CostEvaluator([0], 0, 10)
     op = Swap11(data)
@@ -235,17 +235,17 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
     # Swapping client C1 in route1 and client C2 in route2 improves the overall
     # distance and reduces the excess distance violations.
     actual, should_apply = op.evaluate(route1[2], route2[1], cost_eval)
-    assert_equal(actual, expected)
+    assert_allclose(actual, expected)
     assert_(should_apply)
     op.apply(route1[2], route2[1])
 
     route1.update()
-    assert_equal(route1.distance(), 5_034)
-    assert_equal(route1.excess_distance(), max(5_034 - max_distance, 0))
+    assert_allclose(route1.distance(), 5_034)
+    assert_allclose(route1.excess_distance(), max(5_034 - max_distance, 0))
 
     route2.update()
-    assert_equal(route2.distance(), 3_909)
-    assert_equal(route2.excess_distance(), max(3_909 - max_distance, 0))
+    assert_allclose(route2.distance(), 3_909)
+    assert_allclose(route2.excess_distance(), max(3_909 - max_distance, 0))
 
     delta_dist = 5_034 + 3_909 - 5_501 - 3_994  # compare manual delta cost
     delta_excess = sum(
@@ -277,7 +277,9 @@ def test_swap_with_different_profiles(ok_small_two_profiles):
     dist1, dist2 = data.distance_matrices()
     delta = dist1[0, 4] + dist1[4, 0] + dist2[0, 3] + dist2[3, 0]
     delta -= route1.distance() + route2.distance()
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (delta, False))
+    assert_allclose(
+        op.evaluate(route1[1], route2[1], cost_eval), (delta, False)
+    )
 
 
 def test_swap_does_not_swap_depots(ok_small_multiple_trips):
@@ -292,7 +294,7 @@ def test_swap_does_not_swap_depots(ok_small_multiple_trips):
     cost_eval = CostEvaluator([0], 0, 0)
 
     # This move overlaps with reload depot at index 3, so cannot be evaluated.
-    assert_equal(op.evaluate(route[2], route[4], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[2], route[4], cost_eval), (0, False))
 
 
 def test_bug_evaluating_move_with_initial_load():
@@ -326,7 +328,7 @@ def test_bug_evaluating_move_with_initial_load():
 
     # This move just permutes the solution, turning route1 into route2, and
     # vice versa. Thus, the delta cost of this move should be zero.
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
 
 
 @pytest.mark.parametrize("operator", [Swap21, Swap33])
@@ -368,7 +370,7 @@ def test_skip_unassigned_clients(ok_small):
 
     operator = Swap11(ok_small)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(operator.evaluate(node, route[0], cost_eval), (0, False))
+    assert_allclose(operator.evaluate(node, route[0], cost_eval), (0, False))
 
 
 def test_name(ok_small):
@@ -385,21 +387,21 @@ def test_swap_shipment(small_shipments):
     """
     activities = ["L1", "U1", "L0", "U0", "L2", "U2", "L3", "U3"]
     route = make_search_route(small_shipments, activities)
-    assert_equal(route.distance(), 64_267)
+    assert_allclose(route.distance(), 64_267)
 
     op = Swap22(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
 
     # These cannot be swapped since they would move part of a shipment,
     # possibly resulting in a pickup after a delivery.
-    assert_equal(op.evaluate(route[2], route[0], cost_eval), (0, False))
-    assert_equal(op.evaluate(route[4], route[0], cost_eval), (0, False))
-    assert_equal(op.evaluate(route[6], route[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[2], route[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[4], route[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[6], route[0], cost_eval), (0, False))
 
     # But swapping L0 U0 with L3 U3 is fine, and an improving move.
-    assert_equal(op.evaluate(route[3], route[7], cost_eval), (-5_622, True))
+    assert_allclose(op.evaluate(route[3], route[7], cost_eval), (-5_622, True))
     op.apply(route[3], route[7])
     route.update()
 
-    assert_equal(route.distance(), 58_645)
+    assert_allclose(route.distance(), 58_645)
     assert_equal(str(route), "L1 U1 L3 U3 L2 U2 L0 U0")

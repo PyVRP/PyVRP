@@ -2,11 +2,11 @@ import pickle
 
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Shipment, ShipmentStep
 
-_INT_MAX = np.iinfo(np.int64).max
+_FLOAT_MAX = np.finfo(np.float64).max
 
 
 @pytest.mark.parametrize(
@@ -86,15 +86,15 @@ def test_default_attributes():
     """
     shipment = Shipment(0, 0)
     assert_equal(shipment.pickup.location, 0)
-    assert_equal(shipment.pickup.tw_early, 0)
-    assert_equal(shipment.pickup.tw_late, _INT_MAX)
-    assert_equal(shipment.pickup.service_duration, 0)
+    assert_allclose(shipment.pickup.tw_early, 0)
+    assert_allclose(shipment.pickup.tw_late, _FLOAT_MAX)
+    assert_allclose(shipment.pickup.service_duration, 0)
     assert_equal(shipment.delivery.location, 0)
-    assert_equal(shipment.delivery.tw_early, 0)
-    assert_equal(shipment.delivery.tw_late, _INT_MAX)
-    assert_equal(shipment.delivery.service_duration, 0)
+    assert_allclose(shipment.delivery.tw_early, 0)
+    assert_allclose(shipment.delivery.tw_late, _FLOAT_MAX)
+    assert_allclose(shipment.delivery.service_duration, 0)
     assert_equal(shipment.amount, [])
-    assert_equal(shipment.prize, 0)
+    assert_allclose(shipment.prize, 0)
     assert_(shipment.required)
     assert_equal(shipment.name, "")
 
@@ -121,14 +121,14 @@ def test_custom_attributes():
 
     assert_equal(shipment.pickup.location, 1)
     assert_equal(shipment.delivery.location, 2)
-    assert_equal(shipment.pickup.tw_early, 3)
-    assert_equal(shipment.pickup.tw_late, 5)
-    assert_equal(shipment.pickup.service_duration, 7)
-    assert_equal(shipment.delivery.tw_early, 11)
-    assert_equal(shipment.delivery.tw_late, 13)
-    assert_equal(shipment.delivery.service_duration, 17)
-    assert_equal(shipment.amount, [19])
-    assert_equal(shipment.prize, 23)
+    assert_allclose(shipment.pickup.tw_early, 3)
+    assert_allclose(shipment.pickup.tw_late, 5)
+    assert_allclose(shipment.pickup.service_duration, 7)
+    assert_allclose(shipment.delivery.tw_early, 11)
+    assert_allclose(shipment.delivery.tw_late, 13)
+    assert_allclose(shipment.delivery.service_duration, 17)
+    assert_allclose(shipment.amount, [19])
+    assert_allclose(shipment.prize, 23)
     assert_(not shipment.required)
     assert_equal(shipment.name, "test")
     assert_equal(str(shipment), "test")

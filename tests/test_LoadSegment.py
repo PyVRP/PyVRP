@@ -1,24 +1,24 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose
 
 from pyvrp._pyvrp import LoadSegment
 
-_INT_MAX = np.iinfo(np.int64).max
+_FLOAT_MAX = np.finfo(np.float64).max
 
 
 @pytest.mark.parametrize(
     ("initial", "delta", "increase"),
-    [(1, 2, 3), (0, 0, 0), (_INT_MAX, _INT_MAX, _INT_MAX)],
+    [(1, 2, 3), (0, 0, 0), (_FLOAT_MAX, _FLOAT_MAX, _FLOAT_MAX)],
 )
 def test_attribute_getters(initial: int, delta: int, increase: int):
     """
     Tests that the attribute member functions return the passed in values.
     """
     load_segment = LoadSegment(initial, delta, increase)
-    assert_equal(load_segment.initial(), initial)
-    assert_equal(load_segment.delta(), delta)
-    assert_equal(load_segment.increase(), increase)
+    assert_allclose(load_segment.initial(), initial)
+    assert_allclose(load_segment.delta(), delta)
+    assert_allclose(load_segment.increase(), increase)
 
 
 @pytest.mark.parametrize(
@@ -51,12 +51,12 @@ def test_merge_two(
     Tests merging two load segments.
     """
     merged = LoadSegment.merge(first, second)
-    assert_equal(merged.initial(), exp_init)
-    assert_equal(merged.increase(), exp_increase)
-    assert_equal(merged.load(), exp_load)
+    assert_allclose(merged.initial(), exp_init)
+    assert_allclose(merged.increase(), exp_increase)
+    assert_allclose(merged.load(), exp_load)
 
-    assert_equal(merged.excess_load(0), exp_load)
-    assert_equal(merged.excess_load(capacity=exp_load), 0)
+    assert_allclose(merged.excess_load(0), exp_load)
+    assert_allclose(merged.excess_load(capacity=exp_load), 0)
 
 
 def test_excess_load_capacity():
@@ -70,9 +70,9 @@ def test_excess_load_capacity():
     # There's seven load on this segment, but 30 excess load from some part of
     # the route executed before the last return to the depot, and 5 excess load
     # from part of the route executed after the next return to the depot.
-    assert_equal(merged.load(), 7)
-    assert_equal(merged.excess_load(7), 35)
-    assert_equal(merged.excess_load(0), 42)
+    assert_allclose(merged.load(), 7)
+    assert_allclose(merged.excess_load(7), 35)
+    assert_allclose(merged.excess_load(0), 42)
 
 
 @pytest.mark.parametrize(
@@ -87,11 +87,11 @@ def test_finalise(capacity: int, exp_excess: int):
     finalised = segment.finalise(capacity)
 
     # Finalised segments track cumulative excess load - the rest resets.
-    assert_equal(finalised.initial(), 0)
-    assert_equal(finalised.delta(), 0)
-    assert_equal(finalised.increase(), 0)
-    assert_equal(finalised.load(), 0)
-    assert_equal(finalised.excess_load(capacity), exp_excess)
+    assert_allclose(finalised.initial(), 0)
+    assert_allclose(finalised.delta(), 0)
+    assert_allclose(finalised.increase(), 0)
+    assert_allclose(finalised.load(), 0)
+    assert_allclose(finalised.excess_load(capacity), exp_excess)
 
 
 def test_str():
@@ -117,28 +117,28 @@ def test_mixed_clients_and_shipments():
     pickup1 = LoadSegment(0, 5, 5)
     pickup2 = LoadSegment(0, 3, 3)
     merged = LoadSegment.merge(pickup1, pickup2)
-    assert_equal(merged.load(), 8)
+    assert_allclose(merged.load(), 8)
 
     # Now add a delivery for client 1, adding 5 load from the depot to this
     # client. That brings the total load to 13.
     client1 = LoadSegment(5, 0, 0)
     merged = LoadSegment.merge(merged, client1)
-    assert_equal(merged.load(), 13)
+    assert_allclose(merged.load(), 13)
 
     # Add a pickup for client 2, adding five load from this client to the
     # depot. That should not increase load further.
     client2 = LoadSegment(0, 0, -5, 0)
     merged = LoadSegment.merge(merged, client2)
-    assert_equal(merged.load(), 13)
+    assert_allclose(merged.load(), 13)
 
     # Now deliver the first shipment.
     delivery1 = LoadSegment(0, 0, -5)
     merged = LoadSegment.merge(merged, delivery1)
-    assert_equal(merged.load(), 13)
+    assert_allclose(merged.load(), 13)
 
     # Now finalise the segment. This should clear all client load, but not
     # affect shipment load since those do not go through depots and are thus
     # not finalised.
     finalised = merged.finalise(capacity=11)
-    assert_equal(finalised.load(), 0)
-    assert_equal(finalised.excess_load(capacity=11), 2)
+    assert_allclose(finalised.load(), 0)
+    assert_allclose(finalised.excess_load(capacity=11), 2)

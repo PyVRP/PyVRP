@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
     Activity,
@@ -14,7 +14,7 @@ from pyvrp import (
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
 
-_INT_MAX = np.iinfo(np.int64).max
+_FLOAT_MAX = np.finfo(np.float64).max
 
 
 def test_node_init():
@@ -251,9 +251,9 @@ def test_excess_load(ok_small):
     # The only vehicle type in the instance has a capacity of 10, so this route
     # has excess load.
     assert_(route.has_excess_load())
-    assert_equal(route.excess_load(), [8])
-    assert_equal(route.load(), [18])
-    assert_equal(route.capacity(), [10])
+    assert_allclose(route.excess_load(), [8])
+    assert_allclose(route.load(), [18])
+    assert_allclose(route.capacity(), [10])
 
 
 @pytest.mark.parametrize("fixed_cost", [0, 9])
@@ -266,7 +266,7 @@ def test_fixed_vehicle_cost(ok_small, fixed_cost: int):
         vehicle_types=[VehicleType(2, capacity=[10], fixed_cost=fixed_cost)]
     )
     route = Route(data, vehicle_type=0)
-    assert_equal(route.fixed_vehicle_cost(), fixed_cost)
+    assert_allclose(route.fixed_vehicle_cost(), fixed_cost)
 
 
 @pytest.mark.parametrize("client", [0, 1, 2, 3])
@@ -282,28 +282,28 @@ def test_dist_and_load_for_single_client_routes(ok_small, client: int):
 
     # Only the client has any delivery demand, so the total route load should
     # be equal to it.
-    assert_equal(route.load(), data.delivery)
-    assert_equal(
+    assert_allclose(route.load(), data.delivery)
+    assert_allclose(
         route.load_between(0, 2, dimension=0).load(),
         data.delivery[0],
     )
 
     # The load_between() function is inclusive.
-    assert_equal(route.load_between(0, 0, dimension=0).load(), 0)
-    assert_equal(
+    assert_allclose(route.load_between(0, 0, dimension=0).load(), 0)
+    assert_allclose(
         route.load_between(1, 1, dimension=0).load(),
         data.delivery[0],
     )
 
     # Distances on various segments of the route.
     dists = ok_small.distance_matrix(profile=0)
-    assert_equal(route.dist_between(0, 1), dists[0, data.location])
-    assert_equal(route.dist_between(1, 2), dists[data.location, 0])
+    assert_allclose(route.dist_between(0, 1), dists[0, data.location])
+    assert_allclose(route.dist_between(1, 2), dists[data.location, 0])
 
     # This should always be zero because distance is a property of the edges,
     # not the nodes.
-    assert_equal(route.dist_at(0), 0)
-    assert_equal(route.dist_at(1), 0)
+    assert_allclose(route.dist_at(0), 0)
+    assert_allclose(route.dist_at(1), 0)
 
 
 @pytest.mark.parametrize(
@@ -332,18 +332,18 @@ def test_route_duration_access(ok_small):
         is_depot = idx == 0 or idx == len(route) - 1
         ds = route.duration_at(idx)
 
-        assert_equal(ds.time_warp(), 0)
+        assert_allclose(ds.time_warp(), 0)
 
         if is_depot:
             vehicle_type = ok_small.vehicle_type(route.vehicle_type)
-            assert_equal(ds.start_early(), vehicle_type.tw_early)
-            assert_equal(ds.start_late(), vehicle_type.tw_late)
-            assert_equal(ds.duration(), 0)
+            assert_allclose(ds.start_early(), vehicle_type.tw_early)
+            assert_allclose(ds.start_late(), vehicle_type.tw_late)
+            assert_allclose(ds.duration(), 0)
         else:
             client = ok_small.client(idx - 1)
-            assert_equal(ds.start_early(), client.tw_early)
-            assert_equal(ds.start_late(), client.tw_late)
-            assert_equal(ds.duration(), client.service_duration)
+            assert_allclose(ds.start_early(), client.tw_early)
+            assert_allclose(ds.start_late(), client.tw_late)
+            assert_allclose(ds.duration(), client.service_duration)
 
 
 def test_route_duration_access_with_latest_start(ok_small):
@@ -360,15 +360,15 @@ def test_route_duration_access_with_latest_start(ok_small):
 
     # Start depot
     start_ds = route.duration_at(0)
-    assert_equal(start_ds.start_early(), vehicle_type.tw_early)
-    assert_equal(start_ds.start_late(), vehicle_type.start_late)
-    assert_equal(start_ds.duration(), 0)
+    assert_allclose(start_ds.start_early(), vehicle_type.tw_early)
+    assert_allclose(start_ds.start_late(), vehicle_type.start_late)
+    assert_allclose(start_ds.duration(), 0)
 
     # End depot
     end_ds = route.duration_at(1)
-    assert_equal(end_ds.start_early(), vehicle_type.tw_early)
-    assert_equal(end_ds.start_late(), vehicle_type.tw_late)
-    assert_equal(end_ds.duration(), 0)
+    assert_allclose(end_ds.start_early(), vehicle_type.tw_early)
+    assert_allclose(end_ds.start_late(), vehicle_type.tw_late)
+    assert_allclose(end_ds.duration(), 0)
 
 
 @pytest.mark.parametrize(
@@ -393,10 +393,12 @@ def test_latest_start(ok_small: ProblemData, start_late: int, expected: int):
     route.append(Node("C0"))
     route.update()
 
-    assert_equal(route.duration(), expected)
+    assert_allclose(route.duration(), expected)
     # Starting the route before 14'056 results in wait time, so start_early
     # should be this start time if it does not exceed the route's latest start.
-    assert_equal(route.duration_after(0).start_early(), min(start_late, 14056))
+    assert_allclose(
+        route.duration_after(0).start_early(), min(start_late, 14056)
+    )
 
 
 @pytest.mark.parametrize("idx", [0, 1, 2, 3])
@@ -410,14 +412,14 @@ def test_duration_between_client_returns_node_duration(ok_small, idx: int):
 
     # Duration of the depot node DS's is zero, and for the client it is equal
     # to the service duration.
-    assert_equal(route.duration_between(0, 0).duration(), 0)
-    assert_equal(
+    assert_allclose(route.duration_between(0, 0).duration(), 0)
+    assert_allclose(
         route.duration_between(1, 1).duration(), client.service_duration
     )
-    assert_equal(route.duration_between(2, 2).duration(), 0)
+    assert_allclose(route.duration_between(2, 2).duration(), 0)
 
     # Single route solutions are all feasible for this instance.
-    assert_equal(route.time_warp(), 0)
+    assert_allclose(route.time_warp(), 0)
 
 
 def test_duration_between_equal_to_before_after_when_one_is_depot(ok_small):
@@ -431,13 +433,13 @@ def test_duration_between_equal_to_before_after_when_one_is_depot(ok_small):
     for idx in [1, 2, 3, 4]:
         before = route.duration_before(idx)
         between_before = route.duration_between(0, idx)
-        assert_equal(before.duration(), between_before.duration())
-        assert_equal(before.time_warp(), between_before.time_warp())
+        assert_allclose(before.duration(), between_before.duration())
+        assert_allclose(before.time_warp(), between_before.time_warp())
 
         after = route.duration_after(idx)
         between_after = route.duration_between(idx, len(route) - 1)
-        assert_equal(after.duration(), between_after.duration())
-        assert_equal(after.time_warp(), between_after.time_warp())
+        assert_allclose(after.duration(), between_after.duration())
+        assert_allclose(after.time_warp(), between_after.time_warp())
 
 
 def test_duration_between_single_route_has_correct_time_warp(ok_small):
@@ -450,19 +452,21 @@ def test_duration_between_single_route_has_correct_time_warp(ok_small):
     assert_equal(route.num_clients(), ok_small.num_clients)
 
     assert_(route.has_time_warp())
-    assert_equal(route.duration_between(0, 5).time_warp(), route.time_warp())
+    assert_allclose(
+        route.duration_between(0, 5).time_warp(), route.time_warp()
+    )
 
     # C0 (at idx 1) causes the time warp in combination with C2: C0 can only be
     # visited after C2's window has already closed.
-    assert_equal(route.time_warp(), 3_633)
-    assert_equal(route.duration_between(1, 4).time_warp(), 3_633)
-    assert_equal(route.duration_between(0, 4).time_warp(), 3_633)
-    assert_equal(route.duration_between(1, 5).time_warp(), 3_633)
-    assert_equal(route.duration_between(1, 3).time_warp(), 3_633)
+    assert_allclose(route.time_warp(), 3_633)
+    assert_allclose(route.duration_between(1, 4).time_warp(), 3_633)
+    assert_allclose(route.duration_between(0, 4).time_warp(), 3_633)
+    assert_allclose(route.duration_between(1, 5).time_warp(), 3_633)
+    assert_allclose(route.duration_between(1, 3).time_warp(), 3_633)
 
     # But excluding client C0, other subtours are (time-)feasible:
     for start, end in [(2, 4), (3, 5), (2, 3), (4, 5), (5, 5), (0, 1), (0, 2)]:
-        assert_equal(route.duration_between(start, end).time_warp(), 0)
+        assert_allclose(route.duration_between(start, end).time_warp(), 0)
 
 
 def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
@@ -472,13 +476,13 @@ def test_distance_is_equal_to_dist_between_over_whole_route(ok_small):
     """
     clients = [f"C{idx}" for idx in range(ok_small.num_clients)]
     route = make_search_route(ok_small, clients)
-    assert_equal(route.distance(), route.dist_between(0, len(route) - 1))
+    assert_allclose(route.distance(), route.dist_between(0, len(route) - 1))
 
 
 @pytest.mark.parametrize(
     ("shift_tw", "expected_start"),
     [
-        ((0, np.iinfo(np.int64).max), (0, 1000)),  # should default to depot
+        ((0, np.finfo(np.float64).max), (0, 1000)),  # should default to depot
         ((0, 1000), (0, 1000)),  # same as depot
         ((0, 500), (0, 500)),  # should lower start_late
         ((250, 1000), (250, 1000)),  # should increase start_early
@@ -508,8 +512,8 @@ def test_shift_duration_depot_time_window_interaction(
 
     for idx in [0, 1]:
         ds = route.duration_at(idx)
-        assert_equal(ds.start_early(), expected_start[0])
-        assert_equal(ds.start_late(), expected_start[1])
+        assert_allclose(ds.start_early(), expected_start[0])
+        assert_allclose(ds.start_late(), expected_start[1])
 
 
 @pytest.mark.parametrize(
@@ -533,9 +537,9 @@ def test_shift_duration(ok_small, shift_duration: int, expected: int):
     clients = [f"C{idx}" for idx in range(data.num_clients)]
     route = make_search_route(data, clients)
 
-    assert_equal(route.duration(), 7_950)
+    assert_allclose(route.duration(), 7_950)
     assert_(route.has_time_warp())
-    assert_equal(route.time_warp(), expected)
+    assert_allclose(route.time_warp(), expected)
 
 
 @pytest.mark.parametrize(
@@ -557,9 +561,9 @@ def test_max_distance(ok_small: ProblemData, max_distance: int, expected: int):
     clients = [f"C{idx}" for idx in range(data.num_clients)]
     route = make_search_route(data, clients)
 
-    assert_equal(route.distance(), 6_450)
+    assert_allclose(route.distance(), 6_450)
     assert_equal(route.has_excess_distance(), expected > 0)
-    assert_equal(route.excess_distance(), expected)
+    assert_allclose(route.excess_distance(), expected)
 
 
 @pytest.mark.parametrize(
@@ -600,8 +604,8 @@ def test_dist_between_equal_to_before_after_when_one_is_depot(ok_small):
     route = make_search_route(ok_small, clients)
 
     for idx in [1, 2, 3, 4]:
-        assert_equal(route.dist_before(idx), route.dist_between(0, idx))
-        assert_equal(
+        assert_allclose(route.dist_before(idx), route.dist_between(0, idx))
+        assert_allclose(
             route.dist_after(idx),
             route.dist_between(idx, len(route) - 1),
         )
@@ -618,16 +622,16 @@ def test_load_between_equal_to_before_after_when_one_is_depot(small_spd):
     for idx in [1, 2, 3, 4]:
         before = route.load_before(idx)
         between_before = route.load_between(0, idx)
-        assert_equal(before.load(), between_before.load())
-        assert_equal(before.initial(), between_before.initial())
-        assert_equal(before.increase(), between_before.increase())
-        assert_equal(before.delta(), between_before.delta())
+        assert_allclose(before.load(), between_before.load())
+        assert_allclose(before.initial(), between_before.initial())
+        assert_allclose(before.increase(), between_before.increase())
+        assert_allclose(before.delta(), between_before.delta())
 
         after = route.load_after(idx)
         between_after = route.load_between(idx, len(route) - 1)
-        assert_equal(after.initial(), between_after.initial())
-        assert_equal(after.increase(), between_after.increase())
-        assert_equal(after.delta(), between_after.delta())
+        assert_allclose(after.initial(), between_after.initial())
+        assert_allclose(after.increase(), between_after.increase())
+        assert_allclose(after.delta(), between_after.delta())
 
 
 @pytest.mark.parametrize(
@@ -667,7 +671,9 @@ def test_load_between_multiple_dimensions(frm, to, dim, expected):
     )
 
     route = make_search_route(data, ["C0", "C1"])
-    assert_equal(route.load_between(frm, to, dimension=dim).load(), expected)
+    assert_allclose(
+        route.load_between(frm, to, dimension=dim).load(), expected
+    )
 
 
 def test_load_between_equal_to_before_after_when_one_is_depot_different_dims(
@@ -686,18 +692,18 @@ def test_load_between_equal_to_before_after_when_one_is_depot_different_dims(
             before = route.load_before(idx, dim)
             between_before = route.load_between(0, idx, dim)
 
-            assert_equal(before.load(), between_before.load())
-            assert_equal(before.initial(), between_before.initial())
-            assert_equal(before.delta(), between_before.delta())
-            assert_equal(before.increase(), between_before.increase())
+            assert_allclose(before.load(), between_before.load())
+            assert_allclose(before.initial(), between_before.initial())
+            assert_allclose(before.delta(), between_before.delta())
+            assert_allclose(before.increase(), between_before.increase())
 
             after = route.load_after(idx, dim)
             between_after = route.load_between(idx, len(route) - 1, dim)
 
-            assert_equal(after.load(), between_after.load())
-            assert_equal(after.initial(), between_after.initial())
-            assert_equal(after.delta(), between_after.delta())
-            assert_equal(after.increase(), between_after.increase())
+            assert_allclose(after.load(), between_after.load())
+            assert_allclose(after.initial(), between_after.initial())
+            assert_allclose(after.delta(), between_after.delta())
+            assert_allclose(after.increase(), between_after.increase())
 
 
 def test_distance_different_profiles(ok_small_two_profiles):
@@ -709,13 +715,13 @@ def test_distance_different_profiles(ok_small_two_profiles):
     clients = [f"C{idx}" for idx in range(data.num_clients)]
     route = make_search_route(data, clients)
 
-    assert_equal(route.distance(), 6_450)
+    assert_allclose(route.distance(), 6_450)
     assert_equal(route.profile(), 0)
 
     # Let's test with a different profile. The distance on the route should be
     # double using the second profile.
     depot_to_depot = route.dist_between(0, len(route) - 1, profile=1)
-    assert_equal(depot_to_depot, 2 * route.distance())
+    assert_allclose(depot_to_depot, 2 * route.distance())
 
 
 def test_duration_different_profiles(ok_small_two_profiles):
@@ -727,7 +733,7 @@ def test_duration_different_profiles(ok_small_two_profiles):
     clients = [f"C{idx}" for idx in range(data.num_clients)]
     route = make_search_route(data, clients)
 
-    assert_equal(route.duration(), 7_950)
+    assert_allclose(route.duration(), 7_950)
     assert_equal(route.profile(), 0)
 
     # Let's test with a different profile. The travel duration on the route
@@ -737,7 +743,7 @@ def test_duration_different_profiles(ok_small_two_profiles):
     # adjusted for the service duration.
     depot_to_depot = route.duration_between(0, len(route) - 1, profile=1)
     service = sum(c.service_duration for c in data.clients())
-    assert_equal(depot_to_depot.duration(), 2 * route.duration() - service)
+    assert_allclose(depot_to_depot.duration(), 2 * route.duration() - service)
 
 
 def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
@@ -755,10 +761,10 @@ def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
     assert_equal(route.end_depot(), 1)
 
     dist_mat = data.distance_matrix(0)
-    assert_equal(route.distance(), dist_mat[0, 1])
+    assert_allclose(route.distance(), dist_mat[0, 1])
 
     dur_mat = data.duration_matrix(0)
-    assert_equal(route.duration(), dur_mat[0, 1])
+    assert_allclose(route.duration(), dur_mat[0, 1])
 
 
 @pytest.mark.parametrize(
@@ -801,14 +807,14 @@ def test_initial_load_calculation(ok_small):
     present on the vehicle.
     """
     orig_route = Route(ok_small, 0)
-    assert_equal(orig_route.load(), [0])
+    assert_allclose(orig_route.load(), [0])
 
     veh_type = ok_small.vehicle_type(0)
     new_type = veh_type.replace(initial_load=[5])
     new_data = ok_small.replace(vehicle_types=[new_type])
 
     new_route = Route(new_data, 0)
-    assert_equal(new_route.load(), [5])
+    assert_allclose(new_route.load(), [5])
 
 
 def test_multi_trip_depots(ok_small_multiple_trips):
@@ -849,22 +855,22 @@ def test_multi_trip_load_evaluation(ok_small_multiple_trips):
     # Overall route load statistics: there's 18 load being transported, 10 on
     # the first trip and 8 on the second. Because that's below the capacity of
     # 10 on each trip, there is no excess load.
-    assert_equal(route.load(), [18])
-    assert_equal(route.excess_load(), [0])
+    assert_allclose(route.load(), [18])
+    assert_allclose(route.excess_load(), [0])
 
     start1, end1 = (0, 3)  # start/end of first trip
     before1 = route.load_before(end1)
     after1 = route.load_after(start1)
 
-    assert_equal(before1.load(), 10)
-    assert_equal(after1.load(), 10)
+    assert_allclose(before1.load(), 10)
+    assert_allclose(after1.load(), 10)
 
     start2, end2 = (3, 6)  # start/end of second trip
     before2 = route.load_before(end2)
     after2 = route.load_after(start2)
 
-    assert_equal(before2.load(), 8)
-    assert_equal(after2.load(), 8)
+    assert_allclose(before2.load(), 8)
+    assert_allclose(after2.load(), 8)
 
 
 def test_route_remove_reload_depot(ok_small_multiple_trips):
@@ -939,16 +945,16 @@ def test_bug_reload_swaps_load_arguments(small_spd):
 
     client3 = data.client(2)
     client4 = data.client(3)
-    assert_equal(client3.delivery[0] + client4.delivery[0], 34)
-    assert_equal(client3.pickup[0] + client4.pickup[0], 50)
+    assert_allclose(client3.delivery[0] + client4.delivery[0], 34)
+    assert_allclose(client3.pickup[0] + client4.pickup[0], 50)
 
-    assert_equal(route.load_before(5).initial(), 34)
-    assert_equal(route.load_before(5).delta(), 16)
-    assert_equal(route.load_before(5).load(), 50)
+    assert_allclose(route.load_before(5).initial(), 34)
+    assert_allclose(route.load_before(5).delta(), 16)
+    assert_allclose(route.load_before(5).load(), 50)
 
-    assert_equal(route.load_after(2).initial(), 34)
-    assert_equal(route.load_after(2).delta(), 16)
-    assert_equal(route.load_after(2).load(), 50)
+    assert_allclose(route.load_after(2).initial(), 34)
+    assert_allclose(route.load_after(2).delta(), 16)
+    assert_allclose(route.load_after(2).load(), 50)
 
 
 def test_multi_trip_initial_load(ok_small_multiple_trips):
@@ -962,10 +968,10 @@ def test_multi_trip_initial_load(ok_small_multiple_trips):
 
     # There's five excess load on the first trip, due to five initial load
     # already on the vehicle upon departure from the starting depot.
-    assert_equal(route.excess_load(), [5])
-    assert_equal(route.load_at(0).load(), 5)
-    assert_equal(route.load_before(3).load(), 15)
-    assert_equal(route.load_after(3).load(), 8)
+    assert_allclose(route.excess_load(), [5])
+    assert_allclose(route.load_at(0).load(), 5)
+    assert_allclose(route.load_before(3).load(), 15)
+    assert_allclose(route.load_after(3).load(), 8)
 
 
 def test_multi_trip_with_release_times():
@@ -997,36 +1003,36 @@ def test_multi_trip_with_release_times():
 
     # The two trips run from [50, 95] and [100, 150]. There's 5 wait duration
     # in between the two trips, for a total route duration of 100.
-    assert_equal(route.duration(), 100)
-    assert_equal(route.time_warp(), 0)
+    assert_allclose(route.duration(), 100)
+    assert_allclose(route.time_warp(), 0)
 
     # Duration segment associated with the first trip from 50 to 95.
     trip1 = route.duration_before(3)
-    assert_equal(trip1.start_early(), 50)
-    assert_equal(trip1.start_late(), 50)
-    assert_equal(trip1.duration(), 45)
+    assert_allclose(trip1.start_early(), 50)
+    assert_allclose(trip1.start_late(), 50)
+    assert_allclose(trip1.duration(), 45)
 
     # Duration segment associated with the second trip from 100 to 150.
     trip2 = route.duration_after(3)
-    assert_equal(trip2.start_early(), 100)
-    assert_equal(trip2.start_late(), 110)
-    assert_equal(trip2.duration(), 50)
+    assert_allclose(trip2.start_early(), 100)
+    assert_allclose(trip2.start_late(), 110)
+    assert_allclose(trip2.duration(), 50)
 
     # Prefix duration segment tracking the whole route (associated with the end
     # depot).
     before = route.duration_before(5)
-    assert_equal(before.start_early(), 100)  # of last trip
-    assert_equal(before.start_late(), 110)  # of last trip
-    assert_equal(before.duration(), 100)
-    assert_equal(before.time_warp(), 0)
+    assert_allclose(before.start_early(), 100)  # of last trip
+    assert_allclose(before.start_late(), 110)  # of last trip
+    assert_allclose(before.duration(), 100)
+    assert_allclose(before.time_warp(), 0)
 
     # Postfix duration segment tracking the whole route (associated with the
     # start depot).
     after = route.duration_after(0)
-    assert_equal(after.start_early(), 50)  # of first trip
-    assert_equal(after.start_late(), 50)  # of first trip
-    assert_equal(after.duration(), 100)
-    assert_equal(after.time_warp(), 0)
+    assert_allclose(after.start_early(), 50)  # of first trip
+    assert_allclose(after.start_late(), 50)  # of first trip
+    assert_allclose(after.duration(), 100)
+    assert_allclose(after.time_warp(), 0)
 
 
 def test_multi_trip_duration_caches(ok_small_multiple_trips):
@@ -1043,8 +1049,8 @@ def test_multi_trip_duration_caches(ok_small_multiple_trips):
     first_trip = make_search_route(ok_small_multiple_trips, ["C2", "C3"])
     before_reload = route.duration_before(3)
     between_start_reload = route.duration_between(0, 3)
-    assert_equal(first_trip.duration(), before_reload.duration())
-    assert_equal(between_start_reload.duration(), before_reload.duration())
+    assert_allclose(first_trip.duration(), before_reload.duration())
+    assert_allclose(between_start_reload.duration(), before_reload.duration())
 
     # Test the cache for the trip [C0, C1], starting at the reload depot at
     # index 3. We again test direct computation, and compare against a route
@@ -1052,12 +1058,12 @@ def test_multi_trip_duration_caches(ok_small_multiple_trips):
     second_trip = make_search_route(ok_small_multiple_trips, ["C0", "C1"])
     after_reload = route.duration_after(3)
     between_reload_end = route.duration_between(3, 6)
-    assert_equal(second_trip.duration(), after_reload.duration())
-    assert_equal(between_reload_end.duration(), after_reload.duration())
+    assert_allclose(second_trip.duration(), after_reload.duration())
+    assert_allclose(between_reload_end.duration(), after_reload.duration())
 
     # The trip durations should together sum to the route duration.
     trips_duration = first_trip.duration() + second_trip.duration()
-    assert_equal(route.duration(), trips_duration)
+    assert_allclose(route.duration(), trips_duration)
 
 
 @pytest.mark.parametrize(
@@ -1065,7 +1071,7 @@ def test_multi_trip_duration_caches(ok_small_multiple_trips):
     [
         (VehicleType(), True),  # default has cost
         (VehicleType(unit_distance_cost=0), False),  # no cost or constraint
-        (VehicleType(unit_distance_cost=0, max_distance=_INT_MAX), False),
+        (VehicleType(unit_distance_cost=0, max_distance=_FLOAT_MAX), False),
         (VehicleType(unit_distance_cost=0, max_distance=0), True),  # constr
         (VehicleType(max_distance=0), True),  # both cost and constraint
     ],
@@ -1134,16 +1140,16 @@ def test_overtime(ok_small_overtime):
     route = make_search_route(ok_small_overtime, ["C1", "C3"])
 
     # Route-level vehicle type attributes.
-    assert_equal(route.shift_duration(), 5_000)
-    assert_equal(route.max_overtime(), 1_000)
-    assert_equal(route.max_duration(), 6_000)
-    assert_equal(route.unit_overtime_cost(), 10)
+    assert_allclose(route.shift_duration(), 5_000)
+    assert_allclose(route.max_overtime(), 1_000)
+    assert_allclose(route.max_duration(), 6_000)
+    assert_allclose(route.unit_overtime_cost(), 10)
 
     # Route cost and feasibility attributes.
     assert_(not route.has_time_warp())
-    assert_equal(route.duration(), 5_229)
-    assert_equal(route.overtime(), 229)
-    assert_equal(route.duration_cost(), 1 * 5_229 + 10 * 229)
+    assert_allclose(route.duration(), 5_229)
+    assert_allclose(route.overtime(), 229)
+    assert_allclose(route.duration_cost(), 1 * 5_229 + 10 * 229)
 
 
 def test_eq(ok_small):
@@ -1175,34 +1181,34 @@ def test_multi_trip_with_depot_service_duration(ok_small_multiple_trips):
     first_trip = make_search_route(data, ["C2", "C3"])
     before_reload = route.duration_before(3)
     between_start_reload = route.duration_between(0, 3)
-    assert_equal(first_trip.duration(), before_reload.duration())
-    assert_equal(between_start_reload.duration(), before_reload.duration())
+    assert_allclose(first_trip.duration(), before_reload.duration())
+    assert_allclose(between_start_reload.duration(), before_reload.duration())
 
     # Service duration at each depot is 200, but singleton end depots (incl.
     # reload depots, which are both start and end depots for trips) do not
     # include their service
-    assert_equal(route.duration_at(0).duration(), 200)  # start depot
-    assert_equal(route.duration_at(3).duration(), 0)  # reload depot
-    assert_equal(route.duration_at(6).duration(), 0)  # end depot
+    assert_allclose(route.duration_at(0).duration(), 200)  # start depot
+    assert_allclose(route.duration_at(3).duration(), 0)  # reload depot
+    assert_allclose(route.duration_at(6).duration(), 0)  # end depot
 
     # Now the second trip.
     second_trip = make_search_route(data, ["C0", "C1"])
     after_reload = route.duration_after(3)
     between_reload_end = route.duration_between(3, 6)
-    assert_equal(second_trip.duration(), after_reload.duration())
-    assert_equal(between_reload_end.duration(), after_reload.duration())
+    assert_allclose(second_trip.duration(), after_reload.duration())
+    assert_allclose(between_reload_end.duration(), after_reload.duration())
 
     # The durations of both trips should equal the total route duration.
     trips_duration = first_trip.duration() + second_trip.duration()
-    assert_equal(route.duration(), trips_duration)
+    assert_allclose(route.duration(), trips_duration)
 
     # Before the start and end depots.
-    assert_equal(route.duration_before(0).duration(), 200)
-    assert_equal(route.duration_before(6).duration(), route.duration())
+    assert_allclose(route.duration_before(0).duration(), 200)
+    assert_allclose(route.duration_before(6).duration(), route.duration())
 
     # After the start and end depots.
-    assert_equal(route.duration_after(0).duration(), route.duration())
-    assert_equal(route.duration_after(6).duration(), 0)
+    assert_allclose(route.duration_after(0).duration(), route.duration())
+    assert_allclose(route.duration_after(6).duration(), 0)
 
 
 def test_node_is_client_and_is_depot():
@@ -1245,7 +1251,7 @@ def test_route_statistics_with_shipments(small_shipments):
 
     # These numbers are explained in the ``test_route_with_shipments`` test
     # for pyvrp.Route; see there for details.
-    assert_equal(route.distance(), 47_132)
-    assert_equal(route.duration(), 47_132 + 6 * 900 + 13_800 + 402)
-    assert_equal(route.time_warp(), 1_611)
-    assert_equal(route.excess_load(), [20])
+    assert_allclose(route.distance(), 47_132)
+    assert_allclose(route.duration(), 47_132 + 6 * 900 + 13_800 + 402)
+    assert_allclose(route.time_warp(), 1_611)
+    assert_allclose(route.excess_load(), [20])

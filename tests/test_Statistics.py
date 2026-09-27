@@ -1,5 +1,5 @@
 import pytest
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import CostEvaluator, Solution, Statistics
 
@@ -63,13 +63,13 @@ def test_data_point_matches_collect(ok_small):
 
     datum = stats.data[0]
 
-    assert_equal(datum.current_cost, 28408)
+    assert_allclose(datum.current_cost, 28408)
     assert_(not datum.current_feas)
 
-    assert_equal(datum.candidate_cost, 10012)
+    assert_allclose(datum.candidate_cost, 10012)
     assert_(datum.candidate_feas)
 
-    assert_equal(datum.best_cost, 9725)
+    assert_allclose(datum.best_cost, 9725)
     assert_(datum.best_feas)
 
 
@@ -136,9 +136,9 @@ def test_iterating_over_statistics_returns_data(ok_small):
     assert_equal(len(list(stats)), 2)
 
     for datum in stats:
-        assert_equal(datum.current_cost, cost)
-        assert_equal(datum.candidate_cost, cost)
-        assert_equal(datum.best_cost, cost)
+        assert_allclose(datum.current_cost, cost)
+        assert_allclose(datum.candidate_cost, cost)
+        assert_allclose(datum.best_cost, cost)
         assert_(datum.current_feas)
         assert_(datum.candidate_feas)
         assert_(datum.best_feas)

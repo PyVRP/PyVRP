@@ -174,8 +174,7 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
 #ifndef NDEBUG
             auto const costAfter = costEvaluator.penalisedCost(solution_);
             // When there is an improving move, the delta cost evaluation must
-            // be exact. The resulting cost is then the sum of the cost before
-            // the move, plus the delta cost.
+            // agree with the resulting cost up to floating-point rounding.
             assert(costAfter == costBefore + deltaCost);
 #endif
 
@@ -220,8 +219,7 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
 #ifndef NDEBUG
             auto const costAfter = costEvaluator.penalisedCost(solution_);
             // When there is an improving move, the delta cost evaluation must
-            // be exact. The resulting cost is then the sum of the cost before
-            // the move, plus the delta cost.
+            // agree with the resulting cost up to floating-point rounding.
             assert(costAfter == costBefore + deltaCost);
 #endif
 

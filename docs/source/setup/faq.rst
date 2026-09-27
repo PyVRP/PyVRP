@@ -58,7 +58,7 @@ Debugging
    Why does PyVRP sometimes get stuck when using partial travel matrices?
 
       PyVRP internally uses a large ``missing_value`` argument to set the distance and duration attributes of missing edges.
-      This sometimes results in integer overflow, which can cause the solver to get stuck.
+      This sometimes results in numerical instability, which can cause the solver to get stuck.
       Passing a smaller ``missing_value`` to :meth:`~pyvrp.Model.Model.solve` should fix this problem.
 
 Extending

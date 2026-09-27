@@ -21,8 +21,8 @@ namespace pyvrp
  *     clients: list[Client],
  *     depots: list[Depot],
  *     vehicle_types: list[VehicleType],
- *     distance_matrices: list[numpy.ndarray[int]],
- *     duration_matrices: list[numpy.ndarray[int]],
+ *     distance_matrices: list[numpy.ndarray[float]],
+ *     duration_matrices: list[numpy.ndarray[float]],
  *     groups: list[ClientGroup] = [],
  *     shipments: list[Shipment] = [],
  * )

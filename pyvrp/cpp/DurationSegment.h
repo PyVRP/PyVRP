@@ -12,14 +12,14 @@ namespace pyvrp
 {
 /**
  * DurationSegment(
- *     duration: int = 0,
- *     time_warp: int = 0,
- *     start_early: int = 0,
- *     start_late: int = np.iinfo(np.int64).max,
- *     release_time: int = 0,
- *     cum_duration: int = 0,
- *     cum_time_warp: int = 0,
- *     prev_end_late: int = np.iinfo(np.int64).max,
+ *     duration: float = 0,
+ *     time_warp: float = 0,
+ *     start_early: float = 0,
+ *     start_late: float = np.finfo(np.float64).max,
+ *     release_time: float = 0,
+ *     cum_duration: float = 0,
+ *     cum_time_warp: float = 0,
+ *     prev_end_late: float = np.finfo(np.float64).max,
  * )
  *
  * Creates a duration segment.
@@ -105,7 +105,7 @@ public:
      *
      * Returns
      * -------
-     * int
+     * float
      *     Total time warp on this route segment.
      */
     [[nodiscard]] inline Duration
@@ -191,9 +191,8 @@ DurationSegment DurationSegment::merge(Duration const edgeDuration,
                                        DurationSegment const &first,
                                        DurationSegment const &second)
 {
-    // Because clients' default time windows are [0, INT_MAX], the ternaries in
-    // this method are carefully designed to avoid integer over- and underflow
-    // issues. Be very careful when changing things here!
+    // Unbounded time windows use the largest finite duration. The ternaries
+    // keep intermediate calculations finite when combining those bounds.
 
     // atSecond is the time (relative to our starting time) at which we arrive
     // at the second's initial location.
@@ -266,7 +265,7 @@ DurationSegment DurationSegment::finaliseFront() const
 Duration DurationSegment::duration() const
 {
     auto const duration = cumDuration_ + duration_;
-    return duration + std::max<Duration>(startEarly() - prevEndLate_, 0);
+    return duration + std::max<Duration>(0, startEarly() - prevEndLate_);
 }
 
 Duration DurationSegment::timeWarp(Duration maxDuration) const
@@ -276,7 +275,7 @@ Duration DurationSegment::timeWarp(Duration maxDuration) const
 
     return timeWarp
            // Additional time warp from having to wait until release time.
-           + std::max<Duration>(releaseTime_ - startLate_, 0)
+           + std::max<Duration>(0, releaseTime_ - startLate_)
            // Max duration constraint applies only to net route duration,
            // subtracting existing time warp. Use ternary to avoid underflow.
            + (netDuration > maxDuration ? netDuration - maxDuration : 0);

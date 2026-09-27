@@ -1,7 +1,7 @@
 import pickle
 
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import PiecewiseLinearFunction
 
@@ -13,30 +13,45 @@ def test_call():
     fn = PiecewiseLinearFunction([5, 10], [(1, 2), (11, 3), (26, 4)])
 
     # 1st segment, defined for values < 5.
-    assert_equal(fn(-100), 1 + 2 * -100)
-    assert_equal(fn(0), 1 + 2 * 0)
-    assert_equal(fn(4), 1 + 2 * 4)
+    assert_allclose(fn(-100), 1 + 2 * -100)
+    assert_allclose(fn(0), 1 + 2 * 0)
+    assert_allclose(fn(4), 1 + 2 * 4)
 
     # 2nd segment, defined for values in [5, 10).
-    assert_equal(fn(5), 11 + 3 * 5)
-    assert_equal(fn(9), 11 + 3 * 9)
+    assert_allclose(fn(5), 11 + 3 * 5)
+    assert_allclose(fn(9), 11 + 3 * 9)
 
     # 3rd segment, defined for values >= 10.
-    assert_equal(fn(10), 26 + 4 * 10)
-    assert_equal(fn(13), 26 + 4 * 13)
-    assert_equal(fn(100), 26 + 4 * 100)
+    assert_allclose(fn(10), 26 + 4 * 10)
+    assert_allclose(fn(13), 26 + 4 * 13)
+    assert_allclose(fn(100), 26 + 4 * 100)
 
 
 def test_call_with_floating_point_coefficients():
     """
     Tests calling a piecewise linear function with floating-point segment
-    coefficients. Non-integral results are truncated to integers.
+    coefficients. Non-integral results retain their fractional part.
     """
     fn = PiecewiseLinearFunction([], [(0.5, 1.5)])
 
-    assert_equal(fn(-1), -1)
-    assert_equal(fn(0), 0)
-    assert_equal(fn(1), 2)
+    assert_allclose(fn(-1), -1)
+    assert_allclose(fn(0), 0.5)
+    assert_allclose(fn(1), 2)
+    assert_allclose(fn(0.5), 1.25)
+
+
+def test_fractional_breakpoints_and_points():
+    """
+    Fractional points, breakpoints, and outputs survive pickling.
+    """
+    fn = PiecewiseLinearFunction(
+        points=[(0.25, 0.5), (0.75, 1.5), (0.75, 2.5), (1.25, 2.75)]
+    )
+    fn = pickle.loads(pickle.dumps(fn))
+    assert_allclose(fn.breakpoints, [0.75])
+    assert_allclose(fn(0.5), 1.0)
+    assert_allclose(fn(0.75), 2.5)
+    assert_allclose(fn(1.0), 2.625)
 
 
 def test_zero():
@@ -44,19 +59,19 @@ def test_zero():
     Tests the piecewise linear function with zero slope and/or intercept.
     """
     fn = PiecewiseLinearFunction([], [(0, 7)])  # zero intercept
-    assert_equal(fn(-1), -7)
-    assert_equal(fn(0), 0)
-    assert_equal(fn(1), 7)
+    assert_allclose(fn(-1), -7)
+    assert_allclose(fn(0), 0)
+    assert_allclose(fn(1), 7)
 
     fn = PiecewiseLinearFunction([], [(7, 0)])  # zero slope (constant)
-    assert_equal(fn(-5), 7)
-    assert_equal(fn(0), 7)
-    assert_equal(fn(5), 7)
+    assert_allclose(fn(-5), 7)
+    assert_allclose(fn(0), 7)
+    assert_allclose(fn(5), 7)
 
     fn = PiecewiseLinearFunction([], [(0, 0)])  # all zero
-    assert_equal(fn(-100), 0)
-    assert_equal(fn(0), 0)
-    assert_equal(fn(100), 0)
+    assert_allclose(fn(-100), 0)
+    assert_allclose(fn(0), 0)
+    assert_allclose(fn(100), 0)
 
 
 def test_piecewise_linear_function_raises_inconsistent_argument_sizes():
@@ -79,8 +94,8 @@ def test_breakpoints_and_segments_properties():
     Tests getting the breakpoints and segments.
     """
     fn = PiecewiseLinearFunction([5], [(1, 2), (11, 3)])
-    assert_equal(fn.breakpoints, [5])
-    assert_equal(fn.segments, [(1, 2), (11, 3)])
+    assert_allclose(fn.breakpoints, [5])
+    assert_allclose(fn.segments, [(1, 2), (11, 3)])
 
 
 def test_eq():
@@ -188,7 +203,7 @@ def test_exact_representation_at_points():
     Tests that the piecewise linear function returns the given points exactly.
     """
     fn = PiecewiseLinearFunction(points=[(0, 0), (7, 61), (27, 91), (81, 144)])
-    assert_equal(fn(0), 0)
-    assert_equal(fn(7), 61)
-    assert_equal(fn(27), 91)
-    assert_equal(fn(81), 144)
+    assert_allclose(fn(0), 0)
+    assert_allclose(fn(7), 61)
+    assert_allclose(fn(27), 91)
+    assert_allclose(fn(81), 144)

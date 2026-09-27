@@ -221,7 +221,7 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
     releaseTimes.insert(releaseTimes.begin(), ds.releaseTime());
 
     duration_ = ds.duration();
-    overtime_ = std::max<Duration>(duration_ - vehData.shiftDuration, 0);
+    overtime_ = std::max<Duration>(0, duration_ - vehData.shiftDuration);
     durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_)
                     + vehData.unitOvertimeCost * static_cast<Cost>(overtime_);
     startTime_ = ds.startEarly();
@@ -236,8 +236,8 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
                             Duration late,
                             Duration service)
     {
-        auto const wait = std::max<Duration>(early - now, 0);
-        auto const tw = std::max<Duration>(now - late, 0);
+        auto const wait = std::max<Duration>(0, early - now);
+        auto const tw = std::max<Duration>(0, now - late);
 
         now += wait;
         now -= tw;
@@ -363,7 +363,7 @@ void Route::setDistance(ProblemData const &data)
     }
 
     distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
-    excessDistance_ = std::max<Distance>(distance_ - vehData.maxDistance, 0);
+    excessDistance_ = std::max<Distance>(0, distance_ - vehData.maxDistance);
 }
 
 void Route::setLoad(ProblemData const &data)

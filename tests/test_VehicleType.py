@@ -2,12 +2,12 @@ import pickle
 
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import VehicleType
 from pyvrp.constants import MAX_SIZE
 
-_INT_MAX = np.iinfo(np.int64).max
+_FLOAT_MAX = np.finfo(np.float64).max
 
 
 @pytest.mark.parametrize(
@@ -113,14 +113,14 @@ def test_does_not_raise_for_all_zero_edge_case():
     assert_equal(vehicle_type.start_depot, 0)
     assert_equal(vehicle_type.end_depot, 0)
     assert_equal(vehicle_type.capacity, [])
-    assert_equal(vehicle_type.fixed_cost, 0)
-    assert_equal(vehicle_type.tw_early, 0)
-    assert_equal(vehicle_type.tw_late, 0)
-    assert_equal(vehicle_type.shift_duration, 0)
-    assert_equal(vehicle_type.max_distance, 0)
-    assert_equal(vehicle_type.unit_distance_cost, 0)
-    assert_equal(vehicle_type.unit_duration_cost, 0)
-    assert_equal(vehicle_type.start_late, 0)
+    assert_allclose(vehicle_type.fixed_cost, 0)
+    assert_allclose(vehicle_type.tw_early, 0)
+    assert_allclose(vehicle_type.tw_late, 0)
+    assert_allclose(vehicle_type.shift_duration, 0)
+    assert_allclose(vehicle_type.max_distance, 0)
+    assert_allclose(vehicle_type.unit_distance_cost, 0)
+    assert_allclose(vehicle_type.unit_duration_cost, 0)
+    assert_allclose(vehicle_type.start_late, 0)
 
 
 def test_default_values():
@@ -133,22 +133,22 @@ def test_default_values():
     assert_equal(vehicle_type.start_depot, 0)
     assert_equal(vehicle_type.end_depot, 0)
     assert_equal(vehicle_type.capacity, [])
-    assert_equal(vehicle_type.fixed_cost, 0)
-    assert_equal(vehicle_type.tw_early, 0)
-    assert_equal(vehicle_type.unit_distance_cost, 1)
-    assert_equal(vehicle_type.unit_duration_cost, 0)
-    assert_equal(vehicle_type.unit_overtime_cost, 0)
+    assert_allclose(vehicle_type.fixed_cost, 0)
+    assert_allclose(vehicle_type.tw_early, 0)
+    assert_allclose(vehicle_type.unit_distance_cost, 1)
+    assert_allclose(vehicle_type.unit_duration_cost, 0)
+    assert_allclose(vehicle_type.unit_overtime_cost, 0)
     assert_equal(vehicle_type.name, "")
 
     # The default value for the following fields is the largest representable
-    # integral value.
-    assert_equal(vehicle_type.tw_late, _INT_MAX)
-    assert_equal(vehicle_type.shift_duration, _INT_MAX)
-    assert_equal(vehicle_type.max_duration, _INT_MAX)
-    assert_equal(vehicle_type.max_distance, _INT_MAX)
+    # floating-point value.
+    assert_allclose(vehicle_type.tw_late, _FLOAT_MAX)
+    assert_allclose(vehicle_type.shift_duration, _FLOAT_MAX)
+    assert_allclose(vehicle_type.max_duration, _FLOAT_MAX)
+    assert_allclose(vehicle_type.max_distance, _FLOAT_MAX)
 
     # The default value for start_late is the value of tw_late.
-    assert_equal(vehicle_type.start_late, vehicle_type.tw_late)
+    assert_allclose(vehicle_type.start_late, vehicle_type.tw_late)
 
 
 def test_attribute_access():
@@ -176,16 +176,16 @@ def test_attribute_access():
     assert_equal(vehicle_type.num_available, 7)
     assert_equal(vehicle_type.start_depot, 29)
     assert_equal(vehicle_type.end_depot, 43)
-    assert_equal(vehicle_type.capacity, [13])
-    assert_equal(vehicle_type.fixed_cost, 3)
-    assert_equal(vehicle_type.tw_early, 17)
-    assert_equal(vehicle_type.tw_late, 19)
-    assert_equal(vehicle_type.shift_duration, 23)
-    assert_equal(vehicle_type.max_distance, 31)
-    assert_equal(vehicle_type.unit_distance_cost, 37)
-    assert_equal(vehicle_type.unit_duration_cost, 41)
-    assert_equal(vehicle_type.start_late, 18)
-    assert_equal(vehicle_type.max_overtime, 43)
+    assert_allclose(vehicle_type.capacity, [13])
+    assert_allclose(vehicle_type.fixed_cost, 3)
+    assert_allclose(vehicle_type.tw_early, 17)
+    assert_allclose(vehicle_type.tw_late, 19)
+    assert_allclose(vehicle_type.shift_duration, 23)
+    assert_allclose(vehicle_type.max_distance, 31)
+    assert_allclose(vehicle_type.unit_distance_cost, 37)
+    assert_allclose(vehicle_type.unit_duration_cost, 41)
+    assert_allclose(vehicle_type.start_late, 18)
+    assert_allclose(vehicle_type.max_overtime, 43)
 
     assert_equal(vehicle_type.name, "vehicle_type name")
     assert_equal(str(vehicle_type), "vehicle_type name")
@@ -194,27 +194,28 @@ def test_attribute_access():
 @pytest.mark.parametrize(
     ("shift_duration", "max_overtime", "expected"),
     [
-        (_INT_MAX, _INT_MAX, _INT_MAX),  # should not overflow
-        (_INT_MAX, 0, _INT_MAX),  # borderline
-        (0, _INT_MAX, _INT_MAX),  # borderline
-        (_INT_MAX - 1, 1, _INT_MAX),  # check for off-by-one
-        (1, _INT_MAX - 1, _INT_MAX),  # check for off-by-one
-        (10, 10, 20),  # completely OK, should sum both terms
+        (_FLOAT_MAX, 0, _FLOAT_MAX),  # borderline
+        (0, _FLOAT_MAX, _FLOAT_MAX),  # borderline
+        (_FLOAT_MAX / 2, _FLOAT_MAX / 2, _FLOAT_MAX),  # still OK
+        (_FLOAT_MAX, _FLOAT_MAX, np.inf),  # should overflow into +inf
+        (10.1, 10.1, 20.2),  # completely OK, should sum both terms
     ],
 )
-def test_max_duration(shift_duration: int, max_overtime: int, expected: int):
+def test_max_duration(
+    shift_duration: float, max_overtime: float, expected: float
+):
     """
-    Tests that the maximum duration property is correctly computed, and does
-    not over- or underflow.
+    Tests the maximum duration calculation with various arguments, including
+    when it overflows.
     """
     veh_type = VehicleType(
         shift_duration=shift_duration,
         max_overtime=max_overtime,
     )
 
-    assert_equal(veh_type.shift_duration, shift_duration)
-    assert_equal(veh_type.max_overtime, max_overtime)
-    assert_equal(veh_type.max_duration, expected)
+    assert_allclose(veh_type.shift_duration, shift_duration)
+    assert_allclose(veh_type.max_overtime, max_overtime)
+    assert_allclose(veh_type.max_duration, expected, rtol=1e-15)
 
 
 def test_replace():
@@ -223,7 +224,7 @@ def test_replace():
     """
     vehicle_type = VehicleType(num_available=7, capacity=[10], name="test")
     assert_equal(vehicle_type.num_available, 7)
-    assert_equal(vehicle_type.capacity, [10])
+    assert_allclose(vehicle_type.capacity, [10])
     assert_equal(vehicle_type.name, "test")
 
     # Replacing the number of available vehicles and name should be reflected
@@ -231,7 +232,7 @@ def test_replace():
     # as the original. In particular, capacity should not be changed.
     new = vehicle_type.replace(num_available=5, name="new")
     assert_equal(new.num_available, 5)
-    assert_equal(new.capacity, [10])
+    assert_allclose(new.capacity, [10])
     assert_equal(new.name, "new")
 
 
@@ -241,7 +242,7 @@ def test_multiple_capacities():
     """
     vehicle_type = VehicleType(capacity=[998, 37], num_available=10)
     assert_equal(vehicle_type.num_available, 10)
-    assert_equal(vehicle_type.capacity, [998, 37])
+    assert_allclose(vehicle_type.capacity, [998, 37])
 
 
 def test_eq():
@@ -298,8 +299,8 @@ def test_load_dimensions_are_padded_with_zeroes(
     VehicleType arguments are padded with zeroes.
     """
     vehicle_type = VehicleType(capacity=capacity, initial_load=initial_load)
-    assert_equal(vehicle_type.capacity, exp_capacity)
-    assert_equal(vehicle_type.initial_load, exp_initial_load)
+    assert_allclose(vehicle_type.capacity, exp_capacity)
+    assert_allclose(vehicle_type.initial_load, exp_initial_load)
 
 
 def test_max_trips(ok_small_multiple_trips):
@@ -336,4 +337,4 @@ def test_allows_negative_fixed_cost():
     not allowed.
     """
     veh_type = VehicleType(fixed_cost=-100)
-    assert_equal(veh_type.fixed_cost, -100)
+    assert_allclose(veh_type.fixed_cost, -100)

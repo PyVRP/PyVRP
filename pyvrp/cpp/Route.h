@@ -39,16 +39,16 @@ public:
      *     The index of the activity corresponding to the activity type.
      * trip : int
      *     Trip index.
-     * start_time : int
+     * start_time : float
      *     Time at which this activity begins.
-     * end_time : int
+     * end_time : float
      *     Time at which this activity completes.
-     * duration : int
+     * duration : float
      *     Activity duration.
-     * wait_duration : int
+     * wait_duration : float
      *     If the vehicle arrives early for this activity, this is the duration
      *     it has to wait until it can begin the activity.
-     * time_warp : int
+     * time_warp : float
      *     If the vehicle arrives late, this is the duration it has to 'travel
      *     back in time' to begin the activity. Non-zero time warp indicates an
      *     infeasible route.

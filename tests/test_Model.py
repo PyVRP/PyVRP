@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
@@ -41,6 +41,66 @@ def test_model_data():
     assert_equal(data.num_clients, 1)
     assert_equal(data.num_vehicle_types, 1)
     assert_equal(data.num_vehicles, 1)
+
+
+@pytest.mark.parametrize("scalar", [float, np.float32, np.float64])
+def test_fractional_model_data(scalar):
+    """
+    Fractional scalar loads and edge values survive model construction.
+    """
+    model = Model()
+    depot = model.add_location(0.25, 0.5)
+    client = model.add_location(1.25, 1.5)
+    model.add_depot(depot, tw_late=10.5, service_duration=0.25)
+    model.add_client(
+        client,
+        delivery=scalar(0.5),
+        pickup=scalar(0.25),
+        service_duration=0.75,
+        tw_early=0.5,
+        tw_late=9.5,
+        release_time=0.25,
+        prize=1.25,
+    )
+    model.add_shipment(depot, client, amount=scalar(0.375), prize=0.75)
+    model.add_vehicle_type(
+        capacity=scalar(1.5),
+        initial_load=scalar(0.125),
+        fixed_cost=1.25,
+        unit_distance_cost=0.75,
+        unit_duration_cost=0.25,
+    )
+    model.add_edge(depot, client, distance=1.25, duration=0.75)
+    profile = model.add_profile()
+    profile.add_edge(client, depot, distance=2.5, duration=1.5)
+
+    data = model.data(missing_value=12.5)
+    assert_allclose(data.client(0).delivery, [0.5])
+    assert_allclose(data.client(0).pickup, [0.25])
+    assert_allclose(data.client(0).service_duration, 0.75)
+    assert_allclose(data.client(0).tw_early, 0.5)
+    assert_allclose(data.client(0).tw_late, 9.5)
+    assert_allclose(data.client(0).release_time, 0.25)
+    assert_allclose(data.client(0).prize, 1.25)
+    assert_allclose(data.depot(0).service_duration, 0.25)
+    assert_allclose(data.shipment(0).amount, [0.375])
+    assert_allclose(data.shipment(0).prize, 0.75)
+    assert_allclose(data.vehicle_type(0).capacity, [1.5])
+    assert_allclose(data.vehicle_type(0).initial_load, [0.125])
+    assert_allclose(data.vehicle_type(0).fixed_cost, 1.25)
+    assert_allclose(data.vehicle_type(0).unit_distance_cost, 0.75)
+    assert_allclose(data.vehicle_type(0).unit_duration_cost, 0.25)
+    assert_equal(data.distance_matrix(0).dtype, np.float64)
+    assert_equal(data.duration_matrix(0).dtype, np.float64)
+    assert_allclose(data.distance_matrix(0), [[0, 1.25], [2.5, 0]])
+    assert_allclose(data.duration_matrix(0), [[0, 0.75], [1.5, 0]])
+
+    # An explicit profile inherits unspecified edges from the base matrix.
+    model.add_profile()
+    assert_allclose(
+        model.data(missing_value=12.5).distance_matrix(1),
+        [[0, 1.25], [12.5, 0]],
+    )
 
 
 def test_add_edge_raises_negative_distance_or_duration():
@@ -105,13 +165,13 @@ def test_add_client_attributes():
     )
 
     assert_equal(client.location, 0)
-    assert_equal(client.delivery, [3])
-    assert_equal(client.pickup, [9])
-    assert_equal(client.service_duration, 4)
-    assert_equal(client.tw_early, 5)
-    assert_equal(client.tw_late, 6)
-    assert_equal(client.release_time, 0)
-    assert_equal(client.prize, 8)
+    assert_allclose(client.delivery, [3])
+    assert_allclose(client.pickup, [9])
+    assert_allclose(client.service_duration, 4)
+    assert_allclose(client.tw_early, 5)
+    assert_allclose(client.tw_late, 6)
+    assert_allclose(client.release_time, 0)
+    assert_allclose(client.prize, 8)
     assert_(not client.required)
 
 
@@ -123,8 +183,8 @@ def test_add_client_with_multidimensional_load():
     loc = model.add_location(x=1, y=2)
     client = model.add_client(loc, delivery=[3, 4], pickup=[5, 6])
 
-    assert_equal(client.delivery, [3, 4])
-    assert_equal(client.pickup, [5, 6])
+    assert_allclose(client.delivery, [3, 4])
+    assert_allclose(client.pickup, [5, 6])
 
 
 def test_add_depot_attributes():
@@ -136,8 +196,8 @@ def test_add_depot_attributes():
     loc = model.add_location(x=1, y=0)
     depot = model.add_depot(loc, tw_early=5, tw_late=7)
     assert_equal(depot.location, 0)
-    assert_equal(depot.tw_early, 5)
-    assert_equal(depot.tw_late, 7)
+    assert_allclose(depot.tw_early, 5)
+    assert_allclose(depot.tw_late, 7)
 
 
 def test_add_edge():
@@ -151,8 +211,8 @@ def test_add_edge():
 
     assert_(edge.frm is loc1)
     assert_(edge.to is loc2)
-    assert_equal(edge.distance, 15)
-    assert_equal(edge.duration, 49)
+    assert_allclose(edge.distance, 15)
+    assert_allclose(edge.duration, 49)
 
 
 def test_add_vehicle_type():
@@ -174,14 +234,14 @@ def test_add_vehicle_type():
     )
 
     assert_equal(vehicle_type.num_available, 10)
-    assert_equal(vehicle_type.capacity, [998])
-    assert_equal(vehicle_type.fixed_cost, 1_001)
-    assert_equal(vehicle_type.tw_early, 17)
-    assert_equal(vehicle_type.start_late, 18)
-    assert_equal(vehicle_type.tw_late, 19)
-    assert_equal(vehicle_type.shift_duration, 93)
-    assert_equal(vehicle_type.max_distance, 97)
-    assert_equal(vehicle_type.max_overtime, 43)
+    assert_allclose(vehicle_type.capacity, [998])
+    assert_allclose(vehicle_type.fixed_cost, 1_001)
+    assert_allclose(vehicle_type.tw_early, 17)
+    assert_allclose(vehicle_type.start_late, 18)
+    assert_allclose(vehicle_type.tw_late, 19)
+    assert_allclose(vehicle_type.shift_duration, 93)
+    assert_allclose(vehicle_type.max_distance, 97)
+    assert_allclose(vehicle_type.max_overtime, 43)
 
 
 def test_add_vehicle_type_default_depots():
@@ -297,13 +357,13 @@ def test_from_data(small_cvrp):
     # We can first check if the overall problem dimension numbers agree.
     assert_equal(m_data.num_clients, small_cvrp.num_clients)
     assert_equal(m_data.num_vehicles, small_cvrp.num_vehicles)
-    assert_equal(
+    assert_allclose(
         m_data.vehicle_type(0).capacity,
         small_cvrp.vehicle_type(0).capacity,
     )
 
-    assert_equal(m_data.distance_matrices(), small_cvrp.distance_matrices())
-    assert_equal(m_data.duration_matrices(), small_cvrp.duration_matrices())
+    assert_allclose(m_data.distance_matrices(), small_cvrp.distance_matrices())
+    assert_allclose(m_data.duration_matrices(), small_cvrp.duration_matrices())
 
 
 def test_from_data_and_solve(small_cvrp, ok_small):
@@ -313,12 +373,12 @@ def test_from_data_and_solve(small_cvrp, ok_small):
     """
     model = Model.from_data(small_cvrp)
     res = model.solve(stop=MaxIterations(100), seed=0)
-    assert_equal(res.cost(), 3_743)
+    assert_allclose(res.cost(), 3_743)
     assert_(res.is_feasible())
 
     model = Model.from_data(ok_small)
     res = model.solve(stop=MaxIterations(100), seed=0)
-    assert_equal(res.cost(), 9_155)
+    assert_allclose(res.cost(), 9_155)
     assert_(res.is_feasible())
 
 
@@ -329,7 +389,7 @@ def test_model_and_solve(ok_small):
     """
     model = Model.from_data(ok_small)
     res = model.solve(stop=MaxIterations(100), seed=0)
-    assert_equal(res.cost(), 9_155)
+    assert_allclose(res.cost(), 9_155)
     assert_(res.is_feasible())
 
     # Now do the same thing, but model the instance using the modelling API.
@@ -368,7 +428,7 @@ def test_model_and_solve(ok_small):
     res = model.solve(stop=MaxIterations(100), seed=0)
 
     assert_(res.is_feasible())
-    assert_equal(res.cost(), 9_155)
+    assert_allclose(res.cost(), 9_155)
 
 
 def test_model_solve_display_argument(ok_small, caplog):
@@ -430,12 +490,12 @@ def test_partial_distance_duration_matrix(missing_value):
     # argument, or MAX_VALUE, whichever is smaller.
     data = model.data(missing_value)
     distances = data.distance_matrix(profile=0)
-    assert_equal(distances[0, 2], min(missing_value, MAX_VALUE))
-    assert_equal(distances[1, 0], min(missing_value, MAX_VALUE))
+    assert_allclose(distances[0, 2], min(missing_value, MAX_VALUE))
+    assert_allclose(distances[1, 0], min(missing_value, MAX_VALUE))
 
     res = model.solve(MaxIterations(100), seed=4, missing_value=missing_value)
     assert_equal(res.best.num_routes(), 1)
-    assert_equal(res.cost(), 4)  # depot -> client 1 -> client 2 -> depot
+    assert_allclose(res.cost(), 4)  # depot -> client 1 -> client 2 -> depot
     assert_(res.is_feasible())
 
 
@@ -594,7 +654,7 @@ def test_model_solves_line_instance_with_multiple_depots():
             m.add_edge(frm, to, distance=abs(frm.x - to.x))
 
     res = m.solve(stop=MaxIterations(100), seed=3)
-    assert_equal(res.cost(), 8)
+    assert_allclose(res.cost(), 8)
     assert_(res.is_feasible())
 
     # Test that there are two routes, with the clients closest to depot 0
@@ -673,7 +733,7 @@ def test_model_solves_instances_with_pickups_and_deliveries(
     res = m.solve(stop=MaxIterations(100))
     route = res.best.routes()[0]
 
-    assert_equal(route.excess_load(), [expected_excess_load])
+    assert_allclose(route.excess_load(), [expected_excess_load])
     assert_equal(route.has_excess_load(), expected_excess_load > 0)
 
 
@@ -784,15 +844,15 @@ def test_minimise_distance_or_duration(ok_small):
     orig_res = orig_model.solve(stop=MaxIterations(20), seed=82)
     new_res = new_model.solve(stop=MaxIterations(20), seed=82)
 
-    assert_equal(orig_res.cost(), 9_155)
-    assert_equal(new_res.cost(), 9_875)
+    assert_allclose(orig_res.cost(), 9_155)
+    assert_allclose(new_res.cost(), 9_875)
 
     # The given instance has the same distance and duration matrix. There is
     # thus no difference in actual travel time or distance. But the duration
     # objective should also count service duration along the route, and that
     # is something we can check.
     service = sum(data.client(client).service_duration for client in [0, 3])
-    assert_equal(new_res.cost(), orig_res.cost() + service)
+    assert_allclose(new_res.cost(), orig_res.cost() + service)
 
 
 def test_adding_vehicle_type_with_unknown_profile_raises():
@@ -842,14 +902,14 @@ def test_adding_multiple_routing_profiles():
 
     # Check that the distance and duration matrices of both profiles are
     # defined correctly.
-    assert_equal(data.distance_matrix(profile=0), [[0, 10], [10, 0]])
-    assert_equal(data.duration_matrix(profile=0), [[0, 5], [5, 0]])
-    assert_equal(data.distance_matrix(profile=1), [[0, 5], [5, 0]])
-    assert_equal(data.duration_matrix(profile=1), [[0, 10], [10, 0]])
+    assert_allclose(data.distance_matrix(profile=0), [[0, 10], [10, 0]])
+    assert_allclose(data.duration_matrix(profile=0), [[0, 5], [5, 0]])
+    assert_allclose(data.distance_matrix(profile=1), [[0, 5], [5, 0]])
+    assert_allclose(data.duration_matrix(profile=1), [[0, 10], [10, 0]])
 
     res = m.solve(stop=MaxIterations(10))
     assert_(res.is_feasible())
-    assert_equal(res.cost(), 10)
+    assert_allclose(res.cost(), 10)
 
 
 def test_profiles_build_on_base_edges():
@@ -881,10 +941,10 @@ def test_profiles_build_on_base_edges():
     # We have not yet added profile-specific edges. This means the profile
     # matrices should all be the same as the base matrices.
     data = m.data()
-    assert_equal(data.distance_matrix(0), [[0, 2], [2, 0]])
-    assert_equal(data.distance_matrix(1), [[0, 2], [2, 0]])
-    assert_equal(data.duration_matrix(0), np.zeros((2, 2)))
-    assert_equal(data.duration_matrix(1), np.zeros((2, 2)))
+    assert_allclose(data.distance_matrix(0), [[0, 2], [2, 0]])
+    assert_allclose(data.distance_matrix(1), [[0, 2], [2, 0]])
+    assert_allclose(data.duration_matrix(0), np.zeros((2, 2)))
+    assert_allclose(data.duration_matrix(1), np.zeros((2, 2)))
 
     # Let's now add a few profile-specific edges and test that these overwrite
     # the base data in the new data instance.
@@ -892,10 +952,10 @@ def test_profiles_build_on_base_edges():
     m.add_edge(depot_loc, client_loc, distance=10, duration=5, profile=prof2)
 
     data = m.data()
-    assert_equal(data.distance_matrix(0), [[0, 5], [2, 0]])
-    assert_equal(data.distance_matrix(1), [[0, 10], [2, 0]])
-    assert_equal(data.duration_matrix(0), [[0, 10], [0, 0]])
-    assert_equal(data.duration_matrix(1), [[0, 5], [0, 0]])
+    assert_allclose(data.distance_matrix(0), [[0, 5], [2, 0]])
+    assert_allclose(data.distance_matrix(1), [[0, 10], [2, 0]])
+    assert_allclose(data.duration_matrix(0), [[0, 10], [0, 0]])
+    assert_allclose(data.duration_matrix(1), [[0, 5], [0, 0]])
 
 
 def test_model_solves_instances_with_multiple_profiles():
@@ -924,7 +984,7 @@ def test_model_solves_instances_with_multiple_profiles():
     # distance), and the second vehicle the second client (also no distance).
     # The resulting cost is thus zero.
     res = m.solve(stop=MaxIterations(10), seed=1)
-    assert_equal(res.cost(), 0)
+    assert_allclose(res.cost(), 0)
 
     route1, route2 = res.best.routes()
     assert_equal(str(route1), "C0")
@@ -961,7 +1021,7 @@ def test_model_solves_instance_with_zero_load_dimensions():
     # then the remaining client (1 or 3), and finally return to the depot. This
     # results in a distance of 1 + 1 + 1 + 1 = 4.
     route = res.best.routes()[0]
-    assert_equal(route.distance(), 4)
+    assert_allclose(route.distance(), 4)
 
 
 def test_bug_client_group_indices():
@@ -997,13 +1057,13 @@ def test_integer_vehicle_capacity_and_load_arguments_are_promoted_to_lists():
     m = Model()
 
     veh1 = m.add_vehicle_type(capacity=10, initial_load=1)
-    assert_equal(veh1.capacity, [10])
-    assert_equal(veh1.initial_load, [1])
+    assert_allclose(veh1.capacity, [10])
+    assert_allclose(veh1.initial_load, [1])
 
     veh2 = m.add_vehicle_type(capacity=[10], initial_load=[1])
     assert_(veh1 == veh2)
-    assert_equal(veh2.capacity, [10])
-    assert_equal(veh2.initial_load, [1])
+    assert_allclose(veh2.capacity, [10])
+    assert_allclose(veh2.initial_load, [1])
 
 
 def test_adding_vehicle_reload_depots():
@@ -1054,7 +1114,7 @@ def test_model_solves_multi_trip_instance():
 
     res = m.solve(stop=MaxIterations(10))
     assert_(res.is_feasible())
-    assert_equal(res.cost(), 6)
+    assert_allclose(res.cost(), 6)
 
     routes = res.best.routes()
     assert_equal(len(routes), 1)
@@ -1062,8 +1122,8 @@ def test_model_solves_multi_trip_instance():
     # This route transports the full 15 client delivery demand using a vehicle
     # with capacity of just 5 because it reloads twice along the route.
     route = routes[0]
-    assert_equal(route.excess_load(), [0])
-    assert_equal(route.delivery(), [15])
+    assert_allclose(route.excess_load(), [0])
+    assert_allclose(route.delivery(), [15])
     assert_equal(route.num_trips(), 3)
 
 
@@ -1091,7 +1151,7 @@ def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
     # is a smoke test to verify that we are not too far (>10%) away after a few
     # iterations.
     opt_cost = opt.distance_cost()
-    assert_equal(opt_cost, 10687)
+    assert_allclose(opt_cost, 10687)
     assert_(res.cost() < 1.1 * opt_cost)
 
 
@@ -1177,8 +1237,8 @@ def test_adding_location():
 
     # Add location and test the attributes.
     loc = m.add_location(x=0.0, y=1.2, name="test")
-    assert_equal(loc.x, 0.0)
-    assert_equal(loc.y, 1.2)
+    assert_allclose(loc.x, 0.0)
+    assert_allclose(loc.y, 1.2)
     assert_equal(loc.name, "test")
 
     # Add a client at the location. Since the location is the first one, the
@@ -1221,7 +1281,7 @@ def test_solve_clients_in_same_location():
     best = res.best
     assert_(best.is_feasible())
     assert_equal(best.num_clients(), 2)
-    assert_equal(best.distance(), 20)  # depot loc to clients loc, and back
+    assert_allclose(best.distance(), 20)  # depot loc to clients loc, and back
 
 
 def test_add_shipment_attributes():
@@ -1245,14 +1305,14 @@ def test_add_shipment_attributes():
     )
 
     assert_equal(shipment.pickup.location, 0)
-    assert_equal(shipment.pickup.tw_early, 1)
-    assert_equal(shipment.pickup.tw_late, 2)
-    assert_equal(shipment.pickup.service_duration, 3)
+    assert_allclose(shipment.pickup.tw_early, 1)
+    assert_allclose(shipment.pickup.tw_late, 2)
+    assert_allclose(shipment.pickup.service_duration, 3)
     assert_equal(shipment.delivery.location, 1)
-    assert_equal(shipment.delivery.tw_early, 4)
-    assert_equal(shipment.delivery.tw_late, 5)
-    assert_equal(shipment.delivery.service_duration, 6)
-    assert_equal(shipment.prize, 8)
+    assert_allclose(shipment.delivery.tw_early, 4)
+    assert_allclose(shipment.delivery.tw_late, 5)
+    assert_allclose(shipment.delivery.service_duration, 6)
+    assert_allclose(shipment.prize, 8)
     assert_(not shipment.required)
     assert_equal(shipment.name, "test")
 
@@ -1309,4 +1369,4 @@ def test_add_shipment_integer_amount():
 
     loc = m.add_location(0, 0)
     shipment = m.add_shipment(loc, loc, amount=1)
-    assert_equal(shipment.amount, [1])
+    assert_allclose(shipment.amount, [1])

@@ -65,14 +65,7 @@ VehicleType::VehicleType(size_t numAvailable,
       maxReloads(maxReloads),
       maxOvertime(maxOvertime),
       unitOvertimeCost(unitOvertimeCost),
-      // We need to check >= 0 here to avoid overflow. If the arguments are
-      // negative the validation checks further below will raise, so it doesn't
-      // matter what we set as long as we get to those checks.
-      maxDuration(shiftDuration >= 0 && maxOvertime >= 0
-                          && maxOvertime < std::numeric_limits<Duration>::max()
-                                               - shiftDuration
-                      ? shiftDuration + maxOvertime
-                      : std::numeric_limits<Duration>::max()),
+      maxDuration(shiftDuration + maxOvertime),
       name(duplicate(name.data()))
 {
     if (numAvailable == 0)
