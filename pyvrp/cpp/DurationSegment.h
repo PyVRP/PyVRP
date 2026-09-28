@@ -205,8 +205,7 @@ DurationSegment DurationSegment::merge(Duration const edgeDuration,
                               ? second.startEarly_ - atSecond - first.startLate_
                               : 0;
 
-    // The shifted latest start may overflow to infinity: the first segment's
-    // latest start still bounds the merged segment in that case.
+    // New startLate for the second segment
     auto const secondLate = second.startLate_ - atSecond;
 
     return {first.duration_ + second.duration_ + edgeDuration + diffWait,
