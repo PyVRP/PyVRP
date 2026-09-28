@@ -14,7 +14,7 @@ Duration DurationSegment::slack() const
     // We have wait duration if release time is after the end of the previous
     // trip. Starting any later only increases that wait duration, so there
     // is then definitely no slack.
-    auto const prevSlack = std::max<Duration>(prevEndLate_ - releaseTime_, 0);
+    auto const prevSlack = std::max<Duration>(0, prevEndLate_ - releaseTime_);
     return std::min(startLate() - startEarly(), prevSlack);
 }
 

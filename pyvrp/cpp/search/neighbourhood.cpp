@@ -69,11 +69,11 @@ Matrix<double> computeProximity(ProblemData const &data,
             auto const distance = static_cast<double>(dist);
 
             auto const minWait = toEarly - edgeDur - frmServ - frmLate;
-            auto const duration = edgeDur + std::max(minWait, 0.0);
+            auto const duration = edgeDur + std::max(0.0, minWait);
 
             return static_cast<double>(vehType.unitDistanceCost) * distance
                    + static_cast<double>(vehType.unitDurationCost) * duration
-                   + params.weightWaitTime * std::max(minWait, 0.0);
+                   + params.weightWaitTime * std::max(0.0, minWait);
         };
 
         // Proximity between two activities. If proximity is symmetric, we
