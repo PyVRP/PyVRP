@@ -147,8 +147,6 @@ def plot_route_schedule(
         linewidths=1,
         label="Time window",
     )
-    # Time windows may be unbounded. The visible range is set from the route
-    # schedule below, so including those bounds in autoscaling is unnecessary.
     ax.add_collection(lc_time_windows, autolim=False)
     lc_timewarps = LineCollection(
         timewarp_lines,
