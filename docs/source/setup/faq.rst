@@ -50,17 +50,6 @@ Modelling
       PyVRP supports warm-starting from an initial (possibly infeasible or incomplete) solution.
       Using the :class:`~pyvrp.Model.Model` interface, warm-starting can be achieved by passing a :class:`~pyvrp._pyvrp.Solution` as :meth:`~pyvrp.Model.Model.solve`'s ``initial_solution`` argument.
 
-Debugging
----------
-
-.. glossary::
-
-   Why does PyVRP sometimes get stuck when using partial travel matrices?
-
-      PyVRP internally uses a large ``missing_value`` argument to set the distance and duration attributes of missing edges.
-      This sometimes results in numerical instability, which can cause the solver to get stuck.
-      Passing a smaller ``missing_value`` to :meth:`~pyvrp.Model.Model.solve` should fix this problem.
-
 Extending
 ---------
 

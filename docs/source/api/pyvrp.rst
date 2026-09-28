@@ -11,11 +11,6 @@ These include the :class:`~pyvrp._pyvrp.ProblemData` class defining a VRP instan
 A typical workflow involves defining your problem instance through the :class:`~pyvrp.Model.Model` interface, solving it with its :meth:`~pyvrp.Model.Model.solve` method, and inspecting the resulting :class:`~pyvrp.Result.Result` object.
 This object stores the best observed solution and detailed runtime statistics.
 
-Coordinates, distances, durations, loads, and costs use 64-bit floating-point values.
-Integer inputs are accepted and converted to floating point; fractional inputs are preserved.
-Distance and duration matrices are exposed as read-only NumPy arrays with dtype ``float64``.
-Measures account for floating-point rounding internally when comparing values.
-
 .. hint::
 
    Have a look at the examples to see how these classes relate!
