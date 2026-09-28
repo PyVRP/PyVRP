@@ -401,9 +401,7 @@ def test_init_clips_penalties():
         10 * params.min_penalty,
     )
     assert_allclose(cost_eval.tw_penalty(1), params.max_penalty)  # MAX
-    assert_allclose(
-        cost_eval.dist_penalty(1, 0), 2
-    )  # already OK, so unchanged
+    assert_allclose(cost_eval.dist_penalty(1, 0), 2)  # OK, so unchanged
 
 
 def test_max_cost_evaluator(ok_small_multiple_load):

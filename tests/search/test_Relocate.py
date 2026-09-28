@@ -524,9 +524,10 @@ def test_relocate_shipment(small_shipments):
 
     # But those one can: moving L3 U3 to the front of the route is perfectly
     # fine, and an improving move.
-    assert_allclose(
-        op.evaluate(route[7], route[0], cost_eval), (-13_838, True)
-    )
+    delta_cost, should_apply = op.evaluate(route[7], route[0], cost_eval)
+    assert_allclose(delta_cost, -13_838)
+    assert_(should_apply)
+
     op.apply(route[7], route[0])
     route.update()
 
@@ -550,9 +551,9 @@ def test_relocate_shipment_fixed_cost(small_shipments):
     # a fixed cost of 10_000. So delta is 11_902.
     op = Relocate2(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_allclose(
-        op.evaluate(route1[1], route2[2], cost_eval), (-11_902, True)
-    )
+    delta_cost, should_apply = op.evaluate(route1[1], route2[2], cost_eval)
+    assert_allclose(delta_cost, -11_902)
+    assert_(should_apply)
 
     op.apply(route1[1], route2[2])
     route1.update()

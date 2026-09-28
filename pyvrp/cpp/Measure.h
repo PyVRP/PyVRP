@@ -39,18 +39,16 @@ using Load = Measure<MeasureType::LOAD>;
 //
 
 /**
- * The measure class is a thin wrapper around an underlying value. The measure
- * forms a strong type that is only explicitly castable to other arithmetic or
- * measure types.
+ * The measure class is a thin wrapper around an underlying double value. The
+ * measure forms a strong type that is only explicitly castable to other
+ * arithmetic or measure types.
  *
  * The measure is equipped with a ``MeasureType`` that specifies what it is
- * intended to model. All measures store their values as 64-bit doubles.
- * Comparisons treat values within an absolute or relative tolerance as
- * equivalent.
+ * intended to model. Comparisons allow for a small rounding tolerance.
  */
 template <MeasureType _> class Measure
 {
-    static constexpr double TOL = 1e-9;
+    static constexpr double RTOL = 1e-9;  // relative equality tolerance
 
     double value_ = 0;
 
@@ -86,8 +84,8 @@ public:
     Measure &operator/=(Measure const rhs);
 
     // Comparison operators.
-    [[nodiscard]] bool operator==(Measure const other) const;
     [[nodiscard]] std::partial_ordering operator<=>(Measure const other) const;
+    [[nodiscard]] bool operator==(Measure const other) const;
     [[nodiscard]] bool operator<(Measure const other) const;
     [[nodiscard]] bool operator>(Measure const other) const;
     [[nodiscard]] bool operator<=(Measure const other) const;
@@ -128,18 +126,6 @@ Measure<Type> &Measure<Type>::operator/=(Measure<Type> const rhs)
 
 // Comparison operators.
 template <MeasureType Type>
-bool Measure<Type>::operator==(Measure<Type> const other) const
-{
-    return value_ == other.value_
-           || (std::isfinite(value_) && std::isfinite(other.value_)
-               && std::abs(value_ - other.value_)
-                      <= TOL
-                             * std::max({1.0,
-                                         std::abs(value_),
-                                         std::abs(other.value_)}));
-}
-
-template <MeasureType Type>
 std::partial_ordering
 Measure<Type>::operator<=>(Measure<Type> const other) const
 {
@@ -147,7 +133,23 @@ Measure<Type>::operator<=>(Measure<Type> const other) const
                           : value_ <=> other.value_;
 }
 
-// Check ordinary ordering first, evaluating tolerance only when needed.
+template <MeasureType Type>
+bool Measure<Type>::operator==(Measure<Type> const other) const
+{
+    if (value_ == other.value_)
+        return true;
+
+    if (std::isfinite(value_) && std::isfinite(other.value_))
+    {
+        auto const diff = std::abs(value_ - other.value_);
+        auto const tol
+            = RTOL * std::max({1.0, std::abs(value_), std::abs(other.value_)});
+        return diff <= tol;
+    }
+
+    return false;
+}
+
 template <MeasureType Type>
 bool Measure<Type>::operator<(Measure<Type> const other) const
 {
@@ -215,8 +217,7 @@ std::ostream &operator<<(std::ostream &out, pyvrp::Measure<Type> const measure)
     return out << measure.get();
 }
 
-// Specialisations for numerical limits and formatting. Measures are not
-// hashable because their equality comparison uses a tolerance.
+// Specialisations for numerical limits and formatting.
 
 template <pyvrp::MeasureType Type>
 class std::numeric_limits<pyvrp::Measure<Type>>

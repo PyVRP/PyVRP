@@ -1,4 +1,4 @@
-from math import floor
+import numpy as np
 
 from pyvrp._pyvrp import CostEvaluator, ProblemData, VehicleType
 from pyvrp.solve import SolveParams, solve
@@ -97,7 +97,6 @@ def _lower_bound(data: ProblemData) -> int:
     # Computes a bound based on packing delivery or pickup demands in the given
     # vehicles over all load dimensions. The strongest bound is returned.
     bound = 0
-    cost_eval = CostEvaluator([1] * data.num_load_dimensions, 0, 0)
     for dim in range(data.num_load_dimensions):
         delivery = sum(c.delivery[dim] for c in data.clients())
         pickup = sum(c.pickup[dim] for c in data.clients())
@@ -106,13 +105,6 @@ def _lower_bound(data: ProblemData) -> int:
         # Vehicle capacity applies per trip - if more than one trip is allowed,
         # the capacity needs to be scaled as well.
         capacity = vehicle_type.capacity[dim] * vehicle_type.max_trips
-        if capacity > 0:
-            num_vehicles = floor(demand / capacity)
-            # Use measure comparisons to decide whether the remaining demand
-            # requires another vehicle.
-            residual = cost_eval.load_penalty(
-                demand, num_vehicles * capacity, dim
-            )
-            bound = max(num_vehicles + (residual > 0), bound)
+        bound = max(int(np.ceil(demand / max(capacity, 1))), bound)
 
     return bound

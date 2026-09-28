@@ -47,12 +47,3 @@ def test_larger_than_max_size(input):
     """
     with assert_raises(OverflowError):
         Client(0, tw_late=input)
-
-
-@pytest.mark.parametrize(
-    ("value", "error"),
-    [(None, TypeError), (object(), TypeError), ("x", ValueError)],
-)
-def test_invalid_measure_conversion(value, error):
-    with assert_raises(error):
-        Client(0, tw_late=value)

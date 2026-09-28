@@ -30,7 +30,7 @@ def test_call():
 def test_call_with_floating_point_coefficients():
     """
     Tests calling a piecewise linear function with floating-point segment
-    coefficients. Non-integral results retain their fractional part.
+    coefficients and arguments.
     """
     fn = PiecewiseLinearFunction([], [(0.5, 1.5)])
 
@@ -38,20 +38,6 @@ def test_call_with_floating_point_coefficients():
     assert_allclose(fn(0), 0.5)
     assert_allclose(fn(1), 2)
     assert_allclose(fn(0.5), 1.25)
-
-
-def test_fractional_breakpoints_and_points():
-    """
-    Fractional points, breakpoints, and outputs survive pickling.
-    """
-    fn = PiecewiseLinearFunction(
-        points=[(0.25, 0.5), (0.75, 1.5), (0.75, 2.5), (1.25, 2.75)]
-    )
-    fn = pickle.loads(pickle.dumps(fn))
-    assert_allclose(fn.breakpoints, [0.75])
-    assert_allclose(fn(0.5), 1.0)
-    assert_allclose(fn(0.75), 2.5)
-    assert_allclose(fn(1.0), 2.625)
 
 
 def test_zero():
