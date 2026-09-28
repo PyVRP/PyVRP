@@ -205,7 +205,7 @@ DurationSegment DurationSegment::merge(Duration const edgeDuration,
                               ? second.startEarly_ - atSecond - first.startLate_
                               : 0;
 
-    // New startLate for the second segment
+    // New startLate for the second segment.
     auto const secondLate = second.startLate_ - atSecond;
 
     return {first.duration_ + second.duration_ + edgeDuration + diffWait,
