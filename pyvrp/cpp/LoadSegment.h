@@ -10,8 +10,12 @@
 namespace pyvrp
 {
 /**
- * LoadSegment(initial: float, delta: float, increase: float, excess_load: float
- * = 0)
+ * LoadSegment(
+ *     initial: float,
+ *     delta: float,
+ *     increase: float,
+ *     excess_load: float = 0,
+ * )
  *
  * Creates a new load segment for delivery and pickup loads in a single
  * dimension. These load segments can be efficiently concatenated, and track
