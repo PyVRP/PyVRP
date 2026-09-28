@@ -191,9 +191,6 @@ DurationSegment DurationSegment::merge(Duration const edgeDuration,
                                        DurationSegment const &first,
                                        DurationSegment const &second)
 {
-    // Unbounded time windows use the largest finite duration. The ternaries
-    // keep intermediate calculations finite when combining those bounds.
-
     // atSecond is the time (relative to our starting time) at which we arrive
     // at the second's initial location.
     auto const atSecond = first.duration_ - first.timeWarp_ + edgeDuration;
@@ -208,10 +205,9 @@ DurationSegment DurationSegment::merge(Duration const edgeDuration,
                               ? second.startEarly_ - atSecond - first.startLate_
                               : 0;
 
-    auto const secondLate  // new startLate for the second segment
-        = atSecond > second.startLate_ - std::numeric_limits<Duration>::max()
-              ? second.startLate_ - atSecond
-              : second.startLate_;
+    // The shifted latest start may overflow to infinity: the first segment's
+    // latest start still bounds the merged segment in that case.
+    auto const secondLate = second.startLate_ - atSecond;
 
     return {first.duration_ + second.duration_ + edgeDuration + diffWait,
             first.timeWarp_ + second.timeWarp_ + diffTw,
@@ -277,7 +273,7 @@ Duration DurationSegment::timeWarp(Duration maxDuration) const
            // Additional time warp from having to wait until release time.
            + std::max<Duration>(0, releaseTime_ - startLate_)
            // Max duration constraint applies only to net route duration,
-           // subtracting existing time warp. Use ternary to avoid underflow.
+           // subtracting existing time warp.
            + (netDuration > maxDuration ? netDuration - maxDuration : 0);
 }
 
@@ -307,9 +303,7 @@ Duration DurationSegment::endLate() const
     auto const tripDuration = duration() - cumDuration_;
     auto const tripTimeWarp = timeWarp() - cumTimeWarp_;
     auto const netDuration = tripDuration - tripTimeWarp;
-    return netDuration > std::numeric_limits<Duration>::max() - startLate()
-               ? std::numeric_limits<Duration>::max()
-               : startLate() + netDuration;
+    return startLate() + netDuration;
 }
 
 DurationSegment::DurationSegment(Duration duration,

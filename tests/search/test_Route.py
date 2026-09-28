@@ -1072,6 +1072,8 @@ def test_multi_trip_duration_caches(ok_small_multiple_trips):
         (VehicleType(), True),  # default has cost
         (VehicleType(unit_distance_cost=0), False),  # no cost or constraint
         (VehicleType(unit_distance_cost=0, max_distance=_FLOAT_MAX), False),
+        (VehicleType(unit_distance_cost=0, max_distance=np.inf), False),
+        (VehicleType(max_distance=np.inf), True),  # still has unit cost
         (VehicleType(unit_distance_cost=0, max_distance=0), True),  # constr
         (VehicleType(max_distance=0), True),  # both cost and constraint
     ],
@@ -1110,6 +1112,8 @@ def test_has_distance_cost(veh_type: VehicleType, expected: bool):
         # unit cost and overtime, so could be relevant
         (VehicleType(unit_overtime_cost=1, max_overtime=1), Depot(0), True),
         (VehicleType(max_overtime=5), Depot(0), False),  # not constrained
+        (VehicleType(shift_duration=np.inf), Depot(0), False),
+        (VehicleType(tw_late=np.inf), Depot(0, tw_late=np.inf), False),
     ],
 )
 def test_has_duration_cost(veh_type: VehicleType, depot: Depot, exp: bool):

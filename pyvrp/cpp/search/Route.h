@@ -1036,7 +1036,7 @@ Cost Route::unitDistanceCost() const { return vehicleType_.unitDistanceCost; }
 bool Route::hasDistanceCost() const
 {
     return unitDistanceCost() != 0
-           || maxDistance() != std::numeric_limits<Distance>::max();
+           || maxDistance() < std::numeric_limits<Distance>::max();
 }
 
 Duration Route::duration() const
@@ -1067,7 +1067,7 @@ bool Route::hasDurationCost() const
     return data.hasTimeWindows()
         || unitDurationCost() != 0
         || (unitOvertimeCost() != 0 && maxOvertime() != 0)
-        || maxDuration() != std::numeric_limits<Duration>::max();
+        || maxDuration() < std::numeric_limits<Duration>::max();
     // clang-format on
 }
 

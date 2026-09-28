@@ -28,11 +28,12 @@ bool hasTimeOverlap(auto const &a, auto const &b)
 
 bool hasTimeWindow(auto const &arg)
 {
-    auto const hasTw = arg.twEarly != 0
-                       || arg.twLate != std::numeric_limits<Duration>::max();
+    // Both the largest finite duration and infinity denote unbounded windows.
+    auto const hasTw
+        = arg.twEarly != 0 || arg.twLate < std::numeric_limits<Duration>::max();
 
     if constexpr (requires { arg.startLate; })
-        return hasTw || arg.startLate != std::numeric_limits<Duration>::max();
+        return hasTw || arg.startLate < std::numeric_limits<Duration>::max();
 
     return hasTw;
 }

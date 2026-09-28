@@ -7,6 +7,7 @@ from numpy.testing import assert_, assert_allclose, assert_equal
 from pyvrp import (
     Client,
     CostEvaluator,
+    Depot,
     Location,
     Model,
     PenaltyManager,
@@ -163,6 +164,43 @@ def test_fractional_local_search(fractional_data):
     result = model.solve(MaxIterations(5), display=False)
     assert_(result.is_feasible())
     assert_allclose(result.cost(), 0.92)
+
+
+@pytest.mark.parametrize("unit_duration_cost", [0, 0.5])
+def test_infinite_upper_bounds(fractional_data, unit_duration_cost):
+    """
+    Unbounded windows and vehicle limits leave actual route statistics finite.
+    """
+    vehicle = fractional_data.vehicle_type(0).replace(
+        tw_late=np.inf,
+        start_late=np.inf,
+        shift_duration=np.inf,
+        max_distance=np.inf,
+        unit_duration_cost=unit_duration_cost,
+    )
+    data = fractional_data.replace(
+        clients=[
+            Client(client.location, delivery=client.delivery, tw_late=np.inf)
+            for client in fractional_data.clients()
+        ],
+        depots=[Depot(0, tw_late=np.inf)],
+        vehicle_types=[vehicle],
+    )
+    assert_(not data.has_time_windows())
+
+    result = Model.from_data(data).solve(MaxIterations(5), display=False)
+    assert_(result.is_feasible())
+    assert_allclose(result.cost(), 0.62 + 0.6 * unit_duration_cost)
+
+    solution = result.best
+    search_solution = SearchSolution(data)
+    search_solution.load(solution)
+    for route in (solution.routes()[0], search_solution.routes[0]):
+        assert_allclose(route.distance(), 0.6)
+        assert_allclose(route.duration(), 0.6)
+        assert_allclose(route.time_warp(), 0)
+        assert_allclose(route.overtime(), 0)
+        assert_allclose(route.excess_distance(), 0)
 
 
 def test_fractional_fleet_bound(fractional_data):
