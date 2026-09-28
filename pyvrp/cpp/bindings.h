@@ -14,7 +14,7 @@
 
 namespace pybind11::detail
 {
-// Type caster for matrices of double-valued measures.
+// Type caster for matrices of measures.
 template <pyvrp::MeasureType T>
 struct type_caster<pyvrp::Matrix<pyvrp::Measure<T>>>
 {
@@ -68,7 +68,7 @@ struct type_caster<pyvrp::Matrix<pyvrp::Measure<T>>>
     }
 };
 
-// Caster for floating point measures.
+// Caster for measures.
 template <pyvrp::MeasureType T> struct type_caster<pyvrp::Measure<T>>
 {
     PYBIND11_TYPE_CASTER(pyvrp::Measure<T>, _("float"));
