@@ -77,9 +77,9 @@ def test_fixed_cost_when_emptying_a_route(small_shipments):
     # fixed cost by 10_000.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_allclose(
-        op.evaluate(route2[1], route1[1], cost_eval), (-14_218, True)
-    )
+    delta_cost, should_apply = op.evaluate(route2[1], route1[1], cost_eval)
+    assert_allclose(delta_cost, -14_218)
+    assert_(should_apply)
 
     op.apply(route2[1], route1[1])
     route1.update()
@@ -109,9 +109,9 @@ def test_fixed_cost_relocating_into_empty_route(small_shipments):
     # 1_000. The resulting delta is thus -2_258.
     op = RelocateShipment(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_allclose(
-        op.evaluate(route1[3], route2[0], cost_eval), (-2_258, True)
-    )
+    delta_cost, should_apply = op.evaluate(route1[3], route2[0], cost_eval)
+    assert_allclose(delta_cost, -2_258)
+    assert_(should_apply)
 
     op.apply(route1[3], route2[0])
     route1.update()
@@ -139,9 +139,9 @@ def test_relocate_non_adjacent_to_direct_sequence(small_shipments):
     # results in lower distance.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_allclose(
-        op.evaluate(route2[1], route1[2], cost_eval), (-1_275, True)
-    )
+    delta_cost, should_apply = op.evaluate(route2[1], route1[2], cost_eval)
+    assert_allclose(delta_cost, -1_275)
+    assert_(should_apply)
 
     op.apply(route2[1], route1[2])
     route1.update()
@@ -170,9 +170,9 @@ def test_relocate_non_adjacent_delivery(small_shipments):
     # just after U1.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_allclose(
-        op.evaluate(route1[1], route2[2], cost_eval), (-1_936, True)
-    )
+    delta_cost, should_apply = op.evaluate(route1[1], route2[2], cost_eval)
+    assert_allclose(delta_cost, -1_936)
+    assert_(should_apply)
 
     # Should insert U2 after U1, and L2 immediately after U0. L1 U1 is
     # in-between.
