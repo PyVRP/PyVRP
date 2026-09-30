@@ -61,12 +61,8 @@ def test_load_penalty_multiple_dimensions():
     for dim, pen in enumerate(load_penalties):
         assert_allclose(cost_eval.load_penalty(0, 1, dim), 0)  # below capacity
         assert_allclose(cost_eval.load_penalty(1, 1, dim), 0)  # at capacity
-        assert_allclose(
-            cost_eval.load_penalty(2, 1, dim), 1 * pen
-        )  # 1 above cap
-        assert_allclose(
-            cost_eval.load_penalty(3, 1, dim), 2 * pen
-        )  # 2 above cap
+        assert_allclose(cost_eval.load_penalty(2, 1, dim), pen)  # 1 above cap
+        assert_allclose(cost_eval.load_penalty(3, 1, dim), 2 * pen)  # 2 above
 
 
 @pytest.mark.parametrize("cap", [5, 15, 29, 51, 103])
@@ -81,10 +77,8 @@ def test_load_penalty_always_zero_when_below_capacity(cap: int):
     assert_allclose(cost_eval.load_penalty(0, cap, 0), 0)  # below cap
     assert_allclose(cost_eval.load_penalty(cap - 1, cap, 0), 0)
     assert_allclose(cost_eval.load_penalty(cap, cap, 0), 0)  # at cap
-    assert_allclose(
-        cost_eval.load_penalty(cap + 1, cap, 0), penalty
-    )  # above cap
-    assert_allclose(cost_eval.load_penalty(cap + 2, cap, 0), 2 * penalty)
+    assert_allclose(cost_eval.load_penalty(cap + 1, cap, 0), penalty)  # 1 over
+    assert_allclose(cost_eval.load_penalty(cap + 2, cap, 0), 2 * penalty)  # 2
 
 
 def test_tw_penalty():

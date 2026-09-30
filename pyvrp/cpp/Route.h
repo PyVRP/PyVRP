@@ -7,7 +7,9 @@
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 
+#include <functional>
 #include <iosfwd>
+#include <numbers>
 #include <vector>
 
 namespace pyvrp
@@ -343,5 +345,23 @@ Cost CostEvaluator::penalisedCost(Route const &route) const;
 }  // namespace pyvrp
 
 std::ostream &operator<<(std::ostream &out, pyvrp::Route const &route);
+
+template <> struct std::hash<pyvrp::Route>
+{
+    size_t operator()(pyvrp::Route const &route) const
+    {
+        // The original boost::hash_combine constant is floor(2 ^ 32 / phi).
+        size_t constexpr constant = (1ULL << 32) / std::numbers::phi;
+
+        // Hash activities rather than measure statistics, because measures
+        // compare with a tolerance.
+        size_t hash = route.vehicleType();
+        for (auto const &activity : route)
+            hash ^= std::hash<pyvrp::Activity>()(activity) + constant
+                    + (hash << 6) + (hash >> 2);
+
+        return hash;
+    }
+};
 
 #endif  // PYVRP_ROUTE_H

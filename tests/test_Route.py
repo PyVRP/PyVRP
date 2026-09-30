@@ -752,7 +752,8 @@ def test_route_release_time_after_vehicle_start_late():
 
     # Sanity check that all time warp is also accounted for in the schedule.
     assert_allclose(
-        sum(v.time_warp for v in route.schedule()), route.time_warp()
+        sum(act.time_warp for act in route.schedule()),
+        route.time_warp(),
     )
 
 

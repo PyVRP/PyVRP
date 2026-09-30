@@ -293,19 +293,11 @@ template <> struct std::hash<pyvrp::Solution>
 {
     size_t operator()(pyvrp::Solution const &sol) const
     {
-        // Hash route structure, since measures compare with a tolerance.
         // Summing route hashes makes this independent of route ordering,
         // matching Solution::operator==.
         size_t hash = sol.numRoutes();
         for (auto const &route : sol.routes())
-        {
-            size_t routeHash = route.vehicleType();
-            for (auto const &activity : route)
-                routeHash ^= std::hash<pyvrp::Activity>()(activity) + 0x9e3779b9
-                             + (routeHash << 6) + (routeHash >> 2);
-            hash += routeHash;
-        }
-
+            hash += std::hash<pyvrp::Route>()(route);
         return hash;
     }
 };

@@ -795,16 +795,20 @@ def test_distance_duration_cost_calculations(ok_small):
         VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=5),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
-    routes = [Route(data, [0, 1], 0), Route(data, [2, 3], 1)]
 
+    routes = [Route(data, [0, 1], 0), Route(data, [2, 3], 1)]
     sol = Solution(data, routes)
+
     assert_allclose(sol.distance(), sum(r.distance() for r in routes))
     assert_allclose(
-        sol.distance_cost(), sum(r.distance_cost() for r in routes)
+        sol.distance_cost(),
+        sum(r.distance_cost() for r in routes),
     )
+
     assert_allclose(sol.duration(), sum(r.duration() for r in routes))
     assert_allclose(
-        sol.duration_cost(), sum(r.duration_cost() for r in routes)
+        sol.duration_cost(),
+        sum(r.duration_cost() for r in routes),
     )
 
 

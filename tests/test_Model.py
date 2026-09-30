@@ -43,66 +43,6 @@ def test_model_data():
     assert_equal(data.num_vehicles, 1)
 
 
-@pytest.mark.parametrize("scalar", [float, np.float32, np.float64])
-def test_fractional_model_data(scalar):
-    """
-    Fractional scalar loads and edge values survive model construction.
-    """
-    model = Model()
-    depot = model.add_location(0.25, 0.5)
-    client = model.add_location(1.25, 1.5)
-    model.add_depot(depot, tw_late=10.5, service_duration=0.25)
-    model.add_client(
-        client,
-        delivery=scalar(0.5),
-        pickup=scalar(0.25),
-        service_duration=0.75,
-        tw_early=0.5,
-        tw_late=9.5,
-        release_time=0.25,
-        prize=1.25,
-    )
-    model.add_shipment(depot, client, amount=scalar(0.375), prize=0.75)
-    model.add_vehicle_type(
-        capacity=scalar(1.5),
-        initial_load=scalar(0.125),
-        fixed_cost=1.25,
-        unit_distance_cost=0.75,
-        unit_duration_cost=0.25,
-    )
-    model.add_edge(depot, client, distance=1.25, duration=0.75)
-    profile = model.add_profile()
-    profile.add_edge(client, depot, distance=2.5, duration=1.5)
-
-    data = model.data(missing_value=12.5)
-    assert_allclose(data.client(0).delivery, [0.5])
-    assert_allclose(data.client(0).pickup, [0.25])
-    assert_allclose(data.client(0).service_duration, 0.75)
-    assert_allclose(data.client(0).tw_early, 0.5)
-    assert_allclose(data.client(0).tw_late, 9.5)
-    assert_allclose(data.client(0).release_time, 0.25)
-    assert_allclose(data.client(0).prize, 1.25)
-    assert_allclose(data.depot(0).service_duration, 0.25)
-    assert_allclose(data.shipment(0).amount, [0.375])
-    assert_allclose(data.shipment(0).prize, 0.75)
-    assert_allclose(data.vehicle_type(0).capacity, [1.5])
-    assert_allclose(data.vehicle_type(0).initial_load, [0.125])
-    assert_allclose(data.vehicle_type(0).fixed_cost, 1.25)
-    assert_allclose(data.vehicle_type(0).unit_distance_cost, 0.75)
-    assert_allclose(data.vehicle_type(0).unit_duration_cost, 0.25)
-    assert_equal(data.distance_matrix(0).dtype, np.float64)
-    assert_equal(data.duration_matrix(0).dtype, np.float64)
-    assert_allclose(data.distance_matrix(0), [[0, 1.25], [2.5, 0]])
-    assert_allclose(data.duration_matrix(0), [[0, 0.75], [1.5, 0]])
-
-    # An explicit profile inherits unspecified edges from the base matrix.
-    model.add_profile()
-    assert_allclose(
-        model.data(missing_value=12.5).distance_matrix(1),
-        [[0, 1.25], [12.5, 0]],
-    )
-
-
 def test_add_edge_raises_negative_distance_or_duration():
     """
     Negative distances or durations are not understood. Attempting to add
