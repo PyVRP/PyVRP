@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Iterator, overload
+from typing import Iterator, Sequence, overload
 
 import numpy as np
 
@@ -33,7 +33,7 @@ class Activity:
 class CostEvaluator:
     def __init__(
         self,
-        load_penalties: list[float],
+        load_penalties: Sequence[float],
         tw_penalty: float,
         dist_penalty: float,
     ) -> None: ...
@@ -68,13 +68,13 @@ class PiecewiseLinearFunction:
     @overload
     def __init__(
         self,
-        points: list[tuple[float, float]],
+        points: Sequence[tuple[float, float]],
     ) -> None: ...
     @overload
     def __init__(
         self,
-        breakpoints: list[float],
-        segments: list[tuple[float, float]],
+        breakpoints: Sequence[float],
+        segments: Sequence[tuple[float, float]],
     ) -> None: ...
     def __call__(self, x: float) -> float: ...
     @property
@@ -110,8 +110,8 @@ class Client:
     def __init__(
         self,
         location: int,
-        delivery: list[float] = [],
-        pickup: list[float] = [],
+        delivery: Sequence[float] = [],
+        pickup: Sequence[float] = [],
         service_duration: float = 0,
         tw_early: float = 0,
         tw_late: float = ...,
@@ -198,7 +198,7 @@ class Shipment:
         delivery_tw_early: float = 0,
         delivery_tw_late: float = ...,
         delivery_service_duration: float = 0,
-        amount: list[float] = [],
+        amount: Sequence[float] = [],
         prize: float = 0,
         required: bool = True,
         *,
@@ -232,7 +232,7 @@ class VehicleType:
     def __init__(
         self,
         num_available: int = 1,
-        capacity: list[float] = [],
+        capacity: Sequence[float] = [],
         start_depot: int = 0,
         end_depot: int = 0,
         fixed_cost: float = 0,
@@ -244,7 +244,7 @@ class VehicleType:
         unit_duration_cost: float = 0,
         profile: int = 0,
         start_late: float | None = None,
-        initial_load: list[float] = [],
+        initial_load: Sequence[float] = [],
         reload_depots: list[int] = [],
         max_reloads: int = ...,
         max_overtime: float = 0,
@@ -257,7 +257,7 @@ class VehicleType:
     def replace(
         self,
         num_available: int | None = None,
-        capacity: list[float] | None = None,
+        capacity: Sequence[float] | None = None,
         start_depot: int | None = None,
         end_depot: int | None = None,
         fixed_cost: float | None = None,
@@ -269,7 +269,7 @@ class VehicleType:
         unit_duration_cost: float | None = None,
         profile: int | None = None,
         start_late: float | None = None,
-        initial_load: list[float] | None = None,
+        initial_load: Sequence[float] | None = None,
         reload_depots: list[int] | None = None,
         max_reloads: int | None = None,
         max_overtime: float | None = None,
