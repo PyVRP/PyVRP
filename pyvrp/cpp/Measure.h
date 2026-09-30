@@ -43,7 +43,8 @@ using Load = Measure<MeasureType::LOAD>;
  * arithmetic or measure types.
  *
  * The measure is equipped with a ``MeasureType`` that specifies what it is
- * intended to model. Comparisons allow for a small rounding tolerance.
+ * intended to model. Comparisons allow for a small rounding tolerance, using
+ * the ATOL and RTOL values defined below.
  */
 template <MeasureType _> class Measure
 {
