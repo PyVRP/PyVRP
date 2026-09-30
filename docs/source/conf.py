@@ -36,6 +36,15 @@ autodoc_preserve_defaults = True
 
 
 # -- sphinx.ext.linkcode
+def git_revision(short: bool = False) -> str:
+    """Returns the current Git revision."""
+    cmd = ["git", "rev-parse"]
+    if short:
+        cmd.append("--short")
+    cmd.append("HEAD")
+    return subprocess.check_output(cmd).strip().decode("ascii")
+
+
 def linkcode_resolve(domain: str, info: dict) -> str | None:
     """
     Generates a URL pointing to the source code of a specified object located
@@ -75,8 +84,7 @@ def linkcode_resolve(domain: str, info: dict) -> str | None:
     rel_path = source[source.rfind("pyvrp/") :]
     line_num = inspect.getsourcelines(obj)[1]
 
-    cmd = ["git", "rev-parse", "--short", "HEAD"]
-    revision = subprocess.check_output(cmd).strip().decode("ascii")
+    revision = git_revision(short=True)
 
     return f"{repo_url}/blob/{revision}/{rel_path}#L{line_num}"
 
@@ -90,6 +98,16 @@ napoleon_include_special_with_doc = True
 # -- nbsphinx
 skip_notebooks = os.getenv("SKIP_NOTEBOOKS", False)
 nbsphinx_execute = "never" if skip_notebooks else "always"
+colab_notebook_url = (
+    "https://colab.research.google.com/github/PyVRP/PyVRP/blob/"
+    f"{git_revision()}/"
+    "{{ env.doc2path(env.docname, base=False)|string }}"
+)
+nbsphinx_prolog = f"""
+.. image:: https://colab.research.google.com/assets/colab-badge.svg
+   :target: {colab_notebook_url}
+   :alt: Open In Colab
+"""
 
 # -- General configuration
 extensions = [
