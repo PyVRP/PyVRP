@@ -177,6 +177,17 @@ def test_warns_about_scaling_issues():
         read("data/ReallyLargeDistance.txt")
 
 
+def test_read_without_rounding():
+    """
+    Tests that the default reader retains fractional distance and durations.
+    """
+    data = read("data/RC208.vrp")
+    loc0, loc1 = data.location(0), data.location(1)
+    expected = sqrt((loc0.x - loc1.x) ** 2 + (loc0.y - loc1.y) ** 2)
+    assert_allclose(data.distance_matrix(0)[0, 1], expected)
+    assert_allclose(data.duration_matrix(0)[0, 1], expected)
+
+
 def test_round_func_round_nearest():
     """
     Tests rounding to the nearest integer works well for the RC208 instance,

@@ -306,6 +306,33 @@ def test_from_data(small_cvrp):
     assert_allclose(m_data.duration_matrices(), small_cvrp.duration_matrices())
 
 
+def test_model_solves_instance_with_fractional_data():
+    """
+    Tests that the Model can solve an instance with fractional costs and tight
+    fractional constraints.
+    """
+    m = Model()
+    locs = [m.add_location(idx, 0) for idx in range(4)]
+    m.add_depot(locs[0])
+    m.add_vehicle_type(capacity=0.3, max_distance=0.6)
+
+    for idx, loc in enumerate(locs[1:], 1):
+        m.add_client(loc, delivery=0.1, tw_late=idx / 10)
+
+    for frm in locs:
+        for to in locs:
+            travel = abs(frm.x - to.x) / 10
+            m.add_edge(frm, to, distance=travel, duration=travel)
+
+    # The depot and clients lie at x = 0, 1, 2, 3. Distances and durations
+    # are scaled by 1/10, so visiting locations 0 -> 1 -> 2 -> 3 -> 0 travels
+    # 0.1 + 0.1 + 0.1 + 0.3 = 0.6. With unit distance cost of 1 and no other
+    # costs, the expected cost is also 0.6.
+    res = m.solve(MaxIterations(5), display=False)
+    assert_(res.is_feasible())
+    assert_allclose(res.cost(), 0.6)
+
+
 def test_from_data_and_solve(small_cvrp, ok_small):
     """
     Tests that solving a model initialised from a data instance finds the

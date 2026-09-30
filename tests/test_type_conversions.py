@@ -14,6 +14,7 @@ from pyvrp import Client
 @pytest.mark.parametrize(
     ("input", "expected"),
     [
+        (5e-10, 5e-10),
         (1, 1),
         (0, 0),
         ("1", 1),
