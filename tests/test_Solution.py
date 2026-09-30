@@ -260,7 +260,7 @@ def test_feasibility_release_times():
     # = 4'396.
     sol = Solution(data, [[0, 1], [2], [3]])
     assert_(not sol.is_feasible())
-    assert_equal(sol.time_warp(), 4396)
+    assert_allclose(sol.time_warp(), 4396)
 
     # Visiting C1 and C2 together is feasible: both clients are released at
     # time 5'000. We arrive at C1 at 5'000 + 1'944 and wait till the TW opens
@@ -290,9 +290,9 @@ def test_feasibility_shift_duration(ok_small):
     # First route has duration 6'221, and the second route duration 5'004.
     # Since the shift duration is 3'000, these routes incur time warp of
     # 3'221 + 2'004 = 5'225, and the solution is thus no longer feasible.
-    assert_equal(routes[0].duration(), 6_221)
-    assert_equal(routes[1].duration(), 5_004)
-    assert_equal(sol.time_warp(), 5_225)
+    assert_allclose(routes[0].duration(), 6_221)
+    assert_allclose(routes[1].duration(), 5_004)
+    assert_allclose(sol.time_warp(), 5_225)
 
     assert_(not routes[0].is_feasible())
     assert_(not routes[1].is_feasible())
@@ -313,16 +313,16 @@ def test_feasibility_max_distance(ok_small):
     sol = Solution(data, [[0, 1], [2, 3]])
     routes = sol.routes()
 
-    assert_equal(routes[0].distance(), 5501)
-    assert_equal(routes[0].excess_distance(), 501)
+    assert_allclose(routes[0].distance(), 5501)
+    assert_allclose(routes[0].excess_distance(), 501)
     assert_(not routes[0].has_time_warp())
     assert_(not routes[0].is_feasible())
 
-    assert_equal(routes[1].distance(), 4224)
-    assert_equal(routes[1].excess_distance(), 0)
+    assert_allclose(routes[1].distance(), 4224)
+    assert_allclose(routes[1].excess_distance(), 0)
     assert_(routes[1].is_feasible())
 
-    assert_equal(sol.excess_distance(), 501)
+    assert_allclose(sol.excess_distance(), 501)
     assert_(sol.has_excess_distance())
     assert_(not sol.is_feasible())
 
@@ -341,17 +341,17 @@ def test_distance_calculation(ok_small):
 
     # Solution distance should be equal to all routes' distances. These we
     # check separately.
-    assert_equal(sol.distance(), sum(route.distance() for route in routes))
+    assert_allclose(sol.distance(), sum(route.distance() for route in routes))
 
     distances = ok_small.distance_matrix(profile=0)
     expected = distances[0, 1] + distances[1, 2] + distances[2, 0]
-    assert_equal(routes[0].distance(), expected)
+    assert_allclose(routes[0].distance(), expected)
 
     expected = distances[0, 3] + distances[3, 0]
-    assert_equal(routes[1].distance(), expected)
+    assert_allclose(routes[1].distance(), expected)
 
     expected = distances[0, 4] + distances[4, 0]
-    assert_equal(routes[2].distance(), expected)
+    assert_allclose(routes[2].distance(), expected)
 
 
 def test_excess_load_calculation(ok_small):
@@ -367,12 +367,12 @@ def test_excess_load_calculation(ok_small):
     assert_equal(ok_small.num_load_dimensions, 1)
 
     needed = sum(client.delivery[0] for client in ok_small.clients())
-    assert_equal(needed, 18)
+    assert_allclose(needed, 18)
 
     available = ok_small.vehicle_type(0).capacity[0]
-    assert_equal(available, 10)
+    assert_allclose(available, 10)
 
-    assert_equal(sol.excess_load(), [needed - available])
+    assert_allclose(sol.excess_load(), [needed - available])
 
 
 @pytest.mark.parametrize(
@@ -406,7 +406,7 @@ def test_excess_load_calculation_with_multiple_load_dimensions(
     solution = Solution(data, [[0, 1]])
 
     assert_(solution.has_excess_load())
-    assert_equal(solution.excess_load(), expected_excess_load)
+    assert_allclose(solution.excess_load(), expected_excess_load)
 
 
 @pytest.mark.parametrize(
@@ -451,7 +451,7 @@ def test_time_warp_for_a_very_constrained_problem(dist_mat):
     assert_(not feasible.has_excess_load())
     assert_(feasible.is_feasible())
 
-    assert_equal(
+    assert_allclose(
         feasible.distance(),
         dist_mat[0, 1] + dist_mat[1, 2] + dist_mat[2, 0],
     )
@@ -476,9 +476,9 @@ def test_time_warp_return_to_depot():
 
     # Travel from depot to client and back gives duration 1 + 1 = 2. This is 1
     # more than the vehicle time window 1, giving a time warp of 1.
-    assert_equal(route.duration(), 2)
-    assert_equal(data.vehicle_type(0).tw_late, 1)
-    assert_equal(sol.time_warp(), 1)
+    assert_allclose(route.duration(), 2)
+    assert_allclose(data.vehicle_type(0).tw_late, 1)
+    assert_allclose(sol.time_warp(), 1)
 
 
 def tests_that_not_specifying_the_vehicle_type_assumes_a_default(ok_small):
@@ -730,7 +730,7 @@ def test_fixed_vehicle_cost(
     ]
 
     sol = Solution(data, routes)
-    assert_equal(sol.fixed_vehicle_cost(), expected)
+    assert_allclose(sol.fixed_vehicle_cost(), expected)
 
 
 @pytest.mark.parametrize(
@@ -795,13 +795,21 @@ def test_distance_duration_cost_calculations(ok_small):
         VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=5),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
-    routes = [Route(data, [0, 1], 0), Route(data, [2, 3], 1)]
 
+    routes = [Route(data, [0, 1], 0), Route(data, [2, 3], 1)]
     sol = Solution(data, routes)
-    assert_equal(sol.distance(), sum(r.distance() for r in routes))
-    assert_equal(sol.distance_cost(), sum(r.distance_cost() for r in routes))
-    assert_equal(sol.duration(), sum(r.duration() for r in routes))
-    assert_equal(sol.duration_cost(), sum(r.duration_cost() for r in routes))
+
+    assert_allclose(sol.distance(), sum(r.distance() for r in routes))
+    assert_allclose(
+        sol.distance_cost(),
+        sum(r.distance_cost() for r in routes),
+    )
+
+    assert_allclose(sol.duration(), sum(r.duration() for r in routes))
+    assert_allclose(
+        sol.duration_cost(),
+        sum(r.duration_cost() for r in routes),
+    )
 
 
 def test_overtime(ok_small_overtime):
@@ -814,19 +822,19 @@ def test_overtime(ok_small_overtime):
     route = Route(ok_small_overtime, [1, 3], 0)
 
     assert_(not route.has_time_warp())
-    assert_equal(route.duration(), 5_229)
-    assert_equal(route.overtime(), 229)
+    assert_allclose(route.duration(), 5_229)
+    assert_allclose(route.overtime(), 229)
 
     # Duration cost includes the cost of overtime.
-    assert_equal(route.duration_cost(), 1 * 5_229 + 10 * 229)
+    assert_allclose(route.duration_cost(), 1 * 5_229 + 10 * 229)
 
     # Test that a solution consisting of this single route agrees on these
     # statistics.
     sol = Solution(ok_small_overtime, [route])
     assert_(not sol.has_time_warp())
-    assert_equal(sol.overtime(), route.overtime())
-    assert_equal(sol.duration(), route.duration())
-    assert_equal(sol.duration_cost(), route.duration_cost())
+    assert_allclose(sol.overtime(), route.overtime())
+    assert_allclose(sol.duration(), route.duration())
+    assert_allclose(sol.duration_cost(), route.duration_cost())
 
 
 def test_raises_duplicate_group(ok_small_mutually_exclusive_groups):
@@ -929,15 +937,15 @@ def test_shipment_prizes(small_optional_shipments):
     """
     # The four shipment prizes total 23_000, all of which are uncollected.
     unplanned = Solution(small_optional_shipments, [])
-    assert_equal(unplanned.prizes(), 0)
-    assert_equal(unplanned.uncollected_prizes(), 23_000)
+    assert_allclose(unplanned.prizes(), 0)
+    assert_allclose(unplanned.uncollected_prizes(), 23_000)
 
     # Servicing shipment 0 collects 10_000. The other prizes total 13_000.
     activities = [Activity("L0"), Activity("U0")]
     route = Route(small_optional_shipments, activities, 0)
     planned = Solution(small_optional_shipments, [route])
-    assert_equal(planned.prizes(), 10_000)
-    assert_equal(planned.uncollected_prizes(), 13_000)
+    assert_allclose(planned.prizes(), 10_000)
+    assert_allclose(planned.uncollected_prizes(), 13_000)
 
 
 def test_raises_multiple_shipment_visits(small_shipments):

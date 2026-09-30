@@ -11,7 +11,7 @@ namespace pyvrp
 {
 // clang-format off
 /**
- * PiecewiseLinearFunction(points: list[tuple[np.int64, np.int64]])
+ * PiecewiseLinearFunction(points: list[tuple[float, float]])
  *
  * Creates a piecewise linear function :math:`f` from :math:`(x, f(x))`
  * points that are non-decreasing in :math:`x`.
@@ -35,11 +35,6 @@ namespace pyvrp
  *                \text{ for } i = 2, \ldots, n - 1, \\
  *       f_n(x) & \text{ otherwise.}
  *    \end{cases}
- *
- * .. note::
- *    The internal representation uses floating-point arithmetic to accurately
- *    capture the intended linear functions. The returned values are always
- *    truncated to integers, to match the rest of PyVRP's integer-only design.
  *
  * Parameters
  * ----------

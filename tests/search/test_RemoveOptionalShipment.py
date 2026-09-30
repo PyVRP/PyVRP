@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import CostEvaluator
 from pyvrp.search import RemoveOptionalShipment
@@ -13,7 +13,7 @@ def test_remove(small_optional_shipments):
     sol = Solution(small_optional_shipments)
 
     route = make_search_route(small_optional_shipments, sol.shipments[1])
-    assert_equal(route.distance(), 27_732)
+    assert_allclose(route.distance(), 27_732)
     assert_equal(str(route), "L1 U1")
 
     # The distance is 27_732, which will become zero after removal (the route
@@ -21,12 +21,12 @@ def test_remove(small_optional_shipments):
     # removal. So the delta cost is 2_000 - 27_732 = -25_732.
     op = RemoveOptionalShipment(small_optional_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[1], cost_eval), (-25_732, True))
+    assert_allclose(op.evaluate(route[1], cost_eval), (-25_732, True))
 
     op.apply(route[1])
     route.update()
 
-    assert_equal(route.distance(), 0)
+    assert_allclose(route.distance(), 0)
     assert_equal(str(route), "")
 
 
@@ -47,7 +47,7 @@ def test_fixed_cost_empty_routes(small_optional_shipments):
     # after removing the only shipment in the route.
     op = RemoveOptionalShipment(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[1], cost_eval), (-35_732, True))
+    assert_allclose(op.evaluate(route[1], cost_eval), (-35_732, True))
 
 
 def test_cannot_remove_required_shipment(small_shipments):
@@ -62,7 +62,7 @@ def test_cannot_remove_required_shipment(small_shipments):
 
     # The shipment is required and can thus not leave the solution.
     assert_(small_shipments.shipment(1).required)
-    assert_equal(op.evaluate(route[1], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[1], cost_eval), (0, False))
 
 
 def test_skips_deliveries(small_optional_shipments):
@@ -74,7 +74,7 @@ def test_skips_deliveries(small_optional_shipments):
     cost_eval = CostEvaluator([0], 0, 0)
 
     route = make_search_route(small_optional_shipments, ["L1", "U1"])
-    assert_equal(op.evaluate(route[2], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[2], cost_eval), (0, False))
 
 
 def test_supports(ok_small, small_shipments, small_optional_shipments):
@@ -107,17 +107,17 @@ def test_remove_non_adjacent(small_optional_shipments):
     nodes = [pickup1, *sol.shipments[2], delivery1]
 
     route = make_search_route(small_optional_shipments, nodes)
-    assert_equal(route.distance(), 42_463)
+    assert_allclose(route.distance(), 42_463)
     assert_equal(str(route), "L1 L2 U2 U1")
 
     op = RemoveOptionalShipment(small_optional_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(pickup1, cost_eval), (-24_305, True))
+    assert_allclose(op.evaluate(pickup1, cost_eval), (-24_305, True))
 
     op.apply(pickup1)
     route.update()
 
     # Cost delta is -24_305, but part of that is due to prizes: shipment 1
     # yields a prize of 2_000, which we have removed.
-    assert_equal(route.distance(), 42_463 - 24_305 - 2_000)
+    assert_allclose(route.distance(), 42_463 - 24_305 - 2_000)
     assert_equal(str(route), "L2 U2")

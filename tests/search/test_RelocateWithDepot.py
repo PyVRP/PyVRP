@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Activity,
@@ -27,7 +27,7 @@ def test_inserts_depot_single_route(ok_small_multiple_trips):
     assert_equal(str(route), "C0 C1 C2 C3")
     assert_equal(route.num_depots(), 2)
     assert_equal(route.num_trips(), 1)
-    assert_equal(route.excess_load(), [8])
+    assert_allclose(route.excess_load(), [8])
 
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([500], 0, 0)
@@ -35,7 +35,7 @@ def test_inserts_depot_single_route(ok_small_multiple_trips):
     # The proposal evaluates C0 C2 | C1 C3 and C0 C2 C1 | C3. Of these, the
     # move resulting in C0 C2 | C1 C3 is better, with total route cost 9_543
     # (compared to 10_450 now). The cost delta is thus -907.
-    assert_equal(op.evaluate(route[2], route[3], cost_eval), (-907, True))
+    assert_allclose(op.evaluate(route[2], route[3], cost_eval), (-907, True))
 
     op.apply(route[2], route[3])
     route.update()
@@ -44,7 +44,7 @@ def test_inserts_depot_single_route(ok_small_multiple_trips):
     # load should have been resolved by the reloading.
     assert_equal(route.num_depots(), 3)
     assert_equal(route.num_trips(), 2)
-    assert_equal(route.excess_load(), [0])
+    assert_allclose(route.excess_load(), [0])
 
     # Check that the route now indeed includes the "C2 | C1" bit.
     assert_equal(str(route), "C0 C2 | C1 C3")
@@ -67,7 +67,9 @@ def test_inserts_depot_across_routes(ok_small_multiple_trips):
     # The proposal evaluates C0 | C2 C1 C3 and C0 C2 | C1 C3. The second is
     # better, with total cost 9_543 (compared to 3_994 + 8_601 now). The cost
     # delta is thus -3_052.
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (-3_052, True))
+    delta, should_apply = op.evaluate(route1[1], route2[1], cost_eval)
+    assert_allclose(delta, -3_052)
+    assert_(should_apply)
 
     op.apply(route1[1], route2[1])
     route1.update()
@@ -105,7 +107,7 @@ def test_reload_depot_before_or_after_relocate(
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([load_penalty], 1, 0)
     actual_delta_cost, _ = op.evaluate(route[1], route[2], cost_eval)
-    assert_equal(actual_delta_cost, exp_delta_cost)
+    assert_allclose(actual_delta_cost, exp_delta_cost)
 
     op.apply(route[1], route[2])
     route.update()
@@ -142,7 +144,7 @@ def test_inserts_best_reload_depot():
     route = make_search_route(data, ["C0", "C1"])
 
     assert_(route.has_excess_load())
-    assert_equal(route.excess_load(), [5])
+    assert_allclose(route.excess_load(), [5])
 
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([500], 0, 0)
@@ -151,7 +153,7 @@ def test_inserts_best_reload_depot():
     # Only C1 | C0 removes excess load. Then the depot choice: D0 has a small
     # routing costs, whereas D1 is fee. Thus, we should evaluate and apply the
     # move using D1, at delta cost -2_500.
-    assert_equal(op.evaluate(route[1], route[2], cost_eval), (-2_500, True))
+    assert_allclose(op.evaluate(route[1], route[2], cost_eval), (-2_500, True))
 
     op.apply(route[1], route[2])
     route.update()
@@ -191,7 +193,9 @@ def test_fixed_vehicle_cost():
 
     # After this move, route1 is empty, which results in a cost delta of -2000
     # because all other costs are zero.
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (-2_000, True))
+    delta, should_apply = op.evaluate(route1[1], route2[1], cost_eval)
+    assert_allclose(delta, -2_000)
+    assert_(should_apply)
 
 
 def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
@@ -203,7 +207,7 @@ def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
     route = make_search_route(ok_small_multiple_trips, activities)
 
     assert_equal(str(route), "C2 | C0 C1 C3")
-    assert_equal(route.excess_load(), [5])
+    assert_allclose(route.excess_load(), [5])
 
     op = RelocateWithDepot(ok_small_multiple_trips)
     cost_eval = CostEvaluator([10_000], 0, 0)
@@ -211,7 +215,7 @@ def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
     # This move would result in either C2 | C1 | C0 C3, or C2 | C1 C0 | C3,
     # both of which would resolve any excess load. But that's more trips than
     # the vehicle can perform, so this move cannot be done.
-    assert_equal(op.evaluate(route[3], route[4], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[3], route[4], cost_eval), (0, False))
     assert_equal(route.num_trips(), route.max_trips())
 
 
@@ -233,9 +237,9 @@ def test_bug_release_times(mtvrptw_release_times):
     activities = ["C33", "D0", "C22", "C37", "C47"]
     route1 = make_search_route(mtvrptw_release_times, activities)
 
-    assert_equal(route1.distance(), 1713)
-    assert_equal(route1.time_warp(), 5395)
-    assert_equal(route1.duration(), 29567 + 5395 - 14579)
+    assert_allclose(route1.distance(), 1713)
+    assert_allclose(route1.time_warp(), 5395)
+    assert_allclose(route1.duration(), 29567 + 5395 - 14579)
 
     # This route visits C5, as follows:
     # - Leave the depot at 4718.
@@ -243,9 +247,9 @@ def test_bug_release_times(mtvrptw_release_times):
     # - Return to depot at 6122.
     route2 = make_search_route(mtvrptw_release_times, ["C5"])
 
-    assert_equal(route2.distance(), 504)
-    assert_equal(route2.time_warp(), 0)
-    assert_equal(route2.duration(), 6122 - 4718)
+    assert_allclose(route2.distance(), 504)
+    assert_allclose(route2.time_warp(), 0)
+    assert_allclose(route2.duration(), 6122 - 4718)
 
     assert_equal(str(route1), "C33 | C22 C37 C47")
     assert_equal(str(route2), "C5")
@@ -260,16 +264,16 @@ def test_bug_release_times(mtvrptw_release_times):
     assert_equal(str(route2), "C5 C22 |")
 
     route1.update()
-    assert_equal(route1.distance(), 1525)
-    assert_equal(route1.time_warp(), 2865)
+    assert_allclose(route1.distance(), 1525)
+    assert_allclose(route1.time_warp(), 2865)
 
     route2.update()
-    assert_equal(route2.distance(), 797)
+    assert_allclose(route2.distance(), 797)
     assert_(not route2.has_time_warp())
 
     delta_dist = 1525 + 797 - 504 - 1713  # = new minus old
     delta_time_warp = 2865 - 5395  # = new minus old
-    assert_equal(delta_cost, delta_dist + delta_time_warp)
+    assert_allclose(delta_cost, delta_dist + delta_time_warp)
 
 
 def test_can_insert_reload_after_start_depot():
@@ -298,7 +302,7 @@ def test_can_insert_reload_after_start_depot():
     # all initial load, and thus reduce excess load by 2.
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([1], 0, 0)
-    assert_equal(op.evaluate(route[2], route[0], cost_eval), (-2, True))
+    assert_allclose(op.evaluate(route[2], route[0], cost_eval), (-2, True))
 
     op.apply(route[2], route[0])
     assert_equal(str(route), "| C1 C0")
@@ -336,7 +340,7 @@ def test_can_insert_reload_before_end_depot():
     # a route "C1 C0 |", with a reload at D1.
     op = RelocateWithDepot(data)
     cost_eval = CostEvaluator([], 0, 0)
-    assert_equal(op.evaluate(route[1], route[2], cost_eval), (-10, True))
+    assert_allclose(op.evaluate(route[1], route[2], cost_eval), (-10, True))
 
     # Test if that is indeed the case: the route should be correct, and the
     # reload depot should be D1, not D0.
@@ -374,20 +378,20 @@ def test_depot_service_duration(ok_small_multiple_trips):
     # Single route, no reload depots. This route has excess load, which the
     # cost evaluator penalises heavily, but is feasible w.r.t. duration.
     route = make_search_route(data, ["C2", "C1", "C3", "C0"])
-    assert_equal(route.excess_load(), [8])
-    assert_equal(route.duration(), 200 + 360 + 360 + 360 + 420)  # all service
+    assert_allclose(route.excess_load(), [8])
+    assert_allclose(route.duration(), 200 + 360 + 360 + 360 + 420)  # all serv
     assert_(not route.has_time_warp())
 
     # The reload depot removes excess load (improvement of -8_000) but adds 200
     # extra service duration at the depot. So the overall delta cost is -7_800.
-    assert_equal(op.evaluate(route[1], route[3], cost_eval), (-7_800, True))
+    assert_allclose(op.evaluate(route[1], route[3], cost_eval), (-7_800, True))
 
     op.apply(route[1], route[3])
     route.update()
 
     assert_equal(str(route), "C1 C3 | C2 C0")
-    assert_equal(route.excess_load(), [0])
-    assert_equal(route.duration(), 2 * 200 + 360 + 360 + 360 + 420)
+    assert_allclose(route.excess_load(), [0])
+    assert_allclose(route.duration(), 2 * 200 + 360 + 360 + 360 + 420)
     assert_(not route.has_time_warp())
 
 
@@ -408,10 +412,12 @@ def test_does_not_insert_depot_in_between_shipments(ok_small_multiple_trips):
     # Inserting C2 with a depot after U0 or C0 in route2 is an improving move,
     # and valid: there is no shipment pair that would be broken up by the depot
     # insertion.
-    assert_equal(op.evaluate(route1[1], route2[2], cost_eval), (-1_741, True))
-    assert_equal(op.evaluate(route1[1], route2[3], cost_eval), (-3_052, True))
+    delta, _ = op.evaluate(route1[1], route2[2], cost_eval)
+    assert_allclose(delta, -1_741)
+    delta, _ = op.evaluate(route1[1], route2[3], cost_eval)
+    assert_allclose(delta, -3_052)
 
     # But here there would be: L0 and U0 would be broken up by a depot inserted
     # just after C0. So this move cannot be applied.
     route3 = make_search_route(data, ["L0", "C0", "U0", "C1", "C3"])
-    assert_equal(op.evaluate(route1[1], route3[2], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route1[1], route3[2], cost_eval), (0, False))

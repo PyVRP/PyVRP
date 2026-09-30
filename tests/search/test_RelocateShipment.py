@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import Client, CostEvaluator, VehicleType
 from pyvrp.search import RelocateShipment
@@ -18,7 +18,7 @@ def test_skip_same_route(small_shipments):
 
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[1], route[3], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[1], route[3], cost_eval), (0, False))
 
 
 def test_skip_unassigned(small_shipments):
@@ -35,7 +35,7 @@ def test_skip_unassigned(small_shipments):
     # route's starting depot.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(pickup, empty[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(pickup, empty[0], cost_eval), (0, False))
 
 
 def test_skip_non_pickup(small_shipments):
@@ -52,8 +52,8 @@ def test_skip_non_pickup(small_shipments):
     # operator, so it should skip such moves.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
-    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route1[0], route2[1], cost_eval), (0, False))
 
 
 def test_fixed_cost_when_emptying_a_route(small_shipments):
@@ -70,20 +70,22 @@ def test_fixed_cost_when_emptying_a_route(small_shipments):
     sol = Solution(mixed)
     route1 = make_search_route(mixed, [sol.clients[0]])  # C0
     route2 = make_search_route(mixed, [*sol.shipments[0]])  # L0 U0
-    assert_equal(route1.distance() + route2.distance(), 13_789)
+    assert_allclose(route1.distance() + route2.distance(), 13_789)
 
     # Evaluate relocating L0 U0 after C0. This is improving because C0 and L0
     # share a location, but also because it empties route2 and thus reduces the
     # fixed cost by 10_000.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route2[1], route1[1], cost_eval), (-14_218, True))
+    delta_cost, should_apply = op.evaluate(route2[1], route1[1], cost_eval)
+    assert_allclose(delta_cost, -14_218)
+    assert_(should_apply)
 
     op.apply(route2[1], route1[1])
     route1.update()
     route2.update()
 
-    assert_equal(route1.distance() + route2.distance(), 13_789 - 4_218)
+    assert_allclose(route1.distance() + route2.distance(), 13_789 - 4_218)
     assert_equal(str(route1), "C0 L0 U0")
     assert_equal(str(route2), "")
 
@@ -100,20 +102,22 @@ def test_fixed_cost_relocating_into_empty_route(small_shipments):
     activities = [*sol.shipments[1], *sol.shipments[0], *sol.shipments[2]]
     route1 = make_search_route(data, activities)
     route2 = Route(data, 0)
-    assert_equal(route1.distance() + route2.distance(), 44_712)
+    assert_allclose(route1.distance() + route2.distance(), 44_712)
 
     # Evaluate moving L0 U0 from route1 to route2, which is currently empty.
     # This reduces distance by 3_258, but also incurs route2's fixed cost of
     # 1_000. The resulting delta is thus -2_258.
     op = RelocateShipment(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route1[3], route2[0], cost_eval), (-2_258, True))
+    delta_cost, should_apply = op.evaluate(route1[3], route2[0], cost_eval)
+    assert_allclose(delta_cost, -2_258)
+    assert_(should_apply)
 
     op.apply(route1[3], route2[0])
     route1.update()
     route2.update()
 
-    assert_equal(route1.distance() + route2.distance(), 44_712 - 3_258)
+    assert_allclose(route1.distance() + route2.distance(), 44_712 - 3_258)
     assert_equal(str(route1), "L1 U1 L2 U2")
     assert_equal(str(route2), "L0 U0")
 
@@ -129,19 +133,21 @@ def test_relocate_non_adjacent_to_direct_sequence(small_shipments):
     route1 = make_search_route(small_shipments, sol.shipments[1])
     activities2 = [pickup, *sol.shipments[2], delivery]
     route2 = make_search_route(small_shipments, activities2)
-    assert_equal(route1.distance() + route2.distance(), 50_804)
+    assert_allclose(route1.distance() + route2.distance(), 50_804)
 
     # Relocating U0 from route2 (L0 L2 U2 U0) to route1 (as L1 U1 L0 U0)
     # results in lower distance.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route2[1], route1[2], cost_eval), (-1_275, True))
+    delta_cost, should_apply = op.evaluate(route2[1], route1[2], cost_eval)
+    assert_allclose(delta_cost, -1_275)
+    assert_(should_apply)
 
     op.apply(route2[1], route1[2])
     route1.update()
     route2.update()
 
-    assert_equal(route1.distance() + route2.distance(), 50_804 - 1_275)
+    assert_allclose(route1.distance() + route2.distance(), 50_804 - 1_275)
     assert_equal(str(route1), "L1 U1 L0 U0")
     assert_equal(str(route2), "L2 U2")
 
@@ -158,13 +164,15 @@ def test_relocate_non_adjacent_delivery(small_shipments):
         [*sol.shipments[0], *sol.shipments[1]],
     )
 
-    assert_equal(route1.distance() + route2.distance(), 47_015)
+    assert_allclose(route1.distance() + route2.distance(), 47_015)
 
     # Insert L2 just after U0, and delivery in the first improving place,
     # just after U1.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route1[1], route2[2], cost_eval), (-1_936, True))
+    delta_cost, should_apply = op.evaluate(route1[1], route2[2], cost_eval)
+    assert_allclose(delta_cost, -1_936)
+    assert_(should_apply)
 
     # Should insert U2 after U1, and L2 immediately after U0. L1 U1 is
     # in-between.
@@ -172,7 +180,7 @@ def test_relocate_non_adjacent_delivery(small_shipments):
     route1.update()
     route2.update()
 
-    assert_equal(route1.distance() + route2.distance(), 47_015 - 1_936)
+    assert_allclose(route1.distance() + route2.distance(), 47_015 - 1_936)
     assert_equal(str(route1), "")
     assert_equal(str(route2), "L0 U0 L2 L1 U1 U2")
 

@@ -1,5 +1,6 @@
 #include "Client.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 

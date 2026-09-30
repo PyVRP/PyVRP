@@ -4,6 +4,7 @@
 #include "Measure.h"
 
 #include <limits>
+#include <vector>
 
 namespace pyvrp
 {
@@ -11,14 +12,14 @@ namespace pyvrp
  * Shipment(
  *     pickup_location: int,
  *     delivery_location: int,
- *     pickup_tw_early: int = 0,
- *     pickup_tw_late: int = np.iinfo(np.int64).max,
- *     pickup_service_duration: int = 0,
- *     delivery_tw_early: int = 0,
- *     delivery_tw_late: int = np.iinfo(np.int64).max,
- *     delivery_service_duration: int = 0,
- *     amount: list[int] = [],
- *     prize: int = 0,
+ *     pickup_tw_early: float = 0,
+ *     pickup_tw_late: float = np.finfo(np.float64).max,
+ *     pickup_service_duration: float = 0,
+ *     delivery_tw_early: float = 0,
+ *     delivery_tw_late: float = np.finfo(np.float64).max,
+ *     delivery_service_duration: float = 0,
+ *     amount: list[float] = [],
+ *     prize: float = 0,
  *     required: bool = True,
  *     *,
  *     name: str = "",
@@ -80,9 +81,9 @@ struct Shipment
     /**
      * ShipmentStep(
      *     location: int,
-     *     tw_early: int = 0,
-     *     tw_late: int = np.iinfo(np.int64).max,
-     *     service_duration: int = 0,
+     *     tw_early: float = 0,
+     *     tw_late: float = np.finfo(np.float64).max,
+     *     service_duration: float = 0,
      * )
      *
      * Data for a pickup or delivery step.

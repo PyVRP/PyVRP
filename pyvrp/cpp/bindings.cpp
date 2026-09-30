@@ -48,8 +48,7 @@ using pyvrp::Shipment;
 using pyvrp::Solution;
 using pyvrp::VehicleType;
 
-using PiecewiseLinearFunction
-    = pyvrp::PiecewiseLinearFunction<int64_t, int64_t>;
+using PiecewiseLinearFunction = pyvrp::PiecewiseLinearFunction<double, double>;
 
 PYBIND11_MODULE(_pyvrp, m)
 {
@@ -160,7 +159,7 @@ PYBIND11_MODULE(_pyvrp, m)
         m, "PiecewiseLinearFunction", DOC(pyvrp, PiecewiseLinearFunction))
         .def(py::init<std::vector<PiecewiseLinearFunction::Point>>(),
              py::arg("points"))
-        .def(py::init<std::vector<int64_t>,
+        .def(py::init<std::vector<double>,
                       std::vector<PiecewiseLinearFunction::Segment>>(),
              py::arg("breakpoints"),
              py::arg("segments"))
@@ -188,7 +187,7 @@ PYBIND11_MODULE(_pyvrp, m)
             },
             [](py::tuple t)  // __setstate__
             {
-                using Breakpoints = std::vector<int64_t>;
+                using Breakpoints = std::vector<double>;
                 using Segments = std::vector<PiecewiseLinearFunction::Segment>;
                 return PiecewiseLinearFunction(
                     t[0].cast<Breakpoints>(),  // breakpoints

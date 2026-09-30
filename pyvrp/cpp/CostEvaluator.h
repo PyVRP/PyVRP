@@ -189,7 +189,7 @@ Cost CostEvaluator::loadPenalty(Load load,
                                 size_t dimension) const
 {
     assert(dimension < loadPenalties_.size());
-    auto const excessLoad = std::max<Load>(load - capacity, 0);
+    auto const excessLoad = std::max<Load>(0, load - capacity);
     return static_cast<Cost>(excessLoad.get() * loadPenalties_[dimension]);
 }
 
@@ -200,7 +200,7 @@ Cost CostEvaluator::twPenalty([[maybe_unused]] Duration timeWarp) const
 
 Cost CostEvaluator::distPenalty(Distance distance, Distance maxDistance) const
 {
-    auto const excessDistance = std::max<Distance>(distance - maxDistance, 0);
+    auto const excessDistance = std::max<Distance>(0, distance - maxDistance);
     return excessDistPenalty(excessDistance);
 }
 
