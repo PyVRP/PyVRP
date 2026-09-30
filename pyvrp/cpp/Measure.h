@@ -1,13 +1,12 @@
 #ifndef PYVRP_MEASURE_H
 #define PYVRP_MEASURE_H
 
-#include <algorithm>
 #include <cmath>
 #include <compare>
 #include <format>
 #include <functional>
-#include <iostream>
 #include <limits>
+#include <ostream>
 #include <type_traits>
 
 namespace pyvrp
@@ -48,7 +47,8 @@ using Load = Measure<MeasureType::LOAD>;
  */
 template <MeasureType _> class Measure
 {
-    static constexpr double RTOL = 1e-9;  // relative equality tolerance
+    static constexpr double ATOL = 1e-6;   // absolute equality tolerance
+    static constexpr double RTOL = 1e-12;  // relative equality tolerance
 
     double value_ = 0;
 
@@ -141,9 +141,8 @@ bool Measure<Type>::operator==(Measure<Type> const other) const
 
     if (std::isfinite(value_) && std::isfinite(other.value_))
     {
-        auto const diff = std::abs(value_ - other.value_);
-        auto const tol
-            = RTOL * std::max({1.0, std::abs(value_), std::abs(other.value_)});
+        auto const diff = std::fabs(value_ - other.value_);
+        auto const tol = ATOL + RTOL * std::fabs(other.value_);
         return diff <= tol;
     }
 
@@ -226,11 +225,6 @@ public:
     static pyvrp::Measure<Type> max()
     {
         return std::numeric_limits<double>::max();
-    }
-
-    static pyvrp::Measure<Type> min()
-    {
-        return std::numeric_limits<double>::min();
     }
 };
 

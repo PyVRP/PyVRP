@@ -4,6 +4,7 @@
 #include "Measure.h"
 
 #include <limits>
+#include <vector>
 
 namespace pyvrp
 {

@@ -1,5 +1,6 @@
 #include "VehicleType.h"
 
+#include <algorithm>
 #include <cstring>
 
 using pyvrp::VehicleType;

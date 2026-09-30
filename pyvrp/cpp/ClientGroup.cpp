@@ -1,5 +1,6 @@
 #include "ClientGroup.h"
 
+#include <algorithm>
 #include <cstring>
 
 using pyvrp::ClientGroup;

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Sequence, TypeAlias
 from warnings import warn
 
 import numpy as np
@@ -22,6 +22,10 @@ from pyvrp.solve import SolveParams, solve
 if TYPE_CHECKING:
     from pyvrp.Result import Result
     from pyvrp.stop import StoppingCriterion
+
+# Use concrete types because mypy does not recognise numbers.Number type
+# narrowing. See https://github.com/python/mypy/issues/3186.
+Number: TypeAlias = int | float | np.integer | np.floating
 
 
 class Edge:
@@ -278,12 +282,8 @@ class Model:
 
         client = Client(
             location=location_idx,
-            delivery=[delivery]
-            if isinstance(delivery, (int, float, np.integer, np.floating))
-            else delivery,
-            pickup=[pickup]
-            if isinstance(pickup, (int, float, np.integer, np.floating))
-            else pickup,
+            delivery=[delivery] if isinstance(delivery, Number) else delivery,
+            pickup=[pickup] if isinstance(pickup, Number) else pickup,
             service_duration=service_duration,
             tw_early=tw_early,
             tw_late=tw_late,
@@ -339,9 +339,7 @@ class Model:
             delivery_tw_early=delivery_tw_early,
             delivery_tw_late=delivery_tw_late,
             delivery_service_duration=delivery_service_duration,
-            amount=[amount]
-            if isinstance(amount, (int, float, np.integer, np.floating))
-            else amount,
+            amount=[amount] if isinstance(amount, Number) else amount,
             prize=prize,
             required=required,
             name=name,
@@ -500,14 +498,12 @@ class Model:
                 raise ValueError(msg)
 
         init_load = initial_load
-        if isinstance(init_load, (int, float, np.integer, np.floating)):
+        if isinstance(init_load, Number):
             init_load = [init_load]
 
         vehicle_type = VehicleType(
             num_available=num_available,
-            capacity=[capacity]
-            if isinstance(capacity, (int, float, np.integer, np.floating))
-            else capacity,
+            capacity=[capacity] if isinstance(capacity, Number) else capacity,
             start_depot=start_idx,
             end_depot=end_idx,
             fixed_cost=fixed_cost,
