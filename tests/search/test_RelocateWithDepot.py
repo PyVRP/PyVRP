@@ -67,9 +67,9 @@ def test_inserts_depot_across_routes(ok_small_multiple_trips):
     # The proposal evaluates C0 | C2 C1 C3 and C0 C2 | C1 C3. The second is
     # better, with total cost 9_543 (compared to 3_994 + 8_601 now). The cost
     # delta is thus -3_052.
-    assert_allclose(
-        op.evaluate(route1[1], route2[1], cost_eval), (-3_052, True)
-    )
+    delta, should_apply = op.evaluate(route1[1], route2[1], cost_eval)
+    assert_allclose(delta, -3_052)
+    assert_(should_apply)
 
     op.apply(route1[1], route2[1])
     route1.update()
@@ -193,9 +193,9 @@ def test_fixed_vehicle_cost():
 
     # After this move, route1 is empty, which results in a cost delta of -2000
     # because all other costs are zero.
-    assert_allclose(
-        op.evaluate(route1[1], route2[1], cost_eval), (-2_000, True)
-    )
+    delta, should_apply = op.evaluate(route1[1], route2[1], cost_eval)
+    assert_allclose(delta, -2_000)
+    assert_(should_apply)
 
 
 def test_does_not_evaluate_if_already_max_trips(ok_small_multiple_trips):
@@ -379,9 +379,7 @@ def test_depot_service_duration(ok_small_multiple_trips):
     # cost evaluator penalises heavily, but is feasible w.r.t. duration.
     route = make_search_route(data, ["C2", "C1", "C3", "C0"])
     assert_allclose(route.excess_load(), [8])
-    assert_allclose(
-        route.duration(), 200 + 360 + 360 + 360 + 420
-    )  # all service
+    assert_allclose(route.duration(), 200 + 360 + 360 + 360 + 420)  # all serv
     assert_(not route.has_time_warp())
 
     # The reload depot removes excess load (improvement of -8_000) but adds 200
@@ -414,12 +412,10 @@ def test_does_not_insert_depot_in_between_shipments(ok_small_multiple_trips):
     # Inserting C2 with a depot after U0 or C0 in route2 is an improving move,
     # and valid: there is no shipment pair that would be broken up by the depot
     # insertion.
-    assert_allclose(
-        op.evaluate(route1[1], route2[2], cost_eval), (-1_741, True)
-    )
-    assert_allclose(
-        op.evaluate(route1[1], route2[3], cost_eval), (-3_052, True)
-    )
+    delta, _ = op.evaluate(route1[1], route2[2], cost_eval)
+    assert_allclose(delta, -1_741)
+    delta, _ = op.evaluate(route1[1], route2[3], cost_eval)
+    assert_allclose(delta, -3_052)
 
     # But here there would be: L0 and U0 would be broken up by a depot inserted
     # just after C0. So this move cannot be applied.
