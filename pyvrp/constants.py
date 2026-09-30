@@ -1,6 +1,6 @@
 import sys
 
-MAX_VALUE = 1e7
+MAX_VALUE = 1e9
 """
 The largest value that can be passed for any element of the input distance or
 duration matrices (including missing values). Passing larger values warns about
