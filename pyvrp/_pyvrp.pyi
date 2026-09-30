@@ -1,8 +1,7 @@
 from enum import Enum
-from typing import Iterator, Sequence, overload
+from typing import Iterator, overload
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
 
 _BUILD_TYPE: str
 
@@ -34,7 +33,7 @@ class Activity:
 class CostEvaluator:
     def __init__(
         self,
-        load_penalties: Sequence[float],
+        load_penalties: list[float],
         tw_penalty: float,
         dist_penalty: float,
     ) -> None: ...
@@ -69,13 +68,13 @@ class PiecewiseLinearFunction:
     @overload
     def __init__(
         self,
-        points: Sequence[tuple[float, float]],
+        points: list[tuple[float, float]],
     ) -> None: ...
     @overload
     def __init__(
         self,
-        breakpoints: Sequence[float],
-        segments: Sequence[tuple[float, float]],
+        breakpoints: list[float],
+        segments: list[tuple[float, float]],
     ) -> None: ...
     def __call__(self, x: float) -> float: ...
     @property
@@ -111,8 +110,8 @@ class Client:
     def __init__(
         self,
         location: int,
-        delivery: Sequence[float] = [],
-        pickup: Sequence[float] = [],
+        delivery: list[float] = [],
+        pickup: list[float] = [],
         service_duration: float = 0,
         tw_early: float = 0,
         tw_late: float = ...,
@@ -199,7 +198,7 @@ class Shipment:
         delivery_tw_early: float = 0,
         delivery_tw_late: float = ...,
         delivery_service_duration: float = 0,
-        amount: Sequence[float] = [],
+        amount: list[float] = [],
         prize: float = 0,
         required: bool = True,
         *,
@@ -233,7 +232,7 @@ class VehicleType:
     def __init__(
         self,
         num_available: int = 1,
-        capacity: Sequence[float] = [],
+        capacity: list[float] = [],
         start_depot: int = 0,
         end_depot: int = 0,
         fixed_cost: float = 0,
@@ -245,7 +244,7 @@ class VehicleType:
         unit_duration_cost: float = 0,
         profile: int = 0,
         start_late: float | None = None,
-        initial_load: Sequence[float] = [],
+        initial_load: list[float] = [],
         reload_depots: list[int] = [],
         max_reloads: int = ...,
         max_overtime: float = 0,
@@ -258,7 +257,7 @@ class VehicleType:
     def replace(
         self,
         num_available: int | None = None,
-        capacity: Sequence[float] | None = None,
+        capacity: list[float] | None = None,
         start_depot: int | None = None,
         end_depot: int | None = None,
         fixed_cost: float | None = None,
@@ -270,7 +269,7 @@ class VehicleType:
         unit_duration_cost: float | None = None,
         profile: int | None = None,
         start_late: float | None = None,
-        initial_load: Sequence[float] | None = None,
+        initial_load: list[float] | None = None,
         reload_depots: list[int] | None = None,
         max_reloads: int | None = None,
         max_overtime: float | None = None,
@@ -289,8 +288,8 @@ class ProblemData:
         clients: list[Client],
         depots: list[Depot],
         vehicle_types: list[VehicleType],
-        distance_matrices: Sequence[ArrayLike],
-        duration_matrices: Sequence[ArrayLike],
+        distance_matrices: list[np.ndarray[np.float64]],
+        duration_matrices: list[np.ndarray[np.float64]],
         groups: list[ClientGroup] = [],
         shipments: list[Shipment] = [],
     ) -> None: ...
@@ -300,16 +299,16 @@ class ProblemData:
     def groups(self) -> list[ClientGroup]: ...
     def shipments(self) -> list[Shipment]: ...
     def vehicle_types(self) -> list[VehicleType]: ...
-    def distance_matrices(self) -> list[NDArray[np.float64]]: ...
-    def duration_matrices(self) -> list[NDArray[np.float64]]: ...
+    def distance_matrices(self) -> list[np.ndarray[np.float64]]: ...
+    def duration_matrices(self) -> list[np.ndarray[np.float64]]: ...
     def replace(
         self,
         locations: list[Location] | None = None,
         clients: list[Client] | None = None,
         depots: list[Depot] | None = None,
         vehicle_types: list[VehicleType] | None = None,
-        distance_matrices: Sequence[ArrayLike] | None = None,
-        duration_matrices: Sequence[ArrayLike] | None = None,
+        distance_matrices: list[np.ndarray[np.float64]] | None = None,
+        duration_matrices: list[np.ndarray[np.float64]] | None = None,
         groups: list[ClientGroup] | None = None,
         shipments: list[Shipment] | None = None,
     ) -> ProblemData: ...
@@ -319,8 +318,8 @@ class ProblemData:
     def group(self, group: int) -> ClientGroup: ...
     def shipment(self, shipment: int) -> Shipment: ...
     def vehicle_type(self, vehicle_type: int) -> VehicleType: ...
-    def distance_matrix(self, profile: int) -> NDArray[np.float64]: ...
-    def duration_matrix(self, profile: int) -> NDArray[np.float64]: ...
+    def distance_matrix(self, profile: int) -> np.ndarray[np.float64]: ...
+    def duration_matrix(self, profile: int) -> np.ndarray[np.float64]: ...
     def has_time_windows(self) -> bool: ...
     @property
     def num_clients(self) -> int: ...
