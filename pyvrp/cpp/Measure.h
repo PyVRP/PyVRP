@@ -142,8 +142,8 @@ bool Measure<Type>::operator==(Measure<Type> const other) const
     if (std::isfinite(value_) && std::isfinite(other.value_))
     {
         auto const diff = std::fabs(value_ - other.value_);
-        auto const tol = ATOL + RTOL * std::fabs(other.value_);
-        return diff <= tol;
+        auto const scl = std::fmax(std::fabs(value_), std::fabs(other.value_));
+        return diff <= ATOL + RTOL * scl;
     }
 
     return false;
