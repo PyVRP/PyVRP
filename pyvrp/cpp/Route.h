@@ -7,9 +7,9 @@
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 
+#include <cstdint>
 #include <functional>
 #include <iosfwd>
-#include <numbers>
 #include <vector>
 
 namespace pyvrp
@@ -350,17 +350,30 @@ template <> struct std::hash<pyvrp::Route>
 {
     size_t operator()(pyvrp::Route const &route) const
     {
-        // The original boost::hash_combine constant is floor(2 ^ 32 / phi).
-        size_t constexpr constant = (1ULL << 32) / std::numbers::phi;
+        std::uint64_t hash = 0;
+        auto const combine = [&hash](std::uint64_t value)
+        {
+            // After Boost, see their notes on boost::hash_combine. These
+            // constants are mentioned there.
+            std::uint64_t constexpr constant = 0x9e3779b9ULL;
+            std::uint64_t constexpr multiplier = 0xe9846af9b1a615dULL;
 
-        // Hash activities rather than measure statistics, because measures
-        // compare with a tolerance.
-        size_t hash = route.vehicleType();
+            hash += constant + value;
+            hash ^= hash >> 32;
+            hash *= multiplier;
+            hash ^= hash >> 32;
+            hash *= multiplier;
+            hash ^= hash >> 28;
+        };
+
+        // Start from the vehicle type, and then hash combine with the route's
+        // activities. We hash activities rather than measure statistics,
+        // because measures compare with a tolerance.
+        combine(route.vehicleType());
         for (auto const &activity : route)
-            hash ^= std::hash<pyvrp::Activity>()(activity) + constant
-                    + (hash << 6) + (hash >> 2);
+            combine(std::hash<pyvrp::Activity>()(activity));
 
-        return hash;
+        return static_cast<size_t>(hash);
     }
 };
 
