@@ -208,7 +208,7 @@ def test_relocate_to_heterogeneous_empty_route(ok_small):
 @pytest.mark.parametrize(
     ("op", "base_cost", "fixed_cost"),
     [
-        (Relocate1, 2_346, 0),  # inexact; this move shortcuts
+        (Relocate1, 0, 0),  # inexact; the boundary precheck rejects earlier
         (Relocate1, 2_346, 100),  # inexact; this move shortcuts
         (Relocate2, 1_417, 0),
         (Relocate2, 1_417, 9),

@@ -1,6 +1,7 @@
 #ifndef PYVRP_SEARCH_RELOCATE_H
 #define PYVRP_SEARCH_RELOCATE_H
 
+#include "BoundaryPruning.h"
 #include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
 
@@ -30,6 +31,7 @@ template <size_t N> class Relocate : public BinaryOperator
 
     DynamicBitset hasCachedRemoveCost_;
     std::vector<Cost> removeCost_;
+    BoundaryPruning boundaryPruning_;
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
@@ -96,6 +98,11 @@ std::pair<Cost, bool> Relocate<N>::evaluate(Route::Node *U,
         // We cannot easily evaluate across trips, and if U and V overlap the
         // move is not well-defined. If U follows V the move is a no-op.
         return std::make_pair(0, false);
+
+    if constexpr (N <= 2)
+        if (U->route() != V->route()
+            && boundaryPruning_.block<N, 0>(U, V, costEvaluator))
+            return std::make_pair(0, false);
 
     Cost deltaCost = 0;
     if (U->route() != V->route())
@@ -206,7 +213,8 @@ template <size_t N>
 Relocate<N>::Relocate(ProblemData const &data)
     : BinaryOperator(data),
       hasCachedRemoveCost_(data.numClients() + data.numShipments()),
-      removeCost_(data.numClients() + data.numShipments())
+      removeCost_(data.numClients() + data.numShipments()),
+      boundaryPruning_(data, N <= 2)
 {
 }
 }  // namespace pyvrp::search

@@ -47,6 +47,9 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
         // in the other route.
         return std::make_pair(0, false);
 
+    if (boundaryPruning_.tail(U, V, costEvaluator))
+        return std::make_pair(0, false);
+
     Cost deltaCost = 0;
 
     if (!n(U)->isEndDepot() && !n(V)->isEndDepot())

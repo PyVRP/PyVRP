@@ -1,6 +1,7 @@
 #ifndef PYVRP_SEARCH_SWAPTAILS_H
 #define PYVRP_SEARCH_SWAPTAILS_H
 
+#include "BoundaryPruning.h"
 #include "LocalSearchOperator.h"
 
 namespace pyvrp::search
@@ -19,9 +20,14 @@ namespace pyvrp::search
  */
 class SwapTails : public BinaryOperator
 {
-    using BinaryOperator::BinaryOperator;
+    BoundaryPruning boundaryPruning_;
 
 public:
+    explicit SwapTails(ProblemData const &data)
+        : BinaryOperator(data), boundaryPruning_(data)
+    {
+    }
+
     std::pair<Cost, bool> evaluate(Route::Node *U,
                                    Route::Node *V,
                                    CostEvaluator const &costEvaluator) override;

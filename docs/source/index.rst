@@ -82,6 +82,7 @@ Contents
    notebooks/pyvrp_implementation
    dev/benchmarking
    dev/contributing
+   dev/boundary_pruning
    dev/releasing
    dev/supported_vrplib_fields
    dev/new_vrp_variants

@@ -1,6 +1,7 @@
 #ifndef PYVRP_SEARCH_SWAP_H
 #define PYVRP_SEARCH_SWAP_H
 
+#include "BoundaryPruning.h"
 #include "LocalSearchOperator.h"
 
 #include <cassert>
@@ -16,7 +17,7 @@ namespace pyvrp::search
  */
 template <size_t N, size_t M> class Swap : public BinaryOperator
 {
-    using BinaryOperator::BinaryOperator;
+    BoundaryPruning boundaryPruning_;
 
     static_assert(N >= M && M > 0, "N < M or M == 0 does not make sense");
 
@@ -34,6 +35,11 @@ template <size_t N, size_t M> class Swap : public BinaryOperator
     bool adjacent(Route::Node *U, Route::Node *V) const;
 
 public:
+    explicit Swap(ProblemData const &data)
+        : BinaryOperator(data), boundaryPruning_(data, N <= 2)
+    {
+    }
+
     std::pair<Cost, bool> evaluate(Route::Node *U,
                                    Route::Node *V,
                                    CostEvaluator const &costEvaluator) override;
@@ -105,6 +111,11 @@ std::pair<Cost, bool> Swap<N, M>::evaluate(Route::Node *U,
 
     if constexpr (N == M)  // symmetric, so only have to evaluate this once
         if (U->idx() >= V->idx())
+            return std::make_pair(0, false);
+
+    if constexpr (N <= 2)
+        if (U->route() != V->route()
+            && boundaryPruning_.block<N, M>(U, V, costEvaluator))
             return std::make_pair(0, false);
 
     Cost deltaCost = 0;
