@@ -14,10 +14,10 @@ class NoImprovement:
             raise ValueError("max_iterations < 0 not understood.")
 
         self._max_iterations = max_iterations
-        self._target: float | None = None
+        self._target: int | None = None
         self._counter = 0
 
-    def __call__(self, best_cost: float) -> bool:
+    def __call__(self, best_cost: int) -> bool:
         if self._target is None or best_cost < self._target:
             self._target = best_cost
             self._counter = 0

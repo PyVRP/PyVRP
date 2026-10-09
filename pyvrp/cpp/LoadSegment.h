@@ -10,12 +10,7 @@
 namespace pyvrp
 {
 /**
- * LoadSegment(
- *     initial: float,
- *     delta: float,
- *     increase: float,
- *     excess_load: float = 0,
- * )
+ * LoadSegment(initial: int, delta: int, increase: int, excess_load: int = 0)
  *
  * Creates a new load segment for delivery and pickup loads in a single
  * dimension. These load segments can be efficiently concatenated, and track
@@ -129,7 +124,7 @@ Load LoadSegment::load() const { return initial_ + increase_; }
 
 Load LoadSegment::excessLoad(Load capacity) const
 {
-    return excessLoad_ + std::max<Load>(0, load() - capacity);
+    return excessLoad_ + std::max<Load>(load() - capacity, 0);
 }
 
 LoadSegment LoadSegment::finalise(Load capacity) const

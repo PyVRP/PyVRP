@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence, TypeAlias
+from typing import TYPE_CHECKING, Sequence
 from warnings import warn
 
 import numpy as np
@@ -23,10 +23,6 @@ if TYPE_CHECKING:
     from pyvrp.Result import Result
     from pyvrp.stop import StoppingCriterion
 
-# Use concrete types because mypy does not recognise numbers.Number type
-# narrowing. See https://github.com/python/mypy/issues/3186.
-Number: TypeAlias = int | float | np.integer | np.floating
-
 
 class Edge:
     """
@@ -45,8 +41,8 @@ class Edge:
         self,
         frm: Location,
         to: Location,
-        distance: float,
-        duration: float,
+        distance: int,
+        duration: int,
     ):
         if distance < 0 or duration < 0:
             raise ValueError("Cannot have negative edge distance or duration.")
@@ -89,8 +85,8 @@ class Profile:
         self,
         frm: Location,
         to: Location,
-        distance: float,
-        duration: float = 0,
+        distance: int,
+        duration: int = 0,
     ) -> Edge:
         """
         Adds a new edge to this routing profile.
@@ -241,13 +237,13 @@ class Model:
     def add_client(
         self,
         location: Location,
-        delivery: float | Sequence[float] = [],
-        pickup: float | Sequence[float] = [],
-        service_duration: float = 0,
-        tw_early: float = 0,
-        tw_late: float = np.finfo(np.float64).max,
-        release_time: float = 0,
-        prize: float = 0,
+        delivery: int | list[int] = [],
+        pickup: int | list[int] = [],
+        service_duration: int = 0,
+        tw_early: int = 0,
+        tw_late: int = np.iinfo(np.int64).max,
+        release_time: int = 0,
+        prize: int = 0,
         required: bool = True,
         group: ClientGroup | None = None,
         *,
@@ -282,8 +278,8 @@ class Model:
 
         client = Client(
             location=location_idx,
-            delivery=[delivery] if isinstance(delivery, Number) else delivery,
-            pickup=[pickup] if isinstance(pickup, Number) else pickup,
+            delivery=[delivery] if isinstance(delivery, int) else delivery,
+            pickup=[pickup] if isinstance(pickup, int) else pickup,
             service_duration=service_duration,
             tw_early=tw_early,
             tw_late=tw_late,
@@ -305,14 +301,14 @@ class Model:
         self,
         pickup_location: Location,
         delivery_location: Location,
-        pickup_tw_early: float = 0,
-        pickup_tw_late: float = np.finfo(np.float64).max,
-        pickup_service_duration: float = 0,
-        delivery_tw_early: float = 0,
-        delivery_tw_late: float = np.finfo(np.float64).max,
-        delivery_service_duration: float = 0,
-        amount: float | Sequence[float] = [],
-        prize: float = 0,
+        pickup_tw_early: int = 0,
+        pickup_tw_late: int = np.iinfo(np.int64).max,
+        pickup_service_duration: int = 0,
+        delivery_tw_early: int = 0,
+        delivery_tw_late: int = np.iinfo(np.int64).max,
+        delivery_service_duration: int = 0,
+        amount: int | list[int] = [],
+        prize: int = 0,
         required: bool = True,
         *,
         name: str = "",
@@ -339,7 +335,7 @@ class Model:
             delivery_tw_early=delivery_tw_early,
             delivery_tw_late=delivery_tw_late,
             delivery_service_duration=delivery_service_duration,
-            amount=[amount] if isinstance(amount, Number) else amount,
+            amount=[amount] if isinstance(amount, int) else amount,
             prize=prize,
             required=required,
             name=name,
@@ -362,9 +358,9 @@ class Model:
     def add_depot(
         self,
         location: Location,
-        tw_early: float = 0,
-        tw_late: float = np.finfo(np.float64).max,
-        service_duration: float = 0,
+        tw_early: int = 0,
+        tw_late: int = np.iinfo(np.int64).max,
+        service_duration: int = 0,
         *,
         name: str = "",
     ) -> Depot:
@@ -391,8 +387,8 @@ class Model:
         self,
         frm: Location,
         to: Location,
-        distance: float,
-        duration: float = 0,
+        distance: int,
+        duration: int = 0,
         profile: Profile | None = None,
     ) -> Edge:
         """
@@ -432,23 +428,23 @@ class Model:
     def add_vehicle_type(
         self,
         num_available: int = 1,
-        capacity: float | Sequence[float] = [],
+        capacity: int | list[int] = [],
         start_depot: Depot | None = None,
         end_depot: Depot | None = None,
-        fixed_cost: float = 0,
-        tw_early: float = 0,
-        tw_late: float = np.finfo(np.float64).max,
-        shift_duration: float = np.finfo(np.float64).max,
-        max_distance: float = np.finfo(np.float64).max,
-        unit_distance_cost: float = 1,
-        unit_duration_cost: float = 0,
+        fixed_cost: int = 0,
+        tw_early: int = 0,
+        tw_late: int = np.iinfo(np.int64).max,
+        shift_duration: int = np.iinfo(np.int64).max,
+        max_distance: int = np.iinfo(np.int64).max,
+        unit_distance_cost: int = 1,
+        unit_duration_cost: int = 0,
         profile: Profile | None = None,
-        start_late: float | None = None,
-        initial_load: float | Sequence[float] = [],
+        start_late: int | None = None,
+        initial_load: int | list[int] = [],
         reload_depots: list[Depot] = [],
         max_reloads: int = MAX_SIZE,
-        max_overtime: float = 0,
-        unit_overtime_cost: float = 0,
+        max_overtime: int = 0,
+        unit_overtime_cost: int = 0,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -498,12 +494,12 @@ class Model:
                 raise ValueError(msg)
 
         init_load = initial_load
-        if isinstance(init_load, Number):
+        if isinstance(init_load, int):
             init_load = [init_load]
 
         vehicle_type = VehicleType(
             num_available=num_available,
-            capacity=[capacity] if isinstance(capacity, Number) else capacity,
+            capacity=[capacity] if isinstance(capacity, int) else capacity,
             start_depot=start_idx,
             end_depot=end_idx,
             fixed_cost=fixed_cost,
@@ -526,7 +522,7 @@ class Model:
         self._vehicle_types.append(vehicle_type)
         return vehicle_type
 
-    def data(self, missing_value: float = MAX_VALUE) -> ProblemData:
+    def data(self, missing_value: int = MAX_VALUE) -> ProblemData:
         """
         Creates and returns a :class:`~pyvrp._pyvrp.ProblemData` instance
         from this model's attributes.
@@ -544,8 +540,8 @@ class Model:
         # First we create the base distance and duration matrices. These are
         # shared by all routing profiles.
         fill_value = min(missing_value, MAX_VALUE)
-        base_distance = np.full((len(locs), len(locs)), fill_value, np.float64)
-        base_duration = np.full((len(locs), len(locs)), fill_value, np.float64)
+        base_distance = np.full((len(locs), len(locs)), fill_value, np.int64)
+        base_duration = np.full((len(locs), len(locs)), fill_value, np.int64)
         np.fill_diagonal(base_distance, 0)
         np.fill_diagonal(base_duration, 0)
 
@@ -596,7 +592,7 @@ class Model:
         collect_stats: bool = True,
         display: bool = True,
         params: SolveParams = SolveParams(),
-        missing_value: float = MAX_VALUE,
+        missing_value: int = MAX_VALUE,
         initial_solution: Solution | None = None,
     ) -> Result:
         """

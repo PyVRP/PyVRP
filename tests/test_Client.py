@@ -1,7 +1,7 @@
 import pickle
 
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import Client
 
@@ -63,13 +63,13 @@ def test_constructor_initialises_data_fields_correctly(
     )
 
     assert_equal(client.location, location)
-    assert_allclose(client.delivery, [delivery])
-    assert_allclose(client.pickup, [pickup])
-    assert_allclose(client.service_duration, service_duration)
-    assert_allclose(client.tw_early, tw_early)
-    assert_allclose(client.tw_late, tw_late)
-    assert_allclose(client.release_time, release_time)
-    assert_allclose(client.prize, prize)
+    assert_equal(client.delivery, [delivery])
+    assert_equal(client.pickup, [pickup])
+    assert_equal(client.service_duration, service_duration)
+    assert_equal(client.tw_early, tw_early)
+    assert_equal(client.tw_late, tw_late)
+    assert_equal(client.release_time, release_time)
+    assert_equal(client.prize, prize)
     assert_equal(client.required, required)
     assert_equal(client.group, group)
     assert_equal(client.name, name)
@@ -177,5 +177,5 @@ def test_client_load_dimensions_are_padded_with_zeroes(
     arguments are padded with zeroes.
     """
     client = Client(0, delivery=delivery, pickup=pickup)
-    assert_allclose(client.delivery, exp_delivery)
-    assert_allclose(client.pickup, exp_pickup)
+    assert_equal(client.delivery, exp_delivery)
+    assert_equal(client.pickup, exp_pickup)

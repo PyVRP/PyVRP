@@ -12,14 +12,14 @@ namespace pyvrp
 {
 /**
  * DurationSegment(
- *     duration: float = 0,
- *     time_warp: float = 0,
- *     start_early: float = 0,
- *     start_late: float = np.finfo(np.float64).max,
- *     release_time: float = 0,
- *     cum_duration: float = 0,
- *     cum_time_warp: float = 0,
- *     prev_end_late: float = np.finfo(np.float64).max,
+ *     duration: int = 0,
+ *     time_warp: int = 0,
+ *     start_early: int = 0,
+ *     start_late: int = np.iinfo(np.int64).max,
+ *     release_time: int = 0,
+ *     cum_duration: int = 0,
+ *     cum_time_warp: int = 0,
+ *     prev_end_late: int = np.iinfo(np.int64).max,
  * )
  *
  * Creates a duration segment.
@@ -105,7 +105,7 @@ public:
      *
      * Returns
      * -------
-     * float
+     * int
      *     Total time warp on this route segment.
      */
     [[nodiscard]] inline Duration
@@ -191,6 +191,10 @@ DurationSegment DurationSegment::merge(Duration const edgeDuration,
                                        DurationSegment const &first,
                                        DurationSegment const &second)
 {
+    // Because clients' default time windows are [0, INT_MAX], the ternaries in
+    // this method are carefully designed to avoid integer over- and underflow
+    // issues. Be very careful when changing things here!
+
     // atSecond is the time (relative to our starting time) at which we arrive
     // at the second's initial location.
     auto const atSecond = first.duration_ - first.timeWarp_ + edgeDuration;
@@ -205,8 +209,10 @@ DurationSegment DurationSegment::merge(Duration const edgeDuration,
                               ? second.startEarly_ - atSecond - first.startLate_
                               : 0;
 
-    // New startLate for the second segment.
-    auto const secondLate = second.startLate_ - atSecond;
+    auto const secondLate  // new startLate for the second segment
+        = atSecond > second.startLate_ - std::numeric_limits<Duration>::max()
+              ? second.startLate_ - atSecond
+              : second.startLate_;
 
     return {first.duration_ + second.duration_ + edgeDuration + diffWait,
             first.timeWarp_ + second.timeWarp_ + diffTw,
@@ -260,7 +266,7 @@ DurationSegment DurationSegment::finaliseFront() const
 Duration DurationSegment::duration() const
 {
     auto const duration = cumDuration_ + duration_;
-    return duration + std::max<Duration>(0, startEarly() - prevEndLate_);
+    return duration + std::max<Duration>(startEarly() - prevEndLate_, 0);
 }
 
 Duration DurationSegment::timeWarp(Duration maxDuration) const
@@ -270,9 +276,9 @@ Duration DurationSegment::timeWarp(Duration maxDuration) const
 
     return timeWarp
            // Additional time warp from having to wait until release time.
-           + std::max<Duration>(0, releaseTime_ - startLate_)
+           + std::max<Duration>(releaseTime_ - startLate_, 0)
            // Max duration constraint applies only to net route duration,
-           // subtracting existing time warp.
+           // subtracting existing time warp. Use ternary to avoid underflow.
            + (netDuration > maxDuration ? netDuration - maxDuration : 0);
 }
 
@@ -302,7 +308,9 @@ Duration DurationSegment::endLate() const
     auto const tripDuration = duration() - cumDuration_;
     auto const tripTimeWarp = timeWarp() - cumTimeWarp_;
     auto const netDuration = tripDuration - tripTimeWarp;
-    return startLate() + netDuration;
+    return netDuration > std::numeric_limits<Duration>::max() - startLate()
+               ? std::numeric_limits<Duration>::max()
+               : startLate() + netDuration;
 }
 
 DurationSegment::DurationSegment(Duration duration,

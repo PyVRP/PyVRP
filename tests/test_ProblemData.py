@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 import pytest
 from numpy.random import default_rng
-from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
@@ -169,12 +169,12 @@ def test_problem_data_replace_no_changes():
     new_dist = new.distance_matrix(profile=0)
     orig_dist = original.distance_matrix(profile=0)
     assert_(new_dist is not orig_dist)
-    assert_allclose(new_dist, orig_dist)
+    assert_equal(new_dist, orig_dist)
 
     new_dur = new.duration_matrix(profile=0)
     orig_dur = original.duration_matrix(profile=0)
     assert_(new_dur is not orig_dur)
-    assert_allclose(new_dur, orig_dur)
+    assert_equal(new_dur, orig_dur)
 
     assert_equal(new.num_clients, original.num_clients)
     assert_equal(new.num_vehicle_types, original.num_vehicle_types)
@@ -218,10 +218,10 @@ def test_problem_data_replace_with_changes():
 
     assert_(new.distance_matrix(0) is not original.distance_matrix(0))
     with assert_raises(AssertionError):
-        assert_allclose(new.distance_matrix(0), original.distance_matrix(0))
+        assert_equal(new.distance_matrix(0), original.distance_matrix(0))
 
     assert_(new.duration_matrix(0) is not original.duration_matrix(0))
-    assert_allclose(new.duration_matrix(0), original.duration_matrix(0))
+    assert_equal(new.duration_matrix(0), original.duration_matrix(0))
 
     assert_equal(new.num_clients, original.num_clients)
     assert_(new.num_vehicle_types != original.num_vehicle_types)
@@ -276,8 +276,8 @@ def test_matrix_access():
         duration_matrices=[dur_mat],
     )
 
-    assert_allclose(data.distance_matrix(profile=0), dist_mat)
-    assert_allclose(data.duration_matrix(profile=0), dur_mat)
+    assert_equal(data.distance_matrix(profile=0), dist_mat)
+    assert_equal(data.duration_matrix(profile=0), dur_mat)
 
 
 def test_matrices_are_not_writeable():

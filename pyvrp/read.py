@@ -26,13 +26,13 @@ from pyvrp.exceptions import ScalingWarning
 
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
 
-_FLOAT_MAX = np.finfo(np.float64).max
+_INT_MAX = np.iinfo(np.int64).max
 
 ROUND_FUNCS: dict[str, _RoundingFunc] = {
-    "round": lambda vals: np.round(vals),
-    "trunc": lambda vals: np.trunc(vals),
-    "dimacs": lambda vals: np.trunc(10 * vals),
-    "exact": lambda vals: np.round(1_000 * vals),
+    "round": lambda vals: np.round(vals).astype(np.int64),
+    "trunc": lambda vals: vals.astype(np.int64),
+    "dimacs": lambda vals: (10 * vals).astype(np.int64),
+    "exact": lambda vals: np.round(1_000 * vals).astype(np.int64),
     "none": lambda vals: vals,
 }
 
@@ -193,13 +193,13 @@ class _InstanceParser:
 
     def backhauls(self) -> np.ndarray:
         if "backhaul" not in self.instance:
-            return np.zeros((self.num_locations, 1), dtype=np.float64)
+            return np.zeros((self.num_locations, 1), dtype=np.int64)
 
         return self.round_func(self.instance["backhaul"])
 
     def demands(self) -> np.ndarray:
         if "demand" not in self.instance and "linehaul" not in self.instance:
-            return np.zeros((self.num_locations, 1), dtype=np.float64)
+            return np.zeros((self.num_locations, 1), dtype=np.int64)
 
         return self.round_func(
             self.instance.get("demand", self.instance.get("linehaul"))
@@ -207,7 +207,7 @@ class _InstanceParser:
 
     def coords(self) -> np.ndarray:
         if "node_coord" not in self.instance:
-            return np.zeros((self.num_locations, 2), dtype=np.float64)
+            return np.zeros((self.num_locations, 2), dtype=np.int64)
 
         return self.round_func(self.instance["node_coord"])
 
@@ -231,9 +231,9 @@ class _InstanceParser:
             return self.round_func(data[:, 1:3])
 
         if "time_window" not in self.instance:
-            time_windows = np.empty((self.num_locations, 2), dtype=np.float64)
+            time_windows = np.empty((self.num_locations, 2), dtype=np.int64)
             time_windows[:, 0] = 0
-            time_windows[:, 1] = _FLOAT_MAX
+            time_windows[:, 1] = _INT_MAX
             return time_windows
 
         return self.round_func(self.instance["time_window"])
@@ -258,13 +258,13 @@ class _InstanceParser:
 
     def prizes(self) -> np.ndarray:
         if "prize" not in self.instance:
-            return np.zeros(self.num_locations, dtype=np.float64)
+            return np.zeros(self.num_locations, dtype=np.int64)
 
         return self.round_func(self.instance["prize"])
 
     def capacities(self) -> np.ndarray:
         if "capacity" not in self.instance:
-            return np.full(self.num_vehicles, _FLOAT_MAX)
+            return np.full(self.num_vehicles, _INT_MAX)
 
         capacities = self.instance["capacity"]
 
@@ -300,7 +300,7 @@ class _InstanceParser:
 
     def max_distances(self) -> np.ndarray:
         if "vehicles_max_distance" not in self.instance:
-            return np.full(self.num_vehicles, _FLOAT_MAX)
+            return np.full(self.num_vehicles, _INT_MAX)
 
         max_distances = self.instance["vehicles_max_distance"]
         shape = self.num_vehicles
@@ -309,7 +309,7 @@ class _InstanceParser:
     def shift_durations(self) -> np.ndarray:
         # We call this field shift duration instead of a hard maximum duration.
         if "vehicles_max_duration" not in self.instance:
-            return np.full(self.num_vehicles, _FLOAT_MAX)
+            return np.full(self.num_vehicles, _INT_MAX)
 
         max_durations = self.instance["vehicles_max_duration"]
         shape = self.num_vehicles
@@ -517,7 +517,7 @@ class _ProblemDataBuilder:
         return vehicle_types
 
     def _distance_matrices(self) -> list[np.ndarray]:
-        distances = np.asarray(self.parser.edge_weight(), dtype=np.float64)
+        distances = self.parser.edge_weight()
 
         if self.parser.type() == "VRPB":
             # In VRPB, linehauls must be served before backhauls. This can be
@@ -548,6 +548,11 @@ class _ProblemDataBuilder:
             allowed = np.zeros((num_locations,), dtype=bool)
             allowed[:num_depots] = True
             allowed[list(allowed_clients)] = True
+
+            # Some dtype trickery to ensure the MAX_VALUE assignment below does
+            # not overflow.
+            dtype = np.promote_types(dist_mats[type_idx].dtype, np.int64)
+            dist_mats[type_idx] = dist_mats[type_idx].astype(dtype)
 
             # Set MAX_VALUE to and from disallowed clients, preventing this
             # vehicle type from serving them.

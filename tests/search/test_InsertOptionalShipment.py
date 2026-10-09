@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_equal
 
 from pyvrp import CostEvaluator
 from pyvrp.search import InsertOptionalShipment
@@ -14,7 +14,7 @@ def test_insert_not_adjacent(small_optional_shipments):
     data = small_optional_shipments
     route = make_search_route(data, ["L0", "U0", "L1", "U1"])
     assert_equal(route.num_shipments(), 2)
-    assert_allclose(route.distance(), 30_857)
+    assert_equal(route.distance(), 30_857)
 
     sol = Solution(data)
     pickup, _ = sol.shipments[2]
@@ -24,15 +24,15 @@ def test_insert_not_adjacent(small_optional_shipments):
     # prize of 10_000, for a delta of -3_514.
     op = InsertOptionalShipment(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_allclose(op.evaluate(pickup, route[3], cost_eval), (-3_514, True))
+    assert_equal(op.evaluate(pickup, route[3], cost_eval), (-3_514, True))
 
     # Should insert U2 after U1, and L2 immediately after L1. U1 is in-between.
     op.apply(pickup, route[3])
     route.update()
 
     assert_equal(route.num_shipments(), 3)
-    assert_allclose(route.distance(), 37_343)
-    assert_allclose(data.shipment(2).prize, 10_000)
+    assert_equal(route.distance(), 37_343)
+    assert_equal(data.shipment(2).prize, 10_000)
     assert_equal(str(route), "L0 U0 L1 L2 U1 U2")
 
 
@@ -53,7 +53,7 @@ def test_insert_into_empty_route(small_optional_shipments):
     # start depot. For empty routes we first evaluate start -> pickup
     # -> delivery -> end, a singleton route. The delta is distance - prize
     # = 9_571 - 10_000 = -429.
-    assert_allclose(op.evaluate(pickup, route[0], cost_eval), (-429, True))
+    assert_equal(op.evaluate(pickup, route[0], cost_eval), (-429, True))
 
 
 def test_fixed_cost_empty_routes(small_optional_shipments):
@@ -74,7 +74,7 @@ def test_fixed_cost_empty_routes(small_optional_shipments):
     # Thus, the actual delta is -429 + 250 = -179.
     op = InsertOptionalShipment(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_allclose(op.evaluate(pickup, route[0], cost_eval), (-179, True))
+    assert_equal(op.evaluate(pickup, route[0], cost_eval), (-179, True))
 
 
 def test_insert_delivery_in_first_improving_place(small_optional_shipments):
@@ -84,7 +84,7 @@ def test_insert_delivery_in_first_improving_place(small_optional_shipments):
     """
     route = make_search_route(small_optional_shipments, ["L1", "U1"])
     assert_equal(route.num_shipments(), 1)
-    assert_allclose(route.distance(), 27_732)
+    assert_equal(route.distance(), 27_732)
 
     sol = Solution(small_optional_shipments)
     pickup, _ = sol.shipments[0]
@@ -94,15 +94,15 @@ def test_insert_delivery_in_first_improving_place(small_optional_shipments):
     # a delta of -6_875.
     op = InsertOptionalShipment(small_optional_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_allclose(op.evaluate(pickup, route[0], cost_eval), (-6875, True))
+    assert_equal(op.evaluate(pickup, route[0], cost_eval), (-6875, True))
 
     # Should insert L0 U0 immediately after the start depot.
     op.apply(pickup, route[0])
     route.update()
 
     assert_equal(route.num_shipments(), 2)
-    assert_allclose(route.distance(), 30_857)
-    assert_allclose(small_optional_shipments.shipment(0).prize, 10_000)
+    assert_equal(route.distance(), 30_857)
+    assert_equal(small_optional_shipments.shipment(0).prize, 10_000)
     assert_equal(str(route), "L0 U0 L1 U1")
 
 
@@ -117,7 +117,7 @@ def test_skip_if_shipment_already_in_route(small_shipments):
     cost_eval = CostEvaluator([10], 0, 0)
 
     assert_(route[1].route is not None)
-    assert_allclose(op.evaluate(route[1], route[3], cost_eval), (0, False))
+    assert_equal(op.evaluate(route[1], route[3], cost_eval), (0, False))
 
 
 def test_does_not_insert_across_depots(small_optional_shipments):
@@ -143,7 +143,7 @@ def test_does_not_insert_across_depots(small_optional_shipments):
     # For the pickup node we evaluate a direct sequence first, that is,
     # inserting the pickup and delivery nodes directly after each other. In
     # this case that's an improving move, and it does not cross depots.
-    assert_allclose(op.evaluate(pickup, route[2], cost_eval), (-4_361, True))
+    assert_equal(op.evaluate(pickup, route[2], cost_eval), (-4_361, True))
 
     op.apply(pickup, route[2])
     route.update()
@@ -162,8 +162,8 @@ def test_skips_deliveries(small_optional_shipments):
     op = InsertOptionalShipment(small_optional_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
     route = make_search_route(small_optional_shipments, ["L1", "U1"])
-    assert_allclose(op.evaluate(delivery, route[1], cost_eval), (0, False))
-    assert_allclose(op.evaluate(pickup, route[1], cost_eval), (-1_648, True))
+    assert_equal(op.evaluate(delivery, route[1], cost_eval), (0, False))
+    assert_equal(op.evaluate(pickup, route[1], cost_eval), (-1_648, True))
 
 
 def test_supports(small_optional_shipments, small_shipments):

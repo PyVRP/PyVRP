@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_equal
 from pytest import mark
 
 import pyvrp
@@ -106,11 +106,11 @@ def test_move_involving_empty_routes():
     cost_eval = CostEvaluator([], 0, 0)
 
     # This move does not change the route structure, so the delta cost is 0.
-    assert_allclose(op.evaluate(route1[2], route2[0], cost_eval), (0, False))
+    assert_equal(op.evaluate(route1[2], route2[0], cost_eval), (0, False))
 
     # This move creates routes (D0 -> C0 -> D0) and (D0 -> C1 -> D0), making
     # route 2 non-empty and thus incurring its fixed cost of 100.
-    assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), (100, False))
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (100, False))
 
     # Now we reverse the visits of route 1 and 2, so that we can hit the cases
     # where route 1 is empty.
@@ -123,11 +123,11 @@ def test_move_involving_empty_routes():
     route2.update()  # D0 -> C0 -> C1 -> D0
 
     # This move does not change the route structure, so the delta cost is 0.
-    assert_allclose(op.evaluate(route2[2], route1[0], cost_eval), (0, False))
+    assert_equal(op.evaluate(route2[2], route1[0], cost_eval), (0, False))
 
     # This move creates routes (D0 -> C1 -> D0) and (D0 -> C0 -> D0), making
     # route 1 non-empty and thus incurring its fixed cost of 10.
-    assert_allclose(op.evaluate(route2[1], route1[0], cost_eval), (10, False))
+    assert_equal(op.evaluate(route2[1], route1[0], cost_eval), (10, False))
 
 
 def test_move_involving_multiple_depots():
@@ -164,18 +164,18 @@ def test_move_involving_multiple_depots():
     sol = make_search_solution(data, routes)
     route1, route2 = sol.routes
 
-    assert_allclose(route1.distance(), 16)
-    assert_allclose(route2.distance(), 16)
+    assert_equal(route1.distance(), 16)
+    assert_equal(route2.distance(), 16)
 
     op = SwapTails(data)
     cost_eval = CostEvaluator([], 1, 0)
 
     # This is a no-op, and should be ignored.
-    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
+    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
 
     # First would be D0 -> C1 -> C0 -> D0, second D1 -> D1. Distance on route2
     # would be zero, and on route1 16. Thus delta cost is -16.
-    assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), (-16, True))
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (-16, True))
 
 
 def test_move_with_different_profiles(ok_small_two_profiles):
@@ -196,19 +196,17 @@ def test_move_with_different_profiles(ok_small_two_profiles):
     # First route has profile 0, and its distance is thus computed using the
     # first distance matrix.
     assert_equal(route1.profile(), 0)
-    assert_allclose(route1.distance(), dist1[0, 3] + dist1[3, 0])
+    assert_equal(route1.distance(), dist1[0, 3] + dist1[3, 0])
 
     # Second route has profile 1, and its distance is thus computed using the
     # second distance matrix.
     assert_equal(route2.profile(), 1)
-    assert_allclose(route2.distance(), dist2[0, 2] + dist2[2, 0])
+    assert_equal(route2.distance(), dist2[0, 2] + dist2[2, 0])
 
     # This move evaluates the setting where the second route would be empty,
     # and the first becomes D0 -> C2 -> C1 -> D0.
     delta = dist1[3, 2] + dist1[2, 0] - dist1[3, 0] - route2.distance()
-    assert_allclose(
-        op.evaluate(route1[1], route2[0], cost_eval), (delta, True)
-    )
+    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (delta, True))
 
 
 def test_supports(ok_small, pr107, small_shipments):
@@ -237,4 +235,4 @@ def test_skips_move_if_shipment_is_split_between_routes(small_shipments):
 
     op = SwapTails(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_allclose(op.evaluate(pickup1, delivery2, cost_eval), (0, False))
+    assert_equal(op.evaluate(pickup1, delivery2, cost_eval), (0, False))

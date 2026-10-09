@@ -10,7 +10,7 @@ class MaxIterations:
         self._max_iters = max_iterations
         self._curr_iter = 0
 
-    def __call__(self, best_cost: float) -> bool:
+    def __call__(self, best_cost: int) -> bool:
         self._curr_iter += 1
 
         return self._curr_iter > self._max_iters

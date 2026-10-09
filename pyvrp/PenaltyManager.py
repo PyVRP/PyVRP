@@ -52,6 +52,10 @@ class PenaltyParams:
     max_penalty
         Maximum penalty term value. Must not be negative.
 
+        .. warning::
+           Setting a (too) large maximum penalty value may cause integer
+           overflow in PyVRP's native extensions.
+
     Attributes
     ----------
     solutions_between_updates
@@ -161,7 +165,7 @@ class PenaltyManager:
 
         # For each penalty dimension, track the recent violations and the
         # average violation at the previous update.
-        self._viol_lists: list[list[float]] = [[] for _ in self._penalties]
+        self._viol_lists: list[list[int]] = [[] for _ in self._penalties]
         self._prev_avg_violations = [float("inf")] * len(self._penalties)
 
     def penalties(self) -> tuple[list[float], float, float]:
@@ -193,7 +197,7 @@ class PenaltyManager:
             self._params.max_penalty,
         )
 
-    def _register(self, idx: int, violation: float):
+    def _register(self, idx: int, violation: int):
         viol_list = self._viol_lists[idx]
         viol_list.append(violation)
 
