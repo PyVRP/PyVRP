@@ -1,8 +1,10 @@
 #include "Solution.h"
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
+#include "constants.h"
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <numeric>
 
@@ -102,12 +104,12 @@ bool Solution::hasExcessLoad() const
 {
     return std::any_of(excessLoad_.begin(),
                        excessLoad_.end(),
-                       [](auto const excess) { return excess > 0; });
+                       [](auto const excess) { return excess > TOL; });
 }
 
-bool Solution::hasExcessDistance() const { return excessDistance_ > 0; }
+bool Solution::hasExcessDistance() const { return excessDistance_ > TOL; }
 
-bool Solution::hasTimeWarp() const { return timeWarp_ > 0; }
+bool Solution::hasTimeWarp() const { return timeWarp_ > TOL; }
 
 Distance Solution::distance() const { return distance_; }
 
@@ -133,12 +135,13 @@ Duration Solution::timeWarp() const { return timeWarp_; }
 
 bool Solution::operator==(Solution const &other) const
 {
+    // Summing the same routes in different orders can round differently.
     // clang-format off
-    bool const attributeChecks = distance_ == other.distance_
-                              && duration_ == other.duration_
-                              && distanceCost_ == other.distanceCost_
-                              && durationCost_ == other.durationCost_
-                              && timeWarp_ == other.timeWarp_
+    bool const attributeChecks = std::abs((distance_ - other.distance_).get()) <= TOL
+                              && std::abs((duration_ - other.duration_).get()) <= TOL
+                              && std::abs((distanceCost_ - other.distanceCost_).get()) <= TOL
+                              && std::abs((durationCost_ - other.durationCost_).get()) <= TOL
+                              && std::abs((timeWarp_ - other.timeWarp_).get()) <= TOL
                               && numClients_ == other.numClients_
                               && numShipments_ == other.numShipments_;
     // clang-format on

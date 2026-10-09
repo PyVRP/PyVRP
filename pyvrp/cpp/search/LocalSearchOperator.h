@@ -38,15 +38,15 @@ protected:
 public:
     /**
      * Determines the cost delta of applying this move to the arguments. If the
-     * cost delta is negative, this is an improving move. The second, boolean
+     * cost delta is below -TOL, this is an improving move. The second, boolean
      * return value indicates whether the operator believes the move should be
      * applied (i.e., improves the solution).
      *
      * Moves that the operator believes should be applied must be fully
      * evaluated. The operator, however, is free to return early if it knows
      * the move will never be good: that is, when it determines the cost delta
-     * cannot become negative at all. In that case, the returned (non-negative)
-     * cost delta may not be a complete evaluation.
+     * cannot become smaller than -TOL. In that case, the returned cost delta
+     * may not be a complete evaluation.
      */
     virtual std::pair<Cost, bool> evaluate(Args... args,
                                            CostEvaluator const &costEvaluator)

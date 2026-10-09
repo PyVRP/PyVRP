@@ -1,10 +1,8 @@
 #ifndef PYVRP_MEASURE_H
 #define PYVRP_MEASURE_H
 
-#include <cmath>
 #include <compare>
 #include <format>
-#include <functional>
 #include <limits>
 #include <ostream>
 #include <type_traits>
@@ -43,14 +41,11 @@ using Load = Measure<MeasureType::LOAD>;
  * arithmetic or measure types.
  *
  * The measure is equipped with a ``MeasureType`` that specifies what it is
- * intended to model. Comparisons allow for a small rounding tolerance, using
- * the ATOL and RTOL values defined below.
+ * intended to model. Comparisons use the underlying double values exactly.
+ * Any rounding tolerance must be applied explicitly at the comparison site.
  */
 template <MeasureType _> class Measure
 {
-    static constexpr double ATOL = 1e-6;   // absolute equality tolerance
-    static constexpr double RTOL = 1e-12;  // relative equality tolerance
-
     double value_ = 0;
 
 public:
@@ -85,12 +80,9 @@ public:
     Measure &operator/=(Measure const rhs);
 
     // Comparison operators.
-    [[nodiscard]] std::partial_ordering operator<=>(Measure const other) const;
-    [[nodiscard]] bool operator==(Measure const other) const;
-    [[nodiscard]] bool operator<(Measure const other) const;
-    [[nodiscard]] bool operator>(Measure const other) const;
-    [[nodiscard]] bool operator<=(Measure const other) const;
-    [[nodiscard]] bool operator>=(Measure const other) const;
+    [[nodiscard]] std::partial_ordering operator<=>(Measure const &other) const
+        = default;
+    [[nodiscard]] bool operator==(Measure const &other) const = default;
 };
 
 // Retrieves the underlying value.
@@ -123,55 +115,6 @@ Measure<Type> &Measure<Type>::operator/=(Measure<Type> const rhs)
 {
     this->value_ /= rhs.value_;
     return *this;
-}
-
-// Comparison operators.
-template <MeasureType Type>
-std::partial_ordering
-Measure<Type>::operator<=>(Measure<Type> const other) const
-{
-    return *this == other ? std::partial_ordering::equivalent
-                          : value_ <=> other.value_;
-}
-
-template <MeasureType Type>
-bool Measure<Type>::operator==(Measure<Type> const other) const
-{
-    if (value_ == other.value_)
-        return true;
-
-    if (std::isfinite(value_) && std::isfinite(other.value_))
-    {
-        auto const diff = std::fabs(value_ - other.value_);
-        auto const scl = std::fmax(std::fabs(value_), std::fabs(other.value_));
-        return diff <= ATOL + RTOL * scl;
-    }
-
-    return false;
-}
-
-template <MeasureType Type>
-bool Measure<Type>::operator<(Measure<Type> const other) const
-{
-    return value_ < other.value_ && !(*this == other);
-}
-
-template <MeasureType Type>
-bool Measure<Type>::operator>(Measure<Type> const other) const
-{
-    return value_ > other.value_ && !(*this == other);
-}
-
-template <MeasureType Type>
-bool Measure<Type>::operator<=(Measure<Type> const other) const
-{
-    return value_ <= other.value_ || *this == other;
-}
-
-template <MeasureType Type>
-bool Measure<Type>::operator>=(Measure<Type> const other) const
-{
-    return value_ >= other.value_ || *this == other;
 }
 
 // Free-standing binary operators.

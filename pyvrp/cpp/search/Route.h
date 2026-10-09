@@ -6,6 +6,7 @@
 #include "DurationSegment.h"
 #include "LoadSegment.h"
 #include "ProblemData.h"
+#include "constants.h"
 
 #include <algorithm>
 #include <cassert>
@@ -963,19 +964,19 @@ bool Route::hasExcessLoad() const
     assert(!dirty);
     return std::any_of(excessLoad_.begin(),
                        excessLoad_.end(),
-                       [](auto const excess) { return excess > 0; });
+                       [](auto const excess) { return excess > TOL; });
 }
 
 bool Route::hasExcessDistance() const
 {
     assert(!dirty);
-    return excessDistance() > 0;
+    return excessDistance() > TOL;
 }
 
 bool Route::hasTimeWarp() const
 {
     assert(!dirty);
-    return timeWarp() > 0;
+    return timeWarp() > TOL;
 }
 
 Route::Node *Route::operator[](size_t idx)

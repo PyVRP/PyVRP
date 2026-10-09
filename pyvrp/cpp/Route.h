@@ -367,8 +367,7 @@ template <> struct std::hash<pyvrp::Route>
         };
 
         // Start from the vehicle type, and then hash combine with the route's
-        // activities. We hash activities rather than measure statistics,
-        // because measures compare with a tolerance.
+        // activities.
         combine(route.vehicleType());
         for (auto const &activity : route)
             combine(std::hash<pyvrp::Activity>()(activity));

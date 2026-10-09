@@ -3,6 +3,7 @@
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
 #include "LoadSegment.h"
+#include "constants.h"
 
 #include <algorithm>
 #include <cassert>
@@ -599,12 +600,12 @@ bool Route::hasExcessLoad() const
 {
     return std::any_of(excessLoad_.begin(),
                        excessLoad_.end(),
-                       [](auto const excess) { return excess > 0; });
+                       [](auto const excess) { return excess > TOL; });
 }
 
-bool Route::hasExcessDistance() const { return excessDistance_ > 0; }
+bool Route::hasExcessDistance() const { return excessDistance_ > TOL; }
 
-bool Route::hasTimeWarp() const { return timeWarp_ > 0; }
+bool Route::hasTimeWarp() const { return timeWarp_ > TOL; }
 
 bool Route::operator==(Route const &other) const
 {

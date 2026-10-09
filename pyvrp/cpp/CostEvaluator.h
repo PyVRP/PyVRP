@@ -2,6 +2,7 @@
 #define PYVRP_COSTEVALUATOR_H
 
 #include "Measure.h"
+#include "constants.h"
 
 #include <cassert>
 #include <concepts>
@@ -211,8 +212,7 @@ Cost CostEvaluator::excessDistPenalty(Distance excessDistance) const
 
 template <typename T> Cost CostEvaluator::cost(T const &arg) const
 {
-    // Penalties are zero when the solution is feasible, so we can fall back to
-    // penalised cost in that case.
+    // Feasible solutions use the same cost computation as penalisedCost().
     return arg.isFeasible() ? penalisedCost(arg)
                             : std::numeric_limits<Cost>::max();
 }
@@ -237,7 +237,7 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     for (size_t dim = 0; dim != capacity.size(); ++dim)
     {
         if constexpr (!exact)
-            if (out >= 0)
+            if (out >= -TOL)
                 return false;
 
         out += loadPenalty(proposal.excessLoad(dim), 0, dim);
@@ -291,7 +291,7 @@ bool CostEvaluator::deltaCost(Cost &out,
     for (size_t dim = 0; dim != uCapacity.size(); ++dim)
     {
         if constexpr (!exact)
-            if (out >= 0)
+            if (out >= -TOL)
                 return false;
 
         out += loadPenalty(uProposal.excessLoad(dim), 0, dim);
@@ -301,14 +301,14 @@ bool CostEvaluator::deltaCost(Cost &out,
     for (size_t dim = 0; dim != vCapacity.size(); ++dim)
     {
         if constexpr (!exact)
-            if (out >= 0)
+            if (out >= -TOL)
                 return false;
 
         out += loadPenalty(vProposal.excessLoad(dim), 0, dim);
     }
 
     if constexpr (!exact)
-        if (out >= 0)
+        if (out >= -TOL)
             return false;
 
     if (uRoute->hasDurationCost())

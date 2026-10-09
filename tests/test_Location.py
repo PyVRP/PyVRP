@@ -28,13 +28,12 @@ def test_eq_checks_names():
     assert_(Location(0, 0, name="1") != Location(0, 0, name="2"))
 
 
-def test_eq_accounts_for_small_measure_tolerances():
+def test_eq_compares_coordinates_exactly():
     """
-    Internally, Location uses the Coordinate measure. That measure tolerances a
-    little bit of floating-point error when comparing equality. This test
-    checks that's OK.
+    Even small coordinate differences make locations unequal. Measures do not
+    apply an implicit tolerance when comparing values.
     """
     original = Location(1.0, 0)
     rounded = Location(1.0 + 5e-10, 0)
-    assert_(original == rounded)
-    assert_(rounded == original)
+    assert_(original != rounded)
+    assert_(rounded != original)

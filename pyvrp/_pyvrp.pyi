@@ -4,6 +4,9 @@ from typing import Iterator, Sequence, overload
 import numpy as np
 
 _BUILD_TYPE: str
+MAX_SIZE: int
+MAX_VALUE: float
+TOL: float
 
 class ActivityType(Enum):
     CLIENT = 0

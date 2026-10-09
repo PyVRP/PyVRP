@@ -135,5 +135,13 @@ This object stores the best observed solution and detailed runtime statistics.
    .. autoexception:: PenaltyBoundWarning
 
 .. automodule:: pyvrp.constants
-   :members:
-   :exclude-members: MAX_SIZE
+
+   .. autodata:: MAX_VALUE
+
+      The largest value that can be passed for any element of the input distance
+      or duration matrices (including missing values). Passing larger values
+      warns about possible numerical instability.
+
+   .. autodata:: TOL
+
+      Absolute tolerance for feasibility and improvement decisions.

@@ -20,6 +20,31 @@ from pyvrp import (
 from tests.helpers import read
 
 
+def test_equality_with_different_float_summation_order():
+    """
+    Permuting identical routes must preserve equality even when their summed
+    statistics differ through floating-point rounding.
+    """
+    matrix = np.zeros((4, 4))
+    matrix[0, 1:] = [0.1, 0.2, 0.3]
+    data = ProblemData(
+        locations=[Location(0, 0) for _ in range(4)],
+        clients=[Client(idx + 1) for idx in range(3)],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType(3, unit_duration_cost=1)],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+    )
+    routes = [Route(data, [idx], 0) for idx in range(3)]
+    forward = Solution(data, routes)
+    reverse = Solution(data, routes[::-1])
+
+    assert_(forward.distance() != reverse.distance())
+    assert_(forward.duration() != reverse.duration())
+    assert_equal(forward, reverse)
+    assert_equal(reverse, forward)
+
+
 @pytest.mark.parametrize(
     "routes",
     [

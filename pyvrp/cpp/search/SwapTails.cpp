@@ -1,6 +1,7 @@
 #include "SwapTails.h"
 
 #include "Route.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -95,7 +96,7 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
                                 vRoute->at(vRoute->size() - 1)));
     }
 
-    return std::make_pair(deltaCost, deltaCost < 0);
+    return std::make_pair(deltaCost, deltaCost < -TOL);
 }
 
 void SwapTails::apply(Route::Node *U, Route::Node *V) const

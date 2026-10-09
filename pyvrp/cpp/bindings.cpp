@@ -16,6 +16,7 @@
 #include "Shipment.h"
 #include "Solution.h"
 #include "VehicleType.h"
+#include "constants.h"
 #include "pyvrp_docs.h"
 
 #include <pybind11/functional.h>
@@ -62,6 +63,10 @@ PYBIND11_MODULE(_pyvrp, m)
 #else
     m.attr("_BUILD_TYPE") = "DEBUG";
 #endif
+
+    m.attr("MAX_SIZE") = pyvrp::MAX_SIZE;
+    m.attr("MAX_VALUE") = pyvrp::MAX_VALUE;
+    m.attr("TOL") = pyvrp::TOL;
 
     py::enum_<Activity::ActivityType>(
         m, "ActivityType", DOC(pyvrp, Activity, ActivityType))

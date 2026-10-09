@@ -1,6 +1,7 @@
 #include "RelocatePickup.h"
 
 #include "PickupSegment.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -43,7 +44,7 @@ RelocatePickup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
                                 route->between(node->pos(), U->pos() - 1),
                                 route->after(U->pos() + 1)));
 
-        if (deltaCost < 0)
+        if (deltaCost < -TOL)
         {
             move_.cost = deltaCost;
             move_.before = node;
@@ -51,7 +52,7 @@ RelocatePickup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
         }
     }
 
-    return std::make_pair(move_.cost, move_.cost < 0);
+    return std::make_pair(move_.cost, move_.cost < -TOL);
 }
 
 void RelocatePickup::apply(Route::Node *U) const
