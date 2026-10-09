@@ -1,4 +1,5 @@
 #include "RemoveAdjacentDepot.h"
+#include "constants.h"
 
 #include <cassert>
 #include <limits>
@@ -26,7 +27,7 @@ RemoveAdjacentDepot::evaluate(Route::Node *U,
             Route::Proposal(route->before(U->pos() - 2),
                             route->after(U->pos())));
 
-        if (deltaCost < bestCost)
+        if (deltaCost < bestCost - Cost(TOL))
         {
             bestCost = deltaCost;
             move_ = MoveType::REMOVE_PREV;
@@ -41,7 +42,7 @@ RemoveAdjacentDepot::evaluate(Route::Node *U,
             Route::Proposal(route->before(U->pos()),
                             route->after(U->pos() + 2)));
 
-        if (deltaCost < bestCost)
+        if (deltaCost < bestCost - Cost(TOL))
         {
             bestCost = deltaCost;
             move_ = MoveType::REMOVE_NEXT;
@@ -50,7 +51,7 @@ RemoveAdjacentDepot::evaluate(Route::Node *U,
 
     // Apply this move it's either better or neutral. It can be neutral if e.g.
     // the same depot is visited consecutively, but that's unnecessary.
-    return std::make_pair(bestCost, bestCost <= 0);
+    return std::make_pair(bestCost, bestCost <= TOL);
 }
 
 void RemoveAdjacentDepot::apply(Route::Node *U) const

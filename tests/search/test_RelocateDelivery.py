@@ -1,12 +1,12 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import Client, CostEvaluator
 from pyvrp.search import RelocateDelivery
 from pyvrp.search._search import Solution
 from tests.helpers import make_search_route
 
-_INT_MAX = np.iinfo(np.int64).max
+_FLOAT_MAX = np.finfo(np.float64).max
 
 
 def test_relocate_just_after_pickup(small_shipments):
@@ -28,7 +28,7 @@ def test_relocate_just_after_pickup(small_shipments):
 
     op = RelocateDelivery(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[3], cost_eval), (-10_580, True))
+    assert_allclose(op.evaluate(route[3], cost_eval), (-10_580, True))
 
     op.apply(route[3])
     route.update()
@@ -61,7 +61,7 @@ def test_relocate_just_before_depot(small_shipments):
     # results in less distance because C0 is at L0's location.
     op = RelocateDelivery(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[1], cost_eval), (-2_001, True))
+    assert_allclose(op.evaluate(route[1], cost_eval), (-2_001, True))
 
     op.apply(route[1])
     route.update()
@@ -95,7 +95,7 @@ def test_reload_depot(small_shipments):
 
     op = RelocateDelivery(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[1], cost_eval), (_INT_MAX, False))
+    assert_allclose(op.evaluate(route[1], cost_eval), (_FLOAT_MAX, False))
 
 
 def test_relocate_skips_unassigned_nodes(small_shipments):
@@ -108,7 +108,7 @@ def test_relocate_skips_unassigned_nodes(small_shipments):
 
     op = RelocateDelivery(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(pickup, cost_eval), (0, False))
+    assert_allclose(op.evaluate(pickup, cost_eval), (0, False))
 
 
 def test_relocate_skips_non_pickup_nodes(small_shipments):
@@ -129,8 +129,8 @@ def test_relocate_skips_non_pickup_nodes(small_shipments):
 
     op = RelocateDelivery(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(client, cost_eval), (0, False))
-    assert_equal(op.evaluate(delivery, cost_eval), (0, False))
+    assert_allclose(op.evaluate(client, cost_eval), (0, False))
+    assert_allclose(op.evaluate(delivery, cost_eval), (0, False))
 
 
 def test_supports(ok_small, small_shipments, small_optional_shipments):
@@ -165,4 +165,4 @@ def test_cannot_improve_singleton_route(small_shipments):
 
     op = RelocateDelivery(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(pickup, cost_eval), (_INT_MAX, False))
+    assert_allclose(op.evaluate(pickup, cost_eval), (_FLOAT_MAX, False))

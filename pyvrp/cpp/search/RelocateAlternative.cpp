@@ -1,6 +1,7 @@
 #include "RelocateAlternative.h"
 
 #include "ClientSegment.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -35,7 +36,7 @@ void RelocateAlternative::evalSameRoute(Route::Node *U,
                                 ClientSegment(data, client),
                                 route->after(V->pos() + 1)));
 
-            if (deltaCost < 0)
+            if (deltaCost < -TOL)
             {
                 move_ = {deltaCost, alternative};
                 return;
@@ -57,7 +58,7 @@ void RelocateAlternative::evalSameRoute(Route::Node *U,
                                 route->between(V->pos() + 1, U->pos() - 1),
                                 route->after(U->pos() + 1)));
 
-            if (deltaCost < 0)
+            if (deltaCost < -TOL)
             {
                 move_ = {deltaCost, alternative};
                 return;
@@ -103,7 +104,7 @@ void RelocateAlternative::evalDifferentRoutes(
                                                 ClientSegment(data, client),
                                                 vRoute->after(V->pos() + 1)));
 
-        if (deltaCost < 0)
+        if (deltaCost < -TOL)
         {
             move_ = {deltaCost, &solution_->clients[client]};
             return;
@@ -131,7 +132,7 @@ std::pair<pyvrp::Cost, bool> RelocateAlternative::evaluate(
     else
         evalDifferentRoutes(U, V, costEvaluator);
 
-    return std::make_pair(move_.cost, move_.cost < 0);
+    return std::make_pair(move_.cost, move_.cost < -TOL);
 }
 
 void RelocateAlternative::apply(Route::Node *U, Route::Node *V) const

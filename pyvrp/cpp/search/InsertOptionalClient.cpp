@@ -1,6 +1,7 @@
 #include "InsertOptionalClient.h"
 
 #include "ClientSegment.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -35,7 +36,7 @@ std::pair<pyvrp::Cost, bool> InsertOptionalClient::evaluate(
                                             ClientSegment(data, U->idx()),
                                             route->after(V->pos() + 1)));
 
-    return std::make_pair(deltaCost, deltaCost < 0);
+    return std::make_pair(deltaCost, deltaCost < -TOL);
 }
 
 void InsertOptionalClient::apply(Route::Node *U, Route::Node *V) const

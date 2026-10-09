@@ -1,6 +1,7 @@
 #include "ReplaceOptionalClient.h"
 
 #include "ClientSegment.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -26,7 +27,7 @@ std::pair<pyvrp::Cost, bool> ReplaceOptionalClient::evaluate(
                                             ClientSegment(data, U->idx()),
                                             route->after(V->pos() + 1)));
 
-    return std::make_pair(deltaCost, deltaCost < 0);
+    return std::make_pair(deltaCost, deltaCost < -TOL);
 }
 
 void ReplaceOptionalClient::apply(Route::Node *U, Route::Node *V) const

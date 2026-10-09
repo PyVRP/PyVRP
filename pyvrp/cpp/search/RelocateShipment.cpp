@@ -1,4 +1,5 @@
 #include "RelocateShipment.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -58,7 +59,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
                                             uRoute->at(uDelivery->pos()),
                                             vRoute->after(V->pos() + 1)));
 
-    if (deltaCost < 0)
+    if (deltaCost < -TOL)
     {
         move_ = {V->pos() + 1};
         return std::make_pair(deltaCost, true);
@@ -76,7 +77,7 @@ std::pair<pyvrp::Cost, bool> RelocateShipment::evaluate(
                             uRoute->at(uDelivery->pos()),
                             vRoute->after(node->pos() + 1)));
 
-        if (deltaCost < 0)
+        if (deltaCost < -TOL)
         {
             move_ = {node->pos() + 1};  // after node
             return std::make_pair(deltaCost, true);

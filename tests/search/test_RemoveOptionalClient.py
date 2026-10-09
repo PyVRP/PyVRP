@@ -1,5 +1,6 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
+import pytest
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Client,
@@ -10,8 +11,31 @@ from pyvrp import (
     ProblemData,
     VehicleType,
 )
+from pyvrp.constants import TOL
 from pyvrp.search import RemoveOptionalClient
 from tests.helpers import make_search_route
+
+
+@pytest.mark.parametrize(
+    ("improvement", "expected"),
+    [(0, False), (TOL / 2, False), (2 * TOL, True), (0.25, True)],
+)
+def test_improvement_tolerance(improvement, expected):
+    """Only improvements larger than the cost tolerance are accepted."""
+    data = ProblemData(
+        locations=[Location(0, 0)],
+        clients=[Client(0, prize=1, required=False)],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType(fixed_cost=1 + improvement)],
+        distance_matrices=[np.zeros((1, 1), dtype=int)],
+        duration_matrices=[np.zeros((1, 1), dtype=int)],
+    )
+    route = make_search_route(data, ["C0"])
+    op = RemoveOptionalClient(data)
+    delta, should_apply = op.evaluate(route[1], CostEvaluator([], 0, 0))
+
+    assert_allclose(delta, -improvement, rtol=0, atol=1e-12)
+    assert_equal(should_apply, expected)
 
 
 def test_does_not_remove_required_clients():
@@ -41,8 +65,8 @@ def test_does_not_remove_required_clients():
 
     # Test that the the operator cannot remove the first required client, but
     # does want to remove the second.
-    assert_equal(op.evaluate(route[1], cost_eval), (0, False))
-    assert_equal(op.evaluate(route[2], cost_eval), (-10, True))
+    assert_allclose(op.evaluate(route[1], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[2], cost_eval), (-10, True))
 
     # Should remove the second client.
     op.apply(route[2])
@@ -103,12 +127,12 @@ def test_fixed_vehicle_cost():
     # only client on a route. That makes the route empty, and removes the fixed
     # vehicle cost of 7 for this vehicle type.
     route = make_search_route(data, ["C0"], vehicle_type=0)
-    assert_equal(op.evaluate(route[1], cost_eval), (-7, True))
+    assert_allclose(op.evaluate(route[1], cost_eval), (-7, True))
 
     # Same story for this route, but now we have a different vehicle type with
     # fixed cost 13.
     route = make_search_route(data, ["C0"], vehicle_type=1)
-    assert_equal(op.evaluate(route[1], cost_eval), (-13, True))
+    assert_allclose(op.evaluate(route[1], cost_eval), (-13, True))
 
 
 def test_remove(ok_small_prizes):
@@ -123,7 +147,7 @@ def test_remove(ok_small_prizes):
     # Purely distance. Removes C1 -> C2 -> D0, adds arcs C1 -> D0. This has
     # delta distance of 1726 - 1992 - 1965 = -2231, and a prize delta of 15:
     # -2231 + 15 = -2216.
-    assert_equal(op.evaluate(route[2], cost_eval), (-2216, True))
+    assert_allclose(op.evaluate(route[2], cost_eval), (-2216, True))
 
 
 def test_empty_route_delta_cost_bug():
@@ -157,7 +181,7 @@ def test_empty_route_delta_cost_bug():
     # Similarly, if removing a client results in an empty route, then we should
     # not include the empty route's costs.
     route = make_search_route(data, ["C0"])
-    assert_equal(op.evaluate(route[1], cost_eval), (-4, True))
+    assert_allclose(op.evaluate(route[1], cost_eval), (-4, True))
 
 
 def test_cannot_remove_required_group():
@@ -190,8 +214,8 @@ def test_cannot_remove_required_group():
 
     # The first client in the route is from the optional group and can be
     # removed. The second client is from the required group, and cannot.
-    assert_equal(op.evaluate(route[1], cost_eval), (-1, True))
-    assert_equal(op.evaluate(route[2], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[1], cost_eval), (-1, True))
+    assert_allclose(op.evaluate(route[2], cost_eval), (0, False))
 
 
 def test_removing_last_client_in_route_with_reload_depots_and_service():
@@ -210,11 +234,11 @@ def test_removing_last_client_in_route_with_reload_depots_and_service():
     )
 
     route = make_search_route(data, ["C0", "D0"])
-    assert_equal(route.duration_cost(), 100)
+    assert_allclose(route.duration_cost(), 100)
 
     # Removing C0 turns the route empty, despite there still being depot visits
     # with associated service duration. Since no clients are visited, the route
     # has no cost, and that should be reflected in the cost delta.
     op = RemoveOptionalClient(data)
     cost_eval = CostEvaluator([], 0, 0)
-    assert_equal(op.evaluate(route[1], cost_eval), (-100, True))
+    assert_allclose(op.evaluate(route[1], cost_eval), (-100, True))

@@ -2,6 +2,7 @@
 
 #include "DeliverySegment.h"
 #include "PickupSegment.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -54,7 +55,7 @@ std::pair<pyvrp::Cost, bool> ReplaceOptionalShipment::evaluate(
                 DeliverySegment(data, U->idx()),
                 route->after(vDelivery->pos() + 1)));
 
-    return std::make_pair(deltaCost, deltaCost < 0);
+    return std::make_pair(deltaCost, deltaCost < -TOL);
 }
 
 void ReplaceOptionalShipment::apply(Route::Node *U, Route::Node *V) const

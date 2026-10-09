@@ -1,4 +1,5 @@
 #include "Client.h"
+#include "constants.h"
 
 #include <cassert>
 #include <cstring>
@@ -75,7 +76,7 @@ Client::Client(size_t location,
     if (releaseTime < 0)
         throw std::invalid_argument("release_time must be >= 0.");
 
-    if (prize < 0)
+    if (prize < -TOL)
         throw std::invalid_argument("prize must be >= 0.");
 }
 
@@ -122,7 +123,7 @@ bool Client::operator==(Client const &other) const
         && twEarly == other.twEarly
         && twLate == other.twLate
         && releaseTime == other.releaseTime
-        && prize == other.prize
+        && std::abs((prize - other.prize).get()) <= TOL
         && required == other.required
         && group == other.group
         && std::strcmp(name, other.name) == 0;

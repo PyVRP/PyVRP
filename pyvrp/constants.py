@@ -1,5 +1,7 @@
 import sys
 
+from pyvrp._pyvrp import TOL as TOL
+
 MAX_VALUE = 1 << 44
 """
 The largest value that can be passed for any element of the input distance or

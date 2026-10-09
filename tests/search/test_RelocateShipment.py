@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import Client, CostEvaluator, VehicleType
 from pyvrp.search import RelocateShipment
@@ -18,7 +18,7 @@ def test_skip_same_route(small_shipments):
 
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[1], route[3], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[1], route[3], cost_eval), (0, False))
 
 
 def test_skip_unassigned(small_shipments):
@@ -35,7 +35,7 @@ def test_skip_unassigned(small_shipments):
     # route's starting depot.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(pickup, empty[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(pickup, empty[0], cost_eval), (0, False))
 
 
 def test_skip_non_pickup(small_shipments):
@@ -52,8 +52,8 @@ def test_skip_non_pickup(small_shipments):
     # operator, so it should skip such moves.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
-    assert_equal(op.evaluate(route1[0], route2[1], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route1[0], route2[1], cost_eval), (0, False))
 
 
 def test_fixed_cost_when_emptying_a_route(small_shipments):
@@ -77,7 +77,9 @@ def test_fixed_cost_when_emptying_a_route(small_shipments):
     # fixed cost by 10_000.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route2[1], route1[1], cost_eval), (-14_218, True))
+    assert_allclose(
+        op.evaluate(route2[1], route1[1], cost_eval), (-14_218, True)
+    )
 
     op.apply(route2[1], route1[1])
     route1.update()
@@ -107,7 +109,9 @@ def test_fixed_cost_relocating_into_empty_route(small_shipments):
     # 1_000. The resulting delta is thus -2_258.
     op = RelocateShipment(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route1[3], route2[0], cost_eval), (-2_258, True))
+    assert_allclose(
+        op.evaluate(route1[3], route2[0], cost_eval), (-2_258, True)
+    )
 
     op.apply(route1[3], route2[0])
     route1.update()
@@ -135,7 +139,9 @@ def test_relocate_non_adjacent_to_direct_sequence(small_shipments):
     # results in lower distance.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route2[1], route1[2], cost_eval), (-1_275, True))
+    assert_allclose(
+        op.evaluate(route2[1], route1[2], cost_eval), (-1_275, True)
+    )
 
     op.apply(route2[1], route1[2])
     route1.update()
@@ -164,7 +170,9 @@ def test_relocate_non_adjacent_delivery(small_shipments):
     # just after U1.
     op = RelocateShipment(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route1[1], route2[2], cost_eval), (-1_936, True))
+    assert_allclose(
+        op.evaluate(route1[1], route2[2], cost_eval), (-1_936, True)
+    )
 
     # Should insert U2 after U1, and L2 immediately after U0. L1 U1 is
     # in-between.

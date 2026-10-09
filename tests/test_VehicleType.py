@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import VehicleType
 from pyvrp.constants import MAX_SIZE
@@ -113,13 +113,13 @@ def test_does_not_raise_for_all_zero_edge_case():
     assert_equal(vehicle_type.start_depot, 0)
     assert_equal(vehicle_type.end_depot, 0)
     assert_equal(vehicle_type.capacity, [])
-    assert_equal(vehicle_type.fixed_cost, 0)
+    assert_allclose(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
     assert_equal(vehicle_type.tw_late, 0)
     assert_equal(vehicle_type.shift_duration, 0)
     assert_equal(vehicle_type.max_distance, 0)
-    assert_equal(vehicle_type.unit_distance_cost, 0)
-    assert_equal(vehicle_type.unit_duration_cost, 0)
+    assert_allclose(vehicle_type.unit_distance_cost, 0)
+    assert_allclose(vehicle_type.unit_duration_cost, 0)
     assert_equal(vehicle_type.start_late, 0)
 
 
@@ -133,11 +133,11 @@ def test_default_values():
     assert_equal(vehicle_type.start_depot, 0)
     assert_equal(vehicle_type.end_depot, 0)
     assert_equal(vehicle_type.capacity, [])
-    assert_equal(vehicle_type.fixed_cost, 0)
+    assert_allclose(vehicle_type.fixed_cost, 0)
     assert_equal(vehicle_type.tw_early, 0)
-    assert_equal(vehicle_type.unit_distance_cost, 1)
-    assert_equal(vehicle_type.unit_duration_cost, 0)
-    assert_equal(vehicle_type.unit_overtime_cost, 0)
+    assert_allclose(vehicle_type.unit_distance_cost, 1)
+    assert_allclose(vehicle_type.unit_duration_cost, 0)
+    assert_allclose(vehicle_type.unit_overtime_cost, 0)
     assert_equal(vehicle_type.name, "")
 
     # The default value for the following fields is the largest representable
@@ -177,13 +177,13 @@ def test_attribute_access():
     assert_equal(vehicle_type.start_depot, 29)
     assert_equal(vehicle_type.end_depot, 43)
     assert_equal(vehicle_type.capacity, [13])
-    assert_equal(vehicle_type.fixed_cost, 3)
+    assert_allclose(vehicle_type.fixed_cost, 3)
     assert_equal(vehicle_type.tw_early, 17)
     assert_equal(vehicle_type.tw_late, 19)
     assert_equal(vehicle_type.shift_duration, 23)
     assert_equal(vehicle_type.max_distance, 31)
-    assert_equal(vehicle_type.unit_distance_cost, 37)
-    assert_equal(vehicle_type.unit_duration_cost, 41)
+    assert_allclose(vehicle_type.unit_distance_cost, 37)
+    assert_allclose(vehicle_type.unit_duration_cost, 41)
     assert_equal(vehicle_type.start_late, 18)
     assert_equal(vehicle_type.max_overtime, 43)
 
@@ -336,4 +336,4 @@ def test_allows_negative_fixed_cost():
     not allowed.
     """
     veh_type = VehicleType(fixed_cost=-100)
-    assert_equal(veh_type.fixed_cost, -100)
+    assert_allclose(veh_type.fixed_cost, -100)

@@ -222,8 +222,8 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
 
     duration_ = ds.duration();
     overtime_ = std::max<Duration>(duration_ - vehData.shiftDuration, 0);
-    durationCost_ = vehData.unitDurationCost * static_cast<Cost>(duration_)
-                    + vehData.unitOvertimeCost * static_cast<Cost>(overtime_);
+    durationCost_ = vehData.unitDurationCost * Cost(duration_.get())
+                    + vehData.unitOvertimeCost * Cost(overtime_.get());
     startTime_ = ds.startEarly();
     releaseTime_ = ds.releaseTime();
     slack_ = ds.slack();
@@ -362,7 +362,7 @@ void Route::setDistance(ProblemData const &data)
         frmLoc = toLoc;
     }
 
-    distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
+    distanceCost_ = vehData.unitDistanceCost * Cost(distance_.get());
     excessDistance_ = std::max<Distance>(distance_ - vehData.maxDistance, 0);
 }
 
