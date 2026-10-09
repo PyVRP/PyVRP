@@ -1,7 +1,7 @@
 import pickle
 
 import pytest
-from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
+from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import Depot
 
@@ -41,9 +41,9 @@ def test_initialises_data_correctly():
     )
 
     assert_equal(depot.location, 2)
-    assert_allclose(depot.tw_early, 5)
-    assert_allclose(depot.tw_late, 7)
-    assert_allclose(depot.service_duration, 3)
+    assert_equal(depot.tw_early, 5)
+    assert_equal(depot.tw_late, 7)
+    assert_equal(depot.service_duration, 3)
     assert_equal(depot.name, "test")
 
 

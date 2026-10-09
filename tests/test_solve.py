@@ -133,7 +133,7 @@ def test_solve_optional_shipments(small_optional_shipments):
 
     # Shipment 0 has prize 10_000, which means visiting it at a distance cost
     # of 9_571 incurs a profit.
-    assert_allclose(res.best.distance_cost(), 9_571)
+    assert_equal(res.best.distance_cost(), 9_571)
 
     # Shipment 0 should not have any unplanned activities (that is, it should
     # be the sole planned shipment).

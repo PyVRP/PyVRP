@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_equal
 
 from pyvrp import CostEvaluator, Depot
 from pyvrp.search import RemoveAdjacentDepot
@@ -15,7 +15,7 @@ def test_cannot_evaluate_unassigned(ok_small_multiple_trips):
     op = RemoveAdjacentDepot(data)
 
     unassigned = Node("C0")
-    assert_allclose(op.evaluate(unassigned, cost_eval), (0, False))
+    assert_equal(op.evaluate(unassigned, cost_eval), (0, False))
 
 
 def test_removes_best_adjacent_depot(ok_small_multiple_trips):
@@ -34,15 +34,15 @@ def test_removes_best_adjacent_depot(ok_small_multiple_trips):
     #   delta = dist(C0, C1) - dist(C0, D0) - dist(D0, C1)
     #         = 1_992 - 1_726 - 1_944
     #         = -1_678.
-    assert_allclose(op.evaluate(route[1], cost_eval), (-1_678, True))
+    assert_equal(op.evaluate(route[1], cost_eval), (-1_678, True))
 
     # C1 has a depot before and after it. Removing the depot after is better,
     # so that's the move we should apply.
-    assert_allclose(op.evaluate(route[3], cost_eval), (-3_275, True))
+    assert_equal(op.evaluate(route[3], cost_eval), (-3_275, True))
 
     # C2 has a depot before it. Removing that depot is the same move as we
     # evaluated for C1, so we should find the same delta cost.
-    assert_allclose(op.evaluate(route[5], cost_eval), (-3_275, True))
+    assert_equal(op.evaluate(route[5], cost_eval), (-3_275, True))
 
     # Applying the last evaluated move removes the depot between C1 and C2.
     op.apply(route[5])
@@ -62,7 +62,7 @@ def test_removes_consecutive_depots(ok_small_multiple_trips):
 
     # The move is cost neutral, but should be applied anyway.
     delta_cost, should_apply = op.evaluate(route[1], cost_eval)
-    assert_allclose(delta_cost, 0)
+    assert_equal(delta_cost, 0)
     assert_(should_apply)
 
 
@@ -93,7 +93,7 @@ def test_remove_reload_depot(ok_small_multiple_trips):
     #                  dist delta = -3275
     op = RemoveAdjacentDepot(data)
     cost_eval = CostEvaluator([1000], 0, 0)
-    assert_allclose(op.evaluate(route[2], cost_eval), (8_000 - 3_275, False))
+    assert_equal(op.evaluate(route[2], cost_eval), (8_000 - 3_275, False))
 
 
 def test_remove_reload_depots_service_duration(ok_small_multiple_trips):
@@ -114,5 +114,5 @@ def test_remove_reload_depots_service_duration(ok_small_multiple_trips):
     # duration cost, by removing the associated depot service duration. We
     # evaluate from the adjacent client nodes.
     route = make_search_route(data, ["C0", "C1", "D0", "D0", "C2", "C3"])
-    assert_allclose(op.evaluate(route[2], cost_eval), (-90, True))
-    assert_allclose(op.evaluate(route[5], cost_eval), (-90, True))
+    assert_equal(op.evaluate(route[2], cost_eval), (-90, True))
+    assert_equal(op.evaluate(route[5], cost_eval), (-90, True))

@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_equal
 
 import pyvrp
 from pyvrp import Activity, Client, CostEvaluator, RandomNumberGenerator
@@ -209,7 +209,7 @@ def test_insert_shipment_at_neighbour_predecessor(small_shipments):
     for descr in ["L1", "U1"]:
         route.append(sol[Activity(descr)])
     route.update()
-    assert_allclose(route.distance(), 27_732)
+    assert_equal(route.distance(), 27_732)
 
     # L1 is the only neighbour of shipment 0. Inserting shipment 0 should
     # therefore consider positions after L1 and after its predecessor, which
@@ -227,5 +227,5 @@ def test_insert_shipment_at_neighbour_predecessor(small_shipments):
 
     # Inserting after the start depot adds 3_125 distance. Considering only
     # positions after L1 would instead produce L1 L0 U1 U0, adding 6_637.
-    assert_allclose(route.distance(), 30_857)
+    assert_equal(route.distance(), 30_857)
     assert_equal(str(route), "L0 U0 L1 U1")

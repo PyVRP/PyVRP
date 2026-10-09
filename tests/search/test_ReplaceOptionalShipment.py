@@ -1,4 +1,4 @@
-from numpy.testing import assert_, assert_allclose, assert_equal
+from numpy.testing import assert_, assert_equal
 
 from pyvrp import CostEvaluator
 from pyvrp.search import ReplaceOptionalShipment
@@ -14,7 +14,7 @@ def test_replace(small_optional_shipments):
     sol = Solution(small_optional_shipments)
 
     route = make_search_route(small_optional_shipments, sol.shipments[1])
-    assert_allclose(route.distance(), 27_732)
+    assert_equal(route.distance(), 27_732)
     assert_equal(str(route), "L1 U1")
 
     op = ReplaceOptionalShipment(small_optional_shipments)
@@ -24,13 +24,13 @@ def test_replace(small_optional_shipments):
     # distance goes from 27_732 to 9_571, while the prize of 0 is 10_000 and of
     # 1 just 2_000. So the delta is -26_161.
     pickup, _ = sol.shipments[0]
-    assert_allclose(op.evaluate(pickup, route[1], cost_eval), (-26_161, True))
-    assert_allclose(op.evaluate(pickup, route[2], cost_eval), (-26_161, True))
+    assert_equal(op.evaluate(pickup, route[1], cost_eval), (-26_161, True))
+    assert_equal(op.evaluate(pickup, route[2], cost_eval), (-26_161, True))
 
     op.apply(pickup, route[2])
     route.update()
 
-    assert_allclose(route.distance(), 9_571)
+    assert_equal(route.distance(), 9_571)
     assert_equal(str(route), "L0 U0")
 
 
@@ -50,7 +50,7 @@ def test_cannot_replace_required_shipment(small_shipments):
     # Each shipment is required. That means the shipment cannot be replaced,
     # since it would then leave the solution.
     pickup, _ = sol.shipments[0]
-    assert_allclose(op.evaluate(pickup, route[1], cost_eval), (0, False))
+    assert_equal(op.evaluate(pickup, route[1], cost_eval), (0, False))
 
 
 def test_skips_deliveries(small_optional_shipments):
@@ -66,8 +66,8 @@ def test_skips_deliveries(small_optional_shipments):
 
     op = ReplaceOptionalShipment(small_optional_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_allclose(op.evaluate(delivery, route[1], cost_eval), (0, False))
-    assert_allclose(op.evaluate(pickup, route[1], cost_eval), (-26_161, True))
+    assert_equal(op.evaluate(delivery, route[1], cost_eval), (0, False))
+    assert_equal(op.evaluate(pickup, route[1], cost_eval), (-26_161, True))
 
 
 def test_supports(ok_small, small_shipments, small_optional_shipments):
@@ -100,13 +100,13 @@ def test_replace_non_adjacent(small_optional_shipments):
     nodes = [pickup1, *sol.shipments[2], delivery1]
 
     route = make_search_route(small_optional_shipments, nodes)
-    assert_allclose(route.distance(), 42_463)
+    assert_equal(route.distance(), 42_463)
     assert_equal(str(route), "L1 L2 U2 U1")
 
     pickup, _ = sol.shipments[0]
     op = ReplaceOptionalShipment(small_optional_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_allclose(op.evaluate(pickup, route[1], cost_eval), (-27_391, True))
+    assert_equal(op.evaluate(pickup, route[1], cost_eval), (-27_391, True))
 
     op.apply(pickup, route[1])
     route.update()
@@ -114,5 +114,5 @@ def test_replace_non_adjacent(small_optional_shipments):
     # Cost delta is -27_391, but part of that is due to prizes: shipment 0
     # yields a prize of 10_000, while shipment 1 provides a prize of 2_000.
     # Thus, 10_000 - 2_000 = 8_000 of the delta is due to better prizes.
-    assert_allclose(route.distance(), 42_463 - 27_391 + 8_000)
+    assert_equal(route.distance(), 42_463 - 27_391 + 8_000)
     assert_equal(str(route), "L0 L2 U2 U0")

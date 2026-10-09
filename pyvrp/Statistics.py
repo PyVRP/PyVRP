@@ -13,11 +13,11 @@ class _Datum:
     Single iteration data point.
     """
 
-    current_cost: float
+    current_cost: int
     current_feas: bool
-    candidate_cost: float
+    candidate_cost: int
     candidate_feas: bool
-    best_cost: float
+    best_cost: int
     best_feas: bool
 
 

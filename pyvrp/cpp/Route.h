@@ -7,8 +7,6 @@
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 
-#include <cstdint>
-#include <functional>
 #include <iosfwd>
 #include <vector>
 
@@ -41,16 +39,16 @@ public:
      *     The index of the activity corresponding to the activity type.
      * trip : int
      *     Trip index.
-     * start_time : float
+     * start_time : int
      *     Time at which this activity begins.
-     * end_time : float
+     * end_time : int
      *     Time at which this activity completes.
-     * duration : float
+     * duration : int
      *     Activity duration.
-     * wait_duration : float
+     * wait_duration : int
      *     If the vehicle arrives early for this activity, this is the duration
      *     it has to wait until it can begin the activity.
-     * time_warp : float
+     * time_warp : int
      *     If the vehicle arrives late, this is the duration it has to 'travel
      *     back in time' to begin the activity. Non-zero time warp indicates an
      *     infeasible route.
@@ -345,36 +343,5 @@ Cost CostEvaluator::penalisedCost(Route const &route) const;
 }  // namespace pyvrp
 
 std::ostream &operator<<(std::ostream &out, pyvrp::Route const &route);
-
-template <> struct std::hash<pyvrp::Route>
-{
-    size_t operator()(pyvrp::Route const &route) const
-    {
-        std::uint64_t hash = 0;
-        auto const combine = [&hash](std::uint64_t value)
-        {
-            // After Boost, see their notes on boost::hash_combine. These
-            // constants are mentioned there.
-            std::uint64_t constexpr constant = 0x9e3779b9ULL;
-            std::uint64_t constexpr multiplier = 0xe9846af9b1a615dULL;
-
-            hash += constant + value;
-            hash ^= hash >> 32;
-            hash *= multiplier;
-            hash ^= hash >> 32;
-            hash *= multiplier;
-            hash ^= hash >> 28;
-        };
-
-        // Start from the vehicle type, and then hash combine with the route's
-        // activities. We hash activities rather than measure statistics,
-        // because measures compare with a tolerance.
-        combine(route.vehicleType());
-        for (auto const &activity : route)
-            combine(std::hash<pyvrp::Activity>()(activity));
-
-        return static_cast<size_t>(hash);
-    }
-};
 
 #endif  // PYVRP_ROUTE_H

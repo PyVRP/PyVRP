@@ -391,13 +391,13 @@ void Route::update()
     // These cost components are separately cached as well because they are
     // requested *a lot*.
     distance_ = cumDist.back();
-    excessDistance_ = std::max<Distance>(0, distance_ - maxDistance());
+    excessDistance_ = std::max<Distance>(distance_ - maxDistance(), 0);
     distanceCost_ = unitDistanceCost() * static_cast<Cost>(distance_);
 
     duration_ = durAfter[0].duration();
     timeWarp_ = durAfter[0].timeWarp(maxDuration());
 
-    auto const overtime = std::max<Duration>(0, duration_ - shiftDuration());
+    auto const overtime = std::max<Duration>(duration_ - shiftDuration(), 0);
     durationCost_ = unitDurationCost() * static_cast<Cost>(duration_)
                     + unitOvertimeCost() * static_cast<Cost>(overtime);
 

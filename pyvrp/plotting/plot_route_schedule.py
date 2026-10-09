@@ -51,11 +51,11 @@ def plot_route_schedule(
     track_load = load_dimension < data.num_load_dimensions
 
     # Initialise tracking variables
-    drive_time = 0.0
-    serv_time = 0.0
-    dist = 0.0
+    drive_time = 0
+    serv_time = 0
+    dist = 0
 
-    load = 0.0
+    load = 0
     if track_load:
         load = route.delivery()[load_dimension]
 
@@ -75,7 +75,7 @@ def plot_route_schedule(
 
     prev_loc = data.depot(vehicle_type.start_depot).location
     for activity in route:
-        load_diff = 0.0
+        load_diff = 0
 
         match activity.type:
             case ActivityType.DEPOT:
@@ -147,7 +147,7 @@ def plot_route_schedule(
         linewidths=1,
         label="Time window",
     )
-    ax.add_collection(lc_time_windows, autolim=False)
+    ax.add_collection(lc_time_windows)
     lc_timewarps = LineCollection(
         timewarp_lines,
         colors="red",

@@ -11,9 +11,9 @@ namespace pyvrp
 /**
  * Depot(
  *    location: int,
- *    tw_early: float = 0,
- *    tw_late: float = np.finfo(np.float64).max,
- *    service_duration: float = 0,
+ *    tw_early: int = 0,
+ *    tw_late: int = np.iinfo(np.int64).max,
+ *    service_duration: int = 0,
  *    *,
  *    name: str = "",
  * )
