@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Activity,
@@ -14,6 +14,7 @@ from pyvrp import (
     VehicleType,
 )
 from pyvrp import Route as SolRoute
+from pyvrp.constants import TOL
 from pyvrp.search import (
     LocalSearch,
     NeighbourhoodParams,
@@ -24,6 +25,32 @@ from pyvrp.search import (
 )
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
+
+
+@pytest.mark.parametrize(
+    "cost_field", ["unit_distance_cost", "unit_duration_cost"]
+)
+def test_small_unit_cost_preserves_neutral_moves(cost_field):
+    """A small unit rate must still contribute to the proposed route cost."""
+    matrix = np.where(np.eye(3), 0, 10)
+    data = ProblemData(
+        locations=[Location(0, 0)] * 3,
+        clients=[Client(1), Client(2)],
+        depots=[Depot(0)],
+        vehicle_types=[
+            VehicleType(**{"unit_distance_cost": 0, cost_field: TOL / 2})
+        ],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+    )
+    route = make_search_route(data, ["C0", "C1"])
+    op = Relocate1(data)
+    delta, should_apply = op.evaluate(
+        route[1], route[2], CostEvaluator([], 0, 0)
+    )
+
+    assert_allclose(delta, 0, atol=TOL)
+    assert_(not should_apply)
 
 
 @pytest.mark.parametrize("operator", [Relocate1, Relocate2, Relocate3])
@@ -235,7 +262,7 @@ def test_relocate_fixed_vehicle_cost(ok_small, op, base_cost, fixed_cost):
     # add to the fixed vehicle cost.
     cost_eval = CostEvaluator([1], 1, 0)
     actual, should_apply = op.evaluate(route1[1], route2[0], cost_eval)
-    assert_equal(actual, base_cost + fixed_cost)
+    assert_allclose(actual, base_cost + fixed_cost)
     assert_(not should_apply)  # all worse
 
 
@@ -264,7 +291,7 @@ def test_relocate_with_duration_constraint(ok_small, max_dur, cost):
 
     cost_eval = CostEvaluator([1], 1, 0)
     delta, should_apply = op.evaluate(route1[1], route2[1], cost_eval)
-    assert_equal(delta, cost)
+    assert_allclose(delta, cost)
     assert_equal(should_apply, cost < 0)
 
 
@@ -302,7 +329,7 @@ def test_within_route_simultaneous_pickup_and_delivery():
     # excess load.
     op = Relocate1(data)
     cost_eval = CostEvaluator([1], 1, 0)
-    assert_equal(op.evaluate(route[1], route[3], cost_eval), (-5, True))
+    assert_allclose(op.evaluate(route[1], route[3], cost_eval), (-5, True))
 
 
 @pytest.mark.parametrize(
@@ -354,7 +381,7 @@ def test_relocate_max_distance(ok_small, max_distance: int, expected: int):
             -max(5_501 - max_distance, 0),
         ]
     )
-    assert_equal(delta_dist + 10 * delta_excess, expected)
+    assert_allclose(delta_dist + 10 * delta_excess, expected)
 
 
 @pytest.mark.parametrize("instance", ["ok_small", "pr107", "prize_collecting"])
@@ -416,7 +443,7 @@ def test_bug_release_time_shift_time_windows():
     # about route2's time warp, so the move should not affect costs.
     op = Relocate1(data)
     cost_eval = CostEvaluator([], 1, 0)
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), (0, False))
 
 
 def test_empty_route_delta_cost_bug():
@@ -453,7 +480,7 @@ def test_empty_route_delta_cost_bug():
     # included in the delta cost.
     op = Relocate1(data)
     cost_eval = CostEvaluator([], 1, 1)
-    assert_equal(op.evaluate(route1[1], route2[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), (0, False))
 
 
 def test_relocate_overtime(ok_small_overtime):
@@ -479,7 +506,7 @@ def test_relocate_overtime(ok_small_overtime):
 
     op = Relocate1(ok_small_overtime)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(
+    assert_allclose(
         op.evaluate(route1[2], route2[0], cost_eval),
         (new_cost - old_cost, True),
     )
@@ -494,7 +521,7 @@ def test_skip_unassigned_clients(ok_small):
 
     operator = Relocate1(ok_small)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(operator.evaluate(node, route[0], cost_eval), (0, False))
+    assert_allclose(operator.evaluate(node, route[0], cost_eval), (0, False))
 
 
 def test_name(ok_small):
@@ -518,13 +545,15 @@ def test_relocate_shipment(small_shipments):
 
     # These moves cannot be done because they would move part of a shipment,
     # possibly resulting in a pickup after a delivery.
-    assert_equal(op.evaluate(route[2], route[0], cost_eval), (0, False))
-    assert_equal(op.evaluate(route[4], route[0], cost_eval), (0, False))
-    assert_equal(op.evaluate(route[6], route[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[2], route[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[4], route[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[6], route[0], cost_eval), (0, False))
 
     # But those one can: moving L3 U3 to the front of the route is perfectly
     # fine, and an improving move.
-    assert_equal(op.evaluate(route[7], route[0], cost_eval), (-13_838, True))
+    assert_allclose(
+        op.evaluate(route[7], route[0], cost_eval), (-13_838, True)
+    )
     op.apply(route[7], route[0])
     route.update()
 
@@ -548,7 +577,9 @@ def test_relocate_shipment_fixed_cost(small_shipments):
     # a fixed cost of 10_000. So delta is 11_902.
     op = Relocate2(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route1[1], route2[2], cost_eval), (-11_902, True))
+    assert_allclose(
+        op.evaluate(route1[1], route2[2], cost_eval), (-11_902, True)
+    )
 
     op.apply(route1[1], route2[2])
     route1.update()

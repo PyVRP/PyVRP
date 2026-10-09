@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Client,
@@ -34,7 +34,7 @@ def test_replace(ok_small_mutually_exclusive_groups):
     #       = 1944 + 1090 - 1544 - 1593
     #       = -103.
     node = Node("C1")
-    assert_equal(op.evaluate(node, cost_eval), (-103, True))
+    assert_allclose(op.evaluate(node, cost_eval), (-103, True))
 
     op.apply(node)
     assert_equal(str(sol.routes[0]), "C1 C3")
@@ -65,7 +65,7 @@ def test_replace_accounts_for_prizes():
 
     # Replacing C0 with C1 collects four more units of prize.
     move = op.evaluate(sol.clients[1], CostEvaluator([], 0, 0))
-    assert_equal(move, (-4, True))
+    assert_allclose(move, (-4, True))
 
 
 def test_supports(

@@ -21,7 +21,7 @@ from pyvrp._pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp.constants import MAX_SIZE, MAX_VALUE
+from pyvrp.constants import MAX_SIZE, MAX_VALUE, TOL
 from pyvrp.exceptions import ScalingWarning
 
 _RoundingFunc = Callable[[np.ndarray], np.ndarray]
@@ -428,8 +428,10 @@ class _ProblemDataBuilder:
         service_duration = self.parser.service_times()
         time_windows = self.parser.time_windows()
         release_times = self.parser.release_times()
-        prizes = self.parser.prizes()  # we interpret a zero-prize client as
-        required = np.isclose(prizes, 0)  # required in the benchmark instances
+        prizes = self.parser.prizes()
+
+        # A zero-prize client is required in the benchmark instances.
+        required = np.isclose(prizes, 0, rtol=0, atol=TOL)
 
         return [
             Client(

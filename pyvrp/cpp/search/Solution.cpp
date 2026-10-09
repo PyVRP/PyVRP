@@ -6,6 +6,7 @@
 #include "LoadSegment.h"
 #include "PickupSegment.h"
 #include "Route.h"
+#include "constants.h"
 
 #include <algorithm>
 #include <cassert>
@@ -281,7 +282,7 @@ bool Solution::insert(Route::Node *U,
             continue;
 
         auto const cost = insertCost(U, V, data_, costEvaluator);
-        if (cost < bestCost)
+        if (cost < bestCost - Cost(TOL))
         {
             bestCost = cost;
             UAfter = V;
@@ -301,7 +302,7 @@ bool Solution::insert(Route::Node *U,
             continue;
 
         auto const cost = insertCost(U, (*empty)[0], data_, costEvaluator);
-        if (cost < bestCost)
+        if (cost < bestCost - Cost(TOL))
         {
             bestCost = cost;
             UAfter = (*empty)[0];
@@ -309,7 +310,7 @@ bool Solution::insert(Route::Node *U,
         }
     }
 
-    if (required || bestCost < 0)
+    if (required || bestCost < -TOL)
     {
         auto *route = UAfter->route();
         route->insert(UAfter->pos() + 1, U);
@@ -356,7 +357,7 @@ bool Solution::insert(Route::Node *pickup,
                                 DeliverySegment(data_, delivery->idx()),
                                 route->after(V->pos() + 1)));
 
-            if (deltaCost < bestCost)
+            if (deltaCost < bestCost - Cost(TOL))
             {
                 pickupAfter = V;
                 deliveryPos = V->pos() + 1;
@@ -376,7 +377,7 @@ bool Solution::insert(Route::Node *pickup,
                                     DeliverySegment(data_, delivery->idx()),
                                     route->after(node->pos() + 1)));
 
-                if (deltaCost < bestCost)
+                if (deltaCost < bestCost - Cost(TOL))
                 {
                     pickupAfter = V;
                     deliveryPos = node->pos() + 1;
@@ -406,7 +407,7 @@ bool Solution::insert(Route::Node *pickup,
                             DeliverySegment(data_, delivery->idx()),
                             empty->after(1)));
 
-        if (deltaCost < bestCost)
+        if (deltaCost < bestCost - Cost(TOL))
         {
             pickupAfter = (*empty)[0];
             deliveryPos = 1;
@@ -415,7 +416,7 @@ bool Solution::insert(Route::Node *pickup,
         }
     }
 
-    if (required || bestCost < 0)
+    if (required || bestCost < -TOL)
     {
         auto *route = pickupAfter->route();
         route->insert(deliveryPos, delivery);

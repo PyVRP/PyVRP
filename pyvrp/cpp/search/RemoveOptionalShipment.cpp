@@ -1,4 +1,5 @@
 #include "RemoveOptionalShipment.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -39,7 +40,7 @@ RemoveOptionalShipment::evaluate(Route::Node *U,
                 route->between(pickup->pos() + 1, delivery->pos() - 1),
                 route->after(delivery->pos() + 1)));
 
-    return std::make_pair(deltaCost, deltaCost < 0);
+    return std::make_pair(deltaCost, deltaCost < -TOL);
 }
 
 void RemoveOptionalShipment::apply(Route::Node *U) const

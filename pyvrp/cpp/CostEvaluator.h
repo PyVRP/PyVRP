@@ -2,6 +2,7 @@
 #define PYVRP_COSTEVALUATOR_H
 
 #include "Measure.h"
+#include "constants.h"
 
 #include <cassert>
 #include <concepts>
@@ -237,7 +238,7 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
     for (size_t dim = 0; dim != capacity.size(); ++dim)
     {
         if constexpr (!exact)
-            if (out >= 0)
+            if (out >= -TOL)
                 return false;
 
         out += loadPenalty(proposal.excessLoad(dim), 0, dim);
@@ -291,7 +292,7 @@ bool CostEvaluator::deltaCost(Cost &out,
     for (size_t dim = 0; dim != uCapacity.size(); ++dim)
     {
         if constexpr (!exact)
-            if (out >= 0)
+            if (out >= -TOL)
                 return false;
 
         out += loadPenalty(uProposal.excessLoad(dim), 0, dim);
@@ -301,14 +302,14 @@ bool CostEvaluator::deltaCost(Cost &out,
     for (size_t dim = 0; dim != vCapacity.size(); ++dim)
     {
         if constexpr (!exact)
-            if (out >= 0)
+            if (out >= -TOL)
                 return false;
 
         out += loadPenalty(vProposal.excessLoad(dim), 0, dim);
     }
 
     if constexpr (!exact)
-        if (out >= 0)
+        if (out >= -TOL)
             return false;
 
     if (uRoute->hasDurationCost())

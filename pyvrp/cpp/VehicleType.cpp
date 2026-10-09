@@ -1,4 +1,5 @@
 #include "VehicleType.h"
+#include "constants.h"
 
 #include <cstring>
 
@@ -96,10 +97,10 @@ VehicleType::VehicleType(size_t numAvailable,
     if (maxDistance < 0)
         throw std::invalid_argument("max_distance must be >= 0.");
 
-    if (unitDistanceCost < 0)
+    if (unitDistanceCost < -TOL)
         throw std::invalid_argument("unit_distance_cost must be >= 0.");
 
-    if (unitDurationCost < 0)
+    if (unitDurationCost < -TOL)
         throw std::invalid_argument("unit_duration_cost must be >= 0.");
 
     if (std::any_of(initialLoad.begin(), initialLoad.end(), isNegative<Load>))
@@ -112,7 +113,7 @@ VehicleType::VehicleType(size_t numAvailable,
     if (maxOvertime < 0)
         throw std::invalid_argument("max_overtime must be >= 0.");
 
-    if (unitOvertimeCost < 0)
+    if (unitOvertimeCost < -TOL)
         throw std::invalid_argument("unit_overtime_cost must be >= 0.");
 }
 
@@ -223,20 +224,20 @@ bool VehicleType::operator==(VehicleType const &other) const
         && capacity == other.capacity
         && startDepot == other.startDepot
         && endDepot == other.endDepot
-        && fixedCost == other.fixedCost
+        && std::abs((fixedCost - other.fixedCost).get()) <= TOL
         && twEarly == other.twEarly
         && twLate == other.twLate
         && shiftDuration == other.shiftDuration
         && maxDistance == other.maxDistance
-        && unitDistanceCost == other.unitDistanceCost
-        && unitDurationCost == other.unitDurationCost
+        && std::abs((unitDistanceCost - other.unitDistanceCost).get()) <= TOL
+        && std::abs((unitDurationCost - other.unitDurationCost).get()) <= TOL
         && profile == other.profile
         && startLate == other.startLate
         && initialLoad == other.initialLoad
         && reloadDepots == other.reloadDepots
         && maxReloads == other.maxReloads
         && maxOvertime == other.maxOvertime
-        && unitOvertimeCost == other.unitOvertimeCost
+        && std::abs((unitOvertimeCost - other.unitOvertimeCost).get()) <= TOL
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }

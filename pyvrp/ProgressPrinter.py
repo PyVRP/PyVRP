@@ -3,6 +3,7 @@ from importlib.metadata import version
 from time import perf_counter
 
 from pyvrp._pyvrp import ProblemData
+from pyvrp.constants import TOL
 
 from .Result import Result
 from .Statistics import Statistics
@@ -77,7 +78,7 @@ class ProgressPrinter:
             return
 
         datum = stats.data[-1]
-        new_best = datum.best_feas and datum.best_cost < self._best_cost
+        new_best = datum.best_feas and datum.best_cost < self._best_cost - TOL
         msg = _ITERATION.format(
             special="H" if new_best else " ",
             iters=stats.num_iterations,

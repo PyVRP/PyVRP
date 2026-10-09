@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Client,
@@ -31,7 +31,7 @@ def test_inserts_when_makes_sense(prize_collecting):
     #              = 353 + 114 - 325 - 150
     #              = -8.
     delta, should_apply = op.evaluate(node, route[3], cost_eval)
-    assert_equal(delta, -8)
+    assert_allclose(delta, -8)
     assert_(should_apply)
 
     op.apply(node, route[3])
@@ -50,12 +50,12 @@ def test_skips_assigned_or_missing(ok_small_prizes):
     # Client 1 is already assigned, cannot be inserted again.
     op = InsertOptionalClient(ok_small_prizes)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[1], route[2], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[1], route[2], cost_eval), (0, False))
 
     # These are not assigned anywhere, so cannot insert after.
     node3 = Node("C2")
     node4 = Node("C3")
-    assert_equal(op.evaluate(node3, node4, cost_eval), (0, False))
+    assert_allclose(op.evaluate(node3, node4, cost_eval), (0, False))
 
 
 def test_supports(
@@ -105,7 +105,7 @@ def test_group_skip_required(ok_small_mutually_exclusive_groups):
     # groups are handled in the local search, and should always be present.
     node = Node("C0")
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(node, route[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(node, route[0], cost_eval), (0, False))
 
 
 def test_group_skip_duplicates():
@@ -136,7 +136,7 @@ def test_group_skip_duplicates():
     # yields a prize value, and is thus an improving move.
     client = solution.clients[0]
     cost_eval = CostEvaluator([], 0, 0)
-    assert_equal(op.evaluate(client, route[0], cost_eval), (-1, True))
+    assert_allclose(op.evaluate(client, route[0], cost_eval), (-1, True))
     op.apply(client, route[0])
     route.update()
 
@@ -144,7 +144,7 @@ def test_group_skip_duplicates():
     # possible, because the group is already in the solution.
     client = solution.clients[1]
     cost_eval = CostEvaluator([], 0, 0)
-    assert_equal(op.evaluate(client, route[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(client, route[0], cost_eval), (0, False))
 
 
 def test_insert_in_empty_routes_considers_fixed_vehicle_cost():
@@ -172,12 +172,12 @@ def test_insert_in_empty_routes_considers_fixed_vehicle_cost():
     # client into an empty route. That adds the fixed vehicle cost of 7 for
     # this vehicle type.
     route = make_search_route(data, [], vehicle_type=0)
-    assert_equal(op.evaluate(Node("C0"), route[0], cost_eval), (7, False))
+    assert_allclose(op.evaluate(Node("C0"), route[0], cost_eval), (7, False))
 
     # Same story for this route, but now we have a different vehicle type with
     # fixed cost 13.
     route = make_search_route(data, [], vehicle_type=1)
-    assert_equal(op.evaluate(Node("C0"), route[0], cost_eval), (13, False))
+    assert_allclose(op.evaluate(Node("C0"), route[0], cost_eval), (13, False))
 
 
 def test_name(ok_small_prizes):

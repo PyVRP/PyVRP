@@ -392,14 +392,14 @@ void Route::update()
     // requested *a lot*.
     distance_ = cumDist.back();
     excessDistance_ = std::max<Distance>(distance_ - maxDistance(), 0);
-    distanceCost_ = unitDistanceCost() * static_cast<Cost>(distance_);
+    distanceCost_ = unitDistanceCost() * Cost(distance_.get());
 
     duration_ = durAfter[0].duration();
     timeWarp_ = durAfter[0].timeWarp(maxDuration());
 
     auto const overtime = std::max<Duration>(duration_ - shiftDuration(), 0);
-    durationCost_ = unitDurationCost() * static_cast<Cost>(duration_)
-                    + unitOvertimeCost() * static_cast<Cost>(overtime);
+    durationCost_ = unitDurationCost() * Cost(duration_.get())
+                    + unitOvertimeCost() * Cost(overtime.get());
 
 #ifndef NDEBUG
     dirty = false;

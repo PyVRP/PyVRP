@@ -1,6 +1,7 @@
 #include "LocalSearch.h"
 #include "DynamicBitset.h"
 #include "Measure.h"
+#include "constants.h"
 #include "logging.h"
 
 #include <algorithm>
@@ -176,7 +177,12 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
             // the move, plus the delta cost.
-            assert(costAfter == costBefore + deltaCost);
+            // Scale the tolerance because missing arcs can produce costs far
+            // larger than the absolute precision of a double.
+            auto const scale = std::max(
+                {1.0, std::abs(costBefore.get()), std::abs(costAfter.get())});
+            assert(std::abs((costAfter - costBefore - deltaCost).get())
+                   <= TOL * scale);
 #endif
 
             return true;
@@ -222,7 +228,12 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
             // When there is an improving move, the delta cost evaluation must
             // be exact. The resulting cost is then the sum of the cost before
             // the move, plus the delta cost.
-            assert(costAfter == costBefore + deltaCost);
+            // Scale the tolerance because missing arcs can produce costs far
+            // larger than the absolute precision of a double.
+            auto const scale = std::max(
+                {1.0, std::abs(costBefore.get()), std::abs(costAfter.get())});
+            assert(std::abs((costAfter - costBefore - deltaCost).get())
+                   <= TOL * scale);
 #endif
 
             return true;

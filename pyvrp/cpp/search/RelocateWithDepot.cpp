@@ -2,6 +2,7 @@
 
 #include "Activity.h"
 #include "DepotSegment.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -36,7 +37,7 @@ void RelocateWithDepot::evalSameRoute(Route::Node *U,
                                     route->between(V->pos() + 1, U->pos() - 1),
                                     route->after(U->pos() + 1)));
 
-            if (deltaCost < move_.cost)
+            if (deltaCost < move_.cost - Cost(TOL))
                 move_ = {deltaCost, MoveType::DEPOT_U, depot};
         }
 
@@ -61,7 +62,7 @@ void RelocateWithDepot::evalSameRoute(Route::Node *U,
                                     route->between(V->pos() + 1, U->pos() - 1),
                                     route->after(U->pos() + 1)));
 
-            if (deltaCost < move_.cost)
+            if (deltaCost < move_.cost - Cost(TOL))
                 move_ = {deltaCost, MoveType::U_DEPOT, depot};
         }
 }
@@ -103,7 +104,7 @@ void RelocateWithDepot::evalDifferentRoutes(Route::Node *U,
                                 uRoute->at(U->pos()),
                                 vRoute->after(V->pos() + 1)));
 
-            if (deltaCost < move_.cost)
+            if (deltaCost < move_.cost - Cost(TOL))
                 move_ = {deltaCost, MoveType::DEPOT_U, depot};
         }
 
@@ -118,7 +119,7 @@ void RelocateWithDepot::evalDifferentRoutes(Route::Node *U,
                                 DepotSegment(data, depot),
                                 vRoute->after(V->pos() + 1)));
 
-            if (deltaCost < move_.cost)
+            if (deltaCost < move_.cost - Cost(TOL))
                 move_ = {deltaCost, MoveType::U_DEPOT, depot};
         }
 }
@@ -157,7 +158,7 @@ std::pair<pyvrp::Cost, bool> RelocateWithDepot::evaluate(
     else
         evalDifferentRoutes(U, V, costEvaluator);
 
-    return std::make_pair(move_.cost, move_.cost < 0);
+    return std::make_pair(move_.cost, move_.cost < -TOL);
 }
 
 void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const

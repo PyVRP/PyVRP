@@ -1,6 +1,7 @@
 #include "ReplaceGroup.h"
 
 #include "ClientSegment.h"
+#include "constants.h"
 
 #include <cassert>
 #include <limits>
@@ -43,7 +44,7 @@ ReplaceGroup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
             break;
         }
 
-    return std::make_pair(deltaCost, deltaCost < 0);
+    return std::make_pair(deltaCost, deltaCost < -TOL);
 }
 
 void ReplaceGroup::apply(Route::Node *U) const

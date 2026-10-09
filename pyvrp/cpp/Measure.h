@@ -30,7 +30,7 @@ template <MeasureType Type, NumberType Value> class Measure;
 
 // Type aliases. These are used throughout the program.
 using Coordinate = Measure<MeasureType::COORD, double>;
-using Cost = Measure<MeasureType::COST, int64_t>;
+using Cost = Measure<MeasureType::COST, double>;
 using Distance = Measure<MeasureType::DIST, int64_t>;
 using Duration = Measure<MeasureType::DURATION, int64_t>;
 using Load = Measure<MeasureType::LOAD, int64_t>;
@@ -88,7 +88,7 @@ public:
 
     // Comparison operators.
     [[nodiscard]] bool operator==(Measure const other) const;
-    [[nodiscard]] std::strong_ordering operator<=>(Measure const other) const;
+    [[nodiscard]] auto operator<=>(Measure const other) const;
 };
 
 // Retrieves the underlying value.
@@ -157,8 +157,7 @@ bool Measure<Type, Value>::operator==(Measure<Type, Value> const other) const
 }
 
 template <MeasureType Type, NumberType Value>
-std::strong_ordering
-Measure<Type, Value>::operator<=>(Measure<Type, Value> const other) const
+auto Measure<Type, Value>::operator<=>(Measure<Type, Value> const other) const
 {
     return value_ <=> other.value_;
 }

@@ -8,6 +8,7 @@ from pyvrp.ProgressPrinter import ProgressPrinter
 from pyvrp.Result import Result
 from pyvrp.RingBuffer import RingBuffer
 from pyvrp.Statistics import Statistics
+from pyvrp.constants import TOL
 
 if TYPE_CHECKING:
     from pyvrp.PenaltyManager import PenaltyManager
@@ -237,7 +238,7 @@ class IteratedLocalSearch:
             self._pm.register(cand)
 
             iters_no_improvement += 1
-            if cost_eval.cost(cand) < cost_eval.cost(best):
+            if cost_eval.cost(cand) < cost_eval.cost(best) - TOL:
                 best = cand
                 iters_no_improvement = 0
 
@@ -266,13 +267,13 @@ class IteratedLocalSearch:
             # both enhancements of section 4.2:
             # 1. We accept also when the candidate improves over the current
             #    solution;
-            if cand_cost < late_cost or cand_cost < curr_cost:
+            if cand_cost < late_cost - TOL or cand_cost < curr_cost - TOL:
                 curr = cand
                 curr_cost = cand_cost
 
             # 2. We update the history only when the current solution is better
             #    than the one already in the history.
-            if curr_cost < late_cost or late is None:
+            if curr_cost < late_cost - TOL or late is None:
                 history.append(curr)
             else:
                 history.skip()

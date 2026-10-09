@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Client,
@@ -162,7 +162,7 @@ def test_swap_with_duration_constraint(ok_small, max_dur, cost):
 
     cost_eval = CostEvaluator([1], 1, 0)
     delta, should_apply = op.evaluate(route1[1], route2[1], cost_eval)
-    assert_equal(delta, cost)
+    assert_allclose(delta, cost)
     assert_equal(should_apply, cost < 0)
 
 
@@ -200,7 +200,7 @@ def test_swap_within_route_simultaneous_pickup_and_delivery():
     # important bit is that we visit C2 before C0.
     op = Swap11(data)
     cost_eval = CostEvaluator([1], 1, 0)
-    assert_equal(op.evaluate(route[1], route[3], cost_eval), (-5, True))
+    assert_allclose(op.evaluate(route[1], route[3], cost_eval), (-5, True))
 
 
 @pytest.mark.parametrize(
@@ -256,7 +256,7 @@ def test_swap_max_distance(ok_small, max_distance: int, expected: int):
             -max(3_994 - max_distance, 0),
         ]
     )
-    assert_equal(delta_dist + 10 * delta_excess, expected)
+    assert_allclose(delta_dist + 10 * delta_excess, expected)
 
 
 def test_swap_with_different_profiles(ok_small_two_profiles):
@@ -277,7 +277,9 @@ def test_swap_with_different_profiles(ok_small_two_profiles):
     dist1, dist2 = data.distance_matrices()
     delta = dist1[0, 4] + dist1[4, 0] + dist2[0, 3] + dist2[3, 0]
     delta -= route1.distance() + route2.distance()
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (delta, False))
+    assert_allclose(
+        op.evaluate(route1[1], route2[1], cost_eval), (delta, False)
+    )
 
 
 def test_swap_does_not_swap_depots(ok_small_multiple_trips):
@@ -292,7 +294,7 @@ def test_swap_does_not_swap_depots(ok_small_multiple_trips):
     cost_eval = CostEvaluator([0], 0, 0)
 
     # This move overlaps with reload depot at index 3, so cannot be evaluated.
-    assert_equal(op.evaluate(route[2], route[4], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[2], route[4], cost_eval), (0, False))
 
 
 def test_bug_evaluating_move_with_initial_load():
@@ -326,7 +328,7 @@ def test_bug_evaluating_move_with_initial_load():
 
     # This move just permutes the solution, turning route1 into route2, and
     # vice versa. Thus, the delta cost of this move should be zero.
-    assert_equal(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
 
 
 @pytest.mark.parametrize("operator", [Swap21, Swap33])
@@ -368,7 +370,7 @@ def test_skip_unassigned_clients(ok_small):
 
     operator = Swap11(ok_small)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(operator.evaluate(node, route[0], cost_eval), (0, False))
+    assert_allclose(operator.evaluate(node, route[0], cost_eval), (0, False))
 
 
 def test_name(ok_small):
@@ -392,12 +394,12 @@ def test_swap_shipment(small_shipments):
 
     # These cannot be swapped since they would move part of a shipment,
     # possibly resulting in a pickup after a delivery.
-    assert_equal(op.evaluate(route[2], route[0], cost_eval), (0, False))
-    assert_equal(op.evaluate(route[4], route[0], cost_eval), (0, False))
-    assert_equal(op.evaluate(route[6], route[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[2], route[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[4], route[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[6], route[0], cost_eval), (0, False))
 
     # But swapping L0 U0 with L3 U3 is fine, and an improving move.
-    assert_equal(op.evaluate(route[3], route[7], cost_eval), (-5_622, True))
+    assert_allclose(op.evaluate(route[3], route[7], cost_eval), (-5_622, True))
     op.apply(route[3], route[7])
     route.update()
 

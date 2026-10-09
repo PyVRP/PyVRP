@@ -1,5 +1,5 @@
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pytest import mark
 
 from pyvrp import (
@@ -126,7 +126,9 @@ def test_ils_result_has_correct_stats(ok_small):
     assert_equal(result.stats.num_iterations, 10)
 
     datum = result.stats.data[0]
-    assert_equal(datum.current_cost, pm.cost_evaluator().penalised_cost(init))
+    assert_allclose(
+        datum.current_cost, pm.cost_evaluator().penalised_cost(init)
+    )
     assert_equal(datum.current_feas, init.is_feasible())
 
 
@@ -155,34 +157,34 @@ def test_ils_acceptance_behaviour(ok_small):
 
     # First solution is also the initial solution, so nothing should have
     # changed.
-    assert_equal(data[0].current_cost, 22_065)
-    assert_equal(data[0].candidate_cost, 22_065)
-    assert_equal(data[0].best_cost, 22_065)
+    assert_allclose(data[0].current_cost, 22_065)
+    assert_allclose(data[0].candidate_cost, 22_065)
+    assert_allclose(data[0].best_cost, 22_065)
 
     # The second iteration has a solution that is *much* better. This new
     # solution should become both the current and best.
-    assert_equal(data[1].current_cost, 9_725)
-    assert_equal(data[1].candidate_cost, 9_725)
-    assert_equal(data[1].best_cost, 9_725)
+    assert_allclose(data[1].current_cost, 9_725)
+    assert_allclose(data[1].candidate_cost, 9_725)
+    assert_allclose(data[1].best_cost, 9_725)
 
     # We now get a candidate solution that is a little worse than the previous
     # iteration, but better than the solution from two iterations ago. It is
     # thus accepted.
-    assert_equal(data[2].current_cost, 9_868)
-    assert_equal(data[2].candidate_cost, 9_868)
-    assert_equal(data[2].best_cost, 9_725)
+    assert_allclose(data[2].current_cost, 9_868)
+    assert_allclose(data[2].candidate_cost, 9_868)
+    assert_allclose(data[2].best_cost, 9_725)
 
     # We now find a new best solution that should also be accepted.
-    assert_equal(data[3].current_cost, 9_240)
-    assert_equal(data[3].candidate_cost, 9_240)
-    assert_equal(data[3].best_cost, 9_240)
+    assert_allclose(data[3].current_cost, 9_240)
+    assert_allclose(data[3].candidate_cost, 9_240)
+    assert_allclose(data[3].best_cost, 9_240)
 
     # In the last iteration we again find a solution we found earlier. This
     # solution improves over the solution from two iterations ago, and should
     # thus be accepted.
-    assert_equal(data[4].current_cost, 9_725)
-    assert_equal(data[4].candidate_cost, 9_725)
-    assert_equal(data[4].best_cost, 9_240)
+    assert_allclose(data[4].current_cost, 9_725)
+    assert_allclose(data[4].candidate_cost, 9_725)
+    assert_allclose(data[4].best_cost, 9_240)
 
 
 def test_restart(ok_small):
@@ -216,7 +218,7 @@ def test_restart(ok_small):
     # last iteration, which means that we only accept improving solutions.
     curr_costs = [22065, 9725, 9725, 9725]
     params = Params(history_length=1, exhaustive_on_best=False)
-    assert_equal([datum.current_cost for datum in run(params)], curr_costs)
+    assert_allclose([datum.current_cost for datum in run(params)], curr_costs)
 
     # But here a restart occurs in the third iteration, and that should clear
     # the history. We now accept the worsening solution in the last iteration.
@@ -226,7 +228,7 @@ def test_restart(ok_small):
         exhaustive_on_best=False,
     )
     curr_costs = [22065, 9725, 9725, 9868]
-    assert_equal([datum.current_cost for datum in run(params)], curr_costs)
+    assert_allclose([datum.current_cost for datum in run(params)], curr_costs)
 
 
 def test_exhaustive_search_on_new_best_solution(ok_small):
@@ -256,7 +258,7 @@ def test_exhaustive_search_on_new_best_solution(ok_small):
     # an exhaustive search that returns the final solution.
     res = ils.run(MaxIterations(2))
     assert_equal(len(sols), 0)
-    assert_equal(res.cost(), 9_240)
+    assert_allclose(res.cost(), 9_240)
 
 
 def test_callback_on_start_and_end(ok_small):
