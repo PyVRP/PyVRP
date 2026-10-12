@@ -1,5 +1,4 @@
 #include "Shipment.h"
-#include "constants.h"
 
 #include <algorithm>
 #include <cstring>
@@ -73,7 +72,7 @@ Shipment::Shipment(size_t pickupLocation,
     if (std::any_of(amount.begin(), amount.end(), isNegative<Load>))
         throw std::invalid_argument("shipment amounts must be >= 0.");
 
-    if (prize < -TOL)
+    if (prize < 0)
         throw std::invalid_argument("prize must be >= 0.");
 }
 
@@ -119,7 +118,7 @@ bool Shipment::operator==(Shipment const &other) const
     return pickup == other.pickup
         && delivery == other.delivery
         && amount == other.amount
-        && std::abs((prize - other.prize).get()) <= TOL
+        && prize == other.prize
         && required == other.required
         && std::strcmp(name, other.name) == 0;
     // clang-format on
