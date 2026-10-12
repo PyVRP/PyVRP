@@ -72,8 +72,8 @@ public:
 
     // Explicit conversions to other measures, with the same precision loss or
     // truncation as a regular arithmetic cast.
-    template <MeasureType Other, NumberType OtherValue>
-    explicit operator Measure<Other, OtherValue>() const
+    template <MeasureType OtherType, NumberType OtherValue>
+    explicit operator Measure<OtherType, OtherValue>() const
     {
         return static_cast<OtherValue>(value_);
     }
@@ -88,8 +88,7 @@ public:
     Measure &operator/=(Measure const rhs);
 
     // Comparison operators.
-    [[nodiscard]] bool operator==(Measure const other) const;
-    [[nodiscard]] auto operator<=>(Measure const other) const;
+    [[nodiscard]] auto operator<=>(Measure const &other) const = default;
 };
 
 // Retrieves the underlying value.
@@ -148,19 +147,6 @@ Measure<Type, Value>::operator/=(Measure<Type, Value> const rhs)
 {
     this->value_ /= rhs.value_;
     return *this;
-}
-
-// Comparison operators.
-template <MeasureType Type, NumberType Value>
-bool Measure<Type, Value>::operator==(Measure<Type, Value> const other) const
-{
-    return value_ == other.value_;
-}
-
-template <MeasureType Type, NumberType Value>
-auto Measure<Type, Value>::operator<=>(Measure<Type, Value> const other) const
-{
-    return value_ <=> other.value_;
 }
 
 // Free-standing binary operators.
