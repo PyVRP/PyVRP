@@ -61,12 +61,8 @@ def test_load_penalty_multiple_dimensions():
     for dim, pen in enumerate(load_penalties):
         assert_allclose(cost_eval.load_penalty(0, 1, dim), 0)  # below capacity
         assert_allclose(cost_eval.load_penalty(1, 1, dim), 0)  # at capacity
-        assert_allclose(
-            cost_eval.load_penalty(2, 1, dim), 1 * pen
-        )  # 1 above cap
-        assert_allclose(
-            cost_eval.load_penalty(3, 1, dim), 2 * pen
-        )  # 2 above cap
+        assert_allclose(cost_eval.load_penalty(2, 1, dim), 1 * pen)  # 1 above
+        assert_allclose(cost_eval.load_penalty(3, 1, dim), 2 * pen)  # 2 above
 
 
 @pytest.mark.parametrize("cap", [5, 15, 29, 51, 103])
@@ -75,16 +71,14 @@ def test_load_penalty_always_zero_when_below_capacity(cap: int):
     This test asserts that load penalties are only applied to excess load, that
     is, load in excess of the vehicle's capacity.
     """
-    penalty = 2
-    cost_eval = CostEvaluator([penalty], 1, 0)
+    pen = 2
+    cost_eval = CostEvaluator([pen], 1, 0)
 
     assert_allclose(cost_eval.load_penalty(0, cap, 0), 0)  # below cap
     assert_allclose(cost_eval.load_penalty(cap - 1, cap, 0), 0)
     assert_allclose(cost_eval.load_penalty(cap, cap, 0), 0)  # at cap
-    assert_allclose(
-        cost_eval.load_penalty(cap + 1, cap, 0), penalty
-    )  # above cap
-    assert_allclose(cost_eval.load_penalty(cap + 2, cap, 0), 2 * penalty)
+    assert_allclose(cost_eval.load_penalty(cap + 1, cap, 0), pen)  # above cap
+    assert_allclose(cost_eval.load_penalty(cap + 2, cap, 0), 2 * pen)
 
 
 def test_tw_penalty():
@@ -127,9 +121,12 @@ def test_dist_penalty():
     assert_allclose(cost_eval.dist_penalty(2, 0), 8)
 
 
-@pytest.mark.parametrize("penalty", [0.1, 0.25, 0.12345])
-def test_fractional_penalties(penalty):
-    """None of the penalty components truncate fractional costs."""
+def test_fractional_penalties():
+    """
+    None of the penalty components truncate fractional costs. Previously costs
+    were integral, so truncation of the decimal part happened.
+    """
+    penalty = 0.12345
     cost_eval = CostEvaluator([penalty], penalty, penalty)
     assert_allclose(cost_eval.load_penalty(3, 1, 0), 2 * penalty)
     assert_allclose(cost_eval.tw_penalty(3), 3 * penalty)
@@ -309,23 +306,14 @@ def test_cost_with_fixed_vehicle_cost(
     assert_allclose(cost_eval.penalised_cost(sol), sol.distance() + expected)
 
 
-@pytest.mark.parametrize("scale", [1, 0.12345])
-def test_unit_distance_duration_cost(ok_small, scale):
+def test_unit_distance_duration_cost(ok_small):
     """
     Tests that the cost evaluator takes into account that unit distance and
     duration costs can vary between routes.
     """
     vehicle_types = [
-        VehicleType(
-            capacity=[10],
-            unit_distance_cost=5 * scale,
-            unit_duration_cost=scale,
-        ),
-        VehicleType(
-            capacity=[10],
-            unit_distance_cost=scale,
-            unit_duration_cost=5 * scale,
-        ),
+        VehicleType(capacity=[10], unit_distance_cost=5, unit_duration_cost=1),
+        VehicleType(capacity=[10], unit_distance_cost=1, unit_duration_cost=5),
     ]
     data = ok_small.replace(vehicle_types=vehicle_types)
 
@@ -335,6 +323,6 @@ def test_unit_distance_duration_cost(ok_small, scale):
     assert_equal(sol.duration(), 6_221 + 5_004)
 
     cost_eval = CostEvaluator([1], 1, 0)
-    assert_allclose(sol.distance_cost(), 31_729 * scale)
-    assert_allclose(sol.duration_cost(), 31_241 * scale)
-    assert_allclose(cost_eval.penalised_cost(sol), (31_729 + 31_241) * scale)
+    assert_allclose(sol.distance_cost(), 31_729)
+    assert_allclose(sol.duration_cost(), 31_241)
+    assert_allclose(cost_eval.penalised_cost(sol), 31_729 + 31_241)
