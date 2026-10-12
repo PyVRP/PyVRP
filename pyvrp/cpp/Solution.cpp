@@ -1,7 +1,6 @@
 #include "Solution.h"
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
-#include "constants.h"
 
 #include <algorithm>
 #include <fstream>
@@ -137,8 +136,6 @@ bool Solution::operator==(Solution const &other) const
     // clang-format off
     bool const attributeChecks = distance_ == other.distance_
                               && duration_ == other.duration_
-                              && std::abs((distanceCost_ - other.distanceCost_).get()) <= TOL
-                              && std::abs((durationCost_ - other.durationCost_).get()) <= TOL
                               && timeWarp_ == other.timeWarp_
                               && numClients_ == other.numClients_
                               && numShipments_ == other.numShipments_;
