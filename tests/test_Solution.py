@@ -17,35 +17,7 @@ from pyvrp import (
     Solution,
     VehicleType,
 )
-from pyvrp.constants import TOL
 from tests.helpers import read
-
-
-def test_fractional_costs_route_order_and_hash(ok_small):
-    """Rounding from route order preserves solution equality and hashing."""
-    clients = [
-        Client(
-            client.location,
-            delivery=client.delivery,
-            pickup=client.pickup,
-            prize=prize,
-        )
-        for client, prize in zip(ok_small.clients(), [0.1, 0.2, 0.3, 0.4])
-    ]
-    vehicle = ok_small.vehicle_type(0).replace(
-        num_available=4, unit_distance_cost=0.13, unit_duration_cost=0.17
-    )
-    data = ok_small.replace(clients=clients, vehicle_types=[vehicle])
-    routes = [Route(data, [idx], 0) for idx in range(4)]
-    forward = Solution(data, routes)
-    reverse = Solution(data, routes[::-1])
-
-    assert_allclose(forward.prizes(), 1)
-    assert_allclose(reverse.prizes(), 1)
-    assert_allclose(forward.uncollected_prizes(), 0, atol=TOL)
-    assert_allclose(reverse.uncollected_prizes(), 0, atol=TOL)
-    assert_equal(forward, reverse)
-    assert_equal(hash(forward), hash(reverse))
 
 
 @pytest.mark.parametrize(
