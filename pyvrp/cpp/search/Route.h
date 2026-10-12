@@ -6,7 +6,6 @@
 #include "DurationSegment.h"
 #include "LoadSegment.h"
 #include "ProblemData.h"
-#include "constants.h"
 
 #include <algorithm>
 #include <cassert>
