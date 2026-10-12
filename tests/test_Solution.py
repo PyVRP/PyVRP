@@ -800,11 +800,14 @@ def test_distance_duration_cost_calculations(ok_small):
     sol = Solution(data, routes)
     assert_equal(sol.distance(), sum(r.distance() for r in routes))
     assert_allclose(
-        sol.distance_cost(), sum(r.distance_cost() for r in routes)
+        sol.distance_cost(),
+        sum(r.distance_cost() for r in routes),
     )
+
     assert_equal(sol.duration(), sum(r.duration() for r in routes))
     assert_allclose(
-        sol.duration_cost(), sum(r.duration_cost() for r in routes)
+        sol.duration_cost(),
+        sum(r.duration_cost() for r in routes),
     )
 
 
