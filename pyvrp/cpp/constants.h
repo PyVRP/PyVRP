@@ -3,7 +3,7 @@
 
 namespace pyvrp
 {
-// Tolerance for cost comparisons.
+// Absolute tolerance for cost comparisons.
 inline constexpr double TOL = 1e-5;
 }  // namespace pyvrp
 
