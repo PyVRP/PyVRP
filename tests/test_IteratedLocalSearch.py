@@ -125,10 +125,9 @@ def test_ils_result_has_correct_stats(ok_small):
     assert_equal(result.num_iterations, 10)
     assert_equal(result.stats.num_iterations, 10)
 
+    cost_eval = pm.cost_evaluator()
     datum = result.stats.data[0]
-    assert_allclose(
-        datum.current_cost, pm.cost_evaluator().penalised_cost(init)
-    )
+    assert_allclose(datum.current_cost, cost_eval.penalised_cost(init))
     assert_equal(datum.current_feas, init.is_feasible())
 
 
