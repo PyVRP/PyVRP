@@ -70,11 +70,12 @@ public:
         return static_cast<T>(value_);
     }
 
-    // Explicit conversions to other measures of the same storage type (we do
-    // not want there to be data loss just by casting between measures).
-    template <MeasureType Other> explicit operator Measure<Other, Value>() const
+    // Explicit conversions to other measures, with the same precision loss or
+    // truncation as a regular arithmetic cast.
+    template <MeasureType Other, NumberType OtherValue>
+    explicit operator Measure<Other, OtherValue>() const
     {
-        return value_;
+        return static_cast<OtherValue>(value_);
     }
 
     // Retrieves the underlying value.

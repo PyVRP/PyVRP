@@ -1038,8 +1038,7 @@ bool Route::hasDistanceCost() const
 {
     // Even a small unit cost can matter over a long route. Compare the
     // largest possible contribution against the tolerance.
-    auto const bound = Cost(std::numeric_limits<Distance>::max().get());
-    return std::abs((unitDistanceCost() * bound).get()) > TOL
+    return unitDistanceCost() == 0
            || maxDistance() != std::numeric_limits<Distance>::max();
 }
 
@@ -1067,12 +1066,10 @@ Cost Route::unitOvertimeCost() const { return vehicleType_.unitOvertimeCost; }
 
 bool Route::hasDurationCost() const
 {
-    auto const bound = Cost(std::numeric_limits<Duration>::max().get());
     // clang-format off
     return data.hasTimeWindows()
-        || std::abs((unitDurationCost() * bound).get()) > TOL
-        || (std::abs((unitOvertimeCost() * bound).get()) > TOL
-            && maxOvertime() != 0)
+        || unitDurationCost() == 0
+        || (unitOvertimeCost() == 0 && maxOvertime() != 0)
         || maxDuration() != std::numeric_limits<Duration>::max();
     // clang-format on
 }
@@ -1220,7 +1217,7 @@ std::pair<Cost, Distance> Route::Proposal<Segments...>::distance() const
         merge(merge, std::forward<decltype(args)>(args)...);
 
         auto const excess = std::max<Distance>(distance - maxDistance, 0);
-        auto const cost = unitDistanceCost * Cost(distance.get());
+        auto const cost = unitDistanceCost * static_cast<Cost>(distance);
         return std::make_pair(cost, excess);
     };
 
@@ -1289,8 +1286,8 @@ std::pair<Cost, Duration> Route::Proposal<Segments...>::duration() const
 
         auto const duration = ds.duration();
         auto const overtime = std::max<Duration>(duration - shiftDuration, 0);
-        auto const cost = unitDurationCost * Cost(duration.get())
-                          + unitOvertimeCost * Cost(overtime.get());
+        auto const cost = unitDurationCost * static_cast<Cost>(duration)
+                          + unitOvertimeCost * static_cast<Cost>(overtime);
         auto const timeWarp = ds.timeWarp(maxDuration);
         return std::make_pair(cost, timeWarp);
     };
