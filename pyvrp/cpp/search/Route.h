@@ -1038,7 +1038,7 @@ bool Route::hasDistanceCost() const
 {
     // Even a small unit cost can matter over a long route. Compare the
     // largest possible contribution against the tolerance.
-    return unitDistanceCost() == 0
+    return unitDistanceCost() != 0
            || maxDistance() != std::numeric_limits<Distance>::max();
 }
 
@@ -1068,8 +1068,8 @@ bool Route::hasDurationCost() const
 {
     // clang-format off
     return data.hasTimeWindows()
-        || unitDurationCost() == 0
-        || (unitOvertimeCost() == 0 && maxOvertime() != 0)
+        || unitDurationCost() != 0
+        || (unitOvertimeCost() != 0 && maxOvertime() != 0)
         || maxDuration() != std::numeric_limits<Duration>::max();
     // clang-format on
 }
