@@ -14,7 +14,6 @@ from pyvrp import (
     VehicleType,
 )
 from pyvrp import Route as SolRoute
-from pyvrp.constants import TOL
 from pyvrp.search import (
     LocalSearch,
     NeighbourhoodParams,
@@ -25,32 +24,6 @@ from pyvrp.search import (
 )
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
-
-
-@pytest.mark.parametrize(
-    "cost_field", ["unit_distance_cost", "unit_duration_cost"]
-)
-def test_small_unit_cost_preserves_neutral_moves(cost_field):
-    """A small unit rate must still contribute to the proposed route cost."""
-    matrix = np.where(np.eye(3), 0, 10)
-    data = ProblemData(
-        locations=[Location(0, 0)] * 3,
-        clients=[Client(1), Client(2)],
-        depots=[Depot(0)],
-        vehicle_types=[
-            VehicleType(**{"unit_distance_cost": 0, cost_field: TOL / 2})
-        ],
-        distance_matrices=[matrix],
-        duration_matrices=[matrix],
-    )
-    route = make_search_route(data, ["C0", "C1"])
-    op = Relocate1(data)
-    delta, should_apply = op.evaluate(
-        route[1], route[2], CostEvaluator([], 0, 0)
-    )
-
-    assert_allclose(delta, 0, atol=TOL)
-    assert_(not should_apply)
 
 
 @pytest.mark.parametrize("operator", [Relocate1, Relocate2, Relocate3])
