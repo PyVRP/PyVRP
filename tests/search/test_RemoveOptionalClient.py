@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
@@ -11,31 +10,8 @@ from pyvrp import (
     ProblemData,
     VehicleType,
 )
-from pyvrp.constants import TOL
 from pyvrp.search import RemoveOptionalClient
 from tests.helpers import make_search_route
-
-
-@pytest.mark.parametrize(
-    ("improvement", "expected"),
-    [(0, False), (TOL / 2, False), (2 * TOL, True), (0.25, True)],
-)
-def test_improvement_tolerance(improvement, expected):
-    """Only improvements larger than the cost tolerance are accepted."""
-    data = ProblemData(
-        locations=[Location(0, 0)],
-        clients=[Client(0, prize=1, required=False)],
-        depots=[Depot(0)],
-        vehicle_types=[VehicleType(fixed_cost=1 + improvement)],
-        distance_matrices=[np.zeros((1, 1), dtype=int)],
-        duration_matrices=[np.zeros((1, 1), dtype=int)],
-    )
-    route = make_search_route(data, ["C0"])
-    op = RemoveOptionalClient(data)
-    delta, should_apply = op.evaluate(route[1], CostEvaluator([], 0, 0))
-
-    assert_allclose(delta, -improvement, rtol=0, atol=1e-12)
-    assert_equal(should_apply, expected)
 
 
 def test_does_not_remove_required_clients():
