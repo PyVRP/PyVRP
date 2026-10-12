@@ -37,7 +37,7 @@ void RelocateWithDepot::evalSameRoute(Route::Node *U,
                                     route->between(V->pos() + 1, U->pos() - 1),
                                     route->after(U->pos() + 1)));
 
-            if (deltaCost < move_.cost - Cost(TOL))
+            if (deltaCost < move_.cost)
                 move_ = {deltaCost, MoveType::DEPOT_U, depot};
         }
 
@@ -62,7 +62,7 @@ void RelocateWithDepot::evalSameRoute(Route::Node *U,
                                     route->between(V->pos() + 1, U->pos() - 1),
                                     route->after(U->pos() + 1)));
 
-            if (deltaCost < move_.cost - Cost(TOL))
+            if (deltaCost < move_.cost)
                 move_ = {deltaCost, MoveType::U_DEPOT, depot};
         }
 }
@@ -104,7 +104,7 @@ void RelocateWithDepot::evalDifferentRoutes(Route::Node *U,
                                 uRoute->at(U->pos()),
                                 vRoute->after(V->pos() + 1)));
 
-            if (deltaCost < move_.cost - Cost(TOL))
+            if (deltaCost < move_.cost)
                 move_ = {deltaCost, MoveType::DEPOT_U, depot};
         }
 
@@ -119,7 +119,7 @@ void RelocateWithDepot::evalDifferentRoutes(Route::Node *U,
                                 DepotSegment(data, depot),
                                 vRoute->after(V->pos() + 1)));
 
-            if (deltaCost < move_.cost - Cost(TOL))
+            if (deltaCost < move_.cost)
                 move_ = {deltaCost, MoveType::U_DEPOT, depot};
         }
 }

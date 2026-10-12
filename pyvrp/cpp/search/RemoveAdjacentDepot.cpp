@@ -27,7 +27,7 @@ RemoveAdjacentDepot::evaluate(Route::Node *U,
             Route::Proposal(route->before(U->pos() - 2),
                             route->after(U->pos())));
 
-        if (deltaCost < bestCost - Cost(TOL))
+        if (deltaCost < bestCost)
         {
             bestCost = deltaCost;
             move_ = MoveType::REMOVE_PREV;
@@ -42,7 +42,7 @@ RemoveAdjacentDepot::evaluate(Route::Node *U,
             Route::Proposal(route->before(U->pos()),
                             route->after(U->pos() + 2)));
 
-        if (deltaCost < bestCost - Cost(TOL))
+        if (deltaCost < bestCost)
         {
             bestCost = deltaCost;
             move_ = MoveType::REMOVE_NEXT;

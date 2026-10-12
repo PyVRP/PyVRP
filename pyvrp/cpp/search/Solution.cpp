@@ -282,7 +282,7 @@ bool Solution::insert(Route::Node *U,
             continue;
 
         auto const cost = insertCost(U, V, data_, costEvaluator);
-        if (cost < bestCost - Cost(TOL))
+        if (cost < bestCost)
         {
             bestCost = cost;
             UAfter = V;
@@ -302,7 +302,7 @@ bool Solution::insert(Route::Node *U,
             continue;
 
         auto const cost = insertCost(U, (*empty)[0], data_, costEvaluator);
-        if (cost < bestCost - Cost(TOL))
+        if (cost < bestCost)
         {
             bestCost = cost;
             UAfter = (*empty)[0];
@@ -357,7 +357,7 @@ bool Solution::insert(Route::Node *pickup,
                                 DeliverySegment(data_, delivery->idx()),
                                 route->after(V->pos() + 1)));
 
-            if (deltaCost < bestCost - Cost(TOL))
+            if (deltaCost < bestCost)
             {
                 pickupAfter = V;
                 deliveryPos = V->pos() + 1;
@@ -377,7 +377,7 @@ bool Solution::insert(Route::Node *pickup,
                                     DeliverySegment(data_, delivery->idx()),
                                     route->after(node->pos() + 1)));
 
-                if (deltaCost < bestCost - Cost(TOL))
+                if (deltaCost < bestCost)
                 {
                     pickupAfter = V;
                     deliveryPos = node->pos() + 1;
@@ -407,7 +407,7 @@ bool Solution::insert(Route::Node *pickup,
                             DeliverySegment(data_, delivery->idx()),
                             empty->after(1)));
 
-        if (deltaCost < bestCost - Cost(TOL))
+        if (deltaCost < bestCost)
         {
             pickupAfter = (*empty)[0];
             deliveryPos = 1;
