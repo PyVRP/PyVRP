@@ -1036,8 +1036,6 @@ Cost Route::unitDistanceCost() const { return vehicleType_.unitDistanceCost; }
 
 bool Route::hasDistanceCost() const
 {
-    // Even a small unit cost can matter over a long route. Compare the
-    // largest possible contribution against the tolerance.
     return unitDistanceCost() != 0
            || maxDistance() != std::numeric_limits<Distance>::max();
 }
