@@ -1,12 +1,11 @@
 #include "neighbourhood.h"
 
 #include "Matrix.h"
-#include "constants.h"
 
 #include <algorithm>
-#include <cmath>
 #include <limits>
 #include <numeric>
+#include <set>
 #include <stdexcept>
 #include <tuple>
 
@@ -37,26 +36,17 @@ Matrix<double> computeProximity(ProblemData const &data,
                         data.numClients() + 2 * data.numShipments(),
                         std::numeric_limits<double>::max());
 
-    std::vector<std::tuple<pyvrp::Cost, pyvrp::Cost, size_t>> seen;
+    std::set<std::tuple<pyvrp::Cost, pyvrp::Cost, size_t>> seen = {};
     for (auto const &vehType : data.vehicleTypes())
     {
         auto const key = std::make_tuple(vehType.unitDistanceCost,
                                          vehType.unitDurationCost,
                                          vehType.profile);
 
-        auto const sameProfile = [&](auto const &other)
-        {
-            return std::get<2>(key) == std::get<2>(other)
-                   && std::abs((std::get<0>(key) - std::get<0>(other)).get())
-                          <= pyvrp::TOL
-                   && std::abs((std::get<1>(key) - std::get<1>(other)).get())
-                          <= pyvrp::TOL;
-        };
+        if (seen.contains(key))  // then proximity has already been updated
+            continue;            // based on this cost profile
 
-        if (std::any_of(seen.begin(), seen.end(), sameProfile))
-            continue;  // proximity already includes this cost profile
-
-        seen.push_back(key);
+        seen.insert(key);
         auto const &dists = data.distanceMatrix(vehType.profile);
         auto const &durs = data.durationMatrix(vehType.profile);
 
