@@ -18,12 +18,11 @@ using Unplanned = std::vector<pyvrp::Activity>;
 
 void Solution::evaluate(ProblemData const &data)
 {
-    Cost allPrizes = 0;
-    for (auto const &client : data.clients())
-        allPrizes += client.prize;
-
-    for (auto const &shipment : data.shipments())
-        allPrizes += shipment.prize;
+    for (auto const &activity : unplanned_)
+        if (activity.isClient())
+            uncollectedPrizes_ += data.client(activity.idx()).prize;
+        else if (activity.isPickup())
+            uncollectedPrizes_ += data.shipment(activity.idx()).prize;
 
     excessLoad_ = std::vector<Load>(data.numLoadDimensions(), 0);
     for (auto const &route : routes_)
@@ -45,8 +44,6 @@ void Solution::evaluate(ProblemData const &data)
         for (size_t dim = 0; dim != data.numLoadDimensions(); ++dim)
             excessLoad_[dim] += excessLoad[dim];
     }
-
-    uncollectedPrizes_ = allPrizes - prizes_;
 }
 
 bool Solution::empty() const
@@ -136,8 +133,6 @@ bool Solution::operator==(Solution const &other) const
     // clang-format off
     bool const attributeChecks = distance_ == other.distance_
                               && duration_ == other.duration_
-                              && distanceCost_ == other.distanceCost_
-                              && durationCost_ == other.durationCost_
                               && timeWarp_ == other.timeWarp_
                               && numClients_ == other.numClients_
                               && numShipments_ == other.numShipments_;

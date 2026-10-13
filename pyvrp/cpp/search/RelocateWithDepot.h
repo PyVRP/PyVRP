@@ -32,7 +32,7 @@ class RelocateWithDepot : public BinaryOperator
 
     struct Move
     {
-        Cost cost = std::numeric_limits<Cost>::max();
+        Cost cost = 0;
         MoveType type = MoveType::DEPOT_U;
         size_t depot = 0;
     };

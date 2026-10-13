@@ -1,7 +1,7 @@
 import pickle
 
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
     Activity,
@@ -350,10 +350,10 @@ def test_distance_duration_cost_calculations(ok_small):
     data = ok_small.replace(vehicle_types=vehicle_types)
 
     routes = [Route(data, [0, 1], 0), Route(data, [2, 3], 1)]
-    assert_equal(routes[0].distance_cost(), 5 * routes[0].distance())
-    assert_equal(routes[0].duration_cost(), 1 * routes[0].duration())
-    assert_equal(routes[1].distance_cost(), 1 * routes[1].distance())
-    assert_equal(routes[1].duration_cost(), 5 * routes[1].duration())
+    assert_allclose(routes[0].distance_cost(), 5 * routes[0].distance())
+    assert_allclose(routes[0].duration_cost(), 1 * routes[0].duration())
+    assert_allclose(routes[1].distance_cost(), 1 * routes[1].distance())
+    assert_allclose(routes[1].duration_cost(), 5 * routes[1].duration())
 
 
 def test_start_end_depot_not_same_on_empty_route(ok_small_multi_depot):
@@ -528,7 +528,7 @@ def test_statistics_with_small_multi_trip_example(ok_small_multiple_trips):
     assert_equal(route2.num_trips(), 2)
 
     # Route structure and general statistics.
-    assert_equal(route2.prizes(), route1.prizes())
+    assert_allclose(route2.prizes(), route1.prizes())
     assert_equal(route2.start_depot(), route1.start_depot())
     assert_equal(route2.end_depot(), route1.end_depot())
 
@@ -763,7 +763,7 @@ def test_fixed_vehicle_cost(ok_small, fixed_cost: int):
     data = ok_small.replace(vehicle_types=[veh_type])
 
     route = Route(data, [], 0)
-    assert_equal(route.fixed_vehicle_cost(), fixed_cost)
+    assert_allclose(route.fixed_vehicle_cost(), fixed_cost)
 
 
 def test_raises_invalid_depot_or_client(ok_small_multiple_trips):

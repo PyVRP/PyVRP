@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Shipment, ShipmentStep
 
@@ -94,7 +94,7 @@ def test_default_attributes():
     assert_equal(shipment.delivery.tw_late, _INT_MAX)
     assert_equal(shipment.delivery.service_duration, 0)
     assert_equal(shipment.amount, [])
-    assert_equal(shipment.prize, 0)
+    assert_allclose(shipment.prize, 0)
     assert_(shipment.required)
     assert_equal(shipment.name, "")
 
@@ -128,7 +128,7 @@ def test_custom_attributes():
     assert_equal(shipment.delivery.tw_late, 13)
     assert_equal(shipment.delivery.service_duration, 17)
     assert_equal(shipment.amount, [19])
-    assert_equal(shipment.prize, 23)
+    assert_allclose(shipment.prize, 23)
     assert_(not shipment.required)
     assert_equal(shipment.name, "test")
     assert_equal(str(shipment), "test")

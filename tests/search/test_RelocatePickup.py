@@ -1,12 +1,12 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import Client, CostEvaluator
 from pyvrp.search import RelocatePickup
 from pyvrp.search._search import Solution
 from tests.helpers import make_search_route
 
-_INT_MAX = np.iinfo(np.int64).max
+_FLOAT_MAX = np.finfo(np.float64).max
 
 
 def test_relocate_just_before_delivery(small_shipments):
@@ -29,7 +29,7 @@ def test_relocate_just_before_delivery(small_shipments):
 
     op = RelocatePickup(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[1], cost_eval), (-8_406, True))
+    assert_allclose(op.evaluate(route[1], cost_eval), (-8_406, True))
 
     op.apply(route[1])
     route.update()
@@ -62,7 +62,7 @@ def test_relocate_just_after_depot(small_shipments):
     # before C0. That results in less distance, because C0 is at U0's location.
     op = RelocatePickup(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[2], cost_eval), (-5_353, True))
+    assert_allclose(op.evaluate(route[2], cost_eval), (-5_353, True))
 
     op.apply(route[2])
     route.update()
@@ -96,7 +96,7 @@ def test_reload_depot(small_shipments):
 
     op = RelocatePickup(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[4], cost_eval), (_INT_MAX, False))
+    assert_allclose(op.evaluate(route[4], cost_eval), (_FLOAT_MAX, False))
 
 
 def test_relocate_skips_unassigned_nodes(small_shipments):
@@ -109,7 +109,7 @@ def test_relocate_skips_unassigned_nodes(small_shipments):
 
     op = RelocatePickup(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(pickup, cost_eval), (0, False))
+    assert_allclose(op.evaluate(pickup, cost_eval), (0, False))
 
 
 def test_relocate_skips_non_pickup_nodes(small_shipments):
@@ -132,8 +132,8 @@ def test_relocate_skips_non_pickup_nodes(small_shipments):
     # for the client and delivery nodes.
     op = RelocatePickup(data)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(client, cost_eval), (0, False))
-    assert_equal(op.evaluate(delivery, cost_eval), (0, False))
+    assert_allclose(op.evaluate(client, cost_eval), (0, False))
+    assert_allclose(op.evaluate(delivery, cost_eval), (0, False))
 
 
 def test_supports(ok_small, small_shipments, small_optional_shipments):
@@ -168,4 +168,4 @@ def test_cannot_improve_singleton_route(small_shipments):
 
     op = RelocatePickup(small_shipments)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(pickup, cost_eval), (_INT_MAX, False))
+    assert_allclose(op.evaluate(pickup, cost_eval), (_FLOAT_MAX, False))

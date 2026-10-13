@@ -30,7 +30,7 @@ template <MeasureType Type, NumberType Value> class Measure;
 
 // Type aliases. These are used throughout the program.
 using Coordinate = Measure<MeasureType::COORD, double>;
-using Cost = Measure<MeasureType::COST, int64_t>;
+using Cost = Measure<MeasureType::COST, double>;
 using Distance = Measure<MeasureType::DIST, int64_t>;
 using Duration = Measure<MeasureType::DURATION, int64_t>;
 using Load = Measure<MeasureType::LOAD, int64_t>;
@@ -70,11 +70,12 @@ public:
         return static_cast<T>(value_);
     }
 
-    // Explicit conversions to other measures of the same storage type (we do
-    // not want there to be data loss just by casting between measures).
-    template <MeasureType Other> explicit operator Measure<Other, Value>() const
+    // Explicit conversions to other measures, with the same precision loss or
+    // truncation as a regular arithmetic cast.
+    template <MeasureType OtherType, NumberType OtherValue>
+    explicit operator Measure<OtherType, OtherValue>() const
     {
-        return value_;
+        return static_cast<OtherValue>(value_);
     }
 
     // Retrieves the underlying value.
@@ -87,8 +88,7 @@ public:
     Measure &operator/=(Measure const rhs);
 
     // Comparison operators.
-    [[nodiscard]] bool operator==(Measure const other) const;
-    [[nodiscard]] std::strong_ordering operator<=>(Measure const other) const;
+    [[nodiscard]] auto operator<=>(Measure const &other) const = default;
 };
 
 // Retrieves the underlying value.
@@ -147,20 +147,6 @@ Measure<Type, Value>::operator/=(Measure<Type, Value> const rhs)
 {
     this->value_ /= rhs.value_;
     return *this;
-}
-
-// Comparison operators.
-template <MeasureType Type, NumberType Value>
-bool Measure<Type, Value>::operator==(Measure<Type, Value> const other) const
-{
-    return value_ == other.value_;
-}
-
-template <MeasureType Type, NumberType Value>
-std::strong_ordering
-Measure<Type, Value>::operator<=>(Measure<Type, Value> const other) const
-{
-    return value_ <=> other.value_;
 }
 
 // Free-standing binary operators.

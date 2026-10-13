@@ -2,6 +2,7 @@
 
 #include "Activity.h"
 #include "DepotSegment.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -157,7 +158,7 @@ std::pair<pyvrp::Cost, bool> RelocateWithDepot::evaluate(
     else
         evalDifferentRoutes(U, V, costEvaluator);
 
-    return std::make_pair(move_.cost, move_.cost < 0);
+    return std::make_pair(move_.cost, move_.cost < -TOL);
 }
 
 void RelocateWithDepot::apply(Route::Node *U, Route::Node *V) const

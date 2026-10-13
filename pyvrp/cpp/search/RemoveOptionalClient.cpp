@@ -1,4 +1,5 @@
 #include "RemoveOptionalClient.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -31,7 +32,7 @@ RemoveOptionalClient::evaluate(Route::Node *U,
                                 Route::Proposal(route->before(U->pos() - 1),
                                                 route->after(U->pos() + 1)));
 
-    return std::make_pair(deltaCost, deltaCost < 0);
+    return std::make_pair(deltaCost, deltaCost < -TOL);
 }
 
 void RemoveOptionalClient::apply(Route::Node *U) const

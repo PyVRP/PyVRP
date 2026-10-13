@@ -1,7 +1,7 @@
 import pickle
 
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import Client
 
@@ -69,7 +69,7 @@ def test_constructor_initialises_data_fields_correctly(
     assert_equal(client.tw_early, tw_early)
     assert_equal(client.tw_late, tw_late)
     assert_equal(client.release_time, release_time)
-    assert_equal(client.prize, prize)
+    assert_allclose(client.prize, prize)
     assert_equal(client.required, required)
     assert_equal(client.group, group)
     assert_equal(client.name, name)

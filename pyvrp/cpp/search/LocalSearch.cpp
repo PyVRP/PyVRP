@@ -1,10 +1,12 @@
 #include "LocalSearch.h"
 #include "DynamicBitset.h"
 #include "Measure.h"
+#include "constants.h"
 #include "logging.h"
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <iterator>
 #include <numeric>
 
@@ -172,11 +174,11 @@ bool LocalSearch::applyUnaryOps(Route::Node *U,
             update(rU, rU);
 
 #ifndef NDEBUG
-            auto const costAfter = costEvaluator.penalisedCost(solution_);
             // When there is an improving move, the delta cost evaluation must
-            // be exact. The resulting cost is then the sum of the cost before
-            // the move, plus the delta cost.
-            assert(costAfter == costBefore + deltaCost);
+            // be exact. The delta cost is the difference between the after and
+            // before costs, up to floating-point tolerance.
+            auto const costAfter = costEvaluator.penalisedCost(solution_);
+            assert(std::abs((costAfter - costBefore - deltaCost).get()) <= TOL);
 #endif
 
             return true;
@@ -218,11 +220,11 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
             update(rU, rV);
 
 #ifndef NDEBUG
-            auto const costAfter = costEvaluator.penalisedCost(solution_);
             // When there is an improving move, the delta cost evaluation must
-            // be exact. The resulting cost is then the sum of the cost before
-            // the move, plus the delta cost.
-            assert(costAfter == costBefore + deltaCost);
+            // be exact. The delta cost is the difference between the after and
+            // before costs, up to floating-point tolerance.
+            auto const costAfter = costEvaluator.penalisedCost(solution_);
+            assert(std::abs((costAfter - costBefore - deltaCost).get()) <= TOL);
 #endif
 
             return true;

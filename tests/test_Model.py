@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_, assert_equal, assert_raises
+from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
@@ -111,7 +111,7 @@ def test_add_client_attributes():
     assert_equal(client.tw_early, 5)
     assert_equal(client.tw_late, 6)
     assert_equal(client.release_time, 0)
-    assert_equal(client.prize, 8)
+    assert_allclose(client.prize, 8)
     assert_(not client.required)
 
 
@@ -175,7 +175,7 @@ def test_add_vehicle_type():
 
     assert_equal(vehicle_type.num_available, 10)
     assert_equal(vehicle_type.capacity, [998])
-    assert_equal(vehicle_type.fixed_cost, 1_001)
+    assert_allclose(vehicle_type.fixed_cost, 1_001)
     assert_equal(vehicle_type.tw_early, 17)
     assert_equal(vehicle_type.start_late, 18)
     assert_equal(vehicle_type.tw_late, 19)
@@ -313,12 +313,12 @@ def test_from_data_and_solve(small_cvrp, ok_small):
     """
     model = Model.from_data(small_cvrp)
     res = model.solve(stop=MaxIterations(100), seed=0)
-    assert_equal(res.cost(), 3_743)
+    assert_allclose(res.cost(), 3_743)
     assert_(res.is_feasible())
 
     model = Model.from_data(ok_small)
     res = model.solve(stop=MaxIterations(100), seed=0)
-    assert_equal(res.cost(), 9_155)
+    assert_allclose(res.cost(), 9_155)
     assert_(res.is_feasible())
 
 
@@ -329,7 +329,7 @@ def test_model_and_solve(ok_small):
     """
     model = Model.from_data(ok_small)
     res = model.solve(stop=MaxIterations(100), seed=0)
-    assert_equal(res.cost(), 9_155)
+    assert_allclose(res.cost(), 9_155)
     assert_(res.is_feasible())
 
     # Now do the same thing, but model the instance using the modelling API.
@@ -368,7 +368,7 @@ def test_model_and_solve(ok_small):
     res = model.solve(stop=MaxIterations(100), seed=0)
 
     assert_(res.is_feasible())
-    assert_equal(res.cost(), 9_155)
+    assert_allclose(res.cost(), 9_155)
 
 
 def test_model_solve_display_argument(ok_small, caplog):
@@ -435,7 +435,7 @@ def test_partial_distance_duration_matrix(missing_value):
 
     res = model.solve(MaxIterations(100), seed=4, missing_value=missing_value)
     assert_equal(res.best.num_routes(), 1)
-    assert_equal(res.cost(), 4)  # depot -> client 1 -> client 2 -> depot
+    assert_allclose(res.cost(), 4)  # depot -> client 1 -> client 2 -> depot
     assert_(res.is_feasible())
 
 
@@ -594,7 +594,7 @@ def test_model_solves_line_instance_with_multiple_depots():
             m.add_edge(frm, to, distance=abs(frm.x - to.x))
 
     res = m.solve(stop=MaxIterations(100), seed=3)
-    assert_equal(res.cost(), 8)
+    assert_allclose(res.cost(), 8)
     assert_(res.is_feasible())
 
     # Test that there are two routes, with the clients closest to depot 0
@@ -784,15 +784,15 @@ def test_minimise_distance_or_duration(ok_small):
     orig_res = orig_model.solve(stop=MaxIterations(20), seed=82)
     new_res = new_model.solve(stop=MaxIterations(20), seed=82)
 
-    assert_equal(orig_res.cost(), 9_155)
-    assert_equal(new_res.cost(), 9_875)
+    assert_allclose(orig_res.cost(), 9_155)
+    assert_allclose(new_res.cost(), 9_875)
 
     # The given instance has the same distance and duration matrix. There is
     # thus no difference in actual travel time or distance. But the duration
     # objective should also count service duration along the route, and that
     # is something we can check.
     service = sum(data.client(client).service_duration for client in [0, 3])
-    assert_equal(new_res.cost(), orig_res.cost() + service)
+    assert_allclose(new_res.cost(), orig_res.cost() + service)
 
 
 def test_adding_vehicle_type_with_unknown_profile_raises():
@@ -849,7 +849,7 @@ def test_adding_multiple_routing_profiles():
 
     res = m.solve(stop=MaxIterations(10))
     assert_(res.is_feasible())
-    assert_equal(res.cost(), 10)
+    assert_allclose(res.cost(), 10)
 
 
 def test_profiles_build_on_base_edges():
@@ -924,7 +924,7 @@ def test_model_solves_instances_with_multiple_profiles():
     # distance), and the second vehicle the second client (also no distance).
     # The resulting cost is thus zero.
     res = m.solve(stop=MaxIterations(10), seed=1)
-    assert_equal(res.cost(), 0)
+    assert_allclose(res.cost(), 0)
 
     route1, route2 = res.best.routes()
     assert_equal(str(route1), "C0")
@@ -1054,7 +1054,7 @@ def test_model_solves_multi_trip_instance():
 
     res = m.solve(stop=MaxIterations(10))
     assert_(res.is_feasible())
-    assert_equal(res.cost(), 6)
+    assert_allclose(res.cost(), 6)
 
     routes = res.best.routes()
     assert_equal(len(routes), 1)
@@ -1091,7 +1091,7 @@ def test_instance_with_multi_trip_and_release_times(mtvrptw_release_times):
     # is a smoke test to verify that we are not too far (>10%) away after a few
     # iterations.
     opt_cost = opt.distance_cost()
-    assert_equal(opt_cost, 10687)
+    assert_allclose(opt_cost, 10687)
     assert_(res.cost() < 1.1 * opt_cost)
 
 
@@ -1252,7 +1252,7 @@ def test_add_shipment_attributes():
     assert_equal(shipment.delivery.tw_early, 4)
     assert_equal(shipment.delivery.tw_late, 5)
     assert_equal(shipment.delivery.service_duration, 6)
-    assert_equal(shipment.prize, 8)
+    assert_allclose(shipment.prize, 8)
     assert_(not shipment.required)
     assert_equal(shipment.name, "test")
 

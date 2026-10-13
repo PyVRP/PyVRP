@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Client,
@@ -36,7 +36,7 @@ def test_relocate_alternative_within_route(ok_small_mutually_exclusive_groups):
     #       = 1476 + 1090 + 1965 - 1544 - 1593 - 1475
     #       = -81.
     move = op.evaluate(sol.clients[0], sol.clients[3], cost_eval)
-    assert_equal(move, (-81, True))
+    assert_allclose(move, (-81, True))
 
     op.apply(sol.clients[0], sol.clients[3])
     assert_equal(str(sol.routes[0]), "C3 C1")
@@ -65,7 +65,7 @@ def test_relocate_alternative_between_routes(
     #       = 1090 + 1965 - 1475 - 1544 - 1726
     #       = -1690.
     move = op.evaluate(sol.clients[0], sol.clients[3], cost_eval)
-    assert_equal(move, (-1690, True))
+    assert_allclose(move, (-1690, True))
 
     op.apply(sol.clients[0], sol.clients[3])
     sol.routes[0].update()
@@ -104,7 +104,7 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
     # Moving to the second route saves one fixed vehicle cost (100), and the
     # alternative collects 150 more units of prize.
     move = op.evaluate(sol.clients[0], sol.clients[2], CostEvaluator([], 0, 0))
-    assert_equal(move, (-250, True))
+    assert_allclose(move, (-250, True))
 
     # Second scenario, with C0 and C2 on the same route.
     sol = Solution(data)
@@ -117,7 +117,7 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
     # Moving to the empty second route adds one fixed vehicle cost (100),
     # while the cheaper alternative collects 150 more units of prize.
     move = op.evaluate(sol.clients[0], empty[0], CostEvaluator([], 0, 0))
-    assert_equal(move, (-50, True))
+    assert_allclose(move, (-50, True))
 
 
 def test_skips_client_not_in_group(ok_small_mutually_exclusive_groups):
@@ -134,7 +134,7 @@ def test_skips_client_not_in_group(ok_small_mutually_exclusive_groups):
     # C3 is not in a group, so the operator should skip it.
     route = make_search_route(data, ["C3", "C0"])
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[1], route[2], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[1], route[2], cost_eval), (0, False))
 
 
 def test_supports(

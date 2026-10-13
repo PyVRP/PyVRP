@@ -18,7 +18,7 @@ namespace pyvrp
  *     delivery_tw_late: int = np.iinfo(np.int64).max,
  *     delivery_service_duration: int = 0,
  *     amount: list[int] = [],
- *     prize: int = 0,
+ *     prize: float = 0,
  *     required: bool = True,
  *     *,
  *     name: str = "",

@@ -730,7 +730,7 @@ def test_fixed_vehicle_cost(
     ]
 
     sol = Solution(data, routes)
-    assert_equal(sol.fixed_vehicle_cost(), expected)
+    assert_allclose(sol.fixed_vehicle_cost(), expected)
 
 
 @pytest.mark.parametrize(
@@ -799,9 +799,16 @@ def test_distance_duration_cost_calculations(ok_small):
 
     sol = Solution(data, routes)
     assert_equal(sol.distance(), sum(r.distance() for r in routes))
-    assert_equal(sol.distance_cost(), sum(r.distance_cost() for r in routes))
+    assert_allclose(
+        sol.distance_cost(),
+        sum(r.distance_cost() for r in routes),
+    )
+
     assert_equal(sol.duration(), sum(r.duration() for r in routes))
-    assert_equal(sol.duration_cost(), sum(r.duration_cost() for r in routes))
+    assert_allclose(
+        sol.duration_cost(),
+        sum(r.duration_cost() for r in routes),
+    )
 
 
 def test_overtime(ok_small_overtime):
@@ -818,7 +825,7 @@ def test_overtime(ok_small_overtime):
     assert_equal(route.overtime(), 229)
 
     # Duration cost includes the cost of overtime.
-    assert_equal(route.duration_cost(), 1 * 5_229 + 10 * 229)
+    assert_allclose(route.duration_cost(), 1 * 5_229 + 10 * 229)
 
     # Test that a solution consisting of this single route agrees on these
     # statistics.
@@ -826,7 +833,7 @@ def test_overtime(ok_small_overtime):
     assert_(not sol.has_time_warp())
     assert_equal(sol.overtime(), route.overtime())
     assert_equal(sol.duration(), route.duration())
-    assert_equal(sol.duration_cost(), route.duration_cost())
+    assert_allclose(sol.duration_cost(), route.duration_cost())
 
 
 def test_raises_duplicate_group(ok_small_mutually_exclusive_groups):
@@ -929,15 +936,15 @@ def test_shipment_prizes(small_optional_shipments):
     """
     # The four shipment prizes total 23_000, all of which are uncollected.
     unplanned = Solution(small_optional_shipments, [])
-    assert_equal(unplanned.prizes(), 0)
-    assert_equal(unplanned.uncollected_prizes(), 23_000)
+    assert_allclose(unplanned.prizes(), 0)
+    assert_allclose(unplanned.uncollected_prizes(), 23_000)
 
     # Servicing shipment 0 collects 10_000. The other prizes total 13_000.
     activities = [Activity("L0"), Activity("U0")]
     route = Route(small_optional_shipments, activities, 0)
     planned = Solution(small_optional_shipments, [route])
-    assert_equal(planned.prizes(), 10_000)
-    assert_equal(planned.uncollected_prizes(), 13_000)
+    assert_allclose(planned.prizes(), 10_000)
+    assert_allclose(planned.uncollected_prizes(), 13_000)
 
 
 def test_raises_multiple_shipment_visits(small_shipments):

@@ -1,6 +1,7 @@
 #include "RelocateDelivery.h"
 
 #include "DeliverySegment.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -43,7 +44,7 @@ RelocateDelivery::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
                     route->between(after->pos() + 1, delivery->pos() - 1),
                     route->after(delivery->pos() + 1)));
 
-        if (deltaCost < 0)
+        if (deltaCost < -TOL)
         {
             move_.cost = deltaCost;
             move_.after = after;
@@ -51,7 +52,7 @@ RelocateDelivery::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
         }
     }
 
-    return std::make_pair(move_.cost, move_.cost < 0);
+    return std::make_pair(move_.cost, move_.cost < -TOL);
 }
 
 void RelocateDelivery::apply(Route::Node *U) const

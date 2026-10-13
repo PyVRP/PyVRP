@@ -18,7 +18,7 @@ namespace pyvrp
  *    tw_early: int = 0,
  *    tw_late: int = np.iinfo(np.int64).max,
  *    release_time: int = 0,
- *    prize: int = 0,
+ *    prize: float = 0,
  *    required: bool = True,
  *    group: int | None = None,
  *    *,

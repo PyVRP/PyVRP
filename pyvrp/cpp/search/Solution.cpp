@@ -6,6 +6,7 @@
 #include "LoadSegment.h"
 #include "PickupSegment.h"
 #include "Route.h"
+#include "constants.h"
 
 #include <algorithm>
 #include <cassert>
@@ -309,7 +310,7 @@ bool Solution::insert(Route::Node *U,
         }
     }
 
-    if (required || bestCost < 0)
+    if (required || bestCost < -TOL)
     {
         auto *route = UAfter->route();
         route->insert(UAfter->pos() + 1, U);
@@ -415,7 +416,7 @@ bool Solution::insert(Route::Node *pickup,
         }
     }
 
-    if (required || bestCost < 0)
+    if (required || bestCost < -TOL)
     {
         auto *route = pickupAfter->route();
         route->insert(deliveryPos, delivery);

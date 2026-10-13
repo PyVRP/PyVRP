@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_SWAP_H
 
 #include "LocalSearchOperator.h"
+#include "constants.h"
 
 #include <cassert>
 
@@ -147,7 +148,7 @@ std::pair<Cost, bool> Swap<N, M>::evaluate(Route::Node *U,
                                 route->after(U->pos() + N)));
     }
 
-    return std::make_pair(deltaCost, deltaCost < 0);
+    return std::make_pair(deltaCost, deltaCost < -TOL);
 }
 
 template <size_t N, size_t M>

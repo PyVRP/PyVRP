@@ -16,6 +16,7 @@
 #include "Shipment.h"
 #include "Solution.h"
 #include "VehicleType.h"
+#include "constants.h"
 #include "pyvrp_docs.h"
 
 #include <pybind11/functional.h>
@@ -53,6 +54,8 @@ using PiecewiseLinearFunction
 
 PYBIND11_MODULE(_pyvrp, m)
 {
+    m.attr("TOL") = pyvrp::TOL;
+
     py::options options;
     options.disable_enum_members_docstring();
 

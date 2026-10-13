@@ -3,6 +3,7 @@
 
 #include "DynamicBitset.h"
 #include "LocalSearchOperator.h"
+#include "constants.h"
 
 #include <cassert>
 #include <vector>
@@ -149,7 +150,7 @@ std::pair<Cost, bool> Relocate<N>::evaluate(Route::Node *U,
                                 route->after(U->pos() + N)));
     }
 
-    return std::make_pair(deltaCost, deltaCost < 0);
+    return std::make_pair(deltaCost, deltaCost < -TOL);
 }
 
 template <size_t N>

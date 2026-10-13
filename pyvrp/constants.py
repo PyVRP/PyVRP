@@ -1,6 +1,8 @@
 import sys
 
-MAX_VALUE = 1 << 44
+from pyvrp._pyvrp import TOL as TOL
+
+MAX_VALUE = 1_000_000_000
 """
 The largest value that can be passed for any element of the input distance or
 duration matrices (including missing values). Passing larger values warns about

@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_, assert_equal
+from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Client,
@@ -41,7 +41,7 @@ def test_replacing_optional_client():
     # cost.
     client2 = Node("C1")
     delta, should_apply = op.evaluate(client2, route[1], cost_eval)
-    assert_equal(delta, -4)  # +5 prize, -1 prize.
+    assert_allclose(delta, -4)  # +5 prize, -1 prize.
     assert_(should_apply)
 
     # Apply the move - we should now have only C1 in the route, and no longer
@@ -74,7 +74,7 @@ def test_skips_replacing_required_client():
     # Same example as in previous test but now C0 is a required client,
     # and cannot be replaced.
     client2 = Node("C1")
-    assert_equal(op.evaluate(client2, route[1], cost_eval), (0, False))
+    assert_allclose(op.evaluate(client2, route[1], cost_eval), (0, False))
 
 
 def test_skips_assigned_depot_or_missing_other(ok_small_prizes):
@@ -89,15 +89,15 @@ def test_skips_assigned_depot_or_missing_other(ok_small_prizes):
     # C0 is already assigned, cannot be inserted again.
     op = ReplaceOptionalClient(ok_small_prizes)
     cost_eval = CostEvaluator([0], 0, 0)
-    assert_equal(op.evaluate(route[1], route[2], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[1], route[2], cost_eval), (0, False))
 
     # These are not assigned anywhere, so cannot replace.
     node3 = Node("C2")
     node4 = Node("C3")
-    assert_equal(op.evaluate(node3, node4, cost_eval), (0, False))
+    assert_allclose(op.evaluate(node3, node4, cost_eval), (0, False))
 
     # This is a depot, which cannot be replaced.
-    assert_equal(op.evaluate(route[1], route[0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(route[1], route[0], cost_eval), (0, False))
 
 
 def test_supports(
