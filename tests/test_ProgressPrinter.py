@@ -69,7 +69,7 @@ def test_end(ok_small, caplog):
     printer.end(res)
 
     out = caplog.text
-    assert_(str(round(res.cost())) in out)
+    assert_(f"{res.cost():.2f}" in out)
     assert_(str(res.num_iterations) in out)
     assert_(str(round(res.runtime)) in out)
 
@@ -113,9 +113,9 @@ def test_iteration(ok_small, caplog):
     assert_(str(round(sum(stats.runtimes))) in out)
 
     # Statistics about solution costs and their feasibility.
-    assert_("28408.0  N" in out)  # current
-    assert_("10012.0  Y" in out)  # candidate
-    assert_("9725.0  Y" in out)  # best
+    assert_("28408.00  N" in out)  # current
+    assert_("10012.00  Y" in out)  # candidate
+    assert_("9725.00  Y" in out)  # best
 
 
 def test_should_print_false_no_output(ok_small, caplog):

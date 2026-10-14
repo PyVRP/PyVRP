@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 # Templates for various different outputs.
 _ITERATION = (
     "{special} {iters:>7} {elapsed:>6}s | "
-    "{curr:>12}  {curr_feas} {cand:>12}  {cand_feas} {best:>12}  {best_feas}"
+    "{curr:>12.2f}  {curr_feas} {cand:>12.2f}  {cand_feas} "
+    "{best:>12.2f}  {best_feas}"
 )
 
 _START = """PyVRP v{version}
@@ -29,7 +30,7 @@ Solving an instance with:
 
 _END = """
 Search terminated in {runtime:.2f}s after {iters} iterations.
-Best-found solution has cost {best_cost}.
+Best-found solution has cost {best_cost:.2f}.
 
 {summary}
 """

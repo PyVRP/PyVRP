@@ -75,7 +75,7 @@ def test_summary_contains_essential_information(ok_small, routes):
     # Test that feasibility status and solution cost are presented.
     if sol.is_feasible():
         cost = CostEvaluator([0], 0, 0).cost(sol)
-        assert_(str(cost) in summary)
+        assert_(f"{cost:.2f}" in summary)
     else:
         assert_("INFEASIBLE" in summary)
 
