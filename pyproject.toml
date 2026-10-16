@@ -25,13 +25,12 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: Scientific/Engineering",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3.15",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "numpy>=1.15.2; python_version < '3.12'",
     "numpy>=1.26.0; python_version >= '3.12'",
@@ -140,7 +139,7 @@ exclude_lines = [
 
 [tool.cibuildwheel]
 # We do not support old Python versions and somewhat uncommon platforms.
-build = "cp311-* cp312-* cp313-* cp314-* cp315-*"
+build = "cp312-* cp313-* cp314-* cp315-*"
 skip = "*_ppc64le *_i686 *_s390x *-win32"
 build-frontend = "build"
 test-groups = ["dev"]
