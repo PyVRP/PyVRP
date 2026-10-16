@@ -12,7 +12,7 @@ from pyvrp import (
 )
 from pyvrp import Solution as PyVRPSolution
 from pyvrp.search import ReplaceGroup
-from pyvrp.search._search import Node, Solution
+from pyvrp.search._search import Solution
 
 
 def test_replace(ok_small_mutually_exclusive_groups):
@@ -33,7 +33,7 @@ def test_replace(ok_small_mutually_exclusive_groups):
     # delta = dist(D0, C1) + dist(C1, C3) - dist(D0, C0) - dist(C0, C3)
     #       = 1944 + 1090 - 1544 - 1593
     #       = -103.
-    node = Node("C1")
+    node = sol.clients[1]
     assert_allclose(op.evaluate(node, cost_eval), (-103, True))
 
     op.apply(node)
