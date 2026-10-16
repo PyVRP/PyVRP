@@ -164,6 +164,9 @@ repair-wheel-command = "pyodide auditwheel repair --output-dir {dest_dir} {wheel
 # get significant layout shifts, so we skip the plot tests for pyodide.
 test-command = "pytest -k \"not test_plotting\" ./tests -v"
 
+# Pyodide 315 currently lacks matplotlib, so installing the test wheel fails.
+test-skip = "cp315-pyodide_wasm32"
+
 
 [tool.cibuildwheel.pyodide.environment]
 # Build chain sets PTHREAD_POOL_SIZE, but that's only supported by JavaScript
