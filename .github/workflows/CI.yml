@@ -23,13 +23,13 @@ jobs:
         include:
           - compiler: gcc  # minimum gcc version
             compiler-version: '13'
-            python-version: '3.11'
+            python-version: '3.12'
           - compiler: gcc  # recent gcc version
             compiler-version: '14'
             python-version: '3.15'
           - compiler: clang  # minimum clang version
             compiler-version: '16'
-            python-version: '3.11'
+            python-version: '3.12'
           - compiler: clang  # recent clang version
             compiler-version: '20'
             python-version: '3.15'
