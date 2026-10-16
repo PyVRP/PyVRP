@@ -1,11 +1,13 @@
 #ifndef PYVRP_BINDINGS_H
 #define PYVRP_BINDINGS_H
 
+// Python.h must precede standard headers to set feature-test macros first.
+#include <pybind11/pybind11.h>
+
 #include "Matrix.h"
 #include "Measure.h"
 
 #include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/spdlog.h>
 
