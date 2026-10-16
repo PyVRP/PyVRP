@@ -32,8 +32,7 @@ classifiers = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "numpy>=1.15.2; python_version < '3.12'",
-    "numpy>=1.26.0; python_version >= '3.12'",
+    "numpy>=1.26.0",
     "matplotlib>=2.2.0",
     "vrplib>=1.4.0",
     "tqdm>=4.64.1",
