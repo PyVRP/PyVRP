@@ -29,6 +29,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
 ]
 requires-python = ">=3.11"
 dependencies = [
@@ -139,7 +140,7 @@ exclude_lines = [
 
 [tool.cibuildwheel]
 # We do not support old Python versions and somewhat uncommon platforms.
-build = "cp311-* cp312-* cp313-* cp314-*"
+build = "cp311-* cp312-* cp313-* cp314-* cp315-*"
 skip = "*_ppc64le *_i686 *_s390x *-win32"
 build-frontend = "build"
 test-groups = ["dev"]
@@ -159,12 +160,20 @@ MACOSX_DEPLOYMENT_TARGET = "13.3"
 [tool.cibuildwheel.pyodide]
 build-frontend = "pyodide-build"
 repair-wheel-command = "pyodide auditwheel repair --output-dir {dest_dir} {wheel}"
-# Build chain sets PTHREAD_POOL_SIZE, but that's only supported by JavaScript
-# builds and unused otherwise (so we need to allow unused arguments).
-environment.CXXFLAGS = "-Wno-error=unused-command-line-argument"
 # The pyodide builds can only test with the Agg backend. With that backend we 
 # get significant layout shifts, so we skip the plot tests for pyodide.
 test-command = "pytest -k \"not test_plotting\" ./tests -v"
+
+# Pyodide 315 currently lacks matplotlib, so installing the test wheel fails.
+test-skip = "cp315-pyodide_wasm32"
+
+
+[tool.cibuildwheel.pyodide.environment]
+# Build chain sets PTHREAD_POOL_SIZE, but that's only supported by JavaScript
+# builds and unused otherwise (so we need to allow unused arguments). And the
+# build chain warns about Route::Proposal's deduction guide in some files that
+# include it without using it.
+CXXFLAGS = "-Wno-error=unused-command-line-argument -Wno-error=unused-template"
 
 
 [tool.poetry]
