@@ -210,11 +210,14 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
         Activity const activity = {Activity::ActivityType::CLIENT, idx};
 
         auto const comp = [&](auto const a, auto const b)
-        { return prox(idx, a) < prox(idx, b); };
+        { return std::tie(prox(idx, a), a) < std::tie(prox(idx, b), b); };
 
-        // Reset the vector and then re-sort for this client.
+        // Reset the vector and sort the nearest indices for this client.
         std::iota(indices.begin(), indices.end(), 0);
-        std::stable_sort(indices.begin(), indices.end(), comp);
+        std::partial_sort(indices.begin(),
+                          indices.begin() + numNeighbours,
+                          indices.end(),
+                          comp);
 
         // Neighbourhood of client is set to the first numNeighbours indices.
         neighbours[activity] = {};
@@ -242,14 +245,18 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
     {
         Activity const activity = {Activity::ActivityType::PICKUP, idx};
 
-        auto const comp = [&](auto const a, auto const b) {
-            return prox(data.numClients() + idx, a)
-                   < prox(data.numClients() + idx, b);
+        auto const comp = [&](auto const a, auto const b)
+        {
+            return std::tie(prox(data.numClients() + idx, a), a)
+                   < std::tie(prox(data.numClients() + idx, b), b);
         };
 
-        // Reset the vector and then re-sort for this pickup.
+        // Reset the vector and sort the nearest indices for this pickup.
         std::iota(indices.begin(), indices.end(), 0);
-        std::stable_sort(indices.begin(), indices.end(), comp);
+        std::partial_sort(indices.begin(),
+                          indices.begin() + numNeighbours,
+                          indices.end(),
+                          comp);
 
         // Neighbourhood of pickup is set to the first numNeighbours indices.
         neighbours[activity] = {};
