@@ -1,5 +1,7 @@
 #include "bindings.h"
 #include "Activity.h"
+#include "BatterySegment.h"
+#include "Charger.h"
 #include "Client.h"
 #include "ClientGroup.h"
 #include "CostEvaluator.h"
@@ -33,6 +35,8 @@
 namespace py = pybind11;
 
 using pyvrp::Activity;
+using pyvrp::BatterySegment;
+using pyvrp::Charger;
 using pyvrp::Client;
 using pyvrp::ClientGroup;
 using pyvrp::CostEvaluator;
@@ -72,7 +76,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .value("DEPOT", Activity::ActivityType::DEPOT)
         .value("CLIENT", Activity::ActivityType::CLIENT)
         .value("PICKUP", Activity::ActivityType::PICKUP)
-        .value("DELIVERY", Activity::ActivityType::DELIVERY);
+        .value("DELIVERY", Activity::ActivityType::DELIVERY)
+        .value("CHARGER", Activity::ActivityType::CHARGER);
 
     py::class_<Activity>(m, "Activity", DOC(pyvrp, Activity))
         .def(py::init<Activity::ActivityType, size_t>(),
@@ -84,6 +89,8 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("idx", &Activity::idx)
         .def("is_client", &Activity::isClient, DOC(pyvrp, Activity, isClient))
         .def("is_depot", &Activity::isDepot, DOC(pyvrp, Activity, isDepot))
+        .def(
+            "is_charger", &Activity::isCharger, DOC(pyvrp, Activity, isCharger))
         .def("is_shipment",
              &Activity::isShipment,
              DOC(pyvrp, Activity, isShipment))
@@ -345,6 +352,31 @@ PYBIND11_MODULE(_pyvrp, m)
             [](Depot const &depot) { return depot.name; },
             py::return_value_policy::reference_internal);
 
+    py::class_<Charger>(m, "Charger", DOC(pyvrp, Charger))
+        .def(py::init<size_t, char const *>(),
+             py::arg("location"),
+             py::kw_only(),
+             py::arg("name") = "")
+        .def_readonly("location", &Charger::location)
+        .def_readonly("name",
+                      &Charger::name,
+                      py::return_value_policy::reference_internal)
+        .def(py::self == py::self)  // this is __eq__
+        .def(py::pickle(
+            [](Charger const &charger) {  // __getstate__
+                return py::make_tuple(charger.location, charger.name);
+            },
+            [](py::tuple t) {                               // __setstate__
+                Charger charger(t[0].cast<size_t>(),        // location
+                                t[1].cast<std::string>());  // name
+
+                return charger;
+            }))
+        .def(
+            "__str__",
+            [](Charger const &charger) { return charger.name; },
+            py::return_value_policy::reference_internal);
+
     py::class_<Shipment::Step>(m, "ShipmentStep", DOC(pyvrp, Shipment, Step))
         .def(py::init<size_t,
                       pyvrp::Duration,
@@ -505,6 +537,9 @@ PYBIND11_MODULE(_pyvrp, m)
                       size_t,
                       pyvrp::Duration,
                       pyvrp::Cost,
+                      pyvrp::Distance,
+                      std::optional<pyvrp::Distance>,
+                      pyvrp::Duration,
                       char const *>(),
              py::arg("num_available") = 1,
              py::arg("capacity") = py::list(),
@@ -526,6 +561,10 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_reloads") = std::numeric_limits<size_t>::max(),
              py::arg("max_overtime") = 0,
              py::arg("unit_overtime_cost") = 0,
+             py::arg("battery_capacity")
+             = std::numeric_limits<pyvrp::Distance>::max(),
+             py::arg("initial_charge") = py::none(),
+             py::arg("recharge_duration") = 0,
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("num_available", &VehicleType::numAvailable)
@@ -553,6 +592,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_readonly("max_overtime", &VehicleType::maxOvertime)
         .def_readonly("unit_overtime_cost", &VehicleType::unitOvertimeCost)
         .def_readonly("max_duration", &VehicleType::maxDuration)
+        .def_readonly("battery_capacity", &VehicleType::batteryCapacity)
+        .def_readonly("initial_charge", &VehicleType::initialCharge)
+        .def_readonly("recharge_duration", &VehicleType::rechargeDuration)
         .def_property_readonly("max_trips", &VehicleType::maxTrips)
         .def_readonly("name",
                       &VehicleType::name,
@@ -577,6 +619,9 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("max_reloads") = py::none(),
              py::arg("max_overtime") = py::none(),
              py::arg("unit_overtime_cost") = py::none(),
+             py::arg("battery_capacity") = py::none(),
+             py::arg("initial_charge") = py::none(),
+             py::arg("recharge_duration") = py::none(),
              py::kw_only(),
              py::arg("name") = py::none(),
              DOC(pyvrp, VehicleType, replace))
@@ -601,6 +646,9 @@ PYBIND11_MODULE(_pyvrp, m)
                                       vehicleType.maxReloads,
                                       vehicleType.maxOvertime,
                                       vehicleType.unitOvertimeCost,
+                                      vehicleType.batteryCapacity,
+                                      vehicleType.initialCharge,
+                                      vehicleType.rechargeDuration,
                                       vehicleType.name);
             },
             [](py::tuple t) {  // __setstate__
@@ -622,8 +670,11 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[14].cast<std::vector<size_t>>(),       // reload depots
                     t[15].cast<size_t>(),                    // max reloads
                     t[16].cast<pyvrp::Duration>(),           // max overtime
-                    t[17].cast<pyvrp::Cost>(),   // unit overtime cost
-                    t[18].cast<std::string>());  // name
+                    t[17].cast<pyvrp::Cost>(),      // unit overtime cost
+                    t[18].cast<pyvrp::Distance>(),  // battery capacity
+                    t[19].cast<pyvrp::Distance>(),  // initial charge
+                    t[20].cast<pyvrp::Duration>(),  // recharge duration
+                    t[21].cast<std::string>());     // name
 
                 return vehicleType;
             }))
@@ -640,7 +691,8 @@ PYBIND11_MODULE(_pyvrp, m)
                       std::vector<Matrix<pyvrp::Distance>>,
                       std::vector<Matrix<pyvrp::Duration>>,
                       std::vector<ClientGroup>,
-                      std::vector<Shipment>>(),
+                      std::vector<Shipment>,
+                      std::vector<Charger>>(),
              py::arg("locations"),
              py::arg("clients"),
              py::arg("depots"),
@@ -648,7 +700,8 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("distance_matrices"),
              py::arg("duration_matrices"),
              py::arg("groups") = py::list(),
-             py::arg("shipments") = py::list())
+             py::arg("shipments") = py::list(),
+             py::arg("chargers") = py::list())
         .def("replace",
              &ProblemData::replace,
              py::arg("locations") = py::none(),
@@ -659,6 +712,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("duration_matrices") = py::none(),
              py::arg("groups") = py::none(),
              py::arg("shipments") = py::none(),
+             py::arg("chargers") = py::none(),
              DOC(pyvrp, ProblemData, replace))
         .def_property_readonly("num_clients",
                                &ProblemData::numClients,
@@ -672,6 +726,9 @@ PYBIND11_MODULE(_pyvrp, m)
         .def_property_readonly("num_shipments",
                                &ProblemData::numShipments,
                                DOC(pyvrp, ProblemData, numShipments))
+        .def_property_readonly("num_chargers",
+                               &ProblemData::numChargers,
+                               DOC(pyvrp, ProblemData, numChargers))
         .def_property_readonly("num_locations",
                                &ProblemData::numLocations,
                                DOC(pyvrp, ProblemData, numLocations))
@@ -707,6 +764,10 @@ PYBIND11_MODULE(_pyvrp, m)
              &ProblemData::shipments,
              py::return_value_policy::reference_internal,
              DOC(pyvrp, ProblemData, shipments))
+        .def("chargers",
+             &ProblemData::chargers,
+             py::return_value_policy::reference_internal,
+             DOC(pyvrp, ProblemData, chargers))
         .def("vehicle_types",
              &ProblemData::vehicleTypes,
              py::return_value_policy::reference_internal,
@@ -772,6 +833,18 @@ PYBIND11_MODULE(_pyvrp, m)
             py::arg("shipment"),
             py::return_value_policy::reference_internal,
             DOC(pyvrp, ProblemData, shipment))
+        .def(
+            "charger",
+            [](ProblemData const &data, size_t charger)
+            {
+                if (charger >= data.numChargers())
+                    throw py::index_error();
+
+                return data.charger(charger);
+            },
+            py::arg("charger"),
+            py::return_value_policy::reference_internal,
+            DOC(pyvrp, ProblemData, charger))
         .def("vehicle_type",
              &ProblemData::vehicleType,
              py::arg("vehicle_type"),
@@ -800,7 +873,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                       data.distanceMatrices(),
                                       data.durationMatrices(),
                                       data.groups(),
-                                      data.shipments());
+                                      data.shipments(),
+                                      data.chargers());
             },
             [](py::tuple t) {  // __setstate__
                 using Locations = std::vector<Location>;
@@ -811,6 +885,7 @@ PYBIND11_MODULE(_pyvrp, m)
                 using DurMats = std::vector<pyvrp::Matrix<pyvrp::Duration>>;
                 using Groups = std::vector<ClientGroup>;
                 using Shipments = std::vector<Shipment>;
+                using Chargers = std::vector<Charger>;
 
                 ProblemData data(t[0].cast<Locations>(),
                                  t[1].cast<Clients>(),
@@ -819,7 +894,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                  t[4].cast<DistMats>(),
                                  t[5].cast<DurMats>(),
                                  t[6].cast<Groups>(),
-                                 t[7].cast<Shipments>());
+                                 t[7].cast<Shipments>(),
+                                 t[8].cast<Chargers>());
 
                 return data;
             }));
@@ -881,6 +957,8 @@ PYBIND11_MODULE(_pyvrp, m)
              &Route::numShipments,
              DOC(pyvrp, Route, numShipments))
         .def("num_trips", &Route::numTrips, DOC(pyvrp, Route, numTrips))
+        .def(
+            "num_chargers", &Route::numChargers, DOC(pyvrp, Route, numChargers))
         .def("fixed_vehicle_cost",
              &Route::fixedVehicleCost,
              DOC(pyvrp, Route, fixedVehicleCost))
@@ -979,7 +1057,8 @@ PYBIND11_MODULE(_pyvrp, m)
                                       route.slack(),
                                       route.prizes(),
                                       route.vehicleType(),
-                                      route.numShipments());
+                                      route.numShipments(),
+                                      route.numChargers());
             },
             [](py::tuple t) {  // __setstate__
                 using Schedule = std::vector<Route::ScheduledActivity>;
@@ -1003,7 +1082,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[15].cast<pyvrp::Duration>(),          // slack
                     t[16].cast<pyvrp::Cost>(),              // prizes
                     t[17].cast<size_t>(),                   // vehicle type
-                    t[18].cast<size_t>());                  // num shipments
+                    t[18].cast<size_t>(),                   // num shipments
+                    t[19].cast<size_t>());                  // num chargers
 
                 return route;
             }))
@@ -1196,6 +1276,30 @@ PYBIND11_MODULE(_pyvrp, m)
              &CostEvaluator::cost<Solution>,
              py::arg("solution"),
              DOC(pyvrp, CostEvaluator, cost));
+
+    py::class_<BatterySegment>(m, "BatterySegment", DOC(pyvrp, BatterySegment))
+        .def(
+            py::init<pyvrp::Distance, pyvrp::Distance, pyvrp::Distance, bool>(),
+            py::arg("head") = 0,
+            py::arg("tail") = 0,
+            py::arg("excess_charge") = 0,
+            py::arg("charges") = false)
+        .def("head", &BatterySegment::head, DOC(pyvrp, BatterySegment, head))
+        .def("tail", &BatterySegment::tail, DOC(pyvrp, BatterySegment, tail))
+        .def("charges",
+             &BatterySegment::charges,
+             DOC(pyvrp, BatterySegment, charges))
+        .def("excess_charge",
+             &BatterySegment::excessCharge,
+             py::arg("capacity"),
+             DOC(pyvrp, BatterySegment, excessCharge))
+        .def_static("merge",
+                    &BatterySegment::merge,
+                    py::arg("edge_distance"),
+                    py::arg("first"),
+                    py::arg("second"),
+                    py::arg("capacity"),
+                    DOC(pyvrp, BatterySegment, merge));
 
     py::class_<LoadSegment>(m, "LoadSegment", DOC(pyvrp, LoadSegment))
         .def(py::init<pyvrp::Load, pyvrp::Load, pyvrp::Load, pyvrp::Load>(),

@@ -564,3 +564,50 @@ def test_relocate_shipment_fixed_cost(small_shipments):
     assert_equal(route2.distance(), 29_265 - 1_902)
     assert_equal(str(route1), "")
     assert_equal(str(route2), "L3 U3 L0 U0")
+
+
+@pytest.mark.parametrize("operator", [Relocate2, Relocate3])
+def test_does_not_move_chargers(small_electric, operator):
+    """
+    Tests that Relocate does not move segments containing a charger, because
+    such segments are tied to the vehicle's recharge duration.
+    """
+    data = small_electric
+    route1 = make_search_route(data, ["C0", "R1", "C1"])
+    route2 = make_search_route(data, ["C2"])
+
+    op = operator(data)
+    cost_eval = CostEvaluator([], 0, 0)
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
+
+
+def test_can_insert_after_charger(small_electric):
+    """
+    Tests that Relocate can insert a client directly after a charger.
+    """
+    route = make_search_route(small_electric, ["R1", "C0", "C1", "C2"])
+
+    # Going from R1 to C2 first saves 20 distance.
+    op = Relocate1(small_electric)
+    cost_eval = CostEvaluator([], 0, 0)
+    assert_allclose(op.evaluate(route[4], route[1], cost_eval), (-20, True))
+
+    op.apply(route[4], route[1])
+    route.update()
+    assert_equal(str(route), "R1 C2 C0 C1")
+
+
+def test_relocate_across_charger(small_electric):
+    """
+    Tests that a same-route move correctly evaluates the segment between U and
+    V if that segment contains a charger.
+    """
+    route = make_search_route(small_electric, ["C2", "R0", "C1", "C0"])
+    assert_equal(route.distance(), 100)
+    assert_equal(route.excess_charge(), 10)  # stretches of 60 and 40
+
+    # Moving C2 to the end of the route results in distance 120 and stretches
+    # of 20 and 100. That's 20 more distance, and 40 more excess charge.
+    op = Relocate1(small_electric)
+    cost_eval = CostEvaluator([], 0, 10)
+    assert_allclose(op.evaluate(route[1], route[4], cost_eval), (420, False))

@@ -977,3 +977,172 @@ def test_raises_shipment_crossing_reload_depot(small_shipments):
     with assert_raises(ValueError):
         # Pickup, reload, then delivery. So the shipment crosses the depot.
         Route(data, map(Activity, ["L0", "D0", "U0"]), 0)
+
+
+def test_charger_statistics(small_electric):
+    """
+    Tests the route statistics of a route that visits chargers.
+    """
+    activities = map(Activity, ["C0", "R0", "C1", "C2", "R0"])
+    route = Route(small_electric, list(activities), 0)
+
+    assert_equal(len(route), 7)
+    assert_equal(route.num_clients(), 3)
+    assert_equal(route.num_chargers(), 2)
+    assert_equal(route.num_depots(), 2)
+    assert_equal(route.num_trips(), 1)
+
+    # The vehicle drives to C2 and back, and passes R0 both ways. Each visit
+    # takes 5 time units, but does not cost any distance.
+    assert_equal(route.distance(), 80)
+    assert_equal(route.travel_duration(), 80)
+    assert_equal(route.service_duration(), 10)
+    assert_equal(route.duration(), 90)
+
+    # The stretches between charger visits are 20, 40, and 20, which all fit
+    # on the battery.
+    assert_equal(route.excess_distance(), 0)
+    assert_(route.is_feasible())
+
+
+def test_charger_schedule(small_electric):
+    """
+    Tests that the schedule accounts for the recharge duration.
+    """
+    activities = map(Activity, ["C0", "R0", "C1"])
+    route = Route(small_electric, list(activities), 0)
+
+    schedule = route.schedule()
+    assert_equal(len(schedule), 5)
+
+    assert_(schedule[2].is_charger())
+    assert_equal(schedule[2].idx, 0)
+    assert_equal(schedule[2].start_time, 20)
+    assert_equal(schedule[2].end_time, 25)
+    assert_equal(schedule[2].duration, 5)
+    assert_equal(schedule[2].wait_duration, 0)
+    assert_equal(schedule[2].time_warp, 0)
+
+    assert_equal(schedule[3].start_time, 35)
+    assert_equal(schedule[4].start_time, 65)
+
+
+@pytest.mark.parametrize(
+    ("visits", "exp_distance", "exp_excess"),
+    [
+        (["C0", "C1", "C2"], 80, 30),  # no charger, so one stretch of 80
+        (["C0", "R0", "C1", "C2"], 80, 10),  # stretches of 20 and 60
+        (["C0", "C1", "C2", "R0"], 80, 10),  # stretches of 60 and 20
+        (["C0", "C1", "C2", "R1"], 100, 0),  # stretches of 50 and 50
+        (["C0", "R0", "C1", "C2", "R0"], 80, 0),  # stretches of 20, 40, 20
+        (["C0", "R1", "C1", "C2"], 120, 20),  # stretches of 50 and 70
+    ],
+)
+def test_excess_charge(
+    small_electric,
+    visits: list[str],
+    exp_distance: int,
+    exp_excess: int,
+):
+    """
+    Tests that a route's excess distance includes charge beyond the battery's
+    capacity, between each pair of consecutive charger visits.
+    """
+    route = Route(small_electric, list(map(Activity, visits)), 0)
+    assert_equal(route.distance(), exp_distance)
+    assert_equal(route.excess_distance(), exp_excess)
+    assert_equal(route.has_excess_distance(), exp_excess > 0)
+    assert_equal(route.is_feasible(), exp_excess == 0)
+
+
+def test_excess_charge_initial_charge(small_electric):
+    """
+    Tests that the initial charge only affects the first stretch.
+    """
+    visits = list(map(Activity, ["C0", "R0", "C1", "C2", "R0"]))
+
+    veh_type = small_electric.vehicle_type(0).replace(initial_charge=30)
+    data = small_electric.replace(vehicle_types=[veh_type])
+    assert_equal(Route(data, visits, 0).excess_distance(), 0)  # 20 <= 30
+
+    veh_type = small_electric.vehicle_type(0).replace(initial_charge=15)
+    data = small_electric.replace(vehicle_types=[veh_type])
+    assert_equal(Route(data, visits, 0).excess_distance(), 5)  # 20 - 15 = 5
+
+
+def test_excess_charge_and_max_distance(small_electric):
+    """
+    Tests that excess charge is added to the excess over the maximum distance.
+    """
+    veh_type = small_electric.vehicle_type(0).replace(max_distance=75)
+    data = small_electric.replace(vehicle_types=[veh_type])
+
+    route = Route(data, list(map(Activity, ["C0", "C1", "C2"])), 0)
+    assert_equal(route.excess_distance(), 30 + 5)
+
+
+def test_no_excess_charge_without_battery(small_electric):
+    """
+    Tests that a vehicle without a battery can visit chargers, which then only
+    affect the route's distance and duration.
+    """
+    veh_type = VehicleType(recharge_duration=5)
+    data = small_electric.replace(vehicle_types=[veh_type])
+
+    route = Route(data, list(map(Activity, ["C0", "R1", "C1", "C2"])), 0)
+    assert_equal(route.distance(), 120)
+    assert_equal(route.duration(), 125)
+    assert_equal(route.excess_distance(), 0)
+
+
+def test_reload_depot_does_not_recharge(small_electric):
+    """
+    Tests that reload depots do not recharge the battery, and that chargers do
+    not start a new trip.
+    """
+    veh_type = small_electric.vehicle_type(0).replace(reload_depots=[0])
+    data = small_electric.replace(vehicle_types=[veh_type])
+
+    # Two trips, of 60 and 80. The battery is drained for 140, which is 90 in
+    # excess of the battery capacity.
+    route = Route(data, list(map(Activity, ["C1", "D0", "C2"])), 0)
+    assert_equal(route.num_trips(), 2)
+    assert_equal(route.excess_distance(), 90)
+
+    route = Route(data, list(map(Activity, ["C1", "R1", "C2"])), 0)
+    assert_equal(route.num_trips(), 1)
+    assert_equal(route.num_chargers(), 1)
+
+
+def test_raises_unknown_charger(small_electric):
+    """
+    Tests that a route cannot visit a charger that does not exist.
+    """
+    with assert_raises(ValueError):
+        Route(small_electric, [Activity("R2")], 0)
+
+
+def test_route_with_chargers_can_be_pickled(small_electric):
+    """
+    Tests that a route with chargers survives serialisation.
+    """
+    activities = map(Activity, ["C0", "R0", "C1", "C2"])
+    before_pickle = Route(small_electric, list(activities), 0)
+
+    after_pickle = pickle.loads(pickle.dumps(before_pickle))
+    assert_equal(after_pickle, before_pickle)
+    assert_equal(after_pickle.num_chargers(), 1)
+    assert_equal(after_pickle.num_clients(), 3)
+
+
+def test_only_chargers_is_empty(small_electric):
+    """
+    Tests that a route that only visits chargers counts as an empty route,
+    which is not allowed in a solution.
+    """
+    route = Route(small_electric, [Activity("R0")], 0)
+    assert_equal(route.num_clients(), 0)
+    assert_equal(route.num_chargers(), 1)
+
+    with assert_raises(RuntimeError):
+        Solution(small_electric, [route])

@@ -1,0 +1,37 @@
+#ifndef PYVRP_SEARCH_REMOVECHARGER_H
+#define PYVRP_SEARCH_REMOVECHARGER_H
+
+#include "LocalSearchOperator.h"
+
+namespace pyvrp::search
+{
+/**
+ * RemoveCharger(data: ProblemData)
+ *
+ * Evaluates removing an adjacent charger of a node :math:`U`.
+ */
+class RemoveCharger : public UnaryOperator
+{
+    using UnaryOperator::UnaryOperator;
+
+    enum class MoveType
+    {
+        REMOVE_PREV,
+        REMOVE_NEXT,
+    };
+
+    MoveType move_;
+
+public:
+    std::pair<Cost, bool> evaluate(Route::Node *U,
+                                   CostEvaluator const &costEvaluator) override;
+
+    void apply(Route::Node *U) const override;
+
+    std::string name() const override;
+
+    static bool supports(ProblemData const &data);
+};
+}  // namespace pyvrp::search
+
+#endif  // PYVRP_SEARCH_REMOVECHARGER_H

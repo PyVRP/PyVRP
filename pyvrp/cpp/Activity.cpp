@@ -18,6 +18,8 @@ Activity::ActivityType char2type(char type)
         return Activity::ActivityType::PICKUP;
     case 'U':
         return Activity::ActivityType::DELIVERY;
+    case 'R':
+        return Activity::ActivityType::CHARGER;
     default:
         throw std::invalid_argument("Activity type not understood.");
     }
@@ -35,6 +37,8 @@ char type2char(Activity::ActivityType type)
         return 'L';
     case Activity::ActivityType::DELIVERY:
         return 'U';
+    case Activity::ActivityType::CHARGER:
+        return 'R';
     default:
         throw std::invalid_argument("Activity type not understood.");
     }

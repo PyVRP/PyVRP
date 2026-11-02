@@ -20,6 +20,25 @@ bool splitsShipment(pyvrp::search::Route::Node *node)
     auto const *route = node->route();
     return route->numPickups(node->pos()) != route->numDeliveries(node->pos());
 }
+
+// Moves the node to the given position in the given route. Routes own their
+// charger nodes, so these are copied because removal destroys them.
+void move(pyvrp::search::Route::Node *node,
+          pyvrp::search::Route *route,
+          size_t pos)
+{
+    if (node->isCharger())
+    {
+        pyvrp::search::Route::Node charger = node->activity();
+        node->route()->remove(node->pos());
+        route->insert(pos, &charger);
+    }
+    else
+    {
+        node->route()->remove(node->pos());
+        route->insert(pos, node);
+    }
+}
 }  // namespace
 
 std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
@@ -47,6 +66,33 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
         // Cannot evaluate this move because it would leave part of a shipment
         // in the other route.
         return std::make_pair(0, false);
+
+    auto emptiesV = V->isStartDepot();
+
+    if (uRoute->numChargers() != 0 || vRoute->numChargers() != 0) [[unlikely]]
+    {
+        auto const uCharger = uRoute->hasCharger(U->pos(), uRoute->size() - 1);
+        auto const vCharger = vRoute->hasCharger(V->pos(), vRoute->size() - 1);
+
+        if ((uCharger || vCharger)
+            && uRoute->rechargeDuration() != vRoute->rechargeDuration())
+            // We cannot evaluate this move because the charger nodes in the
+            // tails track the recharge duration of their current route's
+            // vehicle.
+            return std::make_pair(0, false);
+
+        // Chargers alone do not keep V's route from being empty.
+        auto const vBefore = vRoute->before(V->pos());
+        emptiesV = vBefore.numClients() + vBefore.numPickups() == 0;
+
+        if (emptiesV && uCharger && !n(U)->isEndDepot())
+        {
+            auto const uTail = uRoute->after(U->pos() + 1);
+            if (uTail.numClients() + uTail.numPickups() == 0)
+                // U's tail has only chargers, so V's route would become empty.
+                return std::make_pair(0, false);
+        }
+    }
 
     Cost deltaCost = 0;
 
@@ -83,8 +129,8 @@ std::pair<pyvrp::Cost, bool> SwapTails::evaluate(
                               vRoute->between(V->pos() + 1, vRoute->size() - 2),
                               uRoute->at(uRoute->size() - 1));
 
-        if (V->isStartDepot())  // this move empties V's route, so we subtract
-        {                       // its cost and only evaluate U's proposal
+        if (emptiesV)  // this move empties V's route, so we subtract its cost
+        {              // and only evaluate U's proposal
             deltaCost -= costEvaluator.penalisedCost(*vRoute);
             costEvaluator.deltaCost(deltaCost, uProposal);
         }
@@ -110,8 +156,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
     {
         auto *node = nV;
         nV = n(nV);
-        V->route()->remove(node->pos());
-        U->route()->insert(insertIdx++, node);
+        move(node, U->route(), insertIdx++);
     }
 
     insertIdx = V->pos() + 1;
@@ -119,8 +164,7 @@ void SwapTails::apply(Route::Node *U, Route::Node *V) const
     {
         auto *node = nU;
         nU = n(nU);
-        U->route()->remove(node->pos());
-        V->route()->insert(insertIdx++, node);
+        move(node, V->route(), insertIdx++);
     }
 }
 

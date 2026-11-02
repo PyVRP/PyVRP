@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_ROUTE_H
 
 #include "Activity.h"
+#include "BatterySegment.h"
 #include "CostEvaluator.h"
 #include "DurationSegment.h"
 #include "LoadSegment.h"
@@ -11,6 +12,7 @@
 #include <cassert>
 #include <concepts>
 #include <iosfwd>
+#include <list>
 #include <utility>
 
 namespace pyvrp::search
@@ -19,20 +21,21 @@ class SegmentProxy;  // forward declaration
 
 // This defines the minimal interface required for a segment of activities.
 template <typename T>
-concept Segment
-    = requires(T arg, size_t profile, size_t dimension, size_t idx) {
-          { arg.route() };
-          { arg.front() } -> std::convertible_to<SegmentProxy>;
-          { arg.back() } -> std::convertible_to<SegmentProxy>;
-          { arg.size() } -> std::same_as<size_t>;
-          { arg.numClients() } -> std::same_as<size_t>;
-          { arg.numPickups() } -> std::same_as<size_t>;
-          { arg.startsAtReloadDepot() } -> std::same_as<bool>;
-          { arg.endsAtReloadDepot() } -> std::same_as<bool>;
-          { arg.distance(profile) } -> std::convertible_to<Distance>;
-          { arg.duration(profile) } -> std::convertible_to<DurationSegment>;
-          { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
-      };
+concept Segment = requires(
+    T arg, size_t profile, size_t dimension, size_t idx, Distance capacity) {
+    { arg.route() };
+    { arg.front() } -> std::convertible_to<SegmentProxy>;
+    { arg.back() } -> std::convertible_to<SegmentProxy>;
+    { arg.size() } -> std::same_as<size_t>;
+    { arg.numClients() } -> std::same_as<size_t>;
+    { arg.numPickups() } -> std::same_as<size_t>;
+    { arg.startsAtReloadDepot() } -> std::same_as<bool>;
+    { arg.endsAtReloadDepot() } -> std::same_as<bool>;
+    { arg.distance(profile) } -> std::convertible_to<Distance>;
+    { arg.duration(profile) } -> std::convertible_to<DurationSegment>;
+    { arg.load(dimension) } -> std::convertible_to<LoadSegment>;
+    { arg.battery(profile, capacity) } -> std::convertible_to<BatterySegment>;
+};
 
 namespace detail
 {
@@ -111,6 +114,12 @@ public:
          * proposed route.
          */
         std::pair<Cost, Distance> distance() const;
+
+        /**
+         * Returns the excess charge of the proposed route. The route must have
+         * a battery.
+         */
+        Distance excessCharge() const;
 
         /**
          * Returns the (duration cost, time warp) attributes of the proposed
@@ -218,6 +227,11 @@ public:
         [[nodiscard]] inline bool isDelivery() const;
 
         /**
+         * Returns whether this node is a charger.
+         */
+        [[nodiscard]] inline bool isCharger() const;
+
+        /**
          * Assigns the node to the given route, at the given position, in the
          * given trip.
          */
@@ -255,6 +269,8 @@ public:
         inline Distance distance(size_t profile) const;
         inline DurationSegment const &duration(size_t profile) const;
         inline LoadSegment const &load(size_t dimension) const;
+        inline BatterySegment const &battery(size_t profile,
+                                             Distance capacity) const;
     };
 
     /**
@@ -283,6 +299,8 @@ public:
         inline Distance distance(size_t profile) const;
         inline DurationSegment const &duration(size_t profile) const;
         inline LoadSegment const &load(size_t dimension) const;
+        inline BatterySegment const &battery(size_t profile,
+                                             Distance capacity) const;
     };
 
     /**
@@ -314,6 +332,7 @@ public:
         inline Distance distance(size_t profile) const;
         inline DurationSegment duration(size_t profile) const;
         inline LoadSegment load(size_t dimension) const;
+        inline BatterySegment battery(size_t profile, Distance capacity) const;
     };
 
 private:
@@ -357,6 +376,20 @@ private:
     std::vector<DurationSegment> durAt;      // Duration data at each node
     std::vector<DurationSegment> durAfter;   // Dur of node -> end (incl.)
     std::vector<DurationSegment> durBefore;  // Dur of start -> node (incl.)
+
+    // Battery data for prefix and suffix segments, which are only computed if
+    // the vehicle has a battery.
+    std::vector<BatterySegment> batteryAfter;   // Battery of node -> end (incl)
+    std::vector<BatterySegment> batteryBefore;  // Battery of start -> node
+
+    Distance excessCharge_;     // Cached excess charge
+    std::list<Node> chargers_;  // chargers (list, so node pointers stay valid)
+
+    // Returns the battery segment of the singleton node at the given index.
+    [[nodiscard]] inline BatterySegment batteryAt(size_t idx) const;
+
+    // Scans the nodes between [start, end] for a charger.
+    [[nodiscard]] bool scanForCharger(size_t start, size_t end) const;
 
 #ifndef NDEBUG
     // When debug assertions are enabled, we use this flag to check whether
@@ -423,9 +456,30 @@ public:
     [[nodiscard]] inline Distance excessDistance() const;
 
     /**
+     * Charge drained on this route that the vehicle's battery could not
+     * supply. This is included in the route's excess distance.
+     */
+    [[nodiscard]] inline Distance excessCharge() const;
+
+    /**
      * Capacity of the vehicle servicing this route.
      */
     [[nodiscard]] inline std::vector<Load> const &capacity() const;
+
+    /**
+     * Returns whether the vehicle servicing this route has a battery.
+     */
+    [[nodiscard]] inline bool hasBattery() const;
+
+    /**
+     * @return Battery capacity of the vehicle servicing this route.
+     */
+    [[nodiscard]] inline Distance batteryCapacity() const;
+
+    /**
+     * @return Time it takes the vehicle servicing this route to recharge.
+     */
+    [[nodiscard]] inline Duration rechargeDuration() const;
 
     /**
      * @return The depot index of this route's starting depot.
@@ -575,6 +629,16 @@ public:
     [[nodiscard]] inline size_t maxTrips() const;
 
     /**
+     * Returns the number of charger visits in this route.
+     */
+    [[nodiscard]] inline size_t numChargers() const;
+
+    /**
+     * Returns whether the route visits a charger between ``[start, end]``.
+     */
+    [[nodiscard]] inline bool hasCharger(size_t start, size_t end) const;
+
+    /**
      * Returns an object that can be queried for data associated with the node
      * at idx.
      */
@@ -617,14 +681,15 @@ public:
 
     /**
      * Inserts the given node before index ``idx``. Assumes the given index is
-     * valid. Depot nodes are copied into internal memory, but of client nodes
-     * no ownership is taken.
+     * valid. Depot and charger nodes are copied into internal memory, but of
+     * client nodes no ownership is taken.
      */
     void insert(size_t idx, Node *node);
 
     /**
-     * Appends the given node pointer at the end of the route. Depot nodes are
-     * copied into internal memory, but of client nodes no ownership is taken.
+     * Appends the given node pointer at the end of the route. Depot and
+     * charger nodes are copied into internal memory, but of client nodes no
+     * ownership is taken.
      */
     void push_back(Node *node);
 
@@ -727,6 +792,8 @@ bool Route::Node::isPickup() const { return activity_.isPickup(); }
 
 bool Route::Node::isDelivery() const { return activity_.isDelivery(); }
 
+bool Route::Node::isCharger() const { return activity_.isCharger(); }
+
 Route::SegmentAfter::SegmentAfter(Route const &route, size_t start)
     : route_(route), start(start)
 {
@@ -770,6 +837,16 @@ LoadSegment const &Route::SegmentAfter::load(size_t dimension) const
     return route_.loadAfter[dimension][start];
 }
 
+BatterySegment const &
+Route::SegmentAfter::battery([[maybe_unused]] size_t profile,
+                             [[maybe_unused]] Distance capacity) const
+{
+    assert(profile == route_.profile());
+    assert(capacity == route_.batteryCapacity());
+    assert(route_.hasBattery());
+    return route_.batteryAfter[start];
+}
+
 Distance Route::SegmentBefore::distance([[maybe_unused]] size_t profile) const
 {
     assert(profile == route_.profile());
@@ -786,6 +863,16 @@ Route::SegmentBefore::duration([[maybe_unused]] size_t profile) const
 LoadSegment const &Route::SegmentBefore::load(size_t dimension) const
 {
     return route_.loadBefore[dimension][end];
+}
+
+BatterySegment const &
+Route::SegmentBefore::battery([[maybe_unused]] size_t profile,
+                              [[maybe_unused]] Distance capacity) const
+{
+    assert(profile == route_.profile());
+    assert(capacity == route_.batteryCapacity());
+    assert(route_.hasBattery());
+    return route_.batteryBefore[end];
 }
 
 Route const *Route::SegmentBefore::route() const { return &route_; }
@@ -952,6 +1039,31 @@ LoadSegment Route::SegmentBetween::load(size_t dimension) const
     return loadSegment;
 }
 
+BatterySegment Route::SegmentBetween::battery(size_t profile,
+                                              Distance capacity) const
+{
+    auto const &mat = route_.data.distanceMatrix(profile);
+
+    auto segment = route_.batteryAt(start);
+    for (size_t step = start; step != end; ++step)
+    {
+        auto const edge
+            = mat(route_.locations[step], route_.locations[step + 1]);
+        auto const at = route_.batteryAt(step + 1);
+        segment = BatterySegment::merge(edge, segment, at, capacity);
+    }
+
+    return segment;
+}
+
+BatterySegment Route::batteryAt(size_t idx) const
+{
+    if (idx == 0)  // the start depot tracks the vehicle's initial charge
+        return BatterySegment(vehicleType_);
+
+    return {0, 0, 0, nodes[idx]->isCharger()};
+}
+
 bool Route::isFeasible() const
 {
     assert(!dirty);
@@ -1008,9 +1120,24 @@ Distance Route::excessDistance() const
     return excessDistance_;
 }
 
+Distance Route::excessCharge() const
+{
+    assert(!dirty);
+    return excessCharge_;
+}
+
 std::vector<Load> const &Route::capacity() const
 {
     return vehicleType_.capacity;
+}
+
+bool Route::hasBattery() const { return vehicleType_.hasBattery(); }
+
+Distance Route::batteryCapacity() const { return vehicleType_.batteryCapacity; }
+
+Duration Route::rechargeDuration() const
+{
+    return vehicleType_.rechargeDuration;
 }
 
 size_t Route::startDepot() const { return vehicleType_.startDepot; }
@@ -1129,6 +1256,14 @@ size_t Route::numTrips() const { return depots_.size() - 1; }
 
 size_t Route::maxTrips() const { return vehicleType_.maxTrips(); }
 
+size_t Route::numChargers() const { return chargers_.size(); }
+
+bool Route::hasCharger(size_t start, size_t end) const
+{
+    assert(start <= end && end < size());
+    return !chargers_.empty() && scanForCharger(start, end);
+}
+
 Route::SegmentBetween Route::at(size_t idx) const
 {
     assert(!dirty);
@@ -1185,6 +1320,39 @@ template <Segment... Segments>
 Cost Route::Proposal<Segments...>::fixedVehicleCost() const
 {
     return route()->fixedVehicleCost();
+}
+
+template <Segment... Segments>
+Distance Route::Proposal<Segments...>::excessCharge() const
+{
+    assert(route()->hasBattery());
+
+    auto const &data = route()->data;
+    auto const capacity = route()->batteryCapacity();
+    auto const profile = route()->profile();
+    auto const &matrix = data.distanceMatrix(profile);
+
+    auto const fn = [&](auto &&segment, auto &&...args)
+    {
+        BatterySegment bs = segment.battery(profile, capacity);
+        auto lastLoc = segment.back().location();
+
+        auto const merge = [&](auto const &self, auto &&other, auto &&...args)
+        {
+            auto const edgeDist = matrix(lastLoc, other.front().location());
+            bs = BatterySegment::merge(
+                edgeDist, bs, other.battery(profile, capacity), capacity);
+            lastLoc = other.back().location();
+
+            if constexpr (sizeof...(args) != 0)
+                self(self, std::forward<decltype(args)>(args)...);
+        };
+
+        merge(merge, std::forward<decltype(args)>(args)...);
+        return bs.excessCharge(capacity);
+    };
+
+    return std::apply(fn, segments_);
 }
 
 template <Segment... Segments>

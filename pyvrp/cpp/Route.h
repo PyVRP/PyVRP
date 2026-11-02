@@ -103,6 +103,7 @@ private:
 
     size_t vehicleType_;       // Type of vehicle
     size_t numShipments_ = 0;  // Number of shipments in this route
+    size_t numChargers_ = 0;   // Number of charger visits on this route
 
 public:
     [[nodiscard]] bool empty() const;
@@ -131,6 +132,11 @@ public:
      * Returns the number of trips in this route.
      */
     [[nodiscard]] size_t numTrips() const;
+
+    /**
+     * Returns the number of charger visits in this route.
+     */
+    [[nodiscard]] size_t numChargers() const;
 
     [[nodiscard]] ScheduledActivity const &operator[](size_t idx) const;
 
@@ -163,7 +169,8 @@ public:
     [[nodiscard]] Cost distanceCost() const;
 
     /**
-     * Distance in excess of the vehicle's maximum distance constraint.
+     * Distance in excess of the vehicle's maximum distance constraint, plus
+     * any charge drained beyond what the vehicle's battery could supply.
      */
     [[nodiscard]] Distance excessDistance() const;
 
@@ -288,7 +295,8 @@ public:
     [[nodiscard]] bool hasExcessLoad() const;
 
     /**
-     * Returns whether this route violates maximum distance constraints.
+     * Returns whether this route violates maximum distance or battery
+     * constraints.
      */
     [[nodiscard]] bool hasExcessDistance() const;
 
@@ -335,7 +343,8 @@ public:
           Duration slack,
           Cost prizes,
           size_t vehicleType,
-          size_t numShipments);
+          size_t numShipments,
+          size_t numChargers);
 };
 
 template <>  // specialisation for pyvrp::Route

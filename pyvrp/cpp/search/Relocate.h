@@ -23,6 +23,10 @@ template <size_t N> class Relocate : public BinaryOperator
     // Tests if the segment starting at node contains a depot.
     bool hasDepot(Route::Node *node) const;
 
+    // Tests if the segment starting at node contains a charger. Chargers are
+    // not moved by this operator.
+    bool hasCharger(Route::Node *node) const;
+
     // Tests if the segment starting at node splits a shipment if relocated.
     bool splitsShipment(Route::Node *node) const;
 
@@ -61,6 +65,12 @@ template <size_t N> bool Relocate<N>::hasDepot(Route::Node *node) const
            || node->trip() != route[last]->trip();  // contains reload depot
 }
 
+template <size_t N> inline bool Relocate<N>::hasCharger(Route::Node *node) const
+{
+    auto const first = node->pos();
+    return node->route()->hasCharger(first, first + N - 1);
+}
+
 template <size_t N>
 bool Relocate<N>::overlap(Route::Node *U, Route::Node *V) const
 {
@@ -89,7 +99,8 @@ std::pair<Cost, bool> Relocate<N>::evaluate(Route::Node *U,
 {
     stats_.numEvaluations++;
 
-    if (!U->route() || !V->route() || hasDepot(U) || splitsShipment(U))
+    if (!U->route() || !V->route() || hasDepot(U) || splitsShipment(U)
+        || hasCharger(U))
         return std::make_pair(0, false);
 
     if (U->route() == V->route()

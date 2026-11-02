@@ -19,6 +19,20 @@ def test_is_client_depot():
     assert_(depot.is_depot())
 
 
+def test_is_charger():
+    """
+    Tests the is_charger() member function.
+    """
+    charger = Activity(ActivityType.CHARGER, 0)
+    assert_(charger.is_charger())
+    assert_(not charger.is_client())
+    assert_(not charger.is_depot())
+    assert_(not charger.is_shipment())
+
+    assert_equal(Activity("R3"), Activity(ActivityType.CHARGER, 3))
+    assert_equal(str(Activity(ActivityType.CHARGER, 3)), "R3")
+
+
 def test_eq():
     """
     Tests the Activity's equality operator.

@@ -3,6 +3,7 @@ from typing import Type
 from .LocalSearch import LocalSearch as LocalSearch
 from .SearchMethod import SearchMethod as SearchMethod
 from ._search import BinaryOperator as BinaryOperator
+from ._search import InsertCharger as InsertCharger
 from ._search import InsertOptionalClient as InsertOptionalClient
 from ._search import InsertOptionalShipment as InsertOptionalShipment
 from ._search import NeighbourhoodParams as NeighbourhoodParams
@@ -17,8 +18,10 @@ from ._search import RelocatePickup as RelocatePickup
 from ._search import RelocateShipment as RelocateShipment
 from ._search import RelocateWithDepot as RelocateWithDepot
 from ._search import RemoveAdjacentDepot as RemoveAdjacentDepot
+from ._search import RemoveCharger as RemoveCharger
 from ._search import RemoveOptionalClient as RemoveOptionalClient
 from ._search import RemoveOptionalShipment as RemoveOptionalShipment
+from ._search import ReplaceCharger as ReplaceCharger
 from ._search import ReplaceGroup as ReplaceGroup
 from ._search import ReplaceOptionalClient as ReplaceOptionalClient
 from ._search import ReplaceOptionalShipment as ReplaceOptionalShipment
@@ -44,6 +47,9 @@ OPERATORS: list[Type[UnaryOperator | BinaryOperator]] = [
     RelocateDelivery,
     RelocateWithDepot,
     RemoveAdjacentDepot,
+    InsertCharger,
+    RemoveCharger,
+    ReplaceCharger,
     RemoveOptionalClient,
     InsertOptionalClient,
     ReplaceOptionalClient,

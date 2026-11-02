@@ -1,6 +1,15 @@
+import numpy as np
 import pytest
 
-from pyvrp import Shipment, VehicleType
+from pyvrp import (
+    Charger,
+    Client,
+    Depot,
+    Location,
+    ProblemData,
+    Shipment,
+    VehicleType,
+)
 from tests.helpers import read
 
 
@@ -186,3 +195,31 @@ def small_optional_shipments(small_shipments):
     ]
 
     return small_shipments.replace(shipments=shipments)
+
+
+@pytest.fixture(scope="session")
+def small_electric():
+    """
+    Fixture that returns a small electric instance. All locations are on a
+    line, and the distance and duration between two locations is the difference
+    in their coordinates:
+
+        depot: 0, C0: 10, R0: 20, C1: 30, C2: 40, R1: 50.
+
+    There are two vehicles, each with a battery capacity of 50 and a recharge
+    duration of 5.
+    """
+    coords = [0, 10, 30, 40, 20, 50]
+    matrix = np.abs(np.subtract.outer(coords, coords))
+
+    return ProblemData(
+        locations=[Location(x, 0) for x in coords],
+        clients=[Client(1), Client(2), Client(3)],
+        depots=[Depot(0)],
+        vehicle_types=[
+            VehicleType(2, battery_capacity=50, recharge_duration=5),
+        ],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+        chargers=[Charger(4), Charger(5)],
+    )

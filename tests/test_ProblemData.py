@@ -6,6 +6,7 @@ from numpy.random import default_rng
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
+    Charger,
     Client,
     ClientGroup,
     Depot,
@@ -828,3 +829,53 @@ def test_replace_shipments(ok_small):
     assert_equal(data.shipment(0), shipments[0])
     assert_equal(data.shipment(1), shipments[1])
     assert_equal(data.shipments(), shipments)
+
+
+def test_chargers(small_electric):
+    """
+    Tests that chargers are accessible from the problem data.
+    """
+    data = small_electric
+    assert_equal(data.num_chargers, 2)
+    assert_equal(len(data.chargers()), 2)
+    assert_equal(data.charger(0), Charger(4))
+    assert_equal(data.charger(1), Charger(5))
+
+    with assert_raises(IndexError):
+        data.charger(2)
+
+
+def test_no_chargers_by_default(ok_small):
+    """
+    Tests that there are no chargers in the problem data by default.
+    """
+    assert_equal(ok_small.num_chargers, 0)
+    assert_equal(ok_small.chargers(), [])
+
+
+def test_raises_invalid_charger_location(ok_small):
+    """
+    Tests that a charger must reference a known location.
+    """
+    with assert_raises(IndexError):
+        ok_small.replace(chargers=[Charger(ok_small.num_locations)])
+
+
+def test_replace_chargers(small_electric):
+    """
+    Tests that replace() can change and keep the chargers.
+    """
+    assert_equal(
+        small_electric.replace().chargers(), small_electric.chargers()
+    )
+
+    data = small_electric.replace(chargers=[Charger(1, name="new")])
+    assert_equal(data.chargers(), [Charger(1, name="new")])
+
+
+def test_pickle_chargers(small_electric):
+    """
+    Tests that the chargers survive serialisation.
+    """
+    bytes = pickle.dumps(small_electric)
+    assert_equal(pickle.loads(bytes), small_electric)

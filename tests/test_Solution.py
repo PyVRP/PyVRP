@@ -9,6 +9,7 @@ from pyvrp import (
     Activity,
     Client,
     ClientGroup,
+    CostEvaluator,
     Depot,
     Location,
     ProblemData,
@@ -969,3 +970,31 @@ def test_random_sol_with_shipments(small_shipments):
         assert_equal(sol.num_shipments(), 4)
         assert_equal(sol.num_missing_shipments(), 0)
         assert_(sol.is_complete())
+
+
+def test_solution_with_chargers(small_electric):
+    """
+    Tests the solution statistics of a solution with chargers.
+    """
+    activities = map(Activity, ["C0", "R0", "C1", "C2"])
+    route = Route(small_electric, list(activities), 0)
+    sol = Solution(small_electric, [route])
+
+    assert_equal(sol.num_clients(), 3)
+    assert_equal(sol.num_missing_clients(), 0)
+    assert_equal(sol.distance(), 80)
+    assert_equal(sol.excess_distance(), 10)
+    assert_(sol.has_excess_distance())
+    assert_(not sol.is_feasible())
+
+
+def test_solution_with_charger_costs(small_electric):
+    """
+    Tests that excess charge is penalised using the distance penalty.
+    """
+    activities = map(Activity, ["C0", "R0", "C1", "C2"])
+    route = Route(small_electric, list(activities), 0)
+    sol = Solution(small_electric, [route])
+
+    cost_evaluator = CostEvaluator([], 0, 3)
+    assert_allclose(cost_evaluator.penalised_cost(sol), 80 + 3 * 10)

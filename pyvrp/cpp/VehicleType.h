@@ -30,6 +30,9 @@ namespace pyvrp
  *     max_reloads: int = np.iinfo(np.uint64).max,
  *     max_overtime: int = 0,
  *     unit_overtime_cost: float = 0,
+ *     battery_capacity: int = np.iinfo(np.int64).max,
+ *     initial_charge: int | None = None,
+ *     recharge_duration: int = 0,
  *     *,
  *     name: str = "",
  * )
@@ -93,6 +96,15 @@ namespace pyvrp
  * unit_overtime_cost
  *     Cost of a unit of overtime. This is in addition to the regular
  *     :py:attr:`~unit_duration_cost` of route durations. Default 0.
+ * battery_capacity
+ *     Capacity of the vehicle's battery. Vehicles drain one unit of charge per
+ *     unit of distance, so this is the distance the vehicle can travel on a
+ *     full battery. Unconstrained if not explicitly provided.
+ * initial_charge
+ *     Charge in the battery at the start of the route. Defaults to a full
+ *     battery.
+ * recharge_duration
+ *     Time it takes to fully recharge the battery at a charger. Default 0.
  * name
  *     Free-form name field for this vehicle type. Default empty.
  *
@@ -144,6 +156,13 @@ namespace pyvrp
  * max_duration
  *     Hard maximum route duration constraint, computed as the sum of
  *     :py:attr:`~shift_duration` and :py:attr:`~max_overtime`.
+ * battery_capacity
+ *     Capacity of the vehicle's battery, in distance units. This is a very
+ *     large number when the vehicle's range is unconstrained.
+ * initial_charge
+ *     Charge in the battery at the start of the route, in distance units.
+ * recharge_duration
+ *     Time it takes to fully recharge the battery at a charger.
  * name
  *     Free-form name field for this vehicle type.
  */
@@ -167,8 +186,11 @@ struct VehicleType
     size_t const maxReloads;                 // Maximum number of reloads
     Duration const maxOvertime;              // Maximum allowed overtime
     Cost const unitOvertimeCost;             // Cost per unit of overtime
-    Duration const maxDuration;  // Maximum route duration, incl. overtime
-    char const *name;            // Type name (for reference)
+    Duration const maxDuration;       // Maximum route duration, incl. overtime
+    Distance const batteryCapacity;   // Range on a full battery
+    Distance const initialCharge;     // Charge at the start of the route
+    Duration const rechargeDuration;  // Duration of a full recharge
+    char const *name;                 // Type name (for reference)
 
     VehicleType(size_t numAvailable = 1,
                 std::vector<Load> capacity = {},
@@ -188,6 +210,9 @@ struct VehicleType
                 size_t maxReloads = std::numeric_limits<size_t>::max(),
                 Duration maxOvertime = 0,
                 Cost unitOvertimeCost = 0,
+                Distance batteryCapacity = std::numeric_limits<Distance>::max(),
+                std::optional<Distance> initialCharge = std::nullopt,
+                Duration rechargeDuration = 0,
                 std::string name = "");
 
     bool operator==(VehicleType const &other) const;
@@ -222,13 +247,26 @@ struct VehicleType
                         std::optional<size_t> maxReloads,
                         std::optional<Duration> maxOvertime,
                         std::optional<Cost> unitOvertimeCost,
+                        std::optional<Distance> batteryCapacity,
+                        std::optional<Distance> initialCharge,
+                        std::optional<Duration> rechargeDuration,
                         std::optional<std::string> name) const;
 
     /**
      * Returns the maximum number of trips these vehicle can execute.
      */
     size_t maxTrips() const;
+
+    /**
+     * Returns whether these vehicles have a battery that limits their range.
+     */
+    inline bool hasBattery() const;
 };
+
+bool VehicleType::hasBattery() const
+{
+    return batteryCapacity != std::numeric_limits<Distance>::max();
+}
 }  // namespace pyvrp
 
 #endif  // PYVRP_VEHICLETYPE_H

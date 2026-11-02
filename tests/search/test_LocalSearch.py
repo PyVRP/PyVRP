@@ -18,6 +18,7 @@ from pyvrp import (
     VehicleType,
 )
 from pyvrp.search import (
+    InsertCharger,
     InsertOptionalClient,
     LocalSearch,
     PerturbationManager,
@@ -26,7 +27,9 @@ from pyvrp.search import (
     RelocatePickup,
     RelocateWithDepot,
     RemoveAdjacentDepot,
+    RemoveCharger,
     RemoveOptionalClient,
+    ReplaceCharger,
     ReplaceGroup,
     Swap11,
     compute_neighbours,
@@ -768,3 +771,94 @@ def test_shipment_improves_over_random(small_shipments):
     improved_cost = cost_eval.penalised_cost(improved)
     rnd_cost = cost_eval.penalised_cost(rnd_sol)
     assert_(improved_cost < rnd_cost)
+
+
+def _electric_local_search(data, neighbours=None) -> LocalSearch:
+    """
+    Creates a local search with the charger operators and Relocate1.
+    """
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(data, rng, neighbours or compute_neighbours(data))
+
+    ls.add_operator(Relocate1(data))
+    ls.add_operator(InsertCharger(data))
+    ls.add_operator(RemoveCharger(data))
+    ls.add_operator(ReplaceCharger(data))
+    return ls
+
+
+def test_inserts_chargers_to_restore_feasibility(small_electric):
+    """
+    Tests that the local search visits chargers to resolve excess charge.
+    """
+    data = small_electric
+    sol = Solution(data, [[0, 1, 2]])
+    assert_(not sol.is_feasible())
+
+    ls = _electric_local_search(data)
+    improved = ls(sol, CostEvaluator([], 0, 100), exhaustive=True)
+
+    # A single visit to R1 is a local optimum, with a distance of 100.
+    assert_(improved.is_feasible())
+    assert_equal(improved.num_clients(), 3)
+    assert_equal(improved.distance(), 100)
+
+
+def test_removes_chargers_that_are_not_needed(small_electric):
+    """
+    Tests that the local search removes chargers that do not contribute.
+    """
+    veh_type = small_electric.vehicle_type(0).replace(battery_capacity=100)
+    data = small_electric.replace(vehicle_types=[veh_type])
+
+    activities = map(Activity, ["R1", "C0", "R1", "C1", "C2"])
+    route = Route(data, list(activities), 0)
+
+    ls = _electric_local_search(data)
+    improved = ls(Solution(data, [route]), CostEvaluator([], 0, 100), True)
+
+    assert_equal(improved.routes()[0].num_chargers(), 0)
+    assert_equal(improved.distance(), 80)
+
+
+def test_node_after_charger_is_reachable(small_electric):
+    """
+    Tests that the local search evaluates moves with the charger before V, just
+    like it does for the start depot. C2 can only reach its best position right
+    after R1 this way, because C2 has just one neighbour, namely C0.
+    """
+    veh_type = small_electric.vehicle_type(0).replace(num_available=1)
+    data = small_electric.replace(vehicle_types=[veh_type])
+
+    neighbours: dict[Activity, list[Activity]] = {
+        Activity(f"C{idx}"): [] for idx in range(data.num_clients)
+    }
+    neighbours[Activity("C2")] = [Activity("C0")]
+
+    rng = RandomNumberGenerator(seed=42)
+    ls = LocalSearch(data, rng, neighbours)
+    ls.add_operator(Relocate1(data))
+
+    route = Route(data, list(map(Activity, ["R1", "C0", "C1", "C2"])), 0)
+    improved = ls(Solution(data, [route]), CostEvaluator([], 0, 0), True)
+
+    assert_equal(str(improved.routes()[0]), "R1 C2 C0 C1")
+
+
+def test_charger_route_turned_empty_is_cleared(small_electric):
+    """
+    Tests that a route that only has chargers left is removed from the
+    solution once its last client moved out.
+    """
+    data = small_electric
+    routes = [
+        Route(data, list(map(Activity, ["R0", "C0"])), 0),
+        Route(data, list(map(Activity, ["C1", "C2"])), 0),
+    ]
+
+    ls = _electric_local_search(data)
+    improved = ls(Solution(data, routes), CostEvaluator([], 0, 0), True)
+
+    assert_equal(improved.num_routes(), 1)
+    assert_equal(improved.routes()[0].num_chargers(), 0)
+    assert_equal(improved.distance(), 80)

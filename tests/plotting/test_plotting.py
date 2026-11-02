@@ -198,3 +198,14 @@ def test_plot_solution_unplanned_shipments(small_shipments):
     assert_equal(len(solution.unplanned()), 6)  # three missing shipments
 
     plotting.plot_solution(solution, small_shipments, plot_locations=True)
+
+
+def test_plots_with_chargers(small_electric):
+    """
+    Smoke test that the plotting functions can deal with charger visits.
+    """
+    activities = map(Activity, ["C0", "R0", "C1", "C2", "R0"])
+    route = Route(small_electric, list(activities), 0)
+
+    plotting.plot_route_schedule(small_electric, route)
+    plotting.plot_solution(Solution(small_electric, [route]), small_electric)

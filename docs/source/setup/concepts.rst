@@ -56,3 +56,42 @@ The following figure explains this graphically.
 .. figure:: ../assets/images/duration-vehicletype.svg
    :alt: Duration attributes of ``VehicleType`` objects.
    :figwidth: 100%
+
+
+Electric vehicles
+-----------------
+
+Vehicles get a battery through the ``battery_capacity`` field of the :class:`~pyvrp._pyvrp.VehicleType` object.
+A vehicle starts its route with ``initial_charge`` units of charge, which defaults to a full battery, and drains one unit of charge per unit of distance.
+The battery capacity is thus the range of the vehicle in distance units.
+Vehicles that drain differently can be modelled with their own routing profile.
+
+Vehicles recharge at chargers, which are modelled using :class:`~pyvrp._pyvrp.Charger` objects.
+Each visit to a charger takes the vehicle's ``recharge_duration`` and fully recharges the battery.
+Chargers are optional stops that any vehicle may visit as often as needed, so the solver decides which chargers to use.
+Unlike reload depots, chargers do not change the load in the vehicle, and do not start a new trip.
+Reload depots also do not recharge the battery, but a charger may be added at the same location.
+
+Running out of charge is not allowed in a feasible solution.
+During the search, charge that the battery cannot supply counts as excess distance, and is thus penalised in the same way as a violation of the vehicle's ``max_distance``.
+
+In the following example, neither client can be reached without a stop at the charger.
+
+.. code-block:: python
+
+   from pyvrp import Model
+   from pyvrp.stop import MaxIterations
+
+   m = Model()
+   m.add_depot(location=m.add_location(x=0, y=0))
+   m.add_vehicle_type(battery_capacity=70, recharge_duration=10)
+   m.add_charger(location=m.add_location(x=50, y=0))
+
+   for x in [40, 60]:
+       m.add_client(location=m.add_location(x=x, y=0))
+
+   for frm in m.locations:
+       for to in m.locations:
+           m.add_edge(frm, to, distance=abs(frm.x - to.x))
+
+   result = m.solve(MaxIterations(100))

@@ -1,5 +1,6 @@
 #include "Route.h"
 
+#include "BatterySegment.h"
 #include "DurationSegment.h"
 #include "DynamicBitset.h"
 #include "LoadSegment.h"
@@ -89,6 +90,13 @@ void Route::validate(ProblemData const &data,
         {
             std::ostringstream msg;
             msg << "Shipment " << activity << " is not understood.";
+            throw std::invalid_argument(msg.str());
+        }
+
+        if (activity.isCharger() && activity.idx() >= data.numChargers())
+        {
+            std::ostringstream msg;
+            msg << "Charger " << activity << " is not understood.";
             throw std::invalid_argument(msg.str());
         }
 
@@ -207,6 +215,20 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
             nextLoc = delivery.location;
             break;
         }
+
+        case Activity::ActivityType::CHARGER:
+        {
+            auto const &charger = data.charger(it->idx());
+            service_ += vehData.rechargeDuration;
+
+            auto const edgeDur = durations(charger.location, nextLoc);
+            travel_ += edgeDur;
+
+            ds = DurationSegment::merge(
+                edgeDur, {vehData.rechargeDuration}, ds);
+            nextLoc = charger.location;
+            break;
+        }
         }
 
     auto const &start = data.depot(vehData.startDepot);
@@ -318,6 +340,21 @@ void Route::setSchedule(ProblemData const &data, Activities const &activities)
             prevLoc = delivery.location;
             break;
         }
+
+        case Activity::ActivityType::CHARGER:
+        {
+            auto const &charger = data.charger(activity.idx());
+            now += durations(prevLoc, charger.location);
+
+            handle(activity,
+                   tripIdx,
+                   0,
+                   std::numeric_limits<Duration>::max(),
+                   vehData.rechargeDuration);
+
+            prevLoc = charger.location;
+            break;
+        }
         }
 
     now += durations(prevLoc, end.location);
@@ -332,6 +369,11 @@ void Route::setDistance(ProblemData const &data)
 {
     auto const &vehData = data.vehicleType(vehicleType_);
     auto const &distances = data.distanceMatrix(vehData.profile);
+    auto const capacity = vehData.batteryCapacity;
+
+    BatterySegment battery;  // stays trivial for vehicles without a battery
+    if (vehData.hasBattery())
+        battery = BatterySegment(vehData);
 
     size_t frmLoc = data.depot(startDepot()).location;
     for (size_t idx = 1; idx != schedule_.size(); ++idx)
@@ -356,14 +398,24 @@ void Route::setDistance(ProblemData const &data)
         case Activity::ActivityType::DELIVERY:
             toLoc = data.shipment(activity.idx()).delivery.location;
             break;
+
+        case Activity::ActivityType::CHARGER:
+            toLoc = data.charger(activity.idx()).location;
+            break;
         };
 
-        distance_ += distances(frmLoc, toLoc);
+        auto const edgeDist = distances(frmLoc, toLoc);
+        distance_ += edgeDist;
+
+        BatterySegment const at = {0, 0, 0, activity.isCharger()};
+        battery = BatterySegment::merge(edgeDist, battery, at, capacity);
+
         frmLoc = toLoc;
     }
 
     distanceCost_ = vehData.unitDistanceCost * static_cast<Cost>(distance_);
-    excessDistance_ = std::max<Distance>(distance_ - vehData.maxDistance, 0);
+    excessDistance_ = std::max<Distance>(distance_ - vehData.maxDistance, 0)
+                      + battery.excessCharge(capacity);
 }
 
 void Route::setLoad(ProblemData const &data)
@@ -406,6 +458,9 @@ void Route::setLoad(ProblemData const &data)
                 ls = LoadSegment::merge(
                     ls, {data.shipment(activity.idx()), activity.type(), dim});
                 break;
+
+            case Activity::ActivityType::CHARGER:
+                break;
             }
         }
 
@@ -428,6 +483,9 @@ void Route::setOtherStatistics(ProblemData const &data)
             prizes_ += data.shipment(activity.idx()).prize;
             numShipments_++;
         }
+
+        if (activity.isCharger())
+            numChargers_++;
     }
 }
 
@@ -477,7 +535,8 @@ Route::Route(Schedule schedule,
              Duration slack,
              Cost prizes,
              size_t vehicleType,
-             size_t numShipments)
+             size_t numShipments,
+             size_t numChargers)
     : schedule_(std::move(schedule)),
       distance_(distance),
       distanceCost_(distanceCost),
@@ -496,7 +555,8 @@ Route::Route(Schedule schedule,
       slack_(slack),
       prizes_(prizes),
       vehicleType_(vehicleType),
-      numShipments_(numShipments)
+      numShipments_(numShipments),
+      numChargers_(numChargers)
 {
 }
 
@@ -507,8 +567,8 @@ size_t Route::size() const { return schedule_.size(); }
 size_t Route::numClients() const
 {
     // All activities that are not shipments (pickup and delivery are separate
-    // activities) or depots.
-    return size() - 2 * numShipments() - numDepots();
+    // activities), depots, or chargers.
+    return size() - 2 * numShipments() - numDepots() - numChargers();
 }
 
 size_t Route::numShipments() const { return numShipments_; }
@@ -516,6 +576,8 @@ size_t Route::numShipments() const { return numShipments_; }
 size_t Route::numDepots() const { return numTrips() + 1; }
 
 size_t Route::numTrips() const { return schedule_.back().trip(); }
+
+size_t Route::numChargers() const { return numChargers_; }
 
 Route::ScheduledActivity const &Route::operator[](size_t idx) const
 {

@@ -37,6 +37,8 @@ public:
      *     A shipment pickup.
      * DELIVERY
      *     A shipment delivery.
+     * CHARGER
+     *     A charger visit.
      */
     enum class ActivityType
     {
@@ -44,6 +46,7 @@ public:
         CLIENT = 1,
         PICKUP = 2,
         DELIVERY = 3,
+        CHARGER = 4,
     };
 
 private:
@@ -91,6 +94,11 @@ public:
      * Returns whether this activity concerns the delivery step of a shipment.
      */
     inline bool isDelivery() const;
+
+    /**
+     * Returns whether this activity concerns a charger visit.
+     */
+    inline bool isCharger() const;
 };
 
 Activity::ActivityType Activity::type() const { return type_; }
@@ -106,6 +114,8 @@ bool Activity::isShipment() const { return isPickup() || isDelivery(); }
 bool Activity::isPickup() const { return type_ == ActivityType::PICKUP; }
 
 bool Activity::isDelivery() const { return type_ == ActivityType::DELIVERY; }
+
+bool Activity::isCharger() const { return type_ == ActivityType::CHARGER; }
 }  // namespace pyvrp
 
 std::ostream &operator<<(std::ostream &out, pyvrp::Activity const &activity);

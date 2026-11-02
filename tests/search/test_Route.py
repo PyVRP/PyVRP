@@ -11,6 +11,7 @@ from pyvrp import (
     ProblemData,
     VehicleType,
 )
+from pyvrp import Route as SolRoute
 from pyvrp.search._search import Node, Route
 from tests.helpers import make_search_route
 
@@ -1249,3 +1250,211 @@ def test_route_statistics_with_shipments(small_shipments):
     assert_equal(route.duration(), 47_132 + 6 * 900 + 13_800 + 402)
     assert_equal(route.time_warp(), 1_611)
     assert_equal(route.excess_load(), [20])
+
+
+def test_charger_nodes_are_owned_by_route(small_electric):
+    """
+    Tests that charger nodes are copied into the route, so that the original
+    node remains unassigned.
+    """
+    node = Node("R0")
+    route = make_search_route(small_electric, ["C0", node, "C1"])
+
+    assert_(node.route is None)
+    assert_(route[2].is_charger())
+    assert_(route[2] is not node)
+    assert_equal(route[2].route, route)
+    assert_equal(route[2].pos, 2)
+    assert_equal(route[2].activity, node.activity)
+
+
+def test_charger_node_pointers_remain_valid(small_electric):
+    """
+    Tests that inserting and removing chargers keeps the other charger nodes
+    in the route valid.
+    """
+    route = make_search_route(small_electric, ["R0", "C0", "R1", "C1", "R0"])
+    assert_equal(route.num_chargers(), 3)
+
+    del route[3]  # the R1 in the middle
+    route.update()
+    assert_equal(str(route), "R0 C0 C1 R0")
+    assert_equal(route.num_chargers(), 2)
+
+    route.insert(2, Node("R1"))
+    route.update()
+    assert_equal(str(route), "R0 R1 C0 C1 R0")
+    assert_equal(route.num_chargers(), 3)
+
+    positions = [node.pos for node in route]
+    assert_equal(positions, list(range(len(route))))
+
+
+def test_clear_removes_chargers(small_electric):
+    """
+    Tests that clearing a route also removes its chargers.
+    """
+    route = make_search_route(small_electric, ["R0", "C0", "R1"])
+    route.clear()
+
+    assert_equal(len(route), 2)
+    assert_equal(route.num_chargers(), 0)
+
+
+def test_chargers_do_not_affect_counters(small_electric):
+    """
+    Tests that chargers are not counted as clients, depots, or trips, and do
+    not add load or a trip to the route.
+    """
+    route = make_search_route(small_electric, ["C0", "R0", "C1"])
+
+    assert_equal(route.num_clients(), 2)
+    assert_equal(route.num_depots(), 2)
+    assert_equal(route.num_trips(), 1)
+    assert_equal(route[2].trip, 0)
+    assert_equal(route[3].trip, 0)
+
+
+def test_has_charger(small_electric):
+    """
+    Tests that has_charger() considers the given (inclusive) node range.
+    """
+    route = make_search_route(small_electric, ["C0", "R0", "C1"])
+    assert_(not route.has_charger(0, 1))
+    assert_(route.has_charger(0, 2))
+    assert_(route.has_charger(2, 2))
+    assert_(route.has_charger(1, 3))
+    assert_(not route.has_charger(3, 4))
+
+
+def test_excess_charge(small_electric):
+    """
+    Tests that the route's excess distance includes the excess charge, and
+    that the statistics agree with the pyvrp.Route object.
+    """
+    route = make_search_route(small_electric, ["C0", "R0", "C1", "C2"])
+    assert_equal(route.distance(), 80)
+    assert_equal(route.duration(), 85)
+    assert_equal(route.excess_charge(), 10)
+    assert_equal(route.excess_distance(), 10)
+    assert_(route.has_excess_distance())
+    assert_(not route.is_feasible())
+
+
+def test_battery_accessors(small_electric):
+    """
+    Tests that the route exposes its vehicle type's battery attributes.
+    """
+    route = Route(small_electric, 0)
+    assert_(route.has_battery())
+    assert_equal(route.battery_capacity(), 50)
+    assert_equal(route.recharge_duration(), 5)
+
+    data = small_electric.replace(vehicle_types=[VehicleType()])
+    assert_(not Route(data, 0).has_battery())
+
+
+def test_battery_segments(small_electric):
+    """
+    Tests that the prefix, suffix, and between battery segments agree.
+    """
+    route = make_search_route(small_electric, ["C0", "R0", "C1", "C2", "R0"])
+    size = len(route)
+
+    # Between the start and end of the route we should see the whole route, in
+    # whichever way we get there. The head is the stretch to the first charger,
+    # and the tail is the stretch from the last charger back to the depot.
+    for segment in [
+        route.battery_before(size - 1),
+        route.battery_after(0),
+        route.battery_between(0, size - 1),
+    ]:
+        assert_equal(segment.head(), 20)
+        assert_equal(segment.tail(), 20)
+        assert_(segment.charges())
+        assert_equal(segment.excess_charge(50), 0)
+
+    # Before the first charger, there's nothing yet to separate the stretches.
+    before = route.battery_before(1)
+    assert_equal(before.head(), 10)
+    assert_equal(before.tail(), 10)
+    assert_(not before.charges())
+
+    # After the last charger, it's similarly a single stretch.
+    after = route.battery_after(size - 2)
+    assert_equal(after.head(), 0)
+    assert_equal(after.tail(), 20)
+    assert_(after.charges())
+
+    between = route.battery_between(3, 4)
+    assert_equal(between.head(), 10)
+    assert_(not between.charges())
+
+
+def test_battery_between_profiles(small_electric):
+    """
+    Tests that the battery segment between two nodes is computed using the
+    given profile.
+    """
+    distances = small_electric.distance_matrix(0)
+    durations = small_electric.duration_matrix(0)
+    veh_type = small_electric.vehicle_type(0)
+    data = small_electric.replace(
+        vehicle_types=[veh_type, veh_type.replace(profile=1)],
+        distance_matrices=[distances, 2 * distances],
+        duration_matrices=[durations, 2 * durations],
+    )
+
+    route = make_search_route(data, ["C0", "C1", "C2"])
+    assert_equal(route.battery_between(1, 3, 0).head(), 30)
+    assert_equal(route.battery_between(1, 3, 1).head(), 60)
+
+
+def test_initial_charge(small_electric):
+    """
+    Tests that the route's excess charge accounts for the initial charge.
+    """
+    veh_type = small_electric.vehicle_type(0).replace(initial_charge=15)
+    data = small_electric.replace(vehicle_types=[veh_type])
+
+    route = make_search_route(data, ["C0", "R0", "C1", "C2", "R0"])
+    assert_equal(route.excess_charge(), 5)  # first stretch is 20
+    assert_equal(route.battery_before(0).head(), 35)  # 50 - 15 is drained
+
+
+def test_no_battery_has_no_excess_charge(small_electric):
+    """
+    Tests that routes of vehicles without a battery have no excess charge, even
+    if they visit chargers.
+    """
+    data = small_electric.replace(vehicle_types=[VehicleType()])
+    route = make_search_route(data, ["C0", "R1", "C1", "C2"])
+
+    assert_(not route.has_battery())
+    assert_equal(route.excess_charge(), 0)
+    assert_equal(route.excess_distance(), 0)
+    assert_equal(route.distance(), 120)
+
+
+@pytest.mark.parametrize(
+    "visits",
+    [
+        ["C0", "C1", "C2"],
+        ["C0", "R0", "C1", "C2"],
+        ["C0", "R0", "C1", "R1", "C2", "R0"],
+        ["R1", "C2", "R0", "R1", "C0"],
+    ],
+)
+def test_matches_pyvrp_route(small_electric, visits: list[str]):
+    """
+    Tests that the search route's statistics match those of the pyvrp.Route.
+    """
+    search = make_search_route(small_electric, visits)
+    route = SolRoute(small_electric, list(map(Activity, visits)), 0)
+
+    assert_equal(search.distance(), route.distance())
+    assert_equal(search.duration(), route.duration())
+    assert_equal(search.excess_distance(), route.excess_distance())
+    assert_equal(search.time_warp(), route.time_warp())
+    assert_equal(search.num_chargers(), route.num_chargers())
+    assert_equal(search.num_clients(), route.num_clients())

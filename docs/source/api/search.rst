@@ -104,6 +104,15 @@ As a convenience, the :mod:`pyvrp.search` module makes most relevant operators a
    .. autoclass:: RemoveAdjacentDepot
       :exclude-members: evaluate, apply, statistics, supports, init, name
 
+   .. autoclass:: InsertCharger
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: RemoveCharger
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
+   .. autoclass:: ReplaceCharger
+      :exclude-members: evaluate, apply, statistics, supports, init, name
+
    .. autoclass:: RemoveOptionalClient
       :exclude-members: evaluate, apply, statistics, supports, init, name
 

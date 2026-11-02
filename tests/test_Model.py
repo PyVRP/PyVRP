@@ -1310,3 +1310,119 @@ def test_add_shipment_integer_amount():
     loc = m.add_location(0, 0)
     shipment = m.add_shipment(loc, loc, amount=1)
     assert_equal(shipment.amount, [1])
+
+
+def test_add_charger():
+    """
+    Tests that adding a charger to the model works correctly.
+    """
+    model = Model()
+    location = model.add_location(1, 2)
+    charger = model.add_charger(location, name="charger")
+
+    assert_equal(model.chargers, [charger])
+    assert_equal(charger.location, 0)
+    assert_equal(charger.name, "charger")
+
+
+def test_add_charger_raises_unknown_location():
+    """
+    Tests that adding a charger at an unknown location raises.
+    """
+    with assert_raises(ValueError):
+        Model().add_charger(Location(1, 2))
+
+
+def test_add_vehicle_type_battery_attributes():
+    """
+    Tests that the battery attributes are passed to the vehicle type.
+    """
+    model = Model()
+    model.add_depot(model.add_location(0, 0))
+
+    vehicle_type = model.add_vehicle_type(
+        battery_capacity=100,
+        initial_charge=40,
+        recharge_duration=30,
+    )
+    assert_equal(vehicle_type.battery_capacity, 100)
+    assert_equal(vehicle_type.initial_charge, 40)
+    assert_equal(vehicle_type.recharge_duration, 30)
+
+
+def test_model_data_and_from_data_with_chargers(small_electric):
+    """
+    Tests that chargers end up in the data, and that from_data() restores them.
+    """
+    model = Model.from_data(small_electric)
+    assert_equal(model.chargers, small_electric.chargers())
+    assert_equal(model.data().chargers(), small_electric.chargers())
+    assert_equal(model.data().vehicle_types(), small_electric.vehicle_types())
+
+
+def _electric_model(battery_capacity: int) -> Model:
+    """
+    The same layout as the small_electric fixture, as a Model.
+    """
+    model = Model()
+    depot = model.add_location(0, 0)
+    model.add_depot(depot)
+
+    locations = [depot]
+    for x in [10, 30, 40]:
+        location = model.add_location(x, 0)
+        model.add_client(location)
+        locations.append(location)
+
+    for x in [20, 50]:
+        location = model.add_location(x, 0)
+        model.add_charger(location)
+        locations.append(location)
+
+    model.add_vehicle_type(
+        2,
+        battery_capacity=battery_capacity,
+        recharge_duration=5,
+    )
+
+    for frm in locations:
+        for to in locations:
+            distance = abs(frm.x - to.x)
+            model.add_edge(frm, to, distance=distance, duration=distance)
+
+    return model
+
+
+def test_model_solves_electric_instance():
+    """
+    Tests that solving with chargers results in a feasible solution, with the
+    shortest distance of driving out to C2 and back, which needs R0 twice.
+    """
+    res = _electric_model(50).solve(MaxIterations(250), display=False)
+
+    assert_(res.is_feasible())
+    assert_allclose(res.cost(), 80)
+    assert_equal(sum(r.num_chargers() for r in res.best.routes()), 2)
+
+
+def test_model_solves_instance_needing_more_charger_visits():
+    """
+    Tests that the search finds a feasible solution when the vehicle has to
+    charge a number of times along the way. On a battery of 30, reaching C2 and
+    coming back requires both chargers.
+    """
+    res = _electric_model(30).solve(MaxIterations(500), display=False)
+
+    assert_(res.is_feasible())
+    assert_allclose(res.cost(), 100)
+
+
+def test_model_solves_without_chargers_if_range_suffices():
+    """
+    Tests that the solution does not visit chargers that are not needed.
+    """
+    res = _electric_model(80).solve(MaxIterations(250), display=False)
+
+    assert_(res.is_feasible())
+    assert_allclose(res.cost(), 80)
+    assert_equal(sum(r.num_chargers() for r in res.best.routes()), 0)

@@ -56,6 +56,7 @@ libpyvrp = static_library(
     'pyvrp',
     [
         SRC_DIR / 'Activity.cpp',
+        SRC_DIR / 'Charger.cpp',
         SRC_DIR / 'CostEvaluator.cpp',
         SRC_DIR / 'DynamicBitset.cpp',
         SRC_DIR / 'Client.cpp',
@@ -78,6 +79,7 @@ libpyvrp = static_library(
 libsearch = static_library(
     'search',
     [
+        SRC_DIR / 'search' / 'InsertCharger.cpp',
         SRC_DIR / 'search' / 'InsertOptionalClient.cpp',
         SRC_DIR / 'search' / 'InsertOptionalShipment.cpp',
         SRC_DIR / 'search' / 'LocalSearch.cpp',
@@ -90,8 +92,10 @@ libsearch = static_library(
         SRC_DIR / 'search' / 'RelocateShipment.cpp',
         SRC_DIR / 'search' / 'RelocateWithDepot.cpp',
         SRC_DIR / 'search' / 'RemoveAdjacentDepot.cpp',
+        SRC_DIR / 'search' / 'RemoveCharger.cpp',
         SRC_DIR / 'search' / 'RemoveOptionalClient.cpp',
         SRC_DIR / 'search' / 'RemoveOptionalShipment.cpp',
+        SRC_DIR / 'search' / 'ReplaceCharger.cpp',
         SRC_DIR / 'search' / 'ReplaceGroup.cpp',
         SRC_DIR / 'search' / 'ReplaceOptionalClient.cpp',
         SRC_DIR / 'search' / 'ReplaceOptionalShipment.cpp',

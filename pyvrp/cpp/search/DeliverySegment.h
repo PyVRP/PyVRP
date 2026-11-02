@@ -2,6 +2,7 @@
 #define PYVRP_SEARCH_DELIVERYSEGMENT_H
 
 #include "Activity.h"
+#include "BatterySegment.h"
 #include "DurationSegment.h"
 #include "LoadSegment.h"
 #include "ProblemData.h"
@@ -57,6 +58,13 @@ public:
     pyvrp::LoadSegment load(size_t dimension) const
     {
         return {shipment_, Activity::ActivityType::DELIVERY, dimension};
+    }
+
+    pyvrp::BatterySegment
+    battery([[maybe_unused]] size_t profile,
+            [[maybe_unused]] pyvrp::Distance capacity) const
+    {
+        return {};
     }
 };
 }  // namespace pyvrp::search
