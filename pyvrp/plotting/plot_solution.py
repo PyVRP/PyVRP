@@ -39,6 +39,12 @@ def plot_solution(
     depot_locs = np.array([depot.location for depot in data.depots()], int)
     ax.scatter(x_coords[depot_locs], y_coords[depot_locs], **kwargs)
 
+    # These are the chargers, if any, as green triangles.
+    charger_locs = [charger.location for charger in data.chargers()]
+    if charger_locs:
+        x, y = x_coords[charger_locs], y_coords[charger_locs]
+        ax.scatter(x, y, label="Charger", c="tab:green", marker="^", zorder=3)
+
     colors = plt.get_cmap("tab10")
     for idx, route in enumerate(solution.routes()):
         color = colors(idx % colors.N)
@@ -63,6 +69,10 @@ def plot_solution(
                 case ActivityType.DELIVERY:
                     delivery = data.shipment(activity.idx).delivery
                     trips[-1].append(delivery.location)
+
+                case ActivityType.CHARGER:
+                    charger = data.charger(activity.idx)
+                    trips[-1].append(charger.location)
 
                 case _:
                     continue

@@ -1,6 +1,7 @@
 #ifndef PYVRP_PROBLEMDATA_H
 #define PYVRP_PROBLEMDATA_H
 
+#include "Charger.h"
 #include "Client.h"
 #include "ClientGroup.h"
 #include "Depot.h"
@@ -25,6 +26,7 @@ namespace pyvrp
  *     duration_matrices: list[numpy.ndarray[int]],
  *     groups: list[ClientGroup] = [],
  *     shipments: list[Shipment] = [],
+ *     chargers: list[Charger] = [],
  * )
  *
  * Creates a problem data instance. This instance contains all information
@@ -57,6 +59,8 @@ namespace pyvrp
  *     must not be passed.
  * shipments
  *     List of shipments. Default empty.
+ * chargers
+ *     List of chargers. Default empty.
  *
  * Raises
  * ------
@@ -76,6 +80,7 @@ class ProblemData
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
     std::vector<ClientGroup> const groups_;        // Client groups
     std::vector<Shipment> const shipments_;        // Shipment information
+    std::vector<Charger> const chargers_;          // Charger information
 
     size_t const numVehicles_;
     size_t const numLoadDimensions_;
@@ -111,6 +116,11 @@ public:
      * Returns a list of all shipments in the problem instance.
      */
     [[nodiscard]] std::vector<Shipment> const &shipments() const;
+
+    /**
+     * Returns a list of all chargers in the problem instance.
+     */
+    [[nodiscard]] std::vector<Charger> const &chargers() const;
 
     /**
      * Returns a list of all vehicle types in the problem instance.
@@ -188,6 +198,16 @@ public:
      *     Shipment index whose information to retrieve.
      */
     [[nodiscard]] inline Shipment const &shipment(size_t shipment) const;
+
+    /**
+     * Returns the charger at the given index.
+     *
+     * Parameters
+     * ----------
+     * charger
+     *     Charger index whose information to retrieve.
+     */
+    [[nodiscard]] inline Charger const &charger(size_t charger) const;
 
     /**
      * Returns vehicle type data for the given vehicle type.
@@ -269,6 +289,11 @@ public:
     [[nodiscard]] size_t numShipments() const;
 
     /**
+     * Number of chargers in this problem instance.
+     */
+    [[nodiscard]] size_t numChargers() const;
+
+    /**
      * Number of vehicle types in this problem instance.
      */
     [[nodiscard]] size_t numVehicleTypes() const;
@@ -310,6 +335,8 @@ public:
      *     Optional client groups.
      * shipments
      *     Optional list of shipments.
+     * chargers
+     *     Optional list of chargers.
      *
      * Returns
      * -------
@@ -323,7 +350,8 @@ public:
                         std::optional<std::vector<Matrix<Distance>>> &distMats,
                         std::optional<std::vector<Matrix<Duration>>> &durMats,
                         std::optional<std::vector<ClientGroup>> &groups,
-                        std::optional<std::vector<Shipment>> &shipments) const;
+                        std::optional<std::vector<Shipment>> &shipments,
+                        std::optional<std::vector<Charger>> &chargers) const;
 
     ProblemData(std::vector<Location> locations,
                 std::vector<Client> clients,
@@ -332,7 +360,8 @@ public:
                 std::vector<Matrix<Distance>> distMats,
                 std::vector<Matrix<Duration>> durMats,
                 std::vector<ClientGroup> groups = {},
-                std::vector<Shipment> shipments = {});
+                std::vector<Shipment> shipments = {},
+                std::vector<Charger> chargers = {});
 
     ProblemData() = delete;
 };
@@ -353,6 +382,12 @@ Shipment const &ProblemData::shipment(size_t shipment) const
 {
     assert(shipment < numShipments());
     return shipments_[shipment];
+}
+
+Charger const &ProblemData::charger(size_t charger) const
+{
+    assert(charger < numChargers());
+    return chargers_[charger];
 }
 
 Matrix<Distance> const &ProblemData::distanceMatrix(size_t profile) const

@@ -106,6 +106,9 @@ This object stores the best observed solution and detailed runtime statistics.
    .. autoclass:: Depot
       :members:
 
+   .. autoclass:: Charger
+      :members:
+
    .. autoclass:: VehicleType
       :members:
 
@@ -113,6 +116,9 @@ This object stores the best observed solution and detailed runtime statistics.
       :members:
 
    .. autoclass:: ScheduledActivity
+      :members:
+
+   .. autoclass:: BatterySegment
       :members:
 
    .. autoclass:: PiecewiseLinearFunction

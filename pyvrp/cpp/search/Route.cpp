@@ -70,6 +70,7 @@ void Route::clear()
 
     nodes.clear();
     depots_.clear();
+    chargers_.clear();
 
     depots_.emplace_back(Activity::ActivityType::DEPOT,
                          vehicleType_.startDepot);
@@ -105,6 +106,10 @@ void Route::insert(size_t idx, Node *node)
         node = &depots_.emplace_back(node->activity());
         break;
     }
+
+    case Activity::ActivityType::CHARGER:  // insert copy into owned memory
+        node = &chargers_.emplace_back(node->activity());
+        break;
 
     default:
         break;
@@ -145,6 +150,13 @@ void Route::remove(size_t idx)
         for (; it != depots_.end(); ++it)
             nodes[it->pos()] = &*it;
     }
+    else if (nodes[idx]->isCharger())
+    {
+        // We own this node - it's in our chargers list.
+        auto const *node = nodes[idx];
+        chargers_.remove_if([node](auto const &other)
+                            { return &other == node; });
+    }
     else
         // We do not own this node, so we only unassign it.
         nodes[idx]->unassign();
@@ -162,9 +174,17 @@ void Route::remove(size_t idx)
 #endif
 }
 
+bool Route::scanForCharger(size_t start, size_t end) const
+{
+    return std::any_of(nodes.begin() + start,
+                       nodes.begin() + end + 1,
+                       [](auto const *node) { return node->isCharger(); });
+}
+
 void Route::swap(Node *first, Node *second)
 {
     assert(!first->isDepot() && !second->isDepot());
+    assert(!first->isCharger() && !second->isCharger());
 
     // TODO specialise std::swap for Node
     if (first->route_)
@@ -213,6 +233,10 @@ void Route::update()
             locations.emplace_back(delivery.location);
             break;
         }
+
+        case Activity::ActivityType::CHARGER:
+            locations.emplace_back(data.charger(node->idx()).location);
+            break;
         }
 
     // Client counter.
@@ -242,6 +266,33 @@ void Route::update()
     for (size_t idx = 1; idx != nodes.size(); ++idx)
         cumDist[idx]
             = cumDist[idx - 1] + distMat(locations[idx - 1], locations[idx]);
+
+    // Battery.
+    excessCharge_ = 0;
+    if (hasBattery())
+    {
+        auto const capacity = batteryCapacity();
+
+        batteryBefore.resize(nodes.size());
+        batteryBefore[0] = batteryAt(0);
+        for (size_t idx = 1; idx != nodes.size(); ++idx)
+            batteryBefore[idx] = BatterySegment::merge(
+                distMat(locations[idx - 1], locations[idx]),
+                batteryBefore[idx - 1],
+                batteryAt(idx),
+                capacity);
+
+        batteryAfter.resize(nodes.size());
+        batteryAfter[nodes.size() - 1] = batteryAt(nodes.size() - 1);
+        for (size_t idx = nodes.size() - 1; idx != 0; --idx)
+            batteryAfter[idx - 1] = BatterySegment::merge(
+                distMat(locations[idx - 1], locations[idx]),
+                batteryAt(idx - 1),
+                batteryAfter[idx],
+                capacity);
+
+        excessCharge_ = batteryBefore.back().excessCharge(capacity);
+    }
 
     // Duration.
     durAt.resize(nodes.size());
@@ -275,6 +326,10 @@ void Route::update()
 
         case Activity::ActivityType::DELIVERY:
             durAt[idx] = {data.shipment(node->idx()).delivery};
+            break;
+
+        case Activity::ActivityType::CHARGER:
+            durAt[idx] = {vehicleType_.rechargeDuration};
             break;
         }
     }
@@ -338,6 +393,8 @@ void Route::update()
             switch (nodes[pos]->type())
             {
             case Activity::ActivityType::DEPOT:
+                [[fallthrough]];
+            case Activity::ActivityType::CHARGER:
                 loadAt[dim][pos] = {};
                 break;
 
@@ -392,6 +449,7 @@ void Route::update()
     // requested *a lot*.
     distance_ = cumDist.back();
     excessDistance_ = std::max<Distance>(distance_ - maxDistance(), 0);
+    excessDistance_ += excessCharge_;
     distanceCost_ = unitDistanceCost() * static_cast<Cost>(distance_);
 
     duration_ = durAfter[0].duration();

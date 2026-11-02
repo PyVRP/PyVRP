@@ -5,6 +5,7 @@
 #include <numeric>
 #include <stdexcept>
 
+using pyvrp::Charger;
 using pyvrp::Client;
 using pyvrp::ClientGroup;
 using pyvrp::Depot;
@@ -54,6 +55,8 @@ std::vector<Shipment> const &ProblemData::shipments() const
     return shipments_;
 }
 
+std::vector<Charger> const &ProblemData::chargers() const { return chargers_; }
+
 std::vector<VehicleType> const &ProblemData::vehicleTypes() const
 {
     return vehicleTypes_;
@@ -96,6 +99,8 @@ size_t ProblemData::numGroups() const { return groups_.size(); }
 size_t ProblemData::numLocations() const { return locations_.size(); }
 
 size_t ProblemData::numShipments() const { return shipments_.size(); }
+
+size_t ProblemData::numChargers() const { return chargers_.size(); }
 
 size_t ProblemData::numVehicleTypes() const { return vehicleTypes_.size(); }
 
@@ -197,6 +202,11 @@ void ProblemData::validate() const
                 "Shipment has inconsistent amount size.");
     }
 
+    // Charger checks.
+    for (auto const &charger : chargers_)
+        if (charger.location >= numLocations())
+            throw std::out_of_range("Charger references invalid location.");
+
     // Vehicle type checks.
     if (vehicleTypes_.empty())
         throw std::invalid_argument("Expected at least one vehicle type.");
@@ -275,7 +285,8 @@ ProblemData::replace(std::optional<std::vector<Location>> &locations,
                      std::optional<std::vector<Matrix<Distance>>> &distMats,
                      std::optional<std::vector<Matrix<Duration>>> &durMats,
                      std::optional<std::vector<ClientGroup>> &groups,
-                     std::optional<std::vector<Shipment>> &shipments) const
+                     std::optional<std::vector<Shipment>> &shipments,
+                     std::optional<std::vector<Charger>> &chargers) const
 {
     return {locations.value_or(locations_),
             clients.value_or(clients_),
@@ -284,7 +295,8 @@ ProblemData::replace(std::optional<std::vector<Location>> &locations,
             distMats.value_or(dists_),
             durMats.value_or(durs_),
             groups.value_or(groups_),
-            shipments.value_or(shipments_)};
+            shipments.value_or(shipments_),
+            chargers.value_or(chargers_)};
 }
 
 ProblemData::ProblemData(std::vector<Location> locations,
@@ -294,7 +306,8 @@ ProblemData::ProblemData(std::vector<Location> locations,
                          std::vector<Matrix<Distance>> distMats,
                          std::vector<Matrix<Duration>> durMats,
                          std::vector<ClientGroup> groups,
-                         std::vector<Shipment> shipments)
+                         std::vector<Shipment> shipments,
+                         std::vector<Charger> chargers)
     : dists_(std::move(distMats)),
       durs_(std::move(durMats)),
       locations_(std::move(locations)),
@@ -303,6 +316,7 @@ ProblemData::ProblemData(std::vector<Location> locations,
       vehicleTypes_(std::move(vehicleTypes)),
       groups_(std::move(groups)),
       shipments_(std::move(shipments)),
+      chargers_(std::move(chargers)),
       numVehicles_(std::accumulate(vehicleTypes_.begin(),
                                    vehicleTypes_.end(),
                                    0,

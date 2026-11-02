@@ -103,6 +103,9 @@ def plot_route_schedule(
                 if track_load:
                     load_diff -= shipment.amount[load_dimension]
 
+            case ActivityType.CHARGER:
+                stop = data.charger(activity.idx)  # type: ignore
+
         drive_time += durations[prev_loc, stop.location]
         dist += distances[prev_loc, stop.location]
 
@@ -120,7 +123,10 @@ def plot_route_schedule(
         serv_time += activity.duration
         add_traces(dist, activity.end_time, drive_time, serv_time, load)
 
-        timewindow_lines.append(((dist, stop.tw_early), (dist, stop.tw_late)))
+        if not activity.is_charger():  # chargers do not have time windows
+            timewindow_lines.append(
+                ((dist, stop.tw_early), (dist, stop.tw_late))
+            )
 
         prev_loc = stop.location
 

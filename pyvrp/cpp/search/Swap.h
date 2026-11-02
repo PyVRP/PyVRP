@@ -24,6 +24,10 @@ template <size_t N, size_t M> class Swap : public BinaryOperator
     // Tests if the segment starting at node of given length contains the depot.
     bool hasDepot(Route::Node *node, size_t segLength) const;
 
+    // Tests if the segment starting at node of given length contains a
+    // charger. Chargers are not moved by this operator.
+    bool hasCharger(Route::Node *node, size_t segLength) const;
+
     // Tests if the segment starting at node of given length would split a
     // shipment if swapped.
     bool splitsShipment(Route::Node *node, size_t segLength) const;
@@ -56,6 +60,13 @@ bool Swap<N, M>::hasDepot(Route::Node *node, size_t segLength) const
     return first == 0                               // contains start depot
            || last >= route.size() - 1              // contains end depot
            || node->trip() != route[last]->trip();  // contains reload depot
+}
+
+template <size_t N, size_t M>
+inline bool Swap<N, M>::hasCharger(Route::Node *node, size_t segLength) const
+{
+    auto const first = node->pos();
+    return node->route()->hasCharger(first, first + segLength - 1);
 }
 
 template <size_t N, size_t M>
@@ -95,7 +106,8 @@ std::pair<Cost, bool> Swap<N, M>::evaluate(Route::Node *U,
     stats_.numEvaluations++;
 
     if (!U->route() || !V->route() || hasDepot(U, N) || splitsShipment(U, N)
-        || hasDepot(V, M) || splitsShipment(V, M))
+        || hasDepot(V, M) || splitsShipment(V, M) || hasCharger(U, N)
+        || hasCharger(V, M))
         return std::make_pair(0, false);
 
     if (U->route() == V->route()

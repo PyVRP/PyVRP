@@ -46,6 +46,9 @@ VehicleType::VehicleType(size_t numAvailable,
                          size_t maxReloads,
                          Duration maxOvertime,
                          Cost unitOvertimeCost,
+                         Distance batteryCapacity,
+                         std::optional<Distance> initialCharge,
+                         Duration rechargeDuration,
                          std::string name)
     : numAvailable(numAvailable),
       startDepot(startDepot),
@@ -73,6 +76,9 @@ VehicleType::VehicleType(size_t numAvailable,
                                                - shiftDuration
                       ? shiftDuration + maxOvertime
                       : std::numeric_limits<Duration>::max()),
+      batteryCapacity(batteryCapacity),
+      initialCharge(initialCharge.value_or(batteryCapacity)),
+      rechargeDuration(rechargeDuration),
       name(duplicate(name.data()))
 {
     if (numAvailable == 0)
@@ -114,6 +120,18 @@ VehicleType::VehicleType(size_t numAvailable,
 
     if (unitOvertimeCost < 0)
         throw std::invalid_argument("unit_overtime_cost must be >= 0.");
+
+    if (batteryCapacity < 0)
+        throw std::invalid_argument("battery_capacity must be >= 0.");
+
+    if (this->initialCharge < 0)
+        throw std::invalid_argument("initial_charge must be >= 0.");
+
+    if (this->initialCharge > batteryCapacity)
+        throw std::invalid_argument("initial_charge exceeds battery_capacity.");
+
+    if (rechargeDuration < 0)
+        throw std::invalid_argument("recharge_duration must be >= 0.");
 }
 
 VehicleType::VehicleType(VehicleType const &vehicleType)
@@ -136,6 +154,9 @@ VehicleType::VehicleType(VehicleType const &vehicleType)
       maxOvertime(vehicleType.maxOvertime),
       unitOvertimeCost(vehicleType.unitOvertimeCost),
       maxDuration(vehicleType.maxDuration),
+      batteryCapacity(vehicleType.batteryCapacity),
+      initialCharge(vehicleType.initialCharge),
+      rechargeDuration(vehicleType.rechargeDuration),
       name(duplicate(vehicleType.name))
 {
 }
@@ -160,6 +181,9 @@ VehicleType::VehicleType(VehicleType &&vehicleType)
       maxOvertime(vehicleType.maxOvertime),
       unitOvertimeCost(vehicleType.unitOvertimeCost),
       maxDuration(vehicleType.maxDuration),
+      batteryCapacity(vehicleType.batteryCapacity),
+      initialCharge(vehicleType.initialCharge),
+      rechargeDuration(vehicleType.rechargeDuration),
       name(vehicleType.name)  // we can steal
 {
     vehicleType.name = nullptr;  // stolen
@@ -186,8 +210,15 @@ VehicleType::replace(std::optional<size_t> numAvailable,
                      std::optional<size_t> maxReloads,
                      std::optional<Duration> maxOvertime,
                      std::optional<Cost> unitOvertimeCost,
+                     std::optional<Distance> batteryCapacity,
+                     std::optional<Distance> initialCharge,
+                     std::optional<Duration> rechargeDuration,
                      std::optional<std::string> name) const
 {
+    // A full battery stays full when only the battery capacity is replaced.
+    if (!initialCharge && this->initialCharge != this->batteryCapacity)
+        initialCharge = this->initialCharge;
+
     return {numAvailable.value_or(this->numAvailable),
             capacity.value_or(this->capacity),
             startDepot.value_or(this->startDepot),
@@ -206,6 +237,9 @@ VehicleType::replace(std::optional<size_t> numAvailable,
             maxReloads.value_or(this->maxReloads),
             maxOvertime.value_or(this->maxOvertime),
             unitOvertimeCost.value_or(this->unitOvertimeCost),
+            batteryCapacity.value_or(this->batteryCapacity),
+            initialCharge,
+            rechargeDuration.value_or(this->rechargeDuration),
             name.value_or(this->name)};
 }
 
@@ -237,6 +271,9 @@ bool VehicleType::operator==(VehicleType const &other) const
         && maxReloads == other.maxReloads
         && maxOvertime == other.maxOvertime
         && unitOvertimeCost == other.unitOvertimeCost
+        && batteryCapacity == other.batteryCapacity
+        && initialCharge == other.initialCharge
+        && rechargeDuration == other.rechargeDuration
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }

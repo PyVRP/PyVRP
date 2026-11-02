@@ -20,6 +20,7 @@ concept DeltaCostEvaluatable = requires(T arg, size_t dimension) {
     { arg.route() };
     { arg.fixedVehicleCost() } -> std::same_as<Cost>;
     { arg.distance() } -> std::convertible_to<std::pair<Cost, Distance>>;
+    { arg.excessCharge() } -> std::same_as<Distance>;
     { arg.duration() } -> std::convertible_to<std::pair<Cost, Duration>>;
     { arg.excessLoad(dimension) } -> std::same_as<Load>;
 };
@@ -234,6 +235,9 @@ bool CostEvaluator::deltaCost(Cost &out, T<Args...> const &proposal) const
         out += excessDistPenalty(excess);
     }
 
+    if (route->hasBattery()) [[unlikely]]
+        out += excessDistPenalty(proposal.excessCharge());
+
     auto const &capacity = route->capacity();
     for (size_t dim = 0; dim != capacity.size(); ++dim)
     {
@@ -287,6 +291,12 @@ bool CostEvaluator::deltaCost(Cost &out,
         out += cost;
         out += excessDistPenalty(excess);
     }
+
+    if (uRoute->hasBattery()) [[unlikely]]
+        out += excessDistPenalty(uProposal.excessCharge());
+
+    if (vRoute->hasBattery()) [[unlikely]]
+        out += excessDistPenalty(vProposal.excessCharge());
 
     auto const &uCapacity = uRoute->capacity();
     for (size_t dim = 0; dim != uCapacity.size(); ++dim)

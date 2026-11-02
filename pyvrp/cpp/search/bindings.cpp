@@ -1,4 +1,5 @@
 #include "bindings.h"
+#include "InsertCharger.h"
 #include "InsertOptionalClient.h"
 #include "InsertOptionalShipment.h"
 #include "LocalSearch.h"
@@ -10,8 +11,10 @@
 #include "RelocateShipment.h"
 #include "RelocateWithDepot.h"
 #include "RemoveAdjacentDepot.h"
+#include "RemoveCharger.h"
 #include "RemoveOptionalClient.h"
 #include "RemoveOptionalShipment.h"
+#include "ReplaceCharger.h"
 #include "ReplaceGroup.h"
 #include "ReplaceOptionalClient.h"
 #include "ReplaceOptionalShipment.h"
@@ -33,6 +36,7 @@
 namespace py = pybind11;
 
 using pyvrp::search::BinaryOperator;
+using pyvrp::search::InsertCharger;
 using pyvrp::search::InsertOptionalClient;
 using pyvrp::search::InsertOptionalShipment;
 using pyvrp::search::LocalSearch;
@@ -47,8 +51,10 @@ using pyvrp::search::RelocatePickup;
 using pyvrp::search::RelocateShipment;
 using pyvrp::search::RelocateWithDepot;
 using pyvrp::search::RemoveAdjacentDepot;
+using pyvrp::search::RemoveCharger;
 using pyvrp::search::RemoveOptionalClient;
 using pyvrp::search::RemoveOptionalShipment;
+using pyvrp::search::ReplaceCharger;
 using pyvrp::search::ReplaceGroup;
 using pyvrp::search::ReplaceOptionalClient;
 using pyvrp::search::ReplaceOptionalShipment;
@@ -122,6 +128,57 @@ PYBIND11_MODULE(_search, m)
         .def("init", &RemoveAdjacentDepot::init, py::arg("solution"))
         .def_static(
             "supports", &RemoveAdjacentDepot::supports, py::arg("data"));
+
+    py::class_<InsertCharger, UnaryOperator>(
+        m, "InsertCharger", DOC(pyvrp, search, InsertCharger))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &InsertCharger::statistics,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &InsertCharger::name)
+        .def("evaluate",
+             &InsertCharger::evaluate,
+             py::arg("U"),
+             py::arg("cost_evaluator"))
+        .def("apply", &InsertCharger::apply, py::arg("U"))
+        .def("init", &InsertCharger::init, py::arg("solution"))
+        .def_static("supports", &InsertCharger::supports, py::arg("data"));
+
+    py::class_<RemoveCharger, UnaryOperator>(
+        m, "RemoveCharger", DOC(pyvrp, search, RemoveCharger))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &RemoveCharger::statistics,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &RemoveCharger::name)
+        .def("evaluate",
+             &RemoveCharger::evaluate,
+             py::arg("U"),
+             py::arg("cost_evaluator"))
+        .def("apply", &RemoveCharger::apply, py::arg("U"))
+        .def("init", &RemoveCharger::init, py::arg("solution"))
+        .def_static("supports", &RemoveCharger::supports, py::arg("data"));
+
+    py::class_<ReplaceCharger, UnaryOperator>(
+        m, "ReplaceCharger", DOC(pyvrp, search, ReplaceCharger))
+        .def(py::init<pyvrp::ProblemData const &>(),
+             py::arg("data"),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property_readonly("statistics",
+                               &ReplaceCharger::statistics,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("name", &ReplaceCharger::name)
+        .def("evaluate",
+             &ReplaceCharger::evaluate,
+             py::arg("U"),
+             py::arg("cost_evaluator"))
+        .def("apply", &ReplaceCharger::apply, py::arg("U"))
+        .def("init", &ReplaceCharger::init, py::arg("solution"))
+        .def_static("supports", &ReplaceCharger::supports, py::arg("data"));
 
     py::class_<RemoveOptionalClient, UnaryOperator>(
         m, "RemoveOptionalClient", DOC(pyvrp, search, RemoveOptionalClient))
@@ -672,6 +729,9 @@ PYBIND11_MODULE(_search, m)
         .def("num_depots", &Route::numDepots)
         .def("num_trips", &Route::numTrips)
         .def("max_trips", &Route::maxTrips)
+        .def("num_chargers", &Route::numChargers)
+        .def(
+            "has_charger", &Route::hasCharger, py::arg("start"), py::arg("end"))
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
         .def("__delitem__", &Route::remove, py::arg("idx"))
         .def(
@@ -714,6 +774,10 @@ PYBIND11_MODULE(_search, m)
              &Route::excessLoad,
              py::return_value_policy::reference_internal)
         .def("excess_distance", &Route::excessDistance)
+        .def("excess_charge", &Route::excessCharge)
+        .def("has_battery", &Route::hasBattery)
+        .def("battery_capacity", &Route::batteryCapacity)
+        .def("recharge_duration", &Route::rechargeDuration)
         .def("distance", &Route::distance)
         .def("distance_cost", &Route::distanceCost)
         .def("unit_distance_cost", &Route::unitDistanceCost)
@@ -792,6 +856,32 @@ PYBIND11_MODULE(_search, m)
             py::arg("end"),
             py::arg("profile") = 0)
         .def(
+            "battery_between",
+            [](Route const &route, size_t start, size_t end, size_t profile)
+            {
+                auto const capacity = route.batteryCapacity();
+                return route.between(start, end).battery(profile, capacity);
+            },
+            py::arg("start"),
+            py::arg("end"),
+            py::arg("profile") = 0)
+        .def(
+            "battery_before",
+            [](Route const &route, size_t end)
+            {
+                auto const capacity = route.batteryCapacity();
+                return route.before(end).battery(route.profile(), capacity);
+            },
+            py::arg("end"))
+        .def(
+            "battery_after",
+            [](Route const &route, size_t start)
+            {
+                auto const capacity = route.batteryCapacity();
+                return route.after(start).battery(route.profile(), capacity);
+            },
+            py::arg("start"))
+        .def(
             "duration_after",
             [](Route const &route, size_t start)
             { return route.after(start).duration(route.profile()); },
@@ -839,6 +929,7 @@ PYBIND11_MODULE(_search, m)
         .def("is_shipment", &Route::Node::isShipment)
         .def("is_pickup", &Route::Node::isPickup)
         .def("is_delivery", &Route::Node::isDelivery)
+        .def("is_charger", &Route::Node::isCharger)
         .def("__str__",
              [](Route::Node const &node)
              {

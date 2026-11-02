@@ -156,7 +156,8 @@ public:
     [[nodiscard]] bool hasExcessLoad() const;
 
     /**
-     * Returns whether this solution violates maximum distance constraints.
+     * Returns whether this solution violates maximum distance or battery
+     * constraints.
      *
      * Returns
      * -------
@@ -205,7 +206,8 @@ public:
     [[nodiscard]] std::vector<Load> const &excessLoad() const;
 
     /**
-     * Returns the total distance in excess of maximum duration constraints,
+     * Returns the total distance in excess of maximum distance constraints,
+     * plus any charge drained beyond what the vehicles' batteries could supply,
      * over all routes.
      */
     [[nodiscard]] Distance excessDistance() const;

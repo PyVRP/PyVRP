@@ -17,6 +17,8 @@ from .Result import Result as Result
 from .Statistics import Statistics as Statistics
 from ._pyvrp import Activity as Activity
 from ._pyvrp import ActivityType as ActivityType
+from ._pyvrp import BatterySegment as BatterySegment
+from ._pyvrp import Charger as Charger
 from ._pyvrp import Client as Client
 from ._pyvrp import ClientGroup as ClientGroup
 from ._pyvrp import CostEvaluator as CostEvaluator

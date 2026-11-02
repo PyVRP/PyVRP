@@ -229,3 +229,28 @@ def test_insert_shipment_at_neighbour_predecessor(small_shipments):
     # positions after L1 would instead produce L1 L0 U1 U0, adding 6_637.
     assert_equal(route.distance(), 30_857)
     assert_equal(str(route), "L0 U0 L1 U1")
+
+
+def test_load_unload_chargers(small_electric):
+    """
+    Tests that loading and unloading a solution retains its charger visits.
+    """
+    data = small_electric
+    route = pyvrp.Route(data, list(map(Activity, ["C0", "R0", "C1", "C2"])), 0)
+    pyvrp_sol = pyvrp.Solution(data, [route])
+
+    search_sol = Solution(data)
+    search_sol.load(pyvrp_sol)
+
+    assert_equal(str(search_sol.routes[0]), "C0 R0 C1 C2")
+    assert_equal(search_sol.routes[0].num_chargers(), 1)
+    assert_equal(search_sol.unload(), pyvrp_sol)
+
+    # Loading it once more should be a no-op, and loading another solution
+    # should remove the charger.
+    search_sol.load(pyvrp_sol)
+    assert_equal(search_sol.routes[0].num_chargers(), 1)
+
+    search_sol.load(pyvrp.Solution(data, [[0, 1, 2]]))
+    assert_equal(search_sol.routes[0].num_chargers(), 0)
+    assert_equal(str(search_sol.routes[0]), "C0 C1 C2")

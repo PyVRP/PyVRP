@@ -138,10 +138,13 @@ def test_default_values():
     assert_allclose(vehicle_type.unit_distance_cost, 1)
     assert_allclose(vehicle_type.unit_duration_cost, 0)
     assert_allclose(vehicle_type.unit_overtime_cost, 0)
+    assert_equal(vehicle_type.recharge_duration, 0)
     assert_equal(vehicle_type.name, "")
 
     # The default value for the following fields is the largest representable
     # integral value.
+    assert_equal(vehicle_type.battery_capacity, _INT_MAX)
+    assert_equal(vehicle_type.initial_charge, _INT_MAX)
     assert_equal(vehicle_type.tw_late, _INT_MAX)
     assert_equal(vehicle_type.shift_duration, _INT_MAX)
     assert_equal(vehicle_type.max_duration, _INT_MAX)
@@ -337,3 +340,93 @@ def test_allows_negative_fixed_cost():
     """
     veh_type = VehicleType(fixed_cost=-100)
     assert_allclose(veh_type.fixed_cost, -100)
+
+
+@pytest.mark.parametrize(
+    ("battery_capacity", "initial_charge", "recharge_duration"),
+    [
+        (-1, None, 0),  # battery_capacity < 0
+        (10, -1, 0),  # initial_charge < 0
+        (10, 11, 0),  # initial_charge > battery_capacity
+        (10, None, -1),  # recharge_duration < 0
+    ],
+)
+def test_raises_invalid_battery_data(
+    battery_capacity: int,
+    initial_charge: int | None,
+    recharge_duration: int,
+):
+    """
+    Tests that the vehicle type raises when provided invalid battery data.
+    """
+    with assert_raises(ValueError):
+        VehicleType(
+            battery_capacity=battery_capacity,
+            initial_charge=initial_charge,
+            recharge_duration=recharge_duration,
+        )
+
+
+def test_battery_attributes():
+    """
+    Tests that the battery attributes are accessible, and that the vehicle type
+    starts with a full battery if no initial charge is provided.
+    """
+    vehicle_type = VehicleType(
+        battery_capacity=100,
+        initial_charge=40,
+        recharge_duration=30,
+    )
+    assert_equal(vehicle_type.battery_capacity, 100)
+    assert_equal(vehicle_type.initial_charge, 40)
+    assert_equal(vehicle_type.recharge_duration, 30)
+
+    full_battery = VehicleType(battery_capacity=100)
+    assert_equal(full_battery.initial_charge, 100)
+
+
+def test_replace_battery():
+    """
+    Tests that replacing the battery capacity keeps a full battery full, and
+    keeps the initial charge of a battery that is not full.
+    """
+    full_battery = VehicleType(battery_capacity=100)
+    assert_equal(full_battery.replace(num_available=2).initial_charge, 100)
+
+    replaced = full_battery.replace(battery_capacity=200)
+    assert_equal(replaced.battery_capacity, 200)
+    assert_equal(replaced.initial_charge, 200)
+
+    partial = VehicleType(battery_capacity=100, initial_charge=40)
+    replaced = partial.replace(battery_capacity=200)
+    assert_equal(replaced.battery_capacity, 200)
+    assert_equal(replaced.initial_charge, 40)
+
+    replaced = partial.replace(initial_charge=50, recharge_duration=7)
+    assert_equal(replaced.initial_charge, 50)
+    assert_equal(replaced.recharge_duration, 7)
+
+
+def test_eq_battery():
+    """
+    Tests that the equality operator considers the battery attributes.
+    """
+    vehicle_type = VehicleType(battery_capacity=100, recharge_duration=30)
+    assert_(vehicle_type == vehicle_type.replace())
+    assert_(vehicle_type != vehicle_type.replace(battery_capacity=99))
+    assert_(vehicle_type != vehicle_type.replace(initial_charge=99))
+    assert_(vehicle_type != vehicle_type.replace(recharge_duration=29))
+
+
+def test_pickle_battery():
+    """
+    Tests that the battery attributes survive serialisation.
+    """
+    before_pickle = VehicleType(
+        battery_capacity=100,
+        initial_charge=40,
+        recharge_duration=30,
+        name="electric",
+    )
+    bytes = pickle.dumps(before_pickle)
+    assert_equal(pickle.loads(bytes), before_pickle)

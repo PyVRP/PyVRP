@@ -405,3 +405,47 @@ def test_swap_shipment(small_shipments):
 
     assert_equal(route.distance(), 58_645)
     assert_equal(str(route), "L1 U1 L3 U3 L2 U2 L0 U0")
+
+
+def test_does_not_swap_chargers(small_electric):
+    """
+    Tests that Swap does not move segments containing a charger, because such
+    segments are tied to the vehicle's recharge duration.
+    """
+    data = small_electric
+    route1 = make_search_route(data, ["C0", "R1"])
+    route2 = make_search_route(data, ["C1", "C2"])
+
+    cost_eval = CostEvaluator([], 0, 0)
+
+    op = Swap21(data)
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
+
+    op = Swap22(data)
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
+
+    op = Swap11(data)  # V cannot be a charger either
+    assert_allclose(op.evaluate(route2[1], route1[2], cost_eval), (0, False))
+
+
+def test_swaps_clients_around_chargers(small_electric):
+    """
+    Tests that Swap evaluates swapping clients in routes with chargers, keeping
+    the chargers in place.
+    """
+    data = small_electric
+    route1 = make_search_route(data, ["C2", "R0"])
+    route2 = make_search_route(data, ["C0"])
+
+    op = Swap11(data)
+    cost_eval = CostEvaluator([], 0, 0)
+
+    # Before: distance 80 and 20. After: 40 and 80.
+    assert_allclose(op.evaluate(route2[1], route1[1], cost_eval), (20, False))
+
+    op.apply(route2[1], route1[1])
+    route1.update()
+    route2.update()
+
+    assert_equal(str(route1), "C0 R0")
+    assert_equal(str(route2), "C2")

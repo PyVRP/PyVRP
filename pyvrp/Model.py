@@ -6,6 +6,7 @@ from warnings import warn
 import numpy as np
 
 from pyvrp._pyvrp import (
+    Charger,
     Client,
     ClientGroup,
     Depot,
@@ -111,6 +112,7 @@ class Model:
         self._edges: list[Edge] = []
         self._groups: list[ClientGroup] = []
         self._shipments: list[Shipment] = []
+        self._chargers: list[Charger] = []
         self._profiles: list[Profile] = []
         self._vehicle_types: list[VehicleType] = []
 
@@ -148,6 +150,13 @@ class Model:
         Returns all shipments currently in the model.
         """
         return self._shipments
+
+    @property
+    def chargers(self) -> list[Charger]:
+        """
+        Returns all chargers currently in the model.
+        """
+        return self._chargers
 
     @property
     def profiles(self) -> list[Profile]:
@@ -209,6 +218,7 @@ class Model:
         self._depots = data.depots()
         self._groups = data.groups()
         self._shipments = data.shipments()
+        self._chargers = data.chargers()
         self._profiles = profiles
         self._vehicle_types = data.vehicle_types()
 
@@ -383,6 +393,20 @@ class Model:
         self._depots.append(depot)
         return depot
 
+    def add_charger(self, location: Location, *, name: str = "") -> Charger:
+        """
+        Adds a charger with the given attributes to the model. Returns the
+        created :class:`~pyvrp._pyvrp.Charger` instance.
+        """
+        if (location_idx := _idx_by_id(location, self._locations)) is None:
+            msg = "The given location is not in this model instance."
+            raise ValueError(msg)
+
+        charger = Charger(location=location_idx, name=name)
+
+        self._chargers.append(charger)
+        return charger
+
     def add_edge(
         self,
         frm: Location,
@@ -445,6 +469,9 @@ class Model:
         max_reloads: int = MAX_SIZE,
         max_overtime: int = 0,
         unit_overtime_cost: float = 0,
+        battery_capacity: int = np.iinfo(np.int64).max,
+        initial_charge: int | None = None,
+        recharge_duration: int = 0,
         *,
         name: str = "",
     ) -> VehicleType:
@@ -516,6 +543,9 @@ class Model:
             max_reloads=max_reloads,
             max_overtime=max_overtime,
             unit_overtime_cost=unit_overtime_cost,
+            battery_capacity=battery_capacity,
+            initial_charge=initial_charge,
+            recharge_duration=recharge_duration,
             name=name,
         )
 
@@ -583,6 +613,7 @@ class Model:
             durations,
             self._groups,
             self._shipments,
+            self._chargers,
         )
 
     def solve(

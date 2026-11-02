@@ -238,3 +238,150 @@ def test_skips_move_if_shipment_is_split_between_routes(small_shipments):
     op = SwapTails(data)
     cost_eval = CostEvaluator([0], 0, 0)
     assert_allclose(op.evaluate(pickup1, delivery2, cost_eval), (0, False))
+
+
+def _electric_solution(data, routes: list[list[str]]) -> Solution:
+    """
+    Loads the given routes of activities into a search solution, where the
+    route at each index uses the vehicle type of that index.
+    """
+    return make_search_solution(
+        data,
+        [
+            SolRoute(data, list(map(Activity, visits)), idx)
+            for idx, visits in enumerate(routes)
+            if visits
+        ],
+    )
+
+
+def test_moves_chargers_in_tails(small_electric):
+    """
+    Tests that chargers in the tails move along to the other route.
+    """
+    veh_type = small_electric.vehicle_type(0).replace(num_available=1)
+    data = small_electric.replace(vehicle_types=[veh_type, veh_type])
+    sol = _electric_solution(data, [["C0", "C1", "R1"], ["C2", "R0"]])
+
+    route1, route2 = sol.routes
+    op = SwapTails(data)
+    cost_eval = CostEvaluator([], 0, 0)
+
+    # Before: distance 100 and 80. After: distance 40 and 120.
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), (-20, True))
+
+    op.apply(route1[1], route2[1])
+    route1.update()
+    route2.update()
+
+    assert_equal(str(route1), "C0 R0")
+    assert_equal(str(route2), "C2 C1 R1")
+    assert_equal(route1.num_chargers(), 1)
+    assert_equal(route2.num_chargers(), 1)
+    assert_equal(route1.distance() + route2.distance(), 160)
+
+
+def test_tail_battery_uses_vehicle_of_new_route(small_electric):
+    """
+    Tests that a tail moved to another route is evaluated using the battery
+    capacity of the vehicle of that route.
+    """
+    large = small_electric.vehicle_type(0).replace(
+        num_available=1, battery_capacity=100
+    )
+    small = large.replace(battery_capacity=50)
+    data = small_electric.replace(vehicle_types=[large, small])
+    sol = _electric_solution(data, [["C0", "R0", "C1", "C2"], []])
+
+    route1, route2 = sol.routes
+    assert_equal(route1.excess_charge(), 0)
+
+    op = SwapTails(data)
+    cost_eval = CostEvaluator([], 0, 1)
+
+    # The tail moves to the empty route of the vehicle with the smaller battery
+    # where its last stretch of 60 exceeds the capacity by 10. The new routes
+    # have distance 20 and 80, compared to the 80 of the current route.
+    delta_cost, _ = op.evaluate(route1[1], route2[0], cost_eval)
+    assert_allclose(delta_cost, 20 + 80 + 10 - 80)
+
+
+def test_skips_chargers_if_recharge_duration_differs(small_electric):
+    """
+    Tests that the move is not evaluated if the tails contain chargers, and the
+    vehicles have different recharge durations.
+    """
+    veh_type1 = small_electric.vehicle_type(0).replace(
+        num_available=1, recharge_duration=5
+    )
+    veh_type2 = veh_type1.replace(recharge_duration=10)
+    data = small_electric.replace(vehicle_types=[veh_type1, veh_type2])
+    sol = _electric_solution(data, [["C0", "C1", "R1"], ["C2"]])
+
+    route1, route2 = sol.routes
+    op = SwapTails(data)
+    cost_eval = CostEvaluator([], 0, 0)
+
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), (0, False))
+
+
+def test_evaluates_tails_without_charger_if_recharge_duration_differs(
+    small_electric,
+):
+    """
+    Tests that a different recharge duration is no problem if the tails do not
+    contain a charger.
+    """
+    veh_type1 = small_electric.vehicle_type(0).replace(
+        num_available=1, recharge_duration=5
+    )
+    veh_type2 = veh_type1.replace(recharge_duration=10)
+    data = small_electric.replace(vehicle_types=[veh_type1, veh_type2])
+    sol = _electric_solution(data, [["R1", "C0", "C1"], ["C2"]])
+
+    route1, route2 = sol.routes
+    op = SwapTails(data)
+    cost_eval = CostEvaluator([], 0, 0)
+
+    # Before: distance 140 and 80. After: distance 100 and 80.
+    assert_allclose(op.evaluate(route1[2], route2[1], cost_eval), (-40, True))
+
+
+def test_does_not_create_route_with_only_chargers(small_electric):
+    """
+    Tests that the move is skipped when it would leave a route with only
+    chargers, because such a route is empty.
+    """
+    veh_type = small_electric.vehicle_type(0).replace(num_available=1)
+    data = small_electric.replace(vehicle_types=[veh_type, veh_type])
+    sol = _electric_solution(data, [["C0", "R0"], []])
+
+    route1, route2 = sol.routes
+    op = SwapTails(data)
+    cost_eval = CostEvaluator([], 0, 0)
+
+    assert_allclose(op.evaluate(route1[1], route2[0], cost_eval), (0, False))
+
+
+def test_empties_route_with_only_charger_before(small_electric):
+    """
+    Tests that moving all clients out of a route counts as emptying the route,
+    also if a charger is left behind.
+    """
+    veh_type = small_electric.vehicle_type(0).replace(num_available=1)
+    data = small_electric.replace(vehicle_types=[veh_type, veh_type])
+    sol = _electric_solution(data, [["C0"], ["R0", "C1"]])
+
+    route1, route2 = sol.routes
+    op = SwapTails(data)
+    cost_eval = CostEvaluator([], 0, 0)
+
+    # Before: distance 20 and 60. After: distance 60, and an empty route.
+    assert_allclose(op.evaluate(route1[1], route2[1], cost_eval), (-20, True))
+
+    op.apply(route1[1], route2[1])
+    route1.update()
+    route2.update()
+
+    assert_equal(str(route1), "C0 C1")
+    assert_equal(route2.num_clients(), 0)

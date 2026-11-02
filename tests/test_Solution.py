@@ -9,6 +9,7 @@ from pyvrp import (
     Activity,
     Client,
     ClientGroup,
+    CostEvaluator,
     Depot,
     Location,
     ProblemData,
@@ -969,3 +970,51 @@ def test_random_sol_with_shipments(small_shipments):
         assert_equal(sol.num_shipments(), 4)
         assert_equal(sol.num_missing_shipments(), 0)
         assert_(sol.is_complete())
+
+
+def test_solution_with_chargers(small_electric):
+    """
+    Tests the solution statistics of a solution with chargers.
+    """
+    activities = map(Activity, ["C0", "R0", "C1", "C2"])
+    route = Route(small_electric, list(activities), 0)
+    sol = Solution(small_electric, [route])
+
+    assert_equal(sol.num_clients(), 3)
+    assert_equal(sol.num_missing_clients(), 0)
+    assert_equal(sol.distance(), 80)
+    assert_equal(sol.excess_distance(), 10)
+    assert_(sol.has_excess_distance())
+    assert_(not sol.is_feasible())
+
+
+def test_solution_with_charger_costs(small_electric):
+    """
+    Tests that excess charge is penalised using the distance penalty.
+    """
+    activities = map(Activity, ["C0", "R0", "C1", "C2"])
+    route = Route(small_electric, list(activities), 0)
+    sol = Solution(small_electric, [route])
+
+    cost_evaluator = CostEvaluator([], 0, 3)
+    assert_allclose(cost_evaluator.penalised_cost(sol), 80 + 3 * 10)
+
+
+def test_eq_and_pickle_with_chargers(small_electric):
+    """
+    Tests that solution equality takes chargers into account, and that pickling
+    a solution retains its chargers.
+    """
+
+    def make_solution(*stops):
+        route = Route(small_electric, list(map(Activity, stops)), 0)
+        return Solution(small_electric, [route])
+
+    sol = make_solution("C0", "R0", "C1", "C2")
+    assert_equal(sol, make_solution("C0", "R0", "C1", "C2"))
+    assert_(sol != make_solution("C0", "C1", "C2"))
+
+    unpickled = pickle.loads(pickle.dumps(sol))
+    assert_equal(unpickled, sol)
+    assert_equal(unpickled.routes()[0].num_chargers(), 1)
+    assert_equal(unpickled.excess_distance(), sol.excess_distance())

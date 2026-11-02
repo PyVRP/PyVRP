@@ -98,7 +98,7 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
                     if (applyBinaryOps(U, V, costEvaluator))
                         continue;
 
-                    if (p(V)->isStartDepot()
+                    if ((p(V)->isStartDepot() || p(V)->isCharger())
                         && applyBinaryOps(U, p(V), costEvaluator))
                         continue;
                 }
@@ -264,6 +264,8 @@ void LocalSearch::insertRequired(Route::Node *U,
     switch (U->type())
     {
     case Activity::ActivityType::DEPOT:
+        [[fallthrough]];
+    case Activity::ActivityType::CHARGER:
         return;
 
     case Activity::ActivityType::CLIENT:
