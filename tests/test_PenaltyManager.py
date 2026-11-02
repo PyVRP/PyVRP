@@ -419,3 +419,22 @@ def test_max_cost_evaluator(ok_small_multiple_load):
 
     assert_allclose(cost_eval.tw_penalty(1), max_penalty)
     assert_allclose(cost_eval.dist_penalty(1, 0), max_penalty)
+
+
+def test_excess_charge_updates_distance_penalty(small_electric):
+    """
+    Tests that the distance penalty responds to excess charge, which counts as
+    excess distance, on an instance where no vehicle has a maximum distance.
+    """
+    num_registrations = 4
+    params = PenaltyParams(num_registrations, 1.1, 0.9, 0.5)
+    pm = PenaltyManager(([], 1, 100), params)
+
+    infeas = Solution(small_electric, [[0, 1, 2]])
+    assert_(infeas.has_excess_distance())
+
+    # All solutions are infeasible, so the penalty should go up by 10%.
+    assert_allclose(pm.cost_evaluator().dist_penalty(1, 0), 100)
+    for _ in range(num_registrations):
+        pm.register(infeas)
+    assert_allclose(pm.cost_evaluator().dist_penalty(1, 0), 110)

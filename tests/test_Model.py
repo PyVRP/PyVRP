@@ -1387,7 +1387,7 @@ def _electric_model(battery_capacity: int) -> Model:
 
     for frm in locations:
         for to in locations:
-            distance = abs(frm.x - to.x)
+            distance = round(abs(frm.x - to.x))
             model.add_edge(frm, to, distance=distance, duration=distance)
 
     return model
@@ -1426,3 +1426,131 @@ def test_model_solves_without_chargers_if_range_suffices():
     assert_(res.is_feasible())
     assert_allclose(res.cost(), 80)
     assert_equal(sum(r.num_chargers() for r in res.best.routes()), 0)
+
+
+def test_charger_at_depot_location():
+    """
+    Tests that a charger at the depot's location lets a vehicle recharge in
+    between two clients. Neither client alone is a problem for the battery, but
+    together they are, and returning to the depot does not recharge by itself.
+    """
+    model = Model()
+    depot = model.add_location(0, 0)
+    model.add_depot(depot)
+    model.add_vehicle_type(battery_capacity=70, recharge_duration=5)
+
+    locations = [depot]
+    for x in [-30, 30]:
+        location = model.add_location(x, 0)
+        model.add_client(location)
+        locations.append(location)
+
+    for frm in locations:
+        for to in locations:
+            model.add_edge(frm, to, distance=round(abs(frm.x - to.x)))
+
+    res = model.solve(MaxIterations(50), display=False)
+    assert_(not res.is_feasible())
+
+    model.add_charger(depot)
+    res = model.solve(MaxIterations(50), display=False)
+
+    assert_(res.is_feasible())
+    assert_allclose(res.cost(), 120)
+
+    route = res.best.routes()[0]
+    assert_equal(route.num_chargers(), 1)
+    assert_equal(route.distance(), 120)
+
+
+def test_vehicle_starting_with_empty_battery():
+    """
+    Tests that a vehicle with an empty battery first visits a charger at the
+    depot's location before it leaves, which costs no distance.
+    """
+    model = Model()
+    depot = model.add_location(0, 0)
+    client = model.add_location(10, 0)
+
+    model.add_depot(depot)
+    model.add_client(client)
+    model.add_charger(depot)
+    model.add_vehicle_type(battery_capacity=100, initial_charge=0)
+
+    for frm in [depot, client]:
+        for to in [depot, client]:
+            model.add_edge(frm, to, distance=round(abs(frm.x - to.x)))
+
+    res = model.solve(MaxIterations(100), display=False)
+
+    assert_(res.is_feasible())
+    assert_allclose(res.cost(), 20)
+    assert_(res.best.routes()[0].schedule()[1].is_charger())
+
+
+def test_charger_out_of_range_is_infeasible():
+    """
+    Tests that an instance is not feasible when the only charger cannot be
+    reached on the battery.
+    """
+    model = Model()
+    depot = model.add_location(0, 0)
+    charger = model.add_location(80, 0)
+    client = model.add_location(100, 0)
+
+    model.add_depot(depot)
+    model.add_charger(charger)
+    model.add_client(client)
+    model.add_vehicle_type(battery_capacity=50)
+
+    locations = [depot, charger, client]
+    for frm in locations:
+        for to in locations:
+            model.add_edge(frm, to, distance=round(abs(frm.x - to.x)))
+
+    res = model.solve(MaxIterations(100), display=False)
+
+    assert_(not res.is_feasible())
+    assert_(res.best.excess_distance() > 0)
+
+
+def test_mixed_fleet_with_and_without_battery():
+    """
+    Tests that only the vehicle without a battery can serve a client that is
+    out of range, when both vehicle types are available.
+    """
+    model = Model()
+    depot = model.add_location(0, 0)
+    near = model.add_location(10, 0)
+    far = model.add_location(100, 0)
+
+    model.add_depot(depot)
+    model.add_client(near)
+    model.add_client(far)
+
+    model.add_vehicle_type(1, battery_capacity=50)
+    model.add_vehicle_type(1)
+
+    locations = [depot, near, far]
+    for frm in locations:
+        for to in locations:
+            model.add_edge(frm, to, distance=round(abs(frm.x - to.x)))
+
+    res = model.solve(MaxIterations(100), display=False)
+    assert_(res.is_feasible())
+
+    # All clients are on one line, so one route visiting both is the shortest.
+    assert_allclose(res.cost(), 200)
+    assert_equal(res.best.routes()[0].vehicle_type(), 1)
+
+
+def test_same_seed_same_solution_with_chargers():
+    """
+    Tests that the search with chargers is deterministic given the seed.
+    """
+    model = _electric_model(50)
+    first = model.solve(MaxIterations(100), seed=3, display=False)
+    second = model.solve(MaxIterations(100), seed=3, display=False)
+
+    assert_equal(first.best, second.best)
+    assert_equal(first.num_iterations, second.num_iterations)

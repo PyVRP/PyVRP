@@ -1,10 +1,12 @@
 import pickle
 
+import numpy as np
 import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
     Activity,
+    Charger,
     Client,
     Depot,
     Location,
@@ -14,7 +16,7 @@ from pyvrp import (
     Solution,
     VehicleType,
 )
-from tests.helpers import read
+from tests.helpers import make_search_route, read
 
 
 def test_route_depot_accessors(ok_small_multi_depot):
@@ -1146,3 +1148,135 @@ def test_only_chargers_is_empty(small_electric):
 
     with assert_raises(RuntimeError):
         Solution(small_electric, [route])
+
+
+def test_chargers_do_not_change_load(small_electric):
+    """
+    Tests that visiting chargers does not change the load statistics of a
+    route, also not when the vehicle goes over capacity.
+    """
+    clients = [
+        Client(1, delivery=[3]),
+        Client(2, pickup=[2]),
+        Client(3, delivery=[1]),
+    ]
+    veh_type = small_electric.vehicle_type(0).replace(capacity=[3])
+    data = small_electric.replace(clients=clients, vehicle_types=[veh_type])
+
+    stops = ["C0", "C1", "C2"]
+    without = Route(data, list(map(Activity, stops)), 0)
+
+    stops = ["R0", "C0", "R1", "C1", "C2", "R0"]
+    route = Route(data, list(map(Activity, stops)), 0)
+
+    # The vehicle leaves the depot with a load of 4, which is 1 too much.
+    assert_equal(without.excess_load(), [1])
+    assert_equal(route.excess_load(), [1])
+    assert_equal(route.delivery(), without.delivery())
+    assert_equal(route.pickup(), without.pickup())
+
+
+def test_eq_chargers(small_electric):
+    """
+    Tests that route equality takes the chargers into account, also when the
+    routes have the same statistics because the chargers are in one location.
+    """
+    data = small_electric.replace(chargers=[Charger(4), Charger(4)])
+
+    def make_route(*stops):
+        return Route(data, list(map(Activity, stops)), 0)
+
+    route = make_route("C0", "R0", "C1")
+    assert_equal(route, make_route("C0", "R0", "C1"))
+
+    assert_(route != make_route("C0", "C1"))
+    assert_(route != make_route("C0", "R1", "C1"))
+    assert_equal(route.distance(), make_route("C0", "R1", "C1").distance())
+
+
+def test_recharge_duration_delays_later_visits(small_electric):
+    """
+    Tests that the time spent at a charger can result in time warp at a later
+    visit, even when the charger is on the way.
+    """
+    clients = [Client(1), Client(2, tw_late=32), Client(3)]
+    data = small_electric.replace(clients=clients)
+
+    # C1 is 30 away from the depot, which is before its time window closes.
+    route = Route(data, list(map(Activity, ["C0", "C1"])), 0)
+    assert_equal(route.distance(), 60)
+    assert_equal(route.time_warp(), 0)
+
+    # The recharge duration of 5 means arriving at C1 at time 35, which is 3
+    # after the time window closes.
+    route = Route(data, list(map(Activity, ["C0", "R0", "C1"])), 0)
+    assert_equal(route.distance(), 60)
+    assert_equal(route.time_warp(), 3)
+
+
+def test_charger_without_recharge_duration(small_electric):
+    """
+    Tests that visiting a charger still recharges the battery when the vehicle
+    type has no recharge duration, and that the visit then takes no time.
+    """
+    veh_type = small_electric.vehicle_type(0).replace(recharge_duration=0)
+    data = small_electric.replace(vehicle_types=[veh_type])
+
+    route = Route(data, list(map(Activity, ["C0", "R0", "C1", "C2"])), 0)
+    assert_equal(route.duration(), route.distance())
+    assert_equal(route.excess_distance(), 10)  # stretches of 20 and 60
+
+
+@pytest.mark.parametrize("seed", range(20))
+def test_excess_charge_matches_simulation(seed: int):
+    """
+    Tests the excess charge of random routes against a simulation that follows
+    the battery from one stop to the next. Random routes have any number of
+    chargers, in any position, and a reload depot that does not recharge.
+    """
+    rng = np.random.default_rng(seed)
+    coords = rng.integers(0, 50, size=(8, 2))
+    matrix = np.abs(coords[:, np.newaxis] - coords).sum(axis=2)
+
+    capacity = int(rng.integers(30, 120))
+    initial_charge = int(rng.integers(capacity + 1))
+    data = ProblemData(
+        locations=[Location(int(x), int(y)) for x, y in coords],
+        clients=[Client(idx) for idx in range(1, 6)],
+        depots=[Depot(0)],
+        vehicle_types=[
+            VehicleType(
+                battery_capacity=capacity,
+                initial_charge=initial_charge,
+                reload_depots=[0],
+                max_reloads=1,
+            )
+        ],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+        chargers=[Charger(6), Charger(7)],
+    )
+
+    stops = [f"C{idx}" for idx in rng.permutation(5)]
+    for _ in range(rng.integers(4)):
+        stops.insert(rng.integers(len(stops) + 1), f"R{rng.integers(2)}")
+    stops.insert(rng.integers(1, len(stops)), "D0")
+
+    first_location = {"C": 1, "R": 6, "D": 0}
+    charge, excess_charge, frm = initial_charge, 0, 0
+    for stop in [*stops, "D0"]:
+        to = first_location[stop[0]] + int(stop[1:])
+        charge -= matrix[frm, to]
+        frm = to
+
+        if stop[0] == "R":  # any shortage is excess, and then it's full again
+            excess_charge += max(-charge, 0)
+            charge = capacity
+
+    excess_charge += max(-charge, 0)
+
+    route = Route(data, list(map(Activity, stops)), 0)
+    assert_equal(route.excess_distance(), excess_charge)
+
+    search_route = make_search_route(data, stops)
+    assert_equal(search_route.excess_charge(), excess_charge)
