@@ -831,3 +831,55 @@ def test_replace_shipments(ok_small):
     assert_equal(data.shipment(0), shipments[0])
     assert_equal(data.shipment(1), shipments[1])
     assert_equal(data.shipments(), shipments)
+
+
+def test_shipment_groups(ok_small):
+    """
+    Tests that a shipment can belong to a group.
+    """
+    shipment = Shipment(0, 1, amount=[0], required=False, group=0)
+    group = MutuallyExclusiveGroup([Activity("L0")])
+
+    data = ok_small.replace(shipments=[shipment], groups=[group])
+    assert_equal(data.shipments(), [shipment])
+    assert_equal(data.groups(), [group])
+
+
+def test_raises_invalid_shipment_group_indices(ok_small):
+    """
+    Tests out-of-range references from shipments to groups and vice versa.
+    """
+    shipment = Shipment(0, 1, amount=[0], required=False, group=0)
+    with assert_raises(IndexError):
+        ok_small.replace(shipments=[shipment])
+
+    group = MutuallyExclusiveGroup([Activity("L0")])
+    with assert_raises(IndexError):
+        ok_small.replace(groups=[group])
+
+
+def test_raises_wrong_shipment_group_referencing(ok_small):
+    """
+    Tests that shipments and groups must reference each other.
+    """
+    group = MutuallyExclusiveGroup([Activity("L0")])
+    shipment = Shipment(0, 1, amount=[0], required=False)
+    with assert_raises(ValueError):
+        ok_small.replace(shipments=[shipment], groups=[group])
+
+    # L1 refers to the group, but the group contains only L0.
+    shipment = Shipment(0, 1, amount=[0], required=False, group=0)
+    with assert_raises(ValueError):
+        ok_small.replace(shipments=[shipment, shipment], groups=[group])
+
+
+def test_raises_required_shipment_in_group(ok_small):
+    """
+    Tests that a required shipment cannot belong to an optional group.
+    """
+    shipment = Shipment(0, 1, amount=[0], group=0)
+    group = MutuallyExclusiveGroup([Activity("L0")], required=False)
+    assert_(shipment.required and not group.required)
+
+    with assert_raises(ValueError):
+        ok_small.replace(shipments=[shipment], groups=[group])

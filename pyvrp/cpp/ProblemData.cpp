@@ -163,36 +163,11 @@ void ProblemData::validate() const
         if (depot.location >= numLocations())
             throw std::out_of_range("Depot references invalid location.");
 
-    // Group checks.
-    for (size_t idx = 0; idx != numGroups(); ++idx)
-    {
-        auto const &group = groups_[idx];
-
-        if (group.empty())
-            throw std::invalid_argument("Empty group not understood.");
-
-        for (auto const activity : group)
-        {
-            if (!activity.isClient())
-                throw std::invalid_argument("Only client activities are "
-                                            "currently supported in groups.");
-
-            auto const client = activity.idx();
-            if (client >= numClients())
-                throw std::out_of_range("Group references invalid client.");
-
-            auto const &clientData = clients_[client];
-            if (!clientData.group || *clientData.group != idx)
-            {
-                auto const *msg = "Group references client not in group.";
-                throw std::invalid_argument(msg);
-            }
-        }
-    }
-
     // Shipment checks.
-    for (auto const &shipment : shipments_)
+    for (size_t idx = 0; idx != numShipments(); ++idx)
     {
+        auto const &shipment = shipments_[idx];
+
         if (shipment.pickup.location >= numLocations())
             throw std::out_of_range(
                 "Shipment pickup references invalid location.");
@@ -204,6 +179,56 @@ void ProblemData::validate() const
         if (shipment.amount.size() != numLoadDimensions_)
             throw std::invalid_argument(
                 "Shipment has inconsistent amount size.");
+
+        if (!shipment.group)
+            continue;
+
+        if (*shipment.group >= numGroups())
+            throw std::out_of_range("Shipment references invalid group.");
+
+        auto const &group = groups_[*shipment.group];
+        Activity const activity(Activity::ActivityType::PICKUP, idx);
+        if (std::find(group.begin(), group.end(), activity) == group.end())
+            throw std::invalid_argument(
+                "Shipment not in the group it references.");
+
+        if (shipment.required)
+            throw std::invalid_argument(
+                "Required shipment in mutually exclusive group.");
+    }
+
+    // Group checks.
+    for (size_t idx = 0; idx != numGroups(); ++idx)
+    {
+        auto const &group = groups_[idx];
+
+        if (group.empty())
+            throw std::invalid_argument("Empty group not understood.");
+
+        for (auto const activity : group)
+        {
+            if (activity.isClient())
+            {
+                if (activity.idx() >= numClients())
+                    throw std::out_of_range("Group references invalid client.");
+
+                auto const &client = clients_[activity.idx()];
+                if (!client.group || *client.group != idx)
+                    throw std::invalid_argument(
+                        "Group references client not in group.");
+            }
+            else
+            {
+                if (activity.idx() >= numShipments())
+                    throw std::out_of_range(
+                        "Group references invalid shipment.");
+
+                auto const &shipment = shipments_[activity.idx()];
+                if (!shipment.group || *shipment.group != idx)
+                    throw std::invalid_argument(
+                        "Group references shipment not in group.");
+            }
+        }
     }
 
     // Vehicle type checks.
