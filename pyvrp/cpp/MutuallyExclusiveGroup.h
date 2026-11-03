@@ -1,5 +1,5 @@
-#ifndef PYVRP_CLIENTGROUP_H
-#define PYVRP_CLIENTGROUP_H
+#ifndef PYVRP_MUTUALLYEXCLUSIVEGROUP_H
+#define PYVRP_MUTUALLYEXCLUSIVEGROUP_H
 
 #include "Measure.h"
 
@@ -9,19 +9,15 @@
 namespace pyvrp
 {
 /**
- * ClientGroup(
+ * MutuallyExclusiveGroup(
  *    clients: list[int] = [],
  *    required: bool = True,
  *    *,
  *    name: str = "",
  * )
  *
- * A client group that imposes additional restrictions on visits to clients
- * in the group.
- *
- * .. note::
- *
- *    Only mutually exclusive client groups are supported for now.
+ * A group of clients from which exactly one must be visited if the group is
+ * required, and at most one otherwise.
  *
  * Parameters
  * ----------
@@ -51,7 +47,7 @@ namespace pyvrp
  *     When the given clients contain duplicates, or when a client is added
  *     to the group twice.
  */
-class ClientGroup
+class MutuallyExclusiveGroup
 {
     std::vector<size_t> clients_;  // clients in this group
 
@@ -60,19 +56,20 @@ public:
     bool const mutuallyExclusive = true;  // at most one visit in group?
     char const *name;                     // Group name (for reference)
 
-    explicit ClientGroup(std::vector<size_t> clients = {},
-                         bool required = true,
-                         std::string name = "");
+    explicit MutuallyExclusiveGroup(std::vector<size_t> clients = {},
+                                    bool required = true,
+                                    std::string name = "");
 
-    bool operator==(ClientGroup const &other) const;
+    bool operator==(MutuallyExclusiveGroup const &other) const;
 
-    ClientGroup(ClientGroup const &group);
-    ClientGroup(ClientGroup &&group);
+    MutuallyExclusiveGroup(MutuallyExclusiveGroup const &group);
+    MutuallyExclusiveGroup(MutuallyExclusiveGroup &&group);
 
-    ClientGroup &operator=(ClientGroup const &group) = delete;
-    ClientGroup &operator=(ClientGroup &&group) = delete;
+    MutuallyExclusiveGroup &operator=(MutuallyExclusiveGroup const &group)
+        = delete;
+    MutuallyExclusiveGroup &operator=(MutuallyExclusiveGroup &&group) = delete;
 
-    ~ClientGroup();
+    ~MutuallyExclusiveGroup();
 
     bool empty() const;
     size_t size() const;
@@ -86,4 +83,4 @@ public:
 };
 }  // namespace pyvrp
 
-#endif  // PYVRP_CLIENTGROUP_H
+#endif  // PYVRP_MUTUALLYEXCLUSIVEGROUP_H

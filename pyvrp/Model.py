@@ -7,9 +7,9 @@ import numpy as np
 
 from pyvrp._pyvrp import (
     Client,
-    ClientGroup,
     Depot,
     Location,
+    MutuallyExclusiveGroup,
     ProblemData,
     Shipment,
     Solution,
@@ -109,7 +109,7 @@ class Model:
         self._clients: list[Client] = []
         self._depots: list[Depot] = []
         self._edges: list[Edge] = []
-        self._groups: list[ClientGroup] = []
+        self._groups: list[MutuallyExclusiveGroup] = []
         self._shipments: list[Shipment] = []
         self._profiles: list[Profile] = []
         self._vehicle_types: list[VehicleType] = []
@@ -136,7 +136,7 @@ class Model:
         return self._locations
 
     @property
-    def groups(self) -> list[ClientGroup]:
+    def groups(self) -> list[MutuallyExclusiveGroup]:
         """
         Returns all client groups currently in the model.
         """
@@ -245,7 +245,7 @@ class Model:
         release_time: int = 0,
         prize: float = 0,
         required: bool = True,
-        group: ClientGroup | None = None,
+        group: MutuallyExclusiveGroup | None = None,
         *,
         name: str = "",
     ) -> Client:
@@ -344,14 +344,14 @@ class Model:
         self._shipments.append(shipment)
         return shipment
 
-    def add_client_group(
+    def add_mutually_exclusive_group(
         self, required: bool = True, *, name: str = ""
-    ) -> ClientGroup:
+    ) -> MutuallyExclusiveGroup:
         """
-        Adds a new, possibly optional, client group to the model. Returns the
-        created group.
+        Adds a new, possibly optional, mutually exclusive group to the model.
+        Returns the created group.
         """
-        group = ClientGroup(required=required, name=name)
+        group = MutuallyExclusiveGroup(required=required, name=name)
         self._groups.append(group)
         return group
 

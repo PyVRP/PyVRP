@@ -3,10 +3,10 @@ from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Client,
-    ClientGroup,
     CostEvaluator,
     Depot,
     Location,
+    MutuallyExclusiveGroup,
     ProblemData,
     VehicleType,
 )
@@ -78,7 +78,7 @@ def test_supports(
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
-        groups=[ClientGroup(clients=[0], required=False)],
+        groups=[MutuallyExclusiveGroup(clients=[0], required=False)],
     )
 
     # Operator does not support instances with required groups, but it does
@@ -123,7 +123,7 @@ def test_group_skip_duplicates():
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
-        groups=[ClientGroup([0, 1], required=False)],
+        groups=[MutuallyExclusiveGroup([0, 1], required=False)],
     )
 
     solution = Solution(data)

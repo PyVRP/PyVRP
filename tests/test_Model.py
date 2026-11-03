@@ -4,10 +4,10 @@ from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
-    ClientGroup,
     Depot,
     Location,
     Model,
+    MutuallyExclusiveGroup,
     PenaltyParams,
     Profile,
     SolveParams,
@@ -684,7 +684,7 @@ def test_add_client_raises_unknown_group():
     """
     m = Model()
     loc = m.add_location(1, 1)
-    group = ClientGroup()
+    group = MutuallyExclusiveGroup()
 
     with assert_raises(ValueError):
         m.add_client(location=loc, group=group)
@@ -699,7 +699,7 @@ def test_from_data_client_group(ok_small):
     clients[0] = Client(1, delivery=[1], required=False, group=0)
     clients[1] = Client(2, delivery=[1], required=False, group=0)
 
-    group = ClientGroup([0, 1])
+    group = MutuallyExclusiveGroup([0, 1])
 
     data = ok_small.replace(clients=clients, groups=[group])
     model = Model.from_data(data)
@@ -726,7 +726,7 @@ def test_to_data_client_group():
     m.add_vehicle_type()
     m.add_depot(location=m.add_location(1, 1))
 
-    group = m.add_client_group()
+    group = m.add_mutually_exclusive_group()
     m.add_client(location=m.add_location(1, 1), required=False, group=group)
     m.add_client(location=m.add_location(2, 2), required=False, group=group)
 
@@ -747,7 +747,7 @@ def test_raises_mutually_exclusive_client_group_required_client():
     m = Model()
     loc = m.add_location(1, 1)
 
-    group = m.add_client_group()
+    group = m.add_mutually_exclusive_group()
     assert_(group.mutually_exclusive)
 
     with assert_raises(ValueError):
@@ -964,19 +964,19 @@ def test_model_solves_instance_with_zero_load_dimensions():
     assert_equal(route.distance(), 4)
 
 
-def test_bug_client_group_indices():
+def test_bug_group_indices():
     """
-    Tests the bug of #681. Because empty client groups compare equal, the
-    group to index implementation returned the first object that compared
-    equal, in this case resulting in both clients being inserted into the
-    first client group rather than the each into one.
+    Tests the bug of #681. Because empty groups compare equal, the group to
+    index implementation returned the first object that compared equal, in this
+    case resulting in both clients being inserted into the first group rather
+    than the each into one.
     """
     m = Model()
     loc = m.add_location(0, 0)
     m.add_depot(location=loc)
 
-    group1 = m.add_client_group()
-    group2 = m.add_client_group()
+    group1 = m.add_mutually_exclusive_group()
+    group2 = m.add_mutually_exclusive_group()
 
     client1 = m.add_client(location=loc, required=False, group=group2)
     assert_equal(client1.group, 1)
@@ -1132,7 +1132,7 @@ def test_solution_satisfies_group_constraints():
     m.add_depot(location=m.add_location(0, 0))
     m.add_vehicle_type()
 
-    group = m.add_client_group(required=False)
+    group = m.add_mutually_exclusive_group(required=False)
     for _ in range(100):
         m.add_client(
             location=m.add_location(0, 0),

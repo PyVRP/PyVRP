@@ -6,13 +6,13 @@
 #include <stdexcept>
 
 using pyvrp::Client;
-using pyvrp::ClientGroup;
 using pyvrp::Depot;
 using pyvrp::Distance;
 using pyvrp::Duration;
 using pyvrp::Load;
 using pyvrp::Location;
 using pyvrp::Matrix;
+using pyvrp::MutuallyExclusiveGroup;
 using pyvrp::ProblemData;
 using pyvrp::Shipment;
 using pyvrp::VehicleType;
@@ -47,7 +47,10 @@ std::vector<Client> const &ProblemData::clients() const { return clients_; }
 
 std::vector<Depot> const &ProblemData::depots() const { return depots_; }
 
-std::vector<ClientGroup> const &ProblemData::groups() const { return groups_; }
+std::vector<MutuallyExclusiveGroup> const &ProblemData::groups() const
+{
+    return groups_;
+}
 
 std::vector<Shipment> const &ProblemData::shipments() const
 {
@@ -75,7 +78,7 @@ Location const &ProblemData::location(size_t location) const
     return locations_[location];
 }
 
-ClientGroup const &ProblemData::group(size_t group) const
+MutuallyExclusiveGroup const &ProblemData::group(size_t group) const
 {
     assert(group < groups_.size());
     return groups_[group];
@@ -274,7 +277,7 @@ ProblemData::replace(std::optional<std::vector<Location>> &locations,
                      std::optional<std::vector<VehicleType>> &vehicleTypes,
                      std::optional<std::vector<Matrix<Distance>>> &distMats,
                      std::optional<std::vector<Matrix<Duration>>> &durMats,
-                     std::optional<std::vector<ClientGroup>> &groups,
+                     std::optional<std::vector<MutuallyExclusiveGroup>> &groups,
                      std::optional<std::vector<Shipment>> &shipments) const
 {
     return {locations.value_or(locations_),
@@ -293,7 +296,7 @@ ProblemData::ProblemData(std::vector<Location> locations,
                          std::vector<VehicleType> vehicleTypes,
                          std::vector<Matrix<Distance>> distMats,
                          std::vector<Matrix<Duration>> durMats,
-                         std::vector<ClientGroup> groups,
+                         std::vector<MutuallyExclusiveGroup> groups,
                          std::vector<Shipment> shipments)
     : dists_(std::move(distMats)),
       durs_(std::move(durMats)),

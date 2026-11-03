@@ -8,9 +8,9 @@ from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 from pyvrp import (
     Activity,
     Client,
-    ClientGroup,
     Depot,
     Location,
+    MutuallyExclusiveGroup,
     ProblemData,
     RandomNumberGenerator,
     Route,
@@ -754,7 +754,7 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     clients[0] = Client(1, delivery=[0], required=False, group=0)
     clients[1] = Client(2, delivery=[0], required=False, group=0)
 
-    group = ClientGroup([0, 1], required=True)
+    group = MutuallyExclusiveGroup([0, 1], required=True)
     assert_(group.required)
     assert_(group.mutually_exclusive)
 
@@ -776,7 +776,7 @@ def test_optional_mutually_exclusive_group(ok_small):
     clients[0] = Client(1, delivery=[0], required=False, group=0)
     clients[1] = Client(2, delivery=[0], required=False, group=0)
 
-    group = ClientGroup([0, 1], required=False)
+    group = MutuallyExclusiveGroup([0, 1], required=False)
     assert_(not group.required)
     assert_(group.mutually_exclusive)
 

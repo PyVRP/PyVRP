@@ -3,10 +3,10 @@ from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Client,
-    ClientGroup,
     CostEvaluator,
     Depot,
     Location,
+    MutuallyExclusiveGroup,
     ProblemData,
     VehicleType,
 )
@@ -69,7 +69,7 @@ def test_supports(
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
-        groups=[ClientGroup(clients=[0], required=False)],
+        groups=[MutuallyExclusiveGroup(clients=[0], required=False)],
     )
 
     # RemoveOptional does not support instances with required groups, but it
@@ -176,8 +176,8 @@ def test_cannot_remove_required_group():
         duration_matrices=[np.where(np.eye(3), 0, 1)],
         distance_matrices=[np.where(np.eye(3), 0, 1)],
         groups=[
-            ClientGroup([0], required=False),
-            ClientGroup([1], required=True),
+            MutuallyExclusiveGroup([0], required=False),
+            MutuallyExclusiveGroup([1], required=True),
         ],
     )
 

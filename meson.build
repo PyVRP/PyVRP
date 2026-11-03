@@ -59,7 +59,7 @@ libpyvrp = static_library(
         SRC_DIR / 'CostEvaluator.cpp',
         SRC_DIR / 'DynamicBitset.cpp',
         SRC_DIR / 'Client.cpp',
-        SRC_DIR / 'ClientGroup.cpp',
+        SRC_DIR / 'MutuallyExclusiveGroup.cpp',
         SRC_DIR / 'Depot.cpp',
         SRC_DIR / 'Location.cpp',
         SRC_DIR / 'VehicleType.cpp',
