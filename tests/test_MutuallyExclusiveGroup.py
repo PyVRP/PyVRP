@@ -49,9 +49,7 @@ def test_eq():
     assert_(group1 != "text")
     assert_(group1 != 7)
 
-    group4 = MutuallyExclusiveGroup(
-        clients=[1, 2], required=False, name="test"
-    )
+    group4 = MutuallyExclusiveGroup(clients=[1, 2], required=False, name="t")
     assert_(group1 != group4)
 
 
@@ -59,17 +57,15 @@ def test_eq_name():
     """
     Tests that the equality operator considers names.
     """
-    assert_(
-        MutuallyExclusiveGroup(name="1") != MutuallyExclusiveGroup(name="2")
-    )
+    group1 = MutuallyExclusiveGroup(name="1")
+    group2 = MutuallyExclusiveGroup(name="2")
+    assert_(group1 != group2)
 
 
 def test_pickle():
     """
     Tests that mutually exclusive groups can be serialised and unserialised.
     """
-    before_pickle = MutuallyExclusiveGroup(
-        clients=[1, 2, 3], required=False, name="test"
-    )
-    bytes = pickle.dumps(before_pickle)
-    assert_equal(pickle.loads(bytes), before_pickle)
+    obj = MutuallyExclusiveGroup(clients=[1, 2, 3], required=False, name="t")
+    bytes = pickle.dumps(obj)
+    assert_equal(pickle.loads(bytes), obj)

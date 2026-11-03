@@ -73,7 +73,7 @@ class ProblemData
     std::vector<Client> const clients_;            // Client information
     std::vector<Depot> const depots_;              // Depot information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
-    std::vector<MutuallyExclusiveGroup> const groups_;  // Groups
+    std::vector<MutuallyExclusiveGroup> const groups_;  // Group information
     std::vector<Shipment> const shipments_;             // Shipment information
 
     size_t const numVehicles_;
