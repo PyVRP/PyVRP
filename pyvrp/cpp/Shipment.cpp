@@ -53,6 +53,7 @@ Shipment::Shipment(size_t pickupLocation,
                    std::vector<Load> amount,
                    Cost prize,
                    bool required,
+                   std::optional<size_t> group,
                    std::string name)
     : pickup(
           pickupLocation, pickupTwEarly, pickupTwLate, pickupServiceDuration),
@@ -63,6 +64,7 @@ Shipment::Shipment(size_t pickupLocation,
       amount(amount),
       prize(prize),
       required(required),
+      group(group),
       name(duplicate(name.data()))
 {
     if (delivery.twLate < pickup.twEarly)
@@ -81,12 +83,14 @@ Shipment::Shipment(Step pickup,
                    std::vector<Load> amount,
                    Cost prize,
                    bool required,
+                   std::optional<size_t> group,
                    std::string name)
     : pickup(std::move(pickup)),
       delivery(std::move(delivery)),
       amount(std::move(amount)),
       prize(prize),
       required(required),
+      group(group),
       name(duplicate(name.data()))
 {
 }
@@ -97,6 +101,7 @@ Shipment::Shipment(Shipment const &shipment)
       amount(shipment.amount),
       prize(shipment.prize),
       required(shipment.required),
+      group(shipment.group),
       name(duplicate(shipment.name))
 {
 }
@@ -107,6 +112,7 @@ Shipment::Shipment(Shipment &&shipment)
       amount(std::move(shipment.amount)),
       prize(shipment.prize),
       required(shipment.required),
+      group(shipment.group),
       name(shipment.name)  // we can steal
 {
     shipment.name = nullptr;  // stolen
@@ -120,6 +126,7 @@ bool Shipment::operator==(Shipment const &other) const
         && amount == other.amount
         && prize == other.prize
         && required == other.required
+        && group == other.group
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }

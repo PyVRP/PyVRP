@@ -188,6 +188,7 @@ class Shipment:
     amount: list[int]
     prize: float
     required: bool
+    group: int | None
     name: str
     def __init__(
         self,
@@ -202,6 +203,7 @@ class Shipment:
         amount: list[int] = [],
         prize: float = 0,
         required: bool = True,
+        group: int | None = None,
         *,
         name: str = "",
     ) -> None: ...
