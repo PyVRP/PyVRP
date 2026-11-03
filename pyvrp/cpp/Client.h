@@ -60,8 +60,8 @@ namespace pyvrp
  *     True. Make sure to also update the prize value when setting this
  *     argument to False.
  * group
- *     Indicates membership of the given client group, if any. By default
- *     clients are not part of any groups.
+ *     Index of the mutually exclusive group this client belongs to, if any.
+ *     By default, clients are not part of any groups.
  * name
  *     Free-form name field for this client. Default empty.
  *
@@ -88,7 +88,7 @@ namespace pyvrp
  * required
  *     Whether visiting this client is required.
  * group
- *     Indicates membership of the given client group, if any.
+ *     Index of the mutually exclusive group this client belongs to, if any.
  * name
  *     Free-form name field for this client.
  */
@@ -103,7 +103,7 @@ struct Client
     Duration const releaseTime;         // Earliest possible time to leave depot
     Cost const prize;                   // Prize for visiting this client
     bool const required;                // Must client be in solution?
-    std::optional<size_t> const group;  // Optional client group membership
+    std::optional<size_t> const group;  // Optional mutually exclusive group
     char const *name;                   // Client name (for reference)
 
     Client(size_t location,

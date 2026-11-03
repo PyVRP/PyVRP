@@ -53,7 +53,7 @@ class LocalSearch
                               CostEvaluator const &costEvaluator);
 
     // Inserts U if it is an unplanned required client or shipment, or if it
-    // belongs to a required client group that is currently missing.
+    // belongs to a required mutually exclusive group that is currently missing.
     void insertRequired(Route::Node *U, CostEvaluator const &costEvaluator);
 
     // Updates solution state after an improving local search move.

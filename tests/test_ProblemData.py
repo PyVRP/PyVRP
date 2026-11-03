@@ -7,9 +7,9 @@ from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
     Client,
-    ClientGroup,
     Depot,
     Location,
+    MutuallyExclusiveGroup,
     ProblemData,
     Shipment,
     VehicleType,
@@ -430,7 +430,7 @@ def test_raises_inconsistent_profiles(ok_small):
 
 def test_raises_empty_group():
     """
-    Tests that passing an empty client group raises a ValueError.
+    Tests that passing an empty mutually exclusive group raises a ValueError.
     """
     with assert_raises(ValueError):
         ProblemData(
@@ -440,7 +440,7 @@ def test_raises_empty_group():
             vehicle_types=[VehicleType()],
             distance_matrices=[[[0]]],
             duration_matrices=[[[0]]],
-            groups=[ClientGroup()],  # empty group - this should raise
+            groups=[MutuallyExclusiveGroup()],  # empty group should raise
         )
 
 
@@ -448,11 +448,11 @@ def test_raises_empty_group():
     ("groups", "index"),
     [
         ([], 0),  # index 0, but there are no groups
-        ([ClientGroup([0])], 1),  # there is one group, but index is 1
+        ([MutuallyExclusiveGroup([0])], 1),  # one group, but index is 1
     ],
 )
-def test_raises_invalid_client_group_indices(
-    groups: list[ClientGroup], index: int
+def test_raises_invalid_mutually_exclusive_group_indices(
+    groups: list[MutuallyExclusiveGroup], index: int
 ):
     """
     Tests that setting the clients in a mutually exclusive group to values that
@@ -484,7 +484,7 @@ def test_raises_invalid_group_client_indices():
             vehicle_types=[VehicleType()],
             distance_matrices=[np.zeros((2, 2))],
             duration_matrices=[np.zeros((2, 2))],
-            groups=[ClientGroup([0, 1])],
+            groups=[MutuallyExclusiveGroup([0, 1])],
         )
 
 
@@ -507,7 +507,7 @@ def test_raises_wrong_mutual_group_referencing():
             vehicle_types=[VehicleType()],
             distance_matrices=[np.zeros((3, 3))],
             duration_matrices=[np.zeros((3, 3))],
-            groups=[ClientGroup([2])],
+            groups=[MutuallyExclusiveGroup([2])],
         )
 
     with assert_raises(ValueError):
@@ -520,7 +520,7 @@ def test_raises_wrong_mutual_group_referencing():
             duration_matrices=[np.zeros((3, 3))],
             # Group references a client that is not in the group. That should
             # raise as well.
-            groups=[ClientGroup([1])],
+            groups=[MutuallyExclusiveGroup([1])],
         )
 
 
@@ -539,13 +539,13 @@ def test_raises_for_required_mutually_exclusive_group_membership():
             vehicle_types=[VehicleType()],
             distance_matrices=[np.zeros((2, 2))],
             duration_matrices=[np.zeros((2, 2))],
-            groups=[ClientGroup([0])],
+            groups=[MutuallyExclusiveGroup([0])],
         )
 
 
-def test_replacing_client_groups(ok_small):
+def test_replacing_mutually_exclusive_groups(ok_small):
     """
-    Tests that replacing mutually exclusive client groups works well.
+    Tests that replacing mutually exclusive groups works well.
     """
     assert_equal(ok_small.num_groups, 0)
     assert_equal(ok_small.groups(), [])
@@ -554,10 +554,12 @@ def test_replacing_client_groups(ok_small):
     # that has a mutually exclusive group.
     clients = ok_small.clients()
     clients[0] = Client(1, delivery=[1], required=False, group=0)
-    data = ok_small.replace(clients=clients, groups=[ClientGroup([0])])
+    data = ok_small.replace(
+        clients=clients, groups=[MutuallyExclusiveGroup([0])]
+    )
 
-    # There should now be a single client group (at index 0) that has the first
-    # client as its only member.
+    # There should now be a single mutually exclusive group (at index 0) that
+    # has the first client as its only member.
     assert_equal(data.num_groups, 1)
     assert_equal(data.group(0).clients, [0])
 

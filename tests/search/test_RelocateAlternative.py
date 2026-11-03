@@ -3,10 +3,10 @@ from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Client,
-    ClientGroup,
     CostEvaluator,
     Depot,
     Location,
+    MutuallyExclusiveGroup,
     ProblemData,
     VehicleType,
 )
@@ -91,7 +91,7 @@ def test_accounts_for_prizes_and_fixed_vehicle_costs():
         vehicle_types=[VehicleType(2, fixed_cost=100)],
         distance_matrices=[matrix],
         duration_matrices=[matrix],
-        groups=[ClientGroup([0, 1], required=True)],
+        groups=[MutuallyExclusiveGroup([0, 1], required=True)],
     )
 
     # First scenario, with C0 and C2 on separate routes.
@@ -145,7 +145,7 @@ def test_supports(
 ):
     """
     Tests that RelocateAlternative only supports data with mutually exclusive
-    client groups.
+    groups.
     """
     assert_(RelocateAlternative.supports(gtsp))
     assert_(RelocateAlternative.supports(ok_small_mutually_exclusive_groups))

@@ -1,8 +1,8 @@
-#include "ClientGroup.h"
+#include "MutuallyExclusiveGroup.h"
 
 #include <cstring>
 
-using pyvrp::ClientGroup;
+using pyvrp::MutuallyExclusiveGroup;
 
 namespace
 {
@@ -19,23 +19,24 @@ static char *duplicate(char const *src)
 }
 }  // namespace
 
-ClientGroup::ClientGroup(std::vector<size_t> clients,
-                         bool required,
-                         std::string name)
+MutuallyExclusiveGroup::MutuallyExclusiveGroup(std::vector<size_t> clients,
+                                               bool required,
+                                               std::string name)
     : required(required), name(duplicate(name.data()))
 {
     for (auto const client : clients)
         addClient(client);
 }
 
-ClientGroup::ClientGroup(ClientGroup const &group)
+MutuallyExclusiveGroup::MutuallyExclusiveGroup(
+    MutuallyExclusiveGroup const &group)
     : clients_(group.clients_),
       required(group.required),
       name(duplicate(group.name))
 {
 }
 
-ClientGroup::ClientGroup(ClientGroup &&group)
+MutuallyExclusiveGroup::MutuallyExclusiveGroup(MutuallyExclusiveGroup &&group)
     : clients_(std::move(group.clients_)),
       required(group.required),
       name(group.name)  // we can steal
@@ -43,35 +44,38 @@ ClientGroup::ClientGroup(ClientGroup &&group)
     group.name = nullptr;  // stolen
 }
 
-bool ClientGroup::operator==(ClientGroup const &other) const
+bool MutuallyExclusiveGroup::operator==(
+    MutuallyExclusiveGroup const &other) const
 {
     // clang-format off
     return clients_ == other.clients_
         && required == other.required
-        && mutuallyExclusive == other.mutuallyExclusive
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }
 
-ClientGroup::~ClientGroup() { delete[] name; }
+MutuallyExclusiveGroup::~MutuallyExclusiveGroup() { delete[] name; }
 
-bool ClientGroup::empty() const { return clients_.empty(); }
+bool MutuallyExclusiveGroup::empty() const { return clients_.empty(); }
 
-size_t ClientGroup::size() const { return clients_.size(); }
+size_t MutuallyExclusiveGroup::size() const { return clients_.size(); }
 
-std::vector<size_t>::const_iterator ClientGroup::begin() const
+std::vector<size_t>::const_iterator MutuallyExclusiveGroup::begin() const
 {
     return clients_.begin();
 }
 
-std::vector<size_t>::const_iterator ClientGroup::end() const
+std::vector<size_t>::const_iterator MutuallyExclusiveGroup::end() const
 {
     return clients_.end();
 }
 
-std::vector<size_t> const &ClientGroup::clients() const { return clients_; }
+std::vector<size_t> const &MutuallyExclusiveGroup::clients() const
+{
+    return clients_;
+}
 
-void ClientGroup::addClient(size_t client)
+void MutuallyExclusiveGroup::addClient(size_t client)
 {
     if (std::find(clients_.begin(), clients_.end(), client) != clients_.end())
         throw std::invalid_argument("Client already in group.");

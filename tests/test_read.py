@@ -415,8 +415,8 @@ def test_max_distance_constraint():
 
 def test_reading_mutually_exclusive_group():
     """
-    Tests that read() correctly parses a small instance with mutually exclusive
-    client groups.
+    Tests that read() correctly parses mutually exclusive groups from a small
+    instance.
     """
     data = read("data/OkSmallMutuallyExclusiveGroups.txt")
     assert_equal(data.num_groups, 1)
@@ -473,7 +473,7 @@ def test_sdvrptw_instance():
     """
     data = read("data/PR01.vrp")
 
-    # One routing profile per unique client group.
+    # One routing profile per distinct set of allowed clients.
     assert_equal(data.num_profiles, 4)
     assert_equal(len(data.distance_matrices()), 4)
     assert_equal(len(data.duration_matrices()), 4)

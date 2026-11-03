@@ -30,7 +30,7 @@ Modelling
 
    How can I model clients with multiple time windows?
 
-      By adding the client multiple times, once for each time window, and making the duplicate clients part of a :class:`~pyvrp._pyvrp.ClientGroup`.
+      By adding the client multiple times, once for each time window, and making the duplicate clients part of a :class:`~pyvrp._pyvrp.MutuallyExclusiveGroup`.
       PyVRP will then select one of the alternatives to visit.
       See :doc:`this tutorial notebook <../notebooks/mutually_exclusive_groups>` for an example of modelling with mutually exclusive groups.
 

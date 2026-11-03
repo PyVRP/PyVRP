@@ -1,7 +1,6 @@
 #include "bindings.h"
 #include "Activity.h"
 #include "Client.h"
-#include "ClientGroup.h"
 #include "CostEvaluator.h"
 #include "Depot.h"
 #include "DurationSegment.h"
@@ -9,6 +8,7 @@
 #include "LoadSegment.h"
 #include "Location.h"
 #include "Matrix.h"
+#include "MutuallyExclusiveGroup.h"
 #include "PiecewiseLinearFunction.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
@@ -34,7 +34,6 @@ namespace py = pybind11;
 
 using pyvrp::Activity;
 using pyvrp::Client;
-using pyvrp::ClientGroup;
 using pyvrp::CostEvaluator;
 using pyvrp::Depot;
 using pyvrp::DurationSegment;
@@ -42,6 +41,7 @@ using pyvrp::DynamicBitset;
 using pyvrp::LoadSegment;
 using pyvrp::Location;
 using pyvrp::Matrix;
+using pyvrp::MutuallyExclusiveGroup;
 using pyvrp::ProblemData;
 using pyvrp::RandomNumberGenerator;
 using pyvrp::Route;
@@ -447,43 +447,45 @@ PYBIND11_MODULE(_pyvrp, m)
             [](Shipment const &shipment) { return shipment.name; },
             py::return_value_policy::reference_internal);
 
-    py::class_<ClientGroup>(m, "ClientGroup", DOC(pyvrp, ClientGroup))
+    py::class_<MutuallyExclusiveGroup>(
+        m, "MutuallyExclusiveGroup", DOC(pyvrp, MutuallyExclusiveGroup))
         .def(py::init<std::vector<size_t>, bool, char const *>(),
              py::arg("clients") = py::list(),
              py::arg("required") = true,
              py::kw_only(),
              py::arg("name") = "")
-        .def("add_client", &ClientGroup::addClient, py::arg("client"))
+        .def(
+            "add_client", &MutuallyExclusiveGroup::addClient, py::arg("client"))
         .def_property_readonly("clients",
-                               &ClientGroup::clients,
+                               &MutuallyExclusiveGroup::clients,
                                py::return_value_policy::reference_internal)
-        .def_readonly("required", &ClientGroup::required)
-        .def_readonly("mutually_exclusive", &ClientGroup::mutuallyExclusive)
+        .def_readonly("required", &MutuallyExclusiveGroup::required)
         .def_readonly("name",
-                      &ClientGroup::name,
+                      &MutuallyExclusiveGroup::name,
                       py::return_value_policy::reference_internal)
         .def(py::self == py::self)  // this is __eq__
         .def(py::pickle(
-            [](ClientGroup const &group) {  // __getstate__
+            [](MutuallyExclusiveGroup const &group) {  // __getstate__
                 return py::make_tuple(
                     group.clients(), group.required, group.name);
             },
             [](py::tuple t) {  // __setstate__
-                ClientGroup group(t[0].cast<std::vector<size_t>>(),  // clients
-                                  t[1].cast<bool>(),                 // required
-                                  t[2].cast<std::string>());         // name
+                MutuallyExclusiveGroup group(
+                    t[0].cast<std::vector<size_t>>(),  // clients
+                    t[1].cast<bool>(),                 // required
+                    t[2].cast<std::string>());         // name
 
                 return group;
             }))
-        .def("__len__", &ClientGroup::size)
+        .def("__len__", &MutuallyExclusiveGroup::size)
         .def(
             "__iter__",
-            [](ClientGroup const &group)
+            [](MutuallyExclusiveGroup const &group)
             { return py::make_iterator(group.begin(), group.end()); },
             py::return_value_policy::reference_internal)
         .def(
             "__str__",
-            [](ClientGroup const &group) { return group.name; },
+            [](MutuallyExclusiveGroup const &group) { return group.name; },
             py::return_value_policy::reference_internal);
 
     py::class_<VehicleType>(m, "VehicleType", DOC(pyvrp, VehicleType))
@@ -639,7 +641,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       std::vector<VehicleType>,
                       std::vector<Matrix<pyvrp::Distance>>,
                       std::vector<Matrix<pyvrp::Duration>>,
-                      std::vector<ClientGroup>,
+                      std::vector<MutuallyExclusiveGroup>,
                       std::vector<Shipment>>(),
              py::arg("locations"),
              py::arg("clients"),
@@ -809,7 +811,7 @@ PYBIND11_MODULE(_pyvrp, m)
                 using VehicleTypes = std::vector<VehicleType>;
                 using DistMats = std::vector<pyvrp::Matrix<pyvrp::Distance>>;
                 using DurMats = std::vector<pyvrp::Matrix<pyvrp::Duration>>;
-                using Groups = std::vector<ClientGroup>;
+                using Groups = std::vector<MutuallyExclusiveGroup>;
                 using Shipments = std::vector<Shipment>;
 
                 ProblemData data(t[0].cast<Locations>(),

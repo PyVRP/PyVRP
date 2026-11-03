@@ -99,7 +99,7 @@ This object stores the best observed solution and detailed runtime statistics.
    .. autoclass:: Shipment
       :members:
 
-   .. autoclass:: ClientGroup
+   .. autoclass:: MutuallyExclusiveGroup
       :members:
       :special-members: __iter__, __len__
 

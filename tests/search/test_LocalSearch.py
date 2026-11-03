@@ -7,10 +7,10 @@ from numpy.testing import assert_, assert_allclose, assert_equal
 from pyvrp import (
     Activity,
     Client,
-    ClientGroup,
     CostEvaluator,
     Depot,
     Location,
+    MutuallyExclusiveGroup,
     ProblemData,
     RandomNumberGenerator,
     Route,
@@ -613,7 +613,7 @@ def test_does_not_insert_optional_groups():
         vehicle_types=[VehicleType()],
         distance_matrices=[matrix],
         duration_matrices=[matrix],
-        groups=[ClientGroup([0, 1], required=False)],
+        groups=[MutuallyExclusiveGroup([0, 1], required=False)],
     )
 
     rng = RandomNumberGenerator(seed=2)

@@ -135,8 +135,8 @@ def test_proximity_with_mutually_exclusive_groups(
     ok_small_mutually_exclusive_groups,
 ):
     """
-    Tests that clients that are a member of a mutually exclusive client group
-    are not in each other's neighbourhood.
+    Tests that clients that are a member of a mutually exclusive group are not
+    in each other's neighbourhood.
     """
     params = NeighbourhoodParams(0, num_neighbours=1)
     neighbours = compute_neighbours(ok_small_mutually_exclusive_groups, params)

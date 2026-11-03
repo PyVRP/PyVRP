@@ -87,7 +87,7 @@ def ok_small_multiple_trips():
 def ok_small_mutually_exclusive_groups():
     """
     Fixture that returns the OkSmall instance, but where the first three
-    clients have been added to a mutually exclusive client group.
+    clients have been added to a mutually exclusive group.
     """
     return read("data/OkSmallMutuallyExclusiveGroups.txt")
 

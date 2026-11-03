@@ -12,9 +12,9 @@ from pyvrp._pyvrp import (
     Activity,
     ActivityType,
     Client,
-    ClientGroup,
     Depot,
     Location,
+    MutuallyExclusiveGroup,
     ProblemData,
     Route,
     Shipment,
@@ -569,9 +569,9 @@ class _ProblemDataBuilder:
 
         return dist_mats
 
-    def _groups(self) -> list[ClientGroup]:
+    def _groups(self) -> list[MutuallyExclusiveGroup]:
         groups = self.parser.mutually_exclusive_groups()
-        return [ClientGroup(group) for group in groups]
+        return [MutuallyExclusiveGroup(group) for group in groups]
 
     def _shipments(self) -> list[Shipment]:
         num_depots = self.parser.num_depots

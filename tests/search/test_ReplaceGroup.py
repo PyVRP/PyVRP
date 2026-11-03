@@ -3,10 +3,10 @@ from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
     Client,
-    ClientGroup,
     CostEvaluator,
     Depot,
     Location,
+    MutuallyExclusiveGroup,
     ProblemData,
     VehicleType,
 )
@@ -55,7 +55,7 @@ def test_replace_accounts_for_prizes():
         vehicle_types=[VehicleType(1)],
         distance_matrices=[matrix],
         duration_matrices=[matrix],
-        groups=[ClientGroup([0, 1])],
+        groups=[MutuallyExclusiveGroup([0, 1])],
     )
     sol = Solution(data)
     sol.load(PyVRPSolution(data, [[0]]))
@@ -76,7 +76,7 @@ def test_supports(
 ):
     """
     Tests that ReplaceGroup only supports instances with mutually exclusive
-    client groups.
+    groups.
     """
     assert_(ReplaceGroup.supports(gtsp))
     assert_(ReplaceGroup.supports(ok_small_mutually_exclusive_groups))

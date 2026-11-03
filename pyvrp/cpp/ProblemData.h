@@ -2,11 +2,11 @@
 #define PYVRP_PROBLEMDATA_H
 
 #include "Client.h"
-#include "ClientGroup.h"
 #include "Depot.h"
 #include "Location.h"
 #include "Matrix.h"
 #include "Measure.h"
+#include "MutuallyExclusiveGroup.h"
 #include "Shipment.h"
 #include "VehicleType.h"
 
@@ -23,7 +23,7 @@ namespace pyvrp
  *     vehicle_types: list[VehicleType],
  *     distance_matrices: list[numpy.ndarray[int]],
  *     duration_matrices: list[numpy.ndarray[int]],
- *     groups: list[ClientGroup] = [],
+ *     groups: list[MutuallyExclusiveGroup] = [],
  *     shipments: list[Shipment] = [],
  * )
  *
@@ -52,9 +52,8 @@ namespace pyvrp
  *     Duration matrices that give the travel durations between all locations.
  *     Each matrix corresponds to a routing profile.
  * groups
- *     List of client groups. Client groups have certain restrictions - see the
- *     definition for details. By default there are no groups, and empty groups
- *     must not be passed.
+ *     List of mutually exclusive groups. By default there are no groups. Empty
+ *     groups must not be passed.
  * shipments
  *     List of shipments. Default empty.
  *
@@ -74,8 +73,8 @@ class ProblemData
     std::vector<Client> const clients_;            // Client information
     std::vector<Depot> const depots_;              // Depot information
     std::vector<VehicleType> const vehicleTypes_;  // Vehicle type information
-    std::vector<ClientGroup> const groups_;        // Client groups
-    std::vector<Shipment> const shipments_;        // Shipment information
+    std::vector<MutuallyExclusiveGroup> const groups_;  // Group information
+    std::vector<Shipment> const shipments_;             // Shipment information
 
     size_t const numVehicles_;
     size_t const numLoadDimensions_;
@@ -103,9 +102,9 @@ public:
     [[nodiscard]] std::vector<Depot> const &depots() const;
 
     /**
-     * Returns a list of all client groups in the problem instance.
+     * Returns a list of all mutually exclusive groups in the problem instance.
      */
-    [[nodiscard]] std::vector<ClientGroup> const &groups() const;
+    [[nodiscard]] std::vector<MutuallyExclusiveGroup> const &groups() const;
 
     /**
      * Returns a list of all shipments in the problem instance.
@@ -170,14 +169,14 @@ public:
     [[nodiscard]] inline Depot const &depot(size_t depot) const;
 
     /**
-     * Returns the client group at the given index.
+     * Returns the mutually exclusive group at the given index.
      *
      * Parameters
      * ----------
      * group
      *     Group index whose information to retrieve.
      */
-    [[nodiscard]] ClientGroup const &group(size_t group) const;
+    [[nodiscard]] MutuallyExclusiveGroup const &group(size_t group) const;
 
     /**
      * Returns the shipment at the given index.
@@ -254,7 +253,7 @@ public:
     [[nodiscard]] size_t numDepots() const;
 
     /**
-     * Number of client groups in this problem instance.
+     * Number of mutually exclusive groups in this problem instance.
      */
     [[nodiscard]] size_t numGroups() const;
 
@@ -307,7 +306,7 @@ public:
      * duration_matrices
      *     Optional duration matrices, one per routing profile.
      * groups
-     *     Optional client groups.
+     *     Optional mutually exclusive groups.
      * shipments
      *     Optional list of shipments.
      *
@@ -316,14 +315,15 @@ public:
      * ProblemData
      *    A new ProblemData instance with possibly replaced data.
      */
-    ProblemData replace(std::optional<std::vector<Location>> &locations,
-                        std::optional<std::vector<Client>> &clients,
-                        std::optional<std::vector<Depot>> &depots,
-                        std::optional<std::vector<VehicleType>> &vehicleTypes,
-                        std::optional<std::vector<Matrix<Distance>>> &distMats,
-                        std::optional<std::vector<Matrix<Duration>>> &durMats,
-                        std::optional<std::vector<ClientGroup>> &groups,
-                        std::optional<std::vector<Shipment>> &shipments) const;
+    ProblemData
+    replace(std::optional<std::vector<Location>> &locations,
+            std::optional<std::vector<Client>> &clients,
+            std::optional<std::vector<Depot>> &depots,
+            std::optional<std::vector<VehicleType>> &vehicleTypes,
+            std::optional<std::vector<Matrix<Distance>>> &distMats,
+            std::optional<std::vector<Matrix<Duration>>> &durMats,
+            std::optional<std::vector<MutuallyExclusiveGroup>> &groups,
+            std::optional<std::vector<Shipment>> &shipments) const;
 
     ProblemData(std::vector<Location> locations,
                 std::vector<Client> clients,
@@ -331,7 +331,7 @@ public:
                 std::vector<VehicleType> vehicleTypes,
                 std::vector<Matrix<Distance>> distMats,
                 std::vector<Matrix<Duration>> durMats,
-                std::vector<ClientGroup> groups = {},
+                std::vector<MutuallyExclusiveGroup> groups = {},
                 std::vector<Shipment> shipments = {});
 
     ProblemData() = delete;

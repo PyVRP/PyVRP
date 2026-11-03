@@ -22,7 +22,6 @@ ReplaceGroup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
         return std::make_pair(0, false);
 
     auto const &group = data.group(*uData.group);
-    assert(group.mutuallyExclusive);
 
     Cost deltaCost = 0;
     for (auto const client : group)
@@ -68,9 +67,5 @@ std::string ReplaceGroup::name() const { return "ReplaceGroup"; }
 
 bool ReplaceGroup::supports(ProblemData const &data)
 {
-    for (auto const &group : data.groups())
-        if (group.mutuallyExclusive)
-            return true;
-
-    return false;
+    return data.numGroups() > 0;
 }
