@@ -24,22 +24,22 @@ namespace pyvrp
  * clients
  *     The clients in the group.
  * required
- *     Whether visiting this client group is required.
+ *     Whether visiting a client from this group is required.
  * name
- *    Free-form name field for this client group. Default empty.
+ *    Free-form name field for this group. Default empty.
  *
  * Attributes
  * ----------
  * clients
  *     The clients in the group.
  * required
- *     Whether visiting this client group is required.
+ *     Whether visiting a client from this group is required.
  * mutually_exclusive
  *     When ``True``, exactly one of the clients in this group must be
  *     visited if the group is required, and at most one if the group is
  *     not required.
  * name
- *    Free-form name field for this client group.
+ *    Free-form name field for this group.
  *
  * Raises
  * ------
@@ -52,9 +52,8 @@ class MutuallyExclusiveGroup
     std::vector<size_t> clients_;  // clients in this group
 
 public:
-    bool const required;                  // is visiting the group required?
-    bool const mutuallyExclusive = true;  // at most one visit in group?
-    char const *name;                     // Group name (for reference)
+    bool const required;  // is visiting the group required?
+    char const *name;     // Group name (for reference)
 
     explicit MutuallyExclusiveGroup(std::vector<size_t> clients = {},
                                     bool required = true,

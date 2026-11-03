@@ -76,7 +76,7 @@ def test_supports(
 ):
     """
     Tests that ReplaceGroup only supports instances with mutually exclusive
-    client groups.
+    groups.
     """
     assert_(ReplaceGroup.supports(gtsp))
     assert_(ReplaceGroup.supports(ok_small_mutually_exclusive_groups))

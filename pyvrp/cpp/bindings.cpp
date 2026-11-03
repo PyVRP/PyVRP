@@ -460,8 +460,6 @@ PYBIND11_MODULE(_pyvrp, m)
                                &MutuallyExclusiveGroup::clients,
                                py::return_value_policy::reference_internal)
         .def_readonly("required", &MutuallyExclusiveGroup::required)
-        .def_readonly("mutually_exclusive",
-                      &MutuallyExclusiveGroup::mutuallyExclusive)
         .def_readonly("name",
                       &MutuallyExclusiveGroup::name,
                       py::return_value_policy::reference_internal)

@@ -52,9 +52,8 @@ namespace pyvrp
  *     Duration matrices that give the travel durations between all locations.
  *     Each matrix corresponds to a routing profile.
  * groups
- *     List of client groups. Client groups have certain restrictions - see the
- *     definition for details. By default there are no groups, and empty groups
- *     must not be passed.
+ *     List of mutually exclusive groups. By default there are no groups. Empty
+ *     groups must not be passed.
  * shipments
  *     List of shipments. Default empty.
  *
@@ -103,7 +102,7 @@ public:
     [[nodiscard]] std::vector<Depot> const &depots() const;
 
     /**
-     * Returns a list of all client groups in the problem instance.
+     * Returns a list of all mutually exclusive groups in the problem instance.
      */
     [[nodiscard]] std::vector<MutuallyExclusiveGroup> const &groups() const;
 
@@ -170,7 +169,7 @@ public:
     [[nodiscard]] inline Depot const &depot(size_t depot) const;
 
     /**
-     * Returns the client group at the given index.
+     * Returns the mutually exclusive group at the given index.
      *
      * Parameters
      * ----------
@@ -254,7 +253,7 @@ public:
     [[nodiscard]] size_t numDepots() const;
 
     /**
-     * Number of client groups in this problem instance.
+     * Number of mutually exclusive groups in this problem instance.
      */
     [[nodiscard]] size_t numGroups() const;
 
@@ -307,7 +306,7 @@ public:
      * duration_matrices
      *     Optional duration matrices, one per routing profile.
      * groups
-     *     Optional client groups.
+     *     Optional mutually exclusive groups.
      * shipments
      *     Optional list of shipments.
      *

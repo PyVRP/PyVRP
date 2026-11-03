@@ -430,7 +430,7 @@ def test_raises_inconsistent_profiles(ok_small):
 
 def test_raises_empty_group():
     """
-    Tests that passing an empty client group raises a ValueError.
+    Tests that passing an empty mutually exclusive group raises a ValueError.
     """
     with assert_raises(ValueError):
         ProblemData(
@@ -451,7 +451,7 @@ def test_raises_empty_group():
         ([MutuallyExclusiveGroup([0])], 1),  # one group, but index is 1
     ],
 )
-def test_raises_invalid_client_group_indices(
+def test_raises_invalid_mutually_exclusive_group_indices(
     groups: list[MutuallyExclusiveGroup], index: int
 ):
     """
@@ -543,9 +543,9 @@ def test_raises_for_required_mutually_exclusive_group_membership():
         )
 
 
-def test_replacing_client_groups(ok_small):
+def test_replacing_mutually_exclusive_groups(ok_small):
     """
-    Tests that replacing mutually exclusive client groups works well.
+    Tests that replacing mutually exclusive groups works well.
     """
     assert_equal(ok_small.num_groups, 0)
     assert_equal(ok_small.groups(), [])
@@ -558,8 +558,8 @@ def test_replacing_client_groups(ok_small):
         clients=clients, groups=[MutuallyExclusiveGroup([0])]
     )
 
-    # There should now be a single client group (at index 0) that has the first
-    # client as its only member.
+    # There should now be a single mutually exclusive group (at index 0) that
+    # has the first client as its only member.
     assert_equal(data.num_groups, 1)
     assert_equal(data.group(0).clients, [0])
 

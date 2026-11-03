@@ -145,7 +145,7 @@ def test_supports(
 ):
     """
     Tests that RelocateAlternative only supports data with mutually exclusive
-    client groups.
+    groups.
     """
     assert_(RelocateAlternative.supports(gtsp))
     assert_(RelocateAlternative.supports(ok_small_mutually_exclusive_groups))

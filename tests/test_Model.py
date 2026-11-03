@@ -690,10 +690,10 @@ def test_add_client_raises_unknown_group():
         m.add_client(location=loc, group=group)
 
 
-def test_from_data_client_group(ok_small):
+def test_from_data_mutually_exclusive_group(ok_small):
     """
-    Test that creating a model from a given data instance with client groups
-    correctly sets up the client groups in the model.
+    Tests that creating a model from a data instance with mutually exclusive
+    groups correctly sets up those groups in the model.
     """
     clients = ok_small.clients()
     clients[0] = Client(1, delivery=[1], required=False, group=0)
@@ -705,7 +705,7 @@ def test_from_data_client_group(ok_small):
     model = Model.from_data(data)
 
     # Test that the clients have been correctly registered, and that there is
-    # a client group in the model.
+    # a mutually exclusive group in the model.
     assert_equal(model.clients[0].group, 0)
     assert_equal(model.clients[1].group, 0)
     assert_equal(len(model.groups), 1)
@@ -717,10 +717,10 @@ def test_from_data_client_group(ok_small):
     assert_equal(group.clients, [0, 1])
 
 
-def test_to_data_client_group():
+def test_to_data_mutually_exclusive_group():
     """
-    Tests that creating a small model with a client group results in a correct
-    ProblemData instance that has the appropriate group memberships set up.
+    Tests that creating a small model with a mutually exclusive group results
+    in a ProblemData instance with the appropriate group memberships set up.
     """
     m = Model()
     m.add_vehicle_type()
@@ -730,8 +730,8 @@ def test_to_data_client_group():
     m.add_client(location=m.add_location(1, 1), required=False, group=group)
     m.add_client(location=m.add_location(2, 2), required=False, group=group)
 
-    # Generate the data instance. There should be a single client group, and
-    # the first two clients should be members of that group.
+    # Generate the data instance. There should be a single mutually exclusive
+    # group, and the first two clients should be members of that group.
     data = m.data()
     assert_equal(data.num_groups, 1)
 
@@ -739,16 +739,14 @@ def test_to_data_client_group():
     assert_equal(group.clients, [0, 1])
 
 
-def test_raises_mutually_exclusive_client_group_required_client():
+def test_raises_mutually_exclusive_group_required_client():
     """
-    Tests that adding a required client to a mutually exclusive client group
+    Tests that adding a required client to a mutually exclusive group
     raises, because that does not make any sense.
     """
     m = Model()
     loc = m.add_location(1, 1)
-
     group = m.add_mutually_exclusive_group()
-    assert_(group.mutually_exclusive)
 
     with assert_raises(ValueError):
         m.add_client(location=loc, required=True, group=group)

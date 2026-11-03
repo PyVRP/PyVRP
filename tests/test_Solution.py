@@ -756,7 +756,6 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
 
     group = MutuallyExclusiveGroup([0, 1], required=True)
     assert_(group.required)
-    assert_(group.mutually_exclusive)
 
     data = ok_small.replace(clients=clients, groups=[group])
     sol = Solution(data, routes)
@@ -766,9 +765,9 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
 
 def test_optional_mutually_exclusive_group(ok_small):
     """
-    Tests that mutually exclusive client groups can be skipped if they are
-    not required. In that case at most one client from the group needs to be
-    in the solution, but zero is also OK.
+    Tests that mutually exclusive groups can be skipped if they are not
+    required. In that case at most one client from the group needs to be in
+    the solution, but zero is also OK.
     """
     # Clients 1 and 2 are part of a mutually exclusive group. Of these clients,
     # at most one must be part of a feasible solution.
@@ -778,7 +777,6 @@ def test_optional_mutually_exclusive_group(ok_small):
 
     group = MutuallyExclusiveGroup([0, 1], required=False)
     assert_(not group.required)
-    assert_(group.mutually_exclusive)
 
     data = ok_small.replace(clients=clients, groups=[group])
     sol = Solution(data, [[2, 3]])

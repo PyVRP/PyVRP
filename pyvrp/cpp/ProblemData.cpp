@@ -147,7 +147,7 @@ void ProblemData::validate() const
             throw std::invalid_argument(msg);
         }
 
-        if (client.required && group.mutuallyExclusive)
+        if (client.required)
         {
             auto const *msg = "Required client in mutually exclusive group.";
             throw std::invalid_argument(msg);
@@ -168,7 +168,7 @@ void ProblemData::validate() const
         auto const &group = groups_[idx];
 
         if (group.empty())
-            throw std::invalid_argument("Empty client group not understood.");
+            throw std::invalid_argument("Empty group not understood.");
 
         for (auto const client : group)
         {

@@ -15,7 +15,6 @@ def test_mutually_exclusive_group_attribute_access():
 
     assert_equal(group.clients, [1, 2, 3])
     assert_equal(group.required, False)
-    assert_equal(group.mutually_exclusive, True)
     assert_equal(group.name, "test")
     assert_equal(str(group), "test")
 
@@ -46,7 +45,7 @@ def test_eq():
     group3 = MutuallyExclusiveGroup(clients=[1, 2], required=False)
     assert_(group1 == group3)
 
-    # And some things that are not client groups.
+    # And some things that are not mutually exclusive groups.
     assert_(group1 != "text")
     assert_(group1 != 7)
 
@@ -67,7 +66,7 @@ def test_eq_name():
 
 def test_pickle():
     """
-    Tests that client groups can be serialised and unserialised.
+    Tests that mutually exclusive groups can be serialised and unserialised.
     """
     before_pickle = MutuallyExclusiveGroup(
         clients=[1, 2, 3], required=False, name="test"

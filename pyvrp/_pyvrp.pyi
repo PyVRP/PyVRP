@@ -130,7 +130,6 @@ class Client:
 
 class MutuallyExclusiveGroup:
     required: bool
-    mutually_exclusive: bool
     name: str
     def __init__(
         self,

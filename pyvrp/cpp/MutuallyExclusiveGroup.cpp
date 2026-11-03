@@ -50,7 +50,6 @@ bool MutuallyExclusiveGroup::operator==(
     // clang-format off
     return clients_ == other.clients_
         && required == other.required
-        && mutuallyExclusive == other.mutuallyExclusive
         && std::strcmp(name, other.name) == 0;
     // clang-format on
 }

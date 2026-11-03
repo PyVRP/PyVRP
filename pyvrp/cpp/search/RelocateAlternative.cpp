@@ -15,7 +15,6 @@ void RelocateAlternative::evalSameRoute(Route::Node *U,
     auto const *route = U->route();
     auto const &uData = data.client(U->idx());
     auto const &group = data.group(*uData.group);
-    assert(group.mutuallyExclusive);
 
     if (U->trip() != V->trip())
         return;
@@ -73,7 +72,6 @@ void RelocateAlternative::evalDifferentRoutes(
     auto const *vRoute = V->route();
     auto const &uData = data.client(U->idx());
     auto const &group = data.group(*uData.group);
-    assert(group.mutuallyExclusive);
 
     if (!hasCachedRemoveCost_[U->idx()])
     {
@@ -156,11 +154,7 @@ std::string RelocateAlternative::name() const { return "RelocateAlternative"; }
 
 bool RelocateAlternative::supports(ProblemData const &data)
 {
-    for (auto const &group : data.groups())
-        if (group.mutuallyExclusive)
-            return true;
-
-    return false;
+    return data.numGroups() > 0;
 }
 
 void RelocateAlternative::update(Route const *route)

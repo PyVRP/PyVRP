@@ -332,7 +332,6 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
     for (size_t idx = 0; idx != data.numGroups(); ++idx)
     {
         auto const &group = data.group(idx);
-        assert(group.mutuallyExclusive);
 
         auto const inSol = [&](auto client) { return isClientVisited[client]; };
         auto const count = std::count_if(group.begin(), group.end(), inSol);

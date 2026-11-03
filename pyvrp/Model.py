@@ -138,7 +138,7 @@ class Model:
     @property
     def groups(self) -> list[MutuallyExclusiveGroup]:
         """
-        Returns all client groups currently in the model.
+        Returns all mutually exclusive groups currently in the model.
         """
         return self._groups
 
@@ -258,7 +258,7 @@ class Model:
         ValueError
             When ``group`` is not ``None``, and the given ``group`` is not part
             of this model instance, or when a required client is being added to
-            a mutually exclusive client group.
+            a mutually exclusive group.
         """
         if group is None:
             group_idx = None
@@ -271,9 +271,9 @@ class Model:
             msg = "The given location is not in this model instance."
             raise ValueError(msg)
 
-        if required and group is not None and group.mutually_exclusive:
-            # Required clients cannot be part of a mutually exclusive client
-            # group, since then there's nothing to decide about.
+        if required and group is not None:
+            # Required clients cannot be part of a mutually exclusive group,
+            # since then there's nothing to decide about.
             raise ValueError("Required client in mutually exclusive group.")
 
         client = Client(
