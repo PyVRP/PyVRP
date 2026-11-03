@@ -423,10 +423,12 @@ def test_reading_mutually_exclusive_group():
 
     group = data.group(0)
     assert_equal(len(group), 3)
-    assert_equal(group.clients, [0, 1, 2])
+    assert_equal(
+        group.activities, [Activity("C0"), Activity("C1"), Activity("C2")]
+    )
 
-    for client in data.group(0):
-        client_data = data.client(client)
+    for activity in data.group(0):
+        client_data = data.client(activity.idx)
         assert_equal(client_data.required, False)
         assert_equal(client_data.group, 0)
 

@@ -613,7 +613,11 @@ def test_does_not_insert_optional_groups():
         vehicle_types=[VehicleType()],
         distance_matrices=[matrix],
         duration_matrices=[matrix],
-        groups=[MutuallyExclusiveGroup([0, 1], required=False)],
+        groups=[
+            MutuallyExclusiveGroup(
+                [Activity("C0"), Activity("C1")], required=False
+            )
+        ],
     )
 
     rng = RandomNumberGenerator(seed=2)

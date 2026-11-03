@@ -142,13 +142,9 @@ def test_proximity_with_mutually_exclusive_groups(
     neighbours = compute_neighbours(ok_small_mutually_exclusive_groups, params)
 
     group = ok_small_mutually_exclusive_groups.group(0)
-    members = group.clients
-    for client in members:
-        act = Activity(f"C{client}")
-        assert_(
-            all(Activity(f"C{other}") not in neighbours[act]
-            for other in members)
-        )
+    members = group.activities
+    for activity in members:
+        assert_(all(other not in neighbours[activity] for other in members))
 
 
 def test_different_routing_costs(ok_small):

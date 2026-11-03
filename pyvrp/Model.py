@@ -6,6 +6,8 @@ from warnings import warn
 import numpy as np
 
 from pyvrp._pyvrp import (
+    Activity,
+    ActivityType,
     Client,
     Depot,
     Location,
@@ -292,7 +294,9 @@ class Model:
 
         if group_idx is not None:
             client_idx = len(self._clients)
-            self._groups[group_idx].add_client(client_idx)
+            self._groups[group_idx].add_activity(
+                Activity(ActivityType.CLIENT, client_idx)
+            )
 
         self._clients.append(client)
         return client

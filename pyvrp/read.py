@@ -571,7 +571,12 @@ class _ProblemDataBuilder:
 
     def _groups(self) -> list[MutuallyExclusiveGroup]:
         groups = self.parser.mutually_exclusive_groups()
-        return [MutuallyExclusiveGroup(group) for group in groups]
+        return [
+            MutuallyExclusiveGroup(
+                [Activity(ActivityType.CLIENT, idx) for idx in group]
+            )
+            for group in groups
+        ]
 
     def _shipments(self) -> list[Shipment]:
         num_depots = self.parser.num_depots

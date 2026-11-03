@@ -6,6 +6,7 @@ from numpy.random import default_rng
 from numpy.testing import assert_, assert_equal, assert_raises
 
 from pyvrp import (
+    Activity,
     Client,
     Depot,
     Location,
@@ -448,7 +449,7 @@ def test_raises_empty_group():
     ("groups", "index"),
     [
         ([], 0),  # index 0, but there are no groups
-        ([MutuallyExclusiveGroup([0])], 1),  # one group, but index is 1
+        ([MutuallyExclusiveGroup([Activity("C0")])], 1),  # idx 1, one group
     ],
 )
 def test_raises_invalid_mutually_exclusive_group_indices(
@@ -484,7 +485,7 @@ def test_raises_invalid_group_client_indices():
             vehicle_types=[VehicleType()],
             distance_matrices=[np.zeros((2, 2))],
             duration_matrices=[np.zeros((2, 2))],
-            groups=[MutuallyExclusiveGroup([0, 1])],
+            groups=[MutuallyExclusiveGroup([Activity("C0"), Activity("C1")])],
         )
 
 
@@ -507,7 +508,7 @@ def test_raises_wrong_mutual_group_referencing():
             vehicle_types=[VehicleType()],
             distance_matrices=[np.zeros((3, 3))],
             duration_matrices=[np.zeros((3, 3))],
-            groups=[MutuallyExclusiveGroup([2])],
+            groups=[MutuallyExclusiveGroup([Activity("C2")])],
         )
 
     with assert_raises(ValueError):
@@ -520,7 +521,7 @@ def test_raises_wrong_mutual_group_referencing():
             duration_matrices=[np.zeros((3, 3))],
             # Group references a client that is not in the group. That should
             # raise as well.
-            groups=[MutuallyExclusiveGroup([1])],
+            groups=[MutuallyExclusiveGroup([Activity("C1")])],
         )
 
 
@@ -539,7 +540,7 @@ def test_raises_for_required_mutually_exclusive_group_membership():
             vehicle_types=[VehicleType()],
             distance_matrices=[np.zeros((2, 2))],
             duration_matrices=[np.zeros((2, 2))],
-            groups=[MutuallyExclusiveGroup([0])],
+            groups=[MutuallyExclusiveGroup([Activity("C0")])],
         )
 
 
@@ -555,13 +556,13 @@ def test_replacing_mutually_exclusive_groups(ok_small):
     clients = ok_small.clients()
     clients[0] = Client(1, delivery=[1], required=False, group=0)
     data = ok_small.replace(
-        clients=clients, groups=[MutuallyExclusiveGroup([0])]
+        clients=clients, groups=[MutuallyExclusiveGroup([Activity("C0")])]
     )
 
     # There should now be a single mutually exclusive group (at index 0) that
     # has the first client as its only member.
     assert_equal(data.num_groups, 1)
-    assert_equal(data.group(0).clients, [0])
+    assert_equal(data.group(0).activities, [Activity("C0")])
 
 
 def test_pickle_data(ok_small, rc208):

@@ -2,6 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
+    Activity,
     Client,
     CostEvaluator,
     Depot,
@@ -55,7 +56,7 @@ def test_replace_accounts_for_prizes():
         vehicle_types=[VehicleType(1)],
         distance_matrices=[matrix],
         duration_matrices=[matrix],
-        groups=[MutuallyExclusiveGroup([0, 1])],
+        groups=[MutuallyExclusiveGroup([Activity("C0"), Activity("C1")])],
     )
     sol = Solution(data)
     sol.load(PyVRPSolution(data, [[0]]))

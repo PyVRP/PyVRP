@@ -24,9 +24,10 @@ ReplaceGroup::evaluate(Route::Node *U, CostEvaluator const &costEvaluator)
     auto const &group = data.group(*uData.group);
 
     Cost deltaCost = 0;
-    for (auto const client : group)
-        if (solution_->clients[client].route())
+    for (auto const &activity : group)
+        if (solution_->clients[activity.idx()].route())
         {
+            auto const client = activity.idx();
             assert(client != U->idx());
             V_ = &solution_->clients[client];
             auto *route = V_->route();

@@ -2,6 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
+    Activity,
     Client,
     CostEvaluator,
     Depot,
@@ -78,7 +79,9 @@ def test_supports(
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
-        groups=[MutuallyExclusiveGroup(clients=[0], required=False)],
+        groups=[
+            MutuallyExclusiveGroup(activities=[Activity("C0")], required=False)
+        ],
     )
 
     # Operator does not support instances with required groups, but it does
@@ -123,7 +126,11 @@ def test_group_skip_duplicates():
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
-        groups=[MutuallyExclusiveGroup([0, 1], required=False)],
+        groups=[
+            MutuallyExclusiveGroup(
+                [Activity("C0"), Activity("C1")], required=False
+            )
+        ],
     )
 
     solution = Solution(data)

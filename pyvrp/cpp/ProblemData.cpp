@@ -141,7 +141,8 @@ void ProblemData::validate() const
             throw std::out_of_range("Client references invalid group.");
 
         auto const &group = groups_[*client.group];
-        if (std::find(group.begin(), group.end(), idx) == group.end())
+        Activity const activity(Activity::ActivityType::CLIENT, idx);
+        if (std::find(group.begin(), group.end(), activity) == group.end())
         {
             auto const *msg = "Client not in the group it references.";
             throw std::invalid_argument(msg);
@@ -170,8 +171,13 @@ void ProblemData::validate() const
         if (group.empty())
             throw std::invalid_argument("Empty group not understood.");
 
-        for (auto const client : group)
+        for (auto const activity : group)
         {
+            if (!activity.isClient())
+                throw std::invalid_argument("Only client activities are "
+                                            "currently supported in groups.");
+
+            auto const client = activity.idx();
             if (client >= numClients())
                 throw std::out_of_range("Group references invalid client.");
 

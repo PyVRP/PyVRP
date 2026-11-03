@@ -20,8 +20,9 @@ void RelocateAlternative::evalSameRoute(Route::Node *U,
         return;
 
     if (U->pos() < V->pos())
-        for (auto const client : group)
+        for (auto const &activity : group)
         {
+            auto const client = activity.idx();
             auto *alternative = &solution_->clients[client];
             if (alternative == U)
                 continue;
@@ -42,8 +43,9 @@ void RelocateAlternative::evalSameRoute(Route::Node *U,
             }
         }
     else
-        for (auto const client : group)
+        for (auto const &activity : group)
         {
+            auto const client = activity.idx();
             auto *alternative = &solution_->clients[client];
             if (alternative == U)
                 continue;
@@ -90,8 +92,9 @@ void RelocateAlternative::evalDifferentRoutes(
         hasCachedRemoveCost_[U->idx()] = true;
     }
 
-    for (auto const client : group)
+    for (auto const &activity : group)
     {
+        auto const client = activity.idx();
         if (client == U->idx())
             continue;
 

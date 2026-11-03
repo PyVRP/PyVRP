@@ -118,8 +118,8 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
 
     for (auto const &group : data.groups())
     {
-        auto const inSol = [&](auto member)
-        { return solution_.clients[member].route() != nullptr; };
+        auto const inSol = [&](auto const &member)
+        { return solution_[member]->route() != nullptr; };
         auto const count = std::count_if(group.begin(), group.end(), inSol);
         assert(group.required ? count == 1 : count <= 1);
     }
@@ -285,9 +285,9 @@ void LocalSearch::insertRequired(Route::Node *U,
         if (!group.required)
             return;
 
-        for (auto const client : group.clients())   // check if any of the group
-            if (solution_.clients[client].route())  // is already present - then
-                return;                             // we need not insert
+        for (auto const &activity : group)     // check if any group member is
+            if (solution_[activity]->route())  // already present - then
+                return;                        // we need not insert
 
         solution_.insert(U, searchSpace_, costEvaluator, true);
         update(U->route(), U->route());

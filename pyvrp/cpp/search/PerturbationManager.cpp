@@ -81,9 +81,9 @@ void PerturbationManager::perturb(Solution &solution,
             if (client.group)
                 // If another group member is already planned, we first remove
                 // it before inserting the client.
-                for (auto const member : data_.group(*client.group))
+                for (auto const &activity : data_.group(*client.group))
                 {
-                    auto *other = &solution.clients[member];
+                    auto *other = solution[activity];
                     if (other->route())
                     {
                         remove(other);

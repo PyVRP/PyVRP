@@ -754,7 +754,9 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     clients[0] = Client(1, delivery=[0], required=False, group=0)
     clients[1] = Client(2, delivery=[0], required=False, group=0)
 
-    group = MutuallyExclusiveGroup([0, 1], required=True)
+    group = MutuallyExclusiveGroup(
+        [Activity("C0"), Activity("C1")], required=True
+    )
     assert_(group.required)
 
     data = ok_small.replace(clients=clients, groups=[group])
@@ -775,7 +777,9 @@ def test_optional_mutually_exclusive_group(ok_small):
     clients[0] = Client(1, delivery=[0], required=False, group=0)
     clients[1] = Client(2, delivery=[0], required=False, group=0)
 
-    group = MutuallyExclusiveGroup([0, 1], required=False)
+    group = MutuallyExclusiveGroup(
+        [Activity("C0"), Activity("C1")], required=False
+    )
     assert_(not group.required)
 
     data = ok_small.replace(clients=clients, groups=[group])

@@ -160,10 +160,9 @@ Solution::Solution(ProblemData const &data, RandomNumberGenerator &rng)
     for (auto const &group : data.groups())  // first handle groups
         if (group.required || rng.rand() < 0.5)
         {
-            auto const &members = group.clients();
+            auto const &members = group.activities();
             auto const idx = rng.randint(members.size());
-            activities.emplace_back(Activity::ActivityType::CLIENT,
-                                    members[idx]);
+            activities.push_back(members[idx]);
         }
 
     for (size_t idx = 0; idx != data.numClients(); ++idx)
@@ -333,7 +332,8 @@ Solution::Solution(ProblemData const &data, std::vector<Route> routes)
     {
         auto const &group = data.group(idx);
 
-        auto const inSol = [&](auto client) { return isClientVisited[client]; };
+        auto const inSol
+            = [&](auto activity) { return isClientVisited[activity.idx()]; };
         auto const count = std::count_if(group.begin(), group.end(), inSol);
         if (count > 1)
         {
