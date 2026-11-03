@@ -34,10 +34,6 @@ namespace pyvrp
  *     The clients in the group.
  * required
  *     Whether visiting a client from this group is required.
- * mutually_exclusive
- *     When ``True``, exactly one of the clients in this group must be
- *     visited if the group is required, and at most one if the group is
- *     not required.
  * name
  *    Free-form name field for this group.
  *
