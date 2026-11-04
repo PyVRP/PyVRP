@@ -75,39 +75,31 @@ void PerturbationManager::perturb(Solution &solution,
         assert(node->isClient() || node->isPickup());
         assert(!node->route());
 
-        if (node->isClient())
-        {
-            auto const &client = data_.client(node->idx());
-            if (client.group)
-                // If another group member is already planned, we first remove
-                // it before inserting the client.
-                for (auto const &activity : data_.group(*client.group))
+        auto const group = node->isClient() ? data_.client(node->idx()).group
+                                            : data_.shipment(node->idx()).group;
+
+        if (group)
+            // Remove the planned group member before inserting its replacement.
+            for (auto const &activity : data_.group(*group))
+            {
+                auto *other = solution[activity];
+                if (other->route())
                 {
-                    auto *other = solution[activity];
-                    if (other->route())
-                    {
-                        remove(other);
-                        break;
-                    }
+                    remove(other);
+                    break;
                 }
+            }
 
+        if (node->isClient())
             solution.insert(node, searchSpace, costEvaluator, true);
-            node->route()->update();
-            searchSpace.markPromising(node);
-        }
         else
-        {
-            auto *pickup = node;
-            auto *delivery = node + 1;
-            solution.insert(pickup, delivery, searchSpace, costEvaluator, true);
+            solution.insert(node, node + 1, searchSpace, costEvaluator, true);
 
-            auto *route = pickup->route();
-            assert(delivery->route() == route);
+        node->route()->update();
+        searchSpace.markPromising(node);
 
-            route->update();
-            searchSpace.markPromising(pickup);
-            searchSpace.markPromising(delivery);
-        }
+        if (node->isPickup())
+            searchSpace.markPromising(node + 1);
     };
 
     DynamicBitset perturbed

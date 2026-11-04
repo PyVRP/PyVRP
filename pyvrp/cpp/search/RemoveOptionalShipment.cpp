@@ -18,6 +18,9 @@ RemoveOptionalShipment::evaluate(Route::Node *U,
     if (shipment.required)
         return std::make_pair(0, false);
 
+    if (shipment.group && data.group(*shipment.group).required)
+        return std::make_pair(0, false);
+
     auto const *pickup = U;
     auto const *delivery = U + 1;
     auto const *route = U->route();
@@ -60,9 +63,14 @@ std::string RemoveOptionalShipment::name() const
 
 bool RemoveOptionalShipment::supports(ProblemData const &data)
 {
-    for (auto const &shipment : data.shipments())  // need at least one
-        if (!shipment.required)                    // optional shipment
+    for (auto const &shipment : data.shipments())
+    {
+        if (!shipment.required && !shipment.group)
             return true;
+
+        if (shipment.group && !data.group(*shipment.group).required)
+            return true;
+    }
 
     return false;
 }

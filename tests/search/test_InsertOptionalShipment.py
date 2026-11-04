@@ -6,6 +6,32 @@ from pyvrp.search._search import Route, Solution
 from tests.helpers import make_search_route
 
 
+def test_group_insertion(mixed_group):
+    """
+    Insert a shipment pair when its group is absent, then reject duplicates.
+    """
+    sol = Solution(mixed_group)
+    route = sol.routes[0]
+    op = InsertOptionalShipment(mixed_group)
+    op.init(sol)
+    cost_eval = CostEvaluator([], 0, 0)
+    pickup, _ = sol.shipments[1]
+
+    route.append(sol.clients[0])
+    route.update()
+    assert_allclose(op.evaluate(pickup, route[0], cost_eval), (0, False))
+
+    del route[1]
+    route.update()
+    assert_allclose(op.evaluate(pickup, route[0], cost_eval), (-27, True))
+    op.apply(pickup, route[0])
+    route.update()
+    assert_equal(str(route), "L1 U1")
+    assert_allclose(
+        op.evaluate(sol.shipments[0][0], route[0], cost_eval), (0, False)
+    )
+
+
 def test_insert_not_adjacent(small_optional_shipments):
     """
     Tests that the delivery node is inserted in the first improving place

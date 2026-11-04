@@ -256,60 +256,36 @@ void LocalSearch::applyEmptyRouteMoves(Route::Node *U,
 void LocalSearch::insertRequired(Route::Node *U,
                                  CostEvaluator const &costEvaluator)
 {
-    assert(U->isClient() || U->isShipment());
+    assert(U->isClient() || U->isPickup());
 
     if (U->route())  // then U is planned, and there is nothing to do
         return;
 
-    switch (U->type())
+    auto const required = U->isClient() ? data.client(U->idx()).required
+                                        : data.shipment(U->idx()).required;
+    auto const group = U->isClient() ? data.client(U->idx()).group
+                                     : data.shipment(U->idx()).group;
+
+    if (!required)
     {
-    case Activity::ActivityType::DEPOT:
-        return;
-
-    case Activity::ActivityType::CLIENT:
-    {
-        auto const &client = data.client(U->idx());
-
-        if (client.required)  // then we must insert U
-        {
-            solution_.insert(U, searchSpace_, costEvaluator, true);
-            update(U->route(), U->route());
-            searchSpace_.markPromising(U);
-            return;
-        }
-
-        if (!client.group)
+        if (!group || !data.group(*group).required)
             return;
 
-        auto const &group = data.group(*client.group);
-        if (!group.required)
-            return;
+        for (auto const &activity : data.group(*group))
+            if (solution_[activity]->route())  // group is already present
+                return;
+    }
 
-        for (auto const &activity : group)     // check if any group member is
-            if (solution_[activity]->route())  // already present - then
-                return;                        // we need not insert
-
+    if (U->isClient())
         solution_.insert(U, searchSpace_, costEvaluator, true);
-        update(U->route(), U->route());
-        searchSpace_.markPromising(U);
-        return;
-    }
+    else
+        solution_.insert(U, U + 1, searchSpace_, costEvaluator, true);
 
-    case Activity::ActivityType::PICKUP:
-        [[fallthrough]];
-    case Activity::ActivityType::DELIVERY:
-    {
-        if (!data.shipment(U->idx()).required)
-            return;
+    update(U->route(), U->route());
+    searchSpace_.markPromising(U);
 
-        auto &[pickup, delivery] = solution_.shipments[U->idx()];
-        solution_.insert(&pickup, &delivery, searchSpace_, costEvaluator, true);
-        update(pickup.route(), delivery.route());
-        searchSpace_.markPromising(&pickup);
-        searchSpace_.markPromising(&delivery);
-        return;
-    }
-    }
+    if (U->isPickup())
+        searchSpace_.markPromising(U + 1);
 }
 
 void LocalSearch::update(Route *U, Route *V)

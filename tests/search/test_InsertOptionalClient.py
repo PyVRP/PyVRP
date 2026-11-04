@@ -111,6 +111,18 @@ def test_group_skip_required(ok_small_mutually_exclusive_groups):
     assert_allclose(op.evaluate(node, route[0], cost_eval), (0, False))
 
 
+def test_group_skip_active_shipment(mixed_group):
+    """
+    A shipment prevents inserting another member of its group.
+    """
+    sol = Solution(mixed_group)
+    route = make_search_route(mixed_group, sol.shipments[1])
+    op = InsertOptionalClient(mixed_group)
+    op.init(sol)
+    move = op.evaluate(sol.clients[0], route[0], CostEvaluator([], 0, 0))
+    assert_allclose(move, (0, False))
+
+
 def test_group_skip_duplicates():
     """
     Tests that InsertOptionalClient skips inserting for groups when they are
