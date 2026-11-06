@@ -1,9 +1,33 @@
 from numpy.testing import assert_, assert_allclose, assert_equal
 
-from pyvrp import CostEvaluator
+from pyvrp import CostEvaluator, Shipment
 from pyvrp.search import ReplaceOptionalShipment
 from pyvrp.search._search import Solution
 from tests.helpers import make_search_route
+
+
+def test_skips_group_members(mixed_group):
+    """
+    Group members cannot replace unrelated shipments or be replaced by them.
+    """
+    data = mixed_group.replace(
+        shipments=[
+            *mixed_group.shipments(),
+            Shipment(3, 4, prize=100, required=False),
+            Shipment(5, 6, required=False),
+        ]
+    )
+    sol = Solution(data)
+    grouped = make_search_route(data, sol.shipments[0])
+    other = make_search_route(data, sol.shipments[3])
+    op = ReplaceOptionalShipment(data)
+    cost_eval = CostEvaluator([], 0, 0)
+    assert_allclose(
+        op.evaluate(sol.shipments[1][0], other[1], cost_eval), (0, False)
+    )
+    assert_allclose(
+        op.evaluate(sol.shipments[2][0], grouped[1], cost_eval), (0, False)
+    )
 
 
 def test_replace(small_optional_shipments):

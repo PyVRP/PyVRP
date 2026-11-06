@@ -14,7 +14,7 @@ class InsertOptionalClient : public BinaryOperator
 {
     using BinaryOperator::BinaryOperator;
 
-    Solution const *solution_ = nullptr;
+    Solution *solution_ = nullptr;
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,

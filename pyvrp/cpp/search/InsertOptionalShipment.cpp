@@ -20,6 +20,18 @@ std::pair<pyvrp::Cost, bool> InsertOptionalShipment::evaluate(
     move_ = {};
 
     auto const &shipment = data.shipment(U->idx());
+    if (shipment.group)
+    {
+        assert(solution_);
+        auto const &group = data.group(*shipment.group);
+        if (group.required)  // required groups are inserted by local search
+            return std::make_pair(0, false);
+
+        for (auto const &activity : group)
+            if ((*solution_)[activity]->route())
+                return std::make_pair(0, false);
+    }
+
     auto const &route = *V->route();
 
     Cost deltaCost = -shipment.prize;
@@ -73,11 +85,22 @@ std::string InsertOptionalShipment::name() const
     return "InsertOptionalShipment";
 }
 
+void InsertOptionalShipment::init(Solution &solution)
+{
+    BinaryOperator::init(solution);
+    solution_ = &solution;
+}
+
 bool InsertOptionalShipment::supports(ProblemData const &data)
 {
-    for (auto const &shipment : data.shipments())  // need at least one
-        if (!shipment.required)                    // optional shipment
+    for (auto const &shipment : data.shipments())
+    {
+        if (!shipment.required && !shipment.group)
             return true;
+
+        if (shipment.group && !data.group(*shipment.group).required)
+            return true;
+    }
 
     return false;
 }

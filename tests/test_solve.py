@@ -139,3 +139,13 @@ def test_solve_optional_shipments(small_optional_shipments):
     # be the sole planned shipment).
     assert_(Activity("L0") not in res.best.unplanned())
     assert_(Activity("U0") not in res.best.unplanned())
+
+
+def test_solve_mixed_client_shipment_group(mixed_group):
+    """
+    Smoke test that solve() solves an instance with a mixed client and shipment
+    mutually exclusive group.
+    """
+    res = solve(mixed_group, stop=MaxIterations(10))
+    assert_(res.best.is_feasible())
+    assert_(Activity("L1") not in res.best.unplanned())  # visits a shipment

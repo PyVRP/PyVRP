@@ -177,13 +177,14 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
     auto prox = computeProximity(data, params);
 
     for (auto const &group : data.groups())
-        for (auto const frmClient : group)
-            for (auto const toClient : group)
+        for (auto const &frmActivity : group)
+            for (auto const &toActivity : group)
                 // Group members should not neighbour each other, as only one
                 // of them can be in the solution at a time. We use max float,
                 // not infty: we want to avoid same group neighbours, but it is
                 // not too problematic if we need to have them.
-                prox(frmClient, toClient) = std::numeric_limits<double>::max();
+                prox(frmActivity.idx(), toActivity.idx())
+                    = std::numeric_limits<double>::max();
 
     for (size_t idx = 0; idx != prox.numRows(); ++idx)  // excl. self
         prox(idx, idx) = std::numeric_limits<double>::infinity();

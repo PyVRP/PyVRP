@@ -1,6 +1,8 @@
 #include "MutuallyExclusiveGroup.h"
 
+#include <algorithm>
 #include <cstring>
+#include <stdexcept>
 
 using pyvrp::MutuallyExclusiveGroup;
 
@@ -19,25 +21,25 @@ static char *duplicate(char const *src)
 }
 }  // namespace
 
-MutuallyExclusiveGroup::MutuallyExclusiveGroup(std::vector<size_t> clients,
+MutuallyExclusiveGroup::MutuallyExclusiveGroup(std::vector<Activity> activities,
                                                bool required,
                                                std::string name)
     : required(required), name(duplicate(name.data()))
 {
-    for (auto const client : clients)
-        addClient(client);
+    for (auto const activity : activities)
+        addActivity(activity);
 }
 
 MutuallyExclusiveGroup::MutuallyExclusiveGroup(
     MutuallyExclusiveGroup const &group)
-    : clients_(group.clients_),
+    : activities_(group.activities_),
       required(group.required),
       name(duplicate(group.name))
 {
 }
 
 MutuallyExclusiveGroup::MutuallyExclusiveGroup(MutuallyExclusiveGroup &&group)
-    : clients_(std::move(group.clients_)),
+    : activities_(std::move(group.activities_)),
       required(group.required),
       name(group.name)  // we can steal
 {
@@ -48,7 +50,7 @@ bool MutuallyExclusiveGroup::operator==(
     MutuallyExclusiveGroup const &other) const
 {
     // clang-format off
-    return clients_ == other.clients_
+    return activities_ == other.activities_
         && required == other.required
         && std::strcmp(name, other.name) == 0;
     // clang-format on
@@ -56,29 +58,35 @@ bool MutuallyExclusiveGroup::operator==(
 
 MutuallyExclusiveGroup::~MutuallyExclusiveGroup() { delete[] name; }
 
-bool MutuallyExclusiveGroup::empty() const { return clients_.empty(); }
+bool MutuallyExclusiveGroup::empty() const { return activities_.empty(); }
 
-size_t MutuallyExclusiveGroup::size() const { return clients_.size(); }
+size_t MutuallyExclusiveGroup::size() const { return activities_.size(); }
 
-std::vector<size_t>::const_iterator MutuallyExclusiveGroup::begin() const
+std::vector<pyvrp::Activity>::const_iterator
+MutuallyExclusiveGroup::begin() const
 {
-    return clients_.begin();
+    return activities_.begin();
 }
 
-std::vector<size_t>::const_iterator MutuallyExclusiveGroup::end() const
+std::vector<pyvrp::Activity>::const_iterator MutuallyExclusiveGroup::end() const
 {
-    return clients_.end();
+    return activities_.end();
 }
 
-std::vector<size_t> const &MutuallyExclusiveGroup::clients() const
+std::vector<pyvrp::Activity> const &MutuallyExclusiveGroup::activities() const
 {
-    return clients_;
+    return activities_;
 }
 
-void MutuallyExclusiveGroup::addClient(size_t client)
+void MutuallyExclusiveGroup::addActivity(Activity activity)
 {
-    if (std::find(clients_.begin(), clients_.end(), client) != clients_.end())
-        throw std::invalid_argument("Client already in group.");
+    if (!activity.isClient() && !activity.isPickup())
+        throw std::invalid_argument(
+            "Group activity must be a client or pickup.");
 
-    clients_.push_back(client);
+    if (std::find(activities_.begin(), activities_.end(), activity)
+        != activities_.end())
+        throw std::invalid_argument("Activity already in group.");
+
+    activities_.push_back(activity);
 }

@@ -2,6 +2,7 @@ import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
 
 from pyvrp import (
+    Activity,
     Client,
     CostEvaluator,
     Depot,
@@ -78,7 +79,9 @@ def test_supports(
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
-        groups=[MutuallyExclusiveGroup(clients=[0], required=False)],
+        groups=[
+            MutuallyExclusiveGroup(activities=[Activity("C0")], required=False)
+        ],
     )
 
     # Operator does not support instances with required groups, but it does
@@ -108,6 +111,18 @@ def test_group_skip_required(ok_small_mutually_exclusive_groups):
     assert_allclose(op.evaluate(node, route[0], cost_eval), (0, False))
 
 
+def test_group_skip_active_shipment(mixed_group):
+    """
+    A shipment prevents inserting another member of its group.
+    """
+    sol = Solution(mixed_group)
+    route = make_search_route(mixed_group, sol.shipments[1])
+    op = InsertOptionalClient(mixed_group)
+    op.init(sol)
+    move = op.evaluate(sol.clients[0], route[0], CostEvaluator([], 0, 0))
+    assert_allclose(move, (0, False))
+
+
 def test_group_skip_duplicates():
     """
     Tests that InsertOptionalClient skips inserting for groups when they are
@@ -123,7 +138,11 @@ def test_group_skip_duplicates():
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
-        groups=[MutuallyExclusiveGroup([0, 1], required=False)],
+        groups=[
+            MutuallyExclusiveGroup(
+                [Activity("C0"), Activity("C1")], required=False
+            )
+        ],
     )
 
     solution = Solution(data)

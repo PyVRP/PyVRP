@@ -613,7 +613,11 @@ def test_does_not_insert_optional_groups():
         vehicle_types=[VehicleType()],
         distance_matrices=[matrix],
         duration_matrices=[matrix],
-        groups=[MutuallyExclusiveGroup([0, 1], required=False)],
+        groups=[
+            MutuallyExclusiveGroup(
+                [Activity("C0"), Activity("C1")], required=False
+            )
+        ],
     )
 
     rng = RandomNumberGenerator(seed=2)
@@ -672,6 +676,21 @@ def test_insert_missing_groups_and_clients(ok_small_mutually_exclusive_groups):
     assert_(new.is_complete())
     assert_equal(new.num_missing_clients(), 0)
     assert_equal(new.num_missing_groups(), 0)
+
+
+def test_insert_missing_shipment_group(mixed_group):
+    """
+    Restore a required group containing only shipments.
+    """
+    data = mixed_group.replace(
+        clients=[Client(1, required=False), Client(2)],
+        groups=[MutuallyExclusiveGroup([Activity("L0"), Activity("L1")])],
+    )
+    ls = LocalSearch(data, RandomNumberGenerator(42), compute_neighbours(data))
+    ls.add_operator(RelocatePickup(data))  # cannot insert missing shipments
+    result = ls(Solution(data, []), CostEvaluator([], 0, 0), exhaustive=True)
+    assert_(result.is_feasible())
+    assert_equal(result.num_shipments(), 1)
 
 
 @skip_if_release
