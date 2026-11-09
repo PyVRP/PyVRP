@@ -45,10 +45,12 @@ Regular release
 
 9. **[SKIP IF PATCH]** Push the latest version of the docs to `the archive repository <https://github.com/PyVRP/PyVRP.github.io>`_.
    The latest docs can be downloaded from the ``DOC`` workflow associated with the released tag's commit.
-   After pushing to the archive repository, update the version info in ``docs/source/versions.json`` to include a link to the newly archived documentation.
+   After pushing to the archive repository, update the archive's root version info in ``versions.json`` to include a link to the newly archived documentation.
+   Also update the root ``index.html`` to point to the new stable release.
 
 10. **[SKIP IF PATCH]** Bump the version in ``pyproject.toml`` to the next prerelease, *e.g.* from ``0.12.0`` to ``0.13.0a0``.
-    Then commit this to ``main``, together with the updates to ``docs/source/versions.json``. 
+    Also update ``docs/soruce/versions.json`` to include the new release.
+    Then commit these changes to ``main``.
 
 
 Releasing a patch
