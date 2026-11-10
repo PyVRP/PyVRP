@@ -1,12 +1,12 @@
 [
     {
-        "version": "",
-        "title": "Development",
+        "version": "https://pyvrp.org/stable",
+        "title": "Stable",
         "aliases": []
     },
     {
-        "version": "https://pyvrp.org/v0.14.0",
-        "title": "v0.14.0",
+        "version": "",
+        "title": "Development",
         "aliases": []
     },
     {

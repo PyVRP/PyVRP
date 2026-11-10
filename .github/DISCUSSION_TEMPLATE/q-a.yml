@@ -7,7 +7,7 @@ body:
         This form asks a few questions up front because answering user questions and solving problems on GitHub consumes a significant amount of our time.
         By answering these questions in a structured way through this form, it will be much easier to help you.
 
-        Before posting about your question or error, please make sure to check our [FAQ](https://pyvrp.org/setup/faq.html), [discussions](https://github.com/PyVRP/PyVRP/discussions?discussions_q=) and [issue tracker](https://github.com/PyVRP/PyVRP/issues?q=is%3Aissue) for similar posts.
+        Before posting about your question or error, please make sure to check our [FAQ](https://pyvrp.org/stable/setup/faq.html), [discussions](https://github.com/PyVRP/PyVRP/discussions?discussions_q=) and [issue tracker](https://github.com/PyVRP/PyVRP/issues?q=is%3Aissue) for similar posts.
   - type: textarea
     id: description
     attributes:
@@ -17,7 +17,7 @@ body:
         Please explain what you are currently doing, what you expect to happen, and what is actually happening.
 
         Is your problem related to a specific data instance?
-        Then please include a pickle file of your [`ProblemData`](https://pyvrp.org/api/pyvrp.html#pyvrp._pyvrp.ProblemData) instance here.
+        Then please include a pickle file of your [`ProblemData`](https://pyvrp.org/stable/api/pyvrp.html#pyvrp._pyvrp.ProblemData) instance here.
     validations:
       required: true
   - type: textarea
