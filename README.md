@@ -89,30 +89,30 @@ Or, using the following BibTeX entry:
 
 A preprint of this paper is available on [arXiv][13].
 
-[1]: https://pyvrp.org/
+[1]: https://pyvrp.org/stable/
 
-[2]: https://pyvrp.org/dev/contributing.html
+[2]: https://pyvrp.org/stable/dev/contributing.html
 
-[3]: https://pyvrp.org/setup/getting_help.html
+[3]: https://pyvrp.org/stable/setup/getting_help.html
 
-[4]: https://pyvrp.org/notebooks/quick_start.html
+[4]: https://pyvrp.org/stable/notebooks/quick_start.html
 
-[5]: https://pyvrp.org/notebooks/load.html
+[5]: https://pyvrp.org/stable/notebooks/load.html
 
-[6]: https://pyvrp.org/notebooks/duration_constraints.html
+[6]: https://pyvrp.org/stable/notebooks/duration_constraints.html
 
-[7]: https://pyvrp.org/notebooks/profiles.html
+[7]: https://pyvrp.org/stable/notebooks/profiles.html
 
-[8]: https://pyvrp.org/notebooks/optional_clients.html
+[8]: https://pyvrp.org/stable/notebooks/optional_clients.html
 
-[9]: https://pyvrp.org/notebooks/mutually_exclusive_groups.html
+[9]: https://pyvrp.org/stable/notebooks/mutually_exclusive_groups.html
 
-[10]: https://pyvrp.org/notebooks/reloading.html
+[10]: https://pyvrp.org/stable/notebooks/reloading.html
 
-[11]: https://pyvrp.org/dev/algorithm.html
+[11]: https://pyvrp.org/stable/dev/algorithm.html
 
-[12]: https://pyvrp.org/notebooks/pyvrp_implementation.html
+[12]: https://pyvrp.org/stable/notebooks/pyvrp_implementation.html
 
 [13]: https://arxiv.org/abs/2403.13795
 
-[14]: https://pyvrp.org/notebooks/shipments.html
+[14]: https://pyvrp.org/stable/notebooks/shipments.html

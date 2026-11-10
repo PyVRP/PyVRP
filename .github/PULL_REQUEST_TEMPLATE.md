@@ -8,7 +8,7 @@ This PR:
 
 **Notes**:
 
-Please read our [contributing guidelines](https://pyvrp.org/dev/contributing.html) first.
+Please read our [contributing guidelines](https://pyvrp.org/stable/dev/contributing.html) first.
 In particular:
 
 - You must add tests when making code changes.
