@@ -119,6 +119,7 @@ python_use_unqualified_type_names = True
 html_extra_path = ["versions.json"]
 html_theme = "sphinx_immaterial"
 html_logo = "assets/images/icon.svg"
+html_favicon = "assets/images/favicon.ico"
 html_theme_options = {
     "site_url": "https://pyvrp.org/",
     "repo_url": repo_url,
