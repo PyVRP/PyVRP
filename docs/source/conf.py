@@ -1,7 +1,6 @@
 import datetime
 import importlib
 import inspect
-import json
 import os
 import shutil
 import subprocess
@@ -21,9 +20,6 @@ copyright = f"2022 - {now.year}, {authors}"
 with open("../../pyproject.toml", "rb") as fh:
     pyproj = tomllib.load(fh)
     release = version = pyproj["project"]["version"]
-
-with open("versions.json") as fh:  # type: ignore
-    version_info = json.load(fh)
 
 print("Copying notebooks into docs/source/notebooks/")
 shutil.copytree("../../notebooks", "notebooks/", dirs_exist_ok=True)
@@ -120,8 +116,10 @@ add_module_names = False
 python_use_unqualified_type_names = True
 
 # -- Options for HTML output
+html_extra_path = ["versions.json"]
 html_theme = "sphinx_immaterial"
 html_logo = "assets/images/icon.svg"
+html_favicon = "assets/images/favicon.ico"
 html_theme_options = {
     "site_url": "https://pyvrp.org/",
     "repo_url": repo_url,
@@ -157,7 +155,6 @@ html_theme_options = {
         },
     ],
     "version_dropdown": True,
-    "version_info": version_info,
 }
 
 python_resolve_unqualified_typing = True

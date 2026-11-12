@@ -43,12 +43,14 @@ Regular release
 8. After the release is on PyPI, amend the release notes with a link to the Zenodo DOI automatically assigned to this release.
    The release-specific DOI can be found on PyVRP's `Zenodo entry <https://doi.org/10.5281/zenodo.11409402>`_.
 
-9. **[SKIP IF PATCH]** Push the latest version of the docs to `the archive repository <https://github.com/PyVRP/PyVRP.github.io>`_.
+9. **[SKIP IF PATCH]** Push the latest version of the docs to `the archive repository <https://github.com/PyVRP/PyVRP-Docs>`_.
    The latest docs can be downloaded from the ``DOC`` workflow associated with the released tag's commit.
-   After pushing to the archive repository, update the version info in ``docs/source/versions.json`` to include a link to the newly archived documentation.
+   After pushing to the archive repository, update the archive's version info in ``versions.json`` to include a link to replace the stable release, and add an entry for the old stable version.
+   Also update the ``stable`` symlink to point to the new release.
 
 10. **[SKIP IF PATCH]** Bump the version in ``pyproject.toml`` to the next prerelease, *e.g.* from ``0.12.0`` to ``0.13.0a0``.
-    Then commit this to ``main``, together with the updates to ``docs/source/versions.json``. 
+    Also update ``docs/soruce/versions.json`` to include the new release.
+    Then commit these changes to ``main``.
 
 
 Releasing a patch
