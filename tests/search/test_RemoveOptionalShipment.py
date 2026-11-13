@@ -1,9 +1,38 @@
 from numpy.testing import assert_, assert_allclose, assert_equal
 
-from pyvrp import CostEvaluator
+from pyvrp import Activity, CostEvaluator, MutuallyExclusiveGroup, Shipment
 from pyvrp.search import RemoveOptionalShipment
 from pyvrp.search._search import Solution
 from tests.helpers import make_search_route
+
+
+def test_remove_active_group_shipment(mixed_group):
+    """
+    Remove both nodes of an optional group member; retain required groups.
+    """
+    data = mixed_group.replace(
+        shipments=[
+            Shipment(3, 4, required=False, group=0),
+            Shipment(5, 6, required=False, group=1),
+        ],
+        groups=[
+            MutuallyExclusiveGroup(
+                [Activity("C0"), Activity("L0")], required=False
+            ),
+            MutuallyExclusiveGroup([Activity("L1")]),
+        ],
+    )
+    sol = Solution(data)
+    pickup, delivery = sol.shipments[0]
+    route = make_search_route(data, [pickup, *sol.shipments[1], delivery])
+    op = RemoveOptionalShipment(data)
+    cost_eval = CostEvaluator([], 0, 0)
+    assert_allclose(op.evaluate(sol.shipments[1][0], cost_eval), (0, False))
+    assert_allclose(op.evaluate(pickup, cost_eval), (-2, True))
+    op.apply(pickup)
+    route.update()
+    assert_equal(str(route), "L1 U1")
+    assert_(pickup.route is None and delivery.route is None)
 
 
 def test_remove(small_optional_shipments):

@@ -19,20 +19,11 @@ std::pair<pyvrp::Cost, bool> ReplaceOptionalShipment::evaluate(
     auto const &uShipment = data.shipment(U->idx());
     auto const &vShipment = data.shipment(V->idx());
 
-    if (vShipment.required)
+    if (vShipment.required || uShipment.group || vShipment.group)
         return std::make_pair(0, false);
 
-    Route::Node *vPickup, *vDelivery;
-    if (V->isPickup())
-    {
-        vPickup = V;
-        vDelivery = V + 1;
-    }
-    else
-    {
-        vDelivery = V;
-        vPickup = V - 1;
-    }
+    auto *vPickup = V->isPickup() ? V : V - 1;
+    auto *vDelivery = vPickup + 1;
 
     assert(vPickup->pos() < vDelivery->pos());
     auto const *route = V->route();
@@ -63,17 +54,8 @@ void ReplaceOptionalShipment::apply(Route::Node *U, Route::Node *V) const
     assert(U->isPickup() && V->isShipment() && V->route() && !U->route());
     stats_.numApplications++;
 
-    Route::Node *vPickup, *vDelivery;
-    if (V->isPickup())
-    {
-        vPickup = V;
-        vDelivery = V + 1;
-    }
-    else
-    {
-        vDelivery = V;
-        vPickup = V - 1;
-    }
+    auto *vPickup = V->isPickup() ? V : V - 1;
+    auto *vDelivery = vPickup + 1;
 
     Route::swap(vPickup, U);        // U is pickup
     Route::swap(vDelivery, U + 1);  // U + 1 is delivery
@@ -86,8 +68,8 @@ std::string ReplaceOptionalShipment::name() const
 
 bool ReplaceOptionalShipment::supports(ProblemData const &data)
 {
-    for (auto const &shipment : data.shipments())  // need at least one
-        if (!shipment.required)                    // optional shipment
+    for (auto const &shipment : data.shipments())
+        if (!shipment.required && !shipment.group)
             return true;
 
     return false;

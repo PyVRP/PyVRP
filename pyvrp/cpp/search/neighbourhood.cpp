@@ -176,14 +176,27 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
 {
     auto prox = computeProximity(data, params);
 
+    // Group members should not neighbour each other, including shipment
+    // deliveries, as only one member can be in the solution at a time. We use
+    // max float, not infty: we want to avoid same group neighbours, but it is
+    // not too problematic if we need to have them.
     for (auto const &group : data.groups())
-        for (auto const frmClient : group)
-            for (auto const toClient : group)
-                // Group members should not neighbour each other, as only one
-                // of them can be in the solution at a time. We use max float,
-                // not infty: we want to avoid same group neighbours, but it is
-                // not too problematic if we need to have them.
-                prox(frmClient, toClient) = std::numeric_limits<double>::max();
+        for (auto const &frmActivity : group)
+        {
+            auto const frm = frmActivity.idx()
+                             + (frmActivity.isPickup() ? data.numClients() : 0);
+            for (auto const &toActivity : group)
+            {
+                auto const to
+                    = toActivity.idx()
+                      + (toActivity.isPickup() ? data.numClients() : 0);
+                prox(frm, to) = std::numeric_limits<double>::max();
+
+                if (toActivity.isPickup())
+                    prox(frm, to + data.numShipments())
+                        = std::numeric_limits<double>::max();
+            }
+        }
 
     for (size_t idx = 0; idx != prox.numRows(); ++idx)  // excl. self
         prox(idx, idx) = std::numeric_limits<double>::infinity();

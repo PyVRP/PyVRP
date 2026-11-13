@@ -297,6 +297,27 @@ def test_perturb_replaces_group_member(ok_small_mutually_exclusive_groups):
     assert_(Activity("C2") in perturbed.unplanned())
 
 
+def test_perturb_replaces_shipment_group_member(mixed_group):
+    """
+    Perturbation swaps between a client and a complete shipment pair.
+    """
+    data = mixed_group
+    sol = Solution(data)
+    route = pyvrp.Route(data, map(Activity, ["L1", "U1"]), 0)
+    sol.load(pyvrp.Solution(data, [route]))
+    neighbours = {Activity(name): [] for name in ("C0", "C1", "L0", "L1")}
+    space = SearchSpace(data, neighbours)
+    manager = PerturbationManager(data, PerturbationParams(1, 1))
+    cost_eval = CostEvaluator([], 0, 0)
+
+    manager.perturb(sol, space, cost_eval)  # C0 replaces L1 and U1
+    assert_equal(str(sol.routes[0]), "C0")
+
+    space.shuffle(RandomNumberGenerator(2))  # L0 is considered first
+    manager.perturb(sol, space, cost_eval)
+    assert_equal(str(sol.routes[0]), "L0 U0")
+
+
 def test_perturb_skips_group_member_removed_by_group_swap(
     ok_small_mutually_exclusive_groups,
 ):
