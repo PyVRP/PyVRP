@@ -9,151 +9,65 @@
 
 using pyvrp::search::RelocateAlternative;
 
-pyvrp::Cost
-RelocateAlternative::evalToShipment(Route::Node const *U,
-                                    Route::Node const *V,
-                                    size_t alternative,
-                                    Route::Node const *deliveryAfter,
-                                    Cost deltaCost,
-                                    CostEvaluator const &costEvaluator) const
+pyvrp::Cost RelocateAlternative::evalClientToClient(
+    Route::Node const *U,
+    Route::Node const *V,
+    size_t alternative,
+    Cost deltaCost,
+    CostEvaluator const &costEvaluator) const
 {
-    if (U->isPickup() && n(U) != U + 1)
-        return evalShipmentToShipment(
-            U, V, alternative, deliveryAfter, deltaCost, costEvaluator);
-
-    // A client or adjacent shipment is removed as one contiguous block.
+    assert(U->isClient());
     auto const *route = U->route();
     auto const u = U->pos();
-    auto const last = U->isPickup() ? (U + 1)->pos() : u;
     auto const v = V->pos();
-    auto const w = deliveryAfter->pos();
-    auto const pickup = PickupSegment(data, alternative);
-    auto const delivery = DeliverySegment(data, alternative);
+    auto const client = ClientSegment(data, alternative);
 
-    if (v == w)  // adjacent pickup and delivery
-    {
-        if (u < v)
-            costEvaluator.deltaCost(deltaCost,
-                                    Route::Proposal(route->before(u - 1),
-                                                    route->between(last + 1, v),
-                                                    pickup,
-                                                    delivery,
-                                                    route->after(v + 1)));
-        else
-        {
-            if (u == v + 1)
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(route->before(v),
-                                    pickup,
-                                    delivery,
-                                    route->after(last + 1)));
-            else
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(route->before(v),
-                                    pickup,
-                                    delivery,
-                                    route->between(v + 1, u - 1),
-                                    route->after(last + 1)));
-        }
-    }
-    else if (u < v)  // U ... V ... W
+    if (u < v)
         costEvaluator.deltaCost(deltaCost,
                                 Route::Proposal(route->before(u - 1),
-                                                route->between(last + 1, v),
-                                                pickup,
-                                                route->between(v + 1, w),
-                                                delivery,
-                                                route->after(w + 1)));
-    else if (u < w)  // V ... U ... W
-    {
-        if (u == v + 1)
-            costEvaluator.deltaCost(deltaCost,
-                                    Route::Proposal(route->before(v),
-                                                    pickup,
-                                                    route->between(last + 1, w),
-                                                    delivery,
-                                                    route->after(w + 1)));
-        else
-            costEvaluator.deltaCost(
-                deltaCost,
-                Route::Proposal(route->before(v),
-                                pickup,
-                                route->between(v + 1, u - 1),
-                                route->between(last + 1, w),
-                                delivery,
-                                route->after(w + 1)));
-    }
-    else  // V ... W ... U
-    {
-        if (u == w + 1)
-            costEvaluator.deltaCost(deltaCost,
-                                    Route::Proposal(route->before(v),
-                                                    pickup,
-                                                    route->between(v + 1, w),
-                                                    delivery,
-                                                    route->after(last + 1)));
-        else
-            costEvaluator.deltaCost(
-                deltaCost,
-                Route::Proposal(route->before(v),
-                                pickup,
-                                route->between(v + 1, w),
-                                delivery,
-                                route->between(w + 1, u - 1),
-                                route->after(last + 1)));
-    }
+                                                route->between(u + 1, v),
+                                                client,
+                                                route->after(v + 1)));
+    else
+        costEvaluator.deltaCost(deltaCost,
+                                Route::Proposal(route->before(v),
+                                                client,
+                                                route->between(v + 1, u - 1),
+                                                route->after(u + 1)));
 
     return deltaCost;
 }
 
-pyvrp::Cost
-RelocateAlternative::evalToClient(Route::Node const *U,
-                                  Route::Node const *V,
-                                  size_t alternative,
-                                  Cost deltaCost,
-                                  CostEvaluator const &costEvaluator) const
+pyvrp::Cost RelocateAlternative::evalShipmentToClient(
+    Route::Node const *U,
+    Route::Node const *V,
+    size_t alternative,
+    Cost deltaCost,
+    CostEvaluator const &costEvaluator) const
 {
+    assert(U->isPickup());
     auto const *route = U->route();
     auto const p = U->pos();
-    auto const d = U->isPickup() ? (U + 1)->pos() : p;
+    auto const d = (U + 1)->pos();
     auto const v = V->pos();
     auto const client = ClientSegment(data, alternative);
 
-    if (U->isClient() || n(U) == U + 1)
+    if (d < v)  // pickup ... delivery ... V
     {
-        if (U->isClient() && U == n(V))  // handled by ReplaceGroup
-            return 0;
-
-        if (d < v)
+        if (d == p + 1)
             costEvaluator.deltaCost(deltaCost,
                                     Route::Proposal(route->before(p - 1),
                                                     route->between(d + 1, v),
                                                     client,
                                                     route->after(v + 1)));
-        else if (p == v + 1)
-            costEvaluator.deltaCost(
-                deltaCost,
-                Route::Proposal(route->before(v), client, route->after(d + 1)));
         else
             costEvaluator.deltaCost(
                 deltaCost,
-                Route::Proposal(route->before(v),
+                Route::Proposal(route->before(p - 1),
+                                route->between(p + 1, d - 1),
+                                route->between(d + 1, v),
                                 client,
-                                route->between(v + 1, p - 1),
-                                route->after(d + 1)));
-        return deltaCost;
-    }
-
-    if (d < v)  // pickup ... delivery ... V
-    {
-        costEvaluator.deltaCost(deltaCost,
-                                Route::Proposal(route->before(p - 1),
-                                                route->between(p + 1, d - 1),
-                                                route->between(d + 1, v),
-                                                client,
-                                                route->after(v + 1)));
+                                route->after(v + 1)));
     }
     else if (p < v)  // pickup ... V ... delivery
     {
@@ -174,17 +88,14 @@ RelocateAlternative::evalToClient(Route::Node const *U,
     }
     else  // V ... pickup ... delivery
     {
-        if (p == v + 1)
-        {
+        if (d == p + 1)
             costEvaluator.deltaCost(
                 deltaCost,
                 Route::Proposal(route->before(v),
                                 client,
-                                route->between(p + 1, d - 1),
+                                route->between(v + 1, p - 1),
                                 route->after(d + 1)));
-        }
         else
-        {
             costEvaluator.deltaCost(
                 deltaCost,
                 Route::Proposal(route->before(v),
@@ -192,7 +103,79 @@ RelocateAlternative::evalToClient(Route::Node const *U,
                                 route->between(v + 1, p - 1),
                                 route->between(p + 1, d - 1),
                                 route->after(d + 1)));
-        }
+    }
+
+    return deltaCost;
+}
+
+pyvrp::Cost RelocateAlternative::evalClientToShipment(
+    Route::Node const *U,
+    Route::Node const *V,
+    size_t alternative,
+    Route::Node const *deliveryAfter,
+    Cost deltaCost,
+    CostEvaluator const &costEvaluator) const
+{
+    assert(U->isClient());
+    auto const *route = U->route();
+    auto const u = U->pos();
+    auto const v = V->pos();
+    auto const w = deliveryAfter->pos();
+    auto const pickup = PickupSegment(data, alternative);
+    auto const delivery = DeliverySegment(data, alternative);
+
+    if (v == w)  // adjacent pickup and delivery
+    {
+        if (u < v)
+            costEvaluator.deltaCost(deltaCost,
+                                    Route::Proposal(route->before(u - 1),
+                                                    route->between(u + 1, v),
+                                                    pickup,
+                                                    delivery,
+                                                    route->after(v + 1)));
+        else
+            costEvaluator.deltaCost(
+                deltaCost,
+                Route::Proposal(route->before(v),
+                                pickup,
+                                delivery,
+                                route->between(v + 1, u - 1),
+                                route->after(u + 1)));
+    }
+    else if (u < v)  // U ... V ... W
+        costEvaluator.deltaCost(deltaCost,
+                                Route::Proposal(route->before(u - 1),
+                                                route->between(u + 1, v),
+                                                pickup,
+                                                route->between(v + 1, w),
+                                                delivery,
+                                                route->after(w + 1)));
+    else if (u < w)  // V ... U ... W
+        costEvaluator.deltaCost(deltaCost,
+                                Route::Proposal(route->before(v),
+                                                pickup,
+                                                route->between(v + 1, u - 1),
+                                                route->between(u + 1, w),
+                                                delivery,
+                                                route->after(w + 1)));
+    else  // V ... W ... U
+    {
+        if (u == w + 1)
+            costEvaluator.deltaCost(deltaCost,
+                                    Route::Proposal(route->before(v),
+                                                    pickup,
+                                                    route->between(v + 1, w),
+                                                    delivery,
+                                                    route->after(u + 1)));
+        else
+            costEvaluator.deltaCost(
+                deltaCost,
+                Route::Proposal(route->before(v),
+                                pickup,
+                                route->between(v + 1, w),
+                                delivery,
+                                route->between(w + 1, u - 1),
+                                route->after(u + 1)));
     }
 
     return deltaCost;
@@ -202,31 +185,27 @@ pyvrp::Cost RelocateAlternative::evalShipmentToShipment(
     Route::Node const *U,
     Route::Node const *V,
     size_t alternative,
-    Route::Node const *deliveryAfter,
     Cost deltaCost,
     CostEvaluator const &costEvaluator) const
 {
-    assert(U->isPickup() && n(U) != U + 1);
+    assert(U->isPickup() && U + 1 != V);
     auto const *route = U->route();
     auto const p = U->pos();
     auto const d = (U + 1)->pos();
     auto const v = V->pos();
-    auto const w = deliveryAfter->pos();
+
     auto const pickup = PickupSegment(data, alternative);
     auto const delivery = DeliverySegment(data, alternative);
 
-    // V and W anchor the new pickup and delivery; W == V makes them adjacent.
-    if (d < v)  // old pickup ... old delivery ... V ... W
+    if (d < v)  // relocate both endpoints directly after V
     {
-        if (w == v)
-            costEvaluator.deltaCost(
-                deltaCost,
-                Route::Proposal(route->before(p - 1),
-                                route->between(p + 1, d - 1),
-                                route->between(d + 1, v),
-                                pickup,
-                                delivery,
-                                route->after(w + 1)));
+        if (d == p + 1)
+            costEvaluator.deltaCost(deltaCost,
+                                    Route::Proposal(route->before(p - 1),
+                                                    route->between(d + 1, v),
+                                                    pickup,
+                                                    delivery,
+                                                    route->after(v + 1)));
         else
             costEvaluator.deltaCost(
                 deltaCost,
@@ -234,203 +213,47 @@ pyvrp::Cost RelocateAlternative::evalShipmentToShipment(
                                 route->between(p + 1, d - 1),
                                 route->between(d + 1, v),
                                 pickup,
-                                route->between(v + 1, w),
                                 delivery,
-                                route->after(w + 1)));
+                                route->after(v + 1)));
     }
-    else if (p < v)
+    else if (p < v)  // old pickup ... V ... delivery
     {
-        if (d < w)  // old pickup ... V ... old delivery ... W
-        {
-            if (d == v + 1)
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(route->before(p - 1),
-                                    route->between(p + 1, v),
-                                    pickup,
-                                    route->between(d + 1, w),
-                                    delivery,
-                                    route->after(w + 1)));
-            else
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(route->before(p - 1),
-                                    route->between(p + 1, v),
-                                    pickup,
-                                    route->between(v + 1, d - 1),
-                                    route->between(d + 1, w),
-                                    delivery,
-                                    route->after(w + 1)));
-        }
-        else  // old pickup ... V ... W ... old delivery
-        {
-            if (w == v)
-            {
-                if (d == w + 1)
-                    costEvaluator.deltaCost(
-                        deltaCost,
-                        Route::Proposal(route->before(p - 1),
-                                        route->between(p + 1, v),
-                                        pickup,
-                                        delivery,
-                                        route->after(d + 1)));
-                else
-                    costEvaluator.deltaCost(
-                        deltaCost,
-                        Route::Proposal(route->before(p - 1),
-                                        route->between(p + 1, v),
-                                        pickup,
-                                        delivery,
-                                        route->between(w + 1, d - 1),
-                                        route->after(d + 1)));
-            }
-            else
-            {
-                if (d == w + 1)
-                    costEvaluator.deltaCost(
-                        deltaCost,
-                        Route::Proposal(route->before(p - 1),
-                                        route->between(p + 1, v),
-                                        pickup,
-                                        route->between(v + 1, w),
-                                        delivery,
-                                        route->after(d + 1)));
-                else
-                    costEvaluator.deltaCost(
-                        deltaCost,
-                        Route::Proposal(route->before(p - 1),
-                                        route->between(p + 1, v),
-                                        pickup,
-                                        route->between(v + 1, w),
-                                        delivery,
-                                        route->between(w + 1, d - 1),
-                                        route->after(d + 1)));
-            }
-        }
+        if (d == v + 1)
+            costEvaluator.deltaCost(deltaCost,
+                                    Route::Proposal(route->before(p - 1),
+                                                    route->between(p + 1, v),
+                                                    pickup,
+                                                    delivery,
+                                                    route->after(d + 1)));
+        else
+            costEvaluator.deltaCost(
+                deltaCost,
+                Route::Proposal(route->before(p - 1),
+                                route->between(p + 1, v),
+                                pickup,
+                                route->between(v + 1, d - 1),
+                                delivery,
+                                route->after(d + 1)));
     }
-    else if (d < w)  // V ... old pickup ... old delivery ... W
+    else  // V ... old pickup ... delivery
     {
-        if (p == v + 1)
-        {
+        if (d == p + 1)
             costEvaluator.deltaCost(
                 deltaCost,
                 Route::Proposal(route->before(v),
                                 pickup,
-                                route->between(p + 1, d - 1),
-                                route->between(d + 1, w),
+                                route->between(v + 1, p - 1),
                                 delivery,
-                                route->after(w + 1)));
-        }
+                                route->after(d + 1)));
         else
-        {
             costEvaluator.deltaCost(
                 deltaCost,
                 Route::Proposal(route->before(v),
                                 pickup,
                                 route->between(v + 1, p - 1),
                                 route->between(p + 1, d - 1),
-                                route->between(d + 1, w),
                                 delivery,
-                                route->after(w + 1)));
-        }
-    }
-    else if (p < w)  // V ... old pickup ... W ... old delivery
-    {
-        if (p == v + 1)
-        {
-            if (d == w + 1)
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(route->before(v),
-                                    pickup,
-                                    route->between(p + 1, w),
-                                    delivery,
-                                    route->after(d + 1)));
-            else
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(route->before(v),
-                                    pickup,
-                                    route->between(p + 1, w),
-                                    delivery,
-                                    route->between(w + 1, d - 1),
-                                    route->after(d + 1)));
-        }
-        else
-        {
-            if (d == w + 1)
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(route->before(v),
-                                    pickup,
-                                    route->between(v + 1, p - 1),
-                                    route->between(p + 1, w),
-                                    delivery,
-                                    route->after(d + 1)));
-            else
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(route->before(v),
-                                    pickup,
-                                    route->between(v + 1, p - 1),
-                                    route->between(p + 1, w),
-                                    delivery,
-                                    route->between(w + 1, d - 1),
-                                    route->after(d + 1)));
-        }
-    }
-    else  // V ... W ... old pickup ... old delivery
-    {
-        if (w == v)
-        {
-            if (p == w + 1)
-            {
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(route->before(v),
-                                    pickup,
-                                    delivery,
-                                    route->between(p + 1, d - 1),
-                                    route->after(d + 1)));
-            }
-            else
-            {
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(route->before(v),
-                                    pickup,
-                                    delivery,
-                                    route->between(w + 1, p - 1),
-                                    route->between(p + 1, d - 1),
-                                    route->after(d + 1)));
-            }
-        }
-        else
-        {
-            if (p == w + 1)
-            {
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(route->before(v),
-                                    pickup,
-                                    route->between(v + 1, w),
-                                    delivery,
-                                    route->between(p + 1, d - 1),
-                                    route->after(d + 1)));
-            }
-            else
-            {
-                costEvaluator.deltaCost(
-                    deltaCost,
-                    Route::Proposal(route->before(v),
-                                    pickup,
-                                    route->between(v + 1, w),
-                                    delivery,
-                                    route->between(w + 1, p - 1),
-                                    route->between(p + 1, d - 1),
-                                    route->after(d + 1)));
-            }
-        }
+                                route->after(d + 1)));
     }
 
     return deltaCost;
@@ -440,13 +263,14 @@ void RelocateAlternative::evalSameRoute(Route::Node *U,
                                         Route::Node *V,
                                         CostEvaluator const &costEvaluator)
 {
+    // In-place replacements are handled by ReplaceGroup.
+    if (U == n(V) || U->trip() != V->trip())
+        return;
+
     auto const group = U->isClient() ? data.client(U->idx()).group
                                      : data.shipment(U->idx()).group;
     auto const uPrize = U->isClient() ? data.client(U->idx()).prize
                                       : data.shipment(U->idx()).prize;
-
-    if (U->trip() != V->trip())
-        return;
 
     for (auto const &activity : data.group(*group))
     {
@@ -457,11 +281,16 @@ void RelocateAlternative::evalSameRoute(Route::Node *U,
         auto const prize = activity.isClient()
                                ? data.client(activity.idx()).prize
                                : data.shipment(activity.idx()).prize;
+        auto const prizeDelta = uPrize - prize;
+        auto const idx = alternative->idx();
 
         if (alternative->isClient())
         {
-            auto const deltaCost = evalToClient(
-                U, V, alternative->idx(), uPrize - prize, costEvaluator);
+            auto const deltaCost
+                = U->isClient()
+                      ? evalClientToClient(U, V, idx, prizeDelta, costEvaluator)
+                      : evalShipmentToClient(
+                            U, V, idx, prizeDelta, costEvaluator);
             if (deltaCost < -TOL)
             {
                 move_ = {deltaCost, alternative};
@@ -470,18 +299,29 @@ void RelocateAlternative::evalSameRoute(Route::Node *U,
             continue;
         }
 
-        // Try adjacent pickup and delivery, then later delivery positions.
-        auto const *delivery = U->isPickup() ? U + 1 : nullptr;
+        if (U->isPickup())
+        {
+            auto const deltaCost
+                = evalShipmentToShipment(U, V, idx, prizeDelta, costEvaluator);
+            if (deltaCost < -TOL)
+            {
+                auto const *after = V;
+                if (V->pos() < (U + 1)->pos())
+                    after = n(U) == U + 1 ? p(U) : p(U + 1);
+                move_ = {deltaCost, alternative, after};
+                return;
+            }
+            continue;
+        }
+
+        // Replacing a client: try adjacent pickup and delivery, then later
+        // delivery positions.
         for (auto const *after = V;; after = n(after))
         {
-            if (after != U && after != delivery)
+            if (after != U)
             {
-                auto const deltaCost = evalToShipment(U,
-                                                      V,
-                                                      alternative->idx(),
-                                                      after,
-                                                      uPrize - prize,
-                                                      costEvaluator);
+                auto const deltaCost = evalClientToShipment(
+                    U, V, idx, after, prizeDelta, costEvaluator);
 
                 if (deltaCost < -TOL)
                 {

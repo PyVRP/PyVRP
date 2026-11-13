@@ -13,9 +13,14 @@ namespace pyvrp::search
  *
  * Evaluates replacing mutually exclusive group member :math:`U` with another
  * member of the same group and relocating the replacement after :math:`V`.
- * For a shipment alternative, the pickup is inserted after :math:`V` and the
- * delivery in the first improving position thereafter in the same trip.
- * Group members are evaluated in order until an improving move is found.
+ *
+ * The replacement client or pickup is always inserted after :math:`V`. When
+ * replacing a shipment within the same route, the delivery stays in place if
+ * it follows the new pickup; otherwise, it is inserted directly after the new
+ * pickup. For other shipment alternatives, the delivery is inserted in the
+ * first improving position after the pickup in the same trip. Group members
+ * are evaluated in order until an improving move is found.
+ * Replacements in place are handled by ``ReplaceGroup``.
  */
 class RelocateAlternative : public BinaryOperator
 {
@@ -32,25 +37,30 @@ class RelocateAlternative : public BinaryOperator
     DynamicBitset hasCachedRemoveCost_;
     std::vector<Cost> removeCost_;
 
-    // Same-route insertions after removing a client or shipment.
-    Cost evalToShipment(Route::Node const *U,
-                        Route::Node const *V,
-                        size_t alternative,
-                        Route::Node const *deliveryAfter,
-                        Cost deltaCost,
-                        CostEvaluator const &costEvaluator) const;
+    // Same-route insertions. In-place replacements are handled by ReplaceGroup.
+    Cost evalClientToClient(Route::Node const *U,
+                            Route::Node const *V,
+                            size_t alternative,
+                            Cost deltaCost,
+                            CostEvaluator const &costEvaluator) const;
 
-    Cost evalToClient(Route::Node const *U,
-                      Route::Node const *V,
-                      size_t alternative,
-                      Cost deltaCost,
-                      CostEvaluator const &costEvaluator) const;
+    Cost evalShipmentToClient(Route::Node const *U,
+                              Route::Node const *V,
+                              size_t alternative,
+                              Cost deltaCost,
+                              CostEvaluator const &costEvaluator) const;
 
-    // Handles non-adjacent pickup and delivery removals.
+    Cost evalClientToShipment(Route::Node const *U,
+                              Route::Node const *V,
+                              size_t alternative,
+                              Route::Node const *deliveryAfter,
+                              Cost deltaCost,
+                              CostEvaluator const &costEvaluator) const;
+
+    // Keeps delivery in place when possible, otherwise inserts it after pickup.
     Cost evalShipmentToShipment(Route::Node const *U,
                                 Route::Node const *V,
                                 size_t alternative,
-                                Route::Node const *deliveryAfter,
                                 Cost deltaCost,
                                 CostEvaluator const &costEvaluator) const;
 
