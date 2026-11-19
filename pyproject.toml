@@ -8,7 +8,7 @@ authors = [
     { name = "Wouter Kool", email = "wouter.kool@ortec.com" },
 ]
 license = "MIT"
-license-files = ["LICENSE.md"]
+license-files = ["LICENSE", "THIRD_PARTY_LICENSES"]
 readme = "README.md"
 keywords = [
     "vehicle routing problem",
