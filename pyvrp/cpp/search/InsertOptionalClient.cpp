@@ -23,9 +23,10 @@ std::pair<pyvrp::Cost, bool> InsertOptionalClient::evaluate(
         if (group.required)  // then we have already inserted a client in the LS
             return std::make_pair(0, false);
 
-        for (auto const client : group)              // if any client is already
-            if (solution_->clients[client].route())  // in solution we cannot
-                return std::make_pair(0, false);     // insert another
+        for (auto const &activity : group)
+            if ((*solution_)[activity]->route())
+                return std::make_pair(0,
+                                      false);  // cannot insert another member
     }
 
     auto *route = V->route();
@@ -61,13 +62,14 @@ std::string InsertOptionalClient::name() const
 
 bool InsertOptionalClient::supports(ProblemData const &data)
 {
-    for (auto const &group : data.groups())  // if the group is not required
-        if (!group.required)                 // its clients are not either
+    for (auto const &client : data.clients())
+    {
+        if (!client.required && !client.group)
             return true;
 
-    for (auto const &client : data.clients())   // or need at least one optional
-        if (!client.required && !client.group)  // client not in a group
+        if (client.group && !data.group(*client.group).required)
             return true;
+    }
 
     return false;
 }

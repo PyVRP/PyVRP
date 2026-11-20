@@ -7,6 +7,7 @@ from pyvrp import (
     Client,
     Depot,
     Location,
+    MutuallyExclusiveGroup,
     ProblemData,
     Shipment,
     VehicleType,
@@ -142,13 +143,48 @@ def test_proximity_with_mutually_exclusive_groups(
     neighbours = compute_neighbours(ok_small_mutually_exclusive_groups, params)
 
     group = ok_small_mutually_exclusive_groups.group(0)
-    members = group.clients
-    for client in members:
-        act = Activity(f"C{client}")
-        assert_(
-            all(Activity(f"C{other}") not in neighbours[act]
-            for other in members)
-        )
+    members = group.activities
+    for activity in members:
+        assert_(all(other not in neighbours[activity] for other in members))
+
+
+def test_proximity_with_mixed_groups(mixed_group):
+    """
+    Tests that mixed groups exclude both steps of their shipments without
+    suppressing unrelated clients that have the same raw indices.
+    """
+    params = NeighbourhoodParams(num_neighbours=1)
+    neighbours = compute_neighbours(mixed_group, params)
+
+    # C0 and L0 share index 0, while the unrelated C1 shares index 1 with L1.
+    # All arc costs tie, so C1 should be every group member's first neighbour.
+    for activity in mixed_group.group(0):
+        assert_equal(neighbours[activity], [Activity("C1")])
+
+    assert_equal(neighbours[Activity("C1")], [Activity("C0")])
+
+
+def test_proximity_with_shipment_groups(mixed_group):
+    """
+    Tests that shipment groups exclude both steps of their members when there
+    are no clients, and retain both steps of unrelated shipments.
+    """
+    data = mixed_group.replace(
+        clients=[],
+        shipments=[*mixed_group.shipments(), Shipment(1, 2)],
+        groups=[
+            MutuallyExclusiveGroup(
+                [Activity("L0"), Activity("L1")], required=False
+            )
+        ],
+    )
+    params = NeighbourhoodParams(num_neighbours=2)
+    neighbours = compute_neighbours(data, params)
+
+    for activity in data.group(0):
+        assert_equal(neighbours[activity], [Activity("L2"), Activity("U2")])
+
+    assert_equal(neighbours[Activity("L2")], [Activity("L0"), Activity("L1")])
 
 
 def test_different_routing_costs(ok_small):

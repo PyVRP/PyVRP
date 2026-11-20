@@ -1,7 +1,45 @@
+import numpy as np
 import pytest
 
-from pyvrp import Shipment, VehicleType
+from pyvrp import (
+    Activity,
+    Client,
+    Depot,
+    Location,
+    MutuallyExclusiveGroup,
+    ProblemData,
+    Shipment,
+    VehicleType,
+)
 from tests.helpers import read
+
+
+@pytest.fixture(scope="session")
+def mixed_group():
+    """
+    A client and two shipments in one optional group, plus a required client.
+    """
+    matrix = np.ones((7, 7), dtype=int) - np.eye(7, dtype=int)
+    return ProblemData(
+        locations=[Location(idx, 0) for idx in range(7)],
+        clients=[
+            Client(1, prize=5, required=False, group=0),
+            Client(2),
+        ],
+        shipments=[
+            Shipment(3, 4, prize=20, required=False, group=0),
+            Shipment(5, 6, prize=30, required=False, group=0),
+        ],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType(2, reload_depots=[0])],
+        distance_matrices=[matrix],
+        duration_matrices=[matrix],
+        groups=[
+            MutuallyExclusiveGroup(
+                list(map(Activity, ["C0", "L0", "L1"])), required=False
+            )
+        ],
+    )
 
 
 @pytest.fixture(scope="session")

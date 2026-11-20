@@ -96,6 +96,7 @@ def test_default_attributes():
     assert_equal(shipment.amount, [])
     assert_allclose(shipment.prize, 0)
     assert_(shipment.required)
+    assert_(shipment.group is None)
     assert_equal(shipment.name, "")
 
 
@@ -116,6 +117,7 @@ def test_custom_attributes():
         amount=[19],
         prize=23,
         required=False,
+        group=29,
         name="test",
     )
 
@@ -130,6 +132,7 @@ def test_custom_attributes():
     assert_equal(shipment.amount, [19])
     assert_allclose(shipment.prize, 23)
     assert_(not shipment.required)
+    assert_equal(shipment.group, 29)
     assert_equal(shipment.name, "test")
     assert_equal(str(shipment), "test")
 

@@ -3,6 +3,7 @@ import pytest
 from numpy.testing import assert_, assert_allclose, assert_equal, assert_raises
 
 from pyvrp import (
+    Activity,
     Client,
     Depot,
     Location,
@@ -699,7 +700,7 @@ def test_from_data_mutually_exclusive_group(ok_small):
     clients[0] = Client(1, delivery=[1], required=False, group=0)
     clients[1] = Client(2, delivery=[1], required=False, group=0)
 
-    group = MutuallyExclusiveGroup([0, 1])
+    group = MutuallyExclusiveGroup([Activity("C0"), Activity("C1")])
 
     data = ok_small.replace(clients=clients, groups=[group])
     model = Model.from_data(data)
@@ -714,7 +715,7 @@ def test_from_data_mutually_exclusive_group(ok_small):
     group = model.groups[0]
     assert_(group.required)
     assert_equal(len(group), 2)
-    assert_equal(group.clients, [0, 1])
+    assert_equal(group.activities, [Activity("C0"), Activity("C1")])
 
 
 def test_to_data_mutually_exclusive_group():
@@ -736,7 +737,7 @@ def test_to_data_mutually_exclusive_group():
     assert_equal(data.num_groups, 1)
 
     group = data.group(0)
-    assert_equal(group.clients, [0, 1])
+    assert_equal(group.activities, [Activity("C0"), Activity("C1")])
 
 
 def test_raises_mutually_exclusive_group_required_client():
