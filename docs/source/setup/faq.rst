@@ -50,6 +50,10 @@ Modelling
       PyVRP supports warm-starting from an initial (possibly infeasible or incomplete) solution.
       Using the :class:`~pyvrp.Model.Model` interface, warm-starting can be achieved by passing a :class:`~pyvrp._pyvrp.Solution` as :meth:`~pyvrp.Model.Model.solve`'s ``initial_solution`` argument.
 
+   What unit dimensions should I use for real-world instances?
+
+      We typically use metres for distances, and seconds for durations.
+
 Debugging
 ---------
 
