@@ -4,6 +4,7 @@
 #include "Measure.h"
 
 #include <limits>
+#include <optional>
 
 namespace pyvrp
 {
@@ -20,6 +21,7 @@ namespace pyvrp
  *     amount: list[int] = [],
  *     prize: float = 0,
  *     required: bool = True,
+ *     group: int | None = None,
  *     *,
  *     name: str = "",
  * )
@@ -57,6 +59,9 @@ namespace pyvrp
  *     any travel cost before this shipment will be in a solution.
  * required
  *     Whether this shipment is required in a feasible solution. Default True.
+ * group
+ *     Index of the mutually exclusive group this shipment belongs to, if any.
+ *     By default, shipments are not part of any groups.
  * name
  *     Free-form name field for this shipment. Default empty.
  *
@@ -72,6 +77,8 @@ namespace pyvrp
  *     Prize collected by serving this shipment.
  * required
  *     Whether serving this shipment is required.
+ * group
+ *     Index of the mutually exclusive group this shipment belongs to, if any.
  * name
  *     Free-form name field for this shipment.
  */
@@ -136,6 +143,7 @@ struct Shipment
     std::vector<Load> const amount;
     Cost const prize;
     bool const required;
+    std::optional<size_t> const group;
     char const *name;
 
     Shipment(size_t pickupLocation,
@@ -149,6 +157,7 @@ struct Shipment
              std::vector<Load> amount = {},
              Cost prize = 0,
              bool required = true,
+             std::optional<size_t> group = std::nullopt,
              std::string name = "");
 
     Shipment(Step pickup,  // constructor used for serialisation
@@ -156,6 +165,7 @@ struct Shipment
              std::vector<Load> amount,
              Cost prize,
              bool required,
+             std::optional<size_t> group,
              std::string name);
 
     bool operator==(Shipment const &other) const;

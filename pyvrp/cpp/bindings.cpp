@@ -389,6 +389,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       std::vector<pyvrp::Load>,
                       pyvrp::Cost,
                       bool,
+                      std::optional<size_t>,
                       std::string>(),
              py::arg("pickup_location"),
              py::arg("delivery_location"),
@@ -403,6 +404,7 @@ PYBIND11_MODULE(_pyvrp, m)
              py::arg("amount") = py::list(),
              py::arg("prize") = 0,
              py::arg("required") = true,
+             py::arg("group") = py::none(),
              py::kw_only(),
              py::arg("name") = "")
         .def_readonly("pickup",
@@ -416,6 +418,7 @@ PYBIND11_MODULE(_pyvrp, m)
                       py::return_value_policy::reference_internal)
         .def_readonly("prize", &Shipment::prize)
         .def_readonly("required", &Shipment::required)
+        .def_readonly("group", &Shipment::group)
         .def_readonly("name",
                       &Shipment::name,
                       py::return_value_policy::reference_internal)
@@ -428,6 +431,7 @@ PYBIND11_MODULE(_pyvrp, m)
                                       shipment.amount,
                                       shipment.prize,
                                       shipment.required,
+                                      shipment.group,
                                       shipment.name);
             },
             [](py::tuple t)  // __setstate__
@@ -438,7 +442,8 @@ PYBIND11_MODULE(_pyvrp, m)
                     t[2].cast<std::vector<pyvrp::Load>>(),  // amount
                     t[3].cast<pyvrp::Cost>(),               // prize
                     t[4].cast<bool>(),                      // required
-                    t[5].cast<std::string>());              // name
+                    t[5].cast<std::optional<size_t>>(),     // group
+                    t[6].cast<std::string>());              // name
 
                 return shipment;
             }))
@@ -449,15 +454,16 @@ PYBIND11_MODULE(_pyvrp, m)
 
     py::class_<MutuallyExclusiveGroup>(
         m, "MutuallyExclusiveGroup", DOC(pyvrp, MutuallyExclusiveGroup))
-        .def(py::init<std::vector<size_t>, bool, char const *>(),
-             py::arg("clients") = py::list(),
+        .def(py::init<std::vector<Activity>, bool, char const *>(),
+             py::arg("activities") = py::list(),
              py::arg("required") = true,
              py::kw_only(),
              py::arg("name") = "")
-        .def(
-            "add_client", &MutuallyExclusiveGroup::addClient, py::arg("client"))
-        .def_property_readonly("clients",
-                               &MutuallyExclusiveGroup::clients,
+        .def("add_activity",
+             &MutuallyExclusiveGroup::addActivity,
+             py::arg("activity"))
+        .def_property_readonly("activities",
+                               &MutuallyExclusiveGroup::activities,
                                py::return_value_policy::reference_internal)
         .def_readonly("required", &MutuallyExclusiveGroup::required)
         .def_readonly("name",
@@ -467,13 +473,13 @@ PYBIND11_MODULE(_pyvrp, m)
         .def(py::pickle(
             [](MutuallyExclusiveGroup const &group) {  // __getstate__
                 return py::make_tuple(
-                    group.clients(), group.required, group.name);
+                    group.activities(), group.required, group.name);
             },
             [](py::tuple t) {  // __setstate__
                 MutuallyExclusiveGroup group(
-                    t[0].cast<std::vector<size_t>>(),  // clients
-                    t[1].cast<bool>(),                 // required
-                    t[2].cast<std::string>());         // name
+                    t[0].cast<std::vector<Activity>>(),  // activities
+                    t[1].cast<bool>(),                   // required
+                    t[2].cast<std::string>());           // name
 
                 return group;
             }))

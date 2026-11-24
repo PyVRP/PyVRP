@@ -17,6 +17,7 @@ class ReplaceGroup : public UnaryOperator
 
     Solution *solution_ = nullptr;
     Route::Node *V_ = nullptr;
+    size_t deliveryPos_ = 0;
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,

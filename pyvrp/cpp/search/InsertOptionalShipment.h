@@ -23,6 +23,7 @@ class InsertOptionalShipment : public BinaryOperator
     };
 
     Move move_;
+    Solution *solution_ = nullptr;
 
 public:
     std::pair<Cost, bool> evaluate(Route::Node *U,
@@ -30,6 +31,8 @@ public:
                                    CostEvaluator const &costEvaluator) override;
 
     void apply(Route::Node *U, Route::Node *V) const override;
+
+    void init(Solution &solution) override;
 
     std::string name() const override;
 

@@ -754,7 +754,9 @@ def test_solution_feasibility_with_mutually_exclusive_groups(
     clients[0] = Client(1, delivery=[0], required=False, group=0)
     clients[1] = Client(2, delivery=[0], required=False, group=0)
 
-    group = MutuallyExclusiveGroup([0, 1], required=True)
+    group = MutuallyExclusiveGroup(
+        [Activity("C0"), Activity("C1")], required=True
+    )
     assert_(group.required)
 
     data = ok_small.replace(clients=clients, groups=[group])
@@ -775,13 +777,51 @@ def test_optional_mutually_exclusive_group(ok_small):
     clients[0] = Client(1, delivery=[0], required=False, group=0)
     clients[1] = Client(2, delivery=[0], required=False, group=0)
 
-    group = MutuallyExclusiveGroup([0, 1], required=False)
+    group = MutuallyExclusiveGroup(
+        [Activity("C0"), Activity("C1")], required=False
+    )
     assert_(not group.required)
 
     data = ok_small.replace(clients=clients, groups=[group])
     sol = Solution(data, [[2, 3]])
     assert_(sol.is_feasible())
     assert_equal(sol.num_missing_groups(), 0)
+
+
+def test_mixed_group_feasibility(mixed_group):
+    """
+    A required mixed group can be served by either its client or a shipment.
+    """
+    data = mixed_group.replace(
+        groups=[MutuallyExclusiveGroup(mixed_group.group(0).activities)]
+    )
+    assert_equal(Solution(data, [[1]]).num_missing_groups(), 1)
+    assert_(Solution(data, [[0, 1]]).is_complete())
+    route = Route(data, map(Activity, ["L1", "C1", "U1"]), 0)
+    assert_(Solution(data, [route]).is_complete())
+
+
+def test_raises_duplicate_mixed_group(mixed_group):
+    """
+    A client and a shipment from the same group cannot both be planned.
+    """
+    route = Route(mixed_group, map(Activity, ["C0", "L0", "U0"]), 0)
+    with pytest.raises(
+        RuntimeError, match="Group 0 is visited more than once"
+    ):
+        Solution(mixed_group, [route])
+
+
+def test_make_random_mixed_group(mixed_group):
+    """
+    Random construction selects exactly one member of a required mixed group.
+    """
+    data = mixed_group.replace(
+        groups=[MutuallyExclusiveGroup(mixed_group.group(0).activities)]
+    )
+    sol = Solution.make_random(data, RandomNumberGenerator(42))
+    assert_(sol.is_complete())
+    assert_equal(sol.num_clients() - 1 + sol.num_shipments(), 1)
 
 
 def test_distance_duration_cost_calculations(ok_small):
