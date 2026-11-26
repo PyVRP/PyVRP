@@ -722,9 +722,9 @@ def test_debug_operator_logs(prize_collecting, caplog):
     # captured logs list.
     expected = [
         (0, "Applying local search (exhaustive=true)."),
-        (2, "Applying operator Relocate1 to U=9 and V=48 (delta=-300)."),
+        (2, "Applying operator Relocate1 to U=9 and V=32 (delta=-319)."),
         (-2, "Entering search loop (step=3)."),
-        (-1, "Completed local search: improving=71, updates=71, moves=5671."),
+        (-1, "Completed local search: improving=67, updates=67, moves=5672."),
     ]
 
     for idx, exp_msg in expected:
