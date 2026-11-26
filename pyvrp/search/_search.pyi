@@ -276,12 +276,10 @@ class Node:
 class NeighbourhoodParams:
     weight_wait_time: float
     num_neighbours: int
-    symmetric_proximity: bool
     def __init__(
         self,
         weight_wait_time: float = 0.2,
         num_neighbours: int = 50,
-        symmetric_proximity: bool = True,
     ) -> None: ...
     def __eq__(self, other: object) -> bool: ...
 

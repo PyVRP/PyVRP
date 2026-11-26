@@ -17,8 +17,83 @@ using pyvrp::search::NeighbourhoodParams;
 namespace
 {
 /**
+ * Computes rho(V): the mean of up to ten cheapest time-feasible outgoing
+ * arc costs, minimised over complete vehicle cost profiles.
+ */
+template <typename ArcCost>
+std::vector<double> computeOpportunityCosts(ProblemData const &data,
+                                            ArcCost const &arcCost)
+{
+    auto const numActivities = data.numClients() + 2 * data.numShipments();
+    auto const infeasible = std::numeric_limits<double>::max();
+    std::vector<double> rho(numActivities, 0);
+    std::vector<double> outgoing(numActivities);
+
+    auto const compute = [&](auto const &from, size_t frm)
+    {
+        std::fill(outgoing.begin(), outgoing.end(), infeasible);
+        std::set<std::tuple<pyvrp::Cost, pyvrp::Cost, size_t>> seen = {};
+        for (auto const &vehType : data.vehicleTypes())
+        {
+            auto const key = std::make_tuple(vehType.unitDistanceCost,
+                                             vehType.unitDurationCost,
+                                             vehType.profile);
+            if (!seen.insert(key).second)
+                continue;
+
+            for (size_t client = 0; client != data.numClients(); ++client)
+                outgoing[client]
+                    = std::min(arcCost(vehType, from, data.client(client)),
+                               outgoing[client]);
+
+            for (size_t pick = 0; pick != data.numShipments(); ++pick)
+            {
+                auto const idx = data.numClients() + pick;
+                outgoing[idx] = std::min(
+                    arcCost(vehType, from, data.shipment(pick).pickup),
+                    outgoing[idx]);
+            }
+
+            for (size_t del = 0; del != data.numShipments(); ++del)
+            {
+                auto const idx = data.numClients() + data.numShipments() + del;
+                outgoing[idx] = std::min(
+                    arcCost(vehType, from, data.shipment(del).delivery),
+                    outgoing[idx]);
+            }
+        }
+
+        // Exclude self, but retain distinct activities at the same location.
+        outgoing[frm] = infeasible;
+        auto const count
+            = std::min<size_t>(10,
+                               std::count_if(outgoing.begin(),
+                                             outgoing.end(),
+                                             [&](auto const value)
+                                             { return value < infeasible; }));
+        auto const end = outgoing.begin() + count;
+        std::partial_sort(outgoing.begin(), end, outgoing.end());
+        if (count)
+            rho[frm] = std::accumulate(outgoing.begin(), end, 0.0) / count;
+    };
+
+    for (size_t client = 0; client != data.numClients(); ++client)
+        compute(data.client(client), client);
+
+    for (size_t shipment = 0; shipment != data.numShipments(); ++shipment)
+    {
+        compute(data.shipment(shipment).pickup, data.numClients() + shipment);
+        compute(data.shipment(shipment).delivery,
+                data.numClients() + data.numShipments() + shipment);
+    }
+
+    return rho;
+}
+
+/**
  * Computes proximity for neighbourhood. Proximity is based on [1]_, but
- * generalised to additional VRP variants.
+ * generalised to additional VRP variants. The incoming arc cost is adjusted
+ * by the predecessor's opportunity cost.
  *
  * References
  * ----------
@@ -30,11 +105,42 @@ namespace
 Matrix<double> computeProximity(ProblemData const &data,
                                 NeighbourhoodParams const &params)
 {
-    // Rows (from) are #clients + #pickups. Columns (to) are #clients
+    // Rows (U) are #clients + #pickups. Columns (V) are #clients
     // + #pickups + #deliveries.
     Matrix<double> prox(data.numClients() + data.numShipments(),
                         data.numClients() + 2 * data.numShipments(),
                         std::numeric_limits<double>::max());
+
+    auto const arcCost
+        = [&](auto const &vehType, auto const &from, auto const &to)
+    {
+        auto const &dists = data.distanceMatrix(vehType.profile);
+        auto const &durs = data.durationMatrix(vehType.profile);
+        auto const frmServ = static_cast<double>(from.serviceDuration);
+        auto const frmEarly = static_cast<double>(from.twEarly);
+        auto const frmLate = static_cast<double>(from.twLate);
+
+        auto const toEarly = static_cast<double>(to.twEarly);
+        auto const toLate = static_cast<double>(to.twLate);
+
+        auto const dur = durs(from.location, to.location);
+        auto const edgeDur = static_cast<double>(dur);
+
+        if (frmEarly + frmServ + edgeDur > toLate)      // then this edge
+            return std::numeric_limits<double>::max();  // is not feasible
+
+        auto const dist = dists(from.location, to.location);
+        auto const distance = static_cast<double>(dist);
+
+        auto const minWait = toEarly - edgeDur - frmServ - frmLate;
+        auto const duration = edgeDur + std::max(minWait, 0.0);
+
+        return static_cast<double>(vehType.unitDistanceCost) * distance
+               + static_cast<double>(vehType.unitDurationCost) * duration
+               + params.weightWaitTime * std::max(minWait, 0.0);
+    };
+
+    auto const rho = computeOpportunityCosts(data, arcCost);
 
     std::set<std::tuple<pyvrp::Cost, pyvrp::Cost, size_t>> seen = {};
     for (auto const &vehType : data.vehicleTypes())
@@ -47,44 +153,14 @@ Matrix<double> computeProximity(ProblemData const &data,
             continue;            // based on this cost profile
 
         seen.insert(key);
-        auto const &dists = data.distanceMatrix(vehType.profile);
-        auto const &durs = data.durationMatrix(vehType.profile);
 
-        auto const arcCost = [&](auto const &from, auto const &to)
+        // Row U ranks predecessors V by h(V, U) - rho(V).
+        auto const cost = [&](auto const &from, auto const &to, size_t dest)
         {
-            auto const frmServ = static_cast<double>(from.serviceDuration);
-            auto const frmEarly = static_cast<double>(from.twEarly);
-            auto const frmLate = static_cast<double>(from.twLate);
-
-            auto const toEarly = static_cast<double>(to.twEarly);
-            auto const toLate = static_cast<double>(to.twLate);
-
-            auto const dur = durs(from.location, to.location);
-            auto const edgeDur = static_cast<double>(dur);
-
-            if (frmEarly + frmServ + edgeDur > toLate)      // then this edge
-                return std::numeric_limits<double>::max();  // is not feasible
-
-            auto const dist = dists(from.location, to.location);
-            auto const distance = static_cast<double>(dist);
-
-            auto const minWait = toEarly - edgeDur - frmServ - frmLate;
-            auto const duration = edgeDur + std::max(minWait, 0.0);
-
-            return static_cast<double>(vehType.unitDistanceCost) * distance
-                   + static_cast<double>(vehType.unitDurationCost) * duration
-                   + params.weightWaitTime * std::max(minWait, 0.0);
-        };
-
-        // Proximity between two activities. If proximity is symmetric, we
-        // evaluate the arc in both directions, and take the best of the two.
-        auto const cost = [&](auto const &from, auto const &to)
-        {
-            auto value = arcCost(from, to);
-            if (params.symmetricProximity)
-                value = std::min(value, arcCost(to, from));
-
-            return value;
+            auto const incoming = arcCost(vehType, to, from);
+            return incoming < std::numeric_limits<double>::max()
+                       ? incoming - rho[dest]
+                       : incoming;
         };
 
         // From clients.
@@ -97,7 +173,8 @@ Matrix<double> computeProximity(ProblemData const &data,
             {
                 auto const idx = client;
                 auto const &to = data.client(client);
-                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
+                prox(frm, idx)
+                    = std::min(cost(frmData, to, idx), prox(frm, idx));
             }
 
             // To shipment pickups.
@@ -105,7 +182,8 @@ Matrix<double> computeProximity(ProblemData const &data,
             {
                 auto const idx = data.numClients() + pick;
                 auto const &to = data.shipment(pick).pickup;
-                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
+                prox(frm, idx)
+                    = std::min(cost(frmData, to, idx), prox(frm, idx));
             }
 
             // To shipment deliveries.
@@ -113,12 +191,12 @@ Matrix<double> computeProximity(ProblemData const &data,
             {
                 auto const idx = data.numClients() + data.numShipments() + del;
                 auto const &to = data.shipment(del).delivery;
-                prox(frm, idx) = std::min(cost(frmData, to), prox(frm, idx));
+                prox(frm, idx)
+                    = std::min(cost(frmData, to, idx), prox(frm, idx));
             }
         }
 
-        // From shipment pickups. Their neighbourhood considers proximity cost
-        // from both pickup and delivery steps to other activities.
+        // From shipment pickups: local search inserts the pickup after V.
         for (size_t frm = data.numClients(); frm != prox.numRows(); ++frm)
         {
             auto const &shipment = data.shipment(frm - data.numClients());
@@ -128,9 +206,8 @@ Matrix<double> computeProximity(ProblemData const &data,
             {
                 auto const idx = client;
                 auto const &to = data.client(client);
-                prox(frm, idx) = std::min({cost(shipment.pickup, to),
-                                           cost(shipment.delivery, to),
-                                           prox(frm, idx)});
+                prox(frm, idx)
+                    = std::min(cost(shipment.pickup, to, idx), prox(frm, idx));
             }
 
             // To shipment pickups.
@@ -138,9 +215,8 @@ Matrix<double> computeProximity(ProblemData const &data,
             {
                 auto const idx = data.numClients() + pick;
                 auto const &to = data.shipment(pick).pickup;
-                prox(frm, idx) = std::min({cost(shipment.pickup, to),
-                                           cost(shipment.delivery, to),
-                                           prox(frm, idx)});
+                prox(frm, idx)
+                    = std::min(cost(shipment.pickup, to, idx), prox(frm, idx));
             }
 
             // To shipment deliveries.
@@ -148,9 +224,8 @@ Matrix<double> computeProximity(ProblemData const &data,
             {
                 auto const idx = data.numClients() + data.numShipments() + del;
                 auto const &to = data.shipment(del).delivery;
-                prox(frm, idx) = std::min({cost(shipment.pickup, to),
-                                           cost(shipment.delivery, to),
-                                           prox(frm, idx)});
+                prox(frm, idx)
+                    = std::min(cost(shipment.pickup, to, idx), prox(frm, idx));
             }
         }
     }
@@ -160,11 +235,8 @@ Matrix<double> computeProximity(ProblemData const &data,
 }  // namespace
 
 NeighbourhoodParams::NeighbourhoodParams(double weightWaitTime,
-                                         size_t numNeighbours,
-                                         bool symmetricProximity)
-    : weightWaitTime(weightWaitTime),
-      numNeighbours(numNeighbours),
-      symmetricProximity(symmetricProximity)
+                                         size_t numNeighbours)
+    : weightWaitTime(weightWaitTime), numNeighbours(numNeighbours)
 {
     if (numNeighbours == 0)
         throw std::invalid_argument("num_neighbours == 0 not understood.");
@@ -192,22 +264,16 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
         prox(idx, idx + data.numShipments())  // excl. own delivery
             = std::numeric_limits<double>::infinity();
 
-    // Adjust the neighbourhood size to the minimum of the number of other
-    // clients and shipments, and the default neighbourhood size. We need to
-    // make sure we do not wrap-around in case the there are no clients or
-    // shipments. Since we have both pickup and delivery nodes for shipments,
-    // we count those double.
-    auto const numClients = std::max<size_t>(data.numClients(), 1) - 1;
-    auto const numShipments = std::max<size_t>(2 * data.numShipments(), 2) - 2;
-    auto const maxNeighbours = numClients + numShipments;
-    auto const numNeighbours = std::min(params.numNeighbours, maxNeighbours);
-
     std::unordered_map<Activity, std::vector<Activity>> neighbours;
 
     std::vector<size_t> indices(prox.numCols());
     for (size_t idx = 0; idx != data.numClients(); ++idx)
     {
         Activity const activity = {Activity::ActivityType::CLIENT, idx};
+
+        // A client excludes only itself from the available activities.
+        auto const numNeighbours
+            = std::min(params.numNeighbours, indices.size() - 1);
 
         auto const comp = [&](auto const a, auto const b)
         { return std::tie(prox(idx, a), a) < std::tie(prox(idx, b), b); };
@@ -244,6 +310,10 @@ pyvrp::search::computeNeighbours(ProblemData const &data,
     for (size_t idx = 0; idx != data.numShipments(); ++idx)
     {
         Activity const activity = {Activity::ActivityType::PICKUP, idx};
+
+        // A shipment excludes both its own pickup and delivery.
+        auto const numNeighbours
+            = std::min(params.numNeighbours, indices.size() - 2);
 
         auto const comp = [&](auto const a, auto const b)
         {

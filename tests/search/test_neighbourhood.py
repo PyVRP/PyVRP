@@ -22,82 +22,118 @@ def test_neighbourhood_params_raises_for_empty_neighbourhoods():
         NeighbourhoodParams(num_neighbours=0)
 
 
-# fmt: off
+def test_predecessor_proximity():
+    """
+    Tests that U's neighbours rank predecessors V using h(V, U) - rho(V).
+    """
+    distances = np.array(
+        [[0, 100, 100, 100], [100, 0, 1, 4], [100, 8, 0, 5], [100, 1, 9, 0]]
+    )
+    data = ProblemData(
+        locations=[Location(idx, 0) for idx in range(4)],
+        clients=[Client(1), Client(2), Client(3)],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[distances],
+        duration_matrices=[np.zeros_like(distances)],
+    )
+
+    # Incoming scores for C2 are 1.5 and -1.5, favouring C1 despite C0
+    # being closer. Outgoing scoring would favour C0.
+    params = NeighbourhoodParams(num_neighbours=1)
+    neighbours = compute_neighbours(data, params)
+    assert_equal(neighbours[Activity("C2")], [Activity("C1")])
+
+
 @mark.parametrize(
-    (
-        "weight_wait_time",
-        "num_neighbours",
-        "symmetric_proximity",
-        "idx_check",
-        "expected_neighbours_check",
-    ),
-    [
-        (20, 10, True, 1,
-         {0, 2, 3, 4, 5, 6, 7, 44, 45, 99}),
-        # From original C++ implementation
-        (18, 34, True, 0,
-         {1, 2, 3, 4, 5, 6, 7, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 52,
-          53, 54, 59, 60, 67, 68, 69, 72, 77, 78, 80, 87, 89, 97, 99}),
-        (18, 34, True, 98,
-         {8, 9, 10, 11, 12, 13, 14, 15, 19, 21, 23, 46, 51, 52, 54, 55, 56, 57,
-          58, 59, 63, 64, 65, 68, 73, 79, 81, 82, 85, 86, 87, 89, 90, 97}),
-    ],
+    ("weight", "service_duration", "expected"),
+    [(0.2, 0, "C0"), (0.3, 0, "C0"), (1, 0, "C1"), (1, 40, "C0")],
 )
-# fmt: on
-def test_compute_neighbours(
-    rc208,
-    weight_wait_time: int,
-    num_neighbours: int,
-    symmetric_proximity: bool,
-    idx_check: int,
-    expected_neighbours_check: set[int],
+def test_waiting_in_arc_cost_and_opportunity_cost(
+    weight, service_duration, expected
 ):
     """
-    Tests ``compute_neighbours`` on several well-understood cases.
+    Tests waiting in both terms, including service time and time feasibility.
     """
-    params = NeighbourhoodParams(
-        weight_wait_time,
-        num_neighbours,
-        symmetric_proximity,
+    distances = np.full((4, 4), 100, dtype=int)
+    np.fill_diagonal(distances, 0)
+    distances[1, 2], distances[1, 3], distances[2, 3] = 20, 10, 12
+    data = ProblemData(
+        locations=[Location(idx, 0) for idx in range(4)],
+        clients=[
+            Client(1, tw_late=0, service_duration=service_duration),
+            Client(2, tw_early=20, tw_late=20),
+            Client(3, tw_early=40, tw_late=40),
+        ],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[distances],
+        duration_matrices=[np.zeros_like(distances)],
     )
-    neighbours = compute_neighbours(rc208, params)
 
-    assert_equal(len(neighbours), rc208.num_clients)
+    # Without service, scores are -5 + 10 * weight and 0. Weight 0.3 also
+    # catches dividing by ten instead of the feasible alternative count.
+    # Service 40 excludes C0 -> C1, leaving a tie resolved by index.
+    params = NeighbourhoodParams(weight_wait_time=weight, num_neighbours=1)
+    neighbours = compute_neighbours(data, params)
+    assert_equal(neighbours[Activity("C2")], [Activity(expected)])
 
-    # We compare sets because the expected data (from the old C++
-    # implementation) sorts by client ID (ascending), not proximity.
-    activity = Activity(f"C{idx_check}")
-    assert_equal(
-        set(act.idx for act in neighbours[activity]),
-        expected_neighbours_check,
+
+def test_opportunity_cost_uses_ten_cheapest_alternatives():
+    """
+    Tests that an expensive eleventh alternative does not increase rho.
+    """
+    distances = np.ones((13, 13), dtype=int)
+    distances[:, 1] = 1_000  # most predecessors are far from U = C0
+    distances[2, 1] = 10  # V = C1
+    distances[3, 1] = 8  # W = C2
+    distances[2, 12] = 1_000  # expensive eleventh alternative for V
+    np.fill_diagonal(distances, 0)
+    data = ProblemData(
+        locations=[Location(idx, 0) for idx in range(13)],
+        clients=[Client(idx) for idx in range(1, 13)],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType()],
+        distance_matrices=[distances],
+        duration_matrices=[np.zeros_like(distances)],
     )
 
-    for neighb in neighbours.values():
-        assert_equal(len(neighb), num_neighbours)
+    # Scores are 8.1 and 7; including the eleventh alternative favours C1.
+    neighbours = compute_neighbours(
+        data, NeighbourhoodParams(num_neighbours=1)
+    )
+    assert_equal(neighbours[Activity("C0")], [Activity("C2")])
 
 
-def test_neighbours_are_sorted_by_proximity(small_cvrp):
+def test_arc_cost_uses_a_complete_feasible_profile():
     """
-    Tests that the neighbourhood lists sort by their proximity: closest first.
+    Tests that cheap distance and feasible duration come from the same profile.
     """
-    params = NeighbourhoodParams(0, small_cvrp.num_clients)
-    neighbours = compute_neighbours(small_cvrp, params)
-    clients = range(small_cvrp.num_clients)
+    distances = np.ones((4, 4), dtype=int)
+    np.fill_diagonal(distances, 0)
+    distances[1, 3], distances[2, 3] = 1, 5
+    other_distances = distances.copy()
+    other_distances[1, 3] = 20
+    durations = np.zeros_like(distances)
+    durations[1, 3] = 100  # the cheap C0 -> C2 arc is infeasible
+    data = ProblemData(
+        locations=[Location(idx, 0) for idx in range(4)],
+        clients=[
+            Client(1, tw_late=0),
+            Client(2, tw_late=0),
+            Client(3, tw_early=10, tw_late=10),
+        ],
+        depots=[Depot(0)],
+        vehicle_types=[VehicleType(profile=0), VehicleType(profile=1)],
+        distance_matrices=[distances, other_distances],
+        duration_matrices=[durations, np.zeros_like(durations)],
+    )
 
-    # Only consider client location distances; depots do not factor into the
-    # neighbourhoods.
-    distances = small_cvrp.distance_matrix(profile=0)
-    distances = distances[small_cvrp.num_depots:, small_cvrp.num_depots:]
-
-    for client in clients:
-        # Proximity is completely based on distance. We break ties by index
-        # (using stable sort). The test below checks that this is the same as
-        # what comes out of the granular neighbourhood calculation.
-        valid = np.array([other for other in clients if other != client])
-        dists = distances[client, valid]
-        by_proximity = valid[np.argsort(dists, kind="stable")]
-        as_activities = [Activity(f"C{idx}") for idx in by_proximity]
-        assert_equal(as_activities, neighbours[Activity(f"C{client}")])
+    # Scores into C2 are 10.5 and 3. Mixing profiles would favour C0.
+    neighbours = compute_neighbours(
+        data, NeighbourhoodParams(num_neighbours=1)
+    )
+    assert_equal(neighbours[Activity("C2")], [Activity("C1")])
 
 
 def test_more_neighbours_than_instance_size(rc208):
@@ -146,8 +182,10 @@ def test_proximity_with_mutually_exclusive_groups(
     for client in members:
         act = Activity(f"C{client}")
         assert_(
-            all(Activity(f"C{other}") not in neighbours[act]
-            for other in members)
+            all(
+                Activity(f"C{other}") not in neighbours[act]
+                for other in members
+            )
         )
 
 
@@ -217,7 +255,6 @@ def test_zero_clients_or_shipments():
         vehicle_types=[VehicleType()],
         distance_matrices=[np.zeros((1, 1), dtype=int)],
         duration_matrices=[np.zeros((1, 1), dtype=int)],
-        shipments=[],
     )
 
     assert_equal(compute_neighbours(data), {})
@@ -243,9 +280,9 @@ def test_shipments_exclude_either_activity_in_neighbourhood(small_shipments):
         assert_equal(len(neighbourhood), 2 * small_shipments.num_shipments - 2)
 
 
-def test_shipment_proximity_uses_pickup_and_delivery():
+def test_shipment_proximity_uses_pickup_head():
     """
-    Tests that shipment proximity considers both pickup and delivery.
+    Tests that shipment proximity ranks predecessors of the pickup.
     """
     distances = np.full((5, 5), 100, dtype=int)
     np.fill_diagonal(distances, 0)
@@ -262,12 +299,11 @@ def test_shipment_proximity_uses_pickup_and_delivery():
         shipments=[Shipment(3, 4)],
     )
 
-    # Shipment 0's pickup is closest to C0, but its delivery is even closer to
-    # C1. With one neighbour, the neighbour is therefore C1 rather than C0.
+    # Pickup scores are -60 and 33. The nearby delivery must not favour C1.
     params = NeighbourhoodParams(0, num_neighbours=1)
     neighbours = compute_neighbours(data, params)
 
-    assert_equal(neighbours[Activity("L0")], [Activity("C1")])
+    assert_equal(neighbours[Activity("L0")], [Activity("C0")])
 
 
 def test_mixed_client_shipments(small_shipments):
@@ -275,26 +311,26 @@ def test_mixed_client_shipments(small_shipments):
     Tests the neighbourhood of a small instance with mixed clients and
     shipments.
     """
-    # Create a mixed instance, with clients and shipments.
     clients = [Client(2, delivery=[0]), Client(5, delivery=[1])]
     data = small_shipments.replace(clients=clients)
-    assert_equal(data.num_clients, 2)
-    assert_equal(data.num_shipments, 4)
 
     neighbours = compute_neighbours(data)
     assert_equal(len(neighbours), 6)  # for each client and shipment pickup
 
-    # We should have neighbours for both clients and shipments.
-    assert_(Activity("C0") in neighbours)
-    assert_(Activity("L0") in neighbours)
-
-    # The shipment is at location 2, which is also where the first shipment's
-    # pickup happens. So, L0 should be the first entry in C0's neighbourhood,
-    # and vice versa.
+    # C0 and L0 share a location and should be each other's first neighbour.
     assert_equal(neighbours[Activity("C0")][0], Activity("L0"))
     assert_equal(neighbours[Activity("L0")][0], Activity("C0"))
 
-    # The neighbourhood can contain all other shipments and clients. In this
-    # case, there is always one other client, and three other shipments. Thus,
-    # a total of seven activities can be in the neighbourhood.
-    assert_equal(len(neighbours[Activity("C0")]), 7)
+    # A client can neighbour the other client and all eight shipment steps.
+    for idx in range(data.num_clients):
+        client = Activity(f"C{idx}")
+        assert_equal(len(neighbours[client]), 9)
+        assert_(client not in neighbours[client])
+
+    # A pickup can neighbour both clients and the other three shipments.
+    for idx in range(data.num_shipments):
+        pickup = Activity(f"L{idx}")
+        delivery = Activity(f"U{idx}")
+        assert_equal(len(neighbours[pickup]), 8)
+        assert_(pickup not in neighbours[pickup])
+        assert_(delivery not in neighbours[pickup])

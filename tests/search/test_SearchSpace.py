@@ -39,19 +39,8 @@ def test_raises_when_neighbourhood_contains_self(ok_small):
         SearchSpace(ok_small, neighbours)
 
 
-@pytest.mark.parametrize(
-    ("num_neighbours", "symmetric_proximity"),
-    [
-        (10, True),
-        # From original c++ implementation
-        (34, False),
-    ],
-)
-def test_set_get_neighbours(
-    rc208,
-    num_neighbours: int,
-    symmetric_proximity: bool,
-):
+@pytest.mark.parametrize("num_neighbours", [10, 34])
+def test_set_get_neighbours(rc208, num_neighbours: int):
     """
     Tests setting and getting neighbours.
     """
@@ -59,7 +48,7 @@ def test_set_get_neighbours(
     prev_neighbours = compute_neighbours(rc208, params)
     search_space = SearchSpace(rc208, prev_neighbours)
 
-    params = NeighbourhoodParams(20, num_neighbours, symmetric_proximity)
+    params = NeighbourhoodParams(20, num_neighbours)
     neighbours = compute_neighbours(rc208, params)
 
     # Test that before we set neighbours we don't have same

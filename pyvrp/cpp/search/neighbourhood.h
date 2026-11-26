@@ -10,13 +10,14 @@
 namespace pyvrp::search
 {
 /**
- * NeighbourhoodParams(
- *    weight_wait_time: float = 0.2,
- *    num_neighbours: int = 50,
- *    symmetric_proximity: bool = True,
- * )
+ * NeighbourhoodParams(weight_wait_time: float = 0.2, num_neighbours: int = 50)
  *
  * Configuration for calculating a granular neighbourhood.
+ * Candidates V in U's neighbourhood are ranked by the cost of inserting
+ * the arc V -> U, minus V's opportunity cost. The opportunity cost is the
+ * mean of up to ten cheapest time-feasible outgoing arcs from V, excluding
+ * V itself and depots. It is zero if no such arcs exist. Shipment
+ * neighbourhoods rank predecessors of the pickup activity.
  *
  * Parameters
  * ----------
@@ -27,9 +28,6 @@ namespace pyvrp::search
  * num_neighbours
  *     Number of activities in each granular neighbourhood. This parameter
  *     determines the size of the overall neighbourhood.
- * symmetric_proximity
- *     Whether to calculate a symmetric proximity matrix. This ensures edge
- *     :math:`(i, j)` is given the same weight as :math:`(j, i)`.
  *
  * Raises
  * ------
@@ -40,11 +38,8 @@ struct NeighbourhoodParams
 {
     double const weightWaitTime;
     size_t const numNeighbours;
-    bool const symmetricProximity;
 
-    NeighbourhoodParams(double weightWaitTime = 0.2,
-                        size_t numNeighbours = 50,
-                        bool symmetricProximity = true);
+    NeighbourhoodParams(double weightWaitTime = 0.2, size_t numNeighbours = 50);
 
     bool operator==(NeighbourhoodParams const &other) const = default;
 };
