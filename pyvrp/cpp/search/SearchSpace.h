@@ -3,10 +3,13 @@
 
 #include "Activity.h"
 #include "DynamicBitset.h"
+#include "DynamicNeighbourhood.h"
 #include "ProblemData.h"
 #include "RandomNumberGenerator.h"
 #include "Route.h"
 
+#include <memory>
+#include <span>
 #include <unordered_map>
 #include <vector>
 
@@ -19,7 +22,7 @@ namespace pyvrp::search
  * around the given neighbourhood, and uses the concept of promising activities
  * to determine which activity's neighbourhoods to search. It can also be used
  * to define a (randomised) search ordering for activities, routes, and vehicle
- * types.
+ * types, and tracks evaluation history to skip unchanged route pairs.
  */
 class SearchSpace
 {
@@ -39,12 +42,67 @@ private:
     std::vector<std::pair<size_t, size_t>> vehTypeOrder_;
 
     // Tracks clients and shipments that can likely be improved by local search
-    // operators. Clients are tracked in the lower indices (from the front),
-    // shipments in the upper indices (from the back).
+    // operators. Clients are tracked first, followed by shipments.
     DynamicBitset promising_;
+    size_t const numClients_;
+    size_t const numShipments_;
+    std::shared_ptr<DynamicNeighbourhood> dynamic_;
+
+    // Evaluation and modification counters for the current local search.
+    std::vector<int> lastTest_;
+    std::vector<int> lastUpdate_;
+    size_t numUpdates_ = 0;
+    std::span<Route const> routes_;
+
+    size_t index(Activity const &activity) const;
+
+    void touch(Activity const &activity);
 
 public:
     SearchSpace(ProblemData const &data, Neighbours neighbours);
+
+    /**
+     * Resets evaluation history for a new local search over these routes.
+     * The routes must remain valid until the next reset.
+     */
+    void reset(std::span<Route const> routes);
+
+    /** Records a test and returns the activity's previous test counter. */
+    int test(Activity const &activity);
+
+    /** Returns whether either route changed since the given test counter. */
+    bool updatedSince(Route const *U, Route const *V, int lastTest) const;
+
+    /** Counts one solution modification and marks its affected routes. */
+    void update(Route const *U, Route const *V);
+
+    /** Returns the number of modifications in the current local search. */
+    size_t numUpdates() const;
+
+    std::shared_ptr<DynamicNeighbourhood>
+    configureDynamicNeighbourhood(Neighbours const &candidates,
+                                  size_t patience
+                                  = DynamicNeighbourhood::DEFAULT_PATIENCE)
+    {
+        dynamic_ = std::make_shared<DynamicNeighbourhood>(
+            candidates, numClients_, numShipments_, patience);
+        return dynamic_;
+    }
+
+    /** Records participation in an applied binary move, in argument order. */
+    void touch(Route::Node const *U, Route::Node const *V);
+
+    Neighbours activeNeighbours() const
+    {
+        return dynamic_ ? dynamic_->neighbours() : neighbours_;
+    }
+
+    std::vector<Activity> const &
+    activeNeighboursOf(Activity const &activity) const
+    {
+        return dynamic_ ? dynamic_->neighboursOf(activity)
+                        : neighboursOf(activity);
+    }
 
     /**
      * Set the neighbourhood structure of this search space. For each client

@@ -10,8 +10,7 @@
 #include "SearchSpace.h"
 #include "Solution.h"  // pyvrp::search::Solution
 
-#include <functional>
-#include <stdexcept>
+#include <memory>
 #include <vector>
 
 namespace pyvrp::search
@@ -23,8 +22,8 @@ class LocalSearch
     // Stores the node-based solution representation used during LS.
     Solution solution_;
 
-    // Manages the granular neighbourhood, promising nodes, and the order in
-    // which nodes and routes are searched.
+    // Manages the granular neighbourhood, promising nodes, evaluation history,
+    // and the order in which nodes and routes are searched.
     SearchSpace searchSpace_;
 
     // Perturbation manager that determines the size of the perturbation during
@@ -33,12 +32,6 @@ class LocalSearch
 
     std::vector<UnaryOperator *> unaryOps_;
     std::vector<BinaryOperator *> binaryOps_;
-
-    std::vector<int> lastTest_;    // tracks last client and pickup evaluations
-    std::vector<int> lastUpdate_;  // tracks when routes were last modified
-
-    size_t numUpdates_ = 0;         // modification counter
-    bool searchCompleted_ = false;  // No further improving move found?
 
     // Tests the node U.
     bool applyUnaryOps(Route::Node *U, CostEvaluator const &costEvaluator);
@@ -128,6 +121,19 @@ public:
      * Returns search statistics for the currently loaded solution.
      */
     Statistics statistics() const;
+
+    std::shared_ptr<DynamicNeighbourhood>
+    configureDynamicNeighbourhood(SearchSpace::Neighbours const &candidates,
+                                  size_t patience
+                                  = DynamicNeighbourhood::DEFAULT_PATIENCE)
+    {
+        return searchSpace_.configureDynamicNeighbourhood(candidates, patience);
+    }
+
+    SearchSpace::Neighbours activeNeighbours() const
+    {
+        return searchSpace_.activeNeighbours();
+    }
 
     /**
      * Performs a local search around the given solution, and returns a new,

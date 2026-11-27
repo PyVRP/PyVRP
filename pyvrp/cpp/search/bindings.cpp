@@ -33,6 +33,7 @@
 namespace py = pybind11;
 
 using pyvrp::search::BinaryOperator;
+using pyvrp::search::DynamicNeighbourhood;
 using pyvrp::search::InsertOptionalClient;
 using pyvrp::search::InsertOptionalShipment;
 using pyvrp::search::LocalSearch;
@@ -573,6 +574,12 @@ PYBIND11_MODULE(_search, m)
         .def_readonly("num_improving", &LocalSearch::Statistics::numImproving)
         .def_readonly("num_updates", &LocalSearch::Statistics::numUpdates);
 
+    py::class_<DynamicNeighbourhood, std::shared_ptr<DynamicNeighbourhood>>(
+        m, "DynamicNeighbourhood", DOC(pyvrp, search, DynamicNeighbourhood))
+        .def("touch", &DynamicNeighbourhood::touch, py::arg("activity"))
+        .def("update", &DynamicNeighbourhood::update, py::arg("new_best"))
+        .def_property_readonly("neighbours", &DynamicNeighbourhood::neighbours);
+
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
                       SearchSpace::Neighbours,
@@ -586,6 +593,12 @@ PYBIND11_MODULE(_search, m)
                       &LocalSearch::neighbours,
                       &LocalSearch::setNeighbours,
                       py::return_value_policy::reference_internal)
+        .def("configure_dynamic_neighbourhood",
+             &LocalSearch::configureDynamicNeighbourhood,
+             py::arg("candidates"),
+             py::arg("patience") = DynamicNeighbourhood::DEFAULT_PATIENCE)
+        .def_property_readonly("active_neighbours",
+                               &LocalSearch::activeNeighbours)
         .def_property_readonly("statistics", &LocalSearch::statistics)
         .def_property_readonly("unary_operators",
                                &LocalSearch::unaryOperators,

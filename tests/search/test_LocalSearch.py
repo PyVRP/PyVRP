@@ -731,24 +731,48 @@ def test_debug_operator_logs(prize_collecting, caplog):
         assert_equal(caplog.records[idx].message, exp_msg)
 
 
-def test_shipment_structural_feasibility(small_shipments):
+@pytest.mark.parametrize(
+    ("num_clients", "num_shipments"),
+    [(0, 4), (1, 1), (1, 62), (63, 1), (64, 1)],
+)
+def test_shipment_structural_feasibility(
+    small_shipments, num_clients, num_shipments
+):
     """
     Tests that the LocalSearch restores structural feasibility for instances
-    with required shipments.
+    with required clients and shipments, including owner counts around the
+    promising bitset's block boundary.
     """
+    data = small_shipments.replace(
+        clients=[Client(location=1, delivery=[0])] * num_clients,
+        shipments=[
+            small_shipments.shipment(idx % small_shipments.num_shipments)
+            for idx in range(num_shipments)
+        ],
+    )
     rng = RandomNumberGenerator(seed=42)
-    neighbourhood = compute_neighbours(small_shipments)
-    ls = LocalSearch(small_shipments, rng, neighbourhood)
-    ls.add_operator(Relocate1(small_shipments))  # does not insert shipments
+    neighbourhood = compute_neighbours(data)
+    ls = LocalSearch(data, rng, neighbourhood)
+    ls.add_operator(Relocate1(data))  # does not insert shipments
 
-    empty = Solution(small_shipments, [])
+    empty = Solution(data, [])
     assert_equal(empty.num_shipments(), 0)
     assert_(not empty.is_complete())
 
     cost_eval = CostEvaluator([0], 0, 0)
     complete = ls(empty, cost_eval, exhaustive=True)  # disable perturbation
-    assert_equal(complete.num_shipments(), 4)
+    assert_equal(complete.num_clients(), num_clients)
+    assert_equal(complete.num_shipments(), num_shipments)
     assert_(complete.is_complete())
+
+    stats = ls.statistics
+    assert_equal(
+        stats.num_updates,
+        num_clients + num_shipments + stats.num_improving,
+    )
+
+    ls(complete, cost_eval, exhaustive=True)
+    assert_equal(ls.statistics.num_updates, 0)
 
 
 def test_shipment_improves_over_random(small_shipments):
