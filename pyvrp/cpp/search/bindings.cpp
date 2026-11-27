@@ -33,6 +33,7 @@
 namespace py = pybind11;
 
 using pyvrp::search::BinaryOperator;
+using pyvrp::search::DynamicNeighbourhood;
 using pyvrp::search::InsertOptionalClient;
 using pyvrp::search::InsertOptionalShipment;
 using pyvrp::search::LocalSearch;
@@ -573,6 +574,12 @@ PYBIND11_MODULE(_search, m)
         .def_readonly("num_improving", &LocalSearch::Statistics::numImproving)
         .def_readonly("num_updates", &LocalSearch::Statistics::numUpdates);
 
+    py::class_<DynamicNeighbourhood, std::shared_ptr<DynamicNeighbourhood>>(
+        m, "DynamicNeighbourhood", DOC(pyvrp, search, DynamicNeighbourhood))
+        .def("touch", &DynamicNeighbourhood::touch, py::arg("activity"))
+        .def("update", &DynamicNeighbourhood::update, py::arg("new_best"))
+        .def_property_readonly("neighbours", &DynamicNeighbourhood::neighbours);
+
     py::class_<LocalSearch>(m, "LocalSearch")
         .def(py::init<pyvrp::ProblemData const &,
                       SearchSpace::Neighbours,
@@ -586,6 +593,15 @@ PYBIND11_MODULE(_search, m)
                       &LocalSearch::neighbours,
                       &LocalSearch::setNeighbours,
                       py::return_value_policy::reference_internal)
+        .def("configure_dynamic_neighbourhood",
+             &LocalSearch::configureDynamicNeighbourhood,
+             py::arg("candidates"),
+             py::arg("patience") = DynamicNeighbourhood::DEFAULT_PATIENCE)
+        .def("update_neighbourhood",
+             &LocalSearch::updateNeighbourhood,
+             py::arg("new_best"))
+        .def_property_readonly("active_neighbours",
+                               &LocalSearch::activeNeighbours)
         .def_property_readonly("statistics", &LocalSearch::statistics)
         .def_property_readonly("unary_operators",
                                &LocalSearch::unaryOperators,
@@ -849,15 +865,20 @@ PYBIND11_MODULE(_search, m)
 
     py::class_<NeighbourhoodParams>(
         m, "NeighbourhoodParams", DOC(pyvrp, search, NeighbourhoodParams))
-        .def(py::init<double, size_t, bool>(),
+        .def(py::init<double, size_t, bool, bool, size_t>(),
              py::arg("weight_wait_time") = 0.2,
-             py::arg("num_neighbours") = 50,
-             py::arg("symmetric_proximity") = true)
+             py::arg("num_neighbours") = 60,
+             py::arg("symmetric_proximity") = true,
+             py::arg("dynamic") = true,
+             py::arg("dynamic_patience") = 1000)
         .def(py::self == py::self, py::arg("other"))  // this is __eq__
         .def_readonly("weight_wait_time", &NeighbourhoodParams::weightWaitTime)
         .def_readonly("num_neighbours", &NeighbourhoodParams::numNeighbours)
         .def_readonly("symmetric_proximity",
-                      &NeighbourhoodParams::symmetricProximity);
+                      &NeighbourhoodParams::symmetricProximity)
+        .def_readonly("dynamic", &NeighbourhoodParams::dynamic)
+        .def_readonly("dynamic_patience",
+                      &NeighbourhoodParams::dynamicPatience);
 
     m.def("compute_neighbours",
           &pyvrp::search::computeNeighbours,

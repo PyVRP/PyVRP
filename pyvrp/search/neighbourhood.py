@@ -13,7 +13,8 @@ def compute_neighbours(
     data: ProblemData, params: NeighbourhoodParams = NeighbourhoodParams()
 ) -> dict[Activity, list[Activity]]:
     """
-    Computes neighbours defining the neighbourhood for a problem instance.
+    Computes the full ordered neighbourhood lists for a problem instance.
+    Dynamic prefix selection is managed by local search.
 
     Parameters
     ----------

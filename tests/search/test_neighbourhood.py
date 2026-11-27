@@ -14,12 +14,34 @@ from pyvrp import (
 from pyvrp.search import NeighbourhoodParams, compute_neighbours
 
 
+def test_neighbourhood_params_defaults():
+    params = NeighbourhoodParams()
+    assert_equal(params.weight_wait_time, 0.2)
+    assert_equal(params.num_neighbours, 60)
+    assert_(params.symmetric_proximity)
+    assert_(params.dynamic)
+    assert_equal(params.dynamic_patience, 1000)
+
+
 def test_neighbourhood_params_raises_for_empty_neighbourhoods():
     """
     Test that ``NeighbourhoodParams`` raises for empty neighbourhoods.
     """
     with assert_raises(ValueError):
         NeighbourhoodParams(num_neighbours=0)
+
+
+@mark.parametrize("dynamic", [False, True])
+def test_neighbourhood_params_rejects_zero_patience(dynamic):
+    with assert_raises(ValueError):
+        NeighbourhoodParams(dynamic=dynamic, dynamic_patience=0)
+
+
+def test_dynamic_options_preserve_full_candidate_lists(rc208):
+    dynamic = compute_neighbours(rc208)
+    static = compute_neighbours(rc208, NeighbourhoodParams(dynamic=False))
+    assert_equal(dynamic, static)
+    assert_(all(len(row) == 60 for row in dynamic.values()))
 
 
 # fmt: off

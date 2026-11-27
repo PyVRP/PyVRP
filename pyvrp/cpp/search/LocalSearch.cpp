@@ -1,5 +1,4 @@
 #include "LocalSearch.h"
-#include "DynamicBitset.h"
 #include "Measure.h"
 #include "constants.h"
 #include "logging.h"
@@ -7,8 +6,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <iterator>
-#include <numeric>
 
 using pyvrp::Solution;
 using pyvrp::search::BinaryOperator;
@@ -23,10 +20,7 @@ pyvrp::Solution LocalSearch::operator()(pyvrp::Solution const &solution,
     PYVRP_DEBUG(
         "pyvrp.search", "Applying local search (exhaustive={}).", exhaustive);
 
-    std::fill(lastTest_.begin(), lastTest_.end(), -1);
-    std::fill(lastUpdate_.begin(), lastUpdate_.end(), 0);
-    numUpdates_ = 0;
-
+    searchSpace_.reset(solution_.routes);
     solution_.load(solution);
 
     for (auto *op : unaryOps_)
@@ -57,11 +51,10 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
     if (unaryOps_.empty() && binaryOps_.empty())
         return;
 
-    searchCompleted_ = false;
-    for ([[maybe_unused]] int step = 0; !searchCompleted_; ++step)
+    for ([[maybe_unused]] int step = 0;; ++step)
     {
         PYVRP_DEBUG("pyvrp.search", "Entering search loop (step={}).", step);
-        searchCompleted_ = true;
+        auto const numUpdates = searchSpace_.numUpdates();
 
         for (auto const &uActivity : searchSpace_.activityOrder())
         {
@@ -72,40 +65,34 @@ void LocalSearch::search(CostEvaluator const &costEvaluator)
             if (!searchSpace_.isPromising(uActivity))
                 continue;
 
-            // lastTest_ is ordered - #clients (lower indices) and #pickups
-            // (upper indices).
-            auto const idx = (U->isClient() ? 0 : data.numClients()) + U->idx();
-            auto const lastTest = lastTest_[idx];
-            lastTest_[idx] = numUpdates_;
+            auto const lastTest = searchSpace_.test(uActivity);
 
             applyUnaryOps(U, costEvaluator);
 
-            for (auto const &vActivity : searchSpace_.neighboursOf(uActivity))
+            for (auto const &vActivity :
+                 searchSpace_.activeNeighboursOf(uActivity))
             {
                 auto *V = solution_[vActivity];
                 assert(V);
 
-                if (!V->route())
+                if (!V->route()
+                    || !searchSpace_.updatedSince(
+                        U->route(), V->route(), lastTest))
                     continue;
 
-                auto *routes = solution_.routes.data();
-                auto uUpdate = 0;
-                if (U->route())
-                    uUpdate = lastUpdate_[std::distance(routes, U->route())];
-                auto vUpdate = lastUpdate_[std::distance(routes, V->route())];
-                if (uUpdate > lastTest || vUpdate > lastTest)
-                {
-                    if (applyBinaryOps(U, V, costEvaluator))
-                        continue;
+                if (applyBinaryOps(U, V, costEvaluator))
+                    continue;
 
-                    if (p(V)->isStartDepot()
-                        && applyBinaryOps(U, p(V), costEvaluator))
-                        continue;
-                }
+                if (p(V)->isStartDepot()
+                    && applyBinaryOps(U, p(V), costEvaluator))
+                    continue;
             }
 
             applyEmptyRouteMoves(U, costEvaluator);
         }
+
+        if (searchSpace_.numUpdates() == numUpdates)
+            break;
     }
 
 #ifndef NDEBUG
@@ -216,6 +203,8 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
             auto const costBefore = costEvaluator.penalisedCost(solution_);
 #endif
 
+            // Depot insertion can invalidate V, so record participation first.
+            searchSpace_.touch(U, V);
             op->apply(U, V);
             update(rU, rV);
 
@@ -315,17 +304,13 @@ void LocalSearch::insertRequired(Route::Node *U,
 void LocalSearch::update(Route *U, Route *V)
 {
     assert(V);
-    numUpdates_++;
-    searchCompleted_ = false;
+    searchSpace_.update(U, V);
 
     auto const update = [&](Route *route)
     {
         route->update();
         if (route->empty())  // if route turned empty we clear it to remove any
             route->clear();  // lingering non-client nodes.
-
-        auto const idx = std::distance(solution_.routes.data(), route);
-        lastUpdate_[idx] = numUpdates_;
 
         for (auto *op : unaryOps_)   // some operators cache partial evaluations
             op->update(route);       // and rely on this call to keep those
@@ -385,8 +370,8 @@ LocalSearch::Statistics LocalSearch::statistics() const
     std::for_each(unaryOps_.begin(), unaryOps_.end(), count);
     std::for_each(binaryOps_.begin(), binaryOps_.end(), count);
 
-    assert(numImproving <= numUpdates_);
-    return {numMoves, numImproving, numUpdates_};
+    assert(numImproving <= searchSpace_.numUpdates());
+    return {numMoves, numImproving, searchSpace_.numUpdates()};
 }
 
 LocalSearch::LocalSearch(ProblemData const &data,
@@ -395,8 +380,6 @@ LocalSearch::LocalSearch(ProblemData const &data,
     : data(data),
       solution_(data),
       searchSpace_(data, neighbours),
-      perturbationManager_(perturbationManager),
-      lastTest_(data.numClients() + data.numShipments()),
-      lastUpdate_(data.numVehicles())
+      perturbationManager_(perturbationManager)
 {
 }

@@ -6,6 +6,10 @@ from pyvrp._pyvrp import CostEvaluator, Solution
 class SearchMethod(Protocol):  # pragma: no cover
     """
     Protocol that search methods must implement.
+
+    Search methods may additionally provide ``update_neighbourhood(new_best)``.
+    ILS calls this optional hook once per iteration, after all local searches
+    and before the iteration callback, to adapt the search neighbourhood.
     """
 
     def __call__(

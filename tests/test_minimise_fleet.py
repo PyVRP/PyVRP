@@ -71,7 +71,8 @@ def test_X_instance():
     data = read("data/X-n101-50-k13.vrp", round_func="round")
     assert_equal(data.num_vehicles, 100)
 
-    vehicle_type = minimise_fleet(data, MaxIterations(10))
+    # Dynamic neighbourhoods can take more intermediate fleet reductions.
+    vehicle_type = minimise_fleet(data, MaxIterations(20))
     data = data.replace(vehicle_types=[vehicle_type])
     assert_equal(data.num_vehicles, 13)
 

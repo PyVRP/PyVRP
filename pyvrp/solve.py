@@ -39,7 +39,9 @@ class SolveParams:
     penalty
         Penalty parameters.
     neighbourhood
-        Neighbourhood parameters.
+        Neighbourhood parameters. By default, local search selects prefixes
+        of 15, 30, then 60 neighbours as unsuccessful participations
+        accumulate.
     operators
         Operators to use in the search.
     display_interval
@@ -164,6 +166,10 @@ def solve(
     neighbours = compute_neighbours(data, params.neighbourhood)
     perturbation = PerturbationManager(data, params.perturbation)
     ls = LocalSearch(data, rng, neighbours, perturbation)
+    if params.neighbourhood.dynamic:
+        ls.configure_dynamic_neighbourhood(
+            neighbours, params.neighbourhood.dynamic_patience
+        )
 
     for op in params.operators:
         if op.supports(data):

@@ -1,15 +1,21 @@
 #include "SearchSpace.h"
 
+#include <algorithm>
 #include <cassert>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 using pyvrp::Activity;
 using pyvrp::search::Route;
 using pyvrp::search::SearchSpace;
 
 SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
-    : promising_(data.numClients() + data.numShipments())
+    : promising_(data.numClients() + data.numShipments()),
+      numClients_(data.numClients()),
+      numShipments_(data.numShipments()),
+      lastTest_(data.numClients() + data.numShipments()),
+      lastUpdate_(data.numVehicles())
 {
     if (neighbours.size() != data.numClients() + data.numShipments())
         throw std::runtime_error(
@@ -29,6 +35,52 @@ SearchSpace::SearchSpace(ProblemData const &data, Neighbours neighbours)
         vehTypeOrder_.emplace_back(vehType, offset);
         offset += data.vehicleType(vehType).numAvailable;
     }
+}
+
+void SearchSpace::reset(std::span<Route const> routes)
+{
+    assert(routes.size() == lastUpdate_.size());
+    routes_ = routes;
+    std::fill(lastTest_.begin(), lastTest_.end(), -1);
+    std::fill(lastUpdate_.begin(), lastUpdate_.end(), 0);
+    numUpdates_ = 0;
+}
+
+int SearchSpace::test(Activity const &activity)
+{
+    return std::exchange(lastTest_[index(activity)], numUpdates_);
+}
+
+bool SearchSpace::updatedSince(Route const *U,
+                               Route const *V,
+                               int lastTest) const
+{
+    auto const lastUpdate = [&](Route const *route)
+    { return route ? lastUpdate_[route - routes_.data()] : 0; };
+    return lastUpdate(U) > lastTest || lastUpdate(V) > lastTest;
+}
+
+void SearchSpace::update(Route const *U, Route const *V)
+{
+    ++numUpdates_;
+    if (U)
+        lastUpdate_[U - routes_.data()] = numUpdates_;
+    if (V && U != V)
+        lastUpdate_[V - routes_.data()] = numUpdates_;
+}
+
+size_t SearchSpace::numUpdates() const { return numUpdates_; }
+
+void SearchSpace::touch(Activity const &activity)
+{
+    if (dynamic_)
+        dynamic_->touch(activity);
+}
+
+void SearchSpace::touch(Route::Node const *U, Route::Node const *V)
+{
+    touch(U->activity());
+    touch(V->activity());
 }
 
 void SearchSpace::setNeighbours(Neighbours neighbours)
@@ -59,6 +111,7 @@ void SearchSpace::setNeighbours(Neighbours neighbours)
         }
     }
 
+    dynamic_.reset();
     neighbours_ = neighbours;
 }
 
@@ -73,21 +126,21 @@ SearchSpace::neighboursOf(Activity const &activity) const
     return neighbours_.at(activity);
 }
 
-bool SearchSpace::isPromising(Activity const &activity) const
+size_t SearchSpace::index(Activity const &activity) const
 {
     assert(activity.isClient() || activity.isShipment());
-    return activity.isClient()
-               ? promising_[activity.idx()]
-               : promising_[promising_.size() - activity.idx() - 1];
+    return activity.isClient() ? activity.idx() : numClients_ + activity.idx();
+}
+
+bool SearchSpace::isPromising(Activity const &activity) const
+{
+    return promising_[index(activity)];
 }
 
 void SearchSpace::markPromising(Activity const &activity)
 {
-    assert(activity.isClient() || activity.isShipment());
-    if (activity.isClient())
-        promising_[activity.idx()] = true;
-    else
-        promising_[promising_.size() - activity.idx() - 1] = true;
+    touch(activity);
+    promising_[index(activity)] = true;
 }
 
 void SearchSpace::markPromising(Route::Node const *node)
