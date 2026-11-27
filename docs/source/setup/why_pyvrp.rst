@@ -84,6 +84,10 @@ Feature comparison
      - ✅ (enterprise)
      - ❌
      - ❌
+   * - Clustering (compact routes)
+     - ✅ (enterprise)
+     - ❌
+     - ❌
 
 .. [#reloading]
    Have a look at our :doc:`../notebooks/reloading` tutorial to get started using this feature.
