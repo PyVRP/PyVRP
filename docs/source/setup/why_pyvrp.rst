@@ -1,7 +1,7 @@
 Why choose PyVRP?
 =================
 
-There are several alternative open-source vehicle routing solvers, including `VROOM <https://github.com/VROOM-Project/vroom/>`_, `jsprit <https://github.com/graphhopper/jsprit>`_, or implementing a solver yourself using the building blocks provided by `OR-Tools <https://github.com/google/or-tools>`_.
+There are several alternative open-source vehicle routing solvers, including `VROOM <https://github.com/VROOM-Project/vroom/>`_, `jsprit <https://github.com/graphhopper/jsprit>`_, `cuOpt <https://github.com/NVIDIA/cuopt>`_, or implementing a solver yourself using the building blocks provided by `OR-Tools <https://github.com/google/or-tools>`_.
 Why choose PyVRP for your route optimisation, rather than one of those alternatives?
 This page aims to help you decide through a structured comparison of features and project-specific strengths and weaknesses.
 
@@ -20,7 +20,9 @@ Feature comparison
      - PyVRP
      - VROOM
      - jsprit
+     - cuOpt
    * - Load and capacity constraints
+     - ✅
      - ✅
      - ✅
      - ✅
@@ -28,7 +30,9 @@ Feature comparison
      - ✅ (multiple)
      - ✅ (multiple)
      - ✅ (multiple)
+     - ✅ (single)
    * - Heterogeneous fleet
+     - ✅
      - ✅
      - ✅
      - ✅
@@ -36,11 +40,14 @@ Feature comparison
      - ✅
      - ❌
      - ❌
+     - ❌
    * - Shipments
      - ✅
      - ✅
      - ✅
+     - ⚠️ (not mixed with other visits)
    * - Multiple depots
+     - ✅
      - ✅
      - ✅
      - ✅
@@ -48,23 +55,29 @@ Feature comparison
      - ❌
      - ✅
      - ✅
+     - ✅
    * - EU and US hours-of-service regulations
      - ✅ (enterprise)
+     - ❌
      - ❌
      - ❌
    * - Duration objective
      - ✅
      - ⚠️ (not wait duration)
      - ✅
+     - ✅
    * - Flexible route start times
      - ✅
      - ❌
      - ❌
+     - ✅
    * - Alternative visits [#mutually_exclusive_groups]_
      - ✅
      - ❌
      - ❌
+     - ❌
    * - Profiles
+     - ✅
      - ✅
      - ✅
      - ✅
@@ -72,7 +85,9 @@ Feature comparison
      - ❌
      - ❌
      - ✅
+     - ❌
    * - Optional visits
+     - ✅
      - ✅
      - ✅
      - ✅
@@ -80,12 +95,15 @@ Feature comparison
      - ✅ (via load)
      - ✅
      - ✅
+     - ✅
    * - Fairness (load balancing, duration balancing)
      - ✅ (enterprise)
      - ❌
      - ❌
+     - ⚠️ (only stops and service time)
    * - Clustering (compact routes)
      - ✅ (enterprise)
+     - ❌
      - ❌
      - ❌
 
@@ -116,30 +134,36 @@ We discuss our reasoning further below.
      - VROOM
      - jsprit
      - OR-Tools
+     - cuOpt
    * - Scale
      - ⭐⭐⭐
      - ⭐⭐⭐
      - ⭐⭐
      - ⭐⭐
+     - ⭐⭐⭐
    * - Solution quality
      - ⭐⭐⭐
      - ⭐⭐
      - ⭐
      - ⭐
+     - ⭐⭐
    * - Project activity
      - ⭐⭐
      - ⭐⭐⭐
      - ⭐
      - ⭐⭐
+     - ⭐⭐⭐
    * - Ease of use
      - ⭐⭐⭐
      - ⭐⭐⭐
      - ⭐⭐
      - ⭐
+     - ⭐⭐
    * - Ease of modification
      - ⭐
      - ⭐⭐
      - ⭐⭐
+     - ⭐
      - ⭐
 
 
@@ -147,7 +171,7 @@ Scale
 ^^^^^
 
 We define *scale* as the size of the largest instances for which a reasonable solution can typically still be found.
-Both PyVRP and VROOM can comfortably solve instances with many thousands of visits.
+PyVRP, VROOM, and cuOpt can comfortably solve instances with many thousands of visits.
 On the other hand, jsprit and OR-Tools struggle on instances above a thousand visits, with solution quality already deteriorating from about 500 visits onwards.
 
 
@@ -163,6 +187,7 @@ VROOM has a local search component, but no metaheuristic on top: it is fast and 
 jsprit implements a ruin-and-recreate metaheuristic but does not efficiently evaluate moves, which means it cannot quickly iterate through the search space.
 It performs adequately on small and medium-sized instances but can be poor on large instances, or those with shipments (pickup-and-delivery). 
 OR-Tools implements a guided local search that performs similarly to jsprit on most routing problems, but is better on instances with shipments.
+cuOpt runs a genetic algorithm with local search on the GPU, and returns good solutions quickly.
 
 
 Project activity
@@ -171,6 +196,7 @@ Project activity
 We define *project activity* based on the project's issue tracker, discussion, and development activity.
 PyVRP is under active development, but is still fairly new, and has a relatively small user and developer community.
 Both VROOM and OR-Tools are large, established projects, with active user and developer communities, although OR-Tools' routing components have not seen much feature development in recent years.
+cuOpt is developed by NVIDIA and has seen frequent commits since it was open-sourced in 2025, although much of that work targets its linear and mixed-integer programming solvers rather than routing.
 Finally, jsprit appears largely abandoned, with few, sporadic `commits <https://github.com/graphhopper/jsprit/commits/master/>`_ and posts to their `issue tracker <https://github.com/graphhopper/jsprit/issues>`_.
 
 
@@ -180,6 +206,7 @@ Ease of use
 We define *ease of use* by how easy it is to define and solve a vehicle routing problem using the software.
 PyVRP is straightforward to use, with clear examples, documentation, and a high-level modelling interface via its :class:`~pyvrp.Model.Model`.
 VROOM similarly provides clear examples and API documentation.
+cuOpt offers a Python API for routing, but requires an NVIDIA GPU with CUDA.
 jsprit provides documentation in their repository, but those are nearly a decade old and only contain code snippets, not complete examples.
 
 Finally, OR-Tools offers significant documentation, lots of examples, and an active discussion forum.
@@ -192,6 +219,7 @@ Ease of modification
 
 We define *ease of modification* by how easy it is to make changes to the project's codebase, particularly to adjust or implement your own features.
 VROOM and jsprit are fully implemented in C++ and Java, respectively, and relatively straightforward to work with if you understand the language.
+cuOpt is implemented in C++ and CUDA, so modifying it requires GPU programming experience.
 OR-Tools is a complicated C++ codebase, but one rarely needs to dive deep into its internals since OR-Tools already offers a great deal of flexibility for implementing custom requirements.
 
 Finally, PyVRP implements both C++ and Python components.
