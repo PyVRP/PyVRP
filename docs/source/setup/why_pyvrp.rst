@@ -150,7 +150,7 @@ We discuss our reasoning further below.
    * - Project activity
      - ⭐⭐
      - ⭐⭐⭐
-     - ⭐
+     - ⭐⭐
      - ⭐⭐
      - ⭐⭐⭐
    * - Ease of use
@@ -197,7 +197,7 @@ We define *project activity* based on the project's issue tracker, discussion, a
 PyVRP is under active development, but is still fairly new, and has a relatively small user and developer community.
 Both VROOM and OR-Tools are large, established projects, with active user and developer communities, although OR-Tools' routing components have not seen much feature development in recent years.
 cuOpt is developed by NVIDIA and has seen frequent commits since it was open-sourced in 2025, although much of that work targets its linear and mixed-integer programming solvers rather than routing.
-Finally, jsprit appears largely abandoned, with few, sporadic `commits <https://github.com/graphhopper/jsprit/commits/master/>`_ and posts to their `issue tracker <https://github.com/graphhopper/jsprit/issues>`_.
+Finally, jsprit saw little activity for several years, but development picked up again in 2026.
 
 
 Ease of use
