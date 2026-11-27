@@ -211,7 +211,7 @@ jsprit provides documentation in their repository, but those are nearly a decade
 
 Finally, OR-Tools offers significant documentation, lots of examples, and an active discussion forum.
 These are also needed because the user needs to implement all their routing constraints mostly from scratch, and that requires some understanding of OR-Tools' constraint programming model.
-We regularly hear from our users that this is a significant burden, both for initial setup and continued maintance.
+We regularly hear from our users that this is a significant burden, both for initial setup and continued maintenance.
 
 
 Ease of modification
