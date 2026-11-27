@@ -62,7 +62,7 @@ class LocalSearch:
     @property
     def neighbours(self) -> dict[Activity, list[Activity]]:
         """
-        Returns the granular neighbourhood currently used by the local search.
+        Returns the full neighbourhood used by perturbation and insertion.
         """
         return self._ls.neighbours
 
@@ -73,6 +73,35 @@ class LocalSearch:
         by the local search object.
         """
         self._ls.neighbours = neighbours
+
+    @property
+    def active_neighbours(self) -> dict[Activity, list[Activity]]:
+        """
+        Returns the ordered neighbourhoods currently explored by local search.
+        """
+        return self._ls.active_neighbours
+
+    def configure_dynamic_neighbourhood(
+        self,
+        candidates: dict[Activity, list[Activity]],
+        patience: int = 1000,
+    ):
+        """
+        Enables neighbourhoods that widen from quarter to half to full size.
+
+        After ``patience`` unsuccessful participations, a client or shipment's
+        selected prefix doubles. Finding a new best resets participating
+        owners to quarter size. Reciprocal selection can activate additional
+        entries within the given candidate lists.
+        """
+        self._ls.configure_dynamic_neighbourhood(candidates, patience)
+
+    def update_neighbourhood(self, new_best: bool):
+        """
+        Updates the dynamic neighbourhood once per outer ILS iteration, after
+        both ordinary and exhaustive local search have finished.
+        """
+        self._ls.update_neighbourhood(new_best)
 
     @property
     def unary_operators(self) -> list[UnaryOperator]:

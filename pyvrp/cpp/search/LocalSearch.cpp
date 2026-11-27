@@ -203,8 +203,9 @@ bool LocalSearch::applyBinaryOps(Route::Node *U,
             auto const costBefore = costEvaluator.penalisedCost(solution_);
 #endif
 
-            op->apply(U, V);
+            // Depot insertion can invalidate V, so record participation first.
             searchSpace_.touch(U, V);
+            op->apply(U, V);
             update(rU, rV);
 
 #ifndef NDEBUG

@@ -161,13 +161,19 @@ Matrix<double> computeProximity(ProblemData const &data,
 
 NeighbourhoodParams::NeighbourhoodParams(double weightWaitTime,
                                          size_t numNeighbours,
-                                         bool symmetricProximity)
+                                         bool symmetricProximity,
+                                         bool dynamic,
+                                         size_t dynamicPatience)
     : weightWaitTime(weightWaitTime),
       numNeighbours(numNeighbours),
-      symmetricProximity(symmetricProximity)
+      symmetricProximity(symmetricProximity),
+      dynamic(dynamic),
+      dynamicPatience(dynamicPatience)
 {
     if (numNeighbours == 0)
         throw std::invalid_argument("num_neighbours == 0 not understood.");
+    if (dynamicPatience == 0)
+        throw std::invalid_argument("dynamic_patience must be positive.");
 }
 
 std::unordered_map<Activity, std::vector<Activity>>

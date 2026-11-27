@@ -89,6 +89,13 @@ public:
         return dynamic_;
     }
 
+    /** Updates dynamic neighbourhoods once per outer ILS iteration. */
+    void updateNeighbourhood(bool newBest)
+    {
+        if (dynamic_)
+            dynamic_->update(newBest);
+    }
+
     /** Records participation in an applied binary move, in argument order. */
     void touch(Route::Node const *U, Route::Node const *V);
 

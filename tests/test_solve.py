@@ -1,7 +1,8 @@
 import numpy as np
 from numpy.testing import assert_, assert_allclose, assert_equal
+from pytest import mark
 
-from pyvrp import Activity
+from pyvrp import Activity, IteratedLocalSearchCallbacks
 from pyvrp.IteratedLocalSearch import IteratedLocalSearchParams
 from pyvrp.PenaltyManager import PenaltyParams
 from pyvrp.search import (
@@ -10,6 +11,7 @@ from pyvrp.search import (
     PerturbationParams,
     Relocate1,
     SwapTails,
+    compute_neighbours,
 )
 from pyvrp.solve import SolveParams, solve
 from pyvrp.stop import MaxIterations
@@ -57,6 +59,65 @@ def test_solve_params_from_file_defaults():
     """
     params = SolveParams.from_file(DATA_DIR / "empty_config.toml")
     assert_equal(params, SolveParams())
+
+
+def test_dynamic_neighbourhood_params_from_file(tmp_path):
+    config = tmp_path / "neighbourhood.toml"
+    config.write_text(
+        "[neighbourhood]\n"
+        "num_neighbours = 24\n"
+        "dynamic = false\n"
+        "dynamic_patience = 7\n"
+    )
+    expected = NeighbourhoodParams(
+        num_neighbours=24, dynamic=False, dynamic_patience=7
+    )
+    assert_equal(
+        SolveParams.from_file(config), SolveParams(neighbourhood=expected)
+    )
+
+
+@mark.parametrize("dynamic", [False, True])
+@mark.parametrize("num_neighbours", [12, 60])
+def test_solve_configures_dynamic_neighbourhood_on_start(
+    rc208, dynamic, num_neighbours
+):
+    neighbourhood = NeighbourhoodParams(
+        num_neighbours=num_neighbours, dynamic=dynamic
+    )
+    full = compute_neighbours(rc208, neighbourhood)
+
+    class Callbacks(IteratedLocalSearchCallbacks):
+        started = False
+
+        def on_start(self, ils):
+            self.started = True
+            assert_equal(ils.search.neighbours, full)
+            active = ils.search.active_neighbours
+            if not dynamic:
+                assert_equal(active, full)
+                return
+
+            quarter = num_neighbours // 4
+            for activity, row in full.items():
+                # Reciprocal activation can add entries beyond the prefix.
+                assert_(set(row[:quarter]).issubset(active[activity]))
+                assert_equal(
+                    active[activity],
+                    [other for other in row if other in active[activity]],
+                )
+            assert_(
+                any(len(active[act]) < len(row) for act, row in full.items())
+            )
+
+    callbacks = Callbacks()
+    params = SolveParams(
+        ils=IteratedLocalSearchParams(callbacks=callbacks),
+        neighbourhood=neighbourhood,
+    )
+    result = solve(rc208, stop=MaxIterations(0), params=params)
+    assert_(callbacks.started)
+    assert_equal(result.num_iterations, 0)
 
 
 def test_solve_same_seed(ok_small):

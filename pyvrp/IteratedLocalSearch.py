@@ -219,6 +219,9 @@ class IteratedLocalSearch:
         best = curr = self._init
 
         callbacks.on_start(self)
+        update_neighbourhood = getattr(
+            self._search, "update_neighbourhood", None
+        )
 
         cost_eval = self._pm.cost_evaluator()
         while not stop(cost_eval.cost(best)):
@@ -238,7 +241,8 @@ class IteratedLocalSearch:
             self._pm.register(cand)
 
             iters_no_improvement += 1
-            if cost_eval.cost(cand) < cost_eval.cost(best) - TOL:
+            new_best = cost_eval.cost(cand) < cost_eval.cost(best) - TOL
+            if new_best:
                 best = cand
                 iters_no_improvement = 0
 
@@ -280,6 +284,8 @@ class IteratedLocalSearch:
 
             stats.collect(curr, cand, best, cost_eval)
             print_progress.iteration(stats)
+            if update_neighbourhood is not None:
+                update_neighbourhood(new_best)
             callbacks.on_iteration(curr, cand, best, cost_eval)
 
         runtime = time.perf_counter() - start

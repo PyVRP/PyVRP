@@ -12,8 +12,10 @@ namespace pyvrp::search
 /**
  * NeighbourhoodParams(
  *    weight_wait_time: float = 0.2,
- *    num_neighbours: int = 50,
+ *    num_neighbours: int = 60,
  *    symmetric_proximity: bool = True,
+ *    dynamic: bool = True,
+ *    dynamic_patience: int = 1000,
  * )
  *
  * Configuration for calculating a granular neighbourhood.
@@ -25,26 +27,37 @@ namespace pyvrp::search
  *     calculation. A large wait time indicates the clients are far apart
  *     in duration/time.
  * num_neighbours
- *     Number of activities in each granular neighbourhood. This parameter
- *     determines the size of the overall neighbourhood.
+ *     Maximum number of activities in each granular neighbourhood. The full
+ *     list is used by perturbation and insertion. Dynamic local search selects
+ *     prefixes of quarter, half, and full size (15, 30, and 60 by default).
  * symmetric_proximity
  *     Whether to calculate a symmetric proximity matrix. This ensures edge
  *     :math:`(i, j)` is given the same weight as :math:`(j, i)`.
+ * dynamic
+ *     Whether the solver adapts local search neighbourhoods from quarter to
+ *     half to full size. Perturbation and insertion use the full list.
+ * dynamic_patience
+ *     Number of unsuccessful participations before widening a neighbourhood.
+ *     Must be positive.
  *
  * Raises
  * ------
  * ValueError
- *     When ``num_neighbours`` is not strictly positive.
+ *     When ``num_neighbours`` or ``dynamic_patience`` is not strictly positive.
  */
 struct NeighbourhoodParams
 {
     double const weightWaitTime;
     size_t const numNeighbours;
     bool const symmetricProximity;
+    bool const dynamic;
+    size_t const dynamicPatience;
 
     NeighbourhoodParams(double weightWaitTime = 0.2,
-                        size_t numNeighbours = 50,
-                        bool symmetricProximity = true);
+                        size_t numNeighbours = 60,
+                        bool symmetricProximity = true,
+                        bool dynamic = true,
+                        size_t dynamicPatience = 1000);
 
     bool operator==(NeighbourhoodParams const &other) const = default;
 };

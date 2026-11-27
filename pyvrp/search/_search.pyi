@@ -119,6 +119,12 @@ class PerturbationManager:
         cost_evaluator: CostEvaluator,
     ) -> None: ...
 
+class DynamicNeighbourhood:
+    def touch(self, activity: Activity) -> None: ...
+    def update(self, new_best: bool) -> None: ...
+    @property
+    def neighbours(self) -> dict[Activity, list[Activity]]: ...
+
 class LocalSearchStatistics:
     num_moves: int
     num_improving: int
@@ -139,11 +145,18 @@ class LocalSearch:
         self,
         neighbours: dict[Activity, list[Activity]],
     ) -> None: ...
+    def configure_dynamic_neighbourhood(
+        self,
+        candidates: dict[Activity, list[Activity]],
+        patience: int = 1000,
+    ) -> DynamicNeighbourhood: ...
+    def update_neighbourhood(self, new_best: bool) -> None: ...
+    @property
+    def active_neighbours(self) -> dict[Activity, list[Activity]]: ...
     @property
     def unary_operators(self) -> list[UnaryOperator]: ...
     @property
     def binary_operators(self) -> list[BinaryOperator]: ...
-    @property
     @property
     def statistics(self) -> LocalSearchStatistics: ...
     def __call__(
@@ -277,11 +290,15 @@ class NeighbourhoodParams:
     weight_wait_time: float
     num_neighbours: int
     symmetric_proximity: bool
+    dynamic: bool
+    dynamic_patience: int
     def __init__(
         self,
         weight_wait_time: float = 0.2,
-        num_neighbours: int = 50,
+        num_neighbours: int = 60,
         symmetric_proximity: bool = True,
+        dynamic: bool = True,
+        dynamic_patience: int = 1000,
     ) -> None: ...
     def __eq__(self, other: object) -> bool: ...
 

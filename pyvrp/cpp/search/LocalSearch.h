@@ -130,6 +130,11 @@ public:
         return searchSpace_.configureDynamicNeighbourhood(candidates, patience);
     }
 
+    void updateNeighbourhood(bool newBest)
+    {
+        searchSpace_.updateNeighbourhood(newBest);
+    }
+
     SearchSpace::Neighbours activeNeighbours() const
     {
         return searchSpace_.activeNeighbours();

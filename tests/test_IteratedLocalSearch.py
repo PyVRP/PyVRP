@@ -260,6 +260,71 @@ def test_exhaustive_search_on_new_best_solution(ok_small):
     assert_allclose(res.cost(), 9_240)
 
 
+def test_neighbourhood_update_runs_once_after_both_search_passes(ok_small):
+    sols = [
+        Solution(ok_small, [[0, 1], [3, 2]]),  # 9868, initial
+        Solution(ok_small, [[0, 1], [2, 3]]),  # 9725, ordinary improvement
+        Solution(ok_small, [[0, 3], [1, 2]]),  # 9240, exhaustive improvement
+    ]
+    candidates = iter(sols)
+    events = []
+
+    def search(*_, exhaustive):
+        events.append(("search", exhaustive))
+        return next(candidates)
+
+    class Callbacks(IteratedLocalSearchCallbacks):
+        iteration = 0
+
+        def on_start(self, ils):
+            events.append("start")
+            # Resolve the optional hook after on_start so callbacks can
+            # install or replace the neighbourhood controller here.
+            ils.search.update_neighbourhood = lambda new_best: events.append(
+                ("update", new_best)
+            )
+
+        def on_best(self, best):
+            assert_equal(best, sols[2])
+            events.append("best")
+
+        def on_iteration(self, current, candidate, best, cost_evaluator):
+            expected = sols[0] if self.iteration == 0 else sols[2]
+            assert_equal(current, expected)
+            assert_equal(candidate, expected)
+            assert_equal(best, expected)
+            self.iteration += 1
+            events.append("iteration")
+
+        def on_end(self, result):
+            assert_equal(result.best, sols[2])
+            events.append("end")
+
+    ils = IteratedLocalSearch(
+        ok_small,
+        PenaltyManager(initial_penalties=([20], 6, 6)),
+        search,
+        sols[0],
+        IteratedLocalSearchParams(callbacks=Callbacks()),
+    )
+    ils.run(MaxIterations(2))
+    assert_equal(
+        events,
+        [
+            "start",
+            ("search", False),
+            ("update", False),
+            "iteration",
+            ("search", False),
+            ("search", True),
+            "best",
+            ("update", True),
+            "iteration",
+            "end",
+        ],
+    )
+
+
 def test_callback_on_start_and_end(ok_small):
     """
     Tests that ILS calls the provided callbacks at search start and end.
